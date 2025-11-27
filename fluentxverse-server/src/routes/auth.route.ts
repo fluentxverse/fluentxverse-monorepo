@@ -49,7 +49,7 @@ const Auth = new Elysia({ name: 'auth' })
       }, RegisterSchema)
 
 
-    .post('/login', async ({ body, cookie }) => {
+    .post('/login', async ({ body, cookie, set }) => {
       try {
         const authService = new AuthService();
         const userData = await authService.login(body);
@@ -73,6 +73,11 @@ const Auth = new Elysia({ name: 'auth' })
           path: '/'
         });
         
+        // Prevent caching of auth responses
+        set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        set.headers['Pragma'] = 'no-cache';
+        set.headers['Vary'] = 'Cookie';
+
         return { 
           success: true,
           user: userData
@@ -83,17 +88,57 @@ const Auth = new Elysia({ name: 'auth' })
     }, LoginSchema)
     
     .post('/logout', async ({ cookie }) => {
+      // Properly clear the cookie by setting it with expired date and matching attributes
+      cookie.auth?.set({
+        value: '',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0, // Expire immediately
+        path: '/'
+      });
       cookie.auth?.remove();
       return { success: true, message: 'Logged out successfully' };
     }, LogoutSchema)
     
-    .get('/me', async ({ cookie }): Promise<MeResponse> => {
+    // Renew session cookie (extends maxAge) without re-authenticating
+    .post('/refresh', async ({ cookie, set }) => {
+      const raw = cookie.auth?.value;
+      if (!raw) throw new Error('Not authenticated');
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+
+      cookie.auth?.set({
+        value: JSON.stringify({
+          userId: authData.userId,
+          email: authData.email,
+          firstName: authData.firstName,
+          lastName: authData.lastName,
+          walletAddress: authData.walletAddress,
+          tier: authData.tier
+        }),
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 30 * 60,
+        path: '/'
+      });
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      set.headers['Vary'] = 'Cookie';
+      return { success: true };
+    })
+    
+    .get('/me', async ({ cookie, set }): Promise<MeResponse> => {
       try {
         const raw = cookie.auth?.value;
         if (!raw) throw new Error('Not authenticated');
         const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
         console.log('Auth data from cookie:', authData);
 
+        set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        set.headers['Pragma'] = 'no-cache';
+        set.headers['Vary'] = 'Cookie';
         return { user: {
           userId: authData.userId,
           email: authData.email,

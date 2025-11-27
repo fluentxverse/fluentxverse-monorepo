@@ -6,6 +6,8 @@ import Home from './pages/Home';
 import HomeProtected from './pages/HomeProtected';
 import SchedulePage from './pages/SchedulePage';
 import StudentProfilePage from './pages/StudentProfilePage';
+import ClassroomPage from './pages/ClassroomPage';
+import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import ContactPage from "./pages/ContactPage";
@@ -13,6 +15,8 @@ import ContactPage from "./pages/ContactPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFoundPage from "./pages/NotFoundPage";
+import SessionExpiryModal from './Components/SessionExpiryModal';
+import { useAuthContext } from './context/AuthContext';
 
 
 import "./assets/css/privacy-policy.css";
@@ -20,8 +24,11 @@ import "./assets/css/terms-of-service.css";
 
 
 
-export function App() {
+export function AppInner() {
 	const [menuActive, setMenuActive] = useState(false);
+	const { isAuthenticated } = useAuthContext();
+	// Auth state for session modal
+	// We'll read isAuthenticated via context inside the tree
 
 	const handleClick = useCallback((e: MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -43,23 +50,25 @@ export function App() {
 		};
 	}, [handleClick]);
 
-	return (
-			<AuthProvider>
-			<div className="App">
+	    return (
+		    <div className="App">
 				<div className={`offcanvas-wrapper${menuActive ? " active" : ""}`}>
 					{/* Offcanvas content */}
 					<button className="menu-close"></button>
 				</div>
 				<div className={`offcanvas-overly${menuActive ? " active" : ""}`} />
-				<LocationProvider>
-					<main>
+					<LocationProvider>
+						<main>
+							{/* Session expiry warning modal visible when authenticated */}
+							<SessionExpiryModal isAuthenticated={isAuthenticated} />
 						<Router>
 						<Route path="/" component={Home} />
-						<Route path="/home" component={HomeProtected} />
+						<Route path="/home" component={withProtected(HomeProtected)} />
 						{/* Login page intentionally removed; login via modal */}
 						<Route path="/register" component={RegisterPage} />
-						<Route path="/schedule" component={SchedulePage} />
-						<Route path="/student/:studentId" component={StudentProfilePage} />
+						<Route path="/schedule" component={withProtected(SchedulePage)} />
+						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
+							<Route path="/classroom/:studentId" component={withProtected(ClassroomPage)} />
 
 							<Route path="/contact" component={ContactPage} />
 
@@ -72,22 +81,20 @@ export function App() {
 					</main>
 			</LocationProvider>
 			</div>
-			</AuthProvider>
+	);
+}
+
+export function App() {
+	return (
+		<AuthProvider>
+			<AppInner />
+		</AuthProvider>
 	);
 }
 
 if (typeof window !== 'undefined') {
 	const appElement = document.getElementById('app');
-	if (appElement) {
-		hydrate(<App />, appElement);
-	}
-}
-
-if (typeof window !== 'undefined') {
-	const appElement = document.getElementById('app');
-	if (appElement) {
-		hydrate(<App />, appElement);
-	}
+	if (appElement) hydrate(<App />, appElement);
 }
 
 export async function prerender(data: any) {

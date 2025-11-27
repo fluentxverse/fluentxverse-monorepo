@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useRef } from 'preact/hooks';
 import { JSX } from 'preact';
 import './SettingsModal.css';
 import { useAuthContext } from '../../context/AuthContext';
@@ -33,9 +33,22 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const shortWallet = walletAddress
     ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4)
     : '';
+  // Copy wallet animation state
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<number | null>(null);
+
   const copyWallet = () => {
     if (!walletAddress) return;
-    navigator.clipboard.writeText(walletAddress).catch(() => {});
+    navigator.clipboard.writeText(walletAddress).then(() => {
+      // Trigger animation state
+      setCopied(true);
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopied(false);
+      }, 1600); // ~1.6s visible
+    }).catch(() => {});
   };
 
   // Local state for avatar preview & upload status
@@ -119,7 +132,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
             <span className="settings-value">{tutorId}</span>
           </div>
           <div className="settings-email">
-            <i className="fi fi-rr-envelope"></i>
+            <i className="fi fi-sr-envelope"></i>
             <span>{email}</span>
           </div>
 
@@ -131,10 +144,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
               <button
                 type="button"
                 onClick={copyWallet}
-                className="settings-copy-btn"
+                className={`settings-copy-btn ${copied ? 'copied' : ''}`}
                 aria-label="Copy wallet address"
+                disabled={copied}
               >
-                COPY
+                {copied ? <><i className="fas fa-check"></i> COPIED</> : 'COPY'}
               </button>
             </div>
           )}

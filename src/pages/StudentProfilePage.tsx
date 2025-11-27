@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import './StudentProfilePage.css';
 
 interface StudentProfilePageProps {
   studentId?: string;
@@ -28,6 +29,131 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
   const { user } = useAuthContext();
   const { route } = useLocation();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
+  const [showHeadsetModal, setShowHeadsetModal] = useState(false);
+  const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
+  const [micLevel, setMicLevel] = useState(0);
+  const [isPlayingLeft, setIsPlayingLeft] = useState(false);
+  const [isPlayingRight, setIsPlayingRight] = useState(false);
+  const [camPermission, setCamPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  const openHeadsetModal = async () => {
+    setShowHeadsetModal(true);
+    try {
+      // Request audio and video permissions
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+      setMicPermission('granted');
+      
+      // Set up audio analysis for mic level
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      source.connect(analyserRef.current);
+      
+      // Start monitoring mic level
+      const updateMicLevel = () => {
+        if (analyserRef.current) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          setMicLevel(Math.min(100, average * 1.5));
+        }
+        animationFrameRef.current = requestAnimationFrame(updateMicLevel);
+      };
+      updateMicLevel();
+    } catch (err) {
+      setMicPermission('denied');
+    }
+
+    // Camera permission and setup
+    try {
+      const cam = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 360 } });
+      cameraStreamRef.current = cam;
+      setCamPermission('granted');
+      if (videoRef.current) {
+        videoRef.current.srcObject = cam;
+        videoRef.current.play().catch(() => {});
+      }
+    } catch (err) {
+      setCamPermission('denied');
+    }
+  };
+
+  const closeHeadsetModal = () => {
+    setShowHeadsetModal(false);
+    setMicPermission('pending');
+    setMicLevel(0);
+    setCamPermission('pending');
+    
+    // Clean up
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach(track => track.stop());
+      cameraStreamRef.current = null;
+    }
+  };
+
+  const playTestSound = (channel: 'left' | 'right') => {
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    const panner = ctx.createStereoPanner();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = channel === 'left' ? 440 : 880;
+    panner.pan.value = channel === 'left' ? -1 : 1;
+    gainNode.gain.value = 0.3;
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(panner);
+    panner.connect(ctx.destination);
+    
+    if (channel === 'left') setIsPlayingLeft(true);
+    else setIsPlayingRight(true);
+    
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 1);
+    
+    setTimeout(() => {
+      if (channel === 'left') setIsPlayingLeft(false);
+      else setIsPlayingRight(false);
+      ctx.close();
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+      if (cameraStreamRef.current) {
+        cameraStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
   
   // Mock student data - replace with API call
   const studentData = {
@@ -81,238 +207,99 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' }}>
+    <div className="student-profile-page">
       <SideBar />
       
-      <div style={{ flex: 1, marginLeft: '80px' }}>
+      <div className="student-profile-content">
         <Header />
         
-        <div style={{ 
-          padding: '48px 64px',
-          maxWidth: '1400px',
-          margin: '0 auto'
-        }}>
+        <div className="student-profile-main">
           {/* Back Button */}
-          <button
-            onClick={() => route('/schedule')}
-            style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              border: '2px solid rgba(2, 69, 174, 0.15)',
-              borderRadius: '16px',
-              padding: '14px 28px',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '15px',
-              color: '#0245ae',
-              marginBottom: '32px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 2px 8px rgba(2, 69, 174, 0.08)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)';
-              e.currentTarget.style.color = '#fff';
-              e.currentTarget.style.transform = 'translateX(-8px)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(2, 69, 174, 0.25)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
-              e.currentTarget.style.color = '#0245ae';
-              e.currentTarget.style.transform = 'translateX(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(2, 69, 174, 0.08)';
-            }}
-          >
-            <i className="fi fi-rr-arrow-left" style={{ fontSize: '18px' }}></i>
+          <button className="back-button" onClick={() => route('/schedule')}>
+            <i className="fi fi-sr-arrow-left"></i>
             Back to Schedule
           </button>
 
           {/* Profile Header Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.98)',
-            borderRadius: '32px',
-            padding: '56px',
-            boxShadow: '0 12px 40px rgba(2, 69, 174, 0.12)',
-            marginBottom: '40px',
-            border: '1px solid rgba(255, 255, 255, 0.8)'
-          }}>
-            <div style={{ display: 'flex', gap: '48px', alignItems: 'flex-start' }}>
+          <div className="profile-header-card">
+            <div className="profile-header-content">
               {/* Profile Photo */}
-              <div style={{ position: 'relative', flexShrink: 0 }}>
-                <div style={{
-                  width: '180px',
-                  height: '180px',
-                  borderRadius: '28px',
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '68px',
-                  fontWeight: 900,
-                  color: '#fff',
-                  boxShadow: '0 12px 32px rgba(2, 69, 174, 0.35)',
-                  letterSpacing: '3px'
-                }}>
+              <div className="profile-photo-container">
+                <div className="profile-avatar">
                   {studentData.initials}
                 </div>
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-12px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: '#fff',
-                  padding: '10px 20px',
-                  borderRadius: '24px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  boxShadow: '0 6px 16px rgba(16, 185, 129, 0.4)',
-                  letterSpacing: '0.5px',
-                  whiteSpace: 'nowrap'
-                }}>
+                <div className="profile-level-badge">
                   {studentData.level}
                 </div>
               </div>
 
               {/* Profile Info */}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                  <h1 style={{
-                    fontSize: '36px',
-                    fontWeight: 900,
-                    color: '#0f172a',
-                    margin: 0,
-                    lineHeight: 1
-                  }}>
-                    {studentData.name}
-                  </h1>
-                  <span style={{
-                    background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                    color: '#fff',
-                    padding: '8px 16px',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    letterSpacing: '1px',
-                    boxShadow: '0 4px 12px rgba(2, 69, 174, 0.2)'
-                  }}>
-                    {studentData.id}
-                  </span>
+              <div className="profile-info">
+                <div className="profile-name-row">
+                  <h1 className="profile-name">{studentData.name}</h1>
+                  <span className="profile-id-badge">{studentData.id}</span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
-                    <i className="fi fi-rr-envelope" style={{ color: '#0245ae', fontSize: '18px' }}></i>
-                    <span style={{ fontSize: '14px', color: '#475569', fontWeight: 500 }}>{studentData.email}</span>
+                <div className="contact-info-grid">
+                  <div className="contact-info-item">
+                    <i className="fi fi-sr-envelope"></i>
+                    <span>{studentData.email}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
-                    <i className="fi fi-rr-globe" style={{ color: '#0245ae', fontSize: '18px' }}></i>
-                    <span style={{ fontSize: '14px', color: '#475569', fontWeight: 500 }}>{studentData.nationality}</span>
+                  <div className="contact-info-item">
+                    <i className="fi fi-sr-globe"></i>
+                    <span>{studentData.nationality}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
-                    <i className="fi fi-rr-calendar" style={{ color: '#0245ae', fontSize: '18px' }}></i>
-                    <span style={{ fontSize: '14px', color: '#475569', fontWeight: 500 }}>Joined {studentData.joinDate}</span>
+                  <div className="contact-info-item">
+                    <i className="fi fi-sr-calendar"></i>
+                    <span>Joined {studentData.joinDate}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0' }}>
-                    <i className="fi fi-rr-clock" style={{ color: '#0245ae', fontSize: '18px' }}></i>
-                    <span style={{ fontSize: '14px', color: '#475569', fontWeight: 500 }}>{studentData.timezone}</span>
+                  <div className="contact-info-item">
+                    <i className="fi fi-sr-clock"></i>
+                    <span>{studentData.timezone}</span>
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div style={{ display: 'flex', gap: '16px', marginTop: '24px', flexWrap: 'wrap' }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                    padding: '20px 28px',
-                    borderRadius: '16px',
-                    textAlign: 'center',
-                    minWidth: '130px',
-                    boxShadow: '0 6px 20px rgba(2, 69, 174, 0.25)'
-                  }}>
-                    <div style={{ fontSize: '36px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
-                      {studentData.totalLessons}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.95)', marginTop: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Total Lessons
-                    </div>
+                <div className="stats-container">
+                  <div className="stat-card blue">
+                    <div className="stat-value">{studentData.totalLessons}</div>
+                    <div className="stat-label">Total Lessons</div>
                   </div>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    padding: '20px 28px',
-                    borderRadius: '16px',
-                    textAlign: 'center',
-                    minWidth: '130px',
-                    boxShadow: '0 6px 20px rgba(16, 185, 129, 0.25)'
-                  }}>
-                    <div style={{ fontSize: '36px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
-                      {studentData.attendance}%
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.95)', marginTop: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Attendance
-                    </div>
+                  <div className="stat-card green">
+                    <div className="stat-value">{studentData.attendance}%</div>
+                    <div className="stat-label">Attendance</div>
                   </div>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                    padding: '20px 28px',
-                    borderRadius: '16px',
-                    textAlign: 'center',
-                    minWidth: '130px',
-                    boxShadow: '0 6px 20px rgba(245, 158, 11, 0.25)'
-                  }}>
-                    <div style={{ fontSize: '36px', fontWeight: 900, color: '#fff', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <div className="stat-card orange">
+                    <div className="stat-value with-icon">
                       {studentData.averageRating}
-                      <i className="fi fi-sr-star" style={{ fontSize: '24px' }}></i>
+                      <i className="fi fi-sr-star"></i>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.95)', marginTop: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Avg Rating
-                    </div>
+                    <div className="stat-label">Avg Rating</div>
                   </div>
                 </div>
+              </div>
+
+              {/* Action Buttons - Right side */}
+              <div className="profile-action-buttons">
+                <button className="enter-classroom-btn" onClick={() => route(`/classroom/${studentData.id}`)}>
+                  <i className="fi fi-sr-video-camera"></i>
+                  <span>Enter Classroom</span>
+                </button>
+                <button className="test-headset-btn" onClick={openHeadsetModal}>
+                  <i className="fi fi-sr-headset"></i>
+                  <span>Test Headset</span>
+                </button>
               </div>
             </div>
           </div>
 
           {/* Tabs */}
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            marginBottom: '32px',
-            background: 'rgba(255, 255, 255, 0.8)',
-            padding: '8px',
-            borderRadius: '20px',
-            boxShadow: '0 4px 16px rgba(2, 69, 174, 0.08)'
-          }}>
+          <div className="tabs-container">
             {(['overview', 'history', 'notes', 'materials'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                style={{
-                  background: activeTab === tab ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : 'transparent',
-                  color: activeTab === tab ? '#fff' : '#64748b',
-                  border: 'none',
-                  padding: '14px 32px',
-                  borderRadius: '14px',
-                  cursor: 'pointer',
-                  fontWeight: 800,
-                  fontSize: '15px',
-                  textTransform: 'capitalize',
-                  transition: 'all 0.3s ease',
-                  boxShadow: activeTab === tab ? '0 6px 16px rgba(2, 69, 174, 0.3)' : 'none',
-                  flex: 1
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== tab) {
-                    e.currentTarget.style.background = 'rgba(2, 69, 174, 0.08)';
-                    e.currentTarget.style.color = '#0245ae';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== tab) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#64748b';
-                  }
-                }}
+                className={`tab-button ${activeTab === tab ? 'active' : ''}`}
               >
                 {tab}
               </button>
@@ -321,110 +308,42 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
 
           {/* Tab Content */}
           {activeTab === 'overview' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+            <div className="overview-grid">
               {/* Learning Goals */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.98)',
-                borderRadius: '24px',
-                padding: '40px',
-                boxShadow: '0 6px 24px rgba(2, 69, 174, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.8)'
-              }}>
-                <h3 style={{
-                  fontSize: '22px',
-                  fontWeight: 900,
-                  color: '#0f172a',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                  <i className="fi fi-rr-target" style={{ fontSize: '26px', color: '#0245ae' }}></i>
+              <div className="content-card">
+                <h3 className="card-title">
+                  <i className="fi fi-sr-target"></i>
                   Learning Goals
                 </h3>
-                <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.7, marginBottom: '32px' }}>
-                  {studentData.goals}
-                </p>
+                <p className="card-text">{studentData.goals}</p>
 
-                <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginBottom: '16px' }}>
-                  Interests
-                </h4>
-                <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.7, marginBottom: '32px' }}>
-                  {studentData.interests}
-                </p>
+                <h4 className="section-subtitle">Interests</h4>
+                <p className="card-text">{studentData.interests}</p>
 
-                <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', marginBottom: '16px' }}>
-                  Preferred Topics
-                </h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                <h4 className="section-subtitle">Preferred Topics</h4>
+                <div className="topic-tags">
                   {studentData.preferredTopics.map((topic, idx) => (
-                    <span
-                      key={idx}
-                      style={{
-                        background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        borderRadius: '24px',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        boxShadow: '0 4px 12px rgba(2, 69, 174, 0.2)'
-                      }}
-                    >
-                      {topic}
-                    </span>
+                    <span key={idx} className="topic-tag">{topic}</span>
                   ))}
                 </div>
               </div>
 
               {/* Upcoming Sessions */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.98)',
-                borderRadius: '24px',
-                padding: '40px',
-                boxShadow: '0 6px 24px rgba(2, 69, 174, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.8)'
-              }}>
-                <h3 style={{
-                  fontSize: '22px',
-                  fontWeight: 900,
-                  color: '#0f172a',
-                  marginBottom: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                  <i className="fi fi-rr-calendar-lines" style={{ fontSize: '26px', color: '#0245ae' }}></i>
+              <div className="content-card">
+                <h3 className="card-title">
+                  <i className="fi fi-sr-calendar-lines"></i>
                   Upcoming
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="sessions-list">
                   {upcomingSessions.map((session) => (
-                    <div
-                      key={session.id}
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(2, 69, 174, 0.05) 0%, rgba(74, 158, 255, 0.05) 100%)',
-                        padding: '20px',
-                        borderRadius: '16px',
-                        borderLeft: '4px solid #0245ae',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateX(4px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(2, 69, 174, 0.15)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateX(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: '#0245ae', marginBottom: '8px' }}>
-                        {session.topic}
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <i className="fi fi-rr-calendar" style={{ fontSize: '12px' }}></i>
+                    <div key={session.id} className="session-card">
+                      <div className="session-topic">{session.topic}</div>
+                      <div className="session-meta">
+                        <i className="fi fi-sr-calendar"></i>
                         {session.date}
                       </div>
-                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                        <i className="fi fi-rr-clock" style={{ fontSize: '12px' }}></i>
+                      <div className="session-meta" style={{ marginTop: '4px' }}>
+                        <i className="fi fi-sr-clock"></i>
                         {session.time}
                       </div>
                     </div>
@@ -435,66 +354,30 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
           )}
 
           {activeTab === 'history' && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '20px',
-              padding: '32px',
-              boxShadow: '0 4px 16px rgba(2, 69, 174, 0.1)'
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: 900,
-                color: '#0245ae',
-                marginBottom: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <i className="fi fi-rr-time-past" style={{ fontSize: '24px' }}></i>
+            <div className="content-card simple">
+              <h3 className="card-title blue">
+                <i className="fi fi-sr-time-past"></i>
                 Lesson History
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="sessions-list">
                 {pastSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    style={{
-                      background: 'rgba(16, 185, 129, 0.05)',
-                      padding: '20px',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      borderLeft: '4px solid #10b981'
-                    }}
-                  >
+                  <div key={session.id} className="session-card completed">
                     <div>
-                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#0245ae', marginBottom: '8px' }}>
-                        {session.topic}
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <i className="fi fi-rr-calendar" style={{ fontSize: '12px' }}></i>
+                      <div className="session-topic">{session.topic}</div>
+                      <div className="session-meta-row">
+                        <span className="session-meta-item">
+                          <i className="fi fi-sr-calendar"></i>
                           {session.date}
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <i className="fi fi-rr-clock" style={{ fontSize: '12px' }}></i>
+                        <span className="session-meta-item">
+                          <i className="fi fi-sr-clock"></i>
                           {session.time}
                         </span>
                       </div>
                     </div>
                     {session.rating && (
-                      <div style={{
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        color: '#fff',
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        fontSize: '14px',
-                        fontWeight: 800,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <i className="fi fi-sr-star" style={{ fontSize: '14px' }}></i>
+                      <div className="rating-badge">
+                        <i className="fi fi-sr-star"></i>
                         {session.rating}
                       </div>
                     )}
@@ -505,62 +388,25 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
           )}
 
           {activeTab === 'notes' && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '20px',
-              padding: '32px',
-              boxShadow: '0 4px 16px rgba(2, 69, 174, 0.1)'
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: 900,
-                color: '#0245ae',
-                marginBottom: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <i className="fi fi-rr-edit" style={{ fontSize: '24px' }}></i>
+            <div className="content-card simple">
+              <h3 className="card-title blue">
+                <i className="fi fi-sr-edit"></i>
                 Lesson Notes
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div className="notes-list">
                 {lessonNotes.map((note, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: 'rgba(2, 69, 174, 0.03)',
-                      padding: '24px',
-                      borderRadius: '16px',
-                      border: '2px solid rgba(2, 69, 174, 0.1)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 800, color: '#0245ae' }}>
-                          {note.date}
-                        </span>
-                        <span style={{ fontSize: '13px', color: '#64748b' }}>
-                          {note.time}
-                        </span>
+                  <div key={idx} className="note-card">
+                    <div className="note-header">
+                      <div className="note-date-time">
+                        <span className="note-date">{note.date}</span>
+                        <span className="note-time">{note.time}</span>
                       </div>
-                      <div style={{
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        color: '#fff',
-                        padding: '6px 12px',
-                        borderRadius: '16px',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <i className="fi fi-sr-star" style={{ fontSize: '12px' }}></i>
+                      <div className="rating-badge small">
+                        <i className="fi fi-sr-star"></i>
                         {note.rating}
                       </div>
                     </div>
-                    <p style={{ fontSize: '15px', color: '#475569', lineHeight: 1.7, margin: 0 }}>
-                      {note.note}
-                    </p>
+                    <p className="note-content">{note.note}</p>
                   </div>
                 ))}
               </div>
@@ -568,29 +414,165 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
           )}
 
           {activeTab === 'materials' && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '20px',
-              padding: '32px',
-              boxShadow: '0 4px 16px rgba(2, 69, 174, 0.1)',
-              textAlign: 'center',
-              minHeight: '300px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <i className="fi fi-rr-book" style={{ fontSize: '64px', color: '#cbd5e1', marginBottom: '16px' }}></i>
-              <h3 style={{ fontSize: '20px', fontWeight: 900, color: '#64748b', marginBottom: '8px' }}>
-                No Materials Yet
-              </h3>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>
-                Shared lesson materials will appear here
-              </p>
+            <div className="empty-state">
+              <i className="fi fi-sr-book"></i>
+              <h3>No Materials Yet</h3>
+              <p>Shared lesson materials will appear here</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Headset Test Modal */}
+      {showHeadsetModal && (
+        <div className="headset-modal-overlay" onClick={closeHeadsetModal}>
+          <div className="headset-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="headset-modal-header">
+              <h2>
+                <i className="fi fi-sr-computer"></i>
+                Device & Media Test
+              </h2>
+              <button className="modal-close-btn" onClick={closeHeadsetModal}>
+                <i className="fi fi-sr-cross"></i>
+              </button>
+            </div>
+
+            <div className="headset-modal-content">
+              {/* Microphone Test */}
+              <div className="test-section">
+                <h3>
+                  <i className="fi fi-sr-microphone"></i>
+                  Microphone Test
+                </h3>
+                {micPermission === 'pending' && (
+                  <div className="mic-status pending">
+                    <i className="fi fi-sr-spinner"></i>
+                    Requesting microphone access...
+                  </div>
+                )}
+                {micPermission === 'denied' && (
+                  <div className="mic-status denied">
+                    <i className="fi fi-sr-exclamation"></i>
+                    Microphone access denied. Please allow access in your browser settings.
+                  </div>
+                )}
+                {micPermission === 'granted' && (
+                  <div className="mic-test-area">
+                    <div className="mic-status granted">
+                      <i className="fi fi-sr-check"></i>
+                      Microphone connected! Speak to test.
+                    </div>
+                    <div className="mic-level-container">
+                      <div className="mic-level-bar">
+                        <div 
+                          className="mic-level-fill" 
+                          style={{ width: `${micLevel}%` }}
+                        ></div>
+                      </div>
+                      <span className="mic-level-text">{Math.round(micLevel)}%</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Camera Test */}
+              <div className="test-section">
+                <h3>
+                  <i className="fi fi-sr-camera"></i>
+                  Camera Test
+                </h3>
+                {camPermission === 'pending' && (
+                  <div className="cam-status pending">
+                    <i className="fi fi-sr-spinner"></i>
+                    Requesting camera access...
+                  </div>
+                )}
+                {camPermission === 'denied' && (
+                  <div className="cam-status denied">
+                    <i className="fi fi-sr-exclamation"></i>
+                    Camera access denied. Please allow access in your browser settings.
+                  </div>
+                )}
+                {camPermission === 'granted' && (
+                  <div className="camera-test-area">
+                    <div className="camera-preview">
+                      <video ref={videoRef} playsInline muted />
+                    </div>
+                    <div className="camera-controls">
+                      <button
+                        className="camera-btn"
+                        onClick={() => {
+                          if (!videoRef.current) return;
+                          if (videoRef.current.paused) videoRef.current.play();
+                          else videoRef.current.pause();
+                        }}
+                      >
+                        <i className="fi fi-sr-play"></i>
+                        <span>Play/Pause</span>
+                      </button>
+                      <button
+                        className="camera-btn"
+                        onClick={async () => {
+                          try {
+                            // Reinitialize camera in case user switched devices
+                            if (cameraStreamRef.current) {
+                              cameraStreamRef.current.getTracks().forEach(t => t.stop());
+                            }
+                            const cam = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 360 } });
+                            cameraStreamRef.current = cam;
+                            if (videoRef.current) {
+                              videoRef.current.srcObject = cam;
+                              await videoRef.current.play();
+                            }
+                          } catch {}
+                        }}
+                      >
+                        <i className="fi fi-sr-refresh"></i>
+                        <span>Restart Camera</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Speaker Test */}
+              <div className="test-section">
+                <h3>
+                  <i className="fi fi-sr-volume"></i>
+                  Speaker Test
+                </h3>
+                <p className="test-description">Click the buttons below to test your left and right speakers.</p>
+                <div className="speaker-buttons">
+                  <button 
+                    className={`speaker-btn left ${isPlayingLeft ? 'playing' : ''}`}
+                    onClick={() => playTestSound('left')}
+                    disabled={isPlayingLeft}
+                  >
+                    <i className="fi fi-sr-arrow-left"></i>
+                    <span>Left Speaker</span>
+                    {isPlayingLeft && <div className="sound-wave"></div>}
+                  </button>
+                  <button 
+                    className={`speaker-btn right ${isPlayingRight ? 'playing' : ''}`}
+                    onClick={() => playTestSound('right')}
+                    disabled={isPlayingRight}
+                  >
+                    <span>Right Speaker</span>
+                    <i className="fi fi-sr-arrow-right"></i>
+                    {isPlayingRight && <div className="sound-wave"></div>}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="headset-modal-footer">
+              <button className="done-btn" onClick={closeHeadsetModal}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

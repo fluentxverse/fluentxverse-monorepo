@@ -33,3 +33,8 @@ export const getMe = async () => {
     const { data } = await client.get('/me')
     return data;
 }
+
+export const refreshSession = async () => {
+    const { data } = await client.post('/refresh')
+    return data;
+}

@@ -1,6 +1,8 @@
 import { createContext } from 'preact';
-import { useContext, useState, useEffect } from 'preact/hooks';
+import { useContext, useState, useEffect, useRef } from 'preact/hooks';
 import { loginUser, logoutUser, getMe } from '../api/auth.api';
+import { PROTECTED_PATHS } from '../config/protectedPaths';
+import { registerUnauthorizedHandler, setLoginInProgress } from '../api/utils';
 
 interface AuthUser {
   userId?: string; // from /me endpoint
@@ -19,9 +21,9 @@ interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  
   isAuthenticated: boolean;
-  loading: boolean;
+  initialLoading: boolean; // initial /me check
+  loginLoading: boolean; // active login attempt
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -30,7 +32,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: any }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated on mount
@@ -46,13 +49,45 @@ export const AuthProvider = ({ children }: { children: any }) => {
         // Not authenticated or session expired
         setUser(null);
       } finally {
-        setLoading(false);
+        setInitialLoading(false);
       }
     };
     checkAuth();
   }, []);
 
+  // Redirect away from protected routes if session expired
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (initialLoading) return;
+    if (user || loginLoading) return; // avoid redirect mid-login attempt
+    const path = window.location.pathname;
+    if (PROTECTED_PATHS.some(p => path.startsWith(p))) {
+      window.location.href = '/';
+    }
+  }, [initialLoading, user, loginLoading]);
+
+  // Register 401 handler for axios interceptor
+  useEffect(() => {
+    registerUnauthorizedHandler(() => {
+      // Prevent clearing user during active login request
+      if (loginLoading) return;
+      setUser(null);
+      if (typeof window !== 'undefined') {
+        const current = window.location.pathname;
+        // Avoid redirect loop when already on landing/login page
+        const isOnLanding = current === '/' || current === '/home';
+        if (!isOnLanding && PROTECTED_PATHS.some(p => current.startsWith(p))) {
+          window.location.href = '/';
+        }
+      }
+    });
+  }, [loginLoading]);
+
   const login = async (email: string, password: string) => {
+    // Set both local state and global flag to prevent 401 handler interference
+    setLoginLoading(true);
+    setLoginInProgress(true);
+    
     try {
       const data = await loginUser(email, password);
 
@@ -71,6 +106,9 @@ export const AuthProvider = ({ children }: { children: any }) => {
           localStorage.setItem('fxv_user_id', (loggedInUser.id || loggedInUser.userId) as string);
         }
 
+        // Small delay to ensure cookie is fully set before /me call
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Immediately refresh from /me to pull cookie-derived fields (walletAddress)
         try {
           const me = await getMe();
@@ -78,13 +116,19 @@ export const AuthProvider = ({ children }: { children: any }) => {
             setUser(prev => ({ ...prev, ...me.user }));
           }
         } catch (e) {
-          console.warn('Post-login /me refresh failed:', e);
+          console.warn('Post-login /me refresh failed - continuing without extra fields:', e);
         }
       } else {
         throw new Error('Login failed');
       }
     } catch (err: any) {
+      // Clear any partial state on error
+      setUser(null);
       throw new Error(err?.message || 'Login failed');
+    } finally {
+      setLoginLoading(false);
+      // Delay clearing the global flag slightly to cover any in-flight requests
+      setTimeout(() => setLoginInProgress(false), 500);
     }
   };
 
@@ -95,11 +139,14 @@ export const AuthProvider = ({ children }: { children: any }) => {
       console.error('Logout error:', err);
     } finally {
       setUser(null);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

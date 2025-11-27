@@ -9,7 +9,7 @@ import './RegisterPage.css';
 
 const RegisterPage = () => {
   const { route } = useLocation();
-  const { user, loading, login } = useAuthContext();
+  const { user, login } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

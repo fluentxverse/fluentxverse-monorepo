@@ -277,6 +277,27 @@
 
 .dark-mode .settings-copy-btn { box-shadow: 0 4px 10px rgba(16,185,129,0.55); }
 
+/* Copied state animation */
+@keyframes copiedPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@keyframes copiedFlash {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+  100% { filter: brightness(1); }
+}
+.settings-copy-btn.copied {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 16px rgba(5,150,105,0.55);
+  animation: copiedPulse .6s ease, copiedFlash 1.2s ease;
+  pointer-events: none;
+}
+.settings-copy-btn.copied i {
+  margin-right: 4px;
+}
+
 .settings-action-btn {
   display: flex;
   align-items: center;

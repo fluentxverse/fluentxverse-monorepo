@@ -26,8 +26,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     
     try {
       await login(email, password);
+      // Small delay to ensure state is fully updated before navigation
+      await new Promise(resolve => setTimeout(resolve, 200));
       onClose();
-      window.location.href = '/home';
+      // Use replace to prevent back button issues
+      window.location.replace('/home');
     } catch (err: any) {
       console.error('Login error:', err);
       setLoading(false);
