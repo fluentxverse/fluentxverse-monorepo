@@ -1,0 +1,26 @@
+/* CTA section dark mode styles */
+.dark-mode .cta-area {
+  background-color: var(--secondary-color);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .cta-content h2 {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .cta-content p {
+  color: var(--secondary-text-color);
+}
+
+/* Clean, solid dark background for CTA section */
+.dark-mode .cta-area {
+  background: #1a1a1a;
+  position: relative;
+}
+
+/* Remove the green bubbles in dark mode */
+.dark-mode .cta-area::before,
+.dark-mode .cta-area::after {
+  display: none;
+}

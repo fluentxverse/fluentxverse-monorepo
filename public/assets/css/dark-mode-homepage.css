@@ -1,0 +1,105 @@
+/* Dark mode styles specific to the homepage */
+
+/* Hero banner section */
+.dark-mode .banner-bg {
+  background-color: #121212;
+}
+
+.dark-mode .banner-content h2 {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .banner-content p {
+  color: var(--secondary-text-color);
+}
+
+/* Categories & Trending section */
+.dark-mode .category-area {
+  background-color: var(--background-color);
+}
+
+.dark-mode .section-title .title {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .section-title p {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .category-item {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .category-item:hover {
+  box-shadow: var(--card-box-shadow);
+}
+
+.dark-mode .category-item .category-name {
+  color: var(--primary-text-color);
+}
+
+/* Product cards */
+.dark-mode .product-card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .product-card:hover {
+  box-shadow: var(--card-box-shadow);
+}
+
+.dark-mode .product-content h4 {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .product-content .price {
+  color: var(--accent-color);
+}
+
+.dark-mode .product-content .product-meta {
+  border-top: 1px solid var(--border-color);
+}
+
+.dark-mode .product-card .product-img .product-tag {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Featured collection */
+.dark-mode .collection-item {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .collection-content h4 {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .collection-content p {
+  color: var(--secondary-text-color);
+}
+
+/* Top creators */
+.dark-mode .creator-item {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .creator-content h4 {
+  color: var(--primary-text-color);
+}
+
+/* Coming soon */
+.dark-mode .coming-soon-card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .coming-soon-card h3 {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .coming-soon-card p {
+  color: var(--secondary-text-color);
+}

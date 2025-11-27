@@ -1,0 +1,77 @@
+services:
+  fluentxverse-memgraph:
+    image: memgraph/memgraph-mage:latest
+    container_name: fluentxverse-memgraph
+    restart: unless-stopped
+    ports:
+      - "${MEMGRAPH_HTTP_PORT:-7444}:${MEMGRAPH_HTTP_PORT:-7444}"
+      - "${MEMGRAPH_BOLT_PORT:-7687}:${MEMGRAPH_BOLT_PORT:-7687}"
+    environment:
+      - MEMGRAPH_USER=${MEMGRAPH_USER}
+      - MEMGRAPH_PASSWORD=${MEMGRAPH_PASSWORD}
+    networks:
+      - fluentxverse-network
+
+  fluentxverse-redis:
+    image: redis:7-alpine
+    container_name: fluentxverse-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "${REDIS_AOF:-yes}", "--port", "${REDIS_PORT:-6379}"]
+    networks:
+      - fluentxverse-network
+
+  fluentxverse-seaweed-master:
+    image: chrislusf/seaweedfs:latest
+    container_name: fluentxverse-seaweed-master
+    command: "master -ip=fluentxverse-seaweed-master -mdir=/data"
+    restart: unless-stopped
+    ports:
+      - "${SEAWEED_MASTER_PORT:-9333}:${SEAWEED_MASTER_PORT:-9333}"
+    volumes:
+      - seaweed-master-data:/data
+    networks:
+      - fluentxverse-network
+
+  fluentxverse-seaweed-volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: fluentxverse-seaweed-volume
+    command: "volume -max=${SEAWEED_MAX_VOLUMES:-5} -mserver=fluentxverse-seaweed-master:${SEAWEED_MASTER_PORT:-9333} -ip=fluentxverse-seaweed-volume -dir=/data"
+    restart: unless-stopped
+    ports:
+      - "${SEAWEED_VOLUME_ADMIN_PORT:-8080}:${SEAWEED_VOLUME_ADMIN_PORT:-8080}"
+      - "${SEAWEED_VOLUME_PUBLIC_PORT:-8081}:${SEAWEED_VOLUME_PUBLIC_PORT:-8081}"
+    volumes:
+      - seaweed-volume-data:/data
+    depends_on:
+      - fluentxverse-seaweed-master
+    networks:
+      - fluentxverse-network
+
+  fluentxverse-seaweed-filer:
+    image: chrislusf/seaweedfs:latest
+    container_name: fluentxverse-seaweed-filer
+    command: "filer -master=fluentxverse-seaweed-master:${SEAWEED_MASTER_PORT:-9333}"
+    restart: unless-stopped
+    ports:
+      - "${SEAWEED_FILER_PORT:-8888}:${SEAWEED_FILER_PORT:-8888}"
+      - "${SEAWEED_S3_PORT:-8333}:${SEAWEED_S3_PORT:-8333}"
+    volumes:
+      - seaweed-filer-data:/data
+    depends_on:
+      - fluentxverse-seaweed-master
+    networks:
+      - fluentxverse-network
+
+volumes:
+  redis-data:
+  seaweed-master-data:
+  seaweed-volume-data:
+  seaweed-filer-data:
+
+networks:
+  fluentxverse-network:
+    driver: bridge

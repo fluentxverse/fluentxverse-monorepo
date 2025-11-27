@@ -1,0 +1,39 @@
+/* Ensure consistency between light and dark mode sidebar icons */
+
+/* Override any dark mode specific styles to match light mode */
+.dark-mode .sidebar-icon ul li a {
+  color: var(--icon-color) !important;
+  background: var(--sidebar-icon-background) !important;
+  border: 1px solid var(--icon-border-color) !important;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 4px 4px !important;
+}
+
+.dark-mode .sidebar-icon ul li.active a {
+  background: var(--nft-gradient-color) !important;
+  color: #fff !important;
+  border: 1px solid var(--nft-gradient-color) !important;
+}
+
+.dark-mode .sidebar-icon ul li a:hover {
+  background: var(--nft-gradient-color) !important;
+  color: #fff !important;
+}
+
+/* Ensure the icon colors are correct */
+.dark-mode .sidebar-icon ul li a i {
+  color: inherit !important;
+}
+
+/* Theme toggle should maintain proper styling */
+.dark-mode .theme-toggle-wrapper {
+  margin-top: 20px;
+}
+
+/* Fix icon border color in dark mode */
+:root {
+  --icon-border-color-dark: #3a3a3a;
+}
+
+.dark-mode {
+  --icon-border-color: var(--icon-border-color-dark);
+}

@@ -1,0 +1,25 @@
+{
+  "name": "fluentxverse-server",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 bun run --watch src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/cors": "^1.4.0",
+    "@types/node": "^24.10.1",
+    "bcrypt-ts": "^7.1.0",
+    "elysia": "^1.4.16",
+    "nanoid": "^5.1.6",
+    "neo4j-driver": "^6.0.1",
+    "thirdweb": "^5.114.0"
+  }
+}

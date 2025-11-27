@@ -1,0 +1,17 @@
+/* Banner image fix for both light and dark modes */
+.banner-bg {
+  background-image: url(../../img/banner/dashboard_banner.jpg) !important;
+  background-position: center center;
+  background-size: cover;
+}
+
+/* Ensure proper overlay for banner image */
+.banner-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--banner-overlay);
+}

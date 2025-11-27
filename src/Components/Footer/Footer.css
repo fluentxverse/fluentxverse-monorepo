@@ -1,0 +1,339 @@
+/* Footer styles */
+footer {
+  border: none !important;
+  border-top: none !important;
+}
+
+footer * {
+  border-top: none !important;
+}
+
+.footer-top-wrap {
+  background: #f8f9fa;
+  padding: 90px 0 60px;
+  border: none !important;
+  border-top: none !important;
+}
+
+.footer-widget .fw-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: var(--heading-text-color, #18152B);
+}
+
+.fw-links li {
+  margin-bottom: 12px;
+}
+
+.fw-links li a {
+  font-size: 15px;
+  color: var(--body-text-color, #44475a);
+  display: inline-block;
+  position: relative;
+  padding-left: 0;
+  transition: .3s;
+}
+
+.fw-links li a:hover {
+  color: var(--primary-color);
+  padding-left: 8px;
+}
+
+.newsletter-form {
+  position: relative;
+  margin-top: 25px;
+}
+
+.newsletter-form input {
+  width: 100%;
+  background: #fff;
+  border: none;
+  padding: 15px 20px;
+  padding-right: 70px;
+  font-size: 14px;
+  color: #555;
+  border-radius: 30px;
+}
+
+.newsletter-form button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--nft-gradient-color, linear-gradient(90deg, #A8FF04 0%, #6DBE45 100%));
+  border: none;
+  height: 100%;
+  padding: 0 24px;
+  font-size: 14px;
+  color: #fff;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.copyright-wrap {
+  padding: 35px 0;
+  background: #e9ecef;
+}
+
+.copyright-text p {
+  font-size: 14px;
+  color: var(--body-text-color, #44475a);
+  margin-bottom: 0;
+}
+
+.copyright-text p a {
+  color: var(--primary-color);
+}
+
+.copyright-link-list {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.copyright-link-list li {
+  position: relative;
+  padding-right: 18px;
+  margin-right: 17px;
+}
+
+.copyright-link-list li:before {
+  content: "|";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--body-text-color, #44475a);
+}
+
+.copyright-link-list li:last-child {
+  padding-right: 0;
+  margin-right: 0;
+}
+
+.copyright-link-list li:last-child:before {
+  display: none;
+}
+
+.copyright-link-list li a {
+  color: var(--body-text-color, #44475a);
+  font-size: 14px;
+}
+
+.copyright-link-list li a:hover {
+  color: var(--primary-color);
+}
+
+/* Responsive styles */
+@media (max-width: 767px) {
+  .footer-top-wrap {
+    padding: 60px 0 30px;
+  }
+  
+  .footer-widget {
+    margin-bottom: 30px;
+  }
+  
+  .copyright-wrap {
+    text-align: center;
+    padding: 20px 0;
+  }
+  
+  .copyright-text {
+    margin-bottom: 15px;
+  }
+  
+  .copyright-link-list {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .copyright-link-list li {
+    padding: 0 10px;
+    margin: 0;
+  }
+  
+  .copyright-link-list li:before {
+    display: none;
+  }
+  
+  .footer-widget .fw-title {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  .fw-links li {
+    margin-bottom: 10px;
+  }
+}
+
+/* Dark Mode styles */
+.dark-mode .footer-top-wrap,
+.dark-mode .copyright-wrap {
+  background-color: #1a1a1a;
+}
+
+.dark-mode .newsletter-form input {
+  background: #232323;
+  color: #eaeaea;
+  border: 1px solid #333;
+}
+
+.dark-mode .newsletter-form button {
+  background: var(--nft-gradient-color, linear-gradient(90deg, #A8FF04 0%, #6DBE45 100%));
+}
+
+.dark-mode .fw-links li a,
+.dark-mode .copyright-text p,
+.dark-mode .copyright-link-list li a,
+.dark-mode .copyright-link-list li:before {
+  color: #ccc;
+}
+
+.dark-mode .footer-widget .fw-title {
+  color: #ffffff;
+}
+
+.dark-mode .fw-links li a:hover,
+.dark-mode .copyright-link-list li a:hover {
+  color: var(--primary-color);
+}
+
+/* Moving Text Banner */
+.moving-text-banner {
+  background: #f8f9fa;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  height: 100px;
+  display: flex;
+  align-items: center;
+}
+
+.moving-text-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.moving-text-container::before,
+.moving-text-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 150px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.moving-text-container::before {
+  left: 0;
+  background: linear-gradient(to right, 
+    #f8f9fa 0%, 
+    rgba(248, 249, 250, 0.8) 50%, 
+    transparent 100%);
+}
+
+.moving-text-container::after {
+  right: 0;
+  background: linear-gradient(to left, 
+    #f8f9fa 0%, 
+    rgba(248, 249, 250, 0.8) 50%, 
+    transparent 100%);
+}
+
+.moving-text {
+  position: absolute;
+  white-space: nowrap;
+  animation: moveTextContinuous 120s linear infinite;
+  font-size: 8rem;
+  font-weight: 800;
+  color: var(--body-text-color, #44475a);
+  opacity: 0.6;
+  text-transform: capitalize;
+  letter-spacing: 2px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@keyframes moveTextContinuous {
+  0% {
+    transform: translateY(-50%) translateX(0%);
+  }
+  100% {
+    transform: translateY(-50%) translateX(-100%);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .moving-text-banner {
+    height: 70px;
+  }
+  
+  .moving-text {
+    font-size: 5rem;
+    letter-spacing: 1px;
+  }
+  
+  .moving-text-container {
+    padding: 0 10px;
+  }
+  
+  .moving-text-container::before,
+  .moving-text-container::after {
+    width: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .moving-text-banner {
+    height: 60px;
+  }
+  
+  .moving-text {
+    font-size: 3.5rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .moving-text-container {
+    padding: 0 5px;
+  }
+  
+  .moving-text-container::before,
+  .moving-text-container::after {
+    width: 80px;
+  }
+}
+
+/* Dark mode adjustments */
+.dark-mode .moving-text-banner {
+  background: #1a1a1a;
+}
+
+.dark-mode .moving-text {
+  color: #ccc;
+  opacity: 0.4;
+}
+
+.dark-mode .moving-text-container::before {
+  background: linear-gradient(to right, 
+    #1a1a1a 0%, 
+    rgba(26, 26, 26, 0.8) 50%, 
+    transparent 100%);
+}
+
+.dark-mode .moving-text-container::after {
+  background: linear-gradient(to left, 
+    #1a1a1a 0%, 
+    rgba(26, 26, 26, 0.8) 50%, 
+    transparent 100%);
+}

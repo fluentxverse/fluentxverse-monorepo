@@ -1,0 +1,24 @@
+/* Dark mode main content background fix */
+.dark-mode main {
+  background-color: #121212;
+}
+
+/* Ensure banner connects seamlessly with narrative section */
+.banner-bg {
+  margin-bottom: 0 !important;
+}
+
+/* Add a bit more padding to the banner to compensate for removed margin */
+.banner-area {
+  padding-bottom: 165px !important;
+}
+
+/* Adjust the narrative section padding in dark mode for a better connection */
+.dark-mode .narrative-section {
+  padding-top: 100px;
+}
+
+/* Ensure no white gaps on any sections */
+.dark-mode section {
+  background-color: #1a1a1a;
+}

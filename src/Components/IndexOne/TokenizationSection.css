@@ -1,0 +1,423 @@
+/* Modern Tokenization Section */
+.tokenization-section {
+  background: linear-gradient(135deg, var(--section-background-color) 0%, rgba(168, 255, 4, 0.02) 100%);
+  color: var(--body-text-color);
+  padding: 100px 0 80px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.tokenization-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 40%, rgba(168, 255, 4, 0.03) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(109, 190, 69, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.tokenization-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 90%;
+  position: relative;
+  z-index: 1;
+}
+
+.tokenization-header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.tokenization-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--nft-gradient-color));
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(168, 255, 4, 0.3);
+}
+
+.tokenization-title {
+  font-size: 3.2rem;
+  font-weight: 900;
+  margin-bottom: 24px;
+  color: var(--heading-text-color);
+  letter-spacing: -2px;
+  line-height: 1.1;
+}
+
+.tokenization-title .tokenization-green {
+  background: var(--nft-gradient-color);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: unset;
+}
+
+.tokenization-subtitle {
+  font-size: 1.2rem;
+  color: var(--paragraph-text-color);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.tokenization-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 32px;
+  margin-bottom: 80px;
+}
+
+.tokenization-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(168, 255, 4, 0.1);
+  border-radius: 20px;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.tokenization-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--nft-gradient-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.tokenization-card:hover::before {
+  transform: scaleX(1);
+}
+
+.tokenization-card:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 60px rgba(168, 255, 4, 0.15);
+  border-color: rgba(168, 255, 4, 0.3);
+}
+
+.tokenization-card-header {
+  padding: 32px 32px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.tokenization-card-badge {
+  background: rgba(168, 255, 4, 0.1);
+  color: var(--lime-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border: 1px solid rgba(168, 255, 4, 0.2);
+}
+
+.tokenization-card-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--nft-gradient-color));
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  box-shadow: 0 8px 24px rgba(168, 255, 4, 0.3);
+  animation: iconPulse 4s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.tokenization-card-icon:hover {
+  animation: iconSpin 1s ease-in-out;
+}
+
+/* Light mode - ensure icons are visible with dark color on light gradient */
+.tokenization-card-icon {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Dark mode - white icons work well on the gradient */
+.dark-mode .tokenization-card-icon {
+  color: #fff;
+}
+
+.tokenization-card-content {
+  padding: 24px 32px 32px;
+}
+
+.tokenization-card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--heading-text-color);
+  line-height: 1.3;
+}
+
+.tokenization-card-desc {
+  font-size: 1rem;
+  color: var(--paragraph-text-color);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.tokenization-card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(168, 255, 4, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.tokenization-card:hover .tokenization-card-glow {
+  opacity: 1;
+}
+
+.tokenization-stats {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-top: 60px;
+  padding: 40px 0;
+  border-top: 1px solid rgba(168, 255, 4, 0.1);
+}
+
+.tokenization-stat {
+  text-align: center;
+  position: relative;
+}
+
+.tokenization-stat::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -30px;
+  width: 1px;
+  height: 40px;
+  background: rgba(168, 255, 4, 0.2);
+  transform: translateY(-50%);
+}
+
+.tokenization-stat:last-child::after {
+  display: none;
+}
+
+.tokenization-stat-number {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: var(--nft-gradient-color);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: unset;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.tokenization-stat-label {
+  font-size: 0.9rem;
+  color: var(--paragraph-text-color);
+  font-weight: 500;
+  max-width: 120px;
+}
+
+.tokenization-card.clickable {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tokenization-card.clickable:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 25px 70px rgba(168, 255, 4, 0.2);
+  border-color: rgba(168, 255, 4, 0.4);
+}
+
+.tokenization-card-action {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(168, 255, 4, 0.1);
+}
+
+.tokenization-learn-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--lime-color);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.tokenization-card.clickable:hover .tokenization-learn-more {
+  transform: translateX(4px);
+  color: #A8FF04;
+}
+
+/* Dark Mode for clickable cards */
+.dark-mode .tokenization-section {
+  background: linear-gradient(135deg, #1a1a1a 0%, rgba(168, 255, 4, 0.02) 100%);
+}
+
+.dark-mode .tokenization-card.clickable:hover {
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+  border-color: rgba(168, 255, 4, 0.5);
+}
+
+.dark-mode .tokenization-card-action {
+  border-top-color: rgba(168, 255, 4, 0.2);
+}
+
+/* ...existing styles... */
+
+.dark-mode .tokenization-card {
+  background: rgba(35, 35, 35, 0.8);
+  border-color: rgba(168, 255, 4, 0.15);
+}
+
+.dark-mode .tokenization-card:hover {
+  border-color: rgba(168, 255, 4, 0.4);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .tokenization-title,
+.dark-mode .tokenization-card-title {
+  color: #eaeaea;
+}
+
+.dark-mode .tokenization-subtitle,
+.dark-mode .tokenization-card-desc,
+.dark-mode .tokenization-stat-label {
+  color: #ccc;
+}
+
+.dark-mode .tokenization-stats {
+  border-top-color: rgba(168, 255, 4, 0.2);
+}
+
+.dark-mode .tokenization-stat::after {
+  background: rgba(168, 255, 4, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tokenization-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+  }
+  
+  .tokenization-stats {
+    gap: 40px;
+  }
+  
+  .tokenization-stat::after {
+    right: -20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tokenization-title {
+    font-size: 2.4rem;
+    letter-spacing: -1px;
+  }
+  
+  .tokenization-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .tokenization-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .tokenization-stats {
+    flex-direction: column;
+    gap: 32px;
+    align-items: center;
+  }
+  
+  .tokenization-stat::after {
+    display: none;
+  }
+  
+  .tokenization-card-header,
+  .tokenization-card-content {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tokenization-section {
+    padding: 60px 0;
+  }
+  
+  .tokenization-header {
+    margin-bottom: 60px;
+  }
+  
+  .tokenization-title {
+    font-size: 2rem;
+  }
+  
+  .tokenization-badge {
+    padding: 10px 20px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Icon animations */
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 8px 24px rgba(168, 255, 4, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 12px 32px rgba(168, 255, 4, 0.4);
+  }
+}
+
+@keyframes iconSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Staggered animation delays for tokenization cards */
+.tokenization-card:nth-child(1) .tokenization-card-icon {
+  animation-delay: 0s;
+}
+
+.tokenization-card:nth-child(2) .tokenization-card-icon {
+  animation-delay: 1.3s;
+}
+
+.tokenization-card:nth-child(3) .tokenization-card-icon {
+  animation-delay: 2.6s;
+}

@@ -1,0 +1,69 @@
+/* Adjustments for sticky header logo and brand text spacing */
+
+/* Increase logo size */
+#sticky-header .logo img {
+    max-height: 46px; /* Increased from 30px */
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Adjust brand text spacing - much closer to logo */
+#sticky-header .brand-text {
+    margin-left: 8px; /* Significantly reduced from 20px */
+    display: inline-flex;
+    align-items: center;
+    height: 46px; /* Match logo height for better alignment */
+}
+
+/* Add subtle transition for smooth experience */
+#sticky-header .logo img,
+#sticky-header .brand-text {
+    transition: all 0.3s ease;
+}
+
+/* Logo container adjustments */
+#sticky-header .logo {
+    display: flex;
+    align-items: center;
+}
+
+/* Improve layout in menu-nav */
+#sticky-header .menu-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Reduced from 20px */
+}
+
+/* Enhanced logo and brand text relationship */
+#sticky-header .logo + .brand-text {
+    position: relative;
+    margin-left: 5px; /* Further reduced from 15px */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1199px) {
+    #sticky-header .logo img {
+        max-height: 43.7px;
+    }
+    
+    #sticky-header .brand-text {
+        margin-left: 5px;
+    }
+}
+
+@media (max-width: 991px) {
+    #sticky-header .logo img {
+        max-height: 40.25px;
+    }
+    
+    #sticky-header .brand-text {
+        margin-left: 4px;
+    }
+}
+
+@media (max-width: 767px) {
+    #sticky-header .logo img {
+        max-height: 36.8px;
+    }
+}

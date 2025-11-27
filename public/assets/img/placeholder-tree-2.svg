@@ -1,0 +1,25 @@
+<!-- Placeholder for Cacao Tree Image -->
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="treeGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A8FF04;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#6DBE45;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="#2d5016"/>
+  <rect width="400" height="300" fill="url(#treeGradient2)"/>
+  <!-- Tree trunk -->
+  <rect x="185" y="180" width="30" height="120" fill="#8B4513"/>
+  <!-- Tree crown - more oval for cacao -->
+  <ellipse cx="200" cy="160" rx="90" ry="70" fill="#228B22"/>
+  <ellipse cx="170" cy="140" rx="45" ry="35" fill="#32CD32"/>
+  <ellipse cx="230" cy="140" rx="45" ry="35" fill="#32CD32"/>
+  <!-- Cacao pods -->
+  <ellipse cx="160" cy="160" rx="8" ry="12" fill="#8B4513"/>
+  <ellipse cx="240" cy="150" rx="8" ry="12" fill="#CD853F"/>
+  <ellipse cx="180" cy="190" rx="8" ry="12" fill="#8B4513"/>
+  <ellipse cx="220" cy="180" rx="8" ry="12" fill="#CD853F"/>
+  <!-- Text -->
+  <text x="200" y="50" text-anchor="middle" fill="#A8FF04" font-family="Arial" font-size="24" font-weight="bold">CACAO TREE</text>
+  <text x="200" y="80" text-anchor="middle" fill="#fff" font-family="Arial" font-size="14">Premium Chocolate Source</text>
+</svg>

@@ -1,0 +1,328 @@
+/* Wallet Page Styles */
+.wallet-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+  color: var(--primary-text-color);
+  font-size: 1.05rem;
+}
+
+.wallet-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+  color: var(--primary-text-color);
+  letter-spacing: -0.5px;
+}
+
+/* Wallet Info Section */
+.wallet-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.wallet-field {
+  background: var(--card-background);
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: var(--card-box-shadow);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 1.1rem;
+}
+
+.wallet-field:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-field label {
+  display: block;
+  font-size: 1rem;
+  color: var(--secondary-text-color);
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.wallet-address-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 1.2rem;
+}
+
+.wallet-text {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.2rem;
+  color: var(--primary-text-color);
+  word-break: break-all;
+  flex-grow: 1;
+  line-height: 1.5;
+}
+
+.wallet-address {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.wallet-copy-btn {
+  background: none;
+  border: none;
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  padding: 0.6rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  width: 40px;
+  height: 40px;
+}
+
+.wallet-copy-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--primary-color);
+}
+
+.wallet-copy-btn.copied {
+  color: var(--success-color);
+}
+
+/* Tokens Section */
+.wallet-tokens {
+  margin-top: 3.5rem;
+  width: 100%;
+}
+
+.tokens-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 2.75rem 0 2.25rem;
+  color: var(--primary-text-color);
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+.tokens-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+@media (max-width: 768px) {
+  .tokens-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+}
+
+/* Token Cards */
+.wallet-token-card {
+  background: var(--card-background);
+  border-radius: 16px;
+  padding: 2.5rem 2.5rem;
+  box-shadow: var(--card-box-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  height: 100%;
+  min-height: 300px;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+[data-theme='dark'] .wallet-token-card {
+  background: var(--card-bg-dark, #2d3748);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.wallet-token-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.token-image-container {
+  width: 100px;
+  height: 100px;
+  border-radius: 20px;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.token-image {
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+  transition: transform 0.2s ease-in-out;
+}
+
+.wallet-token-card:hover .token-image {
+  transform: scale(1.1);
+}
+
+.token-info {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.token-symbol {
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: var(--primary-text-color);
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  display: block;
+  width: 100%;
+  letter-spacing: -0.5px;
+}
+
+.token-name {
+  font-size: 1.2rem;
+  color: var(--secondary-text-color);
+  opacity: 0.9;
+  margin: 0;
+  line-height: 1.5;
+  display: block;
+  width: 100%;
+  font-weight: 500;
+}
+
+.token-balance {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 2.5rem;
+  color: var(--primary-text-color);
+  margin: 0.75rem 0 0;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.token-balance::after {
+  content: attr(data-symbol);
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--secondary-text-color);
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+/* Loading State */
+.wallet-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: var(--secondary-text-color);
+  font-size: 1.2rem;
+  padding: 2.5rem;
+  text-align: center;
+}
+
+/* Error State */
+.wallet-error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1.75rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border: 1px solid #ffcdd2;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+[data-theme='dark'] .wallet-error {
+  background-color: #3a1f1f;
+  color: #ff8a80;
+  border-color: #5d3737;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .tokens-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .wallet-container {
+    padding: 1.5rem 1.25rem;
+  }
+  
+  .wallet-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .wallet-field {
+    padding: 1.5rem 1.25rem;
+  }
+  
+  .tokens-title {
+    font-size: 1.75rem;
+    margin: 2rem 0 1.5rem;
+  }
+  
+  .tokens-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .wallet-token-card {
+    min-height: 260px;
+    padding: 2rem 1.5rem;
+  }
+  
+  .token-image-container {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1.25rem;
+  }
+  
+  .token-symbol {
+    font-size: 1.5rem;
+  }
+  
+  .token-name {
+    font-size: 1.1rem;
+  }
+  
+  .token-balance {
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tokens-grid {
+    grid-template-columns: 1fr;
+  }
+}

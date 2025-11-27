@@ -1,0 +1,45 @@
+/* Dark mode styles for the Decentragri loader */
+.dark-mode .decentragri-loader-bg {
+  background: var(--background-color, #121212);
+}
+
+.dark-mode .decentragri-title-anim {
+  color: #ffffff !important;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark-mode .decentragri-title-anim span {
+  color: #e0e0e0 !important;
+}
+
+.dark-mode .decentragri-logo-anim, 
+.dark-mode .decentragri-logo-large {
+  filter: brightness(1.2) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+/* Custom flashing animation for dark mode */
+.dark-mode .decentragri-flash {
+  animation: darkLoaderFlash 0.18s linear 0s 8 alternate !important;
+}
+
+@keyframes darkLoaderFlash {
+  0% { 
+    opacity: 1; 
+    filter: brightness(1.4) drop-shadow(0 4px 8px rgba(109, 190, 69, 0.4)); 
+  }
+  100% { 
+    opacity: 0.2; 
+    filter: brightness(0.8) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); 
+  }
+}
+
+/* Add a subtle glow effect to the title in dark mode */
+.dark-mode .decentragri-title-anim span {
+  text-shadow: 0 0 5px rgba(109, 190, 69, 0.2), 0 0 10px rgba(109, 190, 69, 0.1) !important;
+}
+
+/* Add a subtle green accent to the first and last letters */
+.dark-mode .decentragri-title-anim span:first-child,
+.dark-mode .decentragri-title-anim span:last-child {
+  color: #6DBE45 !important;
+}

@@ -1,0 +1,12 @@
+.dashboard-content .staking-container {
+  max-width: 480px;
+  margin: 2rem auto;
+  background: var(--card-background, #ffffff);
+  border-radius: 1rem;
+  box-shadow: var(--card-box-shadow, 0px 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+.dark-mode .dashboard-content .staking-container {
+  background: var(--dark-card-background, #1a1b1e);
+  box-shadow: var(--dark-card-box-shadow, 0px 4px 12px rgba(0, 0, 0, 0.2));
+}
