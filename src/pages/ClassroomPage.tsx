@@ -39,7 +39,9 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<any>(null);
   const speakingFramesRef = useRef(0);
+  const isMutedRef = useRef(false);
   const [activeMaterialSection, setActiveMaterialSection] = useState(0);
+  const [isSwapped, setIsSwapped] = useState(false); // swap main vs PiP
 
   // Mock student data
   const studentData = {
@@ -199,15 +201,15 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
           if (!analyserRef.current || !dataArrayRef.current) return;
           analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
           let sumSquares = 0;
-            for (let i = 0; i < dataArrayRef.current.length; i++) {
+          for (let i = 0; i < dataArrayRef.current.length; i++) {
             const v = (dataArrayRef.current[i] - 128) / 128;
             sumSquares += v * v;
           }
           const rms = Math.sqrt(sumSquares / dataArrayRef.current.length);
           const scaled = rms * 100;
           setMicLevel(scaled);
-          const threshold = 6; // empirically low for typical speaking
-          if (!isMuted && scaled > threshold) {
+          const threshold = 2; // lowered for better sensitivity
+          if (!isMutedRef.current && scaled > threshold) {
             speakingFramesRef.current = Math.min(speakingFramesRef.current + 2, 12);
           } else {
             speakingFramesRef.current = Math.max(speakingFramesRef.current - 1, 0);
@@ -232,6 +234,7 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
 
   // Handle mute toggle (update track enable state)
   useEffect(() => {
+    isMutedRef.current = isMuted;
     const stream = streamRef.current;
     if (!stream) return;
     stream.getAudioTracks().forEach(track => {
@@ -248,9 +251,9 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
     });
   }, [isVideoOff]);
 
-  // Reattach stream to video element when camera turned back on
+  // Reattach stream to video element when camera turned back on or swap changes
   useEffect(() => {
-    if (isVideoOff) return; // only act when turning on
+    if (isVideoOff) return; // only act when camera is on
     const stream = streamRef.current;
     if (!stream) return;
     const tracks = stream.getVideoTracks();
@@ -275,14 +278,17 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
       })();
       return;
     }
-    // Normal case: just re-bind stream to new video element after remount
-    if (videoRef.current && videoRef.current.srcObject !== stream) {
-      videoRef.current.srcObject = stream;
-    }
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  }, [isVideoOff]);
+    // Normal case: just re-bind stream to new video element after remount/swap
+    // Use setTimeout to ensure video element is mounted after swap
+    setTimeout(() => {
+      if (videoRef.current && videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream;
+      }
+      if (videoRef.current) {
+        videoRef.current.play().catch(() => {});
+      }
+    }, 0);
+  }, [isVideoOff, isSwapped]);
 
   return (
     <div className="classroom-container">
@@ -308,32 +314,61 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
 
         {/* Video Area (Swapped: tutor/user main, student PiP) */}
         <div className="video-section">
-          {/* Main Video (Tutor/User) */}
+          {/* Main Video */}
           <div className="video-main">
-            {(!isVideoOff && !mediaError) ? (
-              <div className="local-video-full">
-                <video ref={videoRef} muted playsInline className="local-video" />
-                <div className={`mic-indicator mic-large ${micSpeaking ? 'active' : ''}`}
-                  title={isMuted ? 'Muted' : micSpeaking ? 'Speaking' : 'Idle'}>
-                  <span className="mic-dot" />
-                </div>
+            {isSwapped ? (
+              // Student in main
+              <div className="video-placeholder student-video">
+                <div className="video-avatar-large">{studentData.initials}</div>
+                <span className="video-name">{studentData.name}</span>
               </div>
             ) : (
-              <div className="video-placeholder tutor-video">
-                <div className="video-avatar-large">
-                  {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
+              // Tutor/User in main
+              (!isVideoOff && !mediaError) ? (
+                <div className="local-video-full">
+                  <video ref={videoRef} muted playsInline className="local-video" />
+                  <div className={`mic-indicator mic-large ${micSpeaking ? 'active' : ''}`}
+                    title={isMuted ? 'Muted' : micSpeaking ? 'Speaking' : 'Idle'}>
+                    <span className="mic-dot" />
+                  </div>
                 </div>
-                <span className="video-name">{user?.firstName || 'Tutor'}</span>
-                {mediaError && <span className="media-error-text">Media blocked</span>}
-              </div>
+              ) : (
+                <div className="video-placeholder tutor-video">
+                  <div className="video-avatar-large">
+                    {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
+                  </div>
+                  <span className="video-name">{user?.firstName || 'Tutor'}</span>
+                  {mediaError && <span className="media-error-text">Media blocked</span>}
+                </div>
+              )
             )}
           </div>
 
-          {/* Picture-in-Picture (Student) */}
-          <div className="video-pip">
-            <div className="video-placeholder student-video">
-              <div className="video-avatar-small">{studentData.initials}</div>
-            </div>
+          {/* Picture-in-Picture (click to swap) */}
+          <div className="video-pip" onClick={() => setIsSwapped(prev => !prev)} title="Click to swap">
+            {isSwapped ? (
+              // Tutor/User in PiP
+              (!isVideoOff && !mediaError) ? (
+                <div className="local-video-wrapper">
+                  <video ref={!isSwapped ? undefined : videoRef} muted playsInline className="local-video" />
+                  <div className={`mic-indicator ${micSpeaking ? 'active' : ''}`}
+                    title={isMuted ? 'Muted' : micSpeaking ? 'Speaking' : 'Idle'}>
+                    <span className="mic-dot" />
+                  </div>
+                </div>
+              ) : (
+                <div className="video-placeholder tutor-video">
+                  <div className="video-avatar-small">
+                    {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
+                  </div>
+                </div>
+              )
+            ) : (
+              // Student in PiP
+              <div className="video-placeholder student-video">
+                <div className="video-avatar-small">{studentData.initials}</div>
+              </div>
+            )}
           </div>
 
           {/* Video Controls */}

@@ -2,7 +2,7 @@ import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
 import { loginUser, logoutUser, getMe } from '../api/auth.api';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
-import { registerUnauthorizedHandler, setLoginInProgress } from '../api/utils';
+import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
 
 interface AuthUser {
   userId?: string; // from /me endpoint
@@ -88,8 +88,13 @@ export const AuthProvider = ({ children }: { children: any }) => {
     setLoginLoading(true);
     setLoginInProgress(true);
     
+    // Clear any stale client-side auth state before attempting login
+    forceAuthCleanup();
+    
     try {
+      console.log('Starting login request...');
       const data = await loginUser(email, password);
+      console.log('Login response received:', data?.success);
 
       if (data?.user) {
         // /login returns full user data from RegisteredParams
@@ -107,9 +112,10 @@ export const AuthProvider = ({ children }: { children: any }) => {
         }
 
         // Small delay to ensure cookie is fully set before /me call
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 150));
 
         // Immediately refresh from /me to pull cookie-derived fields (walletAddress)
+        // This is optional - don't let it break the login flow
         try {
           const me = await getMe();
           if (me?.user) {
@@ -117,9 +123,10 @@ export const AuthProvider = ({ children }: { children: any }) => {
           }
         } catch (e) {
           console.warn('Post-login /me refresh failed - continuing without extra fields:', e);
+          // Don't throw - login was successful, just /me failed
         }
       } else {
-        throw new Error('Login failed');
+        throw new Error('Login failed - no user data returned');
       }
     } catch (err: any) {
       // Clear any partial state on error
@@ -139,6 +146,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
       console.error('Logout error:', err);
     } finally {
       setUser(null);
+      // Clear any cached auth data
+      try {
+        localStorage.removeItem('fxv_user_fullname');
+        localStorage.removeItem('fxv_user_id');
+      } catch (e) {}
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }

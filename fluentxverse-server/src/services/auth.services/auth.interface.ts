@@ -38,5 +38,43 @@ export interface AuthData {
     firstName?: string;
     lastName?: string;
     walletAddress?: string;
+    mobileNumber?: string;
     tier: number;
+}
+
+// Personal info update params
+export interface UpdatePersonalInfoParams {
+    userId: string;
+    phoneNumber?: string;
+    // Address
+    country?: string;
+    region?: string;
+    regionName?: string;
+    province?: string;
+    provinceName?: string;
+    city?: string;
+    cityName?: string;
+    zipCode?: string;
+    addressLine?: string;
+    sameAsPermanent?: boolean;
+    // Qualifications
+    schoolAttended?: string;
+    educationalAttainment?: string;
+    major?: string;
+    teachingExperience?: string;
+    teachingQualifications?: string[];
+}
+
+// Update email params
+export interface UpdateEmailParams {
+    userId: string;
+    newEmail: string;
+    currentPassword: string;
+}
+
+// Update password params
+export interface UpdatePasswordParams {
+    userId: string;
+    currentPassword: string;
+    newPassword: string;
 }

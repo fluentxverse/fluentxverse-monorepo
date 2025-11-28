@@ -25,7 +25,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     
     try {
+      console.log('Attempting login...');
       await login(email, password);
+      console.log('Login successful, redirecting...');
       // Small delay to ensure state is fully updated before navigation
       await new Promise(resolve => setTimeout(resolve, 200));
       onClose();

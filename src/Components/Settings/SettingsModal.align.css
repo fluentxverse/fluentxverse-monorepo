@@ -1,0 +1,21 @@
+/* Alignment fixes for SettingsModal */
+.settings-form-row { align-items: stretch; margin-bottom: 1rem; flex-direction: column; gap: 0.75rem; }
+.settings-input-wrapper { width: 100%; }
+.settings-form-input, .settings-form-select { height: 50px; box-sizing: border-box; line-height: 1.2; }
+.settings-form-textarea { box-sizing: border-box; }
+
+/* Ensure labels have consistent spacing so controls align */
+.settings-form-label { margin: 0 0 6px; line-height: 1.2; }
+
+/* Normalize select and input padding to align baselines */
+.settings-form-input { padding-top: 0.55rem; padding-bottom: 0.55rem; }
+.settings-form-select { padding-top: 0.55rem; padding-bottom: 0.55rem; }
+
+/* Ensure selects render consistently across browsers */
+.settings-form-select { appearance: none; -webkit-appearance: none; }
+
+/* Tighten wrapper spacing to avoid baseline drift */
+.settings-form-group-half .settings-input-wrapper { display: block; }
+
+/* Ensure half groups expand full width when stacked */
+.settings-form-group-half { width: 100%; }

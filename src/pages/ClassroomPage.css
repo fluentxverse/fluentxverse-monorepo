@@ -175,13 +175,20 @@
   position: absolute;
   bottom: 14px; /* lowered closer to bottom edge */
   right: 14px; /* slight inset from right edge */
-  width: 120px; /* a touch wider for better visibility */
-  height: 88px;
+  width: 152px; /* increased ~25% total */
+  height: 112px; /* increased ~25% total */
   border-radius: 12px;
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.25);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  z-index: 5; /* ensure above controls */
+  z-index: 3; /* below controls */
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.video-pip:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
 }
 
 .local-video-wrapper {
@@ -265,6 +272,7 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 10; /* ensure above PiP */
 }
 
 .control-btn {

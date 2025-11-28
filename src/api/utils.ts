@@ -11,6 +11,15 @@ export const setLoginInProgress = (inProgress: boolean) => {
   isLoginInProgress = inProgress;
 };
 
+// Clear client-side auth state (localStorage only, don't call server)
+// Server cookie will be overwritten on next successful login
+export const forceAuthCleanup = () => {
+  try {
+    localStorage.removeItem('fxv_user_fullname');
+    localStorage.removeItem('fxv_user_id');
+  } catch (e) {}
+};
+
 // Configure Axios client to send cookies with requests
 export const client = axios.create({
   baseURL: 'http://localhost:8765',
@@ -50,6 +59,8 @@ client.interceptors.response.use(
       // Debounce 401 handling to avoid race conditions
       if (!isLoginInProgress && !isAuthEndpoint && unauthorizedHandler && (now - last401 > 500)) {
         last401 = now;
+        // Clear client-side state
+        forceAuthCleanup();
         unauthorizedHandler();
       }
     }
