@@ -1,0 +1,23 @@
+/* Dark mode styles for decorative elements */
+.dark-mode .shape {
+  opacity: 0.5;
+}
+
+/* Ensure animated shapes have proper visibility in dark mode */
+.dark-mode .shape img {
+  filter: brightness(0.7) contrast(1.2);
+}
+
+/* For shapes that should be hidden in dark mode */
+.dark-mode .light-only-shape {
+  display: none;
+}
+
+/* For shapes that should only appear in dark mode */
+.shape.dark-only-shape {
+  display: none;
+}
+
+.dark-mode .shape.dark-only-shape {
+  display: block;
+}

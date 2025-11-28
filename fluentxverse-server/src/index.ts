@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { createServer } from "http";
 
 import Auth from './routes/auth.route';
+import Tutor from './routes/tutor.route';
 import { initDriver } from './db/memgraph';
 import { getPool } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -25,7 +26,8 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
     credentials: true
   }))
   .use(cookie())
-  .use(Auth);
+  .use(Auth)
+  .use(Tutor);
 
 export type App = typeof app;
 

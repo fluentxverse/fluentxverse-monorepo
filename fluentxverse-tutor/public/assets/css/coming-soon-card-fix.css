@@ -1,0 +1,25 @@
+/* Fix for "More to Come Soon" card in dark mode */
+.dark-mode .coming-soon-card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  color: var(--primary-text-color);
+}
+
+.dark-mode .coming-soon-card h3 {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .coming-soon-card p {
+  color: var(--secondary-text-color);
+}
+
+/* Add a subtle glow effect in dark mode */
+.dark-mode .coming-soon-card {
+  box-shadow: 0 5px 15px rgba(66, 66, 66, 0.15);
+  transition: all 0.3s ease;
+}
+
+.dark-mode .coming-soon-card:hover {
+  box-shadow: 0 8px 20px rgba(66, 66, 66, 0.25);
+  transform: translateY(-5px);
+}

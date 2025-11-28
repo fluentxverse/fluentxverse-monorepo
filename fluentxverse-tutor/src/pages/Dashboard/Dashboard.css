@@ -1,0 +1,47 @@
+/* Main layout */
+.main-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-color, #f7f8fa);
+}
+
+.dashboard-container {
+  flex: 1;
+  margin-left: 116px; /* Match the width of the home page sidebar */
+  min-height: 100vh;
+  background-color: var(--background-color, #f7f8fa);
+  color: var(--text-color, #131740);
+  transition: margin-left 0.3s ease;
+}
+
+.dashboard-content {
+  padding: 24px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Dashboard sections */
+.dashboard-section {
+  background: var(--card-background, #ffffff);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--card-box-shadow, 0px 4px 12px rgba(0, 0, 0, 0.1));
+  margin-bottom: 24px;
+}
+
+/* Dark mode */
+.dark-mode .dashboard-section {
+  background: var(--card-background, #1e1e1e);
+  box-shadow: var(--card-box-shadow, 0px 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .dashboard-container {
+    margin-left: 0;
+  }
+
+  .dashboard-content {
+    padding: 16px;
+  }
+}

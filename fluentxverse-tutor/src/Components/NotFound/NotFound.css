@@ -1,0 +1,252 @@
+/* NotFound Container */
+.not-found-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--page-background, #f8f9fa);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.not-found-content {
+  text-align: center;
+  max-width: 600px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Logo Styling */
+.logo-container {
+  margin-bottom: 2rem;
+}
+
+.not-found-logo {
+  height: 60px;
+  width: auto;
+  filter: var(--logo-filter, none);
+}
+
+/* Error Code Styling */
+.error-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8rem;
+  font-weight: 700;
+  color: var(--primary-color, #6DBE45);
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.zero-container {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+
+.rotating-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  animation: rotate 20s linear infinite;
+  filter: var(--logo-filter, none);
+}
+
+/* Text Styling */
+.not-found-container h1 {
+  font-size: 2.5rem;
+  color: var(--primary-text-color, #131740);
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  font-size: 1.2rem;
+  color: var(--secondary-text-color, #6a6a6a);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* Button Styling */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.back-button,
+.home-button {
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.back-button {
+  background: var(--secondary-button-bg, #f0f0f0);
+  color: var(--secondary-button-text, #666);
+}
+
+.home-button {
+  background: linear-gradient(135deg, #6DBE45, #4ade80);
+  color: white;
+  box-shadow: 0 4px 12px rgba(109, 190, 69, 0.2);
+}
+
+.back-button:hover,
+.home-button:hover {
+  transform: translateY(-2px);
+}
+
+.home-button:hover {
+  box-shadow: 0 6px 16px rgba(109, 190, 69, 0.3);
+}
+
+/* Decorative Elements */
+.decorative-elements {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.decorative-elements i {
+  position: absolute;
+  color: var(--primary-color, #6DBE45);
+  opacity: 0.1;
+  font-size: 2rem;
+}
+
+.seedling-1 { 
+  top: 10%; 
+  left: 5%; 
+  animation: float 8s ease-in-out infinite;
+}
+
+.leaf-1 { 
+  top: 20%; 
+  right: 10%; 
+  animation: float 6s ease-in-out infinite;
+}
+
+.wheat-1 { 
+  bottom: 15%; 
+  left: 15%; 
+  animation: float 7s ease-in-out infinite;
+}
+
+.seedling-2 { 
+  bottom: 20%; 
+  right: 5%; 
+  animation: float 9s ease-in-out infinite;
+}
+
+.leaf-2 { 
+  top: 40%; 
+  left: 20%; 
+  animation: float 5s ease-in-out infinite;
+}
+
+.wheat-2 { 
+  top: 30%; 
+  right: 25%; 
+  animation: float 8s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Dark Mode Styles */
+.dark-mode.not-found-container {
+  background: var(--dark-page-background, #121212);
+}
+
+.dark-mode .not-found-container h1 {
+  color: var(--dark-primary-text-color, #ffffff);
+}
+
+.dark-mode .error-message {
+  color: var(--dark-secondary-text-color, #a1a1aa);
+}
+
+.dark-mode .back-button {
+  background: var(--dark-secondary-button-bg, #2a2a2a);
+  color: var(--dark-secondary-button-text, #e0e0e0);
+}
+
+.dark-mode .not-found-logo,
+.dark-mode .rotating-logo {
+  filter: brightness(0) invert(1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .error-code {
+    font-size: 6rem;
+  }
+
+  .zero-container {
+    width: 90px;
+    height: 90px;
+  }
+
+  .not-found-container h1 {
+    font-size: 2rem;
+  }
+
+  .error-message {
+    font-size: 1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .back-button,
+  .home-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-code {
+    font-size: 4rem;
+  }
+
+  .zero-container {
+    width: 60px;
+    height: 60px;
+  }
+
+  .not-found-logo {
+    height: 40px;
+  }
+}

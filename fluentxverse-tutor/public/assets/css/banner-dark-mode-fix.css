@@ -1,0 +1,17 @@
+/* Dark mode specific banner adjustments */
+.dark-mode .banner-bg::before {
+  background-color: rgba(18, 18, 18, 0.7);
+}
+
+.dark-mode .banner-content h2 {
+  color: #f0f0f0;
+}
+
+.dark-mode .banner-content p {
+  color: #d0d0d0;
+}
+
+/* Ensure text and elements are properly visible in dark mode */
+.dark-mode .banner-area {
+  color: #f0f0f0;
+}

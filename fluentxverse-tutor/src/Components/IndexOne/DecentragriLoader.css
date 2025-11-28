@@ -1,0 +1,137 @@
+.decentragri-loader-bg {
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: #ffffff; /* Default light background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInBg 0.5s;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark-mode .decentragri-loader-bg {
+  background: #121212; /* Dark background */
+}
+
+@keyframes fadeInBg {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.decentragri-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.decentragri-flash {
+  animation: loaderFlash 0.18s linear 0s 8 alternate !important;
+}
+
+@keyframes loaderFlash {
+  0% { opacity: 1; filter: brightness(1.2); }
+  100% { opacity: 0.2; filter: brightness(0.7); }
+}
+
+.decentragri-logo-anim, .decentragri-logo-large {
+  width: 260px;
+  height: 260px;
+  margin-bottom: 12px;
+  object-fit: contain;
+  border-radius: 0;
+  background: transparent;
+  aspect-ratio: unset;
+  animation: logoPop 1.2s cubic-bezier(.68,-0.55,.27,1.55), loaderFlash 0.18s linear 0s 8 alternate;
+  display: block;
+  /* Adding transition for smooth theme changes */
+  transition: filter 0.3s ease;
+}
+
+@keyframes logoPop {
+  0% { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+  80% { transform: scale(0.95) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.decentragri-title-anim {
+  --text-color: #222;
+  --dark-text-color: #f0f0f0;
+  
+  display: flex;
+  font-size: 4.5rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--text-color);
+  text-shadow: none;
+  margin-top: 0;
+  transition: color 0.3s ease;
+}
+
+.dark-mode .decentragri-title-anim {
+  color: var(--dark-text-color);
+}
+
+/* Base styles for all letters */
+.decentragri-title-anim .letter,
+.decentragri-title-anim .special-letter {
+  color: inherit;
+  background: none !important;
+  -webkit-text-fill-color: currentColor;
+  opacity: 0;
+  transform: translateY(40px) scale(0.7) rotate(-10deg);
+  display: inline-block;
+  animation: letterPop 0.5s cubic-bezier(.68,-0.55,.27,1.55) forwards;
+  transition: color 0.3s ease;
+}
+
+/* Force colors for all letters */
+.decentragri-title-anim .letter {
+  color: var(--text-color) !important;
+}
+
+.dark-mode .decentragri-title-anim .letter {
+  color: var(--dark-text-color) !important;
+}
+
+/* Special handling for first and last letters */
+.decentragri-title-anim .special-letter {
+  color: var(--text-color) !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: none !important;
+  background-image: none !important;
+  text-shadow: none !important;
+}
+
+.dark-mode .decentragri-title-anim .special-letter {
+  color: var(--dark-text-color) !important;
+}
+
+@keyframes letterPop {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .decentragri-logo-anim, .decentragri-logo-large {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 24px;
+  }
+  .decentragri-title-large {
+    font-size: 2.1rem;
+    margin-top: 8px;
+    word-break: break-all;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+  .decentragri-title-anim {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+}

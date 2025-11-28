@@ -1,0 +1,367 @@
+/* Wallet Page Styles - Updated to match Dashboard Design System */
+:root {
+  /* Theme Variables */
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --card-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --primary-text-color: #1e293b;
+  --secondary-text-color: #64748b;
+  --border-color: #e2e8f0;
+  --success-color: #10b981;
+  --success-light: #d1fae5;
+  --primary-color: #6DBE45;
+  --primary-light: #dbeafe;
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+  
+  /* Wallet Specific */
+  --wallet-card-radius: 16px;
+  --wallet-card-padding: 20px;
+  --wallet-icon-size: 48px;
+  --transition-default: all 0.2s ease-in-out;
+}
+
+[data-theme='dark'] {
+  --background-color: #0f172a;
+  --card-background: #1e293b;
+  --card-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --primary-text-color: #f8fafc;
+  --secondary-text-color: #94a3b8;
+  --border-color: #334155;
+  --success-color: #34d399;
+  --success-light: rgba(52, 211, 153, 0.1);
+  --primary-color: #6DBE45;
+  --primary-light: rgba(109, 190, 69, 0.1);
+}
+
+/* Base styles */
+.wallet-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px 16px 80px;
+  background-color: var(--background-color);
+  color: var(--primary-text-color);
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Header */
+.wallet-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--card-background);
+  box-shadow: var(--card-box-shadow);
+  padding: 16px 20px;
+  margin: -16px -16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallet-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--primary-text-color);
+  letter-spacing: -0.01em;
+}
+
+/* Token cards */
+.token-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 0 4px;
+}
+
+.wallet-token-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  height: 120px; /* Increased height */
+}
+
+[data-theme='dark'] .wallet-token-card {
+  background: var(--card-bg-dark, #2d3748);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.wallet-token-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.token-image-container {
+  width: 120px; /* Increased from 56px */
+  height: 120px; /* Increased from 56px */
+  border-radius: 16px; /* Slightly more rounded */
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Slightly more prominent shadow */
+}
+
+.token-image {
+  width: 60px; /* Increased from 32px */
+  height: 60px; /* Increased from 32px */
+  object-fit: contain;
+  transition: transform 0.2s ease-in-out;
+}
+
+.wallet-token-card:hover .token-image {
+  transform: scale(1.05); /* Slight scale effect on hover */
+}
+
+.token-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.token-symbol {
+  font-weight: 600;
+  font-size: 1.25rem; /* Increased font size */
+  color: var(--primary-text-color);
+  display: block;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.token-name {
+  font-size: 0.875rem; /* Slightly larger */
+  font-size: 14px;
+  color: var(--secondary-text-color);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Input fields */
+.wallet-input-container {
+  position: relative;
+  margin: 0 0 20px;
+  padding: 0 12px;
+}
+
+.wallet-input-container label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--secondary-text-color);
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+.wallet-input {
+  width: 100%;
+  padding: 12px 44px 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--card-background);
+  color: var(--primary-text-color);
+  transition: var(--transition-default);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.wallet-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.copy-button {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--secondary-text-color);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: var(--transition-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.copy-button:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.copy-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card-background);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 12px;
+  z-index: 40;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--secondary-text-color);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 4px;
+  border-radius: 10px;
+  transition: var(--transition-default);
+  flex: 1;
+  max-width: 64px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item .icon-wrapper {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  font-size: 20px;
+  transition: var(--transition-default);
+}
+
+.nav-item span {
+  font-size: 10px;
+  letter-spacing: 0.01em;
+  transition: var(--transition-default);
+}
+
+.nav-item:hover {
+  color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.nav-item.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.nav-item.active .icon-wrapper {
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .wallet-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding-bottom: 100px;
+  }
+  
+  .token-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 0 16px;
+  }
+  
+  .wallet-input-container {
+    padding: 0 16px;
+  }
+  
+  .bottom-nav {
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 500px;
+    border-radius: 20px 20px 0 0;
+    border-top: none;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+.nav-item .icon-wrapper {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  font-size: 20px;
+}
+
+.nav-item.active .icon-wrapper {
+  background: var(--success-light);
+  border-radius: 50%;
+  padding: 6px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .wallet-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 30px 20px 100px;
+  }
+  
+  .token-grid {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .wallet-container {
+    max-width: 800px;
+    padding: 40px 20px 100px;
+  }
+  
+  .token-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .token-card {
+  border-color: #3d3d3d;
+}
+
+[data-theme='dark'] .wallet-input {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+[data-theme='dark'] .bottom-nav {
+  background: #2d3748;
+  border-color: #4a5568;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
+}

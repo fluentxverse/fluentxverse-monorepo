@@ -1,0 +1,14 @@
+/* Override card shadows to match mission card style */
+.value-card,
+.team-card-inner,
+.founder-card {
+  box-shadow: var(--card-shadow) !important;
+  border: 1px solid var(--icon-border-color, rgba(0, 0, 0, 0.1)) !important;
+}
+
+/* Update hover states */
+.value-card:hover,
+.team-card:hover .team-card-inner,
+.founder-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}

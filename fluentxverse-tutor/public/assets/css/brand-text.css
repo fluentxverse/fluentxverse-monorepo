@@ -1,0 +1,51 @@
+/* Brand text styling for header */
+.brand-text {
+  width: auto; /* Changed from fixed width for better flexibility */
+  margin-left: 10px; /* This will be overridden by sticky-header-logo-fix.css for the sticky header */
+  font-size: 24px;
+  font-weight: 600;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #0245ae;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  text-transform: none;
+}
+
+/* Ensure dark mode compatibility with enhanced visibility */
+.dark-mode .brand-text {
+  /* Fallback for browsers that don't support gradient text */
+  color: #4a9eff; 
+  
+  /* Gradient text effect that matches the app's blue theme */
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-emphasis-color: transparent;
+  
+  /* Add a slight text shadow for better readability */
+  text-shadow: 0px 0px 5px rgba(2, 69, 174, 0.4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1199px) {
+  .brand-text {
+    margin-left: 30px;
+    width: auto;
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 991px) {
+  .brand-text {
+    margin-left: 20px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .brand-text {
+    display: none;
+  }
+}

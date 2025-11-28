@@ -1,0 +1,262 @@
+/* Vision Section - Karaoke-style scroll animation */
+
+/* Vision Section - Single paragraph karaoke animation */
+
+.vision-section {
+  padding: 200px 0; /* Much bigger top and bottom margins */
+  background: var(--bg-color, #ffffff);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+/* Dark mode background */
+[data-theme="dark"] .vision-section {
+  background: var(--bg-color-dark, #1a1a1a);
+}
+
+.vision-content {
+  text-align: left; /* Changed from center to left */
+  position: relative;
+  z-index: 2;
+  max-width: 1400px; /* Wider container for more horizontal spread */
+  margin: 0 auto;
+  padding: 0 20px; /* Less padding to allow more text width */
+}
+
+.vision-heading {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 600;
+  color: #A8FF04;
+  margin-bottom: 20px;
+  text-align: left;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .vision-heading {
+  color: #A8FF04;
+}
+
+.vision-text-block {
+  /* Large font size with natural text wrapping */
+  font-size: 3.75rem; /* 60px */
+  line-height: 1.2; /* Slightly more breathing room */
+  font-weight: 500;
+  position: relative;
+  
+  /* Minimal spacing for maximum words per line */
+  word-spacing: 0.05em;
+  letter-spacing: 0;
+  
+  /* Much wider width for more words per line */
+  max-width: 1200px; /* Much wider to allow more horizontal spread */
+  margin: 0; /* Remove auto margin for left alignment */
+  text-align: left; /* Changed from center to left */
+}
+
+.vision-line {
+  /* Keep old styles for compatibility but not used */
+  display: none;
+}
+
+/* Karaoke effect and text styles */
+.karaoke-text {
+  position: relative;
+  display: inline;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  background: linear-gradient(
+    90deg,
+    #222222 0%,
+    #222222 calc(var(--progress, 0) * 100%),
+    #ffffff calc(var(--progress, 0) * 100%),
+    #ffffff 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Simple white text for dark mode */
+[data-theme="dark"] .karaoke-text {
+  background: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: #ffffff;
+  color: #ffffff;
+}
+
+/* Fallback for older browsers */
+@supports not (-webkit-background-clip: text) {
+  .karaoke-text {
+    color: #222222;
+    background: none;
+    -webkit-text-fill-color: #222222;
+  }
+  
+  [data-theme="dark"] .karaoke-text {
+    color: #888888;
+    -webkit-text-fill-color: #888888;
+  }
+}
+
+/* Responsive font sizes with maintained wrapping */
+@media (max-width: 1200px) {
+  .vision-text-block {
+    font-size: 3rem; /* 48px */
+    max-width: 1000px; /* Still wide for horizontal spread */
+  }
+  
+  .vision-heading {
+    font-size: 1.375rem; /* 22px */
+  }
+}
+
+@media (max-width: 768px) {
+  .vision-section {
+    padding: 120px 0; /* Reduced but still generous spacing on tablets */
+  }
+  
+  .vision-section::before {
+    top: 60px;
+  }
+  
+  .vision-section::after {
+    bottom: 60px;
+  }
+  
+  .vision-content {
+    padding: 0 15px; /* Less padding for more text width */
+    max-width: 100%;
+  }
+  
+  .vision-text-block {
+    font-size: 2.25rem; /* 36px */
+    line-height: 1.2;
+    max-width: 100%; /* Full width on mobile for maximum horizontal space */
+  }
+  
+  .vision-heading {
+    font-size: 1.25rem; /* 20px */
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 576px) {
+  .vision-section {
+    padding: 100px 0; /* Still substantial spacing on mobile */
+  }
+  
+  .vision-section::before {
+    top: 40px;
+  }
+  
+  .vision-section::after {
+    bottom: 40px;
+  }
+  
+  .vision-content {
+    padding: 0 10px; /* Minimal padding */
+  }
+  
+  .vision-text-block {
+    font-size: 1.875rem; /* 30px */
+    line-height: 1.15; /* Tighter on small screens */
+    max-width: 100%;
+  }
+  
+  .vision-heading {
+    font-size: 1.125rem; /* 18px */
+    margin-bottom: 12px;
+  }
+}
+
+/* Subtle entrance animation */
+.vision-content {
+  opacity: 0;
+  transform: translateY(50px);
+  animation: fadeInUp 1s ease-out 0.3s forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Progress indicator lines */
+.vision-section::before {
+  content: '';
+  position: absolute;
+  top: 100px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #A8FF04 50%,
+    transparent 100%
+  );
+  opacity: 0.4;
+}
+
+.vision-section::after {
+  content: '';
+  position: absolute;
+  bottom: 100px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #A8FF04 50%,
+    transparent 100%
+  );
+  opacity: 0.4;
+}
+
+/* Additional visual enhancements */
+.vision-line:last-child {
+  margin-bottom: 0;
+}
+
+/* Improve text rendering */
+.karaoke-text {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Line-specific delays for staggered effect */
+.vision-line:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.vision-line:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.vision-line:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.vision-line:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+/* Fallback for browsers that don't support modern features */
+@supports not (width: calc(var(--progress) * 100%)) {
+  .karaoke-text {
+    color: #222222;
+  }
+  
+  [data-theme="dark"] .karaoke-text {
+    color: #ffffff;
+  }
+}
