@@ -98,7 +98,7 @@ export class ScheduleService {
           throw new Error(`Slot ${slotId} not found or doesn't belong to tutor`);
         }
         
-        const slot = result.records[0].get('s').properties;
+        const slot = result.records[0]?.get('s').properties;
         
         if (slot.status === 'booked') {
           throw new Error(`Cannot close booked slot ${slotId}`);
@@ -159,7 +159,7 @@ export class ScheduleService {
           
           if (slotDateTime > minOpenTime) {
             slots.push({
-              date: d.toISOString().split('T')[0],
+              date: d.toISOString().split('T')[0] || '',
               time
             });
           }
@@ -305,7 +305,7 @@ export class ScheduleService {
         throw new Error('Slot not available for booking');
       }
       
-      const slot = slotResult.records[0].get('s').properties;
+      const slot = slotResult.records[0]?.get('s').properties;
       const slotDateTime = new Date(`${slot.slotDate}T${slot.slotTime}:00`);
       const now = new Date();
       const minBookTime = new Date(now.getTime() + 30 * 60 * 1000);
@@ -388,7 +388,7 @@ export class ScheduleService {
           { bookingId: input.bookingId }
         );
         
-        const booking = result.records[0].get('b').properties;
+        const booking = result.records[0]?.get('b').properties;
         
         // If tutor marked absent and it's a booked slot -> TA-301
         if (booking.attendanceTutor === 'absent') {
@@ -739,7 +739,7 @@ export class ScheduleService {
         for (const template of templates) {
           if (template.dayOfWeek === dayOfWeek) {
             slots.push({
-              date: d.toISOString().split('T')[0],
+              date: d.toISOString().split('T')[0] || '',
               time: template.slotTime
             });
           }
