@@ -6,6 +6,7 @@ import './SettingsModal.align.css';
 import { useAuthContext } from '../../context/AuthContext';
 import { listRegions, PSGCRegion, PSGCProvince, PSGCCity } from '../../data/ph_psgc';
 import { updatePersonalInfo, updateEmail, updatePassword } from '../../api/auth.api';
+import { tutorApi } from '../../api/tutor.api';
 
 // Helper type alias for municipalities (same as PSGCCity)
 
@@ -73,6 +74,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [infoSuccess, setInfoSuccess] = useState('');
   const [infoLoading, setInfoLoading] = useState(false);
 
+  // Profile picture upload state
+  const [profileUploading, setProfileUploading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleLogout = () => {
     logout();
     onClose();
@@ -96,6 +102,28 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
     // Reset personal info form states
     setInfoError('');
     setInfoSuccess('');
+    setProfileError('');
+  };
+
+  const handleProfileFileChange = async (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+    setProfileError('');
+    setProfileUploading(true);
+    try {
+      const url = await tutorApi.uploadProfilePicture(file);
+      // Optimistically update user profile picture in context if available
+      if (user) {
+        // @ts-ignore mutate local user object for immediate UI feedback
+        user.profilePicture = url;
+      }
+    } catch (err: any) {
+      setProfileError(err?.message || 'Failed to upload image');
+    } finally {
+      setProfileUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleUpdatePassword = async (e: Event) => {
@@ -344,18 +372,27 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
       setUploadError('Please select an image file');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => setAvatarPreview(reader.result as string);
-    reader.readAsDataURL(file);
-    // Placeholder upload logic
+    const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_BYTES) {
+      setUploadError(`File too large. Max ${(MAX_BYTES / (1024*1024)).toFixed(1)}MB`);
+      target.value = '';
+      return;
+    }
     try {
       setUploading(true);
-      // TODO: Implement backend upload endpoint
-      await new Promise(r => setTimeout(r, 800));
+      const url = await tutorApi.uploadProfilePicture(file);
+      setAvatarPreview(url);
+      // Optimistically update user.profilePicture
+      if (user) {
+        // @ts-ignore
+        user.profilePicture = url;
+      }
+    } catch (err: any) {
+      setUploadError(err?.message || 'Upload failed');
+    } finally {
       setUploading(false);
-    } catch (err) {
-      setUploading(false);
-      setUploadError('Upload failed');
+      // reset input value to allow re-selecting same file
+      target.value = '';
     }
   };
 

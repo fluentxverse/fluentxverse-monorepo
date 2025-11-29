@@ -1,9 +1,150 @@
-import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
-import { tutorApi } from '../api/tutor.api.ts';
-import { TutorCard } from '../Components/Tutors/TutorCard';
+import { h, Fragment } from 'preact';
+import { useState, useEffect, useCallback } from 'preact/hooks';
+import { Link } from 'react-router-dom';
+import { tutorApi } from '../api/tutor.api';
 import type { Tutor, TutorSearchParams } from '../types/tutor.types.ts';
+import Header from '../Components/Header/Header';
 import './BrowseTutorsPage.css';
+
+// Type assertion helper to fix Preact/React compatibility
+const jsx = (el: any) => el as any;
+
+// Tutor Card Component (inline for better control)
+const TutorCard = ({ tutor }: { tutor: Tutor }) => {
+  const displayName = tutor.displayName || `${tutor.firstName} ${tutor.lastName}`;
+  const initials = `${tutor.firstName?.[0] || ''}${tutor.lastName?.[0] || ''}`.toUpperCase();
+  const hourlyRate = tutor.hourlyRate ? `₱${tutor.hourlyRate}` : 'Free';
+  const rating = tutor.rating ? tutor.rating.toFixed(1) : 'New';
+  const reviewCount = tutor.totalReviews || 0;
+  const sessionCount = tutor.totalSessions || 0;
+
+  const avatarContent = tutor.profilePicture ? (
+    <img 
+      src={tutor.profilePicture} 
+      alt={displayName}
+      className="tutor-card-new__avatar"
+    />
+  ) : (
+    <div className="tutor-card-new__avatar tutor-card-new__avatar--placeholder">
+      {initials}
+    </div>
+  );
+
+  const verifiedBadge = tutor.isVerified ? (
+    <div className="tutor-card-new__verified">
+      <i className="ri-checkbox-circle-fill"></i>
+    </div>
+  ) : null;
+
+  return (
+    <div className="tutor-card-new">
+      {/* Availability Badge */}
+      {tutor.isAvailable && (
+        <div className="tutor-card-new__available-badge">
+          <span className="tutor-card-new__pulse"></span>
+          Available Now
+        </div>
+      )}
+
+      {/* Profile Section */}
+      <div className="tutor-card-new__profile">
+        <a href={`/tutor/${tutor.userId}`} className="tutor-card-new__avatar-link">
+          {jsx(avatarContent)}
+          {jsx(verifiedBadge)}
+        </a>
+
+        <div className="tutor-card-new__info">
+          <a href={`/tutor/${tutor.userId}`} className="tutor-card-new__name-link">
+            <h3 className="tutor-card-new__name">{displayName}</h3>
+          </a>
+          
+          {/* Rating */}
+          <div className="tutor-card-new__rating">
+            <i className="ri-star-fill"></i>
+            <span className="tutor-card-new__rating-value">{rating}</span>
+            {reviewCount > 0 && (
+              <span className="tutor-card-new__reviews">({reviewCount} reviews)</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bio */}
+      {tutor.bio && (
+        <p className="tutor-card-new__bio">
+          {tutor.bio.length > 120 ? `${tutor.bio.substring(0, 120)}...` : tutor.bio}
+        </p>
+      )}
+
+      {/* Languages */}
+      {tutor.languages && tutor.languages.length > 0 && (
+        <div className="tutor-card-new__languages">
+          <i className="ri-translate-2"></i>
+          <span>{tutor.languages.slice(0, 3).join(' • ')}</span>
+          {tutor.languages.length > 3 && <span className="tutor-card-new__more">+{tutor.languages.length - 3}</span>}
+        </div>
+      )}
+
+      {/* Specializations */}
+      {tutor.specializations && tutor.specializations.length > 0 && (
+        <div className="tutor-card-new__tags">
+          {tutor.specializations.slice(0, 3).map((spec, idx) => (
+            <span key={idx} className="tutor-card-new__tag">{spec}</span>
+          ))}
+          {tutor.specializations.length > 3 && (
+            <span className="tutor-card-new__tag tutor-card-new__tag--more">+{tutor.specializations.length - 3}</span>
+          )}
+        </div>
+      )}
+
+      {/* Stats Row */}
+      <div className="tutor-card-new__stats">
+        <div className="tutor-card-new__stat">
+          <i className="ri-video-chat-line"></i>
+          <span>{sessionCount} lessons</span>
+        </div>
+        {tutor.country && (
+          <div className="tutor-card-new__stat">
+            <i className="ri-map-pin-line"></i>
+            <span>{tutor.country}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="tutor-card-new__footer">
+        <div className="tutor-card-new__price">
+          <span className="tutor-card-new__price-value">{hourlyRate}</span>
+          <span className="tutor-card-new__price-label">/hour</span>
+        </div>
+        <a href={`/tutor/${tutor.userId}`} className="tutor-card-new__cta">
+          Book Trial
+          <i className="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </div>
+  );
+};
+
+// Skeleton Loader
+const TutorCardSkeleton = () => (
+  <div className="tutor-card-skeleton">
+    <div className="tutor-card-skeleton__profile">
+      <div className="tutor-card-skeleton__avatar"></div>
+      <div className="tutor-card-skeleton__info">
+        <div className="tutor-card-skeleton__name"></div>
+        <div className="tutor-card-skeleton__rating"></div>
+      </div>
+    </div>
+    <div className="tutor-card-skeleton__bio"></div>
+    <div className="tutor-card-skeleton__bio tutor-card-skeleton__bio--short"></div>
+    <div className="tutor-card-skeleton__tags">
+      <div className="tutor-card-skeleton__tag"></div>
+      <div className="tutor-card-skeleton__tag"></div>
+    </div>
+    <div className="tutor-card-skeleton__footer"></div>
+  </div>
+);
 
 export const BrowseTutorsPage = () => {
   const [tutors, setTutors] = useState<Tutor[]>([]);
@@ -16,16 +157,43 @@ export const BrowseTutorsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
-  const [minRating, setMinRating] = useState<number>(0);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'price-high' | 'popular' | 'newest'>('rating');
-  const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [page, setPage] = useState(1);
 
   // Filter options
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
   const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Generate next 7 days with formatted labels
+  const generateDateOptions = () => {
+    const options = [{ label: 'All Dates', value: 'all' }];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const dayName = days[date.getDay()];
+      const label = `${month}/${day} ${dayName}`;
+      const value = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      options.push({ label, value });
+    }
+    
+    return options;
+  };
+
+  const dateOptions = generateDateOptions();
+
+  // Quick filter options - use first 3 specific dates
+  const quickFilters = [
+    { label: 'All Tutors', value: 'all' },
+    ...dateOptions.slice(1, 4).map(d => ({ label: d.label, value: d.value })),
+    { label: 'Budget Friendly', value: 'budget' },
+  ];
+  const [activeQuickFilter, setActiveQuickFilter] = useState('all');
 
   // Load filter options
   useEffect(() => {
@@ -46,7 +214,7 @@ export const BrowseTutorsPage = () => {
   }, []);
 
   // Search tutors
-  const searchTutors = async (resetPage = false) => {
+  const searchTutors = useCallback(async (resetPage = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -55,10 +223,7 @@ export const BrowseTutorsPage = () => {
         query: searchQuery || undefined,
         languages: selectedLanguages.length > 0 ? selectedLanguages : undefined,
         specializations: selectedSpecs.length > 0 ? selectedSpecs : undefined,
-        minRating: minRating > 0 ? minRating : undefined,
-        minHourlyRate: priceRange[0] > 0 ? priceRange[0] : undefined,
-        maxHourlyRate: priceRange[1] < 10000 ? priceRange[1] : undefined,
-        isAvailable: showAvailableOnly || undefined,
+        dateFilter: selectedDate !== 'all' ? selectedDate : undefined,
         sortBy,
         page: resetPage ? 1 : page,
         limit: 12
@@ -81,12 +246,12 @@ export const BrowseTutorsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, selectedLanguages, selectedSpecs, selectedDate, sortBy, page]);
 
   // Initial load and when filters change
   useEffect(() => {
     searchTutors(true);
-  }, [selectedLanguages, selectedSpecs, minRating, priceRange, sortBy, showAvailableOnly]);
+  }, [selectedLanguages, selectedSpecs, selectedDate, sortBy]);
 
   // Handle search submit
   const handleSearch = (e: Event) => {
@@ -100,250 +265,394 @@ export const BrowseTutorsPage = () => {
     searchTutors(false);
   };
 
-  // Toggle filter checkbox
-  const toggleFilter = (
-    value: string, 
-    selected: string[], 
-    setter: (val: string[]) => void
-  ) => {
-    if (selected.includes(value)) {
-      setter(selected.filter(v => v !== value));
+  // Toggle language filter
+  const toggleLanguage = (lang: string) => {
+    setSelectedLanguages(prev => 
+      prev.includes(lang) 
+        ? prev.filter(l => l !== lang)
+        : [...prev, lang]
+    );
+  };
+
+  // Toggle specialization filter
+  const toggleSpec = (spec: string) => {
+    setSelectedSpecs(prev => 
+      prev.includes(spec) 
+        ? prev.filter(s => s !== spec)
+        : [...prev, spec]
+    );
+  };
+
+  // Handle quick filters
+  const handleQuickFilter = (value: string) => {
+    setActiveQuickFilter(value);
+    if (value === 'budget') {
+      setSelectedDate('all');
+      setSortBy('price-low');
+    } else if (value === 'all') {
+      setSelectedDate('all');
+      setSortBy('rating');
     } else {
-      setter([...selected, value]);
+      // It's a date value
+      setSelectedDate(value);
+      setSortBy('rating');
     }
   };
 
-  return (
-    <div className="browse-tutors-page">
-      {/* Hero Section */}
-      <section className="browse-tutors__hero">
-        <div className="container">
-          <h1 className="browse-tutors__title">Find Your Perfect Tutor</h1>
-          <p className="browse-tutors__subtitle">
-            Connect with experienced tutors and start learning today
-          </p>
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedLanguages([]);
+    setSelectedSpecs([]);
+    setSelectedDate('all');
+    setSortBy('rating');
+    setActiveQuickFilter('all');
+  };
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="browse-tutors__search-form">
-            <div className="browse-tutors__search-wrapper">
-              <i className="ri-search-line browse-tutors__search-icon"></i>
-              <input
-                type="text"
-                className="browse-tutors__search-input"
-                placeholder="Search by name, specialization, or language..."
-                value={searchQuery}
-                onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-              />
+  const hasActiveFilters = selectedLanguages.length > 0 || selectedSpecs.length > 0 || 
+    selectedDate !== 'all';
+
+  return (
+    <>
+      <Header />
+      <div className="browse-page">
+          {/* Hero Section */}
+          <section className="browse-hero">
+            <div className="browse-hero__bg">
+              <div className="browse-hero__image" aria-hidden="true"></div>
+              <div className="browse-hero__gradient"></div>
+              <div className="browse-hero__pattern"></div>
             </div>
-            <button type="submit" className="browse-tutors__search-button">
-              Search
+            
+            <div className="browse-hero__content">
+              <h1 className="browse-hero__title">
+                Find Your Perfect
+                <span className="browse-hero__highlight"> Language Tutor</span>
+              </h1>
+              <p className="browse-hero__subtitle">
+                Connect with expert tutors for personalized 1-on-1 lessons
+              </p>
+
+              {/* Search Bar */}
+              <form className="browse-search" onSubmit={handleSearch}>
+                <div className="browse-search__input-wrapper">
+                  <i className="ri-search-line browse-search__icon"></i>
+                  <input
+                    type="text"
+                    className="browse-search__input"
+                    placeholder="Search by name, language, or specialty..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+                  />
+                  {searchQuery && (
+                    <button 
+                      type="button" 
+                      className="browse-search__clear"
+                      onClick={() => { setSearchQuery(''); searchTutors(true); }}
+                    >
+                      <i className="ri-close-line"></i>
+                    </button>
+                  )}
+                </div>
+                <button type="submit" className="browse-search__btn">
+              <i className="ri-search-line"></i>
+              <span>Search</span>
             </button>
           </form>
+
+          {/* Quick Stats */}
+          <div className="browse-hero__stats">
+            <div className="browse-hero__stat">
+              <span className="browse-hero__stat-value">{total}+</span>
+              <span className="browse-hero__stat-label">Active Tutors</span>
+            </div>
+            <div className="browse-hero__stat-divider"></div>
+            <div className="browse-hero__stat">
+              <span className="browse-hero__stat-value">10+</span>
+              <span className="browse-hero__stat-label">Languages</span>
+            </div>
+            <div className="browse-hero__stat-divider"></div>
+            <div className="browse-hero__stat">
+              <span className="browse-hero__stat-value">4.8</span>
+              <span className="browse-hero__stat-label">Avg Rating</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="container">
-        <div className="browse-tutors__content">
-          {/* Filters Sidebar */}
-          <aside className={`browse-tutors__sidebar ${showFilters ? 'browse-tutors__sidebar--open' : ''}`}>
-            <div className="browse-tutors__sidebar-header">
-              <h3>Filters</h3>
-              <button
-                className="browse-tutors__filter-close"
-                onClick={() => setShowFilters(false)}
-              >
-                <i className="ri-close-line"></i>
-              </button>
-            </div>
-
-            {/* Sort By */}
-            <div className="browse-tutors__filter-section">
-              <h4 className="browse-tutors__filter-title">Sort By</h4>
-              <select
-                className="browse-tutors__sort-select"
-                value={sortBy}
-                onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as any)}
-              >
-                <option value="rating">Highest Rated</option>
-                <option value="popular">Most Popular</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="newest">Newest First</option>
-              </select>
-            </div>
-
-            {/* Availability */}
-            <div className="browse-tutors__filter-section">
-              <label className="browse-tutors__checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={showAvailableOnly}
-                  onChange={(e) => setShowAvailableOnly((e.target as HTMLInputElement).checked)}
-                />
-                <span>Available Now</span>
-              </label>
-            </div>
-
-            {/* Rating Filter */}
-            <div className="browse-tutors__filter-section">
-              <h4 className="browse-tutors__filter-title">Minimum Rating</h4>
-              <div className="browse-tutors__rating-options">
-                {[4.5, 4.0, 3.5, 0].map(rating => (
-                  <label key={rating} className="browse-tutors__radio-label">
-                    <input
-                      type="radio"
-                      name="rating"
-                      checked={minRating === rating}
-                      onChange={() => setMinRating(rating)}
-                    />
-                    <span>
-                      {rating > 0 ? (
-                        <>
-                          {rating} <i className="ri-star-fill"></i> & up
-                        </>
-                      ) : (
-                        'All Ratings'
-                      )}
-                    </span>
-                  </label>
+      {/* Main Content */}
+      <section className="browse-main">
+        <div className="browse-container">
+          {/* Top Bar with Quick Filters */}
+          <div className="browse-topbar">
+            <div className="browse-topbar__left">
+              {/* Quick Filters */}
+              <div className="browse-quick-filters">
+                {quickFilters.map(filter => (
+                  <button
+                    key={filter.value}
+                    className={`browse-quick-filter ${activeQuickFilter === filter.value ? 'browse-quick-filter--active' : ''}`}
+                    onClick={() => handleQuickFilter(filter.value)}
+                  >
+                    {filter.label}
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Price Range */}
-            <div className="browse-tutors__filter-section">
-              <h4 className="browse-tutors__filter-title">
-                Price Range: ₱{priceRange[0]} - ₱{priceRange[1]}
-              </h4>
-              <div className="browse-tutors__price-inputs">
-                <input
-                  type="number"
-                  className="browse-tutors__price-input"
-                  placeholder="Min"
-                  value={priceRange[0]}
-                  onChange={(e) => setPriceRange([Number((e.target as HTMLInputElement).value), priceRange[1]])}
-                />
-                <span>to</span>
-                <input
-                  type="number"
-                  className="browse-tutors__price-input"
-                  placeholder="Max"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], Number((e.target as HTMLInputElement).value)])}
-                />
+            <div className="browse-topbar__right">
+              {/* Sort Dropdown */}
+              <div className="browse-sort">
+                <label className="browse-sort__label">Sort by:</label>
+                <select 
+                  className="browse-sort__select"
+                  value={sortBy}
+                  onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as any)}
+                >
+                  <option value="rating">Top Rated</option>
+                  <option value="popular">Most Popular</option>
+                  <option value="newest">Newest</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                </select>
               </div>
-            </div>
 
-            {/* Languages */}
-            {availableLanguages.length > 0 && (
-              <div className="browse-tutors__filter-section">
-                <h4 className="browse-tutors__filter-title">Languages</h4>
-                <div className="browse-tutors__checkbox-list">
-                  {availableLanguages.slice(0, 5).map(lang => (
-                    <label key={lang} className="browse-tutors__checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={selectedLanguages.includes(lang)}
-                        onChange={() => toggleFilter(lang, selectedLanguages, setSelectedLanguages)}
-                      />
-                      <span>{lang}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Specializations */}
-            {availableSpecs.length > 0 && (
-              <div className="browse-tutors__filter-section">
-                <h4 className="browse-tutors__filter-title">Specializations</h4>
-                <div className="browse-tutors__checkbox-list">
-                  {availableSpecs.slice(0, 5).map(spec => (
-                    <label key={spec} className="browse-tutors__checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={selectedSpecs.includes(spec)}
-                        onChange={() => toggleFilter(spec, selectedSpecs, setSelectedSpecs)}
-                      />
-                      <span>{spec}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-          </aside>
-
-          {/* Main Content */}
-          <main className="browse-tutors__main">
-            {/* Results Header */}
-            <div className="browse-tutors__results-header">
-              <p className="browse-tutors__results-count">
-                {loading && page === 1 ? (
-                  'Searching...'
-                ) : (
-                  `${total} tutor${total !== 1 ? 's' : ''} found`
-                )}
-              </p>
-
-              <button
-                className="browse-tutors__filter-toggle"
-                onClick={() => setShowFilters(!showFilters)}
+              {/* Mobile Filter Toggle */}
+              <button 
+                className="browse-filter-toggle"
+                onClick={() => setShowMobileFilters(true)}
               >
-                <i className="ri-filter-line"></i>
+                <i className="ri-filter-3-line"></i>
                 Filters
+                {hasActiveFilters && <span className="browse-filter-toggle__badge"></span>}
               </button>
             </div>
+          </div>
 
-            {/* Error State */}
-            {error && (
-              <div className="browse-tutors__error">
-                <i className="ri-error-warning-line"></i>
-                <p>{error}</p>
+          {/* Content Layout */}
+          <div className="browse-layout">
+            {/* Sidebar Filters */}
+            <aside className={`browse-sidebar ${showMobileFilters ? 'browse-sidebar--open' : ''}`}>
+              <div className="browse-sidebar__header">
+                <h3>Filters</h3>
+                <button 
+                  className="browse-sidebar__close"
+                  onClick={() => setShowMobileFilters(false)}
+                >
+                  <i className="ri-close-line"></i>
+                </button>
               </div>
-            )}
 
-            {/* Tutors Grid */}
-            {!error && (
-              <>
-                <div className="browse-tutors__grid">
-                  {tutors.map(tutor => (
-                    <TutorCard key={tutor.userId} tutor={tutor} />
+              {hasActiveFilters && (
+                <button className="browse-clear-filters" onClick={clearFilters}>
+                  <i className="ri-refresh-line"></i>
+                  Clear all filters
+                </button>
+              )}
+
+              {/* Availability Date */}
+              <div className="browse-filter-group">
+                <h4 className="browse-filter-group__title">Availability Date</h4>
+                <div className="browse-filter-group__list">
+                  {dateOptions.map(opt => (
+                    <label key={opt.value} className="browse-filter-checkbox">
+                      <input 
+                        type="radio"
+                        name="date-filter"
+                        checked={selectedDate === opt.value}
+                        onChange={() => setSelectedDate(opt.value)}
+                      />
+                      <span className="browse-filter-checkbox__mark"></span>
+                      <span className="browse-filter-checkbox__label">{opt.label}</span>
+                    </label>
                   ))}
                 </div>
+              </div>
 
-                {/* Empty State */}
-                {!loading && tutors.length === 0 && (
-                  <div className="browse-tutors__empty">
-                    <i className="ri-user-search-line"></i>
-                    <h3>No tutors found</h3>
-                    <p>Try adjusting your filters or search query</p>
+              {/* Languages */}
+              {availableLanguages.length > 0 && (
+                <div className="browse-filter-group">
+                  <h4 className="browse-filter-group__title">Languages</h4>
+                  <div className="browse-filter-group__list">
+                    {availableLanguages.map(lang => (
+                      <label key={lang} className="browse-filter-checkbox">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedLanguages.includes(lang)}
+                          onChange={() => toggleLanguage(lang)}
+                        />
+                        <span className="browse-filter-checkbox__mark"></span>
+                        <span className="browse-filter-checkbox__label">{lang}</span>
+                      </label>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Load More */}
-                {hasMore && !loading && (
-                  <div className="browse-tutors__load-more">
-                    <button
-                      className="browse-tutors__load-more-button"
-                      onClick={handleLoadMore}
-                    >
-                      Load More
-                    </button>
+              {/* Specializations */}
+              {availableSpecs.length > 0 && (
+                <div className="browse-filter-group">
+                  <h4 className="browse-filter-group__title">Specializations</h4>
+                  <div className="browse-filter-group__list">
+                    {availableSpecs.map(spec => (
+                      <label key={spec} className="browse-filter-checkbox">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedSpecs.includes(spec)}
+                          onChange={() => toggleSpec(spec)}
+                        />
+                        <span className="browse-filter-checkbox__mark"></span>
+                        <span className="browse-filter-checkbox__label">{spec}</span>
+                      </label>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Loading State */}
-                {loading && (
-                  <div className="browse-tutors__loading">
-                    <div className="spinner"></div>
-                    <p>Loading tutors...</p>
-                  </div>
-                )}
-              </>
+              {/* Mobile Apply Button */}
+              <button 
+                className="browse-sidebar__apply"
+                onClick={() => setShowMobileFilters(false)}
+              >
+                Show {total} tutors
+              </button>
+            </aside>
+
+            {/* Mobile Overlay */}
+            {showMobileFilters && (
+              <div 
+                className="browse-sidebar__overlay"
+                onClick={() => setShowMobileFilters(false)}
+              ></div>
             )}
-          </main>
+
+            {/* Results */}
+            <div className="browse-results">
+              {/* Results Count */}
+              <div className="browse-results__header">
+                <p className="browse-results__count">
+                  {loading && tutors.length === 0 ? (
+                    'Finding tutors...'
+                  ) : (
+                    <>
+                      Showing <strong>{tutors.length}</strong> of <strong>{total}</strong> tutors
+                    </>
+                  )}
+                </p>
+
+                {/* Active Filter Tags */}
+                {hasActiveFilters && (
+                  <div className="browse-active-filters">
+                    {selectedLanguages.map(lang => (
+                      <span key={lang} className="browse-active-filter">
+                        {lang}
+                        <button onClick={() => toggleLanguage(lang)}>
+                          <i className="ri-close-line"></i>
+                        </button>
+                      </span>
+                    ))}
+                    {selectedSpecs.map(spec => (
+                      <span key={spec} className="browse-active-filter">
+                        {spec}
+                        <button onClick={() => toggleSpec(spec)}>
+                          <i className="ri-close-line"></i>
+                        </button>
+                      </span>
+                    ))}
+                    {minRating > 0 && (
+                      <span className="browse-active-filter">
+                        ⭐ {minRating}+
+                        <button onClick={() => setMinRating(0)}>
+                          <i className="ri-close-line"></i>
+                        </button>
+                      </span>
+                    )}
+                    {showAvailableOnly && (
+                      <span className="browse-active-filter">
+                        Available Now
+                        <button onClick={() => setShowAvailableOnly(false)}>
+                          <i className="ri-close-line"></i>
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Error State */}
+              {error && (
+                <div className="browse-error">
+                  <i className="ri-error-warning-line"></i>
+                  <h3>Something went wrong</h3>
+                  <p>{error}</p>
+                  <button onClick={() => searchTutors(true)} className="browse-error__btn">
+                    <i className="ri-refresh-line"></i>
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {/* Tutors Grid */}
+              {!error && (
+                <>
+                  <div className="browse-grid">
+                    {/* Show skeleton loaders when loading initially */}
+                    {loading && tutors.length === 0 && (
+                      <>
+                        {[...Array(6)].map((_, i) => (
+                          <TutorCardSkeleton key={i} />
+                        ))}
+                      </>
+                    )}
+
+                    {/* Show tutor cards */}
+                    {tutors.map((tutor) => (
+                      <TutorCard key={tutor.userId} tutor={tutor} />
+                    ))}
+                  </div>
+
+                  {/* Empty State */}
+                  {!loading && tutors.length === 0 && (
+                    <div className="browse-empty">
+                      <div className="browse-empty__icon">
+                        <i className="ri-user-search-line"></i>
+                      </div>
+                      <h3>No tutors found</h3>
+                      <p>Try adjusting your filters or search query</p>
+                      <button onClick={clearFilters} className="browse-empty__btn">
+                        Clear all filters
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Load More */}
+                  {hasMore && !loading && (
+                    <div className="browse-load-more">
+                      <button 
+                        onClick={handleLoadMore}
+                        className="browse-load-more__btn"
+                        disabled={loading}
+                      >
+                        <span>Load More Tutors</span>
+                        <i className="ri-arrow-down-line"></i>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Loading more indicator */}
+                  {loading && tutors.length > 0 && (
+                    <div className="browse-loading-more">
+                      <div className="browse-loading-more__spinner"></div>
+                      <span>Loading more tutors...</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
+        </section>
       </div>
-    </div>
+    </>
   );
 };

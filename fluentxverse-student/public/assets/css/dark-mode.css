@@ -2,7 +2,7 @@
 :root {
   /* Light theme variables (default) */
   --background-color: #ffffff;
-  --primary-color: #6DBE45;
+  --primary-color: #e2e2e2;
   --secondary-color: #f5f5f5;
   --text-color: #131740;
   --primary-text-color: #131740;
@@ -15,7 +15,7 @@
   --card-box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.08);
   
   /* Common accent colors */
-  --accent-color: #6DBE45;
+  --accent-color: #ececec;
   --accent-hover: #5aa839;
   --danger-color: #ff5e5b;
   --warning-color: #ffbd59;
@@ -26,7 +26,7 @@
 /* Dark theme variables */
 .dark-mode {
   --background-color: #121212;
-  --primary-color: #6DBE45;
+  --primary-color: #0245ae;
   --secondary-color: #2a2a2a;
   --text-color: #e0e0e0;
   --primary-text-color: #e0e0e0;

@@ -4,11 +4,32 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 
+// Penalty code types
+type PenaltyCode = '301' | '302' | '303' | '401' | '501' | '502' | '601';
+
+interface SlotPenalty {
+  code: PenaltyCode;
+  label: string;
+  reason: string;
+  timestamp: Date;
+}
+
+const PENALTY_LABELS: Record<PenaltyCode, { label: string; color: string; bgColor: string }> = {
+  '301': { label: 'TA-301', color: '#dc2626', bgColor: '#fef2f2' }, // Tutor Absence - Booked
+  '302': { label: 'TA-302', color: '#ea580c', bgColor: '#fff7ed' }, // Tutor Absence - Unbooked
+  '303': { label: 'TA-303', color: '#f59e0b', bgColor: '#fffbeb' }, // Short Notice Cancel
+  '401': { label: 'SUB-401', color: '#6366f1', bgColor: '#eef2ff' }, // Substitution
+  '501': { label: 'SYS-501', color: '#8b5cf6', bgColor: '#f5f3ff' }, // System Issue
+  '502': { label: 'STU-502', color: '#06b6d4', bgColor: '#ecfeff' }, // Student Absent
+  '601': { label: 'BLK-601', color: '#991b1b', bgColor: '#fef2f2' }, // Penalty Block
+};
+
 const SchedulePage = () => {
   const { user } = useAuthContext();
   const { route } = useLocation();
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<Set<string>>(new Set());
   const [attendanceMarked, setAttendanceMarked] = useState<Set<string>>(new Set()); // Track which open slots are marked as present
+  const [slotPenalties, setSlotPenalties] = useState<Map<string, SlotPenalty>>(new Map()); // Track penalty codes per slot
   
   // Initialize with a test booking for Nov 25, 2025 at 11:30 PM
   const initializeBookedSlots = () => {
@@ -473,6 +494,75 @@ const SchedulePage = () => {
                 ))}
               </div>
 
+              {/* Penalty Code Legend */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '12px',
+                padding: '20px',
+                marginBottom: '24px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                border: '1px solid rgba(2, 69, 174, 0.1)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '16px'
+                }}>
+                  <i className="fas fa-info-circle" style={{ color: '#0245ae', fontSize: '18px' }}></i>
+                  <h4 style={{
+                    margin: 0,
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#0f172a'
+                  }}>
+                    Penalty Code Reference
+                  </h4>
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '12px'
+                }}>
+                  {Object.entries(PENALTY_LABELS).map(([code, info]) => (
+                    <div
+                      key={code}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        background: info.bgColor,
+                        borderRadius: '8px',
+                        border: `1px solid ${info.color}30`
+                      }}
+                    >
+                      <span style={{
+                        fontWeight: 800,
+                        fontSize: '11px',
+                        color: info.color,
+                        letterSpacing: '0.5px'
+                      }}>
+                        {info.label}
+                      </span>
+                      <span style={{
+                        fontSize: '10px',
+                        color: '#64748b',
+                        flex: 1
+                      }}>
+                        {code === '301' && 'Absent (Booked)'}
+                        {code === '302' && 'Absent (Unbooked)'}
+                        {code === '303' && 'Short Notice Cancel'}
+                        {code === '401' && 'Substitution'}
+                        {code === '501' && 'System Issue'}
+                        {code === '502' && 'Student Absent'}
+                        {code === '601' && 'Penalty Block'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Calendar Grid */}
               <div style={{ overflowX: 'auto' }} className="schedule-scrollable">
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '8px' }}>
@@ -541,9 +631,27 @@ const SchedulePage = () => {
                           const canOpen = canOpenSlot(date, time);
                           const isPastOrNear = !canOpen && !isSelected && !isBooked;
                           const canMarkAttend = isSelected && canMarkAttendance(date, time);
+                          const penalty = slotPenalties.get(key);
                           
                           // Check if booked slot is marked present
                           const isBookedAndPresent = isBooked && isMarkedPresent;
+                          
+                          // Determine slot display label
+                          let slotLabel = 'AVAILABLE';
+                          if (penalty) {
+                            const penaltyInfo = PENALTY_LABELS[penalty.code];
+                            slotLabel = penaltyInfo.label;
+                          } else if (isBooked) {
+                            slotLabel = studentId || 'BOOKED';
+                          } else if (isPastOrNear) {
+                            slotLabel = 'PAST';
+                          } else if (isPendingSelection) {
+                            slotLabel = 'SELECTED';
+                          } else if (isMarkedPresent) {
+                            slotLabel = 'PRESENT';
+                          } else if (isSelected) {
+                            slotLabel = 'OPEN';
+                          }
                           
                           return (
                             <td key={dayIdx} style={{ padding: '4px' }}>
@@ -556,7 +664,9 @@ const SchedulePage = () => {
                                   padding: '16px 8px',
                                   borderRadius: '10px',
                                   cursor: isBooked ? 'pointer' : isPastOrNear || (isSelected && !canMarkAttend) ? 'not-allowed' : 'pointer',
-                                  background: isPastOrNear
+                                  background: penalty
+                                    ? PENALTY_LABELS[penalty.code].bgColor
+                                    : isPastOrNear
                                     ? 'rgba(203, 213, 225, 0.5)'
                                     : isBookedAndPresent
                                     ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
@@ -569,11 +679,15 @@ const SchedulePage = () => {
                                     : isSelected
                                     ? 'rgba(255, 255, 255, 0.9)'
                                     : 'rgba(255, 255, 255, 0.9)',
-                                  color: isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? '#94a3b8' : isSelected ? '#10b981' : '#64748b',
+                                  color: penalty
+                                    ? PENALTY_LABELS[penalty.code].color
+                                    : isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? '#94a3b8' : isSelected ? '#10b981' : '#64748b',
                                   fontWeight: 800,
-                                  fontSize: isBooked ? '13px' : '11px',
+                                  fontSize: isBooked || penalty ? '13px' : '11px',
                                   transition: 'all 0.3s ease',
-                                  boxShadow: isBookedAndPresent
+                                  boxShadow: penalty
+                                    ? `0 2px 8px ${PENALTY_LABELS[penalty.code].color}40`
+                                    : isBookedAndPresent
                                     ? '0 4px 12px rgba(59, 130, 246, 0.5), 0 0 0 3px rgba(16, 185, 129, 0.5)'
                                     : isBooked
                                     ? '0 4px 12px rgba(59, 130, 246, 0.5)'
@@ -582,8 +696,10 @@ const SchedulePage = () => {
                                     : isMarkedPresent
                                     ? '0 4px 12px rgba(16, 185, 129, 0.4)'
                                     : '0 2px 4px rgba(0, 0, 0, 0.05)',
-                                  letterSpacing: isBooked ? '1px' : '0.5px',
-                                  border: isBookedAndPresent
+                                  letterSpacing: isBooked || penalty ? '1px' : '0.5px',
+                                  border: penalty
+                                    ? `2px solid ${PENALTY_LABELS[penalty.code].color}`
+                                    : isBookedAndPresent
                                     ? '3px solid #10b981'
                                     : isBooked
                                     ? 'none'
@@ -619,8 +735,9 @@ const SchedulePage = () => {
                                     e.currentTarget.style.transform = 'scale(1)';
                                   }
                                 }}
+                                title={penalty ? penalty.reason : undefined}
                               >
-                                {isBooked ? studentId : isPastOrNear ? 'PAST' : isPendingSelection ? 'SELECTED' : isMarkedPresent ? 'PRESENT' : isSelected ? 'OPEN' : 'AVAILABLE'}
+                                {slotLabel}
                               </button>
                             </td>
                           );

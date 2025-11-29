@@ -50,10 +50,9 @@ export interface TutorProfile extends Tutor {
 export interface TutorFilters {
   languages?: string[];
   specializations?: string[];
-  minRating?: number;
   maxHourlyRate?: number;
   minHourlyRate?: number;
-  isAvailable?: boolean;
+  dateFilter?: string; // ISO date string YYYY-MM-DD
   sortBy?: 'rating' | 'price-low' | 'price-high' | 'popular' | 'newest';
 }
 

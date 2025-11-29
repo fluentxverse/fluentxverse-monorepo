@@ -22,7 +22,7 @@ getPool();
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
   .use(cors({
-    origin: ['http://localhost:5173'],
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true
   }))
   .use(cookie())

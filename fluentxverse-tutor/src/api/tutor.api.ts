@@ -88,5 +88,29 @@ export const tutorApi = {
     }
 
     return response.data.data;
+  },
+
+  /**
+   * Upload tutor profile picture
+   */
+  uploadProfilePicture: async (file: File): Promise<string> => {
+    const MAX_BYTES = 5 * 1024 * 1024; // 5MB safeguard client-side
+    if (file.size > MAX_BYTES) {
+      throw new Error(`File too large. Max ${(MAX_BYTES / (1024*1024)).toFixed(1)}MB`);
+    }
+    const form = new FormData();
+    form.append('file', file);
+
+    const response = await api.post<{ success: boolean; url?: string; error?: string }>(
+      '/tutor/profile-picture',
+      form,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    if (!response.data.success || !response.data.url) {
+      throw new Error(response.data.error || 'Failed to upload profile picture');
+    }
+
+    return response.data.url;
   }
 };

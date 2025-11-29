@@ -7,8 +7,8 @@ const Banner = () => {
       <div className="hero-image-wrapper">
         <div className="hero-image-bg"></div>
         <img 
-          src="/assets/img/banner/banner_man.png" 
-          alt="Become an ESL Tutor" 
+          src="/assets/img/banner/banner_woman.png" 
+          alt="Learn English Online" 
           className="hero-image"
         />
       </div>
@@ -16,35 +16,38 @@ const Banner = () => {
         <div className="row align-items-center">
           <div className="col-lg-6 col-md-12">
             <div className="hero-content">
-              <span className="hero-badge">Join Our Teaching Community</span>
+              <span className="hero-badge">
+                <i className="fas fa-graduation-cap"></i>
+                Start Your Learning Journey
+              </span>
               <h1 className="hero-title">
-                Teach English <span className="highlight">Online</span> on Your Terms
+                Master <span className="highlight">English</span> with Expert Tutors
               </h1>
               <p className="hero-text">
-                Work from anywhere, set your own hours. No commute, no boss, no minimum hours just you and your students.
+                Connect with qualified ESL tutors. Learn at your own pace with lessons tailored to your goals and schedule.
               </p>
               <div className="hero-buttons">
-                <a href="/register" className="cta-button primary">
-                  Apply Now
-                  <i className="fas fa-arrow-right"></i>
+                <a href="/browse-tutors" className="cta-button primary">
+                  Find Your Tutor
+                  <i className="fas fa-search"></i>
                 </a>
-                <a href="/about" className="cta-button secondary">
-                  Learn More
-                  <i className="fas fa-info-circle"></i>
+                <a href="/register" className="cta-button secondary">
+                  Start Your Free Trial
+                  <i className="fas fa-arrow-right"></i>
                 </a>
               </div>
               <div className="hero-features">
                 <div className="feature-badge">
-                  <i className="fas fa-money-bill-wave"></i>
-                  <span><strong>Earn</strong> at your pace</span>
+                  <i className="fas fa-user-graduate"></i>
+                  <span><strong>1-on-1</strong> Lessons</span>
                 </div>
                 <div className="feature-badge">
-                  <i className="fas fa-clock"></i>
-                  <span><strong>Flexible</strong> Schedule</span>
+                  <i className="fas fa-calendar-check"></i>
+                  <span><strong>Flexible</strong> Scheduling</span>
                 </div>
                 <div className="feature-badge">
-                  <i className="fas fa-globe-americas"></i>
-                  <span><strong>Work</strong> Remotely</span>
+                  <i className="fas fa-certificate"></i>
+                  <span><strong>Certified</strong> Tutors</span>
                 </div>
               </div>
             </div>

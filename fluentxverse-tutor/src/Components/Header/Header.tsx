@@ -130,7 +130,7 @@ const Header = () => {
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul className="navigation">
                       <li><Link to="/">Home</Link></li>
-                      <li><Link to="/browse-tutors">Browse Tutors</Link></li>
+
                       {/* <li><Link to="/farms">Farms</Link></li>
                       <li><Link to="/tree-nfts">Trees</Link></li>
                       <li><a href="/assets/whitepaper/whitepaper.pdf" target="_blank" rel="noopener noreferrer">Whitepaper</a></li>

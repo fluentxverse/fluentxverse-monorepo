@@ -1,5 +1,5 @@
 import Banner from './Banner'
-import VisionSection from './VisionSection'
+
 import NarrativeSection from './NarrativeSection'
 import TokenizationSection from './TokenizationSection'
 import FieldCarousel from './FieldCarousel'
