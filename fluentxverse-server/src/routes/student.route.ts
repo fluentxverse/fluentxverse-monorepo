@@ -1,0 +1,166 @@
+import Elysia, { t } from "elysia";
+import StudentService from "../services/auth.services/student.service";
+
+const Student = new Elysia({ name: "student" })
+  .post("/student/register", async ({ body, cookie, set }) => {
+    try {
+      const studentService = new StudentService();
+      const result = await studentService.register(body);
+      const userData = await studentService.login({ email: body.email, password: body.password });
+
+      // Normalize user object for frontend consistency
+      const normalizedUser = {
+        id: userData.id || userData.userId || userData.uid,
+        userId: userData.id || userData.userId || userData.uid,
+        email: userData.email,
+        givenName: userData.givenName || userData.firstName || userData.given_name || null,
+        familyName: userData.familyName || userData.lastName || userData.family_name || null,
+        mobileNumber: userData.mobileNumber || userData.phone || null,
+        tier: userData.tier ?? 0,
+        role: userData.role || 'student',
+        walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : (userData.smartWalletAddress?.address || null)
+      };
+
+      cookie.auth?.set({
+        value: JSON.stringify({
+          userId: normalizedUser.userId,
+          email: normalizedUser.email,
+          familyName: normalizedUser.familyName,
+          givenName: normalizedUser.givenName,
+          mobileNumber: normalizedUser.mobileNumber,
+          tier: normalizedUser.tier,
+          role: normalizedUser.role,
+          walletAddress: normalizedUser.walletAddress
+        }),
+
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 60,
+        path: "/"
+      });
+
+      return {
+        success: true,
+        message: result.message,
+        user: normalizedUser
+      };
+    } catch (error: any) {
+      console.log(error);
+      // Map email-exists to a 409 friendly response
+      if (error?.code === 'EMAIL_EXISTS' || error?.message === 'EMAIL_EXISTS') {
+        if (set) set.status = 409;
+        return { success: false, message: 'Email is already registered', user: null };
+      }
+      throw error;
+    }
+  }, {
+    body: t.Object({
+      email: t.String(),
+      password: t.String(),
+      familyName: t.String(),
+      givenName: t.String(),
+      birthDate: t.String(),
+      mobileNumber: t.String()
+    }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        message: t.String(),
+        user: t.Any()
+      })
+    }
+  })
+
+  .post("/student/login", async ({ body, cookie }) => {
+    try {
+      const studentService = new StudentService();
+      const userData = await studentService.login(body);
+
+      const normalizedUser = {
+        id: userData.id || userData.userId || userData.uid,
+        userId: userData.id || userData.userId || userData.uid,
+        email: userData.email,
+        givenName: userData.givenName || userData.firstName || userData.given_name || null,
+        familyName: userData.familyName || userData.lastName || userData.family_name || null,
+        mobileNumber: userData.mobileNumber || userData.phone || null,
+        tier: userData.tier ?? 0,
+        role: userData.role || 'student',
+        walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : (userData.smartWalletAddress?.address || null)
+      };
+
+      cookie.auth?.set({
+        value: JSON.stringify({
+          userId: normalizedUser.userId,
+          email: normalizedUser.email,
+          familyName: normalizedUser.familyName,
+          givenName: normalizedUser.givenName,
+          mobileNumber: normalizedUser.mobileNumber,
+          tier: normalizedUser.tier,
+          role: normalizedUser.role,
+          walletAddress: normalizedUser.walletAddress
+        }),
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 60,
+        path: "/"
+      });
+
+      return {
+        success: true,
+        user: normalizedUser
+      };
+    } catch (error: any) {
+      console.log(error);
+      throw error;
+    }
+  }, {
+    body: t.Object({
+      email: t.String(),
+      password: t.String()
+    }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        user: t.Any()
+      })
+    }
+  })
+
+  .get('/student/me', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.auth?.value;
+      if (!raw) throw new Error('Not authenticated');
+      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      set.headers['Vary'] = 'Cookie';
+
+      const normalized = {
+        userId: authData.userId || authData.id || null,
+        id: authData.userId || authData.id || null,
+        email: authData.email,
+        givenName: authData.givenName ?? authData.firstName ?? undefined,
+        familyName: authData.familyName ?? authData.lastName ?? undefined,
+        firstName: authData.firstName ?? authData.givenName ?? undefined,
+        lastName: authData.lastName ?? authData.familyName ?? undefined,
+        walletAddress: authData.walletAddress ?? authData.smartWalletAddress ?? undefined,
+        mobileNumber: authData.mobileNumber ?? undefined,
+        tier: authData.tier ?? 0,
+        role: authData.role ?? 'student'
+      };
+
+      return { user: normalized };
+    } catch (error: any) {
+      console.error('Error parsing student auth cookie:', error);
+      throw new Error('Invalid session');
+    }
+  }, {
+    response: {
+      200: t.Object({ user: t.Any() })
+    }
+  });
+
+export default Student;

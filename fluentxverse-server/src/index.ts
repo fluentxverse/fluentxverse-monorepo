@@ -8,6 +8,7 @@ import { getPool } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
+import Student from "./routes/student.route";
 
 // Initialize databases
 initDriver(
@@ -27,14 +28,18 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   }))
   .use(cookie())
   .use(Auth)
-  .use(Tutor);
+  .use(Tutor)
+  .use(Student)
 
-export type App = typeof app;
+
 
 // Start HTTP server
-const server = app.listen({ port: 8765 }, () => {
+.listen({ port: 8765 }, () => {
   console.log(`✅ FluentXVerse HTTP server is running on port 8765`);
 });
+
+
+export type App = typeof app;
 
 // Initialize Socket.IO server with the HTTP server
 // @ts-ignore - Elysia's server has an underlying HTTP server

@@ -1,3 +1,5 @@
+  // Only allow students to log in to student app
+  const allowedRole = 'student';
 import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
 import { loginUser, logoutUser, getMe } from '../api/auth.api';
@@ -8,15 +10,14 @@ interface AuthUser {
   userId?: string; // from /me endpoint
   id?: string; // from /login endpoint
   email: string;
-  firstName?: string;
-  middleName?: string;
-  lastName?: string;
-  suffix?: string;
+  givenName: string;
+  familyName?: string;
   birthDate?: string;
   mobileNumber?: string;
   smartWalletAddress?: string;
   tier?: number;
   walletAddress?: string;
+  role?: string;
 }
 
 interface AuthContextValue {
@@ -100,10 +101,14 @@ export const AuthProvider = ({ children }: { children: any }) => {
         // /login returns full user data from RegisteredParams
         const loggedInUser = data.user as AuthUser;
         console.log('Logged in user:', loggedInUser);
+        if (loggedInUser.role && loggedInUser.role !== allowedRole) {
+          setUser(null);
+          throw new Error('You are not allowed to log in to the student app.');
+        }
         setUser(loggedInUser);
         // Persist name for cases where /me returns minimal fields
-        const first = loggedInUser.firstName || '';
-        const last = loggedInUser.lastName || '';
+        const first = loggedInUser.givenName || '';
+        const last = loggedInUser.familyName || '';
         if (first || last) {
           localStorage.setItem('fxv_user_fullname', `${first} ${last}`.trim());
         }
@@ -119,6 +124,10 @@ export const AuthProvider = ({ children }: { children: any }) => {
         try {
           const me = await getMe();
           if (me?.user) {
+            if (me.user.role && me.user.role !== allowedRole) {
+              setUser(null);
+              throw new Error('You are not allowed to log in to the student app.');
+            }
             setUser(prev => ({ ...prev, ...me.user }));
           }
         } catch (e) {

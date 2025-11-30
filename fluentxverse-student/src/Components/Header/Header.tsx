@@ -1,7 +1,8 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState } from 'preact/compat';
 import { Link } from 'wouter';
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
+import { loginUser } from '../../api/auth.api';
 import "./Header.css";
 
 
@@ -36,7 +37,7 @@ const Header = () => {
     document.body.style.overflow = 'unset';
   }, []);
 
-  const handleLoginSubmit = useCallback((e: Event) => {
+  const handleLoginSubmit = useCallback(async (e: any) => {
     e.preventDefault();
     if (!email || !password) {
       setLoginError('Please enter both email and password.');
@@ -45,14 +46,19 @@ const Header = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      login(email, password);
-      // Redirect after successful login
-      window.location.href = '/home';
+      const result = await loginUser(email, password);
+      if (result?.success && result.user) {
+        // Optionally update context if needed
+        window.location.href = '/home';
+      } else {
+        setLoginError('Login failed. Please check your credentials.');
+      }
     } catch (err: any) {
-      setLoginLoading(false);
       setLoginError(err?.message || 'Invalid credentials');
+    } finally {
+      setLoginLoading(false);
     }
-  }, [email, password, login]);
+  }, [email, password]);
 
   useEffect(() => {
     // Sticky header on scroll
@@ -76,11 +82,7 @@ const Header = () => {
 
     // Scroll to target
     const scrollToTargetBtn = document.querySelector('.scroll-to-target');
-    interface ScrollToTargetEvent extends React.MouseEvent<HTMLElement> {
-      currentTarget: HTMLElement & { getAttribute(attr: string): string | null };
-    }
-
-    const handleScrollToTarget = (e: Event | ScrollToTargetEvent) => {
+    const handleScrollToTarget = (e: any) => {
       const target = (e.currentTarget as HTMLElement).getAttribute('data-target');
       const el = target ? document.querySelector(target) as HTMLElement | null : null;
       if (el) {
@@ -117,7 +119,7 @@ const Header = () => {
                 role="button"
                 tabIndex={0}
                 aria-label="Open mobile menu"
-                onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') openMobileMenu(); }}
+                  onKeyPress={(e: any) => { if (e.key === 'Enter' || e.key === ' ') openMobileMenu(); }}
               >
                 <i className="fas fa-bars" />
               </div>
@@ -163,7 +165,7 @@ const Header = () => {
                     role="button"
                     tabIndex={0}
                     aria-label="Close mobile menu"
-                    onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') closeMobileMenu(); }}
+                    onKeyPress={(e: any) => { if (e.key === 'Enter' || e.key === ' ') closeMobileMenu(); }}
                   >
                     <i className="fas fa-times" />
                   </div>
@@ -293,7 +295,7 @@ const Header = () => {
               </div>
             </form>
             <div className="modal-footer">
-              <p>Don't have an account? <a href="/register">Apply Now</a></p>
+              <p>Don't have an account? <a href="/register">Join Now</a></p>
             </div>
           </div>
         </div>

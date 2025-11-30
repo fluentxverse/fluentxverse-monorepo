@@ -245,6 +245,27 @@ const SchedulePage = () => {
     };
   };
 
+  // Student click handler: join if it's your booking, otherwise book or show message
+  const handleStudentSlotClick = (dayIdx: number, time: string) => {
+    const key = `${dayIdx}-${time}`;
+    const isBooked = bookedSlots.has(key);
+    const studentId = bookedSlots.get(key);
+
+    if (isBooked) {
+      if (studentId === user?.userId) {
+        // Student's own booking - open lesson room
+        window.open(`/lesson/${key}`, '_blank');
+      } else {
+        // Already booked by someone else
+        window.alert('This time slot is already booked.');
+      }
+      return;
+    }
+
+    // Not booked: navigate to booking flow (Browse Tutors)
+    window.location.href = '/browse-tutors';
+  };
+
   const formatDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
@@ -253,7 +274,7 @@ const SchedulePage = () => {
 
   return (
     <>
-      <SideBar />
+
       <div className="main-content">
         <Header />
         <main style={{ padding: '40px 0', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
@@ -308,7 +329,7 @@ const SchedulePage = () => {
                   backgroundClip: 'text',
                   letterSpacing: '0.5px'
                 }}>
-                  Lesson Schedule
+                  My Schedule
                 </h2>
               </div>
 
@@ -361,7 +382,7 @@ const SchedulePage = () => {
                 <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '22px' }}></i>
               </div>
               <p style={{ margin: 0, fontSize: '14px', color: '#92400e', lineHeight: '1.6', fontWeight: 500 }}>
-                Students can reserve your lessons 3 minutes before the lesson time starts. Please click refresh to get your latest reservation status.
+                Here are your upcoming lessons. Click "Join" to open the lesson room. To book new lessons, visit Browse Tutors.
               </p>
             </div>
 
@@ -548,79 +569,25 @@ const SchedulePage = () => {
                           return (
                             <td key={dayIdx} style={{ padding: '4px' }}>
                               <button
-                                onClick={() => handleSlotClick(dayIdx, time)}
-                                onDblClick={() => handleSlotDoubleClick(dayIdx, time)}
-                                disabled={!isBooked && (isPastOrNear || (isSelected && !canMarkAttend))}
+                                onClick={() => handleStudentSlotClick(dayIdx, time)}
                                 style={{
                                   width: '100%',
-                                  padding: '16px 8px',
+                                  padding: '12px 8px',
                                   borderRadius: '10px',
-                                  cursor: isBooked ? 'pointer' : isPastOrNear || (isSelected && !canMarkAttend) ? 'not-allowed' : 'pointer',
-                                  background: isPastOrNear
+                                  cursor: isBooked ? 'pointer' : canOpen ? 'pointer' : 'not-allowed',
+                                  background: isBooked
+                                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                                    : isPastOrNear
                                     ? 'rgba(203, 213, 225, 0.5)'
-                                    : isBookedAndPresent
-                                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                                    : isBooked
-                                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                                    : isPendingSelection
-                                    ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                                    : isMarkedPresent
-                                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                                    : isSelected
-                                    ? 'rgba(255, 255, 255, 0.9)'
-                                    : 'rgba(255, 255, 255, 0.9)',
-                                  color: isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? '#94a3b8' : isSelected ? '#10b981' : '#64748b',
+                                    : 'rgba(255, 255, 255, 0.95)',
+                                  color: isBooked ? '#fff' : isPastOrNear ? '#94a3b8' : '#0245ae',
                                   fontWeight: 800,
-                                  fontSize: isBooked ? '13px' : '11px',
-                                  transition: 'all 0.3s ease',
-                                  boxShadow: isBookedAndPresent
-                                    ? '0 4px 12px rgba(59, 130, 246, 0.5), 0 0 0 3px rgba(16, 185, 129, 0.5)'
-                                    : isBooked
-                                    ? '0 4px 12px rgba(59, 130, 246, 0.5)'
-                                    : isPendingSelection
-                                    ? '0 4px 12px rgba(245, 158, 11, 0.5), 0 0 0 2px rgba(245, 158, 11, 0.3)'
-                                    : isMarkedPresent
-                                    ? '0 4px 12px rgba(16, 185, 129, 0.4)'
-                                    : '0 2px 4px rgba(0, 0, 0, 0.05)',
-                                  letterSpacing: isBooked ? '1px' : '0.5px',
-                                  border: isBookedAndPresent
-                                    ? '3px solid #10b981'
-                                    : isBooked
-                                    ? 'none'
-                                    : isSelected && !isMarkedPresent && !isPendingSelection 
-                                    ? '2px solid #10b981' 
-                                    : !isSelected && !isPastOrNear && !isPendingSelection 
-                                    ? '1px solid rgba(2, 69, 174, 0.1)' 
-                                    : 'none',
-                                  transform: isPendingSelection || isBooked ? 'scale(1.05)' : 'scale(1)',
-                                  opacity: isSelected && !canMarkAttend && !isBooked ? 0.5 : 1
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (isBookedAndPresent) {
-                                    e.currentTarget.style.transform = 'scale(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.6), 0 0 0 3px rgba(16, 185, 129, 0.6)';
-                                  } else if (isBooked) {
-                                    e.currentTarget.style.transform = 'scale(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.6)';
-                                  } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = 'rgba(2, 69, 174, 0.1)';
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (isBookedAndPresent) {
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5), 0 0 0 3px rgba(16, 185, 129, 0.5)';
-                                  } else if (isBooked) {
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
-                                  } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                                    e.currentTarget.style.transform = 'scale(1)';
-                                  }
+                                  fontSize: '13px',
+                                  transition: 'all 0.2s ease',
+                                  border: isBooked ? 'none' : '1px solid rgba(2, 69, 174, 0.06)'
                                 }}
                               >
-                                {isBooked ? studentId : isPastOrNear ? 'PAST' : isPendingSelection ? 'SELECTED' : isMarkedPresent ? 'PRESENT' : isSelected ? 'OPEN' : 'AVAILABLE'}
+                                {isBooked ? (studentId === user?.userId ? 'Join Lesson' : 'Booked') : (canOpen ? 'Book' : 'Unavailable')}
                               </button>
                             </td>
                           );

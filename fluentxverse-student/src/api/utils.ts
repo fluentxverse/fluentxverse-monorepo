@@ -34,7 +34,7 @@ export const client = axios.create({
 client.interceptors.request.use(
   (config) => {
     // Add timestamp to prevent caching of auth-related requests
-    if (config.url === '/me' || config.url === '/login' || config.url === '/logout' || config.url === '/refresh') {
+    if (config.url === '/me' || config.url === '/student/me' || config.url === '/login' || config.url === '/logout' || config.url === '/refresh') {
       config.params = { ...config.params, _t: Date.now() };
       if (!config.headers) config.headers = {} as any;
       (config.headers as any)['Cache-Control'] = 'no-store, no-cache, must-revalidate';

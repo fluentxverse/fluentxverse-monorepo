@@ -88,5 +88,23 @@ export const tutorApi = {
     }
 
     return response.data.data;
-  }
+  },
+
+  /**
+   * Get tutor weekly availability grid
+   */
+  getAvailability: async (
+      tutorId: string
+    ): Promise<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>> => {
+      const response = await api.get<{
+        success: boolean;
+        data: Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>;
+      }>(`/tutor/${tutorId}/availability`);
+
+      if (!response.data.success) {
+        throw new Error('Failed to get availability');
+      }
+
+      return response.data.data;
+    }
 };

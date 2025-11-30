@@ -366,6 +366,12 @@ class AuthService {
             throw error;
         }
     }
+
+
+
+
+
+    
 }
 
 export default AuthService

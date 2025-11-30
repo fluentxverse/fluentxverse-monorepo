@@ -1,3 +1,5 @@
+  // Only allow tutors to log in to tutor app
+  const allowedRole = 'tutor';
 import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
 import { loginUser, logoutUser, getMe } from '../api/auth.api';
@@ -17,6 +19,7 @@ interface AuthUser {
   smartWalletAddress?: string;
   tier?: number;
   walletAddress?: string;
+  role?: string;
 }
 
 interface AuthContextValue {
@@ -100,6 +103,10 @@ export const AuthProvider = ({ children }: { children: any }) => {
         // /login returns full user data from RegisteredParams
         const loggedInUser = data.user as AuthUser;
         console.log('Logged in user:', loggedInUser);
+        if (loggedInUser.role && loggedInUser.role !== allowedRole) {
+          setUser(null);
+          throw new Error('You are not allowed to log in to the tutor app.');
+        }
         setUser(loggedInUser);
         // Persist name for cases where /me returns minimal fields
         const first = loggedInUser.firstName || '';
@@ -119,6 +126,10 @@ export const AuthProvider = ({ children }: { children: any }) => {
         try {
           const me = await getMe();
           if (me?.user) {
+            if (me.user.role && me.user.role !== allowedRole) {
+              setUser(null);
+              throw new Error('You are not allowed to log in to the tutor app.');
+            }
             setUser(prev => ({ ...prev, ...me.user }));
           }
         } catch (e) {

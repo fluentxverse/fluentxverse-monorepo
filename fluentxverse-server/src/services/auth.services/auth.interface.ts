@@ -12,6 +12,16 @@ export interface RegisterParams {
     mobileNumber: string;
 }
 
+
+export interface RegisterStudentParams {
+    email: string;
+    password: string;
+    familyName: string;
+    givenName: string;
+    birthDate: string;
+    mobileNumber: string;
+}
+
 // Keep User type in-sync with schema at compile time
 export type User = Static<typeof UserSchema>
 

@@ -15,34 +15,10 @@ export interface RegisterParams {
 }
 
 
-export const register = async (params: RegisterParams) => {
-    const { data } = await client.post('/register', params)
-    return data;
-}
 
-export const loginUser = async (email: string, password: string) => {
-    // Use a fresh axios instance for login to avoid any stale state/interceptor issues
-    const freshClient = axios.create({
-        baseURL: 'http://localhost:8765',
-        withCredentials: true,
-        headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-            'Pragma': 'no-cache'
-        }
-    });
-    const { data } = await freshClient.post('/login', { email, password }, {
-        params: { _t: Date.now() }
-    });
-    return data;
-}
-
-export const logoutUser = async () => {
-    const { data } = await client.post('/logout')
-    return data;
-}
 
 export const getMe = async () => {
-    const { data } = await client.get('/me')
+    const { data } = await client.get('/student/me')
     return data;
 }
 
@@ -84,5 +60,31 @@ export const updateEmail = async (newEmail: string, currentPassword: string) => 
 
 export const updatePassword = async (currentPassword: string, newPassword: string) => {
     const { data } = await client.put('/user/password', { currentPassword, newPassword })
+    return data;
+}
+
+
+export interface StudentRegisterParams {
+  email: string;
+  password: string;
+  familyName: string;
+  givenName: string;
+  birthDate: string;
+  mobileNumber: string;
+}
+
+export const register = async (params: StudentRegisterParams) => {
+  const { data } = await client.post('/student/register', params);
+  return data;
+};
+
+export const loginUser = async (email: string, password: string) => {
+  const { data } = await client.post('/student/login', { email, password });
+  return data;
+};
+
+
+export const logoutUser = async () => {
+    const { data } = await client.post('/logout')
     return data;
 }

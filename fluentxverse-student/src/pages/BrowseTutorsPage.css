@@ -1028,11 +1028,19 @@
   padding: 10px 18px;
   background: var(--browse-primary);
   color: #fff;
+  border: none;
+  outline: none;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
   transition: var(--browse-transition);
+}
+
+.tutor-card-new__cta:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.2);
 }
 
 .tutor-card-new__cta:hover {

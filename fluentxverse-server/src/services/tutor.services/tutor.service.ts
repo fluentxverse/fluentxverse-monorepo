@@ -76,6 +76,15 @@ export class TutorService {
   }
 
   /**
+   * Get weekly availability for a tutor
+   */
+  public async getAvailability(tutorId: string): Promise<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>> {
+    // TODO: Implement real availability from Memgraph when schema is ready.
+    // For now, return empty set indicating no opened slots.
+    return [];
+  }
+
+  /**
    * Set user's profile picture URL, optionally clearing previous one
    */
   public async setProfilePicture(userId: string, url: string): Promise<void> {
@@ -111,6 +120,68 @@ export class TutorService {
       const record = res.records[0];
       const url = record?.get('profilePicture');
       return url || undefined;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get tutor profile by ID
+   */
+  public async getTutorProfile(tutorId: string): Promise<TutorProfile | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const query = `
+        MATCH (u:User {id: $tutorId})
+        RETURN u
+      `;
+
+      const result = await session.run(query, { tutorId });
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const record = result.records[0];
+      if (!record) {
+        return null;
+      }
+
+      const user = record.get('u').properties;
+
+      return {
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        middleName: user.middleName,
+        lastName: user.lastName,
+        displayName: user.displayName || `${user.firstName} ${user.lastName}`,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        introduction: user.introduction,
+        tier: user.tier,
+        timezone: user.timezone,
+        country: user.country,
+        languages: user.languages ? JSON.parse(user.languages) : [],
+        specializations: user.specializations ? JSON.parse(user.specializations) : [],
+        hourlyRate: user.hourlyRate ? parseFloat(user.hourlyRate) : undefined,
+        experienceYears: user.experienceYears ? parseInt(user.experienceYears) : undefined,
+        education: user.education ? JSON.parse(user.education) : [],
+        certifications: user.certifications ? JSON.parse(user.certifications) : [],
+        teachingStyle: user.teachingStyle,
+        videoIntroUrl: user.videoIntroUrl,
+        rating: user.rating ? parseFloat(user.rating) : undefined,
+        totalReviews: user.totalReviews ? parseInt(user.totalReviews) : 0,
+        totalSessions: user.totalSessions ? parseInt(user.totalSessions) : 0,
+        isVerified: user.isVerified || false,
+        isAvailable: user.isAvailable || false,
+        joinedDate: user.createdAt
+      };
+    } catch (error) {
+      console.error('Error getting tutor profile:', error);
+      throw new Error('Failed to get tutor profile');
     } finally {
       await session.close();
     }

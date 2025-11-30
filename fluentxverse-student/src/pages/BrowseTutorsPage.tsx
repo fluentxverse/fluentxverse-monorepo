@@ -18,6 +18,19 @@ const TutorCard = ({ tutor }: { tutor: Tutor }) => {
   const reviewCount = tutor.totalReviews || 0;
   const sessionCount = tutor.totalSessions || 0;
 
+  const handleCardClick = (e: any) => {
+    // Don't navigate if clicking the Book Trial button
+    if (e.target.closest('.tutor-card-new__cta')) {
+      return;
+    }
+    window.location.href = `/tutor/${tutor.userId}`;
+  };
+
+  const handleBookTrial = (e: any) => {
+    e.stopPropagation();
+    window.location.href = `/register?tutorId=${tutor.userId}`;
+  };
+
   const avatarContent = tutor.profilePicture ? (
     <img 
       src={tutor.profilePicture} 
@@ -37,7 +50,7 @@ const TutorCard = ({ tutor }: { tutor: Tutor }) => {
   ) : null;
 
   return (
-    <div className="tutor-card-new">
+    <div className="tutor-card-new" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       {/* Availability Badge */}
       {tutor.isAvailable && (
         <div className="tutor-card-new__available-badge">
@@ -48,15 +61,13 @@ const TutorCard = ({ tutor }: { tutor: Tutor }) => {
 
       {/* Profile Section */}
       <div className="tutor-card-new__profile">
-        <a href={`/tutor/${tutor.userId}`} className="tutor-card-new__avatar-link">
+        <div className="tutor-card-new__avatar-link">
           {jsx(avatarContent)}
           {jsx(verifiedBadge)}
-        </a>
+        </div>
 
         <div className="tutor-card-new__info">
-          <a href={`/tutor/${tutor.userId}`} className="tutor-card-new__name-link">
-            <h3 className="tutor-card-new__name">{displayName}</h3>
-          </a>
+          <h3 className="tutor-card-new__name">{displayName}</h3>
           
           {/* Rating */}
           <div className="tutor-card-new__rating">
@@ -117,10 +128,10 @@ const TutorCard = ({ tutor }: { tutor: Tutor }) => {
           <span className="tutor-card-new__price-value">{hourlyRate}</span>
           <span className="tutor-card-new__price-label">/hour</span>
         </div>
-        <a href={`/tutor/${tutor.userId}`} className="tutor-card-new__cta">
+        <button onClick={handleBookTrial} className="tutor-card-new__cta">
           Book Trial
           <i className="ri-arrow-right-line"></i>
-        </a>
+        </button>
       </div>
     </div>
   );
@@ -327,7 +338,7 @@ export const BrowseTutorsPage = () => {
             <div className="browse-hero__content">
               <h1 className="browse-hero__title">
                 Find Your Perfect
-                <span className="browse-hero__highlight"> Language Tutor</span>
+                <span className="browse-hero__highlight"> English Tutor</span>
               </h1>
               <p className="browse-hero__subtitle">
                 Connect with expert tutors for personalized 1-on-1 lessons
@@ -559,22 +570,6 @@ export const BrowseTutorsPage = () => {
                         </button>
                       </span>
                     ))}
-                    {minRating > 0 && (
-                      <span className="browse-active-filter">
-                        ⭐ {minRating}+
-                        <button onClick={() => setMinRating(0)}>
-                          <i className="ri-close-line"></i>
-                        </button>
-                      </span>
-                    )}
-                    {showAvailableOnly && (
-                      <span className="browse-active-filter">
-                        Available Now
-                        <button onClick={() => setShowAvailableOnly(false)}>
-                          <i className="ri-close-line"></i>
-                        </button>
-                      </span>
-                    )}
                   </div>
                 )}
               </div>

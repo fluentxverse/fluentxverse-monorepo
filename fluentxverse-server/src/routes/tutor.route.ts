@@ -94,6 +94,62 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     }
   })
 
+  /**
+   * Get tutor profile by ID
+   * GET /tutor/:tutorId
+   * IMPORTANT: This must be last because it's a catch-all route
+   */
+  .get('/:tutorId', async ({ params }) => {
+    try {
+      const { tutorId } = params;
+      
+      if (!tutorId) {
+        return {
+          success: false,
+          error: 'Tutor ID is required'
+        };
+      }
+
+      const tutor = await tutorService.getTutorProfile(tutorId);
+
+      if (!tutor) {
+        return {
+          success: false,
+          error: 'Tutor not found'
+        };
+      }
+
+      return {
+        success: true,
+        data: tutor
+      };
+    } catch (error) {
+      console.error('Error in /tutor/:tutorId:', error);
+      return {
+        success: false,
+        error: 'Failed to get tutor profile'
+      };
+    }
+  })
+
+  /**
+   * Get tutor weekly availability
+   * GET /tutor/:tutorId/availability
+   */
+  .get('/:tutorId/availability', async ({ params }) => {
+    try {
+      const { tutorId } = params;
+      if (!tutorId) {
+        return { success: false, error: 'Tutor ID is required' };
+      }
+
+      const availability = await tutorService.getAvailability(tutorId);
+      return { success: true, data: availability };
+    } catch (error) {
+      console.error('Error in /tutor/:tutorId/availability:', error);
+      return { success: false, error: 'Failed to get availability' };
+    }
+  })
 
 
 export default Tutor;

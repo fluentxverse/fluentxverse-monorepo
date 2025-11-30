@@ -8,6 +8,7 @@ import SchedulePage from './pages/SchedulePage';
 import StudentProfilePage from './pages/StudentProfilePage';
 import ClassroomPage from './pages/ClassroomPage';
 import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
+import { TutorProfilePage } from './pages/TutorProfilePage';
 import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
@@ -68,6 +69,7 @@ export function AppInner() {
 					{/* Login page intentionally removed; login via modal */}
 					<Route path="/register" component={RegisterPage} />
 					<Route path="/browse-tutors" component={BrowseTutorsPage} />
+					<Route path="/tutor/:tutorId" component={TutorProfilePage} />
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
 							<Route path="/classroom/:studentId" component={withProtected(ClassroomPage)} />

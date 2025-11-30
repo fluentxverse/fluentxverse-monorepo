@@ -1,12 +1,15 @@
 import { useState } from 'preact/hooks';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
+import Footer from '../Components/Footer/Footer';
 import { useAuthContext } from '../context/AuthContext';
 
 const HomePage = () => {
   const { user } = useAuthContext();
-  const [activeStep] = useState(1); // User is on step 1: Skills Assessment
+  const [activeStep] = useState(1); // placeholder if needed
 
+
+  console.log(user)
   return (
     <>
       <SideBar />
@@ -14,508 +17,108 @@ const HomePage = () => {
         <Header />
         <main style={{ padding: '40px 0', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
           <div className="container">
-            {/* Notification Banner */}
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.9)', 
-              backdropFilter: 'blur(10px)',
-              padding: '20px 28px', 
-              borderRadius: '16px', 
-              marginBottom: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              boxShadow: '0 4px 20px rgba(2, 69, 174, 0.1)',
-              border: '1px solid rgba(2, 69, 174, 0.1)'
-            }}>
-              <div style={{ 
-                width: '56px', 
-                height: '56px', 
-                borderRadius: '16px', 
-                background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)'
-              }}>
-                <i className="fas fa-bell" style={{ color: '#fff', fontSize: '24px' }}></i>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: '#0245ae', marginBottom: '6px', letterSpacing: '0.5px' }}>
-                  PLATFORM UPDATE
+            {/* Hero Section (public or logged-in) */}
+            {user ? (
+              <div style={{ display: 'flex', gap: '36px', alignItems: 'center', marginBottom: '36px' }}>
+                <div style={{ flex: 1 }}>
+                  <h1 style={{ margin: 0, fontSize: '36px', fontWeight: 900, color: '#022a6b', lineHeight: 1.05 }}>
+                    Welcome back{user.givenName || user.familyName ? `, ${user.givenName || user.familyName}` : ''}!
+                  </h1>
+                  <p style={{ marginTop: '12px', color: '#475569', fontSize: '16px', maxWidth: '640px' }}>
+                    Ready for your next lesson? Here are quick actions to get you back to learning.
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <a href="/book-lesson" className="btn-primary" style={{ padding: '12px 26px', borderRadius: '12px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>Book a Lesson</a>
+                    <a href="/dashboard" className="btn-secondary" style={{ padding: '10px 16px', borderRadius: '12px', fontWeight: 700, background: '#fff', color: '#0245ae', border: '1px solid rgba(2,69,174,0.08)' }}>Go to Dashboard</a>
+                    <a href="/schedule" className="btn-secondary" style={{ padding: '10px 16px', borderRadius: '12px', fontWeight: 700, background: '#fff', color: '#0245ae', border: '1px solid rgba(2,69,174,0.08)' }}>My Schedule</a>
+                  </div>
                 </div>
-                <div style={{ fontSize: '14px', color: '#475569', lineHeight: '1.5' }}>
-                  We're continuously improving our tutor scheduling and availability features to give you more flexibility.
+
+                <div style={{ width: '300px', flexShrink: 0 }}>
+                  <div style={{ borderRadius: '12px', padding: '16px', background: 'linear-gradient(180deg, #ffffff, #f1f8ff)', boxShadow: '0 8px 24px rgba(2,69,174,0.06)' }}>
+                    <div style={{ fontWeight: 800, color: '#022a6b' }}>Next lesson</div>
+                    <div style={{ marginTop: 8, color: '#475569' }}>No upcoming lessons. Book a trial or schedule your next class.</div>
+                  </div>
                 </div>
               </div>
-              <button style={{ 
-                background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)', 
-                color: '#fff', 
-                border: 'none', 
-                padding: '12px 24px', 
-                borderRadius: '12px', 
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)',
-                transition: 'transform 0.2s ease'
-              }}>
-                <i className="fas fa-inbox"></i>
-                View Inbox
-              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '36px', alignItems: 'center', marginBottom: '36px' }}>
+                <div style={{ flex: 1 }}>
+                  <h1 style={{ margin: 0, fontSize: '40px', fontWeight: 900, color: '#022a6b', lineHeight: 1.05 }}>
+                    Korean Learners — Start Your English Journey
+                  </h1>
+                  <p style={{ marginTop: '12px', color: '#475569', fontSize: '16px', maxWidth: '640px' }}>
+                    FluentXVerse offers tailored English lessons for Korean students: expert tutors, flexible scheduling, and lessons focused on real conversation and exam preparation.
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                    <a href="/register" className="btn-primary" style={{ padding: '14px 26px', borderRadius: '12px', fontWeight: 800 }}>Get Started — Free Trial</a>
+                    <a href="/browse-tutors" className="btn-secondary" style={{ padding: '14px 22px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>Browse Tutors</a>
+                  </div>
+                </div>
+
+                <div style={{ width: '420px', flexShrink: 0 }}>
+                  <div style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(2,69,174,0.12)' }}>
+                    <img src="/assets/img/banner/banner_woman_register.png" alt="Happy student" style={{ width: '100%', display: 'block', objectFit: 'cover' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reduced, neutral Features */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '28px' }}>
+              {[
+                { title: 'Korean-focused lessons', desc: 'Bilingual support and practical conversation practice.' },
+                { title: 'Qualified tutors', desc: 'Experienced teachers with structured lesson plans.' },
+                { title: 'Flexible booking', desc: 'Schedule lessons around school and family.' }
+              ].map((f, i) => (
+                <div key={i} style={{ background: '#fff', padding: '18px', borderRadius: '12px', border: '1px solid rgba(2,69,174,0.06)' }}>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>{f.title}</h4>
+                  <p style={{ margin: 0, color: '#475569', fontSize: '13px' }}>{f.desc}</p>
+                </div>
+              ))}
             </div>
 
-            {/* Application Status Header */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '14px', 
-              marginBottom: '28px' 
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)'
-              }}>
-                <i className="fas fa-tasks" style={{ color: '#fff', fontSize: '22px' }}></i>
-              </div>
-              <h2 style={{ 
-                margin: 0, 
-                fontSize: '32px', 
-                fontWeight: 800, 
-                background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                letterSpacing: '0.5px'
-              }}>
-                APPLICATION STATUS
-              </h2>
-            </div>
+            {/* Simplified How it works (muted) */}
+            <div style={{ background: '#fff', padding: '22px', borderRadius: '12px', border: '1px solid rgba(2,69,174,0.04)', marginBottom: '28px' }}>
+              <h3 style={{ marginTop: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>How it works</h3>
+              <div style={{ position: 'relative', marginTop: '12px', padding: '12px 0' }}>
+                <div style={{ position: 'absolute', left: '8%', right: '8%', top: '36px', height: '6px', background: 'rgba(15,23,42,0.06)', borderRadius: '6px', zIndex: 0 }} />
+                <div style={{ position: 'absolute', left: '8%', width: '34%', top: '36px', height: '6px', background: 'rgba(2,69,174,0.12)', borderRadius: '6px', zIndex: 1 }} />
 
-            {/* Main Status Card */}
-            <div style={{ 
-              background: 'rgba(255, 255, 255, 0.95)', 
-              backdropFilter: 'blur(10px)',
-              borderRadius: '24px', 
-              padding: '40px', 
-              boxShadow: '0 8px 32px rgba(2, 69, 174, 0.12)',
-              marginBottom: '36px',
-              border: '1px solid rgba(2, 69, 174, 0.08)'
-            }}>
-              {/* Progress Steps */}
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                marginBottom: '56px',
-                position: 'relative'
-              }}>
-                {/* Progress Line */}
-                <div style={{
-                  position: 'absolute',
-                  top: '28px',
-                  left: '12%',
-                  right: '12%',
-                  height: '4px',
-                  background: 'rgba(2, 69, 174, 0.1)',
-                  borderRadius: '2px',
-                  zIndex: 0
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: activeStep >= 2 ? '50%' : '0%',
-                    background: 'linear-gradient(90deg, #0245ae 0%, #4a9eff 100%)',
-                    borderRadius: '2px',
-                    transition: 'width 0.5s ease',
-                    boxShadow: '0 2px 8px rgba(2, 69, 174, 0.3)'
-                  }}></div>
-                </div>
-
-                {/* Step 1 */}
-                <div style={{ flex: 1, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                  <div style={{ 
-                    width: '56px', 
-                    height: '56px', 
-                    borderRadius: '16px', 
-                    background: activeStep >= 1 ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : '#e2e8f0',
-                    color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    fontWeight: 800,
-                    marginBottom: '16px',
-                    transition: 'all 0.3s ease',
-                    boxShadow: activeStep >= 1 ? '0 4px 16px rgba(2, 69, 174, 0.4)' : 'none'
-                  }}>1</div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: '#0245ae', letterSpacing: '0.5px' }}>SKILLS</div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: '#0245ae', letterSpacing: '0.5px' }}>ASSESSMENT</div>
-                </div>
-
-                {/* Step 2 */}
-                <div style={{ flex: 1, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                  <div style={{ 
-                    width: '56px', 
-                    height: '56px', 
-                    borderRadius: '16px', 
-                    background: activeStep >= 2 ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : '#e2e8f0',
-                    color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    fontWeight: 800,
-                    marginBottom: '16px',
-                    transition: 'all 0.3s ease',
-                    boxShadow: activeStep >= 2 ? '0 4px 16px rgba(2, 69, 174, 0.4)' : 'none'
-                  }}>2</div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: activeStep >= 2 ? '#0245ae' : '#94a3b8', letterSpacing: '0.5px' }}>ONBOARDING &</div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: activeStep >= 2 ? '#0245ae' : '#94a3b8', letterSpacing: '0.5px' }}>PROFILE</div>
-                </div>
-
-                {/* Step 3 */}
-                <div style={{ flex: 1, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                  <div style={{ 
-                    width: '56px', 
-                    height: '56px', 
-                    borderRadius: '16px', 
-                    background: activeStep >= 3 ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : '#e2e8f0',
-                    color: '#fff',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    fontWeight: 800,
-                    marginBottom: '16px',
-                    transition: 'all 0.3s ease',
-                    boxShadow: activeStep >= 3 ? '0 4px 16px rgba(2, 69, 174, 0.4)' : 'none'
-                  }}>3</div>
-                  <div style={{ fontWeight: 700, fontSize: '13px', color: activeStep >= 3 ? '#0245ae' : '#94a3b8', letterSpacing: '0.5px' }}>SCHEDULE SETUP</div>
-                </div>
-              </div>
-
-              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '40px', lineHeight: '1.6', textAlign: 'center', fontWeight: 500 }}>
-                To join FluentXVerse as an English tutor, you need to complete the following assessment levels:
-              </p>
-
-              {/* English Proficiency Section */}
-              <div style={{ 
-                background: 'rgba(248, 250, 252, 0.6)', 
-                backdropFilter: 'blur(8px)',
-                padding: '32px', 
-                borderRadius: '20px',
-                marginBottom: '28px',
-                border: '1px solid rgba(2, 69, 174, 0.08)'
-              }}>
-                <h3 style={{ 
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontSize: '18px', 
-                  fontWeight: 800, 
-                  marginBottom: '28px',
-                  textAlign: 'center',
-                  letterSpacing: '1px'
-                }}>
-                  ENGLISH PROFICIENCY TEST
-                </h3>
-
-                {/* Written Test */}
-                <div style={{ 
-                  background: 'rgba(255, 255, 255, 0.8)', 
-                  backdropFilter: 'blur(8px)',
-                  padding: '24px', 
-                  borderRadius: '16px',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '24px',
-                  boxShadow: '0 4px 16px rgba(2, 69, 174, 0.08)',
-                  border: '1px solid rgba(2, 69, 174, 0.08)',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}>
-                  <div style={{ 
-                    width: '72px', 
-                    height: '72px', 
-                    borderRadius: '18px', 
-                    background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 6px 20px rgba(2, 69, 174, 0.3)'
-                  }}>
-                    <i className="fas fa-pen" style={{ color: '#fff', fontSize: '30px' }}></i>
+                <div style={{ display: 'flex', gap: '18px', position: 'relative', zIndex: 2 }}>
+                  <div style={{ flex: 1, textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 28, margin: '0 auto', background: '#0245ae', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>1</div>
+                    <div style={{ marginTop: 10, fontWeight: 700, color: '#0f172a' }}>Create account</div>
+                    <div style={{ color: '#64748b', fontSize: 13, marginTop: 6 }}>Sign up with email and basic details.</div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 10px 0', fontSize: '19px', fontWeight: 800, color: '#0f172a' }}>WRITTEN TEST</h4>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#64748b', lineHeight: '1.6' }}>
-                      A comprehensive assessment covering grammar, vocabulary, reading comprehension, and writing skills to evaluate your English proficiency. <a href="#" style={{ color: '#0245ae', fontWeight: 600 }}>Learn more..</a>
-                    </p>
+                  <div style={{ flex: 1, textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 28, margin: '0 auto', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a', fontWeight: 700 }}>2</div>
+                    <div style={{ marginTop: 10, fontWeight: 700, color: '#0f172a' }}>Level check</div>
+                    <div style={{ color: '#64748b', fontSize: 13, marginTop: 6 }}>A short placement to find suitable lessons.</div>
                   </div>
-                  <div style={{ 
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-                    color: '#fff', 
-                    padding: '10px 20px', 
-                    borderRadius: '12px',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                    letterSpacing: '0.5px'
-                  }}>
-                    DONE <i className="fas fa-check-circle"></i>
-                  </div>
-                </div>
-
-                {/* Speaking Test */}
-                <div style={{ 
-                  background: 'rgba(255, 255, 255, 0.8)', 
-                  backdropFilter: 'blur(8px)',
-                  padding: '24px', 
-                  borderRadius: '16px',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '24px',
-                  boxShadow: '0 4px 16px rgba(2, 69, 174, 0.08)',
-                  border: '1px solid rgba(2, 69, 174, 0.08)'
-                }}>
-                  <div style={{ 
-                    width: '72px', 
-                    height: '72px', 
-                    borderRadius: '18px', 
-                    background: 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 6px 20px rgba(74, 158, 255, 0.3)'
-                  }}>
-                    <i className="fas fa-microphone" style={{ color: '#fff', fontSize: '30px' }}></i>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 10px 0', fontSize: '19px', fontWeight: 800, color: '#0f172a' }}>SPEAKING TEST</h4>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#64748b', marginBottom: '14px', lineHeight: '1.6' }}>
-                      An oral assessment to evaluate your pronunciation, fluency, and conversational abilities in English. <a href="#" style={{ color: '#0245ae', fontWeight: 600 }}>Learn more..</a>
-                    </p>
-                    <div style={{ 
-                      background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', 
-                      padding: '12px 18px', 
-                      borderRadius: '12px',
-                      fontSize: '13px',
-                      color: '#92400e',
-                      fontWeight: 600,
-                      border: '1px solid #fbbf24'
-                    }}>
-                      Use this exam code when you begin: <strong style={{ color: '#78350f', fontWeight: 800 }}>FXV2025</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <button style={{ 
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)', 
-                  color: '#fff', 
-                  border: 'none', 
-                  padding: '16px 40px', 
-                  borderRadius: '14px',
-                  fontWeight: 800,
-                  fontSize: '15px',
-                  cursor: 'pointer',
-                  display: 'block',
-                  margin: '0 auto',
-                  boxShadow: '0 6px 20px rgba(2, 69, 174, 0.4)',
-                  letterSpacing: '0.5px',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                }}>
-                  TAKE THE TEST
-                </button>
-              </div>
-
-              {/* Interview Section with Arrow */}
-              <div style={{ position: 'relative', marginBottom: '24px' }}>
-                <div style={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '-40px',
-                  transform: 'translateX(-50%)',
-                  width: 0,
-                  height: 0,
-                  borderLeft: '40px solid transparent',
-                  borderRight: '40px solid transparent',
-                  borderTop: '50px solid #ff1744',
-                  zIndex: 2
-                }}></div>
-              </div>
-
-              <div style={{ 
-                background: 'rgba(248, 250, 252, 0.6)', 
-                backdropFilter: 'blur(8px)',
-                padding: '32px', 
-                borderRadius: '20px',
-                border: '1px solid rgba(2, 69, 174, 0.08)'
-              }}>
-                <h3 style={{ 
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  fontSize: '18px', 
-                  fontWeight: 800, 
-                  marginBottom: '28px',
-                  textAlign: 'center',
-                  letterSpacing: '1px'
-                }}>
-                  INTERVIEW
-                </h3>
-
-                {/* Contact Verification */}
-                <div style={{ 
-                  background: 'rgba(255, 255, 255, 0.8)', 
-                  backdropFilter: 'blur(8px)',
-                  padding: '24px', 
-                  borderRadius: '16px',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '24px',
-                  boxShadow: '0 4px 16px rgba(2, 69, 174, 0.08)',
-                  border: '1px solid rgba(2, 69, 174, 0.08)'
-                }}>
-                  <div style={{ 
-                    width: '72px', 
-                    height: '72px', 
-                    borderRadius: '18px', 
-                    background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 6px 20px rgba(2, 69, 174, 0.3)'
-                  }}>
-                    <i className="fas fa-check-circle" style={{ color: '#fff', fontSize: '32px' }}></i>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#475569', fontWeight: 600, lineHeight: '1.6' }}>
-                      Ensure your contact number is correct and you have a messaging app (Viber, WhatsApp, or Telegram) for interview coordination.
-                    </p>
-                    <p style={{ margin: '10px 0 0', fontSize: '13px', color: '#94a3b8' }}>
-                      Update your contact details here: <a href="#" style={{ color: '#0245ae', fontWeight: 700 }}>My Profile</a>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Interview Guide */}
-                <div style={{ 
-                  background: 'rgba(255, 255, 255, 0.8)', 
-                  backdropFilter: 'blur(8px)',
-                  padding: '24px', 
-                  borderRadius: '16px',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '24px',
-                  boxShadow: '0 4px 16px rgba(2, 69, 174, 0.08)',
-                  border: '1px solid rgba(2, 69, 174, 0.08)'
-                }}>
-                  <div style={{ 
-                    width: '72px', 
-                    height: '72px', 
-                    borderRadius: '18px', 
-                    background: 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 6px 20px rgba(74, 158, 255, 0.3)'
-                  }}>
-                    <i className="fas fa-book-open" style={{ color: '#fff', fontSize: '30px' }}></i>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 14px 0', fontSize: '14px', color: '#475569', fontWeight: 600, lineHeight: '1.6' }}>
-                      Review our interview guide to learn what to expect and how to showcase your teaching skills.
-                    </p>
-                    <button style={{ 
-                      background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)', 
-                      color: '#fff', 
-                      border: 'none', 
-                      padding: '12px 24px', 
-                      borderRadius: '12px',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)',
-                      letterSpacing: '0.5px',
-                      transition: 'transform 0.2s ease'
-                    }}>
-                      INTERVIEW GUIDE
-                    </button>
-                  </div>
-                </div>
-
-                {/* Book Schedule */}
-                <div style={{ 
-                  background: 'rgba(255, 255, 255, 0.8)', 
-                  backdropFilter: 'blur(8px)',
-                  padding: '24px', 
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '24px',
-                  boxShadow: '0 4px 16px rgba(2, 69, 174, 0.08)',
-                  border: '1px solid rgba(2, 69, 174, 0.08)'
-                }}>
-                  <div style={{ 
-                    width: '72px', 
-                    height: '72px', 
-                    borderRadius: '18px', 
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    boxShadow: '0 6px 20px rgba(16, 185, 129, 0.3)'
-                  }}>
-                    <i className="fas fa-calendar-check" style={{ color: '#fff', fontSize: '30px' }}></i>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: '0 0 14px 0', fontSize: '14px', color: '#475569', fontWeight: 600, lineHeight: '1.6' }}>
-                      Choose a convenient time for your interview with our recruitment team.
-                    </p>
-                    <button style={{ 
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-                      color: '#fff', 
-                      border: 'none', 
-                      padding: '12px 24px', 
-                      borderRadius: '12px',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                      letterSpacing: '0.5px',
-                      transition: 'transform 0.2s ease'
-                    }}>
-                      BOOK A SCHEDULE
-                    </button>
+                  <div style={{ flex: 1, textAlign: 'center' }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 28, margin: '0 auto', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f172a', fontWeight: 700 }}>3</div>
+                    <div style={{ marginTop: 10, fontWeight: 700, color: '#0f172a' }}>Book trial</div>
+                    <div style={{ color: '#64748b', fontSize: 13, marginTop: 6 }}>Choose a tutor and schedule your first lesson.</div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Small testimonial line (optional) */}
+            <div style={{ marginBottom: '24px', color: '#475569', fontSize: 14 }}>
+              <em>“Practical lessons and clear explanations — a helpful way to improve conversation.”</em>
+            </div>
+
+            {/* Utility footer removed as requested */}
           </div>
         </main>
+        <Footer />
       </div>
     </>
   );
-};
+};         
 
 export default HomePage;

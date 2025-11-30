@@ -68,10 +68,42 @@ const SchedulePage = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   
   // Time slots for different periods
+  // Generate 30-min slots for PH time 05:00–23:30
+  const generateTimeSlots = () => {
+    const slots: string[] = [];
+    for (let h = 5; h < 24; h++) {
+      const hour12 = h % 12 === 0 ? 12 : h % 12;
+      const ampm = h < 12 ? 'AM' : 'PM';
+      slots.push(`${hour12}:00 ${ampm}`);
+      if (h < 23) {
+        slots.push(`${hour12}:30 ${ampm}`);
+      } else {
+        slots.push('11:30 PM');
+      }
+    }
+    return slots;
+  };
+
+  const allSlots = generateTimeSlots();
   const timeSlots = {
-    morning: ['6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'],
-    afternoon: ['12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM'],
-    evening: ['6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM']
+    morning: allSlots.filter(s => {
+      const [t, p] = s.split(' ');
+      const [h, m] = t.split(':').map(Number);
+      const hour = p === 'PM' ? (h === 12 ? 12 : h + 12) : h;
+      return hour >= 5 && hour < 12;
+    }),
+    afternoon: allSlots.filter(s => {
+      const [t, p] = s.split(' ');
+      const [h, m] = t.split(':').map(Number);
+      const hour = p === 'PM' ? (h === 12 ? 12 : h + 12) : h;
+      return hour >= 12 && hour < 18;
+    }),
+    evening: allSlots.filter(s => {
+      const [t, p] = s.split(' ');
+      const [h, m] = t.split(':').map(Number);
+      const hour = p === 'PM' ? (h === 12 ? 12 : h + 12) : h;
+      return hour >= 18 && (hour < 24 || (hour === 23 && m === 30));
+    })
   };
 
   // Parse time string to Date object

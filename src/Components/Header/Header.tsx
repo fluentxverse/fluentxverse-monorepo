@@ -1,7 +1,8 @@
 import { useEffect, useCallback, useState } from 'react';
 import { Link } from 'wouter';
-import { useThemeStore } from '../../context/ThemeContext';
+import { useThemeStore } from '../../Components/Header';
 import { useAuthContext } from '../../context/AuthContext';
+
 import "./Header.css";
 
 
