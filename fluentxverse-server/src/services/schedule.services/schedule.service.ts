@@ -202,7 +202,7 @@ export class ScheduleService {
         MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
         WHERE s.slotDate >= $startDate AND s.slotDate <= $endDate
         OPTIONAL MATCH (s)<-[:BOOKS]-(b:Booking)
-        OPTIONAL MATCH (b)-[:BOOKED_BY]->(student:User)
+        OPTIONAL MATCH (b)-[:BOOKED_BY]->(student:Student)
         RETURN s, b, student
         ORDER BY s.slotDate, s.slotTime
         `,
@@ -220,7 +220,7 @@ export class ScheduleService {
           status: slot.status,
           bookingId: booking?.bookingId,
           studentId: student?.id,
-          studentName: student ? `${student.firstName} ${student.lastName}` : undefined,
+          studentName: student ? `${student.givenName} ${student.familyName}` : undefined,
           penaltyCode: booking?.penaltyCode,
           attendanceTutor: booking?.attendanceTutor,
           attendanceStudent: booking?.attendanceStudent
@@ -320,7 +320,7 @@ export class ScheduleService {
       await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId})
-        MATCH (student:User {id: $studentId})
+        MATCH (student:Student {id: $studentId})
         SET s.status = 'booked', s.updatedAt = datetime()
         CREATE (b:Booking {
           bookingId: $bookingId,

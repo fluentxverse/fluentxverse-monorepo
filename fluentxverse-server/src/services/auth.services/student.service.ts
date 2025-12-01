@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { hash, compare } from "bcrypt-ts";
 import { getDriver } from "../../db/memgraph";
 import type { RegisterParams, LoginParams, RegisteredParams, Suspended, RegisterStudentParams } from "./auth.interface";
+import WalletService from "../wallet.services/wallet.service";
 
 class StudentService {
   public async register(params: RegisterStudentParams & { familyName: string; givenName: string }): Promise<{ message: string }> {
@@ -10,13 +11,18 @@ class StudentService {
       const signUpdate = Date.now();
       const suspended: Suspended = { until: null, reason: "" };
       const { email, password, familyName, givenName, birthDate, mobileNumber } = params;
-      const encrypted = await hash(password, 10);
+
+      const walletService = new WalletService();
+      const [encrypted, smartWalletAddress] = await Promise.all([
+          hash(password, 10), // Reduced salt rounds for performance
+          walletService.createServerWallet(id)
+      ]);
       const driver = getDriver();
       const session = driver.session();
 
       // Check if email already exists to avoid unique constraint errors
       const existsResult = await session.run(
-        `MATCH (u:User { email: $email }) RETURN u LIMIT 1`,
+        `MATCH (s:Student { email: $email }) RETURN s LIMIT 1`,
         { email }
       );
       if (existsResult.records.length > 0) {
@@ -27,12 +33,11 @@ class StudentService {
       }
 
       await session.run(
-        `CREATE (u:User {
+        `CREATE (s:Student {
           id: $id,
           email: $email,
           password: $encrypted,
           role: 'student',
-          tier: 0,
           familyName: $familyName,
           givenName: $givenName,
           birthDate: $birthDate,
@@ -40,6 +45,7 @@ class StudentService {
           signUpdate: $signUpdate,
           suspendedUntil: $suspendedUntil,
           suspendedReason: $suspendedReason,
+          smartWalletAddress: $smartWalletAddress,
           verifiedEmail: false,
           verifiedMobile: false
         })`,
@@ -53,7 +59,8 @@ class StudentService {
           mobileNumber,
           signUpdate,
           suspendedUntil: suspended.until,
-          suspendedReason: suspended.reason
+          suspendedReason: suspended.reason,
+          smartWalletAddress
         }
       );
       await session.close();
@@ -69,14 +76,14 @@ class StudentService {
       const driver = getDriver();
       const session = driver.session();
       const result = await session.run(
-        `MATCH (u:User { email: $email, role: 'student' }) RETURN u`,
+        `MATCH (s:Student { email: $email }) RETURN s`,
         { email: params.email }
       );
       await session.close();
       if (result.records.length === 0) {
         throw new Error("Invalid email or password");
       }
-      const user = result.records[0]?.get("u").properties;
+      const user = result.records[0]?.get("s").properties;
       const encryptedPassword: string = user.password;
       const isPasswordValid = await compare(params.password, encryptedPassword);
       if (!isPasswordValid) {
