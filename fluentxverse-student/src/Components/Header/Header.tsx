@@ -1,5 +1,4 @@
-import { useEffect, useCallback, useState } from 'preact/compat';
-import { Link } from 'wouter';
+import { useEffect, useCallback, useState } from 'preact/hooks';
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import { loginUser } from '../../api/auth.api';
@@ -126,13 +125,13 @@ const Header = () => {
                   </div>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul className="navigation">
-                      <li><Link to="/">Home</Link></li>
-                      <li><Link to="/browse-tutors">Browse Tutors</Link></li>
-                      {/* <li><Link to="/farms">Farms</Link></li>
-                      <li><Link to="/tree-nfts">Trees</Link></li>
+                      <li><a href="/">Home</a></li>
+                      <li><a href="/browse-tutors">Browse Tutors</a></li>
+                      {/* <li><a href="/farms">Farms</a></li>
+                      <li><a href="/tree-nfts">Trees</a></li>
                       <li><a href="/assets/whitepaper/whitepaper.pdf" target="_blank" rel="noopener noreferrer">Whitepaper</a></li>
-                      <li><Link to="/about">About</Link></li>
-                      <li><Link to="/contact">Contact</Link></li> */}
+                      <li><a href="/about">About</a></li>
+                      <li><a href="/contact">Contact</a></li> */}
                     </ul>
                   </div>
                   {!isAuthenticated && (
@@ -178,22 +177,22 @@ const Header = () => {
                     <nav className="mobile-nav">
                       <ul className="navigation">
                         <li>
-                          <Link to="/" onClick={closeMobileMenu} className="nav-link">
+                          <a href="/" onClick={closeMobileMenu} className="nav-link">
                             <i className="fas fa-home" />
                             <span>Home</span>
-                          </Link>
+                          </a>
                         </li>
                         <li>
-                          <Link to="/farms" onClick={closeMobileMenu} className="nav-link">
+                          <a href="/farms" onClick={closeMobileMenu} className="nav-link">
                             <i className="fas fa-seedling" />
                             <span>Farms</span>
-                          </Link>
+                          </a>
                         </li>
                         <li>
-                          <Link to="/tree-nfts" onClick={closeMobileMenu} className="nav-link">
+                          <a href="/tree-nfts" onClick={closeMobileMenu} className="nav-link">
                             <i className="fas fa-tree" />
                             <span>Trees</span>
-                          </Link>
+                          </a>
                         </li>
                         <li>
                           <a 
@@ -208,16 +207,16 @@ const Header = () => {
                           </a>
                         </li>
                         <li>
-                          <Link to="/about" onClick={closeMobileMenu} className="nav-link">
+                          <a href="/about" onClick={closeMobileMenu} className="nav-link">
                             <i className="fas fa-info-circle" />
                             <span>About</span>
-                          </Link>
+                          </a>
                         </li>
                         <li>
-                          <Link to="/contact" onClick={closeMobileMenu} className="nav-link">
+                          <a href="/contact" onClick={closeMobileMenu} className="nav-link">
                             <i className="fas fa-envelope" />
                             <span>Contact</span>
-                          </Link>
+                          </a>
                         </li>
                       </ul>
                     </nav>
