@@ -3,6 +3,8 @@ import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { scheduleApi, type StudentBooking } from '../api/schedule.api';
+import './SchedulePage.css';
 
 interface Booking {
   id: string;
@@ -21,30 +23,61 @@ const SchedulePage = () => {
   }, []);
 
   const { user } = useAuthContext();
-  
-  // Student bookings - TODO: fetch from API
-  const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: 'b1',
-      tutorId: 't001',
-      tutorName: 'Sarah Kim',
-      tutorAvatar: 'https://i.pravatar.cc/150?img=5',
-      date: new Date(2025, 11, 3, 19, 0), // Dec 3, 2025, 7:00 PM
-      time: '7:00 PM',
-      duration: 30,
-      status: 'upcoming'
-    },
-    {
-      id: 'b2',
-      tutorId: 't002',
-      tutorName: 'James Park',
-      tutorAvatar: 'https://i.pravatar.cc/150?img=12',
-      date: new Date(2025, 11, 5, 20, 30), // Dec 5, 2025, 8:30 PM
-      time: '8:30 PM',
-      duration: 30,
-      status: 'upcoming'
-    }
-  ]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch bookings from API
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await scheduleApi.getStudentBookings();
+        
+        // Transform API data to component format
+        const transformedBookings: Booking[] = data.map((booking: StudentBooking) => {
+          // Parse date and time from slot data
+          const slotDateTime = new Date(`${booking.slotDate}T${booking.slotTime}`);
+          
+          // Determine status based on date and booking status
+          let status: 'upcoming' | 'completed' | 'cancelled' = 'upcoming';
+          if (booking.status === 'completed') {
+            status = 'completed';
+          } else if (booking.status === 'cancelled') {
+            status = 'cancelled';
+          } else if (slotDateTime < new Date()) {
+            status = 'completed';
+          }
+          
+          return {
+            id: booking.bookingId,
+            tutorId: booking.tutorId,
+            tutorName: booking.tutorName,
+            tutorAvatar: booking.tutorAvatar,
+            date: slotDateTime,
+            time: booking.slotTime,
+            duration: booking.durationMinutes,
+            status
+          };
+        });
+        
+        setBookings(transformedBookings);
+      } catch (err) {
+        console.error('Failed to fetch bookings:', err);
+        setError('Failed to load bookings. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [user]);
 
   // Filter and sort upcoming lessons
   const upcomingLessons = bookings
@@ -90,7 +123,7 @@ const SchedulePage = () => {
       <SideBar />
       <div className="main-content">
         <Header />
-        <main style={{ padding: '40px 0', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
+        <main style={{ paddingTop: '120px', paddingBottom: '40px', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
           <div className="container">
             {/* Header Section */}
             <div style={{ 
@@ -160,8 +193,55 @@ const SchedulePage = () => {
               </button>
             </div>
 
+            {/* Loading State */}
+            {loading && (
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  border: '4px solid rgba(2, 69, 174, 0.1)',
+                  borderTop: '4px solid #0245ae',
+                  borderRadius: '50%',
+                  margin: '0 auto 20px',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                <p style={{ color: '#64748b', fontSize: '15px' }}>Loading your lessons...</p>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && !loading && (
+              <div style={{
+                background: 'rgba(220, 38, 38, 0.1)',
+                border: '2px solid rgba(220, 38, 38, 0.2)',
+                borderRadius: '16px',
+                padding: '32px',
+                textAlign: 'center'
+              }}>
+                <i className="fas fa-exclamation-circle" style={{ fontSize: '48px', color: '#dc2626', marginBottom: '16px' }}></i>
+                <h3 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px', fontWeight: 700 }}>Error Loading Lessons</h3>
+                <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '10px 24px',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  <i className="fas fa-redo" style={{ marginRight: '8px' }}></i>
+                  Try Again
+                </button>
+              </div>
+            )}
+
             {/* Lessons List */}
-            {upcomingLessons.length > 0 ? (
+            {!loading && !error && upcomingLessons.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {upcomingLessons.map((lesson) => (
                   <div
@@ -268,7 +348,10 @@ const SchedulePage = () => {
                   </div>
                 ))}
               </div>
-            ) : (
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && upcomingLessons.length === 0 && (
               /* Empty State */
               <div style={{
                 background: 'rgba(255, 255, 255, 0.95)',

@@ -26,6 +26,10 @@ const PENALTY_LABELS: Record<PenaltyCode, { label: string; color: string; bgColo
 };
 
 const SchedulePage = () => {
+  useEffect(() => {
+    document.title = 'Schedule | FluentXVerse';
+  }, []);
+
   const { user } = useAuthContext();
   const { route } = useLocation();
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<Set<string>>(new Set());

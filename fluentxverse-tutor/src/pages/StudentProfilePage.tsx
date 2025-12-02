@@ -16,6 +16,11 @@ interface LessonNote {
   rating: number;
 }
 
+const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
+  useEffect(() => {
+    document.title = 'Student Profile | FluentXVerse';
+  }, []);
+
 interface Session {
   id: string;
   date: string;

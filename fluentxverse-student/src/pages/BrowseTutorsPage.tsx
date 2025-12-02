@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom';
 import { tutorApi } from '../api/tutor.api';
 import type { Tutor, TutorSearchParams } from '../types/tutor.types.ts';
 import Header from '../Components/Header/Header';
+import { BookingModal } from '../Components/Booking/BookingModal';
 import './BrowseTutorsPage.css';
 
 // Type assertion helper to fix Preact/React compatibility
 const jsx = (el: any) => el as any;
 
 // Tutor Card Component (inline for better control)
-const TutorCard = ({ tutor }: { tutor: Tutor }) => {
+const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: Tutor) => void }) => {
   const displayName = tutor.displayName || `${tutor.firstName} ${tutor.lastName}`;
   const initials = `${tutor.firstName?.[0] || ''}${tutor.lastName?.[0] || ''}`.toUpperCase();
   const hourlyRate = tutor.hourlyRate ? `₱${tutor.hourlyRate}` : 'Free';
@@ -28,7 +29,7 @@ const TutorCard = ({ tutor }: { tutor: Tutor }) => {
 
   const handleBookTrial = (e: any) => {
     e.stopPropagation();
-    window.location.href = `/register?tutorId=${tutor.userId}`;
+    onBookClick(tutor);
   };
 
   const avatarContent = tutor.profilePicture ? (
@@ -164,6 +165,10 @@ export const BrowseTutorsPage = () => {
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   
+  // Booking modal state
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
+  
   // Set page title
   useEffect(() => {
     document.title = 'Browse Tutors | FluentXVerse';
@@ -184,6 +189,17 @@ export const BrowseTutorsPage = () => {
   // Filter options
   const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Handle booking modal
+  const handleBookClick = (tutor: Tutor) => {
+    setSelectedTutor(tutor);
+    setBookingModalOpen(true);
+  };
+
+  const handleCloseBookingModal = () => {
+    setBookingModalOpen(false);
+    setSelectedTutor(null);
+  };
 
   // Generate next 7 days with formatted labels
   const generateDateOptions = () => {
@@ -626,7 +642,7 @@ export const BrowseTutorsPage = () => {
 
                     {/* Show tutor cards */}
                     {tutors.map((tutor) => (
-                      <TutorCard key={tutor.userId} tutor={tutor} />
+                      <TutorCard key={tutor.userId} tutor={tutor} onBookClick={handleBookClick} />
                     ))}
                   </div>
 
@@ -672,6 +688,18 @@ export const BrowseTutorsPage = () => {
         </div>
         </section>
       </div>
+
+      {/* Booking Modal */}
+      {selectedTutor && (
+        <BookingModal
+          isOpen={bookingModalOpen}
+          onClose={handleCloseBookingModal}
+          tutorId={selectedTutor.userId}
+          tutorName={selectedTutor.displayName || `${selectedTutor.firstName} ${selectedTutor.lastName}`}
+          tutorAvatar={selectedTutor.profilePicture}
+          hourlyRate={selectedTutor.hourlyRate}
+        />
+      )}
     </>
   );
 };

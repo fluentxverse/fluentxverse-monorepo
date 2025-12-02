@@ -4,6 +4,7 @@ import { useRoute } from 'preact-iso';
 import { tutorApi } from '../api/tutor.api';
 import type { TutorProfile } from '../types/tutor.types';
 import Header from '../Components/Header/Header';
+import { BookingModal } from '../Components/Booking/BookingModal';
 import './TutorProfilePage.css';
 
 export const TutorProfilePage = () => {
@@ -19,6 +20,7 @@ export const TutorProfilePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'about' | 'schedule' | 'reviews'>('about');
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [availability, setAvailability] = useState<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('morning');
 
@@ -111,7 +113,7 @@ export const TutorProfilePage = () => {
   }, [tutorId]);
 
   const handleBookTrial = () => {
-    window.location.href = `/register?tutorId=${tutorId}`;
+    setBookingModalOpen(true);
   };
 
   if (loading) {
@@ -268,7 +270,7 @@ export const TutorProfilePage = () => {
                 </div>
                 <div className="feature-item">
                   <i className="ri-checkbox-circle-line"></i>
-                  <span>30-minute session</span>
+                  <span>25-minute session</span>
                 </div>
                 <div className="feature-item">
                   <i className="ri-checkbox-circle-line"></i>
@@ -550,6 +552,18 @@ export const TutorProfilePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {tutor && (
+        <BookingModal
+          isOpen={bookingModalOpen}
+          onClose={() => setBookingModalOpen(false)}
+          tutorId={tutor.userId}
+          tutorName={displayName}
+          tutorAvatar={tutor.profilePicture}
+          hourlyRate={tutor.hourlyRate}
+        />
+      )}
     </>
   );
 };

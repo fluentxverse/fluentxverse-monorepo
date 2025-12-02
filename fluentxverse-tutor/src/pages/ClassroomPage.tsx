@@ -23,6 +23,10 @@ interface LessonSection {
 }
 
 const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
+  useEffect(() => {
+    document.title = 'Classroom | FluentXVerse';
+  }, []);
+
   const { user } = useAuthContext();
   const { route } = useLocation();
   const chatEndRef = useRef<HTMLDivElement>(null);

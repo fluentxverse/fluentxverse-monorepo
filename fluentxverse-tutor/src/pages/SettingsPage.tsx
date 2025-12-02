@@ -14,6 +14,10 @@ const SettingsPage = () => {
   const { isDarkMode } = useThemeStore();
 
   useEffect(() => {
+    document.title = 'Settings | FluentXVerse';
+  }, []);
+
+  useEffect(() => {
     if (!loading && !isLoggedIn) {
       window.location.href = '/';
     }

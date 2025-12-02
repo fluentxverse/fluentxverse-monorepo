@@ -52,7 +52,7 @@ export class ScheduleService {
             tutorId: $tutorId,
             slotDate: $slotDate,
             slotTime: $slotTime,
-            durationMinutes: 30,
+            durationMinutes: 25,
             status: 'open',
             isRecurring: false,
             createdAt: datetime(),
@@ -749,6 +749,62 @@ export class ScheduleService {
       if (slots.length > 0) {
         await this.openSlots({ tutorId: input.tutorId, slots });
       }
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get student's bookings
+   */
+  async getStudentBookings(studentId: string): Promise<Array<{
+    bookingId: string;
+    tutorId: string;
+    tutorName: string;
+    tutorAvatar?: string;
+    slotDate: string;
+    slotTime: string;
+    durationMinutes: number;
+    status: string;
+    attendanceTutor?: string;
+    attendanceStudent?: string;
+    bookedAt: Date;
+  }>> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      const result = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        WHERE b.status IN ['confirmed', 'completed']
+        RETURN b, slot, tutor
+        ORDER BY slot.slotDate DESC, slot.slotTime DESC
+        `,
+        { studentId }
+      );
+      
+      return result.records.map(record => {
+        const booking = record.get('b').properties;
+        const slot = record.get('slot').properties;
+        const tutor = record.get('tutor').properties;
+        
+        return {
+          bookingId: booking.bookingId,
+          tutorId: tutor.id,
+          tutorName: `${tutor.givenName || ''} ${tutor.familyName || ''}`.trim(),
+          tutorAvatar: tutor.profilePicture,
+          slotDate: slot.slotDate,
+          slotTime: slot.slotTime,
+          durationMinutes: parseInt(slot.durationMinutes) || 30,
+          status: booking.status,
+          attendanceTutor: booking.attendanceTutor,
+          attendanceStudent: booking.attendanceStudent,
+          bookedAt: new Date(booking.bookedAt)
+        };
+      });
     } finally {
       await session.close();
     }

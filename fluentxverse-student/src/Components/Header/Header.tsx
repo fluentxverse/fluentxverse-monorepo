@@ -125,7 +125,7 @@ const Header = () => {
                   </div>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul className="navigation">
-                      <li><a href="/">Home</a></li>
+                      <li><a href={isAuthenticated ? "/home" : "/"}>Home</a></li>
                       <li><a href="/browse-tutors">Browse Tutors</a></li>
                       {/* <li><a href="/farms">Farms</a></li>
                       <li><a href="/tree-nfts">Trees</a></li>
@@ -177,7 +177,7 @@ const Header = () => {
                     <nav className="mobile-nav">
                       <ul className="navigation">
                         <li>
-                          <a href="/" onClick={closeMobileMenu} className="nav-link">
+                          <a href={isAuthenticated ? "/home" : "/"} onClick={closeMobileMenu} className="nav-link">
                             <i className="fas fa-home" />
                             <span>Home</span>
                           </a>

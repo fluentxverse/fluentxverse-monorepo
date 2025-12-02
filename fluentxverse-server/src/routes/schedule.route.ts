@@ -163,6 +163,110 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       bookingId: t.String(),
       status: t.Union([t.Literal('present'), t.Literal('absent')])
     })
+  })
+
+  /**
+   * Get student's bookings
+   * GET /schedule/student-bookings
+   */
+  .get('/student-bookings', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.auth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+
+      const bookings = await scheduleService.getStudentBookings(studentId);
+
+      return {
+        success: true,
+        data: bookings
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/student-bookings:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get bookings'
+      };
+    }
+  })
+
+  /**
+   * Get available slots for a tutor
+   * GET /schedule/available/:tutorId
+   */
+  .get('/available/:tutorId', async ({ params, query, set }) => {
+    try {
+      const { tutorId } = params;
+      
+      if (!tutorId) {
+        return { success: false, error: 'Tutor ID is required' };
+      }
+      
+      // Default to next 7 days if not specified
+      const now = new Date();
+      const startDate = (query.startDate as string) || now.toISOString().split('T')[0] || "";
+      const endDate = (query.endDate as string) || new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || "";
+
+ 
+      const slots = await scheduleService.getAvailableSlots(tutorId, startDate, endDate);
+
+      return {
+        success: true,
+        data: slots
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/available:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get available slots'
+      };
+    }
+  })
+
+  /**
+   * Book a time slot
+   * POST /schedule/book
+   */
+  .post('/book', async ({ body, cookie, set }) => {
+    try {
+      const raw = cookie.auth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+
+      const booking = await scheduleService.bookSlot({
+        studentId,
+        slotId: body.slotId
+      });
+
+      return {
+        success: true,
+        data: booking,
+        message: 'Booking confirmed successfully'
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/book:', error);
+      set.status = 400;
+      return {
+        success: false,
+        error: error.message || 'Failed to book slot'
+      };
+    }
+  }, {
+    body: t.Object({
+      slotId: t.String()
+    })
   });
 
 export default Schedule;

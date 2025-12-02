@@ -1,0 +1,589 @@
+/* HomePage Styles */
+.home-page-main {
+  padding-top: 120px;
+  padding-bottom: 40px;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+/* Welcome Header */
+.home-welcome-header {
+  margin-bottom: 32px;
+}
+
+.home-welcome-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.home-welcome-subtitle {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* Stats Cards Grid */
+.home-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.home-stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  border: 2px solid;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  transition: all 0.3s ease;
+}
+
+.home-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+}
+
+.home-stat-card.blue {
+  border-color: #e0f2fe;
+}
+
+.home-stat-card.green {
+  border-color: #dcfce7;
+}
+
+.home-stat-card.orange {
+  border-color: #fed7aa;
+}
+
+.home-stat-card.purple {
+  border-color: #e9d5ff;
+}
+
+.home-stat-card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.home-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-stat-icon.blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.home-stat-icon.blue i {
+  font-size: 20px;
+  color: #0245ae;
+}
+
+.home-stat-icon.green {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.home-stat-icon.green i {
+  font-size: 20px;
+  color: #10b981;
+}
+
+.home-stat-icon.orange {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+}
+
+.home-stat-icon.orange i {
+  font-size: 20px;
+  color: #f59e0b;
+}
+
+.home-stat-icon.purple {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+}
+
+.home-stat-icon.purple i {
+  font-size: 20px;
+  color: #8b5cf6;
+}
+
+.home-stat-value {
+  font-size: 36px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.home-stat-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Main Content Grid */
+.home-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .home-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(2, 69, 174, 0.12);
+  border: 1px solid rgba(2, 69, 174, 0.08);
+}
+
+.home-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.home-card-title {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.home-card-title i {
+  margin-right: 10px;
+  color: #0245ae;
+}
+
+.home-badge-time {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Next Lesson */
+.home-next-lesson {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.home-tutor-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-tutor-avatar.placeholder {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+}
+
+.home-tutor-avatar i {
+  color: #fff;
+  font-size: 32px;
+}
+
+.home-lesson-info {
+  flex: 1;
+}
+
+.home-lesson-tutor {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.home-lesson-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-lesson-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.home-lesson-detail i {
+  color: #0245ae;
+  width: 16px;
+}
+
+.home-btn-join {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: #fff;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.home-btn-join:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(2, 69, 174, 0.4);
+}
+
+.home-btn-join i {
+  font-size: 20px;
+}
+
+.home-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.home-empty-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: rgba(2, 69, 174, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.home-empty-icon i {
+  color: #0245ae;
+  font-size: 24px;
+}
+
+.home-empty-text {
+  margin: 0 0 16px 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.home-btn-book {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.home-btn-book:hover {
+  transform: translateY(-2px);
+}
+
+/* Quick Actions */
+.home-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-action-btn {
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  border: none;
+  text-align: left;
+}
+
+.home-action-btn:hover {
+  transform: translateX(4px);
+}
+
+.home-action-btn.primary {
+  background: #fff;
+  color: #10b981;
+  border: 2px solid #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.home-action-btn.primary:hover {
+  background: #f0fdf4;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.home-action-btn.secondary {
+  background: #fff;
+  color: #0245ae;
+  border: 2px solid rgba(2, 69, 174, 0.1);
+}
+
+.home-action-btn.secondary:hover {
+  border-color: rgba(2, 69, 174, 0.3);
+}
+
+.home-action-btn.tertiary {
+  background: #fff;
+  color: #64748b;
+  border: 2px solid rgba(100, 116, 139, 0.1);
+}
+
+.home-action-btn.tertiary:hover {
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+.home-action-btn i {
+  font-size: 18px;
+}
+
+/* Recent Activity */
+.home-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(248, 250, 252, 0.8);
+  border-radius: 12px;
+  border: 1px solid rgba(2, 69, 174, 0.04);
+}
+
+.home-activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.home-activity-icon.lesson {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.home-activity-icon.booking {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+}
+
+.home-activity-icon i {
+  font-size: 16px;
+}
+
+.home-activity-content {
+  flex: 1;
+}
+
+.home-activity-action {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.home-activity-tutor {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.home-activity-date {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Landing Page (Not Logged In) */
+.home-hero {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+@media (max-width: 768px) {
+  .home-hero {
+    flex-direction: column;
+  }
+}
+
+.home-hero-content {
+  flex: 1;
+}
+
+.home-hero-title {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.home-hero-description {
+  margin-top: 16px;
+  color: #64748b;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.home-hero-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.home-btn-cta {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: #fff;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 15px;
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.3);
+  transition: all 0.2s ease;
+}
+
+.home-btn-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.4);
+}
+
+.home-btn-secondary {
+  background: #fff;
+  color: #0245ae;
+  border: 2px solid rgba(2, 69, 174, 0.1);
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.home-btn-secondary:hover {
+  border-color: rgba(2, 69, 174, 0.3);
+}
+
+.home-hero-image {
+  width: 460px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .home-hero-image {
+    width: 100%;
+  }
+}
+
+.home-hero-image-wrapper {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(2, 69, 174, 0.2);
+}
+
+.home-hero-image-wrapper img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* Features Grid */
+.home-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .home-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.home-feature-card {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(2, 69, 174, 0.06);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.home-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(2, 69, 174, 0.12);
+}
+
+.home-feature-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.2);
+}
+
+.home-feature-icon i {
+  color: #fff;
+  font-size: 24px;
+}
+
+.home-feature-title {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.home-feature-description {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}

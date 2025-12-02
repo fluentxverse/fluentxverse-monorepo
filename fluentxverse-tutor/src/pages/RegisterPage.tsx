@@ -1,5 +1,5 @@
 
-import { useState } from 'preact/compat';
+import { useState, useEffect } from 'preact/compat';
 import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import Footer from '../Components/Footer/Footer';
@@ -8,6 +8,10 @@ import { useAuthContext } from '../context/AuthContext';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
+  useEffect(() => {
+    document.title = 'Register | FluentXVerse';
+  }, []);
+
   const { route } = useLocation();
   const { user, login } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);

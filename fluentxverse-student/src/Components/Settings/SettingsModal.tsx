@@ -62,12 +62,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [zipCode, setZipCode] = useState('');
   const [addressLine, setAddressLine] = useState('');
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
-  // Qualifications
-  const [schoolAttended, setSchoolAttended] = useState('');
-  const [educationalAttainment, setEducationalAttainment] = useState('');
-  const [major, setMajor] = useState('');
-  const [teachingExperience, setTeachingExperience] = useState('');
-  const [teachingQualifications, setTeachingQualifications] = useState<string[]>([]);
+  // Learning Preferences
+  const [currentProficiency, setCurrentProficiency] = useState('');
+  const [learningGoals, setLearningGoals] = useState<string[]>([]);
+  const [preferredLearningStyle, setPreferredLearningStyle] = useState('');
+  const [availability, setAvailability] = useState<string[]>([]);
   // Form state
   const [infoError, setInfoError] = useState('');
   const [infoSuccess, setInfoSuccess] = useState('');
@@ -208,38 +207,56 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
     'BARMM - Bangsamoro'
   ];
 
-  const educationalAttainments = [
-    'High school or equivalent',
-    'Some college',
-    'Associate degree',
-    "Bachelor's degree",
-    "Master's degree",
-    'Doctoral degree'
+  const proficiencyLevels = [
+    'Beginner (A1)',
+    'Elementary (A2)',
+    'Intermediate (B1)',
+    'Upper Intermediate (B2)',
+    'Advanced (C1)',
+    'Proficient (C2)'
   ];
 
-  const teachingExperienceOptions = [
-    'No experience',
-    'Less than 1 year',
-    '1 to 3 years',
-    '3 to 5 years',
-    '5 to 10 years',
-    'More than 10 years'
+  const learningGoalOptions = [
+    'Conversational fluency',
+    'Business communication',
+    'Academic writing',
+    'Test preparation (IELTS/TOEFL)',
+    'Travel preparation',
+    'Career advancement',
+    'Personal enrichment'
   ];
 
-  const qualificationOptions = [
-    'COTE Certified',
-    'FLT Certified',
-    'RSA-CELTA Certified',
-    'TEFL/TESL Certified',
-    'Education major',
-    'Professionally trained'
+  const learningStyleOptions = [
+    'Visual (pictures, diagrams)',
+    'Auditory (listening, speaking)',
+    'Reading/Writing (texts, notes)',
+    'Kinesthetic (hands-on activities)',
+    'Mixed approach'
   ];
 
-  const toggleQualification = (qual: string) => {
-    setTeachingQualifications(prev =>
-      prev.includes(qual)
-        ? prev.filter(q => q !== qual)
-        : [...prev, qual]
+  const availabilityOptions = [
+    'Weekday mornings',
+    'Weekday afternoons',
+    'Weekday evenings',
+    'Weekend mornings',
+    'Weekend afternoons',
+    'Weekend evenings',
+    'Flexible schedule'
+  ];
+
+  const toggleLearningGoal = (goal: string) => {
+    setLearningGoals(prev =>
+      prev.includes(goal)
+        ? prev.filter(g => g !== goal)
+        : [...prev, goal]
+    );
+  };
+
+  const toggleAvailability = (time: string) => {
+    setAvailability(prev =>
+      prev.includes(time)
+        ? prev.filter(t => t !== time)
+        : [...prev, time]
     );
   };
 
@@ -275,11 +292,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
         zipCode,
         addressLine,
         sameAsPermanent,
-        schoolAttended,
-        educationalAttainment,
-        major,
-        teachingExperience,
-        teachingQualifications
+        currentProficiency,
+        learningGoals,
+        preferredLearningStyle,
+        availability
       });
       
       setInfoSuccess('Personal information updated successfully!');
@@ -306,7 +322,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const displayName = (firstName || lastName)
     ? `${firstName} ${lastName}`.trim()
     : (storedFullName || (user?.email?.split('@')[0] || 'User'));
-  const tutorId = (getUserId() || (typeof window !== 'undefined' ? localStorage.getItem('fxv_user_id') || '' : '')).toString().slice(0, 6) || '570063';
+  const studentId = (getUserId() || (typeof window !== 'undefined' ? localStorage.getItem('fxv_user_id') || '' : '')).toString().slice(0, 6) || '570063';
   const email = user?.email || 'user@example.com';
   const walletAddress = user?.walletAddress || '';
   const shortWallet = walletAddress
@@ -420,8 +436,8 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
               {uploadError && <div style={{color:'#dc2626', fontSize:'0.75rem', marginTop:'0.5rem'}}>{uploadError}</div>}
               <h3 className="settings-name">{displayName}</h3>
               <div className="settings-tutor-id">
-                <span className="settings-label">TUTOR ID:</span>
-                <span className="settings-value">{tutorId}</span>
+                <span className="settings-label">STUDENT ID:</span>
+                <span className="settings-value">{studentId}</span>
               </div>
               <div className="settings-email">
                 <i className="fi fi-sr-envelope"></i>
@@ -767,7 +783,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                 </svg>
               </div>
               <h2 className="settings-subview-title">Update Personal Information</h2>
-              <p className="settings-subview-subtitle">Update your phone, address, and qualifications</p>
+              <p className="settings-subview-subtitle">Update your contact details, address, and learning preferences</p>
             </div>
 
             <form className="settings-form" onSubmit={handleUpdateInfo}>
@@ -891,75 +907,72 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                 </label>
               </div>
 
-              {/* Qualifications Section */}
+              {/* Learning Preferences Section */}
               <div className="settings-form-section">
-                <h3 className="settings-form-section-title">Qualifications</h3>
+                <h3 className="settings-form-section-title">Learning Preferences</h3>
                 
                 <div className="settings-form-group">
-                  <label className="settings-form-label">School Attended</label>
-                  <input
-                    type="text"
-                    value={schoolAttended}
-                    onChange={(e) => setSchoolAttended((e.target as HTMLInputElement).value)}
-                    className="settings-form-input settings-form-input-no-toggle"
-                    placeholder="Enter school name"
-                  />
-                </div>
-
-                <div className="settings-form-group">
-                  <label className="settings-form-label">Educational Attainment</label>
+                  <label className="settings-form-label">Current English Proficiency</label>
                   <select
-                    value={educationalAttainment}
-                    onChange={(e) => setEducationalAttainment((e.target as HTMLSelectElement).value)}
+                    value={currentProficiency}
+                    onChange={(e) => setCurrentProficiency((e.target as HTMLSelectElement).value)}
                     className="settings-form-select"
                   >
-                    <option value="">Select attainment</option>
-                    {educationalAttainments.map(ea => (
-                      <option key={ea} value={ea}>{ea}</option>
+                    <option value="">Select your level</option>
+                    {proficiencyLevels.map(level => (
+                      <option key={level} value={level}>{level}</option>
                     ))}
                   </select>
-                </div>
-
-                <div className="settings-form-row">
-                  <div className="settings-form-group settings-form-group-half">
-                    <label className="settings-form-label">Major</label>
-                    <input
-                      type="text"
-                      value={major}
-                      onChange={(e) => setMajor((e.target as HTMLInputElement).value)}
-                      className="settings-form-input settings-form-input-no-toggle"
-                      placeholder="Enter major"
-                    />
-                  </div>
-                  <div className="settings-form-group settings-form-group-half">
-                    <label className="settings-form-label">Teaching Experience</label>
-                    <select
-                      value={teachingExperience}
-                      onChange={(e) => setTeachingExperience((e.target as HTMLSelectElement).value)}
-                      className="settings-form-select"
-                    >
-                      <option value="">Select experience</option>
-                      {teachingExperienceOptions.map(te => (
-                        <option key={te} value={te}>{te}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <span className="settings-form-hint">This helps us match you with the right tutors</span>
                 </div>
 
                 <div className="settings-form-group">
-                  <label className="settings-form-label">Teaching Qualifications</label>
+                  <label className="settings-form-label">Learning Goals</label>
                   <div className="settings-checkbox-group">
-                    {qualificationOptions.map(qual => (
-                      <label key={qual} className="settings-checkbox-item">
+                    {learningGoalOptions.map(goal => (
+                      <label key={goal} className="settings-checkbox-item">
                         <input
                           type="checkbox"
-                          checked={teachingQualifications.includes(qual)}
-                          onChange={() => toggleQualification(qual)}
+                          checked={learningGoals.includes(goal)}
+                          onChange={() => toggleLearningGoal(goal)}
                         />
-                        <span>{qual}</span>
+                        <span>{goal}</span>
                       </label>
                     ))}
                   </div>
+                  <span className="settings-form-hint">Select all that apply</span>
+                </div>
+
+                <div className="settings-form-group">
+                  <label className="settings-form-label">Preferred Learning Style</label>
+                  <select
+                    value={preferredLearningStyle}
+                    onChange={(e) => setPreferredLearningStyle((e.target as HTMLSelectElement).value)}
+                    className="settings-form-select"
+                  >
+                    <option value="">Select your preference</option>
+                    {learningStyleOptions.map(style => (
+                      <option key={style} value={style}>{style}</option>
+                    ))}
+                  </select>
+                  <span className="settings-form-hint">How do you learn best?</span>
+                </div>
+
+                <div className="settings-form-group">
+                  <label className="settings-form-label">Availability for Lessons</label>
+                  <div className="settings-checkbox-group">
+                    {availabilityOptions.map(time => (
+                      <label key={time} className="settings-checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={availability.includes(time)}
+                          onChange={() => toggleAvailability(time)}
+                        />
+                        <span>{time}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <span className="settings-form-hint">When are you typically available?</span>
                 </div>
               </div>
 
