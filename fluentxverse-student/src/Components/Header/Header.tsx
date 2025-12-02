@@ -102,11 +102,6 @@ const Header = () => {
     };
   }, [isAuthenticated]);
 
-  // Hide header if user is logged in
-  if (isAuthenticated) {
-    return null;
-  }
-
   return (
     <header>
       <div id='sticky-header' className="menu-area ">
@@ -140,20 +135,22 @@ const Header = () => {
                       <li><Link to="/contact">Contact</Link></li> */}
                     </ul>
                   </div>
-                  <div className="header-action d-none d-md-block">
-                    <ul>
-                      <li className="header-login">
-                        <button 
-                          className="login-btn" 
-                          onClick={openLoginModal}
-                          aria-label="Login"
-                        >
-                          <i className="fas fa-user"></i>
-                          <span>Login</span>
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
+                  {!isAuthenticated && (
+                    <div className="header-action d-none d-md-block">
+                      <ul>
+                        <li className="header-login">
+                          <button 
+                            className="login-btn" 
+                            onClick={openLoginModal}
+                            aria-label="Login"
+                          >
+                            <i className="fas fa-user"></i>
+                            <span>Login</span>
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </nav>
               </div>
               {/* Mobile Menu  */}
