@@ -18,7 +18,7 @@ interface SettingsModalProps {
 type SettingsView = 'main' | 'update-password' | 'update-email' | 'update-info';
 
 const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | null => {
-  const { logout, user } = useAuthContext();
+  const { logout, user, getUserId } = useAuthContext();
   const [currentView, setCurrentView] = useState<SettingsView>('main');
 
   // Reset to main view when modal closes
@@ -334,7 +334,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const displayName = (firstName || lastName)
     ? `${firstName} ${lastName}`.trim()
     : (storedFullName || (user?.email?.split('@')[0] || 'User'));
-  const tutorId = (user?.userId || user?.id || (typeof window !== 'undefined' ? localStorage.getItem('fxv_user_id') || '' : '')).toString().slice(0, 6) || '570063';
+  const tutorId = (getUserId() || (typeof window !== 'undefined' ? localStorage.getItem('fxv_user_id') || '' : '')).toString().slice(0, 6) || '570063';
   const email = user?.email || 'user@example.com';
   const walletAddress = user?.walletAddress || '';
   const shortWallet = walletAddress

@@ -53,6 +53,8 @@ export interface TutorFilters {
   maxHourlyRate?: number;
   minHourlyRate?: number;
   dateFilter?: string; // ISO date string YYYY-MM-DD
+  startTime?: string; // HH:MM format (24-hour)
+  endTime?: string; // HH:MM format (24-hour)
   sortBy?: 'rating' | 'price-low' | 'price-high' | 'popular' | 'newest';
 }
 

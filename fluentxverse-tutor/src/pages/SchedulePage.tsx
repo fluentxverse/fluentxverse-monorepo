@@ -1,8 +1,9 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { scheduleApi } from '../api/schedule.api';
 
 // Penalty code types
 type PenaltyCode = '301' | '302' | '303' | '401' | '501' | '502' | '601';
@@ -30,6 +31,8 @@ const SchedulePage = () => {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<Set<string>>(new Set());
   const [attendanceMarked, setAttendanceMarked] = useState<Set<string>>(new Set()); // Track which open slots are marked as present
   const [slotPenalties, setSlotPenalties] = useState<Map<string, SlotPenalty>>(new Map()); // Track penalty codes per slot
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Initialize with a test booking for Nov 25, 2025 at 11:30 PM
   const initializeBookedSlots = () => {
@@ -37,7 +40,6 @@ const SchedulePage = () => {
     // Nov 25, 2025 is a Tuesday (day index 1 in the current week)
     const testKey = '1-11:30 PM';
     map.set(testKey, 'STD001');
-    console.log('Initialized booked slots:', { key: testKey, studentId: 'STD001', mapSize: map.size });
     return map;
   };
   
@@ -48,6 +50,12 @@ const SchedulePage = () => {
   const [pendingSelections, setPendingSelections] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<'open' | 'close' | 'attendance' | null>(null);
   const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent' | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Refresh handler
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   // Generate current week dates
   const getWeekDates = (offset: number) => {
@@ -115,6 +123,78 @@ const SchedulePage = () => {
     return { hour, minute };
   };
 
+  // Format date to YYYY-MM-DD for API
+  const formatDateISO = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const { getUserId } = useAuthContext();
+  const userId = getUserId();
+  
+  // Load schedule data from API when week changes
+  useEffect(() => {
+    const loadSchedule = async () => {
+      if (!userId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const scheduleData = await scheduleApi.getWeekSchedule(currentWeekOffset);
+        
+        // Convert schedule data to local state format
+        const newSelectedSlots = new Set<string>();
+        const newBookedSlots = new Map<string, string>();
+        
+        scheduleData.slots.forEach(slot => {
+
+          
+          // Find which day of the week this slot belongs to
+          const slotDate = new Date(slot.date + 'T00:00:00'); // Parse as local date
+
+          
+          const dayIdx = weekDates.findIndex(d => {
+            const match = d.getFullYear() === slotDate.getFullYear() &&
+              d.getMonth() === slotDate.getMonth() &&
+              d.getDate() === slotDate.getDate();
+
+            return match;
+          });
+          
+          if (dayIdx !== -1) {
+            const key = `${dayIdx}-${slot.time}`;
+
+            if (slot.status === 'open') {
+              newSelectedSlots.add(key);
+
+            } else if (slot.status === 'booked' && slot.studentId) {
+              newSelectedSlots.add(key); // Keep as open slot visually
+              newBookedSlots.set(key, slot.studentId);
+
+            }
+          } else {
+            console.warn('Could not find dayIdx for slot date:', slot.date);
+          }
+        });
+        
+
+        
+        setSelectedTimeSlots(newSelectedSlots);
+        setBookedSlots(newBookedSlots);
+      } catch (err: any) {
+        console.error('Failed to load schedule:', err);
+        setError(err.message || 'Failed to load schedule');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSchedule();
+  }, [currentWeekOffset, userId, refreshTrigger]);
+
   // Check if slot can be opened (more than 5 minutes away)
   const canOpenSlot = (date: Date, timeStr: string): boolean => {
     const now = new Date();
@@ -156,10 +236,21 @@ const SchedulePage = () => {
   };
 
   const handleSlotClick = (dayIdx: number, time: string) => {
+    console.log('🔴 handleSlotClick called', { dayIdx, time });
+    
     const date = weekDates[dayIdx];
     const key = `${dayIdx}-${time}`;
     const isBooked = bookedSlots.has(key);
     const isCurrentlyOpen = selectedTimeSlots.has(key);
+    
+    console.log('🔴 Slot state:', {
+      key,
+      date: formatDateISO(date),
+      isBooked,
+      isCurrentlyOpen,
+      canOpen: canOpenSlot(date, time),
+      canMarkAttendance: canMarkAttendance(date, time)
+    });
     
     // Check if slot is in the past or too close (but allow booked slots)
     if (!canOpenSlot(date, time) && !isCurrentlyOpen && !isBooked) {
@@ -208,6 +299,11 @@ const SchedulePage = () => {
   };
 
   const handleOpenSelected = () => {
+    console.log('🟡 handleOpenSelected called', {
+      pendingSelectionsSize: pendingSelections.size,
+      pendingSelectionsArray: Array.from(pendingSelections)
+    });
+    
     if (pendingSelections.size === 0) return;
     
     // Check if selections are for "open/booked" slots (to update attendance) or "available" slots (to open them)
@@ -227,41 +323,81 @@ const SchedulePage = () => {
     setShowModal(true);
   };
 
-  const confirmBulkAction = () => {
-    if (bulkAction === 'attendance') {
-      // For attendance, update the attendanceMarked set
-      const newAttendanceMarked = new Set(attendanceMarked);
-      
-      if (attendanceStatus === 'present') {
-        pendingSelections.forEach(key => newAttendanceMarked.add(key));
-      } else if (attendanceStatus === 'absent') {
-        pendingSelections.forEach(key => newAttendanceMarked.delete(key));
-      }
-      
-      setAttendanceMarked(newAttendanceMarked);
-      console.log('Attendance marked as:', attendanceStatus, 'for slots:', Array.from(pendingSelections));
-    } else {
-      const newSet = new Set(selectedTimeSlots);
-      
-      if (bulkAction === 'open') {
-        pendingSelections.forEach(key => newSet.add(key));
-      } else if (bulkAction === 'close') {
-        pendingSelections.forEach(key => {
-          newSet.delete(key);
-          // Also remove from attendance if closing
-          const newAttendanceMarked = new Set(attendanceMarked);
-          newAttendanceMarked.delete(key);
-          setAttendanceMarked(newAttendanceMarked);
-        });
-      }
-      
-      setSelectedTimeSlots(newSet);
-    }
+  const confirmBulkAction = async () => {
+    console.log('🔵 confirmBulkAction called', {
+      bulkAction,
+      pendingSelectionsSize: pendingSelections.size,
+      pendingSelectionsArray: Array.from(pendingSelections)
+    });
     
-    setPendingSelections(new Set());
-    setShowModal(false);
-    setBulkAction(null);
-    setAttendanceStatus(null);
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (bulkAction === 'attendance') {
+        // For attendance, update the attendanceMarked set
+        const newAttendanceMarked = new Set(attendanceMarked);
+        
+        if (attendanceStatus === 'present') {
+          pendingSelections.forEach(key => newAttendanceMarked.add(key));
+        } else if (attendanceStatus === 'absent') {
+          pendingSelections.forEach(key => newAttendanceMarked.delete(key));
+        }
+        
+        setAttendanceMarked(newAttendanceMarked);
+        console.log('Attendance marked as:', attendanceStatus, 'for slots:', Array.from(pendingSelections));
+      } else {
+        const newSet = new Set(selectedTimeSlots);
+        
+        if (bulkAction === 'open') {
+          console.log('🟢 Processing OPEN action');
+          console.log('weekDates:', weekDates.map(d => formatDateISO(d)));
+          
+          // Convert pending selections to API format
+          const slotsToOpen = Array.from(pendingSelections).map(key => {
+            const [dayIdx, time] = key.split('-');
+            const date = weekDates[parseInt(dayIdx)];
+            console.log(`  Processing key: ${key} -> dayIdx: ${dayIdx}, time: ${time}, date: ${formatDateISO(date)}`);
+            return {
+              date: formatDateISO(date),
+              time: time
+            };
+          });
+          
+          console.log('🚀 About to call scheduleApi.openSlots with:', slotsToOpen);
+          
+          // Call API to open slots
+          const result = await scheduleApi.openSlots(slotsToOpen);
+          console.log('✅ API call successful, result:', result);
+          
+          // Update local state only after successful API call
+          pendingSelections.forEach(key => newSet.add(key));
+        } else if (bulkAction === 'close') {
+          // For closing, we need slot IDs which we don't have in current state
+          // For now, just update local state
+          // TODO: Store slot IDs when loading schedule data
+          pendingSelections.forEach(key => {
+            newSet.delete(key);
+            // Also remove from attendance if closing
+            const newAttendanceMarked = new Set(attendanceMarked);
+            newAttendanceMarked.delete(key);
+            setAttendanceMarked(newAttendanceMarked);
+          });
+        }
+        
+        setSelectedTimeSlots(newSet);
+      }
+      
+      setPendingSelections(new Set());
+      setShowModal(false);
+      setBulkAction(null);
+      setAttendanceStatus(null);
+    } catch (err: any) {
+      console.error('Failed to perform action:', err);
+      setError(err.message || 'Failed to perform action');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const closeModal = () => {
@@ -366,22 +502,27 @@ const SchedulePage = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <button style={{
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '14px',
-                  letterSpacing: '0.5px'
-                }}>
-                  <i className="fas fa-sync-alt"></i>
+                <button 
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  style={{
+                    background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    letterSpacing: '0.5px',
+                    opacity: loading ? 0.6 : 1
+                  }}
+                >
+                  <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
                   Refresh
                 </button>
               </div>
@@ -417,6 +558,45 @@ const SchedulePage = () => {
                 Students can reserve your lessons 3 minutes before the lesson time starts. Please click refresh to get your latest reservation status.
               </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div style={{
+                background: 'rgba(220, 38, 38, 0.1)',
+                backdropFilter: 'blur(10px)',
+                padding: '16px 20px',
+                borderRadius: '12px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                border: '1px solid rgba(220, 38, 38, 0.3)'
+              }}>
+                <i className="fas fa-exclamation-circle" style={{ color: '#dc2626', fontSize: '20px' }}></i>
+                <p style={{ margin: 0, fontSize: '14px', color: '#dc2626', fontWeight: 600 }}>
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Loading Indicator */}
+            {loading && (
+              <div style={{
+                background: 'rgba(2, 69, 174, 0.05)',
+                padding: '16px 20px',
+                borderRadius: '12px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                justifyContent: 'center'
+              }}>
+                <i className="fas fa-spinner fa-spin" style={{ color: '#0245ae', fontSize: '20px' }}></i>
+                <p style={{ margin: 0, fontSize: '14px', color: '#0245ae', fontWeight: 600 }}>
+                  Loading schedule...
+                </p>
+              </div>
+            )}
 
             {/* Main Schedule Card */}
             <div style={{

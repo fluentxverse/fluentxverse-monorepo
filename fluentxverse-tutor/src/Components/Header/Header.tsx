@@ -245,8 +245,8 @@ const Header = () => {
 
       {/* Login Modal */}
       {showLoginModal && (
-        <div className="login-modal-overlay" onClick={closeLoginModal}>
-          <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="login-modal-overlay" onMouseDown={closeLoginModal}>
+          <div className="login-modal-content" onMouseDown={(e) => e.stopPropagation()}>
             <button className="modal-close-btn" onClick={closeLoginModal}>
               <i className="fas fa-times"></i>
             </button>

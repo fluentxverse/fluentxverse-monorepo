@@ -8,6 +8,10 @@ import { useAuthContext } from '../context/AuthContext';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
+  useEffect(() => {
+    document.title = 'Register | FluentXVerse';
+  }, []);
+
   const { route } = useLocation();
   const { user, login } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);

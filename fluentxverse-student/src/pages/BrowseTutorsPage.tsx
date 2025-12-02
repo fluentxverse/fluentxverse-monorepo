@@ -164,16 +164,24 @@ export const BrowseTutorsPage = () => {
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   
+  // Set page title
+  useEffect(() => {
+    document.title = 'Browse Tutors | FluentXVerse';
+    return () => {
+      document.title = 'FluentXVerse';
+    };
+  }, []);
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('all');
+  const [startTime, setStartTime] = useState<string>('06:00');
+  const [endTime, setEndTime] = useState<string>('24:30');
   const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'price-high' | 'popular' | 'newest'>('rating');
   const [page, setPage] = useState(1);
 
   // Filter options
-  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
   const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -187,9 +195,11 @@ export const BrowseTutorsPage = () => {
       date.setDate(date.getDate() + i);
       const month = date.getMonth() + 1;
       const day = date.getDate();
+      const year = date.getFullYear();
       const dayName = days[date.getDay()];
       const label = `${month}/${day} ${dayName}`;
-      const value = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      // Format as YYYY-MM-DD in local timezone to avoid UTC shift
+      const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       options.push({ label, value });
     }
     
@@ -198,11 +208,25 @@ export const BrowseTutorsPage = () => {
 
   const dateOptions = generateDateOptions();
 
-  // Quick filter options - use first 3 specific dates
+  // Generate time options (30-min intervals from 05:00 to 24:30)
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let h = 5; h < 24; h++) {
+      times.push(`${String(h).padStart(2, '0')}:00`);
+      if (h < 23 || h === 23) {
+        times.push(`${String(h).padStart(2, '0')}:30`);
+      }
+    }
+    times.push('24:30'); // Add final slot
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
+
+  // Quick filter options - all dates (remove budget friendly)
   const quickFilters = [
     { label: 'All Tutors', value: 'all' },
-    ...dateOptions.slice(1, 4).map(d => ({ label: d.label, value: d.value })),
-    { label: 'Budget Friendly', value: 'budget' },
+    ...dateOptions.slice(1).map(d => ({ label: d.label, value: d.value })),
   ];
   const [activeQuickFilter, setActiveQuickFilter] = useState('all');
 
@@ -210,11 +234,7 @@ export const BrowseTutorsPage = () => {
   useEffect(() => {
     const loadFilterOptions = async () => {
       try {
-        const [languages, specs] = await Promise.all([
-          tutorApi.getFilterLanguages(),
-          tutorApi.getFilterSpecializations()
-        ]);
-        setAvailableLanguages(languages);
+        const specs = await tutorApi.getFilterSpecializations();
         setAvailableSpecs(specs);
       } catch (err) {
         console.error('Failed to load filter options:', err);
@@ -232,9 +252,10 @@ export const BrowseTutorsPage = () => {
 
       const params: TutorSearchParams = {
         query: searchQuery || undefined,
-        languages: selectedLanguages.length > 0 ? selectedLanguages : undefined,
         specializations: selectedSpecs.length > 0 ? selectedSpecs : undefined,
         dateFilter: selectedDate !== 'all' ? selectedDate : undefined,
+        startTime: startTime !== '06:00' ? startTime : undefined,
+        endTime: endTime !== '24:30' ? endTime : undefined,
         sortBy,
         page: resetPage ? 1 : page,
         limit: 12
@@ -257,12 +278,12 @@ export const BrowseTutorsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedLanguages, selectedSpecs, selectedDate, sortBy, page]);
+  }, [searchQuery, selectedSpecs, selectedDate, startTime, endTime, sortBy, page]);
 
   // Initial load and when filters change
   useEffect(() => {
     searchTutors(true);
-  }, [selectedLanguages, selectedSpecs, selectedDate, sortBy]);
+  }, [selectedSpecs, selectedDate, startTime, endTime, sortBy]);
 
   // Handle search submit
   const handleSearch = (e: Event) => {
@@ -274,15 +295,6 @@ export const BrowseTutorsPage = () => {
   const handleLoadMore = () => {
     setPage(prev => prev + 1);
     searchTutors(false);
-  };
-
-  // Toggle language filter
-  const toggleLanguage = (lang: string) => {
-    setSelectedLanguages(prev => 
-      prev.includes(lang) 
-        ? prev.filter(l => l !== lang)
-        : [...prev, lang]
-    );
   };
 
   // Toggle specialization filter
@@ -297,10 +309,7 @@ export const BrowseTutorsPage = () => {
   // Handle quick filters
   const handleQuickFilter = (value: string) => {
     setActiveQuickFilter(value);
-    if (value === 'budget') {
-      setSelectedDate('all');
-      setSortBy('price-low');
-    } else if (value === 'all') {
+    if (value === 'all') {
       setSelectedDate('all');
       setSortBy('rating');
     } else {
@@ -313,15 +322,18 @@ export const BrowseTutorsPage = () => {
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery('');
-    setSelectedLanguages([]);
     setSelectedSpecs([]);
     setSelectedDate('all');
+    setStartTime('06:00');
+    setEndTime('24:30');
     setSortBy('rating');
     setActiveQuickFilter('all');
   };
 
-  const hasActiveFilters = selectedLanguages.length > 0 || selectedSpecs.length > 0 || 
-    selectedDate !== 'all';
+  const hasActiveFilters = selectedSpecs.length > 0 || 
+    selectedDate !== 'all' ||
+    startTime !== '06:00' ||
+    endTime !== '24:30';
 
   return (
     <>
@@ -412,19 +424,27 @@ export const BrowseTutorsPage = () => {
             </div>
 
             <div className="browse-topbar__right">
-              {/* Sort Dropdown */}
-              <div className="browse-sort">
-                <label className="browse-sort__label">Sort by:</label>
+              {/* Time Range Filter */}
+              <div className="browse-topbar__time-range">
+                <label className="browse-topbar__time-label">Time:</label>
                 <select 
-                  className="browse-sort__select"
-                  value={sortBy}
-                  onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as any)}
+                  className="browse-topbar__time-select"
+                  value={startTime}
+                  onChange={(e) => setStartTime((e.target as HTMLSelectElement).value)}
                 >
-                  <option value="rating">Top Rated</option>
-                  <option value="popular">Most Popular</option>
-                  <option value="newest">Newest</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
+                  {timeOptions.map(time => (
+                    <option key={time} value={time}>{time}</option>
+                  ))}
+                </select>
+                <span className="browse-topbar__time-separator">~</span>
+                <select 
+                  className="browse-topbar__time-select"
+                  value={endTime}
+                  onChange={(e) => setEndTime((e.target as HTMLSelectElement).value)}
+                >
+                  {timeOptions.map(time => (
+                    <option key={time} value={time}>{time}</option>
+                  ))}
                 </select>
               </div>
 
@@ -480,25 +500,37 @@ export const BrowseTutorsPage = () => {
                 </div>
               </div>
 
-              {/* Languages */}
-              {availableLanguages.length > 0 && (
-                <div className="browse-filter-group">
-                  <h4 className="browse-filter-group__title">Languages</h4>
-                  <div className="browse-filter-group__list">
-                    {availableLanguages.map(lang => (
-                      <label key={lang} className="browse-filter-checkbox">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedLanguages.includes(lang)}
-                          onChange={() => toggleLanguage(lang)}
-                        />
-                        <span className="browse-filter-checkbox__mark"></span>
-                        <span className="browse-filter-checkbox__label">{lang}</span>
-                      </label>
-                    ))}
+              {/* Time Range */}
+              <div className="browse-filter-group">
+                <h4 className="browse-filter-group__title">Time Range</h4>
+                <div className="browse-filter-group__time-range">
+                  <div className="browse-filter-group__time-input">
+                    <label>Start time</label>
+                    <select 
+                      value={startTime}
+                      onChange={(e) => setStartTime((e.target as HTMLSelectElement).value)}
+                      className="browse-filter-group__select"
+                    >
+                      {timeOptions.map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <span className="browse-filter-group__time-separator">~</span>
+                  <div className="browse-filter-group__time-input">
+                    <label>End time</label>
+                    <select 
+                      value={endTime}
+                      onChange={(e) => setEndTime((e.target as HTMLSelectElement).value)}
+                      className="browse-filter-group__select"
+                    >
+                      {timeOptions.map(time => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Specializations */}
               {availableSpecs.length > 0 && (
@@ -554,14 +586,6 @@ export const BrowseTutorsPage = () => {
                 {/* Active Filter Tags */}
                 {hasActiveFilters && (
                   <div className="browse-active-filters">
-                    {selectedLanguages.map(lang => (
-                      <span key={lang} className="browse-active-filter">
-                        {lang}
-                        <button onClick={() => toggleLanguage(lang)}>
-                          <i className="ri-close-line"></i>
-                        </button>
-                      </span>
-                    ))}
                     {selectedSpecs.map(spec => (
                       <span key={spec} className="browse-active-filter">
                         {spec}

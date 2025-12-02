@@ -1,10 +1,14 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import Footer from '../Components/Footer/Footer';
 import { useAuthContext } from '../context/AuthContext';
 
 const HomePage = () => {
+  useEffect(() => {
+    document.title = 'Home | FluentXVerse';
+  }, []);
+
   const { user } = useAuthContext();
 
   // Mock data - TODO: fetch from API

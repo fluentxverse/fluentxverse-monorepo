@@ -7,8 +7,7 @@ import { PROTECTED_PATHS } from '../config/protectedPaths';
 import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
 
 interface AuthUser {
-  userId?: string; // from /me endpoint
-  id?: string; // from /login endpoint
+  userId: string;
   email: string;
   firstName?: string;
   middleName?: string;
@@ -29,6 +28,7 @@ interface AuthContextValue {
   loginLoading: boolean; // active login attempt
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  getUserId: () => string | undefined; // Helper to get userId consistently
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -114,8 +114,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
         if (first || last) {
           localStorage.setItem('fxv_user_fullname', `${first} ${last}`.trim());
         }
-        if (loggedInUser.id || loggedInUser.userId) {
-          localStorage.setItem('fxv_user_id', (loggedInUser.id || loggedInUser.userId) as string);
+        if (loggedInUser.userId) {
+          localStorage.setItem('fxv_user_id', loggedInUser.userId);
         }
 
         // Small delay to ensure cookie is fully set before /me call
@@ -150,6 +150,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
     }
   };
 
+  // Helper to get user ID
+  const getUserId = () => {
+    return user?.userId;
+  };
+
   const logout = async () => {
     try {
       await logoutUser();
@@ -169,7 +174,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout, getUserId }}>
       {children}
     </AuthContext.Provider>
   );

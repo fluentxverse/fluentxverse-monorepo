@@ -3,6 +3,7 @@ import { createServer } from "http";
 
 import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
+import Schedule from './routes/schedule.route';
 import { initDriver } from './db/memgraph';
 import { getPool } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -29,6 +30,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(cookie())
   .use(Auth)
   .use(Tutor)
+  .use(Schedule)
   .use(Student)
 
 

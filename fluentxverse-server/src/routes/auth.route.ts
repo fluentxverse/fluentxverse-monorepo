@@ -39,7 +39,10 @@ const Auth = new Elysia({ name: 'auth' })
         return {
           success: true,
           message: result.message,
-          user: userData
+          user: {
+            ...userData,
+            userId: userData.id
+          }
         };
         
       } catch (error: any) {
@@ -85,7 +88,10 @@ const Auth = new Elysia({ name: 'auth' })
 
         return { 
           success: true,
-          user: userData
+          user: {
+            ...userData,
+            userId: userData.id
+          }
         };
       } catch (error: any) {
         throw error;

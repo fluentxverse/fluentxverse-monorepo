@@ -26,6 +26,10 @@ interface Session {
 }
 
 const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
+  useEffect(() => {
+    document.title = 'Profile | FluentXVerse';
+  }, []);
+
   const { user } = useAuthContext();
   const { route } = useLocation();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');

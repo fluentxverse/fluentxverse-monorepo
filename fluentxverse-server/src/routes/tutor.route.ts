@@ -12,14 +12,19 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    */
   .get('/search', async ({ query }) => {
     try {
+      console.log('🔎 Tutor search request received:', query);
+      
       const params = {
         page: query.page ? Number(query.page) : 1,
-        limit: query.limit ? Number(query.limit) : 12
+        limit: query.limit ? Number(query.limit) : 12,
+        dateFilter: query.dateFilter || undefined,
+        startTime: query.startTime || undefined,
+        endTime: query.endTime || undefined
       };
 
+      console.log('📋 Search params:', params);
       const result = await tutorService.searchTutors(params);
-
-      console.log('Tutor search result:', result);
+      console.log('✅ Search result:', { total: result.total, tutorCount: result.tutors.length });
 
       return {
         success: true,

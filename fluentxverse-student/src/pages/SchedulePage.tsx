@@ -16,6 +16,10 @@ interface Booking {
 }
 
 const SchedulePage = () => {
+  useEffect(() => {
+    document.title = 'Schedule | FluentXVerse';
+  }, []);
+
   const { user } = useAuthContext();
   
   // Student bookings - TODO: fetch from API

@@ -16,6 +16,10 @@ const WalletPage = () => {
   const { isDarkMode } = useThemeStore();
 
   useEffect(() => {
+    document.title = 'Wallet | FluentXVerse';
+  }, []);
+
+  useEffect(() => {
     if (!loading && !isLoggedIn) {
       window.location.href = '/';
     }

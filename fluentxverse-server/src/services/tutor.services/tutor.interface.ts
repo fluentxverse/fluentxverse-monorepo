@@ -48,6 +48,9 @@ export interface TutorFilters {
 
 export interface TutorSearchParams extends TutorFilters {
   query?: string;
+  dateFilter?: string; // YYYY-MM-DD format to filter tutors with open slots on this date
+  startTime?: string; // HH:MM format to filter slots starting from this time
+  endTime?: string; // HH:MM format to filter slots ending before this time
   page?: number;
   limit?: number;
 }

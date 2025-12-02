@@ -17,20 +17,22 @@ export const tutorApi = {
    * Search tutors with filters
    */
   searchTutors: async (params: TutorSearchParams): Promise<TutorSearchResponse> => {
+    console.log('🔍 Frontend calling searchTutors with params:', params);
+    
     const response = await api.get<{ success: boolean; data: TutorSearchResponse }>('/tutor/search', {
       params: {
         q: params.query,
-        languages: params.languages,
         specializations: params.specializations,
-        minRating: params.minRating,
-        maxHourlyRate: params.maxHourlyRate,
-        minHourlyRate: params.minHourlyRate,
-        isAvailable: params.isAvailable,
+        dateFilter: params.dateFilter,
+        startTime: params.startTime,
+        endTime: params.endTime,
         sortBy: params.sortBy,
         page: params.page,
         limit: params.limit
       }
     });
+
+    console.log('✅ Frontend received response:', response.data);
 
     if (!response.data.success) {
       throw new Error('Failed to search tutors');
@@ -70,15 +72,7 @@ export const tutorApi = {
   /**
    * Get available filter options
    */
-  getFilterLanguages: async (): Promise<string[]> => {
-    const response = await api.get<{ success: boolean; data: string[] }>('/tutor/filters/languages');
 
-    if (!response.data.success) {
-      throw new Error('Failed to get languages');
-    }
-
-    return response.data.data;
-  },
 
   getFilterSpecializations: async (): Promise<string[]> => {
     const response = await api.get<{ success: boolean; data: string[] }>('/tutor/filters/specializations');

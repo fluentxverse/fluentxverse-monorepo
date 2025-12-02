@@ -7,6 +7,10 @@ import Header from '../Components/Header/Header';
 import './TutorProfilePage.css';
 
 export const TutorProfilePage = () => {
+  useEffect(() => {
+    document.title = 'Tutor Profile | FluentXVerse';
+  }, []);
+
   const { params } = useRoute();
   const tutorId = params.tutorId;
 

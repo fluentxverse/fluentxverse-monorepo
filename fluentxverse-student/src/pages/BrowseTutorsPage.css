@@ -338,6 +338,55 @@
   color: #fff;
 }
 
+/* Top Bar Time Range */
+.browse-topbar__time-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--browse-card);
+  border: 1px solid var(--browse-border);
+  border-radius: 8px;
+}
+
+.browse-topbar__time-label {
+  font-size: 14px;
+  color: var(--browse-text-secondary);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.browse-topbar__time-select {
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: var(--browse-text);
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right center;
+  padding-right: 18px;
+  min-width: 70px;
+}
+
+.browse-topbar__time-select:focus {
+  outline: none;
+}
+
+.browse-topbar__time-separator {
+  color: var(--browse-text-secondary);
+  font-size: 14px;
+  user-select: none;
+}
+
+[data-theme="dark"] .browse-topbar__time-range {
+  background: #1e293b;
+  border-color: var(--browse-border);
+}
+
 /* Sort Dropdown */
 .browse-sort {
   display: flex;
@@ -545,6 +594,61 @@
 
 [data-theme="dark"] .browse-filter-group__list::-webkit-scrollbar-thumb:hover {
   background: var(--browse-primary);
+}
+
+/* Time Range Filter */
+.browse-filter-group__time-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.browse-filter-group__time-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.browse-filter-group__time-input label {
+  font-size: 12px;
+  color: var(--browse-text-secondary);
+  font-weight: 500;
+}
+
+.browse-filter-group__select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--browse-border);
+  border-radius: 8px;
+  background: var(--browse-card);
+  color: var(--browse-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--browse-transition);
+}
+
+.browse-filter-group__select:hover {
+  border-color: var(--browse-primary-light);
+}
+
+.browse-filter-group__select:focus {
+  outline: none;
+  border-color: var(--browse-primary);
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.browse-filter-group__time-separator {
+  font-size: 18px;
+  color: var(--browse-text-secondary);
+  margin-top: 20px;
+}
+
+[data-theme="dark"] .browse-filter-group__select {
+  background: #1e293b;
+  border-color: var(--browse-border);
 }
 
 /* Custom Checkbox */

@@ -13,7 +13,10 @@ export class TutorService {
     try {
       const {
         page = 1,
-        limit = 12
+        limit = 12,
+        dateFilter,
+        startTime,
+        endTime
       } = params;
 
       // Ensure page and limit are integers
@@ -21,27 +24,83 @@ export class TutorService {
       const limitNum = Math.max(1, Math.min(100, Math.floor(Number(limit)))); // Cap at 100
       const skip = (pageNum - 1) * limitNum;
 
-      // Get total count of tutors
+      // Helper function to convert time string to comparable format
+      const convertTo12HourFormat = (time24: string): string => {
+        const [hourStr, minute] = time24.split(':');
+        let hour = parseInt(hourStr || "0", 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return `${hour}:${minute} ${ampm}`;
+      };
+
+      // Build WHERE clause for date and time filtering
+      let whereClause = '';
+      let matchPattern = 'MATCH (u:User)';
+      const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
+      
+      console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime);
+      
+      if (dateFilter) {
+        // Only show tutors who have open slots on the specified date
+        matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)`;
+        whereClause = `WHERE s.slotDate = $dateFilter AND s.status = 'open'`;
+        
+        // Add time range filtering if provided
+        if (startTime || endTime) {
+          const timeConditions = [];
+          
+          if (startTime) {
+            const startTime12 = convertTo12HourFormat(startTime);
+            queryParams.startTime = startTime12;
+            timeConditions.push('s.slotTime >= $startTime');
+            console.log('📅 Adding start time filter:', startTime12);
+          }
+          
+          if (endTime) {
+            const endTime12 = convertTo12HourFormat(endTime);
+            queryParams.endTime = endTime12;
+            timeConditions.push('s.slotTime <= $endTime');
+            console.log('📅 Adding end time filter:', endTime12);
+          }
+          
+          if (timeConditions.length > 0) {
+            whereClause += ` AND ${timeConditions.join(' AND ')}`;
+          }
+        }
+        
+        console.log('📅 Using date filter match pattern:', matchPattern);
+        console.log('📅 Using date filter WHERE clause:', whereClause);
+      } else {
+        console.log('📅 No date filter, showing all tutors');
+      }
+
+      // Get total count of tutors matching filter
       const countQuery = `
-        MATCH (u:User)
-        RETURN count(u) as total
+        ${matchPattern}
+        ${whereClause}
+        RETURN count(DISTINCT u) as total
       `;
 
-      const countResult = await session.run(countQuery);
+      console.log('🔢 Count query:', countQuery);
+      console.log('🔢 Query parameters:', queryParams);
+      
+      const countResult = await session.run(countQuery, queryParams);
       const total = countResult.records[0]?.get('total').toNumber() || 0;
+      
+      console.log('🔢 Total tutors found:', total);
 
       // Get tutors with pagination
       const tutorsQuery = `
-        MATCH (u:User)
-        RETURN u
+        ${matchPattern}
+        ${whereClause}
+        RETURN DISTINCT u
         SKIP $skip
         LIMIT $limit
       `;
 
-      const result = await session.run(tutorsQuery, {
-        skip: neo4j.int(skip),
-        limit: neo4j.int(limitNum)
-      });
+      const result = await session.run(tutorsQuery, queryParams);
+      
+
 
       const tutors: Tutor[] = result.records.map(record => {
         const user = record.get('u').properties;
