@@ -3,6 +3,7 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import Footer from '../Components/Footer/Footer';
 import { useAuthContext } from '../context/AuthContext';
+import { scheduleApi, StudentStats, RecentActivity } from '../api/schedule.api';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -11,28 +12,58 @@ const HomePage = () => {
   }, []);
 
   const { user } = useAuthContext();
+  const [stats, setStats] = useState<StudentStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
-  // Mock data - TODO: fetch from API
-  const nextLesson = {
-    tutorName: 'Sarah Kim',
-    tutorAvatar: 'https://i.pravatar.cc/150?img=5',
-    date: new Date(2025, 11, 3, 19, 0), // Dec 3, 2025, 7:00 PM
-    time: '7:00 PM',
-    lessonId: 'b1'
-  };
+  // Fetch student stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        const data = await scheduleApi.getStudentStats();
+        setStats(data);
+        setError(null);
+      } catch (err: any) {
+        console.error('Failed to fetch student stats:', err);
+        setError(err.message || 'Failed to load statistics');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const stats = {
-    lessonsCompleted: 12,
-    upcomingLessons: 2,
-    learningStreak: 5, // days
-    credits: 450
-  };
+    fetchStats();
+  }, [user]);
 
-  const recentActivity = [
-    { type: 'lesson', tutor: 'James Park', date: 'Nov 28', action: 'Completed lesson' },
-    { type: 'booking', tutor: 'Sarah Kim', date: 'Nov 27', action: 'Booked lesson for Dec 3' },
-    { type: 'lesson', tutor: 'James Park', date: 'Nov 25', action: 'Completed lesson' }
-  ];
+  // Fetch recent activity
+  useEffect(() => {
+    const fetchActivity = async () => {
+      if (!user) {
+        setActivityLoading(false);
+        return;
+      }
+      
+      try {
+        setActivityLoading(true);
+        const data = await scheduleApi.getStudentActivity(10);
+        setRecentActivity(data);
+      } catch (err: any) {
+        console.error('Failed to fetch recent activity:', err);
+        setRecentActivity([]);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+
+    fetchActivity();
+  }, [user]);
 
   const getTimeUntil = (date: Date) => {
     const now = new Date();
@@ -95,7 +126,9 @@ const HomePage = () => {
                       <div className="home-stat-icon blue">
                         <i className="fas fa-book-open"></i>
                       </div>
-                      <div className="home-stat-value">{stats.lessonsCompleted}</div>
+                      <div className="home-stat-value">
+                        {loading ? '...' : (stats?.lessonsCompleted || 0)}
+                      </div>
                     </div>
                     <div className="home-stat-label">Lessons Completed</div>
                   </div>
@@ -105,7 +138,9 @@ const HomePage = () => {
                       <div className="home-stat-icon green">
                         <i className="fas fa-calendar-check"></i>
                       </div>
-                      <div className="home-stat-value">{stats.upcomingLessons}</div>
+                      <div className="home-stat-value">
+                        {loading ? '...' : (stats?.upcomingLessons || 0)}
+                      </div>
                     </div>
                     <div className="home-stat-label">Upcoming Lessons</div>
                   </div>
@@ -113,11 +148,13 @@ const HomePage = () => {
                   <div className="home-stat-card orange">
                     <div className="home-stat-card-content">
                       <div className="home-stat-icon orange">
-                        <i className="fas fa-fire"></i>
+                        <i className="fas fa-clock"></i>
                       </div>
-                      <div className="home-stat-value">{stats.learningStreak}</div>
+                      <div className="home-stat-value">
+                        {loading ? '...' : (stats?.totalHours || 0)}
+                      </div>
                     </div>
-                    <div className="home-stat-label">Day Streak</div>
+                    <div className="home-stat-label">Total Hours</div>
                   </div>
                   
                   <div className="home-stat-card purple">
@@ -125,7 +162,9 @@ const HomePage = () => {
                       <div className="home-stat-icon purple">
                         <i className="fas fa-coins"></i>
                       </div>
-                      <div className="home-stat-value">{stats.credits}</div>
+                      <div className="home-stat-value">
+                        {loading ? '...' : 0}
+                      </div>
                     </div>
                     <div className="home-stat-label">Credits Available</div>
                   </div>
@@ -135,68 +174,82 @@ const HomePage = () => {
                 <div className="home-content-grid">
                   {/* Next Lesson Card */}
                   <div className="home-card">
-                    <div className="home-card-header">
-                      <h3 className="home-card-title">
-                        <i className="fas fa-calendar-check"></i>
-                        Next Lesson
-                      </h3>
-                      {nextLesson && (
-                        <div className="home-badge-time">
-                          in {getTimeUntil(nextLesson.date)}
-                        </div>
-                      )}
-                    </div>
-
-                    {nextLesson ? (
-                      <div className="home-next-lesson">
-                        <div 
-                          className={nextLesson.tutorAvatar ? "home-tutor-avatar" : "home-tutor-avatar placeholder"}
-                          style={nextLesson.tutorAvatar ? { backgroundImage: `url(${nextLesson.tutorAvatar})` } : undefined}
-                        >
-                          {!nextLesson.tutorAvatar && (
-                            <i className="fas fa-user"></i>
-                          )}
-                        </div>
-                        
-                        <div className="home-lesson-info">
-                          <div className="home-lesson-tutor">
-                            {nextLesson.tutorName}
-                          </div>
-                          <div className="home-lesson-details">
-                            <div className="home-lesson-detail">
-                              <i className="fas fa-calendar"></i>
-                              <span>{formatDate(nextLesson.date)}</span>
-                            </div>
-                            <div className="home-lesson-detail">
-                              <i className="fas fa-clock"></i>
-                              <span>{nextLesson.time}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => window.open(`/lesson/${nextLesson.lessonId}`, '_blank')}
-                          className="home-btn-join"
-                        >
-                          <i className="fas fa-video"></i>
-                          <span>Join Now</span>
-                        </button>
+                    {loading ? (
+                      <div className="home-loading-state">
+                        <i className="fas fa-spinner fa-spin"></i>
+                        <p>Loading your schedule...</p>
+                      </div>
+                    ) : error ? (
+                      <div className="home-error-state">
+                        <i className="fas fa-exclamation-circle"></i>
+                        <p>{error}</p>
                       </div>
                     ) : (
-                      <div className="home-empty-state">
-                        <div className="home-empty-icon">
-                          <i className="fas fa-calendar-plus"></i>
+                      <>
+                        <div className="home-card-header">
+                          <h3 className="home-card-title">
+                            <i className="fas fa-calendar-check"></i>
+                            Next Lesson
+                          </h3>
+                          {stats?.nextLesson && (
+                            <div className="home-badge-time">
+                              in {getTimeUntil(new Date(`${stats.nextLesson.slotDate}T${stats.nextLesson.slotTime}`))}
+                            </div>
+                          )}
                         </div>
-                        <p className="home-empty-text">
-                          No upcoming lessons scheduled
-                        </p>
-                        <button
-                          onClick={() => window.location.href = '/browse-tutors'}
-                          className="home-btn-book"
-                        >
-                          Book a Lesson
-                        </button>
-                      </div>
+
+                        {stats?.nextLesson ? (
+                          <div className="home-next-lesson">
+                            <div 
+                              className={stats.nextLesson.tutorAvatar ? "home-tutor-avatar" : "home-tutor-avatar placeholder"}
+                              style={stats.nextLesson.tutorAvatar ? { backgroundImage: `url(${stats.nextLesson.tutorAvatar})` } : undefined}
+                            >
+                              {!stats.nextLesson.tutorAvatar && (
+                                <i className="fas fa-user"></i>
+                              )}
+                            </div>
+                            
+                            <div className="home-lesson-info">
+                              <div className="home-lesson-tutor">
+                                {stats.nextLesson.tutorName}
+                              </div>
+                              <div className="home-lesson-details">
+                                <div className="home-lesson-detail">
+                                  <i className="fas fa-calendar"></i>
+                                  <span>{formatDate(new Date(stats.nextLesson.slotDate))}</span>
+                                </div>
+                                <div className="home-lesson-detail">
+                                  <i className="fas fa-clock"></i>
+                                  <span>{stats.nextLesson.slotTime}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => window.open(`/lesson/${stats.nextLesson!.bookingId}`, '_blank')}
+                              className="home-btn-join"
+                            >
+                              <i className="fas fa-video"></i>
+                              <span>Join Now</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="home-empty-state">
+                            <div className="home-empty-icon">
+                              <i className="fas fa-calendar-plus"></i>
+                            </div>
+                            <p className="home-empty-text">
+                              No upcoming lessons scheduled
+                            </p>
+                            <button
+                              onClick={() => window.location.href = '/browse-tutors'}
+                              className="home-btn-book"
+                            >
+                              Book a Lesson
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -247,29 +300,51 @@ const HomePage = () => {
                     <i className="fas fa-history"></i>
                     Recent Activity
                   </h3>
-                  <div className="home-activity-list">
-                    {recentActivity.map((activity, idx) => (
-                      <div
-                        key={idx}
-                        className="home-activity-item"
-                      >
-                        <div className={`home-activity-icon ${activity.type}`}>
-                          <i className={`fas fa-${activity.type === 'lesson' ? 'check-circle' : 'calendar-plus'}`}></i>
-                        </div>
-                        <div className="home-activity-content">
-                          <div className="home-activity-action">
-                            {activity.action}
-                          </div>
-                          <div className="home-activity-tutor">
-                            with {activity.tutor}
-                          </div>
-                        </div>
-                        <div className="home-activity-date">
-                          {activity.date}
-                        </div>
+                  {activityLoading ? (
+                    <div className="home-loading-state">
+                      <i className="fas fa-spinner fa-spin"></i>
+                      <p>Loading activity...</p>
+                    </div>
+                  ) : recentActivity.length === 0 ? (
+                    <div className="home-empty-state">
+                      <div className="home-empty-icon">
+                        <i className="fas fa-history"></i>
                       </div>
-                    ))}
-                  </div>
+                      <p className="home-empty-text">
+                        No recent activity yet
+                      </p>
+                      <button
+                        onClick={() => window.location.href = '/browse-tutors'}
+                        className="home-btn-book"
+                      >
+                        Book Your First Lesson
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="home-activity-list">
+                      {recentActivity.map((activity, idx) => (
+                        <div
+                          key={idx}
+                          className="home-activity-item"
+                        >
+                          <div className={`home-activity-icon ${activity.type === 'lesson_completed' ? 'lesson' : 'booking'}`}>
+                            <i className={`fas fa-${activity.type === 'lesson_completed' ? 'check-circle' : 'calendar-plus'}`}></i>
+                          </div>
+                          <div className="home-activity-content">
+                            <div className="home-activity-action">
+                              {activity.action}
+                            </div>
+                            <div className="home-activity-tutor">
+                              with {activity.tutorName}
+                            </div>
+                          </div>
+                          <div className="home-activity-date">
+                            {activity.date}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

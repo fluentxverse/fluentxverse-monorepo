@@ -197,6 +197,69 @@ const Schedule = new Elysia({ prefix: '/schedule' })
   })
 
   /**
+   * Get student statistics for dashboard
+   * GET /schedule/student-stats
+   */
+  .get('/student-stats', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.auth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+
+      const stats = await scheduleService.getStudentStats(studentId);
+
+      return {
+        success: true,
+        data: stats
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/student-stats:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get student stats'
+      };
+    }
+  })
+
+  /**
+   * Get recent activity for student dashboard
+   * GET /schedule/student-activity
+   */
+  .get('/student-activity', async ({ cookie, query, set }) => {
+    try {
+      const raw = cookie.auth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+      const limit = query.limit ? parseInt(query.limit as string) : 10;
+
+      const activity = await scheduleService.getStudentRecentActivity(studentId, limit);
+
+      return {
+        success: true,
+        data: activity
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/student-activity:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get student activity'
+      };
+    }
+  })
+
+  /**
    * Get available slots for a tutor
    * GET /schedule/available/:tutorId
    */

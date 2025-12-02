@@ -2,7 +2,7 @@
 import Elysia, { t } from "elysia";
 
 //** SERVICE IMPORT */
-import AuthService from "../services/auth.services/auth.service";
+import AuthService from "../services/auth.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
 import type { AuthData, MeResponse, User } from "@/services/auth.services/auth.interface";
 

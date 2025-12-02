@@ -150,7 +150,11 @@ class AuthService {
                 educationalAttainment,
                 major,
                 teachingExperience,
-                teachingQualifications
+                teachingQualifications,
+                currentProficiency,
+                learningGoals,
+                preferredLearningStyle,
+                availability
             } = params;
 
             // Build dynamic SET clause for only provided fields
@@ -220,6 +224,22 @@ class AuthService {
             if (teachingQualifications !== undefined) {
                 updates.push('u.teachingQualifications = $teachingQualifications');
                 queryParams.teachingQualifications = teachingQualifications;
+            }
+            if (currentProficiency !== undefined) {
+                updates.push('u.currentProficiency = $currentProficiency');
+                queryParams.currentProficiency = currentProficiency;
+            }
+            if (learningGoals !== undefined) {
+                updates.push('u.learningGoals = $learningGoals');
+                queryParams.learningGoals = learningGoals;
+            }
+            if (preferredLearningStyle !== undefined) {
+                updates.push('u.preferredLearningStyle = $preferredLearningStyle');
+                queryParams.preferredLearningStyle = preferredLearningStyle;
+            }
+            if (availability !== undefined) {
+                updates.push('u.availability = $availability');
+                queryParams.availability = availability;
             }
 
             if (updates.length === 0) {

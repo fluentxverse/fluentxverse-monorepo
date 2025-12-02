@@ -94,12 +94,17 @@ export const UpdatePersonalInfoSchema = {
         zipCode: t.Optional(t.String()),
         addressLine: t.Optional(t.String()),
         sameAsPermanent: t.Optional(t.Boolean()),
-        // Qualifications
+        // Tutor Qualifications
         schoolAttended: t.Optional(t.String()),
         educationalAttainment: t.Optional(t.String()),
         major: t.Optional(t.String()),
         teachingExperience: t.Optional(t.String()),
         teachingQualifications: t.Optional(t.Array(t.String())),
+        // Student Learning Preferences
+        currentProficiency: t.Optional(t.String()),
+        learningGoals: t.Optional(t.Array(t.String())),
+        preferredLearningStyle: t.Optional(t.String()),
+        availability: t.Optional(t.Array(t.String())),
     }),
     response: {
         200: t.Object({

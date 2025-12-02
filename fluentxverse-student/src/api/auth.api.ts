@@ -40,26 +40,31 @@ export interface UpdatePersonalInfoParams {
     zipCode?: string;
     addressLine?: string;
     sameAsPermanent?: boolean;
-    // Qualifications
+    // Tutor Qualifications (for tutor app)
     schoolAttended?: string;
     educationalAttainment?: string;
     major?: string;
     teachingExperience?: string;
     teachingQualifications?: string[];
+    // Student Learning Preferences (for student app)
+    currentProficiency?: string;
+    learningGoals?: string[];
+    preferredLearningStyle?: string;
+    availability?: string[];
 }
 
 export const updatePersonalInfo = async (params: UpdatePersonalInfoParams) => {
-    const { data } = await client.put('/user/personal-info', params)
+    const { data } = await client.put('/student/user/personal-info', params)
     return data;
 }
 
 export const updateEmail = async (newEmail: string, currentPassword: string) => {
-    const { data } = await client.put('/user/email', { newEmail, currentPassword })
+    const { data } = await client.put('/student/user/email', { newEmail, currentPassword })
     return data;
 }
 
 export const updatePassword = async (currentPassword: string, newPassword: string) => {
-    const { data } = await client.put('/user/password', { currentPassword, newPassword })
+    const { data } = await client.put('/student/user/password', { currentPassword, newPassword })
     return data;
 }
 

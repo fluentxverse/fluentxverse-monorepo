@@ -28,6 +28,30 @@ export interface AvailableSlot {
   durationMinutes: number;
 }
 
+export interface StudentStats {
+  lessonsCompleted: number;
+  upcomingLessons: number;
+  totalHours: number;
+  nextLesson?: {
+    tutorName: string;
+    tutorAvatar?: string;
+    slotDate: string;
+    slotTime: string;
+    bookingId: string;
+  };
+}
+
+export interface RecentActivity {
+  type: 'lesson_completed' | 'lesson_booked';
+  tutorName: string;
+  tutorAvatar?: string;
+  date: string;
+  action: string;
+  bookingId?: string;
+  slotDate?: string;
+  timestamp: Date;
+}
+
 export const scheduleApi = {
   /**
    * Get student's bookings
@@ -43,6 +67,24 @@ export const scheduleApi = {
       return response.data.data;
     } catch (error) {
       console.error('Failed to get student bookings:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get student statistics for dashboard
+   */
+  getStudentStats: async (): Promise<StudentStats> => {
+    try {
+      const response = await api.get('/schedule/student-stats');
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to get student stats');
+      }
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('Failed to get student stats:', error);
       throw error;
     }
   },
@@ -84,6 +126,26 @@ export const scheduleApi = {
     } catch (error: any) {
       console.error('Failed to book slot:', error);
       throw error.response?.data?.error || error.message || 'Failed to book slot';
+    }
+  },
+
+  /**
+   * Get recent activity for student dashboard
+   */
+  getStudentActivity: async (limit: number = 10): Promise<RecentActivity[]> => {
+    try {
+      const response = await api.get('/schedule/student-activity', { 
+        params: { limit } 
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to get student activity');
+      }
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('Failed to get student activity:', error);
+      throw error;
     }
   }
 };

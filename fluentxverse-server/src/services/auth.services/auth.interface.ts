@@ -67,12 +67,17 @@ export interface UpdatePersonalInfoParams {
     zipCode?: string;
     addressLine?: string;
     sameAsPermanent?: boolean;
-    // Qualifications
+    // Tutor Qualifications
     schoolAttended?: string;
     educationalAttainment?: string;
     major?: string;
     teachingExperience?: string;
     teachingQualifications?: string[];
+    // Student Learning Preferences
+    currentProficiency?: string;
+    learningGoals?: string[];
+    preferredLearningStyle?: string;
+    availability?: string[];
 }
 
 // Update email params

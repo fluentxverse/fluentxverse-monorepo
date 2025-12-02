@@ -809,4 +809,209 @@ export class ScheduleService {
       await session.close();
     }
   }
+
+  /**
+   * Get student statistics for dashboard
+   */
+  async getStudentStats(studentId: string): Promise<{
+    lessonsCompleted: number;
+    upcomingLessons: number;
+    totalHours: number;
+    nextLesson?: {
+      tutorName: string;
+      tutorAvatar?: string;
+      slotDate: string;
+      slotTime: string;
+      bookingId: string;
+    };
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      const now = new Date().toISOString();
+      
+      // Get completed lessons count
+      const completedResult = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
+        WHERE b.status = 'completed'
+        RETURN count(b) as completedCount
+        `,
+        { studentId }
+      );
+      
+      // Get upcoming lessons count and next lesson
+      const upcomingResult = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        WHERE b.status = 'confirmed'
+          AND datetime(slot.slotDate + 'T' + slot.slotTime + ':00') > datetime($now)
+        RETURN count(b) as upcomingCount,
+               tutor.givenName as tutorGivenName,
+               tutor.familyName as tutorFamilyName,
+               tutor.profilePicture as tutorAvatar,
+               slot.slotDate as slotDate,
+               slot.slotTime as slotTime,
+               b.bookingId as bookingId,
+               slot.slotDate + 'T' + slot.slotTime as sortKey
+        ORDER BY sortKey ASC
+        LIMIT 1
+        `,
+        { studentId, now }
+      );
+      
+      // Get total hours from completed lessons
+      const hoursResult = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        WHERE b.status = 'completed'
+        RETURN sum(slot.durationMinutes) as totalMinutes
+        `,
+        { studentId }
+      );
+      
+      const completedCount = completedResult.records[0]?.get('completedCount')?.toNumber() || 0;
+      const upcomingCount = upcomingResult.records[0]?.get('upcomingCount')?.toNumber() || 0;
+      const totalMinutes = hoursResult.records[0]?.get('totalMinutes')?.toNumber() || 0;
+      const totalHours = Math.round((totalMinutes / 60) * 10) / 10; // Round to 1 decimal
+      
+      let nextLesson = undefined;
+      if (upcomingResult.records.length > 0 && upcomingResult.records[0]) {
+        const record = upcomingResult.records[0];
+        const givenName = record?.get('tutorGivenName') || '';
+        const familyName = record?.get('tutorFamilyName') || '';
+        
+        nextLesson = {
+          tutorName: `${givenName} ${familyName}`.trim() || 'Tutor',
+          tutorAvatar: record?.get('tutorAvatar'),
+          slotDate: record?.get('slotDate'),
+          slotTime: record?.get('slotTime'),
+          bookingId: record?.get('bookingId')
+        };
+      }
+      
+      return {
+        lessonsCompleted: completedCount,
+        upcomingLessons: upcomingCount,
+        totalHours,
+        nextLesson
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get recent activity for student dashboard
+   */
+  async getStudentRecentActivity(studentId: string, limit: number = 10): Promise<Array<{
+    type: 'lesson_completed' | 'lesson_booked';
+    tutorName: string;
+    tutorAvatar?: string;
+    date: string;
+    action: string;
+    bookingId?: string;
+    slotDate?: string;
+    timestamp: Date;
+  }>> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      // Ensure limit is an integer
+      const limitInt = Math.floor(Number(limit)) || 10;
+      
+      // Get completed lessons and bookings
+      const result = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        WHERE b.status IN ['completed', 'confirmed']
+        WITH b, slot, tutor,
+             CASE 
+               WHEN b.status = 'completed' THEN slot.slotDate + 'T' + slot.slotTime
+               ELSE b.bookedAt
+             END as sortTime
+        RETURN b, slot, tutor, sortTime
+        ORDER BY sortTime DESC
+        LIMIT ${limitInt}
+        `,
+        { studentId }
+      );
+      
+      return result.records.map(record => {
+        const booking = record.get('b').properties;
+        const slot = record.get('slot').properties;
+        const tutor = record.get('tutor').properties;
+        
+        const tutorName = `${tutor.givenName || tutor.firstName || ''} ${tutor.familyName || tutor.lastName || ''}`.trim();
+        const isCompleted = booking.status === 'completed';
+        
+        const activityDate = isCompleted 
+          ? new Date(slot.slotDate) 
+          : new Date(booking.bookedAt);
+        
+        return {
+          type: isCompleted ? 'lesson_completed' : 'lesson_booked',
+          tutorName,
+          tutorAvatar: tutor.profilePicture,
+          date: this.formatActivityDate(activityDate),
+          action: isCompleted 
+            ? 'Completed lesson' 
+            : `Booked lesson for ${this.formatBookingDate(slot.slotDate)}`,
+          bookingId: booking.bookingId,
+          slotDate: slot.slotDate,
+          timestamp: activityDate
+        };
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Format date for activity display (e.g., "Nov 28", "Yesterday", "Today")
+   */
+  private formatActivityDate(date: Date): string {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const activityDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    if (activityDate.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (activityDate.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
+
+  /**
+   * Format date for booking display (e.g., "Dec 3", "Tomorrow")
+   */
+  private formatBookingDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const slotDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    if (slotDate.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (slotDate.getTime() === tomorrow.getTime()) {
+      return 'Tomorrow';
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
 }
