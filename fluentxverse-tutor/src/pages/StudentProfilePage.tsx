@@ -581,5 +581,6 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
     </div>
   );
 };
+}
 
-export default StudentProfilePage;
+export default StudentProfilePage

@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi } from '../api/schedule.api';
 import Header from '../Components/Header/Header';
+import SideBar from '../Components/IndexOne/SideBar';
 import Footer from '../Components/Footer/Footer';
 import './LessonPage.css';
 
@@ -171,10 +172,13 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
       <>
         <Header />
         <div className="lesson-page">
-          <div className="lesson-container">
-            <div className="lesson-loading">
-              <i className="fas fa-spinner fa-spin"></i>
-              <p>Loading lesson details...</p>
+          <SideBar />
+          <div className="lesson-main-content">
+            <div className="lesson-container">
+              <div className="lesson-loading">
+                <i className="fas fa-spinner fa-spin"></i>
+                <p>Loading lesson details...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -188,14 +192,17 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
       <>
         <Header />
         <div className="lesson-page">
-          <div className="lesson-container">
-            <div className="lesson-error">
-              <i className="fas fa-exclamation-circle"></i>
-              <h2>Unable to Load Lesson</h2>
-              <p>{error || 'Lesson not found'}</p>
-              <button onClick={() => window.location.href = '/schedule'} className="btn-back">
-                Back to Schedule
-              </button>
+          <SideBar />
+          <div className="lesson-main-content">
+            <div className="lesson-container">
+              <div className="lesson-error">
+                <i className="fas fa-exclamation-circle"></i>
+                <h2>Unable to Load Lesson</h2>
+                <p>{error || 'Lesson not found'}</p>
+                <button onClick={() => window.location.href = '/schedule'} className="btn-back">
+                  Back to Schedule
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -208,7 +215,9 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
     <>
       <Header />
       <div className="lesson-page">
-        <div className="lesson-container">
+        <SideBar />
+        <div className="lesson-main-content">
+          <div className="lesson-container">
           {/* Back Button */}
           <button onClick={() => window.history.back()} className="lesson-back-btn">
             <i className="fas fa-arrow-left"></i>
@@ -415,6 +424,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
       <Footer />

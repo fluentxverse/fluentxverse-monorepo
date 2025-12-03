@@ -974,16 +974,7 @@ export class ScheduleService {
           const firstName = next.tutorFirstName || next.tutorGivenName || '';
           const lastName = next.tutorLastName || next.tutorFamilyName || '';
           
-          console.log('Next lesson data:', {
-            tutorFirstName: next.tutorFirstName,
-            tutorLastName: next.tutorLastName,
-            tutorGivenName: next.tutorGivenName,
-            tutorFamilyName: next.tutorFamilyName,
-            tutorAvatar: next.tutorAvatar,
-            slotDate: next.slotDate,
-            slotTime: next.slotTime,
-            bookingId: next.bookingId
-          });
+
           
           nextLesson = {
             tutorName: `${firstName} ${lastName}`.trim() || 'Tutor',
@@ -1002,7 +993,7 @@ export class ScheduleService {
         nextLesson
       };
       
-      console.log('Student stats result:', JSON.stringify(stats, null, 2));
+
       
       return stats;
     } finally {
@@ -1064,8 +1055,21 @@ export class ScheduleService {
           // Parse slotDate as a date (e.g., "2025-12-03")
           activityDate = new Date(slot.slotDate + 'T00:00:00');
         } else {
-          // bookedAt is already a timestamp
-          activityDate = new Date(booking.bookedAt);
+          // bookedAt is a Neo4j DateTime object, convert to JavaScript Date
+          const bookedAtDateTime = booking.bookedAt;
+          if (bookedAtDateTime && bookedAtDateTime.__isDateTime__) {
+            activityDate = new Date(
+              bookedAtDateTime.year.toInt(),
+              bookedAtDateTime.month.toInt() - 1,
+              bookedAtDateTime.day.toInt(),
+              bookedAtDateTime.hour.toInt(),
+              bookedAtDateTime.minute.toInt(),
+              bookedAtDateTime.second.toInt()
+            );
+          } else {
+            // Fallback if it's already a date string
+            activityDate = new Date(booking.bookedAt);
+          }
         }
         
         // Validate date
@@ -1139,9 +1143,6 @@ export class ScheduleService {
   async getLessonDetails(bookingId: string, studentId: string) {
     const session = getDriver().session();
     try {
-      console.log('\n=== SERVICE: getLessonDetails ===');
-      console.log('Input bookingId:', bookingId);
-      console.log('Input studentId:', studentId);
       
       // Match Booking -> TimeSlot and derive tutor via OFFERS relationship
       // Use slotDateTime stored on Booking for date/time extraction
@@ -1168,75 +1169,10 @@ export class ScheduleService {
           tutor.hourlyRate AS hourlyRate
       `;
 
-      console.log('Executing Cypher query...');
       const result = await session.run(query, { bookingId, studentId });
-      
-      console.log('Query returned', result.records.length, 'records');
 
       if (result.records.length === 0) {
-        console.log('\n=== DEBUG: No records found ===');
-        // Debug: Try to find the booking without student filter
-        const debugQuery = `MATCH (booking:Booking {bookingId: $bookingId}) RETURN booking`;
-        const debugResult = await session.run(debugQuery, { bookingId });
-        console.log('Debug query 1 - Found booking?', debugResult.records.length > 0);
-        if (debugResult.records.length > 0) {
-          const bookingNode = debugResult.records[0]?.get('booking');
-          const bookingProps = bookingNode?.properties ?? {};
-          console.log('Debug: Booking found! Properties:', JSON.stringify(bookingProps, null, 2));
-        }
-        
-        // Debug: Check if student exists
-        const studentQuery = `MATCH (s:Student {id: $studentId}) RETURN s`;
-        const studentResult = await session.run(studentQuery, { studentId });
-        console.log('Debug query 2 - Student exists?', studentResult.records.length > 0);
-        if (studentResult.records.length > 0) {
-          const studentNode = studentResult.records[0]?.get('s');
-          const studentProps = studentNode?.properties ?? {};
-          console.log('Debug: Student found! Properties:', JSON.stringify(studentProps, null, 2));
-        }
-        
-        // Debug: Check the relationship
-        const relQuery = `
-          MATCH (booking:Booking {bookingId: $bookingId})-[r:BOOKED_BY]->(student:Student)
-          RETURN student.id AS studentId, type(r) AS relType
-        `;
-        const relResult = await session.run(relQuery, { bookingId });
-        console.log('Debug query 3 - BOOKED_BY relationship found?', relResult.records.length > 0);
-        if (relResult.records.length > 0) {
-          const relStudentId = relResult.records[0]?.get('studentId');
-          console.log('Debug: Relationship points to student ID:', relStudentId);
-          console.log('Debug: Expected student ID:', studentId);
-        }
-        
-        // Debug: Check what relationships exist from Booking
-        const allRelsQuery = `
-          MATCH (booking:Booking {bookingId: $bookingId})-[r]->(n)
-          RETURN type(r) AS relType, labels(n) AS nodeLabels, n LIMIT 5
-        `;
-        const allRelsResult = await session.run(allRelsQuery, { bookingId });
-        console.log('Debug query 4 - All relationships from Booking:');
-        allRelsResult.records.forEach((rec, idx) => {
-          console.log(`  ${idx + 1}. Relationship: ${rec.get('relType')}, To: ${rec.get('nodeLabels')}`);
-        });
-
-        // Debug: Verify OFFERS relationship from the matched TimeSlot to a Tutor
-        const offersQuery = `
-          MATCH (booking:Booking {bookingId: $bookingId})-[:BOOKS]->(slot:TimeSlot)
-          OPTIONAL MATCH (slot)<-[:OFFERS]-(tutor:User)
-          RETURN slot.slotId AS slotId, tutor.userId AS tutorId
-        `;
-        const offersResult = await session.run(offersQuery, { bookingId });
-        if (offersResult.records.length > 0) {
-          const rec = offersResult.records[0];
-          const sId = rec?.get('slotId');
-          const tId = rec?.get('tutorId');
-          console.log('Debug query 5 - Slot to Tutor via OFFERS:', { slotId: sId, tutorId: tId });
-        } else {
-          console.log('Debug query 5 - No OFFERS tutor found for slot');
-        }
-
         // Fallback attempt: match tutor by booking.tutorId using WHERE
-        console.log('Attempting fallback query using booking.tutorId WHERE match...');
         const fallbackQuery = `
           MATCH (booking:Booking {bookingId: $bookingId})-[:BOOKED_BY]->(student:Student {id: $studentId})
           MATCH (tutor:User)
@@ -1255,10 +1191,8 @@ export class ScheduleService {
             tutor.hourlyRate AS hourlyRate
         `;
         const fallbackResult = await session.run(fallbackQuery, { bookingId, studentId });
-        console.log('Fallback query returned', fallbackResult.records.length, 'records');
         if (fallbackResult.records.length > 0) {
           const fr = fallbackResult.records[0];
-          console.log('Fallback query succeeded, returning data');
 
           // Extract slotDateTime
           const slotDateTime = fr?.get('slotDateTime');
@@ -1286,8 +1220,6 @@ export class ScheduleService {
             bookedAt: fr?.get('bookedAt'),
             sessionId: bookingId
           };
-          console.log('Constructed lesson details (fallback):', JSON.stringify(lessonDetails, null, 2));
-          console.log('=== END SERVICE (fallback) ===\n');
           return lessonDetails;
         }
         
@@ -1307,11 +1239,9 @@ export class ScheduleService {
           bookedAt: undefined,
           sessionId: bookingId
         };
-        console.log('Returning booking-only fallback:', bookingOnly);
         return bookingOnly;
       }
 
-      console.log('\n=== SUCCESS: Record found ===');
       const record = result.records[0]!;
       
       // Extract slotDateTime and convert to date and time strings
@@ -1319,22 +1249,43 @@ export class ScheduleService {
       const year = slotDateTime.year.toInt();
       const month = String(slotDateTime.month.toInt()).padStart(2, '0');
       const day = String(slotDateTime.day.toInt()).padStart(2, '0');
-      const hour = slotDateTime.hour.toInt();
+      
+      // The slotDateTime is stored in UTC, convert to Philippine time (UTC+8)
+      let hour = slotDateTime.hour.toInt() + 8;
+      if (hour >= 24) hour -= 24;
+      
       const minute = String(slotDateTime.minute.toInt()).padStart(2, '0');
       
       // Format as date string (YYYY-MM-DD)
       const slotDate = `${year}-${month}-${day}`;
       
-      // Format as 12-hour time string (H:MM AM/PM)
+      // Format as 12-hour time string (H:MM AM/PM) in Philippine time
       const period = hour >= 12 ? 'PM' : 'AM';
       const hour12 = hour % 12 || 12;
       const slotTime = `${hour12}:${minute} ${period}`;
       
-      console.log('Extracted slotDate:', slotDate, 'slotTime:', slotTime);
-      
       const first = record.get('tFirst');
       const last = record.get('tLast');
       const derivedTutorName = `${(first || '').trim()} ${(last || '').trim()}`.trim() || 'Tutor';
+
+      // Convert bookedAt DateTime to ISO string
+      const bookedAtDateTime = record.get('bookedAt');
+      let bookedAtISO = new Date().toISOString();
+      if (bookedAtDateTime) {
+        try {
+          const bookedAtDate = new Date(
+            bookedAtDateTime.year.toInt(),
+            bookedAtDateTime.month.toInt() - 1,
+            bookedAtDateTime.day.toInt(),
+            bookedAtDateTime.hour.toInt(),
+            bookedAtDateTime.minute.toInt(),
+            bookedAtDateTime.second.toInt()
+          );
+          bookedAtISO = bookedAtDate.toISOString();
+        } catch (e) {
+          console.error('Error converting bookedAt:', e);
+        }
+      }
 
       const lessonDetails = {
         bookingId: record.get('bookingId'),
@@ -1347,12 +1298,9 @@ export class ScheduleService {
         slotTime,
         durationMinutes: record.get('durationMinutes')?.toNumber?.() || record.get('durationMinutes'),
         status: record.get('status'),
-        bookedAt: record.get('bookedAt'),
+        bookedAt: bookedAtISO,
         sessionId: bookingId // Use bookingId as sessionId for classroom
       };
-
-      console.log('Constructed lesson details:', JSON.stringify(lessonDetails, null, 2));
-      console.log('=== END SERVICE ===\n');
 
       return lessonDetails;
     } catch (error) {

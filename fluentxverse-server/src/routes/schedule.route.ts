@@ -211,11 +211,10 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
       
-      console.log('Getting stats for student:', studentId);
 
       const stats = await scheduleService.getStudentStats(studentId);
       
-      console.log('Stats to be returned:', JSON.stringify(stats, null, 2));
+
 
       return {
         success: true,
@@ -279,25 +278,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const studentId = authData.userId;
       const { bookingId } = params;
 
-      console.log('\n=== ROUTE: GET /lesson/:bookingId ===');
-      console.log('bookingId from params:', bookingId);
-      console.log('studentId from auth:', studentId);
-
       const lessonDetails = await scheduleService.getLessonDetails(bookingId, studentId);
-
-      console.log('Lesson details retrieved successfully:', JSON.stringify(lessonDetails, null, 2));
-      console.log('=== END ROUTE ===\n');
-
       return {
         success: true,
         data: lessonDetails
       };
     } catch (error: any) {
-      console.error('=== ERROR in /lesson/:bookingId route ===');
+
       console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      
-      set.status = error.message.includes('not found') ? 404 : 500;
+
       return {
         success: false,
         error: error.message || 'Failed to get lesson details'
