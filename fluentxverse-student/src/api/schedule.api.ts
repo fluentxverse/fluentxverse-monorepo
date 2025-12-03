@@ -153,16 +153,27 @@ export const scheduleApi = {
    * Get lesson details by booking ID
    */
   getLessonDetails: async (bookingId: string): Promise<any> => {
+    console.log('\n=== FRONTEND API: getLessonDetails ===');
+    console.log('Requesting bookingId:', bookingId);
+    
     try {
       const response = await api.get(`/schedule/lesson/${bookingId}`);
       
+      console.log('Response status:', response.status);
+      console.log('Response data:', JSON.stringify(response.data, null, 2));
+      
       if (!response.data.success) {
+        console.error('API returned error:', response.data.error);
         throw new Error(response.data.error || 'Failed to get lesson details');
       }
       
+      console.log('Lesson data received:', JSON.stringify(response.data.data, null, 2));
+      console.log('=== END FRONTEND API ===\n');
       return response.data.data;
     } catch (error: any) {
+      console.error('=== ERROR in FRONTEND API ===');
       console.error('Failed to get lesson details:', error);
+      console.error('Error response:', error.response?.data);
       throw error.response?.data?.error || error.message || 'Failed to load lesson';
     }
   }

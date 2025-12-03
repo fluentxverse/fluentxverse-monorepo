@@ -1139,58 +1139,222 @@ export class ScheduleService {
   async getLessonDetails(bookingId: string, studentId: string) {
     const session = getDriver().session();
     try {
-      console.log('Getting lesson details for bookingId:', bookingId, 'studentId:', studentId);
+      console.log('\n=== SERVICE: getLessonDetails ===');
+      console.log('Input bookingId:', bookingId);
+      console.log('Input studentId:', studentId);
       
+      // Match Booking -> TimeSlot and derive tutor via OFFERS relationship
+      // Use slotDateTime stored on Booking for date/time extraction
       const query = `
         MATCH (booking:Booking {bookingId: $bookingId})-[:BOOKED_BY]->(student:Student {id: $studentId})
-        MATCH (booking)-[:BOOKS]->(slot:TimeSlot)<-[:OFFERS]-(tutor:User)
+        OPTIONAL MATCH (booking)-[:BOOKS]->(slot:TimeSlot)
+        OPTIONAL MATCH (slot)<-[:OFFERS]-(tutorRel)
+        OPTIONAL MATCH (tutorDirect)
+        WHERE tutorDirect.userId = booking.tutorId OR tutorDirect.id = booking.tutorId
+        WITH booking, student,
+             coalesce(tutorRel, tutorDirect) AS tutor
         RETURN 
           booking.bookingId AS bookingId,
           booking.status AS status,
           booking.bookedAt AS bookedAt,
-          slot.slotDate AS slotDate,
-          slot.slotTime AS slotTime,
-          slot.durationMinutes AS durationMinutes,
-          tutor.userId AS tutorId,
-          COALESCE(tutor.firstName, tutor.givenName, 'Tutor') + ' ' + 
-          COALESCE(tutor.lastName, tutor.familyName, '') AS tutorName,
+          booking.slotDateTime AS slotDateTime,
+          booking.durationMinutes AS durationMinutes,
+          tutor.userId AS tutorUserId,
+          tutor.id AS tutorId,
+          COALESCE(tutor.firstName, tutor.givenName, '') AS tFirst,
+          COALESCE(tutor.lastName, tutor.familyName, '') AS tLast,
           tutor.profilePicture AS tutorAvatar,
           tutor.bio AS tutorBio,
           tutor.hourlyRate AS hourlyRate
       `;
 
+      console.log('Executing Cypher query...');
       const result = await session.run(query, { bookingId, studentId });
       
       console.log('Query returned', result.records.length, 'records');
 
       if (result.records.length === 0) {
+        console.log('\n=== DEBUG: No records found ===');
         // Debug: Try to find the booking without student filter
         const debugQuery = `MATCH (booking:Booking {bookingId: $bookingId}) RETURN booking`;
         const debugResult = await session.run(debugQuery, { bookingId });
-        console.log('Debug: Found booking?', debugResult.records.length > 0);
+        console.log('Debug query 1 - Found booking?', debugResult.records.length > 0);
         if (debugResult.records.length > 0) {
-          console.log('Debug: Booking exists but student mismatch. Booking studentId:', debugResult.records[0].get('booking').properties.studentId);
+          const bookingNode = debugResult.records[0]?.get('booking');
+          const bookingProps = bookingNode?.properties ?? {};
+          console.log('Debug: Booking found! Properties:', JSON.stringify(bookingProps, null, 2));
         }
         
-        throw new Error('Lesson not found or you do not have access to this lesson');
+        // Debug: Check if student exists
+        const studentQuery = `MATCH (s:Student {id: $studentId}) RETURN s`;
+        const studentResult = await session.run(studentQuery, { studentId });
+        console.log('Debug query 2 - Student exists?', studentResult.records.length > 0);
+        if (studentResult.records.length > 0) {
+          const studentNode = studentResult.records[0]?.get('s');
+          const studentProps = studentNode?.properties ?? {};
+          console.log('Debug: Student found! Properties:', JSON.stringify(studentProps, null, 2));
+        }
+        
+        // Debug: Check the relationship
+        const relQuery = `
+          MATCH (booking:Booking {bookingId: $bookingId})-[r:BOOKED_BY]->(student:Student)
+          RETURN student.id AS studentId, type(r) AS relType
+        `;
+        const relResult = await session.run(relQuery, { bookingId });
+        console.log('Debug query 3 - BOOKED_BY relationship found?', relResult.records.length > 0);
+        if (relResult.records.length > 0) {
+          const relStudentId = relResult.records[0]?.get('studentId');
+          console.log('Debug: Relationship points to student ID:', relStudentId);
+          console.log('Debug: Expected student ID:', studentId);
+        }
+        
+        // Debug: Check what relationships exist from Booking
+        const allRelsQuery = `
+          MATCH (booking:Booking {bookingId: $bookingId})-[r]->(n)
+          RETURN type(r) AS relType, labels(n) AS nodeLabels, n LIMIT 5
+        `;
+        const allRelsResult = await session.run(allRelsQuery, { bookingId });
+        console.log('Debug query 4 - All relationships from Booking:');
+        allRelsResult.records.forEach((rec, idx) => {
+          console.log(`  ${idx + 1}. Relationship: ${rec.get('relType')}, To: ${rec.get('nodeLabels')}`);
+        });
+
+        // Debug: Verify OFFERS relationship from the matched TimeSlot to a Tutor
+        const offersQuery = `
+          MATCH (booking:Booking {bookingId: $bookingId})-[:BOOKS]->(slot:TimeSlot)
+          OPTIONAL MATCH (slot)<-[:OFFERS]-(tutor:User)
+          RETURN slot.slotId AS slotId, tutor.userId AS tutorId
+        `;
+        const offersResult = await session.run(offersQuery, { bookingId });
+        if (offersResult.records.length > 0) {
+          const rec = offersResult.records[0];
+          const sId = rec?.get('slotId');
+          const tId = rec?.get('tutorId');
+          console.log('Debug query 5 - Slot to Tutor via OFFERS:', { slotId: sId, tutorId: tId });
+        } else {
+          console.log('Debug query 5 - No OFFERS tutor found for slot');
+        }
+
+        // Fallback attempt: match tutor by booking.tutorId using WHERE
+        console.log('Attempting fallback query using booking.tutorId WHERE match...');
+        const fallbackQuery = `
+          MATCH (booking:Booking {bookingId: $bookingId})-[:BOOKED_BY]->(student:Student {id: $studentId})
+          MATCH (tutor:User)
+          WHERE tutor.userId = booking.tutorId
+          RETURN 
+            booking.bookingId AS bookingId,
+            booking.status AS status,
+            booking.bookedAt AS bookedAt,
+            booking.slotDateTime AS slotDateTime,
+            booking.durationMinutes AS durationMinutes,
+            tutor.userId AS tutorId,
+            COALESCE(tutor.firstName, tutor.givenName, 'Tutor') + ' ' + 
+            COALESCE(tutor.lastName, tutor.familyName, '') AS tutorName,
+            tutor.profilePicture AS tutorAvatar,
+            tutor.bio AS tutorBio,
+            tutor.hourlyRate AS hourlyRate
+        `;
+        const fallbackResult = await session.run(fallbackQuery, { bookingId, studentId });
+        console.log('Fallback query returned', fallbackResult.records.length, 'records');
+        if (fallbackResult.records.length > 0) {
+          const fr = fallbackResult.records[0];
+          console.log('Fallback query succeeded, returning data');
+
+          // Extract slotDateTime
+          const slotDateTime = fr?.get('slotDateTime');
+          const year = slotDateTime.year.toInt();
+          const month = String(slotDateTime.month.toInt()).padStart(2, '0');
+          const day = String(slotDateTime.day.toInt()).padStart(2, '0');
+          const hour = slotDateTime.hour.toInt();
+          const minute = String(slotDateTime.minute.toInt()).padStart(2, '0');
+          const period = hour >= 12 ? 'PM' : 'AM';
+          const hour12 = hour % 12 || 12;
+          const slotDate = `${year}-${month}-${day}`;
+          const slotTime = `${hour12}:${minute} ${period}`;
+
+          const lessonDetails = {
+            bookingId: fr?.get('bookingId'),
+            tutorId: fr?.get('tutorId'),
+            tutorName: fr?.get('tutorName')?.trim?.() || fr?.get('tutorName'),
+            tutorAvatar: fr?.get('tutorAvatar'),
+            tutorBio: fr?.get('tutorBio'),
+            hourlyRate: fr?.get('hourlyRate')?.toNumber?.() || fr?.get('hourlyRate'),
+            slotDate,
+            slotTime,
+            durationMinutes: fr?.get('durationMinutes')?.toNumber?.() || fr?.get('durationMinutes'),
+            status: fr?.get('status'),
+            bookedAt: fr?.get('bookedAt'),
+            sessionId: bookingId
+          };
+          console.log('Constructed lesson details (fallback):', JSON.stringify(lessonDetails, null, 2));
+          console.log('=== END SERVICE (fallback) ===\n');
+          return lessonDetails;
+        }
+        
+        // As a last resort, return booking-only details (tutor may be missing)
+        const bookingOnly = {
+          bookingId,
+          tutorId: null,
+          tutorName: null,
+          tutorAvatar: null,
+          tutorBio: null,
+          hourlyRate: null,
+          // Extract date/time from debug bookingProps above if present
+          slotDate: undefined,
+          slotTime: undefined,
+          durationMinutes: undefined,
+          status: undefined,
+          bookedAt: undefined,
+          sessionId: bookingId
+        };
+        console.log('Returning booking-only fallback:', bookingOnly);
+        return bookingOnly;
       }
 
-      const record = result.records[0];
+      console.log('\n=== SUCCESS: Record found ===');
+      const record = result.records[0]!;
       
-      return {
+      // Extract slotDateTime and convert to date and time strings
+      const slotDateTime = record.get('slotDateTime');
+      const year = slotDateTime.year.toInt();
+      const month = String(slotDateTime.month.toInt()).padStart(2, '0');
+      const day = String(slotDateTime.day.toInt()).padStart(2, '0');
+      const hour = slotDateTime.hour.toInt();
+      const minute = String(slotDateTime.minute.toInt()).padStart(2, '0');
+      
+      // Format as date string (YYYY-MM-DD)
+      const slotDate = `${year}-${month}-${day}`;
+      
+      // Format as 12-hour time string (H:MM AM/PM)
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      const slotTime = `${hour12}:${minute} ${period}`;
+      
+      console.log('Extracted slotDate:', slotDate, 'slotTime:', slotTime);
+      
+      const first = record.get('tFirst');
+      const last = record.get('tLast');
+      const derivedTutorName = `${(first || '').trim()} ${(last || '').trim()}`.trim() || 'Tutor';
+
+      const lessonDetails = {
         bookingId: record.get('bookingId'),
-        tutorId: record.get('tutorId'),
-        tutorName: record.get('tutorName').trim(),
+        tutorId: record.get('tutorUserId') || record.get('tutorId') || null,
+        tutorName: derivedTutorName,
         tutorAvatar: record.get('tutorAvatar'),
         tutorBio: record.get('tutorBio'),
         hourlyRate: record.get('hourlyRate')?.toNumber?.() || record.get('hourlyRate'),
-        slotDate: record.get('slotDate'),
-        slotTime: record.get('slotTime'),
+        slotDate,
+        slotTime,
         durationMinutes: record.get('durationMinutes')?.toNumber?.() || record.get('durationMinutes'),
         status: record.get('status'),
         bookedAt: record.get('bookedAt'),
         sessionId: bookingId // Use bookingId as sessionId for classroom
       };
+
+      console.log('Constructed lesson details:', JSON.stringify(lessonDetails, null, 2));
+      console.log('=== END SERVICE ===\n');
+
+      return lessonDetails;
     } catch (error) {
       console.error('Error getting lesson details:', error);
       throw error;

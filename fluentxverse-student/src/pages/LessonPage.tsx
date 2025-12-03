@@ -84,13 +84,22 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   const fetchLessonDetails = async () => {
     setLoading(true);
     setError(null);
+    
+    console.log('\n=== LESSON PAGE: Fetching lesson details ===');
+    console.log('bookingId from URL:', bookingId);
+    
     try {
       const details = await scheduleApi.getLessonDetails(bookingId);
+      console.log('Lesson details received in component:', JSON.stringify(details, null, 2));
       setLesson(details);
     } catch (err: any) {
+      console.error('=== ERROR in LessonPage ===');
+      console.error('Error message:', err.message);
+      console.error('Full error:', err);
       setError(err.message || 'Failed to load lesson details');
     } finally {
       setLoading(false);
+      console.log('=== END LESSON PAGE ===\n');
     }
   };
 
