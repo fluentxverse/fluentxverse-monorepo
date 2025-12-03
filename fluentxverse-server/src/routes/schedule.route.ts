@@ -12,7 +12,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .post('/open', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.tutorAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -22,7 +22,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const tutorId = authData.userId;
 
       // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
 
       await scheduleService.openSlots({
         tutorId,
@@ -56,7 +56,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .post('/close', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.tutorAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -66,7 +66,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const tutorId = authData.userId;
 
       // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
 
       await scheduleService.closeSlots({
         tutorId,
@@ -97,7 +97,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .get('/week', async ({ query, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.tutorAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -107,7 +107,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const tutorId = authData.userId;
 
       // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
 
       const weekOffset = query.weekOffset ? parseInt(query.weekOffset, 10) : 0;
 
@@ -139,7 +139,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .post('/attendance', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.tutorAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -147,12 +147,14 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const tutorId = authData.userId;
-      const role = authData.tier >= 2 ? 'tutor' : 'student';
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
 
       await scheduleService.markAttendance({
         bookingId: body.bookingId,
         tutorId,
-        role,
+        role: 'tutor',
         status: body.status
       });
 
@@ -181,7 +183,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .get('/student-bookings', async ({ cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -191,10 +193,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const studentId = authData.userId;
 
       // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData);
-
-      const stats = await scheduleService.getStudentStats(studentId);
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'studentAuth');
 
       const bookings = await scheduleService.getStudentBookings(studentId);
 
@@ -218,7 +217,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .get('/student-stats', async ({ cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -226,10 +225,11 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
-      
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'studentAuth');
 
       const stats = await scheduleService.getStudentStats(studentId);
-      
 
 
       return {
@@ -252,7 +252,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .get('/student-activity', async ({ cookie, query, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -260,6 +260,10 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'studentAuth');
+
       const limit = query.limit ? parseInt(query.limit as string) : 10;
 
       const activity = await scheduleService.getStudentRecentActivity(studentId, limit);
@@ -284,7 +288,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .get('/lesson/:bookingId', async ({ cookie, params, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -292,6 +296,10 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'studentAuth');
+
       const { bookingId } = params;
 
       const lessonDetails = await scheduleService.getLessonDetails(bookingId, studentId);
@@ -350,22 +358,37 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .post('/book', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      console.log('=== BOOKING REQUEST STARTED ===');
+      console.log('Request body:', JSON.stringify(body, null, 2));
+      
+      const raw = cookie.studentAuth?.value;
+      console.log('Cookie studentAuth raw:', raw ? 'Present' : 'Missing');
+      
       if (!raw) {
+        console.log('ERROR: No authentication cookie found');
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
       }
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      console.log('Auth data parsed:', JSON.stringify(authData, null, 2));
+      
       const studentId = authData.userId;
+      console.log('Student ID:', studentId);
+      console.log('Slot ID from body:', body.slotId);
 
       // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'studentAuth');
+      console.log('Cookie refreshed');
 
+      console.log('Calling scheduleService.bookSlot...');
       const booking = await scheduleService.bookSlot({
         studentId,
         slotId: body.slotId
       });
+      
+      console.log('Booking successful:', JSON.stringify(booking, null, 2));
+      console.log('=== BOOKING REQUEST COMPLETED ===');
 
       return {
         success: true,
@@ -373,7 +396,13 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         message: 'Booking confirmed successfully'
       };
     } catch (error: any) {
-      console.error('Error in /schedule/book:', error);
+      console.error('=== BOOKING ERROR ===');
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      console.error('=== END BOOKING ERROR ===');
+      
       set.status = 400;
       return {
         success: false,

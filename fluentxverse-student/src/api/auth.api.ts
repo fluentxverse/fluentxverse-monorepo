@@ -90,6 +90,6 @@ export const loginUser = async (email: string, password: string) => {
 
 
 export const logoutUser = async () => {
-    const { data } = await client.post('/logout')
+    const { data } = await client.post('/student/logout')
     return data;
 }

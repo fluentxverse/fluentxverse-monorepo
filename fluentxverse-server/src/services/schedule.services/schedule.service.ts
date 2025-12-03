@@ -292,7 +292,11 @@ export class ScheduleService {
     const session = driver.session();
     
     try {
+      console.log('=== SERVICE: bookSlot START ===');
+      console.log('Input:', JSON.stringify(input, null, 2));
+      
       // Check slot availability
+      console.log('Checking slot availability for slotId:', input.slotId);
       const slotResult = await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId, status: 'open'})
@@ -301,27 +305,35 @@ export class ScheduleService {
         { slotId: input.slotId }
       );
       
+      console.log('Slot query returned', slotResult.records.length, 'records');
+      
       if (slotResult.records.length === 0) {
+        console.log('ERROR: Slot not available - either not found or status is not "open"');
         throw new Error('Slot not available for booking');
       }
       
       const slot = slotResult.records[0]?.get('s').properties;
+      console.log('Slot found:', JSON.stringify(slot, null, 2));
       
       // Parse slotTime - it's already in 12-hour format like "6:00 PM"
       // Convert to 24-hour format for Date constructor
       const slotTime = slot.slotTime; // e.g., "6:00 PM"
+      console.log('Parsing slot time:', slotTime, 'for date:', slot.slotDate);
       let slotDateTime: Date;
       
       try {
         // Parse the time string (e.g., "6:00 PM")
         const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
         if (!timeMatch) {
+          console.log('ERROR: Time format does not match regex');
           throw new Error(`Invalid time format: ${slotTime}`);
         }
         
         let hours = parseInt(timeMatch[1]);
         const minutes = parseInt(timeMatch[2]);
         const meridiem = timeMatch[3].toUpperCase();
+        
+        console.log('Parsed time components:', { hours, minutes, meridiem });
         
         // Convert to 24-hour format
         if (meridiem === 'PM' && hours !== 12) {
@@ -330,10 +342,15 @@ export class ScheduleService {
           hours = 0;
         }
         
+        console.log('Converted to 24-hour format:', hours);
+        
         // Create date with proper format
         slotDateTime = new Date(`${slot.slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
         
+        console.log('Created slotDateTime:', slotDateTime.toISOString());
+        
         if (isNaN(slotDateTime.getTime())) {
+          console.log('ERROR: Invalid date created');
           throw new Error(`Invalid date/time combination: ${slot.slotDate} ${slotTime}`);
         }
       } catch (error: any) {
@@ -344,14 +361,45 @@ export class ScheduleService {
       const now = new Date();
       const minBookTime = new Date(now.getTime() + 30 * 60 * 1000);
       
+      console.log('Current time:', now.toISOString());
+      console.log('Minimum booking time (30 min ahead):', minBookTime.toISOString());
+      console.log('Slot time:', slotDateTime.toISOString());
+      
       if (slotDateTime <= minBookTime) {
+        console.log('ERROR: Slot is too soon to book');
         throw new Error('Cannot book slot less than 30 minutes in advance');
       }
       
       const bookingId = nanoid(16);
+      console.log('Generated bookingId:', bookingId);
+      
+      // Check if student exists
+      console.log('Checking if student exists...');
+      const studentCheck = await session.run(
+        `MATCH (student:Student {id: $studentId}) RETURN student`,
+        { studentId: input.studentId }
+      );
+      
+      if (studentCheck.records.length === 0) {
+        console.log('ERROR: Student not found with ID:', input.studentId);
+        console.log('This user might be logged in as a tutor (User node) instead of a student (Student node)');
+        throw new Error('Student account not found. Please make sure you are logged in as a student.');
+      }
+      
+      console.log('Student found, proceeding with booking...');
       
       // Create booking and update slot
-      await session.run(
+      console.log('Creating booking in database...');
+      console.log('Parameters:', {
+        slotId: input.slotId,
+        bookingId,
+        studentId: input.studentId,
+        tutorId: slot.tutorId,
+        slotDateTime: slotDateTime.toISOString(),
+        durationMinutes: slot.durationMinutes
+      });
+      
+      const bookingResult = await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId})
         MATCH (student:Student {id: $studentId})
@@ -368,6 +416,7 @@ export class ScheduleService {
         })
         CREATE (b)-[:BOOKS]->(s)
         CREATE (b)-[:BOOKED_BY]->(student)
+        RETURN b, s
         `,
         {
           slotId: input.slotId,
@@ -378,6 +427,10 @@ export class ScheduleService {
           durationMinutes: slot.durationMinutes
         }
       );
+      
+      console.log('Booking query returned', bookingResult.records.length, 'records');
+      console.log('Booking created successfully in database');
+      console.log('=== SERVICE: bookSlot END ===');
       
       return {
         bookingId,

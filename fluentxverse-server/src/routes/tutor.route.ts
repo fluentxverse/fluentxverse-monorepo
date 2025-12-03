@@ -13,8 +13,8 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    */
   .get('/search', async ({ query }) => {
     try {
-      console.log('🔎 Tutor search request received:', query);
-      
+
+  
       const params = {
         page: query.page ? Number(query.page) : 1,
         limit: query.limit ? Number(query.limit) : 12,
@@ -23,9 +23,9 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         endTime: query.endTime || undefined
       };
 
-      console.log('📋 Search params:', params);
+
       const result = await tutorService.searchTutors(params);
-      console.log('✅ Search result:', { total: result.total, tutorCount: result.tutors.length });
+
 
       return {
         success: true,
@@ -46,13 +46,13 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    */
   .post('/profile-picture', async ({ request, cookie }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
 
       // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
 
       const form = await request.formData();
       const file = form.get('file');
@@ -157,6 +157,38 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     } catch (error) {
       console.error('Error in /tutor/:tutorId/availability:', error);
       return { success: false, error: 'Failed to get availability' };
+    }
+  })
+
+  /**
+   * Get student profile (for tutor view)
+   * GET /tutor/student/:studentId
+   */
+  .get('/student/:studentId', async ({ params, cookie, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const tutorId = authData.userId;
+
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      const { studentId } = params;
+      if (!studentId) {
+        set.status = 400;
+        return { success: false, error: 'Student ID is required' };
+      }
+
+      const studentProfile = await tutorService.getStudentProfile(studentId, tutorId);
+      return { success: true, data: studentProfile };
+    } catch (error: any) {
+      console.error('Error in /tutor/student/:studentId:', error);
+      set.status = error.message === 'Student not found' ? 404 : 500;
+      return { success: false, error: error.message || 'Failed to get student profile' };
     }
   })
 

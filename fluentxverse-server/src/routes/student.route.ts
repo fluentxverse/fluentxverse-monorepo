@@ -22,7 +22,7 @@ const Student = new Elysia({ name: "student" })
         walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : (userData.smartWalletAddress?.address || null)
       };
 
-      cookie.auth?.set({
+      cookie.studentAuth?.set({
         value: JSON.stringify({
           userId: normalizedUser.userId,
           email: normalizedUser.email,
@@ -90,7 +90,7 @@ const Student = new Elysia({ name: "student" })
         walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : (userData.smartWalletAddress?.address || null)
       };
 
-      cookie.auth?.set({
+      cookie.studentAuth?.set({
         value: JSON.stringify({
           userId: normalizedUser.userId,
           email: normalizedUser.email,
@@ -129,14 +129,41 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
+  .post('/student/logout', async ({ cookie, set }) => {
+    // Aggressively clear the student cookie with all possible methods
+    cookie.studentAuth?.set({
+      value: '',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0, // Expire immediately
+      expires: new Date(0), // Also set explicit past date
+      path: '/'
+    });
+    cookie.studentAuth?.remove();
+    
+    // Set headers to prevent caching
+    set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+    set.headers['Pragma'] = 'no-cache';
+    
+    return { success: true, message: 'Logged out successfully' };
+  }, {
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        message: t.String()
+      })
+    }
+  })
+
   .get('/student/me', async ({ cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
       const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
 
       // Refresh cookie on every /me call
-      refreshAuthCookie(cookie, authData);
+      refreshAuthCookie(cookie, authData, 'studentAuth');
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -169,7 +196,7 @@ const Student = new Elysia({ name: "student" })
 
   .put('/student/user/personal-info', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
       const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
 
@@ -181,7 +208,7 @@ const Student = new Elysia({ name: "student" })
 
       // Update mobileNumber in cookie if phoneNumber was updated
       if (body.phoneNumber) {
-        cookie.auth?.set({
+        cookie.studentAuth?.set({
           value: JSON.stringify({
             ...authData,
             mobileNumber: body.phoneNumber
@@ -235,7 +262,7 @@ const Student = new Elysia({ name: "student" })
 
   .put('/student/user/email', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
       const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
 
@@ -247,7 +274,7 @@ const Student = new Elysia({ name: "student" })
       });
 
       // Update email in cookie
-      cookie.auth?.set({
+      cookie.studentAuth?.set({
         value: JSON.stringify({
           ...authData,
           email: body.newEmail.toLowerCase()
@@ -282,7 +309,7 @@ const Student = new Elysia({ name: "student" })
 
   .put('/student/user/password', async ({ body, cookie, set }) => {
     try {
-      const raw = cookie.auth?.value;
+      const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
       const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
 

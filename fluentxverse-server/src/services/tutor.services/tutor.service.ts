@@ -87,7 +87,6 @@ export class TutorService {
       const countResult = await session.run(countQuery, queryParams);
       const total = countResult.records[0]?.get('total').toNumber() || 0;
       
-      console.log('🔢 Total tutors found:', total);
 
       // Get tutors with pagination
       const tutorsQuery = `
@@ -241,6 +240,73 @@ export class TutorService {
     } catch (error) {
       console.error('Error getting tutor profile:', error);
       throw new Error('Failed to get tutor profile');
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get student profile for tutor view (includes booking stats)
+   */
+  public async getStudentProfile(studentId: string, tutorId: string) {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (s:Student {id: $studentId})
+        OPTIONAL MATCH (s)<-[:BOOKED_BY]-(b:Booking)
+        OPTIONAL MATCH (b)-[:BOOKS]->(slot:TimeSlot)<-[:OPENS_SLOT]-(tutor:User {id: $tutorId})
+        WITH s, 
+             COUNT(DISTINCT CASE WHEN b.status = 'confirmed' OR b.status = 'completed' THEN b END) as totalLessons,
+             COUNT(DISTINCT CASE WHEN tutor IS NOT NULL THEN b END) as lessonsWithThisTutor,
+             COUNT(DISTINCT CASE WHEN b.status = 'completed' AND b.attendanceStatus = 'present' THEN b END) as attendedLessons,
+             COUNT(DISTINCT CASE WHEN b.status = 'confirmed' AND slot.slotDate >= date() THEN b END) as upcomingLessons
+        RETURN s {
+          .*,
+          totalLessons: totalLessons,
+          lessonsWithThisTutor: lessonsWithThisTutor,
+          attendedLessons: attendedLessons,
+          upcomingLessons: upcomingLessons,
+          attendanceRate: CASE WHEN totalLessons > 0 THEN (attendedLessons * 100.0 / totalLessons) ELSE 0 END
+        } as student
+        `,
+        { studentId, tutorId }
+      );
+
+      if (result.records.length === 0) {
+        throw new Error('Student not found');
+      }
+
+      const studentData = result.records[0]?.get('student');
+      
+      return {
+        id: studentData.id,
+        email: studentData.email,
+        givenName: studentData.givenName,
+        familyName: studentData.familyName,
+        fullName: `${studentData.givenName} ${studentData.familyName}`,
+        initials: `${studentData.givenName?.[0] || ''}${studentData.familyName?.[0] || ''}`.toUpperCase(),
+        mobileNumber: studentData.mobileNumber,
+        birthDate: studentData.birthDate,
+        joinDate: studentData.signUpdate || 'N/A',
+        totalLessons: studentData.totalLessons || 0,
+        lessonsWithThisTutor: studentData.lessonsWithThisTutor || 0,
+        upcomingLessons: studentData.upcomingLessons || 0,
+        attendance: Math.round(studentData.attendanceRate || 0),
+        smartWalletAddress: studentData.smartWalletAddress,
+        // Additional fields that might be in personal info
+        currentProficiency: studentData.currentProficiency,
+        learningGoals: studentData.learningGoals ? JSON.parse(studentData.learningGoals) : [],
+        preferredLearningStyle: studentData.preferredLearningStyle,
+        availability: studentData.availability ? JSON.parse(studentData.availability) : [],
+        country: studentData.country,
+        timezone: studentData.timezone || 'GMT+8 (Philippine Time)'
+      };
+    } catch (error) {
+      console.error('Error getting student profile:', error);
+      throw error;
     } finally {
       await session.close();
     }

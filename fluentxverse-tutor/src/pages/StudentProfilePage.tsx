@@ -16,11 +16,6 @@ interface LessonNote {
   rating: number;
 }
 
-const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
-  useEffect(() => {
-    document.title = 'Student Profile | FluentXVerse';
-  }, []);
-
 interface Session {
   id: string;
   date: string;
@@ -33,6 +28,11 @@ interface Session {
 const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
   const { user } = useAuthContext();
   const { route } = useLocation();
+  
+  useEffect(() => {
+    document.title = 'Student Profile | FluentXVerse';
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
   const [showHeadsetModal, setShowHeadsetModal] = useState(false);
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
@@ -46,6 +46,40 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Student data state
+  const [studentData, setStudentData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch student data
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      if (!studentId) return;
+      
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:8765/tutor/student/${studentId}`, {
+          credentials: 'include'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          setStudentData(result.data);
+        } else {
+          setError(result.error || 'Failed to load student data');
+        }
+      } catch (err) {
+        console.error('Error fetching student data:', err);
+        setError('Failed to load student profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudentData();
+  }, [studentId]);
 
   const openHeadsetModal = async () => {
     setShowHeadsetModal(true);
@@ -159,23 +193,53 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
       }
     };
   }, []);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <>
+        <SideBar />
+        <div className="main-content">
+          <Header />
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <p>Loading student profile...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show error state
+  if (error || !studentData) {
+    return (
+      <>
+        <SideBar />
+        <div className="main-content">
+          <Header />
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+            <p>{error || 'Student not found'}</p>
+          </div>
+        </div>
+      </>
+    );
+  }
   
-  // Mock student data - replace with API call
-  const studentData = {
-    id: studentId || 'STD001',
-    name: 'Maria Santos',
-    email: 'maria.santos@email.com',
-    initials: 'MS',
-    level: 'Intermediate',
-    nationality: 'Philippines',
-    joinDate: 'Jan 15, 2025',
-    totalLessons: 48,
-    attendance: 96,
-    averageRating: 4.8,
-    goals: 'Improve business English communication and presentation skills',
-    interests: 'Technology, Travel, Business',
-    timezone: 'GMT+8 (Philippine Time)',
-    preferredTopics: ['Business English', 'Conversation', 'Pronunciation']
+  // Use real student data from API
+  const displayData = {
+    id: studentData.id,
+    name: studentData.fullName || `${studentData.givenName} ${studentData.familyName}`,
+    email: studentData.email,
+    initials: studentData.initials,
+    level: studentData.currentProficiency || 'Intermediate',
+    nationality: studentData.country || 'Philippines',
+    joinDate: new Date(studentData.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) || 'N/A',
+    totalLessons: studentData.totalLessons || 0,
+    attendance: studentData.attendance || 0,
+    averageRating: 4.8, // TODO: Add rating system
+    goals: studentData.learningGoals?.join(', ') || 'Improve English communication skills',
+    interests: 'Technology, Travel, Business', // TODO: Add interests field
+    timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
+    preferredTopics: ['Business English', 'Conversation', 'Pronunciation'] // TODO: Add from profile
   };
 
   const upcomingSessions: Session[] = [
@@ -231,11 +295,11 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
               {/* Profile Photo */}
               <div className="profile-photo-container">
                 <div className="profile-avatar">
-                  {studentData.initials}
+                  {displayData.initials}
                 </div>
-                <div className="profile-level-badge">
-                  {studentData.level}
-                </div>
+                <span className="level-badge">
+                  {displayData.level}
+                </span>
               </div>
 
               {/* Profile Info */}
@@ -286,7 +350,7 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
 
               {/* Action Buttons - Right side */}
               <div className="profile-action-buttons">
-                <button className="enter-classroom-btn" onClick={() => route(`/classroom/${studentData.id}`)}>
+                <button className="enter-classroom-btn" onClick={() => route(`/classroom/${displayData.id}`)}>
                   <i className="fi fi-sr-video-camera"></i>
                   <span>Enter Classroom</span>
                 </button>
@@ -581,6 +645,6 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
     </div>
   );
 };
-}
+
 
 export default StudentProfilePage
