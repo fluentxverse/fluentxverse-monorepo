@@ -202,35 +202,40 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
 
   // Setup Socket.IO listeners
   useEffect(() => {
-    const socket = getSocket();
+    try {
+      const socket = getSocket();
 
-    socket.on('webrtc:offer', ({ offer, from }) => {
-      console.log('Received offer from:', from);
-      handleOffer(offer);
-    });
+      socket.on('webrtc:offer', ({ offer, from }) => {
+        console.log('Received offer from:', from);
+        handleOffer(offer);
+      });
 
-    socket.on('webrtc:answer', ({ answer, from }) => {
-      console.log('Received answer from:', from);
-      handleAnswer(answer);
-    });
+      socket.on('webrtc:answer', ({ answer, from }) => {
+        console.log('Received answer from:', from);
+        handleAnswer(answer);
+      });
 
-    socket.on('webrtc:ice-candidate', ({ candidate, from }) => {
-      console.log('Received ICE candidate from:', from);
-      handleIceCandidate(candidate);
-    });
+      socket.on('webrtc:ice-candidate', ({ candidate, from }) => {
+        console.log('Received ICE candidate from:', from);
+        handleIceCandidate(candidate);
+      });
 
-    socket.on('webrtc:peer-left', () => {
-      console.log('Peer left');
-      setRemoteStream(null);
-      setIsConnected(false);
-    });
+      socket.on('webrtc:peer-left', () => {
+        console.log('Peer left');
+        setRemoteStream(null);
+        setIsConnected(false);
+      });
 
-    return () => {
-      socket.off('webrtc:offer');
-      socket.off('webrtc:answer');
-      socket.off('webrtc:ice-candidate');
-      socket.off('webrtc:peer-left');
-    };
+      return () => {
+        socket.off('webrtc:offer');
+        socket.off('webrtc:answer');
+        socket.off('webrtc:ice-candidate');
+        socket.off('webrtc:peer-left');
+      };
+    } catch (err) {
+      console.warn('Socket not initialized yet for WebRTC listeners:', err);
+      // Socket will be initialized by the parent component
+    }
   }, [handleOffer, handleAnswer, handleIceCandidate]);
 
   // Cleanup on unmount

@@ -362,6 +362,11 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                       <p className="lesson-join-countdown">
                         {getTimeUntil()}
                       </p>
+                      {/* Test button to enter classroom anytime */}
+                      <button onClick={handleJoinClassroom} className="btn-join-classroom" style={{ marginTop: '1rem', opacity: '0.7' }}>
+                        <i className="fas fa-video"></i>
+                        <span>Test Enter Classroom (Debug)</span>
+                      </button>
                     </div>
                   )}
                 </>

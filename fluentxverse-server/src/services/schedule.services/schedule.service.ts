@@ -359,15 +359,15 @@ export class ScheduleService {
       }
       
       const now = new Date();
-      const minBookTime = new Date(now.getTime() + 30 * 60 * 1000);
+      const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // Changed to 5 minutes
       
       console.log('Current time:', now.toISOString());
-      console.log('Minimum booking time (30 min ahead):', minBookTime.toISOString());
+      console.log('Minimum booking time (5 min ahead):', minBookTime.toISOString());
       console.log('Slot time:', slotDateTime.toISOString());
       
       if (slotDateTime <= minBookTime) {
         console.log('ERROR: Slot is too soon to book');
-        throw new Error('Cannot book slot less than 30 minutes in advance');
+        throw new Error('Cannot book slot less than 5 minutes in advance');
       }
       
       const bookingId = nanoid(16);

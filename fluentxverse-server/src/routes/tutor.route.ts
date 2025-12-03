@@ -165,28 +165,39 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    * GET /tutor/student/:studentId
    */
   .get('/student/:studentId', async ({ params, cookie, set }) => {
+    console.log('[TutorRoute] GET /tutor/student/:studentId - Request received');
+    console.log('[TutorRoute] Params:', params);
+    
     try {
       const raw = cookie.tutorAuth?.value;
+      console.log('[TutorRoute] tutorAuth cookie present:', !!raw);
+      
       if (!raw) {
+        console.error('[TutorRoute] No tutorAuth cookie found');
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
       }
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const tutorId = authData.userId;
+      console.log('[TutorRoute] TutorId from cookie:', tutorId);
 
       refreshAuthCookie(cookie, authData, 'tutorAuth');
 
       const { studentId } = params;
       if (!studentId) {
+        console.error('[TutorRoute] No studentId in params');
         set.status = 400;
         return { success: false, error: 'Student ID is required' };
       }
 
+      console.log('[TutorRoute] Calling getStudentProfile with:', { studentId, tutorId });
       const studentProfile = await tutorService.getStudentProfile(studentId, tutorId);
+      console.log('[TutorRoute] Service returned student profile:', studentProfile ? 'SUCCESS' : 'NULL');
+      
       return { success: true, data: studentProfile };
     } catch (error: any) {
-      console.error('Error in /tutor/student/:studentId:', error);
+      console.error('[TutorRoute] Error in /tutor/student/:studentId:', error);
       set.status = error.message === 'Student not found' ? 404 : 500;
       return { success: false, error: error.message || 'Failed to get student profile' };
     }

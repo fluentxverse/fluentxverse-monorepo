@@ -249,10 +249,14 @@ export class TutorService {
    * Get student profile for tutor view (includes booking stats)
    */
   public async getStudentProfile(studentId: string, tutorId: string) {
+    console.log('[TutorService] getStudentProfile called with:', { studentId, tutorId });
+    
     const driver = getDriver();
     const session = driver.session();
 
     try {
+      console.log('[TutorService] Executing student profile query...');
+      
       const result = await session.run(
         `
         MATCH (s:Student {id: $studentId})
@@ -262,7 +266,7 @@ export class TutorService {
              COUNT(DISTINCT CASE WHEN b.status = 'confirmed' OR b.status = 'completed' THEN b END) as totalLessons,
              COUNT(DISTINCT CASE WHEN tutor IS NOT NULL THEN b END) as lessonsWithThisTutor,
              COUNT(DISTINCT CASE WHEN b.status = 'completed' AND b.attendanceStatus = 'present' THEN b END) as attendedLessons,
-             COUNT(DISTINCT CASE WHEN b.status = 'confirmed' AND slot.slotDate >= date() THEN b END) as upcomingLessons
+             COUNT(DISTINCT CASE WHEN b.status = 'confirmed' AND slot.slotDate IS NOT NULL THEN b END) as upcomingLessons
         RETURN s {
           .*,
           totalLessons: totalLessons,
@@ -275,13 +279,17 @@ export class TutorService {
         { studentId, tutorId }
       );
 
+      console.log('[TutorService] Query returned', result.records.length, 'records');
+
       if (result.records.length === 0) {
+        console.error('[TutorService] Student not found with ID:', studentId);
         throw new Error('Student not found');
       }
 
       const studentData = result.records[0]?.get('student');
+      console.log('[TutorService] Raw student data:', studentData);
       
-      return {
+      const profileData = {
         id: studentData.id,
         email: studentData.email,
         givenName: studentData.givenName,
@@ -291,9 +299,9 @@ export class TutorService {
         mobileNumber: studentData.mobileNumber,
         birthDate: studentData.birthDate,
         joinDate: studentData.signUpdate || 'N/A',
-        totalLessons: studentData.totalLessons || 0,
-        lessonsWithThisTutor: studentData.lessonsWithThisTutor || 0,
-        upcomingLessons: studentData.upcomingLessons || 0,
+        totalLessons: typeof studentData.totalLessons === 'object' ? studentData.totalLessons.toInt() : (studentData.totalLessons || 0),
+        lessonsWithThisTutor: typeof studentData.lessonsWithThisTutor === 'object' ? studentData.lessonsWithThisTutor.toInt() : (studentData.lessonsWithThisTutor || 0),
+        upcomingLessons: typeof studentData.upcomingLessons === 'object' ? studentData.upcomingLessons.toInt() : (studentData.upcomingLessons || 0),
         attendance: Math.round(studentData.attendanceRate || 0),
         smartWalletAddress: studentData.smartWalletAddress,
         // Additional fields that might be in personal info
@@ -304,8 +312,16 @@ export class TutorService {
         country: studentData.country,
         timezone: studentData.timezone || 'GMT+8 (Philippine Time)'
       };
+      
+      console.log('[TutorService] Returning profile data (abbreviated):', {
+        id: profileData.id,
+        email: profileData.email,
+        totalLessons: profileData.totalLessons
+      });
+      
+      return profileData;
     } catch (error) {
-      console.error('Error getting student profile:', error);
+      console.error('[TutorService] Error getting student profile:', error);
       throw error;
     } finally {
       await session.close();

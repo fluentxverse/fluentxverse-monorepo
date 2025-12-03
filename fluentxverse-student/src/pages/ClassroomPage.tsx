@@ -36,7 +36,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   
   // Extract sessionId from route params if not passed as prop
-  const currentSessionId = sessionId || (route.split('/classroom/')[1]?.split('?')[0]);
+  const currentSessionId = sessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
   
   // State
   const [message, setMessage] = useState('');

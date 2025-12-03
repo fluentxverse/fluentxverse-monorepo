@@ -1,7 +1,6 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { Link } from 'react-router-dom';
-import { useAuthContext } from '../../context/AuthContext';
+import { useAuthContext } from '../context/AuthContext';
 import './StudentDashboard.css';
 
 export const StudentDashboard = () => {
@@ -19,7 +18,7 @@ export const StudentDashboard = () => {
     <div className="student-dashboard">
       <div className="container">
         <div className="dashboard-header">
-          <h1>Welcome back, {user?.firstName}!</h1>
+          <h1>Welcome back, {user?.givenName}!</h1>
           <p>Continue your learning journey</p>
         </div>
 
@@ -47,7 +46,7 @@ export const StudentDashboard = () => {
           <div className="dashboard-card upcoming-sessions">
             <div className="card-header">
               <h3>Upcoming Sessions</h3>
-              <Link to="/browse-tutors" className="btn-link">Book Session</Link>
+              <a href="/browse-tutors" className="btn-link">Book Session</a>
             </div>
             {loading ? (
               <p>Loading...</p>
@@ -55,7 +54,7 @@ export const StudentDashboard = () => {
               <div className="empty-state">
                 <i className="ri-calendar-line"></i>
                 <p>No upcoming sessions</p>
-                <Link to="/browse-tutors" className="btn-primary">Find a Tutor</Link>
+                <a href="/browse-tutors" className="btn-primary">Find a Tutor</a>
               </div>
             ) : (
               <div className="sessions-list">
@@ -91,18 +90,18 @@ export const StudentDashboard = () => {
           <div className="dashboard-card quick-actions">
             <h3>Quick Actions</h3>
             <div className="actions-grid">
-              <Link to="/browse-tutors" className="action-button">
+              <a href="/browse-tutors" className="action-button">
                 <i className="ri-search-line"></i>
                 <span>Find Tutors</span>
-              </Link>
-              <Link to="/schedule" className="action-button">
+              </a>
+              <a href="/schedule" className="action-button">
                 <i className="ri-calendar-check-line"></i>
                 <span>View Schedule</span>
-              </Link>
-              <Link to="/settings" className="action-button">
+              </a>
+              <a href="/settings" className="action-button">
                 <i className="ri-settings-line"></i>
                 <span>Settings</span>
-              </Link>
+              </a>
             </div>
           </div>
         </div>

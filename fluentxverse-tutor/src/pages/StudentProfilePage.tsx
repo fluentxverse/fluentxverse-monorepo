@@ -25,9 +25,14 @@ interface Session {
   rating?: number;
 }
 
-const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
+const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProps) => {
   const { user } = useAuthContext();
   const { route } = useLocation();
+  
+  // Extract studentId from URL path
+  const studentId = studentIdProp || window.location.pathname.split('/student/')[1]?.split('?')[0];
+  
+  console.log('[StudentProfile] Pathname:', window.location.pathname, 'StudentId prop:', studentIdProp, 'Extracted studentId:', studentId);
   
   useEffect(() => {
     document.title = 'Student Profile | FluentXVerse';
@@ -55,26 +60,41 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
   // Fetch student data
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (!studentId) return;
+      if (!studentId) {
+        console.log('[StudentProfile] No studentId provided');
+        return;
+      }
+      
+      console.log('[StudentProfile] Fetching data for studentId:', studentId);
       
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8765/tutor/student/${studentId}`, {
+        const url = `http://localhost:8765/tutor/student/${studentId}`;
+        console.log('[StudentProfile] Requesting:', url);
+        
+        const response = await fetch(url, {
           credentials: 'include'
         });
         
+        console.log('[StudentProfile] Response status:', response.status);
+        console.log('[StudentProfile] Response headers:', Object.fromEntries(response.headers.entries()));
+        
         const result = await response.json();
+        console.log('[StudentProfile] Response data:', result);
         
         if (result.success && result.data) {
+          console.log('[StudentProfile] Successfully loaded student data:', result.data);
           setStudentData(result.data);
         } else {
+          console.error('[StudentProfile] Failed to load student data:', result.error);
           setError(result.error || 'Failed to load student data');
         }
       } catch (err) {
-        console.error('Error fetching student data:', err);
+        console.error('[StudentProfile] Error fetching student data:', err);
         setError('Failed to load student profile');
       } finally {
         setLoading(false);
+        console.log('[StudentProfile] Fetch completed, loading:', false);
       }
     };
 
@@ -236,7 +256,7 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
     totalLessons: studentData.totalLessons || 0,
     attendance: studentData.attendance || 0,
     averageRating: 4.8, // TODO: Add rating system
-    goals: studentData.learningGoals?.join(', ') || 'Improve English communication skills',
+    goals: Array.isArray(studentData.learningGoals) ? studentData.learningGoals.join(', ') : (studentData.learningGoals || 'Improve English communication skills'),
     interests: 'Technology, Travel, Business', // TODO: Add interests field
     timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
     preferredTopics: ['Business English', 'Conversation', 'Pronunciation'] // TODO: Add from profile
@@ -284,7 +304,7 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
         
         <div className="student-profile-main">
           {/* Back Button */}
-          <button className="back-button" onClick={() => route('/schedule')}>
+          <button className="back-button" onClick={() => window.location.href = '/schedule'}>
             <i className="fi fi-sr-arrow-left"></i>
             Back to Schedule
           </button>
@@ -297,7 +317,7 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
                 <div className="profile-avatar">
                   {displayData.initials}
                 </div>
-                <span className="level-badge">
+                <span className="profile-level-badge">
                   {displayData.level}
                 </span>
               </div>
@@ -350,7 +370,7 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
 
               {/* Action Buttons - Right side */}
               <div className="profile-action-buttons">
-                <button className="enter-classroom-btn" onClick={() => route(`/classroom/${displayData.id}`)}>
+                <button className="enter-classroom-btn" onClick={() => window.location.href = `/classroom/${displayData.id}`}>
                   <i className="fi fi-sr-video-camera"></i>
                   <span>Enter Classroom</span>
                 </button>
@@ -391,7 +411,7 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
 
                 <h4 className="section-subtitle">Preferred Topics</h4>
                 <div className="topic-tags">
-                  {studentData.preferredTopics.map((topic, idx) => (
+                  {(displayData.preferredTopics || []).map((topic, idx) => (
                     <span key={idx} className="topic-tag">{topic}</span>
                   ))}
                 </div>

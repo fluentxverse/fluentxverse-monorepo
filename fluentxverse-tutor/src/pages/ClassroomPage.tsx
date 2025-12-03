@@ -36,7 +36,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   
   // Extract sessionId from route params if not passed as prop
-  const currentSessionId = sessionId || (route.split('/classroom/')[1]?.split('?')[0]);
+  const currentSessionId = sessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
+  
+  // Initialize socket immediately
+  useEffect(() => {
+    if (currentSessionId) {
+      console.log('🔌 [Classroom] Initializing socket...');
+      initSocket();
+      connectSocket();
+    }
+  }, [currentSessionId]);
   
   // State
   const [message, setMessage] = useState('');
@@ -169,8 +178,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       return;
     }
 
-    const socket = initSocket();
-    connectSocket();
+    const socket = getSocket();
 
     // Join the session room
     socket.emit('session:join', { sessionId: currentSessionId });
@@ -214,10 +222,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     const initWebRTC = async () => {
       try {
-        console.log('🎥 Starting local media stream...');
+        console.log('🎥 [Classroom] Starting local media stream...');
+        console.log('🎥 [Classroom] startLocalStream function:', typeof startLocalStream);
         await startLocalStream(true, true);
+        console.log('🎥 [Classroom] Local media stream started successfully');
       } catch (err) {
-        console.error('Failed to start media:', err);
+        console.error('❌ [Classroom] Failed to start media:', err);
       }
     };
 
@@ -226,8 +236,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Attach local stream to video element
   useEffect(() => {
+    console.log('📹 [Classroom] Local stream state:', localStream ? 'EXISTS' : 'NULL');
+    console.log('📹 [Classroom] Local video ref:', localVideoRef.current ? 'EXISTS' : 'NULL');
     if (localStream && localVideoRef.current) {
+      console.log('📹 [Classroom] Attaching local stream to video element');
       localVideoRef.current.srcObject = localStream;
+      // Ensure the video plays
+      localVideoRef.current.play().catch(err => {
+        console.error('❌ [Classroom] Error playing local video:', err);
+      });
+      console.log('📹 [Classroom] Local stream attached successfully');
     }
   }, [localStream]);
 
@@ -235,6 +253,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
+      // Ensure the video plays
+      remoteVideoRef.current.play().catch(err => {
+        console.error('❌ [Classroom] Error playing remote video:', err);
+      });
       console.log('📺 Remote stream attached');
     }
   }, [remoteStream]);
@@ -351,7 +373,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             {isSwapped ? (
               // Tutor (local) in PiP
               localStream && !isVideoOff ? (
-                <video ref={!isSwapped ? localVideoRef : undefined} muted autoPlay playsInline className="local-video-small" />
+                <video muted autoPlay playsInline className="local-video-small" ref={(el) => {
+                  if (el && localStream) el.srcObject = localStream;
+                }} />
               ) : (
                 <div className="video-placeholder tutor-video">
                   <div className="video-avatar-small">
@@ -362,7 +386,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             ) : (
               // Student (remote) in PiP
               remoteStream ? (
-                <video ref={!isSwapped ? remoteVideoRef : undefined} autoPlay playsInline className="remote-video-small" />
+                <video autoPlay playsInline className="remote-video-small" ref={(el) => {
+                  if (el && remoteStream) el.srcObject = remoteStream;
+                }} />
               ) : (
                 <div className="video-placeholder student-video">
                   <div className="video-avatar-small">{studentData.initials}</div>
