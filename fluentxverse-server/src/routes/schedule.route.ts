@@ -1,6 +1,7 @@
 import Elysia, { t } from 'elysia';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
+import { refreshAuthCookie } from '../utils/refreshCookie';
 
 const scheduleService = new ScheduleService();
 
@@ -19,6 +20,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const tutorId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData);
 
       await scheduleService.openSlots({
         tutorId,
@@ -61,6 +65,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const tutorId = authData.userId;
 
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData);
+
       await scheduleService.closeSlots({
         tutorId,
         slotIds: body.slotIds
@@ -99,7 +106,10 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const tutorId = authData.userId;
 
-      const weekOffset = query.weekOffset ? parseInt(query.weekOffset as string) : 0;
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData);
+
+      const weekOffset = query.weekOffset ? parseInt(query.weekOffset, 10) : 0;
 
       const schedule = await scheduleService.getTutorSchedule({
         tutorId,
@@ -179,6 +189,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData);
+
+      const stats = await scheduleService.getStudentStats(studentId);
+      refreshAuthCookie(cookie, authData);
 
       const bookings = await scheduleService.getStudentBookings(studentId);
 
@@ -342,6 +358,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData);
 
       const booking = await scheduleService.bookSlot({
         studentId,

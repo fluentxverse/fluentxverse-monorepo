@@ -1,5 +1,6 @@
 import Elysia, { t } from "elysia";
 import StudentService from "../services/auth.services/student.service";
+import { refreshAuthCookie } from "../utils/refreshCookie";
 
 const Student = new Elysia({ name: "student" })
   .post("/student/register", async ({ body, cookie, set }) => {
@@ -36,7 +37,7 @@ const Student = new Elysia({ name: "student" })
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 30 * 60,
+        maxAge: 60 * 60,
         path: "/"
       });
 
@@ -103,7 +104,7 @@ const Student = new Elysia({ name: "student" })
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 30 * 60,
+        maxAge: 60 * 60,
         path: "/"
       });
 
@@ -133,6 +134,9 @@ const Student = new Elysia({ name: "student" })
       const raw = cookie.auth?.value;
       if (!raw) throw new Error('Not authenticated');
       const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+
+      // Refresh cookie on every /me call
+      refreshAuthCookie(cookie, authData);
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';

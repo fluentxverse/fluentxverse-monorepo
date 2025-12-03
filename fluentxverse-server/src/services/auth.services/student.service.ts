@@ -20,12 +20,24 @@ class StudentService {
       const driver = getDriver();
       const session = driver.session();
 
-      // Check if email already exists to avoid unique constraint errors
-      const existsResult = await session.run(
+      // Check if email already exists in Student nodes
+      const studentExistsResult = await session.run(
         `MATCH (s:Student { email: $email }) RETURN s LIMIT 1`,
         { email }
       );
-      if (existsResult.records.length > 0) {
+      if (studentExistsResult.records.length > 0) {
+        await session.close();
+        const err: any = new Error('EMAIL_EXISTS');
+        err.code = 'EMAIL_EXISTS';
+        throw err;
+      }
+
+      // Check if email already exists in User (tutor) nodes
+      const tutorExistsResult = await session.run(
+        `MATCH (u:User { email: $email }) RETURN u LIMIT 1`,
+        { email }
+      );
+      if (tutorExistsResult.records.length > 0) {
         await session.close();
         const err: any = new Error('EMAIL_EXISTS');
         err.code = 'EMAIL_EXISTS';

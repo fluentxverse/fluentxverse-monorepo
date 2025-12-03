@@ -30,6 +30,30 @@ class AuthService {
         const driver = getDriver();
         const session = driver.session();
 
+        // Check if email already exists in User (tutor) nodes
+        const tutorExistsResult = await session.run(
+            `MATCH (u:User { email: $email }) RETURN u LIMIT 1`,
+            { email }
+        );
+        if (tutorExistsResult.records.length > 0) {
+            await session.close();
+            const err: any = new Error('EMAIL_EXISTS');
+            err.code = 'EMAIL_EXISTS';
+            throw err;
+        }
+
+        // Check if email already exists in Student nodes
+        const studentExistsResult = await session.run(
+            `MATCH (s:Student { email: $email }) RETURN s LIMIT 1`,
+            { email }
+        );
+        if (studentExistsResult.records.length > 0) {
+            await session.close();
+            const err: any = new Error('EMAIL_EXISTS');
+            err.code = 'EMAIL_EXISTS';
+            throw err;
+        }
+
         await session.run(
             `
             CREATE (u:User {

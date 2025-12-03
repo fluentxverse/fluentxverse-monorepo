@@ -1,4 +1,4 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { JSX } from 'preact';
 import './SettingsModal.css';
 import './SettingsModal.extra.css';
@@ -19,6 +19,19 @@ type SettingsView = 'main' | 'update-password' | 'update-email' | 'update-info';
 const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | null => {
   const { logout, user, getUserId } = useAuthContext();
   const [currentView, setCurrentView] = useState<SettingsView>('main');
+
+  // Manage body overflow when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   // Reset to main view when modal closes
   const handleClose = () => {

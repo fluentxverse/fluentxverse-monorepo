@@ -5,6 +5,7 @@ import Elysia, { t } from "elysia";
 import AuthService from "../services/auth.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
 import type { AuthData, MeResponse, User } from "@/services/auth.services/auth.interface";
+import { refreshAuthCookie } from "../utils/refreshCookie";
 
 // Define routes as an Elysia plugin instance to preserve route types
 const Auth = new Elysia({ name: 'auth' })
@@ -17,7 +18,7 @@ const Auth = new Elysia({ name: 'auth' })
         // Immediately log the user in after successful registration
         const userData = await authService.login({ email: body.email, password: body.password });
 
-        // Set httpOnly cookie with 30-minute expiration and basic profile
+        // Set httpOnly cookie with 1-hour expiration and basic profile
         cookie.auth?.set({
           value: JSON.stringify({
             userId: userData.id,
@@ -32,7 +33,7 @@ const Auth = new Elysia({ name: 'auth' })
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 30 * 60,
+          maxAge: 60 * 60,
           path: '/'
         });
 
@@ -63,7 +64,7 @@ const Auth = new Elysia({ name: 'auth' })
         // First, explicitly clear any existing auth cookie to ensure clean state
         cookie.auth?.remove();
  
-        // Set fresh httpOnly cookie with 30-minute expiration
+        // Set fresh httpOnly cookie with 1-hour expiration
         cookie.auth?.set({
           value: JSON.stringify({
             userId: userData.id,
@@ -77,7 +78,7 @@ const Auth = new Elysia({ name: 'auth' })
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 30 * 60, // 30 minutes in seconds
+          maxAge: 60 * 60, // 1 hour in seconds
           path: '/'
         });
         
@@ -124,22 +125,7 @@ const Auth = new Elysia({ name: 'auth' })
       if (!raw) throw new Error('Not authenticated');
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
 
-      cookie.auth?.set({
-        value: JSON.stringify({
-          userId: authData.userId,
-          email: authData.email,
-          firstName: authData.firstName,
-          lastName: authData.lastName,
-          walletAddress: authData.walletAddress,
-          mobileNumber: authData.mobileNumber,
-          tier: authData.tier
-        }),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 30 * 60,
-        path: '/'
-      });
+      refreshAuthCookie(cookie, authData);
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -153,6 +139,9 @@ const Auth = new Elysia({ name: 'auth' })
         if (!raw) throw new Error('Not authenticated');
         const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
         console.log('Auth data from cookie:', authData);
+
+        // Refresh cookie on every /me call
+        refreshAuthCookie(cookie, authData);
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
@@ -186,18 +175,11 @@ const Auth = new Elysia({ name: 'auth' })
 
         // Update mobileNumber in cookie if phoneNumber was updated
         if (body.phoneNumber) {
-          cookie.auth?.set({
-            value: JSON.stringify({
-              ...authData,
-              mobileNumber: body.phoneNumber
-            }),
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 30 * 60,
-            path: '/'
-          });
+          authData.mobileNumber = body.phoneNumber;
         }
+        
+        // Refresh cookie with updated data and 1-hour expiry
+        refreshAuthCookie(cookie, authData);
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
@@ -222,18 +204,9 @@ const Auth = new Elysia({ name: 'auth' })
           currentPassword: body.currentPassword
         });
 
-        // Update email in cookie
-        cookie.auth?.set({
-          value: JSON.stringify({
-            ...authData,
-            email: body.newEmail.toLowerCase()
-          }),
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 60,
-          path: '/'
-        });
+        // Update email in cookie and refresh with 1-hour expiry
+        authData.email = body.newEmail.toLowerCase();
+        refreshAuthCookie(cookie, authData);
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
@@ -257,6 +230,9 @@ const Auth = new Elysia({ name: 'auth' })
           currentPassword: body.currentPassword,
           newPassword: body.newPassword
         });
+
+        // Refresh cookie with 1-hour expiry
+        refreshAuthCookie(cookie, authData);
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';

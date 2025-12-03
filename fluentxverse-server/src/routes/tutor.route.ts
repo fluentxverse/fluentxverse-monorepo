@@ -2,6 +2,7 @@ import Elysia, { t } from 'elysia';
 import { TutorService } from '../services/tutor.services/tutor.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
+import { refreshAuthCookie } from '../utils/refreshCookie';
 
 const tutorService = new TutorService();
 
@@ -49,6 +50,9 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       if (!raw) return { success: false, error: 'Not authenticated' };
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData);
 
       const form = await request.formData();
       const file = form.get('file');

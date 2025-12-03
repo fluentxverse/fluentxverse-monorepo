@@ -10,6 +10,13 @@ import './RegisterPage.css';
 const RegisterPage = () => {
   useEffect(() => {
     document.title = 'Register | FluentXVerse';
+    // Ensure body overflow is reset (in case user came from a modal)
+    document.body.style.overflow = 'unset';
+    
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = 'unset';
+    };
   }, []);
 
   const { route } = useLocation();
