@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../context/AuthContext';
+import { initSocket, connectSocket, getSocket } from '../client/socket/socket.client';
+import { useWebRTC } from '../hooks/useWebRTC';
 import './ClassroomPage.css';
 
 interface ClassroomPageProps {
-  studentId?: string;
+  sessionId?: string;
 }
 
 interface ChatMessage {
@@ -22,7 +24,7 @@ interface LessonSection {
   content: any;
 }
 
-const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
+const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     document.title = 'Classroom | FluentXVerse';
   }, []);
@@ -30,27 +32,38 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
   const { user } = useAuthContext();
   const { route } = useLocation();
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  
+  // Extract sessionId from route params if not passed as prop
+  const currentSessionId = sessionId || (route.split('/classroom/')[1]?.split('?')[0]);
+  
+  // State
   const [message, setMessage] = useState('');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [micLevel, setMicLevel] = useState(0); // RMS scaled 0-100
-  const [micSpeaking, setMicSpeaking] = useState(false);
-  const [mediaError, setMediaError] = useState<string | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const dataArrayRef = useRef<any>(null);
-  const speakingFramesRef = useRef(0);
-  const isMutedRef = useRef(false);
   const [activeMaterialSection, setActiveMaterialSection] = useState(0);
-  const [isSwapped, setIsSwapped] = useState(false); // swap main vs PiP
+  const [isSwapped, setIsSwapped] = useState(false);
+  const [studentInfo, setStudentInfo] = useState<{ name: string; id: string; initials: string } | null>(null);
+  const [isConnecting, setIsConnecting] = useState(true);
 
-  // Mock student data
-  const studentData = {
-    name: 'Maria Santos',
-    initials: 'MS',
+  // WebRTC Hook
+  const {
+    localStream,
+    remoteStream,
+    isConnected,
+    error: webrtcError,
+    startLocalStream,
+    toggleAudio,
+    toggleVideo,
+    cleanup
+  } = useWebRTC({ remoteUserId: studentInfo?.id });
+
+  // Mock student data (will be replaced with real data)
+  const studentData = studentInfo || {
+    name: 'Student',
+    initials: 'ST',
     sessionTime: '10:00AM - 10:25AM',
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   };
@@ -149,6 +162,99 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
     return () => clearInterval(timer);
   }, []);
 
+  // Initialize Socket.IO and join session
+  useEffect(() => {
+    if (!currentSessionId) {
+      console.error('No session ID provided');
+      return;
+    }
+
+    const socket = initSocket();
+    connectSocket();
+
+    // Join the session room
+    socket.emit('session:join', { sessionId: currentSessionId });
+    console.log('👨‍🏫 Tutor joining session:', currentSessionId);
+
+    // Listen for student joining
+    socket.on('session:user-joined', ({ userId, userType }) => {
+      console.log(`👥 User joined: ${userType} - ${userId}`);
+      if (userType === 'student') {
+        setStudentInfo({ id: userId, name: 'Student', initials: 'ST' });
+        setIsConnecting(false);
+      }
+    });
+
+    // Listen for student leaving
+    socket.on('session:user-left', ({ userType }) => {
+      console.log(`👋 User left: ${userType}`);
+      if (userType === 'student') {
+        setStudentInfo(null);
+      }
+    });
+
+    // Listen for session state
+    socket.on('session:state', (state) => {
+      console.log('📊 Session state:', state);
+      if (state.participants.studentId) {
+        setStudentInfo({ id: state.participants.studentId, name: 'Student', initials: 'ST' });
+        setIsConnecting(false);
+      }
+    });
+
+    return () => {
+      socket.emit('session:leave');
+      socket.off('session:user-joined');
+      socket.off('session:user-left');
+      socket.off('session:state');
+    };
+  }, [currentSessionId]);
+
+  // Start local media when component mounts
+  useEffect(() => {
+    const initWebRTC = async () => {
+      try {
+        console.log('🎥 Starting local media stream...');
+        await startLocalStream(true, true);
+      } catch (err) {
+        console.error('Failed to start media:', err);
+      }
+    };
+
+    initWebRTC();
+  }, [startLocalStream]);
+
+  // Attach local stream to video element
+  useEffect(() => {
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
+
+  // Attach remote stream to video element
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      console.log('📺 Remote stream attached');
+    }
+  }, [remoteStream]);
+
+  // Handle audio/video toggles
+  useEffect(() => {
+    toggleAudio(!isMuted);
+  }, [isMuted, toggleAudio]);
+
+  useEffect(() => {
+    toggleVideo(!isVideoOff);
+  }, [isVideoOff, toggleVideo]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
+
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -174,125 +280,11 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
 
   const handleLeaveClassroom = () => {
     if (confirm('Are you sure you want to leave the classroom?')) {
-      route(`/student/${studentId || 'STD001'}`);
+      cleanup();
+      getSocket().emit('session:leave');
+      route('/schedule');
     }
   };
-
-  // Initialize local media (audio + video)
-  useEffect(() => {
-    let rafId: number;
-    const init = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        streamRef.current = stream;
-        // Attach video
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {});
-        }
-        // Audio analyser
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        audioCtxRef.current = audioCtx;
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyserRef.current = analyser;
-        source.connect(analyser);
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray: any = new Uint8Array(bufferLength);
-        dataArrayRef.current = dataArray;
-        const tick = () => {
-          if (!analyserRef.current || !dataArrayRef.current) return;
-          analyserRef.current.getByteTimeDomainData(dataArrayRef.current);
-          let sumSquares = 0;
-          for (let i = 0; i < dataArrayRef.current.length; i++) {
-            const v = (dataArrayRef.current[i] - 128) / 128;
-            sumSquares += v * v;
-          }
-          const rms = Math.sqrt(sumSquares / dataArrayRef.current.length);
-          const scaled = rms * 100;
-          setMicLevel(scaled);
-          const threshold = 2; // lowered for better sensitivity
-          if (!isMutedRef.current && scaled > threshold) {
-            speakingFramesRef.current = Math.min(speakingFramesRef.current + 2, 12);
-          } else {
-            speakingFramesRef.current = Math.max(speakingFramesRef.current - 1, 0);
-          }
-          setMicSpeaking(speakingFramesRef.current >= 2);
-          rafId = requestAnimationFrame(tick);
-        };
-        tick();
-      } catch (err: any) {
-        setMediaError(err?.message || 'Failed to access camera/microphone');
-      }
-    };
-    init();
-    return () => {
-      cancelAnimationFrame(rafId);
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-      }
-      if (audioCtxRef.current) audioCtxRef.current.close();
-    };
-  }, []);
-
-  // Handle mute toggle (update track enable state)
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-    const stream = streamRef.current;
-    if (!stream) return;
-    stream.getAudioTracks().forEach(track => {
-      track.enabled = !isMuted;
-    });
-  }, [isMuted]);
-
-  // Handle video toggle
-  useEffect(() => {
-    const stream = streamRef.current;
-    if (!stream) return;
-    stream.getVideoTracks().forEach(track => {
-      track.enabled = !isVideoOff;
-    });
-  }, [isVideoOff]);
-
-  // Reattach stream to video element when camera turned back on or swap changes
-  useEffect(() => {
-    if (isVideoOff) return; // only act when camera is on
-    const stream = streamRef.current;
-    if (!stream) return;
-    const tracks = stream.getVideoTracks();
-    // If track ended (rare on enable/disable), reacquire
-    if (tracks.length === 0 || tracks[0].readyState === 'ended') {
-      (async () => {
-        try {
-          const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          // Preserve existing audio if any
-          if (streamRef.current) {
-            const audioTracks = streamRef.current.getAudioTracks();
-            audioTracks.forEach(t => newStream.addTrack(t));
-          }
-          streamRef.current = newStream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = newStream;
-            videoRef.current.play().catch(() => {});
-          }
-        } catch (e) {
-          // Ignore; mediaError already handled elsewhere
-        }
-      })();
-      return;
-    }
-    // Normal case: just re-bind stream to new video element after remount/swap
-    // Use setTimeout to ensure video element is mounted after swap
-    setTimeout(() => {
-      if (videoRef.current && videoRef.current.srcObject !== stream) {
-        videoRef.current.srcObject = stream;
-      }
-      if (videoRef.current) {
-        videoRef.current.play().catch(() => {});
-      }
-    }, 0);
-  }, [isVideoOff, isSwapped]);
 
   return (
     <div className="classroom-container">
@@ -316,33 +308,39 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
           </div>
         </div>
 
-        {/* Video Area (Swapped: tutor/user main, student PiP) */}
+        {/* Video Area */}
         <div className="video-section">
+          {/* Connection Status */}
+          {isConnecting && (
+            <div className="connection-status">
+              <div className="spinner"></div>
+              <p>Waiting for student to join...</p>
+            </div>
+          )}
+          
           {/* Main Video */}
           <div className="video-main">
             {isSwapped ? (
-              // Student in main
-              <div className="video-placeholder student-video">
-                <div className="video-avatar-large">{studentData.initials}</div>
-                <span className="video-name">{studentData.name}</span>
-              </div>
-            ) : (
-              // Tutor/User in main
-              (!isVideoOff && !mediaError) ? (
-                <div className="local-video-full">
-                  <video ref={videoRef} muted playsInline className="local-video" />
-                  <div className={`mic-indicator mic-large ${micSpeaking ? 'active' : ''}`}
-                    title={isMuted ? 'Muted' : micSpeaking ? 'Speaking' : 'Idle'}>
-                    <span className="mic-dot" />
-                  </div>
+              // Student (remote) in main
+              remoteStream ? (
+                <video ref={remoteVideoRef} autoPlay playsInline className="remote-video" />
+              ) : (
+                <div className="video-placeholder student-video">
+                  <div className="video-avatar-large">{studentData.initials}</div>
+                  <span className="video-name">{studentData.name}</span>
+                  {!isConnected && studentInfo && <span className="connection-text">Connecting...</span>}
                 </div>
+              )
+            ) : (
+              // Tutor (local) in main
+              localStream && !isVideoOff ? (
+                <video ref={localVideoRef} muted autoPlay playsInline className="local-video" />
               ) : (
                 <div className="video-placeholder tutor-video">
                   <div className="video-avatar-large">
                     {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
                   </div>
                   <span className="video-name">{user?.firstName || 'Tutor'}</span>
-                  {mediaError && <span className="media-error-text">Media blocked</span>}
                 </div>
               )
             )}
@@ -351,15 +349,9 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
           {/* Picture-in-Picture (click to swap) */}
           <div className="video-pip" onClick={() => setIsSwapped(prev => !prev)} title="Click to swap">
             {isSwapped ? (
-              // Tutor/User in PiP
-              (!isVideoOff && !mediaError) ? (
-                <div className="local-video-wrapper">
-                  <video ref={!isSwapped ? undefined : videoRef} muted playsInline className="local-video" />
-                  <div className={`mic-indicator ${micSpeaking ? 'active' : ''}`}
-                    title={isMuted ? 'Muted' : micSpeaking ? 'Speaking' : 'Idle'}>
-                    <span className="mic-dot" />
-                  </div>
-                </div>
+              // Tutor (local) in PiP
+              localStream && !isVideoOff ? (
+                <video ref={!isSwapped ? localVideoRef : undefined} muted autoPlay playsInline className="local-video-small" />
               ) : (
                 <div className="video-placeholder tutor-video">
                   <div className="video-avatar-small">
@@ -368,10 +360,14 @@ const ClassroomPage = ({ studentId }: ClassroomPageProps) => {
                 </div>
               )
             ) : (
-              // Student in PiP
-              <div className="video-placeholder student-video">
-                <div className="video-avatar-small">{studentData.initials}</div>
-              </div>
+              // Student (remote) in PiP
+              remoteStream ? (
+                <video ref={!isSwapped ? remoteVideoRef : undefined} autoPlay playsInline className="remote-video-small" />
+              ) : (
+                <div className="video-placeholder student-video">
+                  <div className="video-avatar-small">{studentData.initials}</div>
+                </div>
+              )
             )}
           </div>
 

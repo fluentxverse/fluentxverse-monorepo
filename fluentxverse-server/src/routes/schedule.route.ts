@@ -210,8 +210,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const studentId = authData.userId;
+      
+      console.log('Getting stats for student:', studentId);
 
       const stats = await scheduleService.getStudentStats(studentId);
+      
+      console.log('Stats to be returned:', JSON.stringify(stats, null, 2));
 
       return {
         success: true,
@@ -252,6 +256,38 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     } catch (error: any) {
       console.error('Error in /schedule/student-activity:', error);
       set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get student activity'
+      };
+    }
+  })
+
+  /**
+   * Get lesson details by booking ID
+   * GET /schedule/lesson/:bookingId
+   */
+  .get('/lesson/:bookingId', async ({ cookie, params, set }) => {
+    try {
+      const raw = cookie.auth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+      const { bookingId } = params;
+
+      const lessonDetails = await scheduleService.getLessonDetails(bookingId, studentId);
+
+      return {
+        success: true,
+        data: lessonDetails
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/lesson/:bookingId:', error);
+      set.status = error.message.includes('not found') ? 404 : 500;
       return {
         success: false,
         error: error.message || 'Failed to get student activity'

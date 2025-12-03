@@ -306,7 +306,41 @@ export class ScheduleService {
       }
       
       const slot = slotResult.records[0]?.get('s').properties;
-      const slotDateTime = new Date(`${slot.slotDate}T${slot.slotTime}:00`);
+      
+      // Parse slotTime - it's already in 12-hour format like "6:00 PM"
+      // Convert to 24-hour format for Date constructor
+      const slotTime = slot.slotTime; // e.g., "6:00 PM"
+      let slotDateTime: Date;
+      
+      try {
+        // Parse the time string (e.g., "6:00 PM")
+        const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (!timeMatch) {
+          throw new Error(`Invalid time format: ${slotTime}`);
+        }
+        
+        let hours = parseInt(timeMatch[1]);
+        const minutes = parseInt(timeMatch[2]);
+        const meridiem = timeMatch[3].toUpperCase();
+        
+        // Convert to 24-hour format
+        if (meridiem === 'PM' && hours !== 12) {
+          hours += 12;
+        } else if (meridiem === 'AM' && hours === 12) {
+          hours = 0;
+        }
+        
+        // Create date with proper format
+        slotDateTime = new Date(`${slot.slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+        
+        if (isNaN(slotDateTime.getTime())) {
+          throw new Error(`Invalid date/time combination: ${slot.slotDate} ${slotTime}`);
+        }
+      } catch (error: any) {
+        console.error('Error parsing slot time:', error);
+        throw new Error(`Failed to parse slot time: ${error.message}`);
+      }
+      
       const now = new Date();
       const minBookTime = new Date(now.getTime() + 30 * 60 * 1000);
       
@@ -829,7 +863,7 @@ export class ScheduleService {
     const session = driver.session();
     
     try {
-      const now = new Date().toISOString();
+      const now = new Date();
       
       // Get completed lessons count
       const completedResult = await session.run(
@@ -841,26 +875,24 @@ export class ScheduleService {
         { studentId }
       );
       
-      // Get upcoming lessons count and next lesson
+      // Get upcoming lessons - filter by date in application code since slotTime is in 12-hour format
       const upcomingResult = await session.run(
         `
         MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
         MATCH (b)-[:BOOKS]->(slot:TimeSlot)
         MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
         WHERE b.status = 'confirmed'
-          AND datetime(slot.slotDate + 'T' + slot.slotTime + ':00') > datetime($now)
-        RETURN count(b) as upcomingCount,
+        RETURN b.bookingId as bookingId,
+               tutor.firstName as tutorFirstName,
+               tutor.lastName as tutorLastName,
                tutor.givenName as tutorGivenName,
                tutor.familyName as tutorFamilyName,
                tutor.profilePicture as tutorAvatar,
                slot.slotDate as slotDate,
-               slot.slotTime as slotTime,
-               b.bookingId as bookingId,
-               slot.slotDate + 'T' + slot.slotTime as sortKey
-        ORDER BY sortKey ASC
-        LIMIT 1
+               slot.slotTime as slotTime
+        ORDER BY slot.slotDate ASC, slot.slotTime ASC
         `,
-        { studentId, now }
+        { studentId }
       );
       
       // Get total hours from completed lessons
@@ -875,31 +907,104 @@ export class ScheduleService {
       );
       
       const completedCount = completedResult.records[0]?.get('completedCount')?.toNumber() || 0;
-      const upcomingCount = upcomingResult.records[0]?.get('upcomingCount')?.toNumber() || 0;
+      
+      // Filter future lessons in application code and get count + next lesson
+      const futureBookings = upcomingResult.records
+        .map(record => {
+          const slotDate = record.get('slotDate');
+          const slotTime = record.get('slotTime');
+          
+          // Parse slotTime (e.g., "6:00 PM") to create proper Date
+          const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+          if (!timeMatch) return null;
+          
+          let hours = parseInt(timeMatch[1]);
+          const minutes = parseInt(timeMatch[2]);
+          const meridiem = timeMatch[3].toUpperCase();
+          
+          // Convert to 24-hour format
+          if (meridiem === 'PM' && hours !== 12) {
+            hours += 12;
+          } else if (meridiem === 'AM' && hours === 12) {
+            hours = 0;
+          }
+          
+          const slotDateTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+          
+          if (isNaN(slotDateTime.getTime()) || slotDateTime <= now) {
+            return null;
+          }
+          
+          return {
+            bookingId: record.get('bookingId'),
+            tutorFirstName: record.get('tutorFirstName'),
+            tutorLastName: record.get('tutorLastName'),
+            tutorGivenName: record.get('tutorGivenName'),
+            tutorFamilyName: record.get('tutorFamilyName'),
+            tutorAvatar: record.get('tutorAvatar'),
+            slotDate,
+            slotTime,
+            slotDateTime
+          };
+        })
+        .filter(Boolean) as Array<{
+          bookingId: string;
+          tutorFirstName: string;
+          tutorLastName: string;
+          tutorGivenName: string;
+          tutorFamilyName: string;
+          tutorAvatar?: string;
+          slotDate: string;
+          slotTime: string;
+          slotDateTime: Date;
+        }>;
+      
+      const upcomingCount = futureBookings.length;
       const totalMinutes = hoursResult.records[0]?.get('totalMinutes')?.toNumber() || 0;
       const totalHours = Math.round((totalMinutes / 60) * 10) / 10; // Round to 1 decimal
       
       let nextLesson = undefined;
-      if (upcomingResult.records.length > 0 && upcomingResult.records[0]) {
-        const record = upcomingResult.records[0];
-        const givenName = record?.get('tutorGivenName') || '';
-        const familyName = record?.get('tutorFamilyName') || '';
+      if (futureBookings.length > 0) {
+        // Sort by datetime and get the earliest
+        futureBookings.sort((a, b) => a.slotDateTime.getTime() - b.slotDateTime.getTime());
+        const next = futureBookings[0];
         
-        nextLesson = {
-          tutorName: `${givenName} ${familyName}`.trim() || 'Tutor',
-          tutorAvatar: record?.get('tutorAvatar'),
-          slotDate: record?.get('slotDate'),
-          slotTime: record?.get('slotTime'),
-          bookingId: record?.get('bookingId')
-        };
+        if (next) {
+          // Try firstName/lastName first (tutors), fall back to givenName/familyName (students)
+          const firstName = next.tutorFirstName || next.tutorGivenName || '';
+          const lastName = next.tutorLastName || next.tutorFamilyName || '';
+          
+          console.log('Next lesson data:', {
+            tutorFirstName: next.tutorFirstName,
+            tutorLastName: next.tutorLastName,
+            tutorGivenName: next.tutorGivenName,
+            tutorFamilyName: next.tutorFamilyName,
+            tutorAvatar: next.tutorAvatar,
+            slotDate: next.slotDate,
+            slotTime: next.slotTime,
+            bookingId: next.bookingId
+          });
+          
+          nextLesson = {
+            tutorName: `${firstName} ${lastName}`.trim() || 'Tutor',
+            tutorAvatar: next.tutorAvatar,
+            slotDate: next.slotDate,
+            slotTime: next.slotTime,
+            bookingId: next.bookingId
+          };
+        }
       }
       
-      return {
+      const stats = {
         lessonsCompleted: completedCount,
         upcomingLessons: upcomingCount,
         totalHours,
         nextLesson
       };
+      
+      console.log('Student stats result:', JSON.stringify(stats, null, 2));
+      
+      return stats;
     } finally {
       await session.close();
     }
@@ -949,12 +1054,25 @@ export class ScheduleService {
         const slot = record.get('slot').properties;
         const tutor = record.get('tutor').properties;
         
-        const tutorName = `${tutor.givenName || tutor.firstName || ''} ${tutor.familyName || tutor.lastName || ''}`.trim();
+        // Try firstName/lastName first (tutors), fall back to givenName/familyName
+        const tutorName = `${tutor.firstName || tutor.givenName || ''} ${tutor.lastName || tutor.familyName || ''}`.trim();
         const isCompleted = booking.status === 'completed';
         
-        const activityDate = isCompleted 
-          ? new Date(slot.slotDate) 
-          : new Date(booking.bookedAt);
+        // For completed lessons, use slot date; for bookings, use bookedAt timestamp
+        let activityDate: Date;
+        if (isCompleted) {
+          // Parse slotDate as a date (e.g., "2025-12-03")
+          activityDate = new Date(slot.slotDate + 'T00:00:00');
+        } else {
+          // bookedAt is already a timestamp
+          activityDate = new Date(booking.bookedAt);
+        }
+        
+        // Validate date
+        if (isNaN(activityDate.getTime())) {
+          console.error('Invalid date for activity:', { slotDate: slot.slotDate, bookedAt: booking.bookedAt });
+          activityDate = new Date(); // fallback to now
+        }
         
         return {
           type: isCompleted ? 'lesson_completed' : 'lesson_booked',
@@ -1012,6 +1130,72 @@ export class ScheduleService {
       return 'Tomorrow';
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  }
+
+  /**
+   * Get detailed lesson information by booking ID
+   */
+  async getLessonDetails(bookingId: string, studentId: string) {
+    const session = getDriver().session();
+    try {
+      console.log('Getting lesson details for bookingId:', bookingId, 'studentId:', studentId);
+      
+      const query = `
+        MATCH (booking:Booking {bookingId: $bookingId})-[:BOOKED_BY]->(student:Student {id: $studentId})
+        MATCH (booking)-[:BOOKS]->(slot:TimeSlot)<-[:OFFERS]-(tutor:User)
+        RETURN 
+          booking.bookingId AS bookingId,
+          booking.status AS status,
+          booking.bookedAt AS bookedAt,
+          slot.slotDate AS slotDate,
+          slot.slotTime AS slotTime,
+          slot.durationMinutes AS durationMinutes,
+          tutor.userId AS tutorId,
+          COALESCE(tutor.firstName, tutor.givenName, 'Tutor') + ' ' + 
+          COALESCE(tutor.lastName, tutor.familyName, '') AS tutorName,
+          tutor.profilePicture AS tutorAvatar,
+          tutor.bio AS tutorBio,
+          tutor.hourlyRate AS hourlyRate
+      `;
+
+      const result = await session.run(query, { bookingId, studentId });
+      
+      console.log('Query returned', result.records.length, 'records');
+
+      if (result.records.length === 0) {
+        // Debug: Try to find the booking without student filter
+        const debugQuery = `MATCH (booking:Booking {bookingId: $bookingId}) RETURN booking`;
+        const debugResult = await session.run(debugQuery, { bookingId });
+        console.log('Debug: Found booking?', debugResult.records.length > 0);
+        if (debugResult.records.length > 0) {
+          console.log('Debug: Booking exists but student mismatch. Booking studentId:', debugResult.records[0].get('booking').properties.studentId);
+        }
+        
+        throw new Error('Lesson not found or you do not have access to this lesson');
+      }
+
+      const record = result.records[0];
+      
+      return {
+        bookingId: record.get('bookingId'),
+        tutorId: record.get('tutorId'),
+        tutorName: record.get('tutorName').trim(),
+        tutorAvatar: record.get('tutorAvatar'),
+        tutorBio: record.get('tutorBio'),
+        hourlyRate: record.get('hourlyRate')?.toNumber?.() || record.get('hourlyRate'),
+        slotDate: record.get('slotDate'),
+        slotTime: record.get('slotTime'),
+        durationMinutes: record.get('durationMinutes')?.toNumber?.() || record.get('durationMinutes'),
+        status: record.get('status'),
+        bookedAt: record.get('bookedAt'),
+        sessionId: bookingId // Use bookingId as sessionId for classroom
+      };
+    } catch (error) {
+      console.error('Error getting lesson details:', error);
+      throw error;
+    } finally {
+      await session.close();
     }
   }
 }

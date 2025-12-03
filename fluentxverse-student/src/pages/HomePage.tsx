@@ -28,7 +28,10 @@ const HomePage = () => {
       
       try {
         setLoading(true);
+        console.log('Fetching student stats...');
         const data = await scheduleApi.getStudentStats();
+        console.log('Student stats received:', JSON.stringify(data, null, 2));
+        console.log('Next lesson data:', data.nextLesson);
         setStats(data);
         setError(null);
       } catch (err: any) {
@@ -52,7 +55,9 @@ const HomePage = () => {
       
       try {
         setActivityLoading(true);
+        console.log('Fetching recent activity...');
         const data = await scheduleApi.getStudentActivity(10);
+        console.log('Recent activity received:', data.length, 'items');
         setRecentActivity(data);
       } catch (err: any) {
         console.error('Failed to fetch recent activity:', err);
@@ -65,9 +70,72 @@ const HomePage = () => {
     fetchActivity();
   }, [user]);
 
+  // Parse slot time (12-hour format) and create Date in Philippine time, then convert to Korean time (+1 hour)
+  const parseSlotDateTime = (slotDate: string, slotTime: string): Date => {
+    // slotTime is in format "6:00 PM" (Philippine time UTC+8)
+    const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!timeMatch) {
+      console.error('Invalid time format:', slotTime);
+      return new Date(); // fallback
+    }
+    
+    let hours = parseInt(timeMatch[1]);
+    const minutes = parseInt(timeMatch[2]);
+    const meridiem = timeMatch[3].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (meridiem === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (meridiem === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    
+    // Create date in Philippine time
+    const phTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
+    
+    // Convert to Korean time (+1 hour from Philippine time)
+    const koreanTime = new Date(phTime.getTime() + (60 * 60 * 1000));
+    
+    return koreanTime;
+  };
+
+  // Convert Philippine time string to Korean time display
+  const convertToKoreanTime = (slotTime: string): string => {
+    // slotTime is in format "6:00 PM" (Philippine time)
+    const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!timeMatch) {
+      return slotTime; // fallback to original
+    }
+    
+    let hours = parseInt(timeMatch[1]);
+    const minutes = parseInt(timeMatch[2]);
+    const meridiem = timeMatch[3].toUpperCase();
+    
+    // Convert to 24-hour format
+    if (meridiem === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (meridiem === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    
+    // Add 1 hour for Korean timezone
+    hours += 1;
+    
+    // Handle day rollover
+    if (hours >= 24) {
+      hours -= 24;
+    }
+    
+    // Convert back to 12-hour format
+    const koreanMeridiem = hours >= 12 ? 'PM' : 'AM';
+    const koreanHours = hours === 0 ? 12 : (hours > 12 ? hours - 12 : hours);
+    
+    return `${koreanHours}:${String(minutes).padStart(2, '0')} ${koreanMeridiem}`;
+  };
+
   const getTimeUntil = (date: Date) => {
     const now = new Date();
-    const diff = new Date(date).getTime() - now.getTime();
+    const diff = date.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
@@ -193,46 +261,55 @@ const HomePage = () => {
                           </h3>
                           {stats?.nextLesson && (
                             <div className="home-badge-time">
-                              in {getTimeUntil(new Date(`${stats.nextLesson.slotDate}T${stats.nextLesson.slotTime}`))}
+                              in {getTimeUntil(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}
                             </div>
                           )}
                         </div>
 
                         {stats?.nextLesson ? (
-                          <div className="home-next-lesson">
-                            <div 
-                              className={stats.nextLesson.tutorAvatar ? "home-tutor-avatar" : "home-tutor-avatar placeholder"}
-                              style={stats.nextLesson.tutorAvatar ? { backgroundImage: `url(${stats.nextLesson.tutorAvatar})` } : undefined}
-                            >
-                              {!stats.nextLesson.tutorAvatar && (
-                                <i className="fas fa-user"></i>
-                              )}
-                            </div>
-                            
-                            <div className="home-lesson-info">
-                              <div className="home-lesson-tutor">
-                                {stats.nextLesson.tutorName}
+                          <>
+                            {console.log('Rendering next lesson:', {
+                              tutorName: stats.nextLesson.tutorName,
+                              tutorAvatar: stats.nextLesson.tutorAvatar,
+                              slotDate: stats.nextLesson.slotDate,
+                              slotTime: stats.nextLesson.slotTime,
+                              bookingId: stats.nextLesson.bookingId
+                            })}
+                            <div className="home-next-lesson">
+                              <div 
+                                className={stats.nextLesson.tutorAvatar ? "home-tutor-avatar" : "home-tutor-avatar placeholder"}
+                                style={stats.nextLesson.tutorAvatar ? { backgroundImage: `url(${stats.nextLesson.tutorAvatar})` } : undefined}
+                              >
+                                {!stats.nextLesson.tutorAvatar && (
+                                  <i className="fas fa-user"></i>
+                                )}
                               </div>
-                              <div className="home-lesson-details">
-                                <div className="home-lesson-detail">
-                                  <i className="fas fa-calendar"></i>
-                                  <span>{formatDate(new Date(stats.nextLesson.slotDate))}</span>
+                              
+                              <div className="home-lesson-info">
+                                <div className="home-lesson-tutor">
+                                  {stats.nextLesson.tutorName}
                                 </div>
-                                <div className="home-lesson-detail">
-                                  <i className="fas fa-clock"></i>
-                                  <span>{stats.nextLesson.slotTime}</span>
+                                <div className="home-lesson-details">
+                                  <div className="home-lesson-detail">
+                                    <i className="fas fa-calendar"></i>
+                                    <span>{formatDate(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}</span>
+                                  </div>
+                                  <div className="home-lesson-detail">
+                                    <i className="fas fa-clock"></i>
+                                    <span>{convertToKoreanTime(stats.nextLesson.slotTime)} KST</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
 
-                            <button
-                              onClick={() => window.open(`/lesson/${stats.nextLesson!.bookingId}`, '_blank')}
-                              className="home-btn-join"
-                            >
-                              <i className="fas fa-video"></i>
-                              <span>Join Now</span>
-                            </button>
-                          </div>
+                              <button
+                                onClick={() => window.open(`/lesson/${stats.nextLesson!.bookingId}`, '_blank')}
+                                className="home-btn-join"
+                              >
+                                <i className="fas fa-video"></i>
+                                <span>Join Now</span>
+                              </button>
+                            </div>
+                          </>
                         ) : (
                           <div className="home-empty-state">
                             <div className="home-empty-icon">

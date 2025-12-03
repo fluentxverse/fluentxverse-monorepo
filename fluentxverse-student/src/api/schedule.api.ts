@@ -147,5 +147,23 @@ export const scheduleApi = {
       console.error('Failed to get student activity:', error);
       throw error;
     }
+  },
+
+  /**
+   * Get lesson details by booking ID
+   */
+  getLessonDetails: async (bookingId: string): Promise<any> => {
+    try {
+      const response = await api.get(`/schedule/lesson/${bookingId}`);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to get lesson details');
+      }
+      
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Failed to get lesson details:', error);
+      throw error.response?.data?.error || error.message || 'Failed to load lesson';
+    }
   }
 };

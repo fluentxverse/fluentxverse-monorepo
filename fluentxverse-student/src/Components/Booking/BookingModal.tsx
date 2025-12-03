@@ -105,10 +105,41 @@ export const BookingModal = ({
     return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
   };
 
+  const convertToKoreanTime = (phTimeString: string): string => {
+    // Parse Philippine time (12-hour format like "6:00 PM")
+    const timeMatch = phTimeString.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!timeMatch) return phTimeString;
+
+    let hours = parseInt(timeMatch[1], 10);
+    const minutes = timeMatch[2];
+    const period = timeMatch[3].toUpperCase();
+
+    // Convert to 24-hour format
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    // Add 1 hour for Korean timezone (UTC+9 vs UTC+8)
+    hours += 1;
+
+    // Handle day rollover
+    if (hours >= 24) {
+      hours -= 24;
+    }
+
+    // Convert back to 12-hour format
+    const koreanPeriod = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+
+    return `${displayHours}:${minutes} ${koreanPeriod}`;
+  };
+
   const formatTime = (timeString: string) => {
     console.log('🕐 Formatting time:', timeString);
-    // Time is already formatted as "6:00 PM" from backend, return as-is
-    return timeString;
+    // Convert Philippine time to Korean time (add 1 hour)
+    return convertToKoreanTime(timeString);
   };
 
   if (!isOpen) return null;
@@ -204,7 +235,7 @@ export const BookingModal = ({
                             className={`booking-modal-time-slot ${selectedSlot?.slotId === slot.slotId ? 'selected' : ''}`}
                             onClick={() => setSelectedSlot(slot)}
                           >
-                            {formatTime(slot.time)}
+                            {formatTime(slot.time)} KST
                           </button>
                         ))}
                       </div>
@@ -223,7 +254,7 @@ export const BookingModal = ({
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
                   <span>
-                    {formatDate(selectedSlot.date)} at {formatTime(selectedSlot.time)}
+                    {formatDate(selectedSlot.date)} at {formatTime(selectedSlot.time)} KST
                     <span className="booking-modal-duration"> ({(() => {
                       console.log('⏱️ Duration value:', selectedSlot.durationMinutes);
                       console.log('⏱️ Duration type:', typeof selectedSlot.durationMinutes);
