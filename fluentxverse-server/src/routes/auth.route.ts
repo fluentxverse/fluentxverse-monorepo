@@ -18,6 +18,11 @@ const Auth = new Elysia({ name: 'auth' })
         // Immediately log the user in after successful registration
         const userData = await authService.login({ email: body.email, password: body.password });
 
+        // Handle smartWalletAddress - it might be a string or object from DB
+        const walletAddress = typeof userData.smartWalletAddress === 'string' 
+          ? userData.smartWalletAddress 
+          : userData.smartWalletAddress?.address || '';
+
         // Set httpOnly cookie with 1-hour expiration and basic profile
         cookie.tutorAuth?.set({
           value: JSON.stringify({
@@ -25,7 +30,7 @@ const Auth = new Elysia({ name: 'auth' })
             email: userData.email,
             firstName: userData.firstName,
             lastName: userData.lastName,
-            walletAddress: userData.smartWalletAddress.address,
+            walletAddress: walletAddress,
             mobileNumber: userData.mobileNumber,
             tier: userData.tier
 
@@ -64,6 +69,11 @@ const Auth = new Elysia({ name: 'auth' })
         // First, explicitly clear any existing auth cookie to ensure clean state
         cookie.tutorAuth?.remove();
  
+        // Handle smartWalletAddress - it might be a string or object from DB
+        const walletAddress = typeof userData.smartWalletAddress === 'string' 
+          ? userData.smartWalletAddress 
+          : userData.smartWalletAddress?.address || '';
+
         // Set fresh httpOnly cookie with 1-hour expiration
         cookie.tutorAuth?.set({
           value: JSON.stringify({
@@ -71,7 +81,7 @@ const Auth = new Elysia({ name: 'auth' })
             email: userData.email,
             firstName: userData.firstName,
             lastName: userData.lastName,
-            walletAddress: userData.smartWalletAddress.address,
+            walletAddress: walletAddress,
             mobileNumber: userData.mobileNumber,
             tier: userData.tier
           }),
