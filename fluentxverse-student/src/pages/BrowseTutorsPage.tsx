@@ -246,19 +246,6 @@ export const BrowseTutorsPage = () => {
   ];
   const [activeQuickFilter, setActiveQuickFilter] = useState('all');
 
-  // Load filter options
-  useEffect(() => {
-    const loadFilterOptions = async () => {
-      try {
-        const specs = await tutorApi.getFilterSpecializations();
-        setAvailableSpecs(specs);
-      } catch (err) {
-        console.error('Failed to load filter options:', err);
-      }
-    };
-
-    loadFilterOptions();
-  }, []);
 
   // Search tutors
   const searchTutors = useCallback(async (resetPage = false) => {
@@ -279,15 +266,22 @@ export const BrowseTutorsPage = () => {
 
       const result = await tutorApi.searchTutors(params);
 
+      // If "All Dates" is selected, show only tutors with any open schedule
+      const filteredTutors = selectedDate === 'all'
+        ? result.tutors.filter(t => t.isAvailable)
+        : result.tutors;
+
       if (resetPage) {
-        setTutors(result.tutors);
+        setTutors(filteredTutors);
         setPage(1);
       } else {
-        setTutors(prev => [...prev, ...result.tutors]);
+        setTutors(prev => [...prev, ...filteredTutors]);
       }
 
-      setTotal(result.total);
-      setHasMore(result.hasMore);
+      // Adjust count/hasMore based on filtered results when on "All Dates"
+      const totalCount = selectedDate === 'all' ? filteredTutors.length : result.total;
+      setTotal(totalCount);
+      setHasMore(selectedDate === 'all' ? false : result.hasMore);
     } catch (err) {
       console.error('Failed to search tutors:', err);
       setError('Failed to load tutors. Please try again.');

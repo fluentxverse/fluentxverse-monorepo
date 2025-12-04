@@ -36,7 +36,7 @@ const Header = () => {
     document.body.style.overflow = 'unset';
   }, []);
 
-  const handleLoginSubmit = useCallback((e: Event) => {
+  const handleLoginSubmit = useCallback(async (e: Event) => {
     e.preventDefault();
     if (!email || !password) {
       setLoginError('Please enter both email and password.');
@@ -45,14 +45,19 @@ const Header = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      login(email, password);
-      // Redirect after successful login
+      console.log('[HEADER] Starting login...');
+      await login(email, password);
+      console.log('[HEADER] Login successful, closing modal and navigating...');
+      closeLoginModal();
+      // Small delay to ensure state propagation
+      await new Promise(resolve => setTimeout(resolve, 100));
       window.location.href = '/home';
     } catch (err: any) {
+      console.log('[HEADER] Login failed:', err);
       setLoginLoading(false);
       setLoginError(err?.message || 'Invalid credentials');
     }
-  }, [email, password, login]);
+  }, [email, password, login, closeLoginModal]);
 
   useEffect(() => {
     // Sticky header on scroll

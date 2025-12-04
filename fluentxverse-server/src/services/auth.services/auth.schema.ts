@@ -6,16 +6,15 @@ import { t } from "elysia";
 // A minimal safe user shape returned to clients
 export const UserSchema = t.Object({
     id: t.String(),
+    userId: t.String(),
     email: t.String(),
     firstName: t.Optional(t.String()),
     lastName: t.Optional(t.String()),
-    smartWalletAddress: t.Object({
-        address: t.String(),
-        createdAt: t.String(),
-        label: t.String(),
-        smartAccountAddress: t.String(),
-    }),
-    tier: t.Number()
+    mobileNumber: t.String(),
+    tier: t.Number(),
+    role: t.String(),
+    walletAddress: t.String()
+
 });
 
 
@@ -50,7 +49,7 @@ export const LoginSchema = {
     response: {
         200: t.Object({
             success: t.Boolean(),
-            user: UserSchema
+            user: t.Any()
         })
     }
 }

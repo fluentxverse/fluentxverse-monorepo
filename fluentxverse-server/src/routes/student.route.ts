@@ -35,8 +35,8 @@ const Student = new Elysia({ name: "student" })
         }),
 
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: true, // Always true for sameSite:none
+        sameSite: "none", // Required for cross-origin
         maxAge: 60 * 60,
         path: "/"
       });
@@ -102,8 +102,8 @@ const Student = new Elysia({ name: "student" })
           walletAddress: normalizedUser.walletAddress
         }),
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: false, // False for localhost HTTP
+        sameSite: "lax", // Lax works for localhost
         maxAge: 60 * 60,
         path: "/"
       });
@@ -134,8 +134,8 @@ const Student = new Elysia({ name: "student" })
     cookie.studentAuth?.set({
       value: '',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: false, // Match login settings
+      sameSite: 'lax', // Match login settings
       maxAge: 0, // Expire immediately
       expires: new Date(0), // Also set explicit past date
       path: '/'

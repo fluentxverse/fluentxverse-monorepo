@@ -6,6 +6,8 @@ type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServe
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 const sessionService = new SessionService();
+// In-memory fallback store for dev or DB-down scenarios
+const memParticipants: Record<string, Array<{ user_id: string; socket_id: string; user_type: 'tutor' | 'student' }>> = {};
 
 export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
   // Join a session
@@ -19,16 +21,24 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       await socket.join(sessionId);
       socket.data.sessionId = sessionId;
 
-      // Update participant status in database
-      await sessionService.addParticipant({
-        sessionId,
-        userId,
-        socketId: socket.id,
-        userType
-      });
-
-      // Get all participants in the session
-      const participants = await sessionService.getSessionParticipants(sessionId);
+      let participants: Array<{ user_id: string; socket_id: string; user_type: 'tutor' | 'student' }> = [];
+      try {
+        // Preferred: persist to database
+        await sessionService.addParticipant({
+          sessionId,
+          userId,
+          socketId: socket.id,
+          userType
+        });
+        participants = await sessionService.getSessionParticipants(sessionId);
+      } catch (err) {
+        // Fallback: use in-memory participants to keep signaling working in dev
+        const list = memParticipants[sessionId] || [];
+        const updated = list.filter(p => p.user_id !== userId).concat([{ user_id: userId, socket_id: socket.id, user_type: userType }]);
+        memParticipants[sessionId] = updated;
+        participants = updated;
+        console.warn('⚠️ Using in-memory session participants due to DB error:', (err as Error)?.message);
+      }
       
       // Prepare session state
       const sessionState = {
@@ -69,8 +79,13 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         return;
       }
 
-      // Remove participant from database
-      await sessionService.removeParticipant(sessionId, userId);
+      // Remove participant, prefer DB then fallback
+      try {
+        await sessionService.removeParticipant(sessionId, userId);
+      } catch (err) {
+        const list = memParticipants[sessionId] || [];
+        memParticipants[sessionId] = list.filter(p => p.user_id !== userId);
+      }
 
       // Leave the socket.io room
       await socket.leave(sessionId);
@@ -83,7 +98,12 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       });
 
       // Get remaining participants
-      const participants = await sessionService.getSessionParticipants(sessionId);
+      let participants: Array<{ user_id: string; socket_id: string; user_type: 'tutor' | 'student' }> = [];
+      try {
+        participants = await sessionService.getSessionParticipants(sessionId);
+      } catch {
+        participants = memParticipants[sessionId] || [];
+      }
       
       // Send updated session state
       const sessionState = {
@@ -113,7 +133,12 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       const userType = socket.data.userType;
 
       if (sessionId) {
-        await sessionService.removeParticipant(sessionId, userId);
+        try {
+          await sessionService.removeParticipant(sessionId, userId);
+        } catch {
+          const list = memParticipants[sessionId] || [];
+          memParticipants[sessionId] = list.filter(p => p.user_id !== userId);
+        }
         
         socket.to(sessionId).emit('session:user-left', {
           userId,

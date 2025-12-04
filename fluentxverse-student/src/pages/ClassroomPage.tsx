@@ -34,9 +34,29 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localPipRef = useRef<HTMLVideoElement>(null);
+  const remotePipRef = useRef<HTMLVideoElement>(null);
   
-  // Extract sessionId from route params if not passed as prop
-  const currentSessionId = sessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
+  // Extract sessionId from router params first, then pathname as fallback
+  const routeSessionId = (route as any)?.params?.sessionId as string | undefined;
+  const querySessionId = (() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get('sessionId') || undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+  const currentSessionId = sessionId || routeSessionId || querySessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
+  
+  // Initialize socket immediately
+  useEffect(() => {
+    if (currentSessionId) {
+      console.log('🔌 [Classroom] Initializing socket...');
+      initSocket();
+      connectSocket();
+    }
+  }, [currentSessionId]);
   
   // State
   const [message, setMessage] = useState('');
@@ -45,8 +65,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [activeMaterialSection, setActiveMaterialSection] = useState(0);
   const [isSwapped, setIsSwapped] = useState(false);
-  const [tutorInfo, setTutorInfo] = useState<{ name: string; id: string } | null>(null);
+  const [tutorInfo, setTutorInfo] = useState<{ name: string; id: string; initials: string; date: string } | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
+  const [isSpeakingLocal, setIsSpeakingLocal] = useState(false);
 
   // WebRTC Hook
   const {
@@ -55,16 +76,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     isConnected,
     error: webrtcError,
     startLocalStream,
-    createOffer,
     toggleAudio,
     toggleVideo,
     cleanup
   } = useWebRTC({ remoteUserId: tutorInfo?.id });
 
-  // Mock student data
+  // Mock student data (will be replaced with real data)
   const studentData = {
-    name: user?.givenName ? `${user.givenName} ${user.familyName || ''}` : 'Student',
-    initials: `${user?.givenName?.charAt(0) || 'S'}${user?.familyName?.charAt(0) || ''}`,
+    name: 'Student',
+    initials: 'ST',
     sessionTime: '10:00AM - 10:25AM',
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   };
@@ -170,8 +190,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       return;
     }
 
-    const socket = initSocket();
-    connectSocket();
+    const socket = getSocket();
 
     // Join the session room
     socket.emit('session:join', { sessionId: currentSessionId });
@@ -181,24 +200,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     socket.on('session:user-joined', ({ userId, userType }) => {
       console.log(`👥 User joined: ${userType} - ${userId}`);
       if (userType === 'tutor') {
-        setTutorInfo({ id: userId, name: 'Tutor' });
+        setTutorInfo({ id: userId, name: 'Tutor', initials: 'TT', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
         setIsConnecting(false);
       }
     });
 
-    // Listen for tutor leaving
+    // Listen for student leaving
     socket.on('session:user-left', ({ userType }) => {
       console.log(`👋 User left: ${userType}`);
-      if (userType === 'tutor') {
-        setTutorInfo(null);
+      if (userType === 'student') {
+        setStudentInfo(null);
       }
     });
 
     // Listen for session state
     socket.on('session:state', (state) => {
       console.log('📊 Session state:', state);
-      if (state.participants.tutorId) {
-        setTutorInfo({ id: state.participants.tutorId, name: 'Tutor' });
+      if (state.participants.studentId) {
+        setStudentInfo({ id: state.participants.studentId, name: 'Student', initials: 'ST', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
         setIsConnecting(false);
       }
     });
@@ -211,32 +230,39 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
   }, [currentSessionId]);
 
-  // Start local media and create offer when tutor joins
+  // Start local media as soon as page loads on student side
   useEffect(() => {
-    if (!tutorInfo) return;
+    startLocalStream(true, true).catch(() => {});
+  }, [startLocalStream]);
 
+  // Start local media when component mounts
+  useEffect(() => {
     const initWebRTC = async () => {
       try {
-        console.log('🎥 Starting local media stream...');
+        console.log('🎥 [Classroom] Starting local media stream...');
+        console.log('🎥 [Classroom] startLocalStream function:', typeof startLocalStream);
         await startLocalStream(true, true);
-        
-        // Wait a bit for the stream to be ready, then create offer
-        setTimeout(() => {
-          console.log('📞 Creating offer for tutor...');
-          createOffer();
-        }, 1000);
+        console.log('🎥 [Classroom] Local media stream started successfully');
       } catch (err) {
-        console.error('Failed to start media:', err);
+        console.error('❌ [Classroom] Failed to start media:', err);
       }
     };
 
     initWebRTC();
-  }, [tutorInfo, startLocalStream, createOffer]);
+  }, [startLocalStream]);
 
   // Attach local stream to video element
   useEffect(() => {
+    console.log('📹 [Classroom] Local stream state:', localStream ? 'EXISTS' : 'NULL');
+    console.log('📹 [Classroom] Local video ref:', localVideoRef.current ? 'EXISTS' : 'NULL');
     if (localStream && localVideoRef.current) {
+      console.log('📹 [Classroom] Attaching local stream to video element');
       localVideoRef.current.srcObject = localStream;
+      // Ensure the video plays
+      localVideoRef.current.play().catch(err => {
+        console.error('❌ [Classroom] Error playing local video:', err);
+      });
+      console.log('📹 [Classroom] Local stream attached successfully');
     }
   }, [localStream]);
 
@@ -244,9 +270,68 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
+      // Ensure the video plays
+      remoteVideoRef.current.play().catch(err => {
+        console.error('❌ [Classroom] Error playing remote video:', err);
+      });
       console.log('📺 Remote stream attached');
     }
   }, [remoteStream]);
+  // Detect local speaking using Web Audio API
+  useEffect(() => {
+    if (!localStream) return;
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(localStream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(analyser);
+
+    let rafId: number;
+    const threshold = 40; // simple energy threshold
+    const tick = () => {
+      analyser.getByteFrequencyData(dataArray);
+      // compute average energy
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+      const avg = sum / dataArray.length;
+      setIsSpeakingLocal(avg > threshold);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      try { source.disconnect(); } catch {}
+      try { analyser.disconnect(); } catch {}
+      try { audioCtx.close(); } catch {}
+    };
+  }, [localStream]);
+
+  // Re-attach correct streams when swapping views
+  useEffect(() => {
+    if (isSwapped) {
+      // Remote should be in main; local in PiP
+      if (remoteStream && remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.play().catch(() => {});
+      }
+      if (localStream && localPipRef.current) {
+        localPipRef.current.srcObject = localStream;
+        localPipRef.current.play().catch(() => {});
+      }
+    } else {
+      // Local should be in main; remote in PiP
+      if (localStream && localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream;
+        localVideoRef.current.play().catch(() => {});
+      }
+      if (remoteStream && remotePipRef.current) {
+        remotePipRef.current.srcObject = remoteStream;
+        remotePipRef.current.play().catch(() => {});
+      }
+    }
+  }, [isSwapped, localStream, remoteStream]);
 
   // Handle audio/video toggles
   useEffect(() => {
@@ -306,10 +391,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <span>FluentXVerse</span>
           </div>
           <div className="classroom-session-info">
-            <div className="session-student">
-              <div className="student-avatar-small">{studentData.initials}</div>
-              <span>{studentData.name}</span>
-            </div>
             <div className="session-time-display">
               <span className="timer">{formatTime(elapsedTime)}</span>
               <span className="session-date">{studentData.date}</span>
@@ -319,55 +400,86 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
         {/* Video Area */}
         <div className="video-section">
-          {/* Connection Status */}
-          {isConnecting && (
-            <div className="connection-status">
-              <div className="spinner"></div>
-              <p>Waiting for tutor to join...</p>
-            </div>
-          )}
-          
           {/* Main Video */}
           <div className="video-main">
+            {/* Connection Status overlay inside video */}
+            {isConnecting && (
+              <div className="connection-status overlay-top">
+                <div className="spinner"></div>
+                <p>Waiting for tutor to join...</p>
+              </div>
+            )}
             {isSwapped ? (
-              // Student (local) in main
-              localStream && !isVideoOff ? (
-                <video ref={localVideoRef} muted autoPlay playsInline className="local-video" />
+              // Student (remote) in main
+              remoteStream ? (
+                <video ref={remoteVideoRef} autoPlay playsInline className="remote-video" />
               ) : (
                 <div className="video-placeholder student-video">
                   <div className="video-avatar-large">{studentData.initials}</div>
                   <span className="video-name">{studentData.name}</span>
+                  {!isConnected && studentInfo && <span className="connection-text">Connecting...</span>}
                 </div>
               )
             ) : (
-              // Tutor (remote) in main
-              remoteStream ? (
-                <video ref={remoteVideoRef} autoPlay playsInline className="remote-video" />
-              ) : (
-                <div className="video-placeholder tutor-video">
-                  <div className="video-avatar-large">T</div>
-                  <span className="video-name">{tutorInfo?.name || 'Tutor'}</span>
-                  {!isConnected && tutorInfo && <span className="connection-text">Connecting...</span>}
-                </div>
-              )
+              // Student (local) in main
+              <>
+                <video 
+                  ref={localVideoRef} 
+                  muted 
+                  autoPlay 
+                  playsInline 
+                  className="local-video" 
+                  style={{ display: isVideoOff ? 'none' : 'block' }}
+                />
+                {/* Speaking indicator bottom-left when local is main */}
+                {!isVideoOff && (
+                  <div className={`mic-indicator mic-large ${isSpeakingLocal ? 'active' : ''}`}> 
+                    <div className="mic-dot" />
+                  </div>
+                )}
+                {isVideoOff && (
+                  <div className="video-placeholder tutor-video">
+                    <div className="video-avatar-large">
+                      {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
+                    </div>
+                    <span className="video-name">{user?.firstName || 'Tutor'}</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* Picture-in-Picture (click to swap) */}
-          <div className="video-pip" onClick={() => setIsSwapped(prev => !prev)} title="Click to swap">
+          {/* Picture-in-Picture (click to show tutor in main) */}
+          <div className="video-pip" onClick={() => setIsSwapped(false)} title="Show tutor in main">
             {isSwapped ? (
-              // Tutor (remote) in PiP
-              remoteStream ? (
-                <video ref={!isSwapped ? remoteVideoRef : undefined} autoPlay playsInline className="remote-video-small" />
-              ) : (
-                <div className="video-placeholder tutor-video">
-                  <div className="video-avatar-small">T</div>
-                </div>
-              )
+              // Tutor (local) in PiP
+              <>
+                <video 
+                  muted 
+                  autoPlay 
+                  playsInline 
+                  className="local-video-small" 
+                  style={{ display: isVideoOff ? 'none' : 'block' }}
+                  ref={localPipRef}
+                />
+                {/* Speaking indicator bottom-left for PiP when local is PiP */}
+                {!isVideoOff && (
+                  <div className={`mic-indicator ${isSpeakingLocal ? 'active' : ''}`}>
+                    <div className="mic-dot" />
+                  </div>
+                )}
+                {isVideoOff && (
+                  <div className="video-placeholder tutor-video">
+                    <div className="video-avatar-small">
+                      {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
-              // Student (local) in PiP
-              localStream && !isVideoOff ? (
-                <video ref={!isSwapped ? localVideoRef : undefined} muted autoPlay playsInline className="local-video-small" />
+              // Student (remote) in PiP
+              remoteStream ? (
+                <video autoPlay playsInline className="remote-video-small" ref={remotePipRef} />
               ) : (
                 <div className="video-placeholder student-video">
                   <div className="video-avatar-small">{studentData.initials}</div>

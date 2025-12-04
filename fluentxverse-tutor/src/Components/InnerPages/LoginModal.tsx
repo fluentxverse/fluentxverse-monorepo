@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './LoginModal.css';
 import { useAuthContext } from '../../context/AuthContext';
+import { useLocation } from 'wouter';
 
 
 interface LoginModalProps {
@@ -13,6 +14,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuthContext();
+  const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,12 +29,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     try {
       console.log('Attempting login...');
       await login(email, password);
-      console.log('Login successful, redirecting...');
-      // Small delay to ensure state is fully updated before navigation
-      await new Promise(resolve => setTimeout(resolve, 200));
+      console.log('Login successful, navigating...');
       onClose();
-      // Use replace to prevent back button issues
-      window.location.replace('/home');
+      // Use client-side navigation instead of full page reload
+      setLocation('/home');
     } catch (err: any) {
       console.error('Login error:', err);
       setLoading(false);

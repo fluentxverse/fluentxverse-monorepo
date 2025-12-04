@@ -1,18 +1,8 @@
-import { useEffect } from 'preact/hooks';
-import { useAuthContext } from '@/context/AuthContext';
 import HomePage from './HomePage';
 
+// HomeProtected is wrapped by withProtected HOC which handles auth checks
+// So we just render HomePage directly
 const HomeProtected = () => {
-  const { isAuthenticated, loading } = useAuthContext();
-
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      window.location.href = '/';
-    }
-  }, [loading, isAuthenticated]);
-
-  if (loading) return null;
-  if (!isAuthenticated) return null;
   return <HomePage />;
 };
 

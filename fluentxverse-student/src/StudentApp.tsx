@@ -15,6 +15,7 @@ import NotFoundPage from './pages/NotFoundPage';
 // Components
 import { withProtected } from './Components/ProtectedRoute';
 import SessionExpiryModal from './Components/SessionExpiryModal';
+import ApiTiming from './Components/Common/ApiTiming';
 
 // Import Socket.IO initialization
 import { initSocket, connectSocket } from './client/socket/socket.client';
@@ -37,6 +38,7 @@ function AppContent() {
   return (
     <main>
       <SessionExpiryModal isAuthenticated={false} />
+      <ApiTiming />
       <Router>
         <Route path="/" component={Home} />
         <Route path="/register" component={RegisterPage} />

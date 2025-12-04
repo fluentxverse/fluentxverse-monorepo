@@ -80,15 +80,6 @@ export const tutorApi = {
     return response.data.data;
   },
 
-  getFilterSpecializations: async (): Promise<string[]> => {
-    const response = await api.get<{ success: boolean; data: string[] }>('/tutor/filters/specializations');
-
-    if (!response.data.success) {
-      throw new Error('Failed to get specializations');
-    }
-
-    return response.data.data;
-  },
 
   /**
    * Upload tutor profile picture

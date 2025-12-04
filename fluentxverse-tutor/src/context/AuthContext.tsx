@@ -1,5 +1,5 @@
   // Only allow tutors to log in to tutor app
-  const allowedRole = 'tutor';
+
 import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
 import { loginUser, logoutUser, getMe } from '../api/auth.api';
@@ -30,27 +30,64 @@ interface AuthContextValue {
   logout: () => void;
   getUserId: () => string | undefined; // Helper to get userId consistently
 }
-
+const allowedRole = 'tutor';
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: any }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+  // Ref to track login in progress - survives re-renders and is synchronously readable
+  const loginInProgressRef = useRef(false);
+  // Ref to track if initial auth check has been done
+  const initialCheckDoneRef = useRef(false);
 
   useEffect(() => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
+      console.log('[AUTH] checkAuth called, loginInProgressRef:', loginInProgressRef.current, 'initialCheckDoneRef:', initialCheckDoneRef.current);
+      
+      // Skip if login is in progress or initial check already done
+      if (loginInProgressRef.current || initialCheckDoneRef.current) {
+        console.log('[AUTH] Skipping checkAuth - already in progress or done');
+        setInitialLoading(false);
+        return;
+      }
+      
+      initialCheckDoneRef.current = true;
+      
+      // Check if we have any indication of a previous session
+      // If not, skip the /me call entirely (it will fail anyway)
+      const hasLocalSession = localStorage.getItem('fxv_user_id');
+      if (!hasLocalSession) {
+        console.log('[AUTH] No local session indicator, skipping /me call');
+        setInitialLoading(false);
+        return;
+      }
+      
       try {
+        console.log('[AUTH] Calling getMe()...');
         const me = await getMe();
-
+        console.log('[AUTH] getMe() returned:', me);
+        // Double-check login hasn't started while we were awaiting
+        if (loginInProgressRef.current) {
+          console.log('[AUTH] Login started during getMe, aborting');
+          return;
+        }
         if (me?.user) {
-          // /me returns { userId, email }
+          console.log('[AUTH] Setting user from /me:', me.user);
           setUser(me.user as AuthUser);
         }
       } catch (err) {
+        console.log('[AUTH] getMe() failed:', err);
         // Not authenticated or session expired
-        setUser(null);
+        // Only clear if login isn't in progress
+        if (!loginInProgressRef.current) {
+          setUser(null);
+        }
+        // Clear stale local session indicator
+        localStorage.removeItem('fxv_user_id');
+        localStorage.removeItem('fxv_user_fullname');
       } finally {
         setInitialLoading(false);
       }
@@ -62,7 +99,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (initialLoading) return;
-    if (user || loginLoading) return; // avoid redirect mid-login attempt
+    // CRITICAL: Don't redirect if login is in progress (check both state and ref)
+    if (user || loginLoading || loginInProgressRef.current) return;
     const path = window.location.pathname;
     if (PROTECTED_PATHS.some(p => path.startsWith(p))) {
       window.location.href = '/';
@@ -72,8 +110,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
   // Register 401 handler for axios interceptor
   useEffect(() => {
     registerUnauthorizedHandler(() => {
-      // Prevent clearing user during active login request
-      if (loginLoading) return;
+      // Prevent clearing user during active login request (check both state and ref)
+      if (loginLoading || loginInProgressRef.current) return;
       setUser(null);
       if (typeof window !== 'undefined') {
         const current = window.location.pathname;
@@ -87,6 +125,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
   }, [loginLoading]);
 
   const login = async (email: string, password: string) => {
+    console.log('[AUTH] login() called with email:', email);
+    
+    // CRITICAL: Set ref FIRST (synchronous) before any async operation
+    // This prevents race conditions with other effects checking this flag
+    loginInProgressRef.current = true;
+    
     // Set both local state and global flag to prevent 401 handler interference
     setLoginLoading(true);
     setLoginInProgress(true);
@@ -95,19 +139,30 @@ export const AuthProvider = ({ children }: { children: any }) => {
     forceAuthCleanup();
     
     try {
-      console.log('Starting login request...');
+      console.log('[AUTH] Calling loginUser()...');
       const data = await loginUser(email, password);
-      console.log('Login response received:', data?.success);
+
+      console.log("[AUTH] loginUser returned:", data);
+
+      // Check if login was cancelled/superseded
+      if (!loginInProgressRef.current) {
+        console.log('[AUTH] Login was cancelled, returning');
+        return;
+      }
 
       if (data?.user) {
         // /login returns full user data from RegisteredParams
         const loggedInUser = data.user as AuthUser;
-        console.log('Logged in user:', loggedInUser);
+        console.log('[AUTH] User data received:', loggedInUser);
+        
         if (loggedInUser.role && loggedInUser.role !== allowedRole) {
           setUser(null);
           throw new Error('You are not allowed to log in to the tutor app.');
         }
+        console.log('[AUTH] Setting user state...');
         setUser(loggedInUser);
+        console.log('[AUTH] User state set successfully');
+        
         // Persist name for cases where /me returns minimal fields
         const first = loggedInUser.firstName || '';
         const last = loggedInUser.lastName || '';
@@ -117,36 +172,25 @@ export const AuthProvider = ({ children }: { children: any }) => {
         if (loggedInUser.userId) {
           localStorage.setItem('fxv_user_id', loggedInUser.userId);
         }
-
-        // Small delay to ensure cookie is fully set before /me call
-        await new Promise(resolve => setTimeout(resolve, 150));
-
-        // Immediately refresh from /me to pull cookie-derived fields (walletAddress)
-        // This is optional - don't let it break the login flow
-        try {
-          const me = await getMe();
-          if (me?.user) {
-            if (me.user.role && me.user.role !== allowedRole) {
-              setUser(null);
-              throw new Error('You are not allowed to log in to the tutor app.');
-            }
-            setUser(prev => ({ ...prev, ...me.user }));
-          }
-        } catch (e) {
-          console.warn('Post-login /me refresh failed - continuing without extra fields:', e);
-          // Don't throw - login was successful, just /me failed
-        }
+        // No page reload needed - user state is already set
+        // Client-side navigation will preserve this state
       } else {
         throw new Error('Login failed - no user data returned');
       }
     } catch (err: any) {
+      console.log('[AUTH] Login error:', err);
       // Clear any partial state on error
       setUser(null);
       throw new Error(err?.message || 'Login failed');
     } finally {
+      console.log('[AUTH] Login finally block');
       setLoginLoading(false);
-      // Delay clearing the global flag slightly to cover any in-flight requests
-      setTimeout(() => setLoginInProgress(false), 500);
+      // Delay clearing the flags slightly to cover any in-flight requests
+      setTimeout(() => {
+        setLoginInProgress(false);
+        loginInProgressRef.current = false;
+        console.log('[AUTH] Flags cleared');
+      }, 300);
     }
   };
 

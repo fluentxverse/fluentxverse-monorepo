@@ -18,7 +18,14 @@ export default defineConfig({
 		hmr: {
 			port: 5173,
 		},
-		// Treaty calls hit server directly; proxy optional. Update if needed.
+		// Proxy API requests to backend - this makes cookies work (same origin)
+		proxy: {
+			'/api': {
+				target: 'http://localhost:8765',
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api/, ''),
+			},
+		},
 	},
 	resolve: {
 		alias: {

@@ -25,7 +25,20 @@ export interface RegisterStudentParams {
 // Keep User type in-sync with schema at compile time
 export type User = Static<typeof UserSchema>
 
-export type RegisteredParams = User & RegisterParams
+export interface RegisteredParams extends RegisterParams {
+    tier: number;
+    role: string;
+    signUpdate: number;
+    smartWalletAddress: {
+        address: string;
+        createdAt: string;
+        label: string;
+        smartAccountAddress: string;
+    }
+    verifiedEmail: boolean;
+    verifiedMobile: boolean;
+    id: string;
+}
 
 export interface Suspended {
     until: Date | null;

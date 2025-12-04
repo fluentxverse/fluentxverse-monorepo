@@ -10,6 +10,7 @@ import { initSocketServer } from './socket/socket.server';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
 import Student from "./routes/student.route";
+import Debug from './routes/debug.route';
 
 // Initialize databases
 initDriver(
@@ -24,14 +25,25 @@ getPool();
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
   .use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
-    credentials: true
+    // Allow common localhost variants for Vite dev servers
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      'http://127.0.0.1:5175',
+    ],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   }))
   .use(cookie())
   .use(Auth)
   .use(Tutor)
   .use(Schedule)
   .use(Student)
+  .use(Debug)
 
 
 
@@ -49,7 +61,7 @@ const httpServer = createServer();
 const io = initSocketServer(httpServer);
 
 // Attach Socket.IO to run alongside Elysia
-httpServer.listen(8766, () => {
-  console.log(`✅ Socket.IO server is running on port 8766`);
+httpServer.listen(8767, () => {
+  console.log(`✅ Socket.IO server is running on port 8767`);
 });
 

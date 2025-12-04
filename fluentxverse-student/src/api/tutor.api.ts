@@ -6,19 +6,17 @@ import type {
   TutorSearchResponse 
 } from '../types/tutor.types';
 import { API_BASE_URL } from '../config/api';
+import { api as sharedApi } from '../client/api';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true
-});
+// Use the shared client with timing interceptors
+const api = sharedApi;
 
 export const tutorApi = {
   /**
    * Search tutors with filters
    */
   searchTutors: async (params: TutorSearchParams): Promise<TutorSearchResponse> => {
-    console.log('🔍 Frontend calling searchTutors with params:', params);
-    
+
     const response = await api.get<{ success: boolean; data: TutorSearchResponse }>('/tutor/search', {
       params: {
         q: params.query,
@@ -31,8 +29,6 @@ export const tutorApi = {
         limit: params.limit
       }
     });
-
-    console.log('✅ Frontend received response:', response.data);
 
     if (!response.data.success) {
       throw new Error('Failed to search tutors');
@@ -74,15 +70,7 @@ export const tutorApi = {
    */
 
 
-  getFilterSpecializations: async (): Promise<string[]> => {
-    const response = await api.get<{ success: boolean; data: string[] }>('/tutor/filters/specializations');
 
-    if (!response.data.success) {
-      throw new Error('Failed to get specializations');
-    }
-
-    return response.data.data;
-  },
 
   /**
    * Get tutor weekly availability grid

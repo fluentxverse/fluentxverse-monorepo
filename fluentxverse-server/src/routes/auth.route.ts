@@ -8,7 +8,7 @@ import type { AuthData, MeResponse, User } from "@/services/auth.services/auth.i
 import { refreshAuthCookie } from "../utils/refreshCookie";
 
 // Define routes as an Elysia plugin instance to preserve route types
-const Auth = new Elysia({ name: 'auth' })
+const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
     .post('/register', async ({ body, cookie }) => {
       try 
       {
@@ -36,8 +36,8 @@ const Auth = new Elysia({ name: 'auth' })
 
           }),
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          secure: false, // False for localhost HTTP dev
+          sameSite: 'lax', // Lax works for localhost same-site
           maxAge: 60 * 60,
           path: '/'
         });
@@ -59,52 +59,57 @@ const Auth = new Elysia({ name: 'auth' })
       }, RegisterSchema)
 
 
-    .post('/login', async ({ body, cookie, set }) => {
+    .post('/login', async ({ body, cookie }) => {
       try {
         const authService = new AuthService();
         const userData = await authService.login(body);
-
-        console.log('User data on login:', userData);
-        
-        // First, explicitly clear any existing auth cookie to ensure clean state
-        cookie.tutorAuth?.remove();
- 
+      
         // Handle smartWalletAddress - it might be a string or object from DB
-        const walletAddress = typeof userData.smartWalletAddress === 'string' 
-          ? userData.smartWalletAddress 
-          : userData.smartWalletAddress?.address || '';
 
-        // Set fresh httpOnly cookie with 1-hour expiration
+
+        // Normalize user object (same pattern as student app)
+        const normalizedUser = {
+          id: userData.id,
+          userId: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          mobileNumber: userData.mobileNumber,
+          tier: userData.tier,
+          role: userData.role || 'tutor',
+          walletAddress: userData.walletAddress
+        };
+
+
+        console.log('Normalized User:', normalizedUser);
+
+        // Set cookie - don't specify domain for localhost to work correctly
         cookie.tutorAuth?.set({
           value: JSON.stringify({
-            userId: userData.id,
-            email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            walletAddress: walletAddress,
-            mobileNumber: userData.mobileNumber,
-            tier: userData.tier
+            userId: normalizedUser.userId,
+            email: normalizedUser.email,
+            firstName: normalizedUser.firstName,
+            lastName: normalizedUser.lastName,
+            mobileNumber: normalizedUser.mobileNumber,
+            tier: normalizedUser.tier,
+            role: normalizedUser.role,
+            walletAddress: normalizedUser.walletAddress
           }),
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60, // 1 hour in seconds
-          path: '/'
+          secure: false, // False for localhost HTTP
+          sameSite: "lax", // Lax works for localhost
+          maxAge: 60 * 60, // 1 hour
+          path: "/",
+          // Don't set domain - let browser default to current host
         });
         
-        // Prevent caching of auth responses
-        set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
-        set.headers['Pragma'] = 'no-cache';
-        set.headers['Vary'] = 'Cookie';
 
-        return { 
+        return {
           success: true,
-          user: {
-            ...userData,
-            userId: userData.id
-          }
+          user: normalizedUser
         };
       } catch (error: any) {
+        console.log(error);
         throw error;
       }
     }, LoginSchema)
@@ -114,7 +119,7 @@ const Auth = new Elysia({ name: 'auth' })
       cookie.tutorAuth?.set({
         value: '',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         sameSite: 'lax',
         maxAge: 0, // Expire immediately
         expires: new Date(0), // Also set explicit past date
@@ -130,7 +135,7 @@ const Auth = new Elysia({ name: 'auth' })
     }, LogoutSchema)
     
     // Renew session cookie (extends maxAge) without re-authenticating
-    .post('/refresh', async ({ cookie, set }) => {
+    .post('/refresh', async ({ cookie, set, headers }) => {
       const raw = cookie.tutorAuth?.value;
       if (!raw) throw new Error('Not authenticated');
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
@@ -146,9 +151,12 @@ const Auth = new Elysia({ name: 'auth' })
     .get('/me', async ({ cookie, set }): Promise<MeResponse> => {
       try {
         const raw = cookie.tutorAuth?.value;
-        if (!raw) throw new Error('Not authenticated');
+
+        console.log("burat: ", raw)
+        if (!raw) {
+          throw new Error('Not authenticated');
+        }
         const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-        console.log('Auth data from cookie:', authData);
 
         // Refresh cookie on every /me call
         refreshAuthCookie(cookie, authData, 'tutorAuth');
@@ -166,7 +174,6 @@ const Auth = new Elysia({ name: 'auth' })
           tier: authData.tier
         } };
       } catch (error: any) {
-        console.error('Error parsing auth cookie:', error);
         throw new Error('Invalid session');
       }
     }, MeSchema)

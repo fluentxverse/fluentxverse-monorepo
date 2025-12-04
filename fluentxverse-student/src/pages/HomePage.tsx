@@ -28,10 +28,7 @@ const HomePage = () => {
       
       try {
         setLoading(true);
-        console.log('Fetching student stats...');
         const data = await scheduleApi.getStudentStats();
-        console.log('Student stats received:', JSON.stringify(data, null, 2));
-        console.log('Next lesson data:', data.nextLesson);
         setStats(data);
         setError(null);
       } catch (err: any) {

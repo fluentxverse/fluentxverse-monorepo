@@ -106,7 +106,7 @@ class AuthService {
     }
 
 
-    public async login (params: LoginParams): Promise<Omit<RegisteredParams, 'password'>> {
+    public async login (params: LoginParams) {
 
         try {
         const driver = getDriver();
@@ -134,11 +134,15 @@ class AuthService {
 
         const user: RegisteredParams = result.records[0]?.get('u').properties;
 
-        const {  password, tier, ...safeProperties    } = user
+        const {  password, tier, smartWalletAddress, ...safeProperties    } = user
         const tierNumber = Number(tier);
+        const { smartAccountAddress } = smartWalletAddress
 
-        const safeUser: Omit<RegisteredParams, 'password'> = {
+
+
+        const safeUser = {
             ...safeProperties,
+            walletAddress: smartAccountAddress,
             tier: tierNumber
         };
 

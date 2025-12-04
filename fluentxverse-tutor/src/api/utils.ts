@@ -21,20 +21,22 @@ export const forceAuthCleanup = () => {
 };
 
 // Configure Axios client to send cookies with requests
+// Use direct URL like student app does (which works)
 export const client = axios.create({
   baseURL: 'http://localhost:8765',
   withCredentials: true,
+  timeout: 15000,
   headers: {
     'Cache-Control': 'no-cache',
     Pragma: 'no-cache'
   }
-});
+})
 
 // Request interceptor to add cache-busting for auth requests
 client.interceptors.request.use(
   (config) => {
     // Add timestamp to prevent caching of auth-related requests
-    if (config.url === '/me' || config.url === '/login' || config.url === '/logout' || config.url === '/refresh') {
+    if (config.url === '/tutor/me' || config.url === '/tutor/login' || config.url === '/tutor/logout' || config.url === '/tutor/refresh') {
       config.params = { ...config.params, _t: Date.now() };
       if (!config.headers) config.headers = {} as any;
       (config.headers as any)['Cache-Control'] = 'no-store, no-cache, must-revalidate';
@@ -67,3 +69,20 @@ client.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Send logs from frontend to server terminal
+export const logToServer = async (
+  message: string,
+  opts?: { tag?: string; level?: 'info'|'warn'|'error'; data?: any }
+) => {
+  try {
+    await client.post('/debug/log', {
+      tag: opts?.tag ?? 'tutor-app',
+      level: opts?.level ?? 'info',
+      message,
+      data: opts?.data ?? null
+    });
+  } catch (e) {
+    // Swallow errors to avoid breaking app flow
+  }
+};

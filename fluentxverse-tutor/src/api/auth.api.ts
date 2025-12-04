@@ -16,38 +16,40 @@ export interface RegisterParams {
 
 
 export const register = async (params: RegisterParams) => {
-    const { data } = await client.post('/register', params)
+    const { data } = await client.post('/tutor/register', params)
     return data;
 }
 
 export const loginUser = async (email: string, password: string) => {
-    // Use a fresh axios instance for login to avoid any stale state/interceptor issues
-    const freshClient = axios.create({
-        baseURL: 'http://localhost:8765',
-        withCredentials: true,
-        headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-            'Pragma': 'no-cache'
-        }
-    });
-    const { data } = await freshClient.post('/login', { email, password }, {
-        params: { _t: Date.now() }
-    });
-    return data;
-}
+  console.log('[AUTH API] loginUser called, making request...');
+  console.log('[AUTH API] client baseURL:', client.defaults.baseURL);
+  console.log('[AUTH API] client withCredentials:', client.defaults.withCredentials);
+  
+  try {
+    const response = await client.post('/tutor/login', { email, password });
+    console.log('[AUTH API] Response status:', response.status);
+    console.log('[AUTH API] Response headers:', response.headers);
+    console.log('[AUTH API] Response data:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('[AUTH API] Request failed:', error);
+    console.error('[AUTH API] Error response:', error.response?.data);
+    throw error;
+  }
+};
 
 export const logoutUser = async () => {
-    const { data } = await client.post('/logout')
+    const { data } = await client.post('/tutor/logout')
     return data;
 }
 
 export const getMe = async () => {
-    const { data } = await client.get('/me')
+    const { data } = await client.get('/tutor/me')
     return data;
 }
 
 export const refreshSession = async () => {
-    const { data } = await client.post('/refresh')
+    const { data } = await client.post('/tutor/refresh')
     return data;
 }
 
@@ -73,16 +75,16 @@ export interface UpdatePersonalInfoParams {
 }
 
 export const updatePersonalInfo = async (params: UpdatePersonalInfoParams) => {
-    const { data } = await client.put('/user/personal-info', params)
+    const { data } = await client.put('/tutor/user/personal-info', params)
     return data;
 }
 
 export const updateEmail = async (newEmail: string, currentPassword: string) => {
-    const { data } = await client.put('/user/email', { newEmail, currentPassword })
+    const { data } = await client.put('/tutor/user/email', { newEmail, currentPassword })
     return data;
 }
 
 export const updatePassword = async (currentPassword: string, newPassword: string) => {
-    const { data } = await client.put('/user/password', { currentPassword, newPassword })
+    const { data } = await client.put('/tutor/user/password', { currentPassword, newPassword })
     return data;
 }

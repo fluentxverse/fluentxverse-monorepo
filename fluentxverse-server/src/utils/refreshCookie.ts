@@ -20,8 +20,8 @@ export function refreshAuthCookie(cookie: Record<string, Cookie<any>>, authData:
       role: authData.role
     }),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: false, // False for localhost HTTP dev
+    sameSite: 'lax', // Lax works for localhost same-site
     maxAge: 60 * 60, // 1 hour in seconds
     path: '/'
   });

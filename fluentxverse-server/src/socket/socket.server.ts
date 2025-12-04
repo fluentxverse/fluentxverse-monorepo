@@ -6,9 +6,15 @@ import { sessionHandler } from './handlers/session.handler';
 import { authMiddleware } from './middleware/auth.middleware';
 
 export const initSocketServer = (httpServer: HTTPServer) => {
+  const allowedOrigins = (
+    process.env.FRONTEND_URLS || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:5174'
+  )
+    .split(',')
+    .map(o => o.trim());
+
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      origin: allowedOrigins,
       methods: ['GET', 'POST'],
       credentials: true
     },
