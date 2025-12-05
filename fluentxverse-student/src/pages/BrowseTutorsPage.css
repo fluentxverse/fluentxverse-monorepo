@@ -902,20 +902,19 @@
   transform: translateY(-4px);
 }
 
-/* Available Badge */
+/* Available Badge - inline with name */
 .tutor-card-new__available-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 4px;
+  padding: 3px 8px;
   background: rgba(34, 197, 94, 0.1);
-  border-radius: 20px;
-  font-size: 11px;
+  border-radius: 12px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--browse-success);
+  white-space: nowrap;
+  margin-left: 8px;
 }
 
 .tutor-card-new__pulse {
@@ -991,6 +990,14 @@
   min-width: 0;
 }
 
+.tutor-card-new__name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
 .tutor-card-new__name-link {
   text-decoration: none;
 }
@@ -999,7 +1006,7 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--browse-text);
-  margin: 0 0 4px;
+  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1102,7 +1109,7 @@
 .tutor-card-new__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding-top: 16px;
   border-top: 1px solid var(--browse-border);
   margin-top: auto;

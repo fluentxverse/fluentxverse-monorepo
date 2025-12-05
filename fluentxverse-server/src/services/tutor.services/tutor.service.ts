@@ -24,19 +24,43 @@ export class TutorService {
       const limitNum = Math.max(1, Math.min(100, Math.floor(Number(limit)))); // Cap at 100
       const skip = (pageNum - 1) * limitNum;
 
-      // Helper function to convert time string to comparable format
-      const convertTo12HourFormat = (time24: string): string => {
+      // Helper function to convert 24h time to minutes since midnight for comparison
+      const timeToMinutes = (time24: string): number => {
         const [hourStr, minute] = time24.split(':');
         let hour = parseInt(hourStr || "0", 10);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        hour = hour % 12 || 12;
-        return `${hour}:${minute} ${ampm}`;
+        // Handle "24:XX" as next day (1440+ minutes)
+        if (hour === 24) {
+          return 1440 + parseInt(minute || "0", 10);
+        }
+        return hour * 60 + parseInt(minute || "0", 10);
+      };
+
+      // Helper function to convert 12h time string to minutes for comparison
+      const time12ToMinutes = (time12: string): number => {
+        // Format: "11:30 PM" or "12:00 AM"
+        const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!match) return 0;
+        let hour = parseInt(match[1], 10);
+        const minute = parseInt(match[2], 10);
+        const isPM = match[3].toUpperCase() === 'PM';
+        
+        if (hour === 12) {
+          hour = isPM ? 12 : 0; // 12 PM = 12, 12 AM = 0
+        } else if (isPM) {
+          hour += 12;
+        }
+        
+        return hour * 60 + minute;
       };
 
       // Build WHERE clause for date and time filtering
       let whereClause = '';
       let matchPattern = 'MATCH (u:User)';
       const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
+      
+      // Get today's date for "all dates" filter
+      const today = new Date().toISOString().split('T')[0];
+      queryParams.today = today;
       
       console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime);
       
@@ -45,78 +69,182 @@ export class TutorService {
         matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)`;
         whereClause = `WHERE s.slotDate = $dateFilter AND s.status = 'open'`;
         
-        // Add time range filtering if provided
-        if (startTime || endTime) {
-          const timeConditions = [];
-          
-          if (startTime) {
-            const startTime12 = convertTo12HourFormat(startTime);
-            queryParams.startTime = startTime12;
-            timeConditions.push('s.slotTime >= $startTime');
-            console.log('📅 Adding start time filter:', startTime12);
-          }
-          
-          if (endTime) {
-            const endTime12 = convertTo12HourFormat(endTime);
-            queryParams.endTime = endTime12;
-            timeConditions.push('s.slotTime <= $endTime');
-            console.log('📅 Adding end time filter:', endTime12);
-          }
-          
-          if (timeConditions.length > 0) {
-            whereClause += ` AND ${timeConditions.join(' AND ')}`;
-          }
-        }
+        // Add time range filtering if provided - we'll filter in post-processing
+        // because string comparison of 12-hour times doesn't work correctly
+        // No time filtering in Cypher query - we'll handle it after fetching
         
         console.log('📅 Using date filter match pattern:', matchPattern);
         console.log('📅 Using date filter WHERE clause:', whereClause);
+        
+        // Store time filters for post-processing
+        if (startTime) {
+          queryParams.startTimeMinutes = timeToMinutes(startTime);
+          console.log('📅 Start time filter (minutes):', queryParams.startTimeMinutes);
+        }
+        if (endTime) {
+          queryParams.endTimeMinutes = timeToMinutes(endTime);
+          console.log('📅 End time filter (minutes):', queryParams.endTimeMinutes);
+        }
       } else {
-        console.log('📅 No date filter, showing all tutors');
+        // "All Dates" - show tutors who have ANY open slots from today onwards
+        matchPattern = `MATCH (u:User)
+          OPTIONAL MATCH (u)-[:OPENS_SLOT]->(s:TimeSlot)
+          WHERE s.slotDate >= $today AND s.status = 'open'`;
+        whereClause = '';
+        console.log('📅 No date filter, showing tutors with any open slots from today');
       }
 
       // Get total count of tutors matching filter
-      const countQuery = `
-        ${matchPattern}
-        ${whereClause}
-        RETURN count(DISTINCT u) as total
-      `;
+      // When filtering by time, we need to check slots individually
+      let countQuery: string;
+      let tutorsQuery: string;
+      
+      if (dateFilter && (startTime || endTime)) {
+        // For time filtering, we need to get slots and filter in code
+        // because string comparison of 12-hour format doesn't work correctly
+        countQuery = `
+          ${matchPattern}
+          ${whereClause}
+          RETURN DISTINCT u, collect(s.slotTime) as slotTimes
+        `;
+        
+        tutorsQuery = countQuery; // Same query, we'll handle pagination in code
+      } else if (!dateFilter) {
+        // "All Dates" mode - need to get tutors with their slot count
+        countQuery = `
+          ${matchPattern}
+          WITH u, count(s) as slotCount
+          WHERE slotCount > 0
+          RETURN count(DISTINCT u) as total
+        `;
+        
+        tutorsQuery = `
+          ${matchPattern}
+          WITH u, count(s) as slotCount
+          WHERE slotCount > 0
+          RETURN DISTINCT u, slotCount
+          SKIP $skip
+          LIMIT $limit
+        `;
+      } else {
+        countQuery = `
+          ${matchPattern}
+          ${whereClause}
+          RETURN count(DISTINCT u) as total
+        `;
+        
+        tutorsQuery = `
+          ${matchPattern}
+          ${whereClause}
+          RETURN DISTINCT u
+          SKIP $skip
+          LIMIT $limit
+        `;
+      }
 
       console.log('🔢 Count query:', countQuery);
       console.log('🔢 Query parameters:', queryParams);
       
-      const countResult = await session.run(countQuery, queryParams);
-      const total = countResult.records[0]?.get('total').toNumber() || 0;
+      let total: number;
+      let tutors: Tutor[];
       
+      if (dateFilter && (startTime || endTime)) {
+        // Time filtering mode - fetch all matching tutors with their slots
+        const result = await session.run(countQuery, queryParams);
+        
+        // Filter tutors who have at least one slot in the time range
+        const filteredTutors: Tutor[] = [];
+        
+        for (const record of result.records) {
+          const user = record.get('u').properties;
+          const slotTimes: string[] = record.get('slotTimes') || [];
+          
+          // Check if any slot falls within the time range
+          const hasMatchingSlot = slotTimes.some((slotTime: string) => {
+            const slotMinutes = time12ToMinutes(slotTime);
+            const startOk = !queryParams.startTimeMinutes || slotMinutes >= queryParams.startTimeMinutes;
+            const endOk = !queryParams.endTimeMinutes || slotMinutes <= queryParams.endTimeMinutes;
+            return startOk && endOk;
+          });
+          
+          if (hasMatchingSlot) {
+            filteredTutors.push({
+              userId: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              middleName: user.middleName,
+              lastName: user.lastName,
+              displayName: `${user.firstName} ${user.lastName}`,
+              profilePicture: user.profilePicture,
+              tier: user.tier,
+              timezone: user.timezone,
+              isVerified: user.isVerified || false,
+              isAvailable: true,
+              joinedDate: user.createdAt
+            });
+          }
+        }
+        
+        total = filteredTutors.length;
+        // Apply pagination in code
+        const startIdx = (pageNum - 1) * limitNum;
+        tutors = filteredTutors.slice(startIdx, startIdx + limitNum);
+        
+        console.log(`📅 Time filtering: ${result.records.length} tutors found, ${total} after time filter`);
+      } else if (!dateFilter) {
+        // "All Dates" mode - tutors with any open slots
+        const countResult = await session.run(countQuery, queryParams);
+        total = countResult.records[0]?.get('total')?.toNumber?.() || 0;
 
-      // Get tutors with pagination
-      const tutorsQuery = `
-        ${matchPattern}
-        ${whereClause}
-        RETURN DISTINCT u
-        SKIP $skip
-        LIMIT $limit
-      `;
+        // Get tutors with pagination
+        const result = await session.run(tutorsQuery, queryParams);
+        
+        tutors = result.records.map(record => {
+          const user = record.get('u').properties;
+          const slotCount = record.get('slotCount')?.toNumber?.() || 0;
+          return {
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            middleName: user.middleName,
+            lastName: user.lastName,
+            displayName: `${user.firstName} ${user.lastName}`,
+            profilePicture: user.profilePicture,
+            tier: user.tier,
+            timezone: user.timezone,
+            isVerified: user.isVerified || false,
+            isAvailable: slotCount > 0,
+            joinedDate: user.createdAt
+          };
+        });
+        
+        console.log(`📅 All Dates mode: ${total} tutors with open slots`);
+      } else {
+        // Standard mode with date filter but no time filter
+        const countResult = await session.run(countQuery, queryParams);
+        total = countResult.records[0]?.get('total')?.toNumber?.() || 0;
 
-      const result = await session.run(tutorsQuery, queryParams);
-      
-
-
-      const tutors: Tutor[] = result.records.map(record => {
-        const user = record.get('u').properties;
-        return {
-          userId: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          middleName: user.middleName,
-          lastName: user.lastName,
-          displayName: `${user.firstName} ${user.lastName}`,
-          profilePicture: user.profilePicture,
-          tier: user.tier,
-          timezone: user.timezone,
-          isVerified: user.isVerified || false,
-          joinedDate: user.createdAt
-        };
-      });
+        // Get tutors with pagination
+        const result = await session.run(tutorsQuery, queryParams);
+        
+        tutors = result.records.map(record => {
+          const user = record.get('u').properties;
+          return {
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            middleName: user.middleName,
+            lastName: user.lastName,
+            displayName: `${user.firstName} ${user.lastName}`,
+            profilePicture: user.profilePicture,
+            tier: user.tier,
+            timezone: user.timezone,
+            isVerified: user.isVerified || false,
+            isAvailable: true,
+            joinedDate: user.createdAt
+          };
+        });
+      }
 
       return {
         tutors,
@@ -135,11 +263,98 @@ export class TutorService {
 
   /**
    * Get weekly availability for a tutor
+   * Returns slots converted to KST (Asia/Seoul) timezone for student display
    */
   public async getAvailability(tutorId: string): Promise<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>> {
-    // TODO: Implement real availability from Memgraph when schema is ready.
-    // For now, return empty set indicating no opened slots.
-    return [];
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      // Get next 7 days
+      const now = new Date();
+      const startDate = now.toISOString().split('T')[0];
+      const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      const result = await session.run(
+        `
+        MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
+        WHERE s.slotDate >= $startDate 
+          AND s.slotDate <= $endDate
+        RETURN s
+        ORDER BY s.slotDate, s.slotTime
+        `,
+        { tutorId, startDate, endDate }
+      );
+      
+      // Helper to parse 12h time to {hour, minute}
+      const parse12hTime = (time12: string): { hour: number; minute: number } => {
+        const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!match) return { hour: 0, minute: 0 };
+        let hour = parseInt(match[1], 10);
+        const minute = parseInt(match[2], 10);
+        const isPM = match[3].toUpperCase() === 'PM';
+        
+        if (hour === 12) {
+          hour = isPM ? 12 : 0;
+        } else if (isPM) {
+          hour += 12;
+        }
+        
+        return { hour, minute };
+      };
+      
+      // Convert Philippine time to KST (KST = PHT + 1 hour)
+      const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string } => {
+        const { hour, minute } = parse12hTime(time12);
+        
+        // Create date in PHT (assumed from tutor)
+        const [year, month, day] = dateStr.split('-').map(Number);
+        
+        // Add 1 hour for KST
+        let kstHour = hour + 1;
+        let kstDay = day;
+        let kstMonth = month;
+        let kstYear = year;
+        
+        // Handle day overflow
+        if (kstHour >= 24) {
+          kstHour -= 24;
+          // Move to next day
+          const phtDate = new Date(year, month - 1, day);
+          phtDate.setDate(phtDate.getDate() + 1);
+          kstDay = phtDate.getDate();
+          kstMonth = phtDate.getMonth() + 1;
+          kstYear = phtDate.getFullYear();
+        }
+        
+        const kstDate = `${kstYear}-${String(kstMonth).padStart(2, '0')}-${String(kstDay).padStart(2, '0')}`;
+        const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        
+        return { date: kstDate, time: kstTime };
+      };
+      
+      return result.records.map(record => {
+        const slot = record.get('s').properties;
+        const { date, time } = convertPHTtoKST(slot.slotDate, slot.slotTime);
+        
+        // Map status
+        let status: 'AVAIL' | 'TAKEN' | 'BOOKED' = 'AVAIL';
+        if (slot.status === 'booked') {
+          status = 'BOOKED';
+        } else if (slot.status === 'taken') {
+          status = 'TAKEN';
+        }
+        
+        return {
+          date,
+          time,
+          status,
+          studentId: slot.studentId
+        };
+      });
+    } finally {
+      await session.close();
+    }
   }
 
   /**

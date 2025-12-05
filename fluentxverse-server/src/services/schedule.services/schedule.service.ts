@@ -248,6 +248,23 @@ export class ScheduleService {
       const now = new Date();
       const minBookTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 min ahead
       
+      // Helper to convert 12h time to 24h format for Date parsing
+      const convert12hTo24h = (time12: string): string => {
+        const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (!match) return '00:00';
+        let hour = parseInt(match[1], 10);
+        const minute = match[2];
+        const isPM = match[3].toUpperCase() === 'PM';
+        
+        if (hour === 12) {
+          hour = isPM ? 12 : 0;
+        } else if (isPM) {
+          hour += 12;
+        }
+        
+        return `${String(hour).padStart(2, '0')}:${minute}`;
+      };
+      
       const result = await session.run(
         `
         MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
@@ -263,7 +280,10 @@ export class ScheduleService {
       return result.records
         .map(record => {
           const slot = record.get('s').properties;
-          const slotDateTime = new Date(`${slot.slotDate}T${slot.slotTime}:00`);
+          
+          // Convert 12h time to 24h for proper Date parsing
+          const time24h = convert12hTo24h(slot.slotTime);
+          const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00`);
           
           // Filter out slots less than 30 minutes away
           if (slotDateTime <= minBookTime) {

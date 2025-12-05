@@ -8,6 +8,25 @@
   flex-direction: column;
 }
 
+/* PDF viewer scrollbar - gray background, blue scroller */
+.pdf-viewer-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pdf-viewer-wrapper::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 3px;
+}
+
+.pdf-viewer-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border-radius: 3px;
+}
+
+.pdf-viewer-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0336a0 0%, #3b8fee 100%);
+}
+
 /* Main toolbar */
 .pdf-toolbar {
   display: flex;

@@ -14,20 +14,19 @@ const jsx = (el: any) => el as any;
 const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: Tutor) => void }) => {
   const displayName = tutor.displayName || `${tutor.firstName} ${tutor.lastName}`;
   const initials = `${tutor.firstName?.[0] || ''}${tutor.lastName?.[0] || ''}`.toUpperCase();
-  const hourlyRate = tutor.hourlyRate ? `₱${tutor.hourlyRate}` : 'Free';
   const rating = tutor.rating ? tutor.rating.toFixed(1) : 'New';
   const reviewCount = tutor.totalReviews || 0;
   const sessionCount = tutor.totalSessions || 0;
 
   const handleCardClick = (e: any) => {
-    // Don't navigate if clicking the Book Trial button
+    // Don't navigate if clicking the Book Now button
     if (e.target.closest('.tutor-card-new__cta')) {
       return;
     }
     window.location.href = `/tutor/${tutor.userId}`;
   };
 
-  const handleBookTrial = (e: any) => {
+  const handleBookNow = (e: any) => {
     e.stopPropagation();
     onBookClick(tutor);
   };
@@ -52,14 +51,6 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
 
   return (
     <div className="tutor-card-new" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
-      {/* Availability Badge */}
-      {tutor.isAvailable && (
-        <div className="tutor-card-new__available-badge">
-          <span className="tutor-card-new__pulse"></span>
-          Available Now
-        </div>
-      )}
-
       {/* Profile Section */}
       <div className="tutor-card-new__profile">
         <div className="tutor-card-new__avatar-link">
@@ -68,7 +59,16 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
         </div>
 
         <div className="tutor-card-new__info">
-          <h3 className="tutor-card-new__name">{displayName}</h3>
+          <div className="tutor-card-new__name-row">
+            <h3 className="tutor-card-new__name">{displayName}</h3>
+            {/* Availability Badge */}
+            {tutor.isAvailable && (
+              <div className="tutor-card-new__available-badge">
+                <span className="tutor-card-new__pulse"></span>
+                Available Now
+              </div>
+            )}
+          </div>
           
           {/* Rating */}
           <div className="tutor-card-new__rating">
@@ -123,14 +123,10 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer with Book Now */}
       <div className="tutor-card-new__footer">
-        <div className="tutor-card-new__price">
-          <span className="tutor-card-new__price-value">{hourlyRate}</span>
-          <span className="tutor-card-new__price-label">/hour</span>
-        </div>
-        <button onClick={handleBookTrial} className="tutor-card-new__cta">
-          Book Trial
+        <button onClick={handleBookNow} className="tutor-card-new__cta">
+          Book Now
           <i className="ri-arrow-right-line"></i>
         </button>
       </div>
@@ -181,7 +177,7 @@ export const BrowseTutorsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('all');
-  const [startTime, setStartTime] = useState<string>('06:00');
+  const [startTime, setStartTime] = useState<string>('05:00');
   const [endTime, setEndTime] = useState<string>('24:30');
   const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'price-high' | 'popular' | 'newest'>('rating');
   const [page, setPage] = useState(1);
@@ -238,6 +234,44 @@ export const BrowseTutorsPage = () => {
   };
 
   const timeOptions = generateTimeOptions();
+
+  // Get valid end time options (must be AFTER start time, not same)
+  const getEndTimeOptions = (currentStartTime: string) => {
+    const startIdx = timeOptions.findIndex(t => t === currentStartTime);
+    if (startIdx === -1) return timeOptions.slice(1); // Skip first option
+    // Return times AFTER start time (startIdx + 1)
+    return timeOptions.slice(startIdx + 1);
+  };
+
+  // Get valid start time options (must be BEFORE end time)
+  const getStartTimeOptions = (currentEndTime: string) => {
+    const endIdx = timeOptions.findIndex(t => t === currentEndTime);
+    if (endIdx === -1) return timeOptions.slice(0, -1); // Skip last option
+    // Return times BEFORE end time (0 to endIdx, exclusive)
+    return timeOptions.slice(0, endIdx);
+  };
+
+  // Handle start time change - adjust end time if needed
+  const handleStartTimeChange = (newStartTime: string) => {
+    setStartTime(newStartTime);
+    // If end time is not after start time, set end time to next slot after start
+    const startIdx = timeOptions.findIndex(t => t === newStartTime);
+    const endIdx = timeOptions.findIndex(t => t === endTime);
+    if (endIdx <= startIdx && startIdx < timeOptions.length - 1) {
+      setEndTime(timeOptions[startIdx + 1]);
+    }
+  };
+
+  // Handle end time change - adjust start time if needed
+  const handleEndTimeChange = (newEndTime: string) => {
+    setEndTime(newEndTime);
+    // If start time is not before end time, set start time to previous slot
+    const startIdx = timeOptions.findIndex(t => t === startTime);
+    const endIdx = timeOptions.findIndex(t => t === newEndTime);
+    if (startIdx >= endIdx && endIdx > 0) {
+      setStartTime(timeOptions[endIdx - 1]);
+    }
+  };
 
   // Quick filter options - all dates (remove budget friendly)
   const quickFilters = [
@@ -373,7 +407,7 @@ export const BrowseTutorsPage = () => {
                   <input
                     type="text"
                     className="browse-search__input"
-                    placeholder="Search by name, language, or specialty..."
+                    placeholder="Search by name"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
                   />
@@ -394,7 +428,7 @@ export const BrowseTutorsPage = () => {
           </form>
 
           {/* Quick Stats */}
-          <div className="browse-hero__stats">
+          {/* <div className="browse-hero__stats">
             <div className="browse-hero__stat">
               <span className="browse-hero__stat-value">{total}+</span>
               <span className="browse-hero__stat-label">Active Tutors</span>
@@ -409,7 +443,7 @@ export const BrowseTutorsPage = () => {
               <span className="browse-hero__stat-value">4.8</span>
               <span className="browse-hero__stat-label">Avg Rating</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -440,9 +474,9 @@ export const BrowseTutorsPage = () => {
                 <select 
                   className="browse-topbar__time-select"
                   value={startTime}
-                  onChange={(e) => setStartTime((e.target as HTMLSelectElement).value)}
+                  onChange={(e) => handleStartTimeChange((e.target as HTMLSelectElement).value)}
                 >
-                  {timeOptions.map(time => (
+                  {getStartTimeOptions(endTime).map(time => (
                     <option key={time} value={time}>{time}</option>
                   ))}
                 </select>
@@ -450,9 +484,9 @@ export const BrowseTutorsPage = () => {
                 <select 
                   className="browse-topbar__time-select"
                   value={endTime}
-                  onChange={(e) => setEndTime((e.target as HTMLSelectElement).value)}
+                  onChange={(e) => handleEndTimeChange((e.target as HTMLSelectElement).value)}
                 >
-                  {timeOptions.map(time => (
+                  {getEndTimeOptions(startTime).map(time => (
                     <option key={time} value={time}>{time}</option>
                   ))}
                 </select>
@@ -518,10 +552,10 @@ export const BrowseTutorsPage = () => {
                     <label>Start time</label>
                     <select 
                       value={startTime}
-                      onChange={(e) => setStartTime((e.target as HTMLSelectElement).value)}
+                      onChange={(e) => handleStartTimeChange((e.target as HTMLSelectElement).value)}
                       className="browse-filter-group__select"
                     >
-                      {timeOptions.map(time => (
+                      {getStartTimeOptions(endTime).map(time => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
@@ -531,10 +565,10 @@ export const BrowseTutorsPage = () => {
                     <label>End time</label>
                     <select 
                       value={endTime}
-                      onChange={(e) => setEndTime((e.target as HTMLSelectElement).value)}
+                      onChange={(e) => handleEndTimeChange((e.target as HTMLSelectElement).value)}
                       className="browse-filter-group__select"
                     >
-                      {timeOptions.map(time => (
+                      {getEndTimeOptions(startTime).map(time => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
