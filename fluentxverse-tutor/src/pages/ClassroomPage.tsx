@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
+import type { JSX } from 'preact';
 import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../context/AuthContext';
 import { initSocket, connectSocket, getSocket, destroySocket } from '../client/socket/socket.client';
@@ -564,7 +565,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       
       socket.emit('chat:send', {
         sessionId: currentSessionId,
-        text: message.trim() || (selectedFile ? `Shared a ${fileData.fileType === 'image' ? 'image' : 'file'}` : ''),
+        text: message.trim() || (selectedFile ? ` ${fileData.fileType === 'image' ? 'image' : 'file'}` : ''),
         ...fileData
       });
       // Stop typing indicator when message is sent
@@ -844,7 +845,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                       </a>
                     )}
                     {/* Text content with formatting */}
-                    {msg.text && !msg.text.startsWith('Shared a ') && (
+                    {msg.text && !msg.text.startsWith() && (
                       <span className="message-text">{formatMessageText(msg.text)}</span>
                     )}
                   </div>
@@ -868,10 +869,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               {filePreview ? (
                 <img src={filePreview} alt="Preview" className="file-preview-thumb" />
               ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
+                <div className="file-preview-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                </div>
               )}
               <span className="file-preview-name">{selectedFile.name}</span>
               <span className="file-preview-size">{formatFileSize(selectedFile.size)}</span>

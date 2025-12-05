@@ -384,6 +384,25 @@
   gap: 12px;
 }
 
+/* Chat scrollbar - blue thumb, gray track */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0336a0 0%, #3b8fee 100%);
+}
+
 .chat-message {
   display: flex;
   flex-direction: column;
@@ -528,8 +547,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: rgba(2, 69, 174, 0.05);
-  border-top: 1px solid rgba(2, 69, 174, 0.1);
+  background: #f1f5f9;
+  border-top: 1px solid #e2e8f0;
 }
 
 .file-preview-thumb {
@@ -539,10 +558,22 @@
   object-fit: cover;
 }
 
+.file-preview-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 69, 174, 0.1);
+  border-radius: 8px;
+  color: #0245ae;
+  font-size: 18px;
+}
+
 .file-preview-name {
   flex: 1;
   font-size: 13px;
-  color: #334155;
+  color: #1e293b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -624,15 +655,43 @@
   color: #64748b;
 }
 
+/* File attachment in self messages (blue bubble) */
+.chat-message.self .message-file {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.chat-message.self .message-file:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chat-message.self .message-file svg,
+.chat-message.self .message-file i {
+  color: #ffffff;
+}
+
+.chat-message.self .message-file .file-size {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* Chat Link */
 .chat-link {
-  color: #3b82f6;
+  color: #2563eb;
   text-decoration: underline;
   word-break: break-all;
 }
 
 .chat-link:hover {
-  color: #2563eb;
+  color: #1d4ed8;
+}
+
+/* Links in self messages (blue bubble) - use white/light color */
+.chat-message.self .chat-link {
+  color: #ffffff;
+}
+
+.chat-message.self .chat-link:hover {
+  color: #e0f2fe;
 }
 
 /* Typing Indicator */
