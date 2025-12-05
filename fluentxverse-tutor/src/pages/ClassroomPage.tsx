@@ -18,7 +18,69 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   correction?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: 'image' | 'file';
+  fileSize?: number;
 }
+
+// Format text with bold, italic, and clickable links
+const formatMessageText = (text: string): (string | JSX.Element)[] => {
+  const parts: (string | JSX.Element)[] = [];
+  
+  // Combined regex for bold (*text*), italic (_text_), and URLs
+  const regex = /(\*[^*]+\*)|(_[^_]+_)|(https?:\/\/[^\s<]+)/g;
+  let lastIndex = 0;
+  let match;
+  let keyIndex = 0;
+  
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    
+    const matchedText = match[0];
+    
+    if (matchedText.startsWith('*') && matchedText.endsWith('*')) {
+      // Bold text
+      parts.push(<strong key={`bold-${keyIndex++}`}>{matchedText.slice(1, -1)}</strong>);
+    } else if (matchedText.startsWith('_') && matchedText.endsWith('_')) {
+      // Italic text
+      parts.push(<em key={`italic-${keyIndex++}`}>{matchedText.slice(1, -1)}</em>);
+    } else if (matchedText.startsWith('http')) {
+      // URL - make it clickable
+      parts.push(
+        <a 
+          key={`link-${keyIndex++}`} 
+          href={matchedText} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="chat-link"
+        >
+          {matchedText}
+        </a>
+      );
+    }
+    
+    lastIndex = match.index + matchedText.length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : [text];
+};
+
+// Format file size for display
+const formatFileSize = (bytes?: number): string => {
+  if (!bytes) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
@@ -80,7 +142,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         sender: data.senderType,
         text: data.text,
         timestamp: new Date(data.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-        correction: data.correction
+        correction: data.correction,
+        fileUrl: data.fileUrl,
+        fileName: data.fileName,
+        fileType: data.fileType,
+        fileSize: data.fileSize
       };
       setChatMessages(prev => {
         // Avoid duplicates
@@ -97,7 +163,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         sender: msg.senderType,
         text: msg.text,
         timestamp: new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-        correction: msg.correction
+        correction: msg.correction,
+        fileUrl: msg.fileUrl,
+        fileName: msg.fileName,
+        fileType: msg.fileType,
+        fileSize: msg.fileSize
       }));
       setChatMessages(formattedMessages);
     };
@@ -189,6 +259,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const [remoteTyping, setRemoteTyping] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Try to enable audio - will succeed if user has engagement history with the site
   useEffect(() => {
@@ -417,23 +493,90 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim() || !currentSessionId) return;
+  // Handle file selection
+  const handleFileSelect = (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size must be less than 10MB');
+      return;
+    }
+    
+    setSelectedFile(file);
+    
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  // Clear selected file
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Upload file and get URL (using base64 for now - in production use cloud storage)
+  const uploadFile = async (file: File): Promise<{ url: string; type: 'image' | 'file' }> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        const fileType = file.type.startsWith('image/') ? 'image' : 'file';
+        resolve({ url: base64, type: fileType });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSendMessage = async () => {
+    if ((!message.trim() && !selectedFile) || !currentSessionId) return;
     
     try {
       const socket = getSocket();
+      
+      let fileData: { fileUrl?: string; fileName?: string; fileType?: 'image' | 'file'; fileSize?: number } = {};
+      
+      if (selectedFile) {
+        setIsUploading(true);
+        const { url, type } = await uploadFile(selectedFile);
+        fileData = {
+          fileUrl: url,
+          fileName: selectedFile.name,
+          fileType: type,
+          fileSize: selectedFile.size
+        };
+        setIsUploading(false);
+      }
+      
       socket.emit('chat:send', {
         sessionId: currentSessionId,
-        text: message.trim()
+        text: message.trim() || (selectedFile ? `Shared a ${fileData.fileType === 'image' ? 'image' : 'file'}` : ''),
+        ...fileData
       });
       // Stop typing indicator when message is sent
       socket.emit('chat:typing', { isTyping: false });
-      console.log('📤 [Classroom] Sent message:', message.trim());
+      console.log('📤 [Classroom] Sent message:', message.trim(), fileData.fileName ? `with file: ${fileData.fileName}` : '');
     } catch (error) {
       console.error('Failed to send message:', error);
+      setIsUploading(false);
     }
     
     setMessage('');
+    clearSelectedFile();
   };
 
   // Handle typing indicator
@@ -673,14 +816,37 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               <div key={msg.id} className={`chat-message ${isOwnMessage ? 'self' : 'other'}`}>
                 {msg.correction && (
                   <div className="message-correction">
-                    <span className="label">You said:</span> {msg.text}
+                    <span className="label">You said:</span> {formatMessageText(msg.text)}
                     <br />
-                    <span className="label">Correct:</span> {msg.correction}
+                    <span className="label">Correct:</span> {formatMessageText(msg.correction)}
                   </div>
                 )}
                 {!msg.correction && (
                   <div className="message-bubble">
-                    {msg.text}
+                    {/* File/Image attachment */}
+                    {msg.fileUrl && msg.fileType === 'image' && (
+                      <div className="message-image">
+                        <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <img src={msg.fileUrl} alt={msg.fileName || 'Shared image'} />
+                        </a>
+                      </div>
+                    )}
+                    {msg.fileUrl && msg.fileType === 'file' && (
+                      <a href={msg.fileUrl} download={msg.fileName} className="message-file">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                          <polyline points="14 2 14 8 20 8"></polyline>
+                          <line x1="12" y1="18" x2="12" y2="12"></line>
+                          <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        <span className="file-name">{msg.fileName}</span>
+                        {msg.fileSize && <span className="file-size">{formatFileSize(msg.fileSize)}</span>}
+                      </a>
+                    )}
+                    {/* Text content with formatting */}
+                    {msg.text && !msg.text.startsWith('Shared a ') && (
+                      <span className="message-text">{formatMessageText(msg.text)}</span>
+                    )}
                   </div>
                 )}
                 <span className="message-time">{msg.timestamp}</span>
@@ -695,10 +861,49 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             )}
             <div ref={chatEndRef} />
           </div>
+          
+          {/* File preview */}
+          {selectedFile && (
+            <div className="file-preview-bar">
+              {filePreview ? (
+                <img src={filePreview} alt="Preview" className="file-preview-thumb" />
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              )}
+              <span className="file-preview-name">{selectedFile.name}</span>
+              <span className="file-preview-size">{formatFileSize(selectedFile.size)}</span>
+              <button className="file-preview-remove" onClick={clearSelectedFile}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          )}
+          
           <div className="chat-input-area">
             <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
+              style={{ display: 'none' }}
+            />
+            <button 
+              className="attach-btn" 
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach file"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+              </svg>
+            </button>
+            <input
               type="text"
-              placeholder="Enter your message here"
+              placeholder="Type a message... (*bold* _italic_)"
               value={message}
               onChange={(e) => {
                 const newValue = (e.target as HTMLInputElement).value;
@@ -706,11 +911,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 // Only show typing if there's actual text
                 handleTyping(newValue.trim().length > 0);
               }}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
               onBlur={() => handleTyping(false)}
             />
-            <button className="send-btn" onClick={handleSendMessage}>
-              <i className="fi fi-sr-paper-plane"></i>
+            <button className="send-btn" onClick={handleSendMessage} disabled={isUploading}>
+              {isUploading ? (
+                <span className="upload-spinner"></span>
+              ) : (
+                <i className="fi fi-sr-paper-plane"></i>
+              )}
             </button>
           </div>
         </div>

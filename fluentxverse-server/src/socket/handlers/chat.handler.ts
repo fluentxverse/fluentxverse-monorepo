@@ -16,6 +16,10 @@ interface InMemoryMessage {
   text: string;
   timestamp: string;
   correction?: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: 'image' | 'file';
+  fileSize?: number;
 }
 const memChatMessages: Record<string, InMemoryMessage[]> = {};
 
@@ -23,7 +27,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   // Send chat message
   socket.on('chat:send', async (data) => {
     try {
-      const { sessionId, text, correction } = data;
+      const { sessionId, text, correction, fileUrl, fileName, fileType, fileSize } = data;
       const userId = socket.data.userId;
       const userType = socket.data.userType;
 
@@ -46,7 +50,11 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
           senderType: message.sender_type,
           text: message.message_text,
           timestamp: message.created_at.toISOString(),
-          correction: message.correction_text || undefined
+          correction: message.correction_text || undefined,
+          fileUrl,
+          fileName,
+          fileType,
+          fileSize
         };
       } catch (dbError) {
         // Fallback: use in-memory storage
@@ -58,7 +66,11 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
           senderType: userType,
           text,
           timestamp: new Date().toISOString(),
-          correction
+          correction,
+          fileUrl,
+          fileName,
+          fileType,
+          fileSize
         };
         
         // Store in memory

@@ -46,12 +46,22 @@ export interface ChatMessageData {
   timestamp: string;
   correction?: string;
   isSystemMessage?: boolean;
+  // File attachment support
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: 'image' | 'file';
+  fileSize?: number;
 }
 
 export interface SendMessageData {
   sessionId: string;
   text: string;
   correction?: string;
+  // File attachment support
+  fileUrl?: string;
+  fileName?: string;
+  fileType?: 'image' | 'file';
+  fileSize?: number;
 }
 
 export interface SessionState {
