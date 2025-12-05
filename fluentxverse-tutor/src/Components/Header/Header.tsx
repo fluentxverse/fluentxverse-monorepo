@@ -45,15 +45,10 @@ const Header = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      console.log('[HEADER] Starting login...');
       await login(email, password);
-      console.log('[HEADER] Login successful, closing modal and navigating...');
       closeLoginModal();
-      // Small delay to ensure state propagation
-      await new Promise(resolve => setTimeout(resolve, 100));
       window.location.href = '/home';
     } catch (err: any) {
-      console.log('[HEADER] Login failed:', err);
       setLoginLoading(false);
       setLoginError(err?.message || 'Invalid credentials');
     }
@@ -189,46 +184,26 @@ const Header = () => {
                             <span>Home</span>
                           </Link>
                         </li>
-                        <li>
-                          <Link to="/farms" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-seedling" />
-                            <span>Farms</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="/tree-nfts" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-tree" />
-                            <span>Trees</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <a 
-                            href="https://decentragri.gitbook.io/decentragri.com/" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={closeMobileMenu}
-                            className="nav-link"
-                          >
-                            <i className="fas fa-file-alt" />
-                            <span>Whitepaper</span>
-                          </a>
-                        </li>
-                        <li>
-                          <Link to="/about" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-info-circle" />
-                            <span>About</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="/contact" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-envelope" />
-                            <span>Contact</span>
-                          </Link>
-                        </li>
                       </ul>
                     </nav>
                     
-
+                    <div className="mobile-menu-actions">
+                      <button 
+                        className="mobile-login-btn" 
+                        onClick={() => { closeMobileMenu(); openLoginModal(); }}
+                      >
+                        <i className="fas fa-user" />
+                        <span>Login</span>
+                      </button>
+                      <Link 
+                        to="/register" 
+                        onClick={closeMobileMenu} 
+                        className="mobile-register-btn"
+                      >
+                        <i className="fas fa-user-plus" />
+                        <span>Apply Now</span>
+                      </Link>
+                    </div>
                   </div>
                   <div className="social-links">
                     <h4 className="social-links-title">Follow us on:</h4>

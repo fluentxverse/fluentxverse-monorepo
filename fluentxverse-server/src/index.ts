@@ -25,14 +25,12 @@ getPool();
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
   .use(cors({
-    // Allow common localhost variants for Vite dev servers
+    // Allow common localhost variants for Vite dev servers + LAN access
     origin: [
       'http://localhost:5173',
       'http://localhost:5174',
-      'http://localhost:5175',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174',
-      'http://127.0.0.1:5175',
+      'http://192.168.0.102:5173',
+      'http://192.168.0.102:5174',
     ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
@@ -47,8 +45,8 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
 
 
 
-// Start HTTP server
-.listen({ port: 8765 }, () => {
+// Start HTTP server - listen on all interfaces for LAN access
+.listen({ hostname: '0.0.0.0', port: 8765 }, () => {
   console.log(`✅ FluentXVerse HTTP server is running on port 8765`);
 });
 
@@ -60,8 +58,8 @@ export type App = typeof app;
 const httpServer = createServer();
 const io = initSocketServer(httpServer);
 
-// Attach Socket.IO to run alongside Elysia
-httpServer.listen(8767, () => {
+// Attach Socket.IO to run alongside Elysia - listen on all interfaces for LAN access
+httpServer.listen(8767, '0.0.0.0', () => {
   console.log(`✅ Socket.IO server is running on port 8767`);
 });
 

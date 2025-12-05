@@ -17,11 +17,13 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFoundPage from "./pages/NotFoundPage";
 import SessionExpiryModal from './Components/SessionExpiryModal';
+import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
 
 
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
+import "./assets/css/mobile-global.css";
 
 
 
@@ -59,6 +61,8 @@ export function AppInner() {
 				</div>
 				<div className={`offcanvas-overly${menuActive ? " active" : ""}`} />
 					<LocationProvider>
+						{/* Mobile Header for logged-in users */}
+						<MobileHeader />
 						<main>
 							{/* Session expiry warning modal visible when authenticated */}
 							<SessionExpiryModal isAuthenticated={isAuthenticated} />

@@ -23,7 +23,7 @@ export const getMe = async () => {
 }
 
 export const refreshSession = async () => {
-    const { data } = await client.post('/refresh')
+    const { data } = await client.post('/student/refresh')
     return data;
 }
 

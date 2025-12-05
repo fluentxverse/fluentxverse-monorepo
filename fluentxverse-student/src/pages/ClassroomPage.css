@@ -224,7 +224,8 @@
   justify-content: center;
 }
 
-.local-video {
+.local-video,
+.remote-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -380,11 +381,11 @@
   gap: 4px;
 }
 
-.chat-message.student {
+.chat-message.other {
   align-items: flex-start;
 }
 
-.chat-message.tutor {
+.chat-message.self {
   align-items: flex-end;
 }
 
@@ -396,13 +397,13 @@
   line-height: 1.5;
 }
 
-.chat-message.student .message-bubble {
+.chat-message.other .message-bubble {
   background: #f1f5f9;
   color: #0f172a;
   border-bottom-left-radius: 4px;
 }
 
-.chat-message.tutor .message-bubble {
+.chat-message.self .message-bubble {
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #fff;
   border-bottom-right-radius: 4px;
@@ -471,6 +472,54 @@
   box-shadow: 0 4px 12px rgba(2, 69, 174, 0.4);
 }
 
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(241, 245, 249, 0.9);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-style: italic;
+  margin-left: 4px;
+}
+
+.typing-indicator span:first-child {
+  color: #475569;
+  font-weight: 500;
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.typing-dots::before,
+.typing-dots::after {
+  content: '•';
+}
+
+.typing-dots::before {
+  animation: typingDot 1s infinite 0s;
+}
+
+.typing-dots {
+  animation: typingDot 1s infinite 0.2s;
+}
+
+.typing-dots::after {
+  animation: typingDot 1s infinite 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% { opacity: 0.3; }
+  30% { opacity: 1; }
+}
+
 /* Right Panel - Materials */
 .classroom-right {
   flex: 1;
@@ -478,6 +527,39 @@
   flex-direction: column;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   overflow: hidden;
+}
+
+/* Material Header */
+.material-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 2px solid rgba(2, 69, 174, 0.1);
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.material-header i {
+  color: #0245ae;
+  font-size: 18px;
+}
+
+/* PDF Viewer Container */
+.pdf-viewer-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.pdf-viewer {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
 }
 
 /* Material Navigation */
@@ -825,4 +907,82 @@
 
 .dark-mode .material-title {
   color: #4a9eff;
+}
+
+/* Lesson Ended Toast Notification */
+.lesson-ended-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 360px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
+              0 0 20px rgba(251, 191, 36, 0.1);
+  animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1000;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.toast-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-icon svg {
+  color: #1e293b;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.toast-title {
+  color: #fbbf24;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.toast-message {
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.toast-close:hover {
+  color: #94a3b8;
 }

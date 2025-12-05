@@ -39,6 +39,7 @@ export const authMiddleware = async (
     // In development, allow anonymous sockets but mark as unauthenticated
     const isDev = process.env.NODE_ENV !== 'production';
     if (!authData && isDev) {
+      // This shouldn't happen now since clients send their tier, but fallback just in case
       socket.data.userId = `anon-${socket.id}`;
       socket.data.userType = 'student';
       socket.data.email = undefined;
@@ -56,7 +57,7 @@ export const authMiddleware = async (
 
     // Attach user data to socket
     socket.data.userId = authData.userId;
-    socket.data.userType = authData.tier >= 2 ? 'tutor' : 'student'; // Assuming tier 2+ are tutors
+    socket.data.userType = (authData.tier && authData.tier >= 2) ? 'tutor' : 'student';
     socket.data.email = authData.email;
 
     console.log(`✅ Socket authenticated: User ${authData.userId} (${socket.data.userType})`);

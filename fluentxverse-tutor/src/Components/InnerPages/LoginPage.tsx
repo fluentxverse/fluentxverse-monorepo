@@ -12,19 +12,12 @@ const LoginPage = () => {
 
   const handleLogin = async (e: Event) => {
     e.preventDefault();
-    console.log('[LOGIN PAGE] handleLogin called');
     setLoading(true);
     setError('');
     try {
-      console.log('[LOGIN PAGE] Calling login()...');
       await login(email, password);
-      console.log('[LOGIN PAGE] login() completed successfully');
-      // Small delay to ensure React state propagation before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('[LOGIN PAGE] Navigating to /home...');
       setLocation('/home');
     } catch (err: any) {
-      console.log('[LOGIN PAGE] login() failed:', err);
       setError(err.message || 'Login failed');
       setLoading(false);
     }

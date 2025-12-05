@@ -1,5 +1,14 @@
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+// Dynamically determine API host - use same host as the page but on port 8765
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    return `http://${host}:8765`;
+  }
+  return 'http://localhost:8765';
+};
+
+export const API_BASE_URL = import.meta.env.VITE_API_URL || getApiBaseUrl();
 
 export const API_CONFIG = {
   BASE_URL: 'https://consumer.decentragri.com',

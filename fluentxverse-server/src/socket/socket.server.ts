@@ -3,14 +3,23 @@ import type { Server as HTTPServer } from 'http';
 import { chatHandler } from './handlers/chat.handler';
 import { webrtcHandler } from './handlers/webrtc.handler';
 import { sessionHandler } from './handlers/session.handler';
+import { highlightHandler } from './handlers/highlight.handler';
 import { authMiddleware } from './middleware/auth.middleware';
 
 export const initSocketServer = (httpServer: HTTPServer) => {
-  const allowedOrigins = (
-    process.env.FRONTEND_URLS || process.env.FRONTEND_URL || 'http://localhost:5173,http://localhost:5174'
-  )
+  const defaultOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://192.168.0.102:5173',
+    'http://192.168.0.102:5174'
+  ];
+  
+  const envOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
     .split(',')
-    .map(o => o.trim());
+    .map(o => o.trim())
+    .filter(o => o.length > 0);
+  
+  const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
 
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -38,6 +47,7 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     chatHandler(io, socket);
     webrtcHandler(io, socket);
     sessionHandler(io, socket);
+    highlightHandler(io, socket);
 
     socket.on('disconnect', (reason) => {
       console.log(`❌ Client disconnected: ${socket.id}, reason: ${reason}`);

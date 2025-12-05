@@ -397,3 +397,49 @@
   display: inline-block;
 }
 
+/* Mobile Menu Actions */
+.mobile-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-login-btn,
+.mobile-register-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.mobile-login-btn {
+  background: linear-gradient(135deg, #0245ae, #4a9eff);
+  color: #ffffff;
+  border: none;
+}
+
+.mobile-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
+}
+
+.mobile-register-btn {
+  background: transparent;
+  color: #0245ae;
+  border: 2px solid #0245ae;
+}
+
+.mobile-register-btn:hover {
+  background: rgba(2, 69, 174, 0.1);
+}
+

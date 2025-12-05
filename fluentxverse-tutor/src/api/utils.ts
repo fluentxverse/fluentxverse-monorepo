@@ -20,10 +20,18 @@ export const forceAuthCleanup = () => {
   } catch (e) {}
 };
 
+// Dynamically determine API host - use same host as the page but on port 8765
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    return `http://${host}:8765`;
+  }
+  return 'http://localhost:8765';
+};
+
 // Configure Axios client to send cookies with requests
-// Use direct URL like student app does (which works)
 export const client = axios.create({
-  baseURL: 'http://localhost:8765',
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
   timeout: 15000,
   headers: {

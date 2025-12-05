@@ -10,6 +10,7 @@ export interface ServerToClientEvents {
   'session:user-joined': (data: { userId: string; userType: string }) => void;
   'session:user-left': (data: { userId: string; userType: string }) => void;
   'session:state': (data: SessionState) => void;
+  'session:lesson-ended': (data: { tutorId: string; message?: string }) => void;
   
   // WebRTC signaling events
   'webrtc:offer': (data: { offer: RTCSessionDescriptionInit; from: string }) => void;

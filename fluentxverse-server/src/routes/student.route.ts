@@ -156,6 +156,31 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
+  // Renew student session cookie (extends maxAge) without re-authenticating
+  .post('/student/refresh', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      if (!raw) throw new Error('Not authenticated');
+      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+
+      refreshAuthCookie(cookie, authData, 'studentAuth');
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      set.headers['Vary'] = 'Cookie';
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error refreshing student session:', error);
+      throw new Error('Invalid session');
+    }
+  }, {
+    response: {
+      200: t.Object({
+        success: t.Boolean()
+      })
+    }
+  })
+
   .get('/student/me', async ({ cookie, set }) => {
     try {
       const raw = cookie.studentAuth?.value;

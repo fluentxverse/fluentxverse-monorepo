@@ -587,6 +587,9 @@
   justify-content: center;
   z-index: 9999;
   animation: fadeIn 0.2s ease;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -599,9 +602,13 @@
   border-radius: 24px;
   width: 90%;
   max-width: 560px;
+  max-height: 90vh;
   box-shadow: 0 24px 64px rgba(2, 69, 174, 0.3);
   animation: slideUp 0.3s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
 }
 
 @keyframes slideUp {
@@ -622,6 +629,7 @@
   padding: 24px 32px;
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #fff;
+  flex-shrink: 0;
 }
 
 .headset-modal-header h2 {
@@ -664,6 +672,9 @@
 
 .headset-modal-content {
   padding: 32px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .test-section {
@@ -695,6 +706,78 @@
   margin: 0 0 16px 0;
 }
 
+/* Permission Request Area */
+.permission-request-area {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.05) 0%, rgba(74, 158, 255, 0.05) 100%);
+  border-radius: 16px;
+  border: 2px dashed rgba(2, 69, 174, 0.2);
+}
+
+.permission-request-area .test-description {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.request-permission-btn {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: #fff;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.35);
+  transition: all 0.3s ease;
+}
+
+.request-permission-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(2, 69, 174, 0.45);
+}
+
+.request-permission-btn:active {
+  transform: translateY(0);
+}
+
+.request-permission-btn.camera {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+
+.request-permission-btn.camera:hover {
+  box-shadow: 0 8px 28px rgba(16, 185, 129, 0.45);
+}
+
+.request-permission-btn i {
+  font-size: 18px;
+}
+
+.retry-permission-btn {
+  background: transparent;
+  border: 2px solid currentColor;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  transition: all 0.2s ease;
+  color: inherit;
+}
+
+.retry-permission-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* Camera Status */
 .cam-status {
   display: flex;
@@ -716,6 +799,8 @@
   background: rgba(239, 68, 68, 0.1);
   color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.3);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .cam-status.granted {
   background: rgba(16, 185, 129, 0.1);
@@ -801,6 +886,39 @@
   background: rgba(239, 68, 68, 0.1);
   color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.3);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mic-status.denied .denied-reason,
+.cam-status.denied .denied-reason {
+  flex: 1 1 100%;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.mic-status.denied .https-hint,
+.cam-status.denied .https-hint {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+  border: 1px dashed rgba(239, 68, 68, 0.4);
+}
+
+.mic-status.denied .https-hint code,
+.cam-status.denied .https-hint code {
+  display: block;
+  margin: 8px 0;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  word-break: break-all;
 }
 
 .mic-status.granted {
@@ -945,6 +1063,7 @@
   border-top: 1px solid rgba(2, 69, 174, 0.1);
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .done-btn {
@@ -963,4 +1082,497 @@
 .done-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+}
+
+/* ==========================================
+   MOBILE RESPONSIVE STYLES
+   ========================================== */
+
+/* Tablet and below */
+@media screen and (max-width: 991px) {
+  .student-profile-content {
+    margin-left: 0;
+  }
+  
+  .student-profile-main {
+    padding: 80px 24px 32px 24px;
+  }
+  
+  /* Profile Header Card */
+  .profile-header-card {
+    padding: 24px;
+    border-radius: 20px;
+  }
+  
+  .profile-header-content {
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+    text-align: center;
+  }
+  
+  /* Profile Photo */
+  .profile-photo-container {
+    margin-bottom: 16px;
+  }
+  
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+    font-size: 44px;
+    border-radius: 20px;
+  }
+  
+  .profile-level-badge {
+    padding: 8px 16px;
+    font-size: 12px;
+    bottom: -10px;
+  }
+  
+  /* Profile Info */
+  .profile-info {
+    width: 100%;
+  }
+  
+  .profile-name-row {
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .profile-name {
+    font-size: 24px;
+  }
+  
+  .profile-id-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  /* Contact Info Grid - Stack on mobile */
+  .contact-info-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: left;
+  }
+  
+  .contact-info-item {
+    justify-content: center;
+  }
+  
+  .contact-info-item i {
+    font-size: 16px;
+  }
+  
+  .contact-info-item span {
+    font-size: 13px;
+  }
+  
+  /* Stats Container */
+  .stats-container {
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px 20px;
+    min-width: 100px;
+  }
+  
+  .stat-value {
+    font-size: 28px;
+  }
+  
+  .stat-value i {
+    font-size: 20px;
+  }
+  
+  .stat-label {
+    font-size: 10px;
+  }
+  
+  /* Action Buttons - Full width on mobile */
+  .profile-action-buttons {
+    width: 100%;
+    flex-direction: row;
+    gap: 12px;
+  }
+  
+  .enter-classroom-btn,
+  .test-headset-btn {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+  
+  .enter-classroom-btn i,
+  .test-headset-btn i {
+    font-size: 16px;
+  }
+  
+  /* Tabs */
+  .tabs-container {
+    padding: 6px;
+    border-radius: 16px;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab-button {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-radius: 12px;
+    white-space: nowrap;
+    flex: none;
+    min-width: auto;
+  }
+  
+  /* Overview Grid - Stack on mobile */
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .content-card {
+    padding: 24px;
+    border-radius: 16px;
+  }
+  
+  .content-card.simple {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  
+  .card-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  
+  .card-title i {
+    font-size: 22px;
+  }
+  
+  .card-text {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .section-subtitle {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  /* Topic Tags */
+  .topic-tags {
+    gap: 8px;
+  }
+  
+  .topic-tag {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+  
+  /* Sessions */
+  .session-card {
+    padding: 16px;
+  }
+  
+  .session-topic {
+    font-size: 14px;
+  }
+  
+  .session-meta {
+    font-size: 12px;
+  }
+  
+  .session-card.completed {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .session-meta-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  /* Notes */
+  .note-card {
+    padding: 16px;
+  }
+  
+  .note-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .note-content {
+    font-size: 13px;
+  }
+  
+  /* Back Button */
+  .back-button {
+    padding: 12px 20px;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .back-button i {
+    font-size: 16px;
+  }
+  
+  /* Headset Modal */
+  .headset-modal-overlay {
+    padding: 12px;
+    align-items: flex-start;
+  }
+  
+  .headset-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 24px);
+    border-radius: 20px;
+    margin: 0;
+  }
+  
+  .headset-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .headset-modal-header h2 {
+    font-size: 18px;
+    gap: 10px;
+  }
+  
+  .headset-modal-header h2 i {
+    font-size: 22px;
+  }
+  
+  .modal-close-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .headset-modal-content {
+    padding: 20px;
+  }
+  
+  /* Permission request buttons on mobile */
+  .permission-request-area {
+    padding: 16px;
+  }
+  
+  .request-permission-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 24px;
+    font-size: 14px;
+  }
+  
+  .retry-permission-btn {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .mic-status.denied,
+  .cam-status.denied {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .test-section {
+    margin-bottom: 20px;
+  }
+  
+  .test-section h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  
+  .test-description {
+    font-size: 13px;
+  }
+  
+  .speaker-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .speaker-btn {
+    padding: 16px;
+    font-size: 14px;
+  }
+  
+  .camera-preview {
+    height: 160px;
+    border-radius: 12px;
+  }
+  
+  .headset-modal-footer {
+    padding: 16px 20px;
+    flex-shrink: 0;
+  }
+  
+  .done-btn {
+    width: 100%;
+    padding: 14px 24px;
+  }
+}
+
+/* Phone styles */
+@media screen and (max-width: 480px) {
+  .student-profile-main {
+    padding: 70px 12px 24px 12px;
+  }
+  
+  .profile-header-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 36px;
+    border-radius: 16px;
+  }
+  
+  .profile-level-badge {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  
+  .profile-name {
+    font-size: 20px;
+  }
+  
+  .contact-info-item span {
+    font-size: 12px;
+  }
+  
+  .stats-container {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .stat-card {
+    padding: 12px 16px;
+    min-width: 90px;
+    flex: 1;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+  }
+  
+  .stat-label {
+    font-size: 9px;
+  }
+  
+  .profile-action-buttons {
+    flex-direction: column;
+  }
+  
+  .enter-classroom-btn,
+  .test-headset-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .tabs-container {
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  
+  .tab-button {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .content-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+    gap: 8px;
+  }
+  
+  .card-title i {
+    font-size: 18px;
+  }
+  
+  .back-button {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  
+  /* Modal adjustments for small phones */
+  .headset-modal-overlay {
+    padding: 0;
+  }
+  
+  .headset-modal {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .headset-modal-header {
+    padding: 14px 16px;
+  }
+  
+  .headset-modal-header h2 {
+    font-size: 16px;
+  }
+  
+  .headset-modal-content {
+    padding: 16px;
+  }
+  
+  .test-section {
+    margin-bottom: 16px;
+  }
+  
+  .test-section h3 {
+    font-size: 14px;
+  }
+  
+  .test-description {
+    font-size: 12px;
+  }
+  
+  .permission-status {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .mic-level-container {
+    gap: 8px;
+  }
+  
+  .mic-level-text {
+    font-size: 12px;
+  }
+  
+  .speaker-btn {
+    padding: 14px;
+    font-size: 13px;
+  }
+  
+  .camera-preview {
+    height: 140px;
+  }
 }

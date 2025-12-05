@@ -21,21 +21,8 @@ export const register = async (params: RegisterParams) => {
 }
 
 export const loginUser = async (email: string, password: string) => {
-  console.log('[AUTH API] loginUser called, making request...');
-  console.log('[AUTH API] client baseURL:', client.defaults.baseURL);
-  console.log('[AUTH API] client withCredentials:', client.defaults.withCredentials);
-  
-  try {
-    const response = await client.post('/tutor/login', { email, password });
-    console.log('[AUTH API] Response status:', response.status);
-    console.log('[AUTH API] Response headers:', response.headers);
-    console.log('[AUTH API] Response data:', response.data);
-    return response.data;
-  } catch (error: any) {
-    console.error('[AUTH API] Request failed:', error);
-    console.error('[AUTH API] Error response:', error.response?.data);
-    throw error;
-  }
+  const { data } = await client.post('/tutor/login', { email, password });
+  return data;
 };
 
 export const logoutUser = async () => {

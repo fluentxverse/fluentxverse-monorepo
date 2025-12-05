@@ -69,12 +69,13 @@ export class SessionService {
   async addParticipant(data: AddParticipantData): Promise<SessionParticipant> {
     const { sessionId, userId, socketId, userType } = data;
 
-    // First, deactivate any existing active participants for this user in this session
+    // First, deactivate any existing active participants of the same type in this session
+    // This handles reconnections where user ID might change
     await query(
       `UPDATE session_participants
        SET is_active = false, left_at = NOW()
-       WHERE session_id = $1 AND user_id = $2 AND is_active = true`,
-      [sessionId, userId]
+       WHERE session_id = $1 AND user_type = $2 AND is_active = true`,
+      [sessionId, userType]
     );
 
     // Add new participant record
@@ -88,7 +89,19 @@ export class SessionService {
     return result.rows[0];
   }
 
-  async removeParticipant(sessionId: string, userId: string): Promise<boolean> {
+  async removeParticipant(sessionId: string, userId: string, userType?: string): Promise<boolean> {
+    // If userType is provided, use it for more reliable removal
+    if (userType) {
+      const result = await query(
+        `UPDATE session_participants
+         SET is_active = false, left_at = NOW()
+         WHERE session_id = $1 AND user_type = $2 AND is_active = true`,
+        [sessionId, userType]
+      );
+      return (result.rowCount || 0) > 0;
+    }
+    
+    // Fallback to user_id based removal
     const result = await query(
       `UPDATE session_participants
        SET is_active = false, left_at = NOW()

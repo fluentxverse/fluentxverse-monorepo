@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef } from 'preact/hooks';
 import { refreshSession } from '../api/auth.api';
 import './SessionExpiryModal.css';
 
@@ -19,6 +19,7 @@ export default function SessionExpiryModal({
 }: Props) {
   const [show, setShow] = useState(false);
   const [remaining, setRemaining] = useState(sessionMinutes * 60); // seconds
+  const startTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -26,12 +27,12 @@ export default function SessionExpiryModal({
       return;
     }
     // Track session time in memory; reset on mount
-    let start = Date.now();
+    startTimeRef.current = Date.now();
     setShow(false);
     setRemaining(sessionMinutes * 60);
 
     const interval = window.setInterval(() => {
-      const elapsedSec = Math.floor((Date.now() - start) / 1000);
+      const elapsedSec = Math.floor((Date.now() - startTimeRef.current) / 1000);
       const left = sessionMinutes * 60 - elapsedSec;
       setRemaining(left);
       if (left <= warnMinutes * 60) setShow(true);
@@ -50,7 +51,8 @@ export default function SessionExpiryModal({
     try {
       const res = await refreshSession();
       if (res?.success) {
-        // Reset timer
+        // Reset timer by updating start time ref
+        startTimeRef.current = Date.now();
         setShow(false);
         setRemaining(sessionMinutes * 60);
         if (onRefreshed) onRefreshed();

@@ -10,6 +10,7 @@ export interface ServerToClientEvents {
   'session:user-joined': (data: { userId: string; userType: string }) => void;
   'session:user-left': (data: { userId: string; userType: string }) => void;
   'session:state': (data: SessionState) => void;
+  'session:lesson-ended': (data: { tutorId: string; message?: string }) => void;
   
   // WebRTC signaling events
   'webrtc:offer': (data: { offer: any; from: string }) => void;
@@ -27,6 +28,7 @@ export interface ClientToServerEvents {
   // Session events
   'session:join': (data: { sessionId: string }) => void;
   'session:leave': () => void;
+  'session:end-lesson': (data: { message?: string }) => void;
   
   // WebRTC signaling events
   'webrtc:offer': (data: { offer: any; to: string }) => void;

@@ -7,7 +7,11 @@ type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServe
 
 const sessionService = new SessionService();
 // In-memory fallback store for dev or DB-down scenarios
-const memParticipants: Record<string, Array<{ user_id: string; socket_id: string; user_type: 'tutor' | 'student' }>> = {};
+// Key: sessionId, Value: { tutor?: participant, student?: participant }
+const memParticipants: Record<string, { 
+  tutor?: { user_id: string; socket_id: string; user_type: 'tutor' };
+  student?: { user_id: string; socket_id: string; user_type: 'student' };
+}> = {};
 
 export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
   // Join a session
@@ -33,11 +37,25 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         participants = await sessionService.getSessionParticipants(sessionId);
       } catch (err) {
         // Fallback: use in-memory participants to keep signaling working in dev
-        const list = memParticipants[sessionId] || [];
-        const updated = list.filter(p => p.user_id !== userId).concat([{ user_id: userId, socket_id: socket.id, user_type: userType }]);
-        memParticipants[sessionId] = updated;
-        participants = updated;
+        // Initialize session if not exists
+        if (!memParticipants[sessionId]) {
+          memParticipants[sessionId] = {};
+        }
+        
+        // Update the participant for this user type (replaces any previous)
+        memParticipants[sessionId][userType] = { 
+          user_id: userId, 
+          socket_id: socket.id, 
+          user_type: userType 
+        };
+        
+        // Convert to array format
+        const session = memParticipants[sessionId];
+        if (session.tutor) participants.push(session.tutor);
+        if (session.student) participants.push(session.student);
+        
         console.warn('⚠️ Using in-memory session participants due to DB error:', (err as Error)?.message);
+        console.log('📋 In-memory participants for session', sessionId, ':', participants);
       }
       
       // Prepare session state
@@ -81,10 +99,12 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
 
       // Remove participant, prefer DB then fallback
       try {
-        await sessionService.removeParticipant(sessionId, userId);
+        await sessionService.removeParticipant(sessionId, userId, userType);
       } catch (err) {
-        const list = memParticipants[sessionId] || [];
-        memParticipants[sessionId] = list.filter(p => p.user_id !== userId);
+        // Remove from in-memory store
+        if (memParticipants[sessionId] && userType) {
+          delete memParticipants[sessionId][userType];
+        }
       }
 
       // Leave the socket.io room
@@ -102,7 +122,12 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       try {
         participants = await sessionService.getSessionParticipants(sessionId);
       } catch {
-        participants = memParticipants[sessionId] || [];
+        // Convert in-memory format to array
+        const session = memParticipants[sessionId];
+        if (session) {
+          if (session.tutor) participants.push(session.tutor);
+          if (session.student) participants.push(session.student);
+        }
       }
       
       // Send updated session state
@@ -125,6 +150,36 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
     }
   });
 
+  // Handle tutor ending the lesson (signals to student that lesson time is over)
+  socket.on('session:end-lesson', async (data) => {
+    try {
+      const sessionId = socket.data.sessionId;
+      const userId = socket.data.userId;
+      const userType = socket.data.userType;
+
+      if (!sessionId) {
+        console.error('No session ID found for end-lesson');
+        return;
+      }
+
+      // Only tutors can end lessons
+      if (userType !== 'tutor') {
+        console.error('Only tutors can end lessons');
+        return;
+      }
+
+      // Notify the student that the lesson has ended
+      socket.to(sessionId).emit('session:lesson-ended', {
+        tutorId: userId,
+        message: data?.message || 'The tutor has ended the lesson. Thank you for learning with us!'
+      });
+
+      console.log(`🔔 Tutor ${userId} ended lesson for session ${sessionId}`);
+    } catch (error) {
+      console.error('Error handling session:end-lesson:', error);
+    }
+  });
+
   // Handle disconnect (automatic leave)
   socket.on('disconnect', async () => {
     try {
@@ -134,10 +189,12 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
 
       if (sessionId) {
         try {
-          await sessionService.removeParticipant(sessionId, userId);
+          await sessionService.removeParticipant(sessionId, userId, userType);
         } catch {
-          const list = memParticipants[sessionId] || [];
-          memParticipants[sessionId] = list.filter(p => p.user_id !== userId);
+          // Remove from in-memory store
+          if (memParticipants[sessionId] && userType) {
+            delete memParticipants[sessionId][userType];
+          }
         }
         
         socket.to(sessionId).emit('session:user-left', {

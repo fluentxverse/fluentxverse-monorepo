@@ -18,15 +18,21 @@ export interface SaveMessageData {
   correction?: string;
 }
 
+// Generate a unique message ID
+const generateMessageId = (): string => {
+  return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
 export class ChatService {
   async saveMessage(data: SaveMessageData): Promise<ChatMessage> {
     const { sessionId, senderId, senderType, text, correction } = data;
+    const id = generateMessageId();
 
     const result = await query(
-      `INSERT INTO chat_messages (session_id, sender_id, sender_type, message_text, correction_text)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO chat_messages (id, session_id, sender_id, sender_type, message_text, correction_text)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [sessionId, senderId, senderType, text, correction || null]
+      [id, sessionId, senderId, senderType, text, correction || null]
     );
 
     return result.rows[0];

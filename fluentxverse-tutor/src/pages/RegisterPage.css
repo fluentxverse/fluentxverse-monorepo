@@ -434,3 +434,248 @@
 .login-link:hover {
   text-decoration: underline;
 }
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 1024px) {
+  .register-content {
+    flex-direction: column;
+    background: #e0f2fe;
+  }
+
+  .register-left-side {
+    padding: 40px 30px;
+    order: 2;
+  }
+
+  .register-right-side {
+    padding: 40px 30px;
+    order: 1;
+  }
+
+  .left-title {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+
+  .name-fields-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .register-content {
+    padding-top: 100px;
+  }
+
+  .register-left-side {
+    padding: 30px 20px;
+  }
+
+  .register-right-side {
+    padding: 30px 20px;
+    align-items: center;
+  }
+
+  .register-form-card {
+    max-width: 100%;
+  }
+
+  .left-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .left-subtitle {
+    font-size: 13px;
+  }
+
+  .left-intro {
+    font-size: 14px;
+  }
+
+  .features-list {
+    gap: 16px;
+  }
+
+  .feature-item {
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .feature-icon-circle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .feature-icon {
+    font-size: 16px;
+  }
+
+  .feature-title {
+    font-size: 15px;
+  }
+
+  .feature-desc {
+    font-size: 13px;
+  }
+
+  .left-cta {
+    font-size: 13px;
+    margin-top: 20px;
+  }
+
+  .form-title {
+    font-size: 26px;
+  }
+
+  .form-description {
+    font-size: 12px;
+  }
+
+  .name-fields-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .two-column-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .decorative-circle-top {
+    width: 150px;
+    height: 150px;
+    top: -50px;
+    right: -50px;
+  }
+
+  .decorative-circle-bottom {
+    width: 100px;
+    height: 100px;
+    bottom: -30px;
+    left: -30px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .register-content {
+    padding-top: 90px;
+  }
+
+  .register-left-side {
+    padding: 24px 16px;
+  }
+
+  .register-right-side {
+    padding: 24px 16px;
+  }
+
+  .left-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .left-subtitle {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .left-intro {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .features-list {
+    gap: 12px;
+  }
+
+  .feature-item {
+    gap: 10px;
+  }
+
+  .feature-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+  }
+
+  .feature-icon {
+    font-size: 14px;
+  }
+
+  .feature-title {
+    font-size: 14px;
+  }
+
+  .feature-desc {
+    font-size: 12px;
+  }
+
+  .left-cta {
+    font-size: 12px;
+    margin-top: 16px;
+  }
+
+  .form-title {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .form-description {
+    font-size: 11px;
+    margin-bottom: 20px;
+  }
+
+  .name-fields-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .two-column-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-label {
+    font-size: 11px;
+  }
+
+  .form-input,
+  .form-input-with-icon,
+  .password-input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .form-input-with-icon {
+    padding-left: 48px !important;
+    padding-right: 24px !important;
+  }
+
+  .password-input {
+    padding-left: 48px !important;
+    padding-right: 48px !important;
+  }
+
+  .input-icon {
+    left: 12px;
+    font-size: 14px;
+  }
+
+  .password-toggle-btn {
+    right: 12px;
+  }
+
+  .submit-btn {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .alert {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .show-password-label {
+    font-size: 12px;
+  }
+}

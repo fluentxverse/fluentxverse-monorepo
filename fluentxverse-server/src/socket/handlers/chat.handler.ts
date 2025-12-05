@@ -7,6 +7,18 @@ type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServe
 
 const chatService = new ChatService();
 
+// In-memory fallback for chat messages when DB is unavailable
+interface InMemoryMessage {
+  id: string;
+  sessionId: string;
+  senderId: string;
+  senderType: 'tutor' | 'student';
+  text: string;
+  timestamp: string;
+  correction?: string;
+}
+const memChatMessages: Record<string, InMemoryMessage[]> = {};
+
 export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   // Send chat message
   socket.on('chat:send', async (data) => {
@@ -15,27 +27,50 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
       const userId = socket.data.userId;
       const userType = socket.data.userType;
 
-      // Save message to database
-      const message = await chatService.saveMessage({
-        sessionId,
-        senderId: userId,
-        senderType: userType,
-        text,
-        correction
-      });
+      let messageData: InMemoryMessage;
+
+      try {
+        // Try to save message to database
+        const message = await chatService.saveMessage({
+          sessionId,
+          senderId: userId,
+          senderType: userType,
+          text,
+          correction
+        });
+
+        messageData = {
+          id: message.id,
+          sessionId: message.session_id,
+          senderId: message.sender_id,
+          senderType: message.sender_type,
+          text: message.message_text,
+          timestamp: message.created_at.toISOString(),
+          correction: message.correction_text || undefined
+        };
+      } catch (dbError) {
+        // Fallback: use in-memory storage
+        console.warn('⚠️ Using in-memory chat storage due to DB error');
+        messageData = {
+          id: `mem-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          sessionId,
+          senderId: userId,
+          senderType: userType,
+          text,
+          timestamp: new Date().toISOString(),
+          correction
+        };
+        
+        // Store in memory
+        if (!memChatMessages[sessionId]) {
+          memChatMessages[sessionId] = [];
+        }
+        memChatMessages[sessionId].push(messageData);
+      }
 
       // Broadcast message to all users in the session
-      io.to(sessionId).emit('chat:message', {
-        id: message.id,
-        sessionId: message.session_id,
-        senderId: message.sender_id,
-        senderType: message.sender_type,
-        text: message.message_text,
-        timestamp: message.created_at.toISOString(),
-        correction: message.correction_text || undefined
-      });
+      io.to(sessionId).emit('chat:message', messageData);
 
-      console.log(`💬 Message sent in session ${sessionId} by ${userId}`);
     } catch (error) {
       console.error('Error handling chat:send:', error);
       socket.emit('chat:message', {
@@ -74,21 +109,30 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
     try {
       const { sessionId } = data;
       
-      // Fetch message history from database
-      const messages = await chatService.getSessionMessages(sessionId);
+      let historyMessages: InMemoryMessage[] = [];
+
+      try {
+        // Try to fetch message history from database
+        const messages = await chatService.getSessionMessages(sessionId);
+        historyMessages = messages.map(msg => ({
+          id: msg.id,
+          sessionId: msg.session_id,
+          senderId: msg.sender_id,
+          senderType: msg.sender_type,
+          text: msg.message_text,
+          timestamp: msg.created_at.toISOString(),
+          correction: msg.correction_text || undefined
+        }));
+      } catch (dbError) {
+        // Fallback: use in-memory storage
+        console.warn('⚠️ Using in-memory chat history due to DB error');
+        historyMessages = memChatMessages[sessionId] || [];
+      }
 
       // Send history to requesting client
-      socket.emit('chat:history', messages.map(msg => ({
-        id: msg.id,
-        sessionId: msg.session_id,
-        senderId: msg.sender_id,
-        senderType: msg.sender_type,
-        text: msg.message_text,
-        timestamp: msg.created_at.toISOString(),
-        correction: msg.correction_text || undefined
-      })));
+      socket.emit('chat:history', historyMessages);
 
-      console.log(`📜 Chat history sent for session ${sessionId}`);
+      console.log(`📜 Chat history sent for session ${sessionId} (${historyMessages.length} messages)`);
     } catch (error) {
       console.error('Error handling chat:request-history:', error);
       socket.emit('chat:history', []);

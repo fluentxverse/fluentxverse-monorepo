@@ -147,12 +147,24 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       set.headers['Vary'] = 'Cookie';
       return { success: true };
     })
+
+    // Alias for /refresh at /tutor/refresh path
+    .post('/tutor/refresh', async ({ cookie, set, headers }) => {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) throw new Error('Not authenticated');
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      set.headers['Vary'] = 'Cookie';
+      return { success: true };
+    })
     
     .get('/me', async ({ cookie, set }): Promise<MeResponse> => {
       try {
         const raw = cookie.tutorAuth?.value;
-
-        console.log("burat: ", raw)
         if (!raw) {
           throw new Error('Not authenticated');
         }

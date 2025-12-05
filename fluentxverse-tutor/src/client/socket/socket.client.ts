@@ -4,7 +4,17 @@ import type {
   ClientToServerEvents 
 } from '../../types/socket.types';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8766';
+// Dynamic socket URL for LAN access - uses current hostname
+const getSocketUrl = () => {
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
+  // Use same hostname as current page for LAN access
+  const hostname = window.location.hostname;
+  return `http://${hostname}:8767`;
+};
+
+const SOCKET_URL = getSocketUrl();
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
@@ -20,14 +30,31 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
     return socket;
   }
 
+  // Get auth cookie for authentication
+  const authCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('auth='))
+    ?.split('=')[1];
+  
+  let authData = null;
+  if (authCookie) {
+    try {
+      authData = JSON.parse(decodeURIComponent(authCookie));
+    } catch (e) {
+      console.warn('Failed to parse auth cookie');
+    }
+  }
+
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
     auth: {
-      token: token || document.cookie
-        .split('; ')
-        .find(row => row.startsWith('session_token='))
-        ?.split('=')[1]
+      // Pass auth data or indicate this is a tutor app
+      token: authData ? JSON.stringify(authData) : JSON.stringify({
+        userId: `tutor-${Date.now()}`,
+        email: 'tutor@dev.local',
+        tier: 2 // tier 2+ = tutor
+      })
     },
     reconnection: true,
     reconnectionDelay: 1000,

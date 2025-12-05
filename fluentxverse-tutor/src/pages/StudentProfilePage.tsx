@@ -69,7 +69,8 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
       
       try {
         setLoading(true);
-        const url = `http://localhost:8765/tutor/student/${studentId}`;
+        const apiHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+        const url = `http://${apiHost}:8765/tutor/student/${studentId}`;
         console.log('[StudentProfile] Requesting:', url);
         
         const response = await fetch(url, {
@@ -103,14 +104,47 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
 
   const openHeadsetModal = async () => {
     setShowHeadsetModal(true);
+    // Don't auto-request permissions - let user click buttons on mobile
+    // This is more reliable for mobile browsers
+  };
+
+  // Check if we're on a secure context (HTTPS or localhost)
+  const isSecureContext = typeof window !== 'undefined' && (
+    window.isSecureContext || 
+    window.location.protocol === 'https:' || 
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+  );
+
+  // Error message for insecure context
+  const [micError, setMicError] = useState<string | null>(null);
+  const [camError, setCamError] = useState<string | null>(null);
+
+  // Separate function to request mic permission (triggered by button click)
+  const requestMicPermission = async () => {
+    setMicPermission('pending');
+    setMicError(null);
+    
+    // Check if mediaDevices is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMicError('Camera/Mic access requires HTTPS. On mobile Chrome, go to chrome://flags and enable "Insecure origins treated as secure", then add your LAN URL.');
+      setMicPermission('denied');
+      return;
+    }
+
     try {
-      // Request audio and video permissions
+      // Request audio permission
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = stream;
       setMicPermission('granted');
       
-      // Set up audio analysis for mic level
+      // Set up audio analysis for mic level - resume AudioContext for mobile
       audioContextRef.current = new AudioContext();
+      // Resume AudioContext (required for mobile browsers)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
@@ -127,20 +161,66 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
         animationFrameRef.current = requestAnimationFrame(updateMicLevel);
       };
       updateMicLevel();
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Mic permission error:', err);
+      if (err.name === 'NotAllowedError') {
+        setMicError('Permission denied. Please allow microphone access in your browser settings.');
+      } else if (err.name === 'NotFoundError') {
+        setMicError('No microphone found. Please connect a microphone and try again.');
+      } else if (err.name === 'NotReadableError') {
+        setMicError('Microphone is in use by another app. Please close other apps using the mic.');
+      } else if (err.name === 'SecurityError' || err.message?.includes('secure')) {
+        setMicError('HTTPS required. On mobile Chrome: go to chrome://flags → "Insecure origins treated as secure" → add http://192.168.0.102:5173');
+      } else {
+        setMicError(`Error: ${err.message || 'Unable to access microphone'}`);
+      }
       setMicPermission('denied');
     }
+  };
 
-    // Camera permission and setup
+  // Separate function to request camera permission (triggered by button click)
+  const requestCameraPermission = async () => {
+    setCamPermission('pending');
+    setCamError(null);
+
+    // Check if mediaDevices is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCamError('Camera/Mic access requires HTTPS. On mobile Chrome, go to chrome://flags and enable "Insecure origins treated as secure", then add your LAN URL.');
+      setCamPermission('denied');
+      return;
+    }
+
     try {
-      const cam = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 360 } });
+      const cam = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 360 },
+          facingMode: 'user' // Front camera on mobile
+        } 
+      });
       cameraStreamRef.current = cam;
       setCamPermission('granted');
-      if (videoRef.current) {
-        videoRef.current.srcObject = cam;
-        videoRef.current.play().catch(() => {});
+      
+      // Small delay to ensure video element is ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = cam;
+          videoRef.current.play().catch((e) => console.log('Video play error:', e));
+        }
+      }, 100);
+    } catch (err: any) {
+      console.error('Camera permission error:', err);
+      if (err.name === 'NotAllowedError') {
+        setCamError('Permission denied. Please allow camera access in your browser settings.');
+      } else if (err.name === 'NotFoundError') {
+        setCamError('No camera found. Please connect a camera and try again.');
+      } else if (err.name === 'NotReadableError') {
+        setCamError('Camera is in use by another app. Please close other apps using the camera.');
+      } else if (err.name === 'SecurityError' || err.message?.includes('secure')) {
+        setCamError('HTTPS required. On mobile Chrome: go to chrome://flags → "Insecure origins treated as secure" → add http://192.168.0.102:5173');
+      } else {
+        setCamError(`Error: ${err.message || 'Unable to access camera'}`);
       }
-    } catch (err) {
       setCamPermission('denied');
     }
   };
@@ -534,15 +614,31 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
                   Microphone Test
                 </h3>
                 {micPermission === 'pending' && (
-                  <div className="mic-status pending">
-                    <i className="fi fi-sr-spinner"></i>
-                    Requesting microphone access...
+                  <div className="permission-request-area">
+                    <p className="test-description">Click the button below to allow microphone access and test your mic.</p>
+                    <button className="request-permission-btn" onClick={requestMicPermission}>
+                      <i className="fi fi-sr-microphone"></i>
+                      Allow Microphone Access
+                    </button>
                   </div>
                 )}
                 {micPermission === 'denied' && (
                   <div className="mic-status denied">
                     <i className="fi fi-sr-exclamation"></i>
-                    Microphone access denied. Please allow access in your browser settings.
+                    <div className="denied-reason">
+                      {micDeniedReason || 'Microphone access denied. Please allow access in your browser settings.'}
+                      {!window.isSecureContext && (
+                        <div className="https-hint">
+                          <strong>Tip:</strong> On mobile Chrome, go to:<br/>
+                          <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code><br/>
+                          Add your server URL and restart Chrome.
+                        </div>
+                      )}
+                    </div>
+                    <button className="retry-permission-btn" onClick={requestMicPermission}>
+                      <i className="fi fi-sr-refresh"></i>
+                      Try Again
+                    </button>
                   </div>
                 )}
                 {micPermission === 'granted' && (
@@ -571,21 +667,37 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
                   Camera Test
                 </h3>
                 {camPermission === 'pending' && (
-                  <div className="cam-status pending">
-                    <i className="fi fi-sr-spinner"></i>
-                    Requesting camera access...
+                  <div className="permission-request-area">
+                    <p className="test-description">Click the button below to allow camera access and test your video.</p>
+                    <button className="request-permission-btn camera" onClick={requestCameraPermission}>
+                      <i className="fi fi-sr-camera"></i>
+                      Allow Camera Access
+                    </button>
                   </div>
                 )}
                 {camPermission === 'denied' && (
                   <div className="cam-status denied">
                     <i className="fi fi-sr-exclamation"></i>
-                    Camera access denied. Please allow access in your browser settings.
+                    <div className="denied-reason">
+                      {camDeniedReason || 'Camera access denied. Please allow access in your browser settings.'}
+                      {!window.isSecureContext && (
+                        <div className="https-hint">
+                          <strong>Tip:</strong> On mobile Chrome, go to:<br/>
+                          <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code><br/>
+                          Add your server URL and restart Chrome.
+                        </div>
+                      )}
+                    </div>
+                    <button className="retry-permission-btn" onClick={requestCameraPermission}>
+                      <i className="fi fi-sr-refresh"></i>
+                      Try Again
+                    </button>
                   </div>
                 )}
                 {camPermission === 'granted' && (
                   <div className="camera-test-area">
                     <div className="camera-preview">
-                      <video ref={videoRef} playsInline muted />
+                      <video ref={videoRef} playsInline muted autoPlay />
                     </div>
                     <div className="camera-controls">
                       <button

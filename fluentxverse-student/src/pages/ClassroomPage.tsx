@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../context/AuthContext';
-import { initSocket, connectSocket, getSocket } from '../client/socket/socket.client';
+import { initSocket, connectSocket, getSocket, destroySocket } from '../client/socket/socket.client';
 import { useWebRTC } from '../hooks/useWebRTC';
+import PdfViewer from '../Components/PdfViewer/PdfViewer';
+import type { ChatMessageData } from '../types/socket.types';
+import type { Socket } from 'socket.io-client';
 import './ClassroomPage.css';
 
 interface ClassroomPageProps {
@@ -15,13 +18,6 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   correction?: string;
-}
-
-interface LessonSection {
-  id: string;
-  type: 'dialogue' | 'trivia' | 'practice';
-  title: string;
-  content: any;
 }
 
 const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
@@ -37,6 +33,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const localPipRef = useRef<HTMLVideoElement>(null);
   const remotePipRef = useRef<HTMLVideoElement>(null);
   
+  // Track stream IDs for forcing re-renders
+  const [localStreamId, setLocalStreamId] = useState<string>('');
+  const [remoteStreamId, setRemoteStreamId] = useState<string>('');
+  
+  // Socket state for passing to child components
+  const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+  
   // Extract sessionId from router params first, then pathname as fallback
   const routeSessionId = (route as any)?.params?.sessionId as string | undefined;
   const querySessionId = (() => {
@@ -49,13 +52,137 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   })();
   const currentSessionId = sessionId || routeSessionId || querySessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
   
-  // Initialize socket immediately
+  // Initialize socket and join session
   useEffect(() => {
-    if (currentSessionId) {
-      console.log('🔌 [Classroom] Initializing socket...');
-      initSocket();
-      connectSocket();
+    if (!currentSessionId) return;
+    
+    console.log('🔌 [Classroom] Initializing socket...');
+    // Destroy any existing socket to ensure fresh connection with correct auth
+    destroySocket();
+    initSocket();
+    connectSocket();
+    
+    const socket = getSocket();
+    setSocketInstance(socket);
+    
+    // Wait for connection before joining
+    const onConnect = () => {
+      console.log('✅ [Classroom] Socket connected, joining session:', currentSessionId);
+      socket.emit('session:join', { sessionId: currentSessionId });
+      socket.emit('chat:request-history', { sessionId: currentSessionId });
+    };
+    
+    // Handle incoming chat messages
+    const onChatMessage = (data: ChatMessageData) => {
+      console.log('💬 [Classroom] Received message:', data);
+      const newMsg: ChatMessage = {
+        id: data.id,
+        sender: data.senderType,
+        text: data.text,
+        timestamp: new Date(data.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        correction: data.correction
+      };
+      setChatMessages(prev => {
+        // Avoid duplicates
+        if (prev.some(m => m.id === data.id)) return prev;
+        return [...prev, newMsg];
+      });
+    };
+    
+    // Handle chat history
+    const onChatHistory = (messages: ChatMessageData[]) => {
+      console.log('📜 [Classroom] Received chat history:', messages.length, 'messages');
+      const formattedMessages: ChatMessage[] = messages.map(msg => ({
+        id: msg.id,
+        sender: msg.senderType,
+        text: msg.text,
+        timestamp: new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        correction: msg.correction
+      }));
+      setChatMessages(formattedMessages);
+    };
+    
+    // Handle typing indicator
+    const onTyping = (data: { userId: string; isTyping: boolean }) => {
+      setRemoteTyping(data.isTyping);
+    };
+    
+    // Handle session state
+    const onSessionState = (data: any) => {
+      console.log('📋 [Classroom] Session state:', data);
+      if (data.status === 'active') {
+        setIsConnecting(false);
+      }
+      // Always update tutor info with latest from session state
+      if (data.participants?.tutorId) {
+        setTutorInfo({
+          id: data.participants.tutorId,
+          name: 'Tutor',
+          initials: 'TU',
+          date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        });
+        console.log('🎯 [Classroom] Updated tutorInfo to:', data.participants.tutorId);
+      } else {
+        // No tutor in session, clear tutorInfo
+        setTutorInfo(null);
+      }
+    };
+    
+    // Handle user joined
+    const onUserJoined = (data: { userId: string; userType: string }) => {
+      console.log('👋 [Classroom] User joined:', data);
+      if (data.userType === 'tutor') {
+        setIsConnecting(false);
+        // Always update with the latest tutor ID
+        setTutorInfo({
+          id: data.userId,
+          name: 'Tutor',
+          initials: 'TU',
+          date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        });
+        console.log('🎯 [Classroom] Tutor joined with ID:', data.userId);
+      }
+    };
+    
+    // Handle user left
+    const onUserLeft = (data: { userId: string; userType: string }) => {
+      console.log('👋 [Classroom] User left:', data);
+      if (data.userType === 'tutor') {
+        setTutorInfo(null);
+      }
+    };
+    
+    // Handle lesson ended by tutor
+    const onLessonEnded = (data: { tutorId: string; message?: string }) => {
+      console.log('🔔 [Classroom] Lesson ended by tutor:', data);
+      setLessonEndedMessage(data.message || 'The tutor has ended the lesson. Thank you for learning with us!');
+    };
+    
+    // Set up listeners
+    socket.on('connect', onConnect);
+    socket.on('chat:message', onChatMessage);
+    socket.on('chat:history', onChatHistory);
+    socket.on('chat:typing', onTyping);
+    socket.on('session:state', onSessionState);
+    socket.on('session:user-joined', onUserJoined);
+    socket.on('session:user-left', onUserLeft);
+    socket.on('session:lesson-ended', onLessonEnded);
+    
+    // If already connected, join immediately
+    if (socket.connected) {
+      onConnect();
     }
+    
+    return () => {
+      socket.off('connect', onConnect);
+      socket.off('chat:message', onChatMessage);
+      socket.off('chat:history', onChatHistory);
+      socket.off('chat:typing', onTyping);
+      socket.off('session:state', onSessionState);
+      socket.off('session:user-joined', onUserJoined);
+      socket.off('session:user-left', onUserLeft);
+      socket.off('session:lesson-ended', onLessonEnded);
+    };
   }, [currentSessionId]);
   
   // State
@@ -63,11 +190,62 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [activeMaterialSection, setActiveMaterialSection] = useState(0);
   const [isSwapped, setIsSwapped] = useState(false);
   const [tutorInfo, setTutorInfo] = useState<{ name: string; id: string; initials: string; date: string } | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
   const [isSpeakingLocal, setIsSpeakingLocal] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [remoteTyping, setRemoteTyping] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [lessonEndedMessage, setLessonEndedMessage] = useState<string | null>(null);
+
+  // Try to enable audio - will succeed if user has engagement history with the site
+  useEffect(() => {
+    if (audioEnabled) return;
+    
+    // Try to play unmuted immediately (works if site has media engagement)
+    const tryAutoUnmute = async () => {
+      const testAudio = new Audio();
+      testAudio.volume = 0.01; // Very quiet
+      try {
+        await testAudio.play();
+        testAudio.pause();
+        // Success! Browser allows autoplay with sound
+        setAudioEnabled(true);
+        console.log('🔊 Autoplay with sound allowed by browser');
+        return;
+      } catch {
+        // Autoplay blocked, need user interaction
+        console.log('🔇 Autoplay blocked, waiting for user interaction');
+      }
+    };
+    
+    tryAutoUnmute();
+    
+    // Fallback: enable on first user interaction
+    const enableAudio = () => {
+      setAudioEnabled(true);
+      [remoteVideoRef.current, remotePipRef.current].forEach(video => {
+        if (video) {
+          video.muted = false;
+          console.log('🔊 Audio enabled via user interaction');
+        }
+      });
+      document.removeEventListener('click', enableAudio);
+      document.removeEventListener('keydown', enableAudio);
+      document.removeEventListener('touchstart', enableAudio);
+    };
+    
+    document.addEventListener('click', enableAudio);
+    document.addEventListener('keydown', enableAudio);
+    document.addEventListener('touchstart', enableAudio);
+    
+    return () => {
+      document.removeEventListener('click', enableAudio);
+      document.removeEventListener('keydown', enableAudio);
+      document.removeEventListener('touchstart', enableAudio);
+    };
+  }, [audioEnabled]);
 
   // WebRTC Hook
   const {
@@ -76,6 +254,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     isConnected,
     error: webrtcError,
     startLocalStream,
+    createOffer,
     toggleAudio,
     toggleVideo,
     cleanup
@@ -89,91 +268,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   };
 
-  // Mock chat messages
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      sender: 'student',
-      text: 'No, because I like to meeting new people.',
-      timestamp: '10:01 AM',
-      correction: 'No, because I like to meet new people.'
-    },
-    {
-      id: '2',
-      sender: 'tutor',
-      text: 'Humorous [hyoo-mer-uhs]',
-      timestamp: '10:02 AM'
-    },
-    {
-      id: '3',
-      sender: 'student',
-      text: 'They are humorous because they like speaking jokes.',
-      timestamp: '10:03 AM',
-      correction: 'They are humorous because they like telling jokes.'
-    }
-  ]);
-
-  // Mock lesson material sections
-  const lessonSections: LessonSection[] = [
-    {
-      id: '1',
-      type: 'dialogue',
-      title: 'UNDERSTAND',
-      content: {
-        dialogue: [
-          { speaker: 'Sofia', text: 'Oh, good! What are they like?' },
-          { speaker: 'Haru', text: "His mom's so friendly. She talked to me a lot and even cooked her special pasta for me." },
-          { speaker: 'Sofia', text: 'She sounds like a nice lady. What about his dad?' },
-          { speaker: 'Haru', text: "Oh, he's really funny. He told jokes all night." }
-        ],
-        instructions: [
-          'Transition to the next part',
-          '"Great! Let\'s go to the next part!"'
-        ]
-      }
-    },
-    {
-      id: '2',
-      type: 'trivia',
-      title: 'TRIVIA (1 minute)',
-      content: {
-        explanation: 'The word funny has two meanings in English. It can mean humorous or strange. To show the positive meaning of funny, you can use it with so or really. To show the negative meaning, you can use funny with a bit or a little.',
-        examples: [
-          { text: "He's really funny.", meaning: '(humorous)' },
-          { text: "He's a little funny.", meaning: '(strange)' }
-        ],
-        instructions: [
-          'Introduce the Trivia',
-          '"Let\'s look at the Trivia."',
-          'Read the trivia.',
-          'Confirm the student\'s understanding.',
-          '"Is it clear?"',
-          'Ask the question below:',
-          'Do you have any funny friends? Are they humorous funny or strange funny?'
-        ]
-      }
-    },
-    {
-      id: '3',
-      type: 'practice',
-      title: 'PRACTICE - STEP A (2 minutes)',
-      content: {
-        instruction: 'Choose the most polite answer in the parentheses. Strengthen the positive traits and soften the negative traits.',
-        exercises: [
-          { id: 1, text: 'Robin is (a bit / so) negative. She complains a lot.' },
-          { id: 2, text: 'My date was (a little / really) funny. I laughed all night.' },
-          { id: 3, text: 'The bus driver seems (a bit / so) friendly. He always smiles at everyone.' }
-        ],
-        tutorInstructions: [
-          'Introduce Practice',
-          '"Okay, now let\'s do Practice."',
-          '"We\'re going to practice the grammar tip we read earlier."',
-          '"First we have Step A."',
-          'Read the instructions.'
-        ]
-      }
-    }
-  ];
+  // Chat messages - start empty, will load from server
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Timer effect
   useEffect(() => {
@@ -183,64 +279,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Initialize Socket.IO and join session
-  useEffect(() => {
-    if (!currentSessionId) {
-      console.error('No session ID provided');
-      return;
-    }
-
-    const socket = getSocket();
-
-    // Join the session room
-    socket.emit('session:join', { sessionId: currentSessionId });
-    console.log('🎓 Student joining session:', currentSessionId);
-
-    // Listen for tutor joining
-    socket.on('session:user-joined', ({ userId, userType }) => {
-      console.log(`👥 User joined: ${userType} - ${userId}`);
-      if (userType === 'tutor') {
-        setTutorInfo({ id: userId, name: 'Tutor', initials: 'TT', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
-        setIsConnecting(false);
-      }
-    });
-
-    // Listen for student leaving
-    socket.on('session:user-left', ({ userType }) => {
-      console.log(`👋 User left: ${userType}`);
-      if (userType === 'student') {
-        setStudentInfo(null);
-      }
-    });
-
-    // Listen for session state
-    socket.on('session:state', (state) => {
-      console.log('📊 Session state:', state);
-      if (state.participants.studentId) {
-        setStudentInfo({ id: state.participants.studentId, name: 'Student', initials: 'ST', date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) });
-        setIsConnecting(false);
-      }
-    });
-
-    return () => {
-      socket.emit('session:leave');
-      socket.off('session:user-joined');
-      socket.off('session:user-left');
-      socket.off('session:state');
-    };
-  }, [currentSessionId]);
-
-  // Start local media as soon as page loads on student side
-  useEffect(() => {
-    startLocalStream(true, true).catch(() => {});
-  }, [startLocalStream]);
-
-  // Start local media when component mounts
+  // Start local media when component mounts (only once)
   useEffect(() => {
     const initWebRTC = async () => {
       try {
         console.log('🎥 [Classroom] Starting local media stream...');
-        console.log('🎥 [Classroom] startLocalStream function:', typeof startLocalStream);
         await startLocalStream(true, true);
         console.log('🎥 [Classroom] Local media stream started successfully');
       } catch (err) {
@@ -249,34 +292,86 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
 
     initWebRTC();
-  }, [startLocalStream]);
+  }, []); // Empty deps - only run once on mount
 
-  // Attach local stream to video element
+  // When tutor info is known and local stream is ready, student initiates offer
   useEffect(() => {
-    console.log('📹 [Classroom] Local stream state:', localStream ? 'EXISTS' : 'NULL');
-    console.log('📹 [Classroom] Local video ref:', localVideoRef.current ? 'EXISTS' : 'NULL');
-    if (localStream && localVideoRef.current) {
-      console.log('📹 [Classroom] Attaching local stream to video element');
-      localVideoRef.current.srcObject = localStream;
-      // Ensure the video plays
-      localVideoRef.current.play().catch(err => {
-        console.error('❌ [Classroom] Error playing local video:', err);
-      });
-      console.log('📹 [Classroom] Local stream attached successfully');
+    if (tutorInfo?.id && localStream) {
+      console.log('🎓 Student initiating offer to tutor:', tutorInfo.id);
+      createOffer();
     }
-  }, [localStream]);
+  }, [tutorInfo?.id, localStream, createOffer]);
 
-  // Attach remote stream to video element
+  // Attach all streams to all video refs - robust effect with interval checking
   useEffect(() => {
-    if (remoteStream && remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = remoteStream;
-      // Ensure the video plays
-      remoteVideoRef.current.play().catch(err => {
-        console.error('❌ [Classroom] Error playing remote video:', err);
-      });
-      console.log('📺 Remote stream attached');
-    }
-  }, [remoteStream]);
+    const attachStreams = () => {
+      let attached = false;
+      
+      if (localStream) {
+        if (localVideoRef.current && localVideoRef.current.srcObject !== localStream) {
+          localVideoRef.current.srcObject = localStream;
+          localVideoRef.current.play().catch(() => {});
+          console.log('📹 [Classroom] Local stream attached to main video');
+          attached = true;
+        }
+        if (localPipRef.current && localPipRef.current.srcObject !== localStream) {
+          localPipRef.current.srcObject = localStream;
+          localPipRef.current.play().catch(() => {});
+          console.log('📹 [Classroom] Local stream attached to PiP video');
+          attached = true;
+        }
+        // Update stream ID to force re-render if needed
+        const newLocalId = localStream.id || Date.now().toString();
+        setLocalStreamId(prev => prev !== newLocalId ? newLocalId : prev);
+      }
+      
+      if (remoteStream) {
+        if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
+          remoteVideoRef.current.srcObject = remoteStream;
+          remoteVideoRef.current.play().catch(() => {});
+          console.log('📺 [Classroom] Remote stream attached to main video');
+          attached = true;
+        }
+        if (remotePipRef.current && remotePipRef.current.srcObject !== remoteStream) {
+          remotePipRef.current.srcObject = remoteStream;
+          remotePipRef.current.play().catch(() => {});
+          console.log('📺 [Classroom] Remote stream attached to PiP video');
+          attached = true;
+        }
+        // Update stream ID to force re-render if needed
+        const newRemoteId = remoteStream.id || Date.now().toString();
+        setRemoteStreamId(prev => prev !== newRemoteId ? newRemoteId : prev);
+      }
+      
+      return attached;
+    };
+    
+    // Attach immediately
+    attachStreams();
+    
+    // Keep checking periodically until streams are attached (handles late DOM mounting)
+    const intervalId = setInterval(() => {
+      const allAttached = attachStreams();
+      // Check if all expected streams are attached
+      const localAttached = !localStream || (localVideoRef.current?.srcObject === localStream);
+      const remoteAttached = !remoteStream || (remoteVideoRef.current?.srcObject === remoteStream && remotePipRef.current?.srcObject === remoteStream);
+      
+      if (localAttached && remoteAttached) {
+        // All streams attached, can reduce frequency but keep monitoring
+      }
+    }, 500);
+    
+    // Also attach after short delays to handle race conditions
+    const timeouts = [100, 300, 1000, 2000].map(delay => 
+      setTimeout(attachStreams, delay)
+    );
+    
+    return () => {
+      clearInterval(intervalId);
+      timeouts.forEach(t => clearTimeout(t));
+    };
+  }, [localStream, remoteStream]);
+
   // Detect local speaking using Web Audio API
   useEffect(() => {
     if (!localStream) return;
@@ -308,31 +403,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
   }, [localStream]);
 
-  // Re-attach correct streams when swapping views
-  useEffect(() => {
-    if (isSwapped) {
-      // Remote should be in main; local in PiP
-      if (remoteStream && remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.play().catch(() => {});
-      }
-      if (localStream && localPipRef.current) {
-        localPipRef.current.srcObject = localStream;
-        localPipRef.current.play().catch(() => {});
-      }
-    } else {
-      // Local should be in main; remote in PiP
-      if (localStream && localVideoRef.current) {
-        localVideoRef.current.srcObject = localStream;
-        localVideoRef.current.play().catch(() => {});
-      }
-      if (remoteStream && remotePipRef.current) {
-        remotePipRef.current.srcObject = remoteStream;
-        remotePipRef.current.play().catch(() => {});
-      }
-    }
-  }, [isSwapped, localStream, remoteStream]);
-
   // Handle audio/video toggles
   useEffect(() => {
     toggleAudio(!isMuted);
@@ -357,15 +427,31 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   };
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
-    const newMsg: ChatMessage = {
-      id: Date.now().toString(),
-      sender: 'tutor',
-      text: message,
-      timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    };
-    setChatMessages(prev => [...prev, newMsg]);
+    if (!message.trim() || !currentSessionId) return;
+    
+    try {
+      const socket = getSocket();
+      socket.emit('chat:send', {
+        sessionId: currentSessionId,
+        text: message.trim()
+      });
+      console.log('📤 [Classroom] Sent message:', message.trim());
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
+    
+    handleTyping(false);
     setMessage('');
+  };
+
+  // Handle typing indicator
+  const handleTyping = (typing: boolean) => {
+    try {
+      const socket = getSocket();
+      socket.emit('chat:typing', { isTyping: typing });
+    } catch (error) {
+      // Socket might not be ready
+    }
   };
 
   useEffect(() => {
@@ -409,82 +495,106 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 <p>Waiting for tutor to join...</p>
               </div>
             )}
-            {isSwapped ? (
-              // Student (remote) in main
-              remoteStream ? (
-                <video ref={remoteVideoRef} autoPlay playsInline className="remote-video" />
-              ) : (
-                <div className="video-placeholder student-video">
-                  <div className="video-avatar-large">{studentData.initials}</div>
-                  <span className="video-name">{studentData.name}</span>
-                  {!isConnected && studentInfo && <span className="connection-text">Connecting...</span>}
+            {/* All video elements always rendered, visibility controlled by isSwapped */}
+            {/* Remote video in main (visible when swapped) */}
+            <video 
+              ref={(el) => {
+                remoteVideoRef.current = el;
+                if (el && remoteStream && el.srcObject !== remoteStream) {
+                  el.srcObject = remoteStream;
+                  el.muted = !audioEnabled;
+                  el.play().catch(() => {});
+                  console.log('🎬 Remote Main: Stream attached');
+                }
+              }}
+              autoPlay 
+              playsInline 
+              muted={!audioEnabled}
+              className="remote-video"
+              style={{ display: isSwapped && remoteStream ? 'block' : 'none' }}
+            />
+            {/* Remote placeholder in main (visible when swapped and no stream) */}
+            {isSwapped && !remoteStream && (
+              <div className="video-placeholder student-video">
+                <div className="video-avatar-large">{studentData.initials}</div>
+                <span className="video-name">{studentData.name}</span>
+                {!isConnected && tutorInfo && <span className="connection-text">Connecting...</span>}
+              </div>
+            )}
+            {/* Local video in main (visible when not swapped) */}
+            <video 
+              ref={localVideoRef} 
+              muted 
+              autoPlay 
+              playsInline 
+              className="local-video" 
+              style={{ display: !isSwapped && !isVideoOff ? 'block' : 'none' }}
+            />
+            {/* Speaking indicator for local in main */}
+            {!isSwapped && !isVideoOff && (
+              <div className={`mic-indicator mic-large ${isSpeakingLocal ? 'active' : ''}`}> 
+                <div className="mic-dot" />
+              </div>
+            )}
+            {/* Local placeholder in main (visible when not swapped and video off) */}
+            {!isSwapped && isVideoOff && (
+              <div className="video-placeholder tutor-video">
+                <div className="video-avatar-large">
+                  {user?.firstName?.charAt(0) || 'S'}{user?.lastName?.charAt(0) || ''}
                 </div>
-              )
-            ) : (
-              // Student (local) in main
-              <>
-                <video 
-                  ref={localVideoRef} 
-                  muted 
-                  autoPlay 
-                  playsInline 
-                  className="local-video" 
-                  style={{ display: isVideoOff ? 'none' : 'block' }}
-                />
-                {/* Speaking indicator bottom-left when local is main */}
-                {!isVideoOff && (
-                  <div className={`mic-indicator mic-large ${isSpeakingLocal ? 'active' : ''}`}> 
-                    <div className="mic-dot" />
-                  </div>
-                )}
-                {isVideoOff && (
-                  <div className="video-placeholder tutor-video">
-                    <div className="video-avatar-large">
-                      {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
-                    </div>
-                    <span className="video-name">{user?.firstName || 'Tutor'}</span>
-                  </div>
-                )}
-              </>
+                <span className="video-name">{user?.firstName || 'Student'}</span>
+              </div>
             )}
           </div>
 
-          {/* Picture-in-Picture (click to show tutor in main) */}
-          <div className="video-pip" onClick={() => setIsSwapped(false)} title="Show tutor in main">
-            {isSwapped ? (
-              // Tutor (local) in PiP
-              <>
-                <video 
-                  muted 
-                  autoPlay 
-                  playsInline 
-                  className="local-video-small" 
-                  style={{ display: isVideoOff ? 'none' : 'block' }}
-                  ref={localPipRef}
-                />
-                {/* Speaking indicator bottom-left for PiP when local is PiP */}
-                {!isVideoOff && (
-                  <div className={`mic-indicator ${isSpeakingLocal ? 'active' : ''}`}>
-                    <div className="mic-dot" />
-                  </div>
-                )}
-                {isVideoOff && (
-                  <div className="video-placeholder tutor-video">
-                    <div className="video-avatar-small">
-                      {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              // Student (remote) in PiP
-              remoteStream ? (
-                <video autoPlay playsInline className="remote-video-small" ref={remotePipRef} />
-              ) : (
-                <div className="video-placeholder student-video">
-                  <div className="video-avatar-small">{studentData.initials}</div>
+          {/* Picture-in-Picture (click to swap) */}
+          <div className="video-pip" onClick={() => setIsSwapped(prev => !prev)} title="Click to swap">
+            {/* All PiP video elements always rendered, visibility controlled by isSwapped */}
+            {/* Local video in PiP (visible when swapped) */}
+            <video 
+              muted 
+              autoPlay 
+              playsInline 
+              className="local-video-small" 
+              style={{ display: isSwapped && !isVideoOff ? 'block' : 'none' }}
+              ref={localPipRef}
+            />
+            {/* Speaking indicator for local in PiP */}
+            {isSwapped && !isVideoOff && (
+              <div className={`mic-indicator ${isSpeakingLocal ? 'active' : ''}`}>
+                <div className="mic-dot" />
+              </div>
+            )}
+            {/* Local placeholder in PiP (visible when swapped and video off) */}
+            {isSwapped && isVideoOff && (
+              <div className="video-placeholder tutor-video">
+                <div className="video-avatar-small">
+                  {user?.firstName?.charAt(0) || 'S'}{user?.lastName?.charAt(0) || ''}
                 </div>
-              )
+              </div>
+            )}
+            {/* Remote video in PiP (visible when not swapped) */}
+            <video 
+              autoPlay 
+              playsInline 
+              muted={!audioEnabled}
+              className="remote-video-small" 
+              ref={(el) => {
+                remotePipRef.current = el;
+                if (el && remoteStream && el.srcObject !== remoteStream) {
+                  el.srcObject = remoteStream;
+                  el.muted = !audioEnabled;
+                  el.play().catch(() => {});
+                  console.log('🎬 Remote PiP: Stream attached');
+                }
+              }}
+              style={{ display: !isSwapped && remoteStream ? 'block' : 'none' }}
+            />
+            {/* Remote placeholder in PiP (visible when not swapped and no stream) */}
+            {!isSwapped && !remoteStream && (
+              <div className="video-placeholder student-video">
+                <div className="video-avatar-small">{studentData.initials}</div>
+              </div>
             )}
           </div>
 
@@ -545,8 +655,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <span>Chat</span>
           </div>
           <div className="chat-messages">
-            {chatMessages.map((msg) => (
-              <div key={msg.id} className={`chat-message ${msg.sender}`}>
+            {chatMessages.map((msg) => {
+              // In student app: student messages are "self" (right), tutor messages are "other" (left)
+              const isOwnMessage = msg.sender === 'student';
+              return (
+              <div key={msg.id} className={`chat-message ${isOwnMessage ? 'self' : 'other'}`}>
                 {msg.correction && (
                   <div className="message-correction">
                     <span className="label">You said:</span> {msg.text}
@@ -561,7 +674,14 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 <span className="message-time">{msg.timestamp}</span>
               </div>
-            ))}
+              );
+            })}
+            {remoteTyping && (
+              <div className="typing-indicator">
+                <span>Tutor is typing</span>
+                <span className="typing-dots">...</span>
+              </div>
+            )}
             <div ref={chatEndRef} />
           </div>
           <div className="chat-input-area">
@@ -569,8 +689,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               type="text"
               placeholder="Enter your message here"
               value={message}
-              onChange={(e) => setMessage((e.target as HTMLInputElement).value)}
+              onChange={(e) => {
+                setMessage((e.target as HTMLInputElement).value);
+                handleTyping((e.target as HTMLInputElement).value.length > 0);
+              }}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onBlur={() => handleTyping(false)}
             />
             <button className="send-btn" onClick={handleSendMessage}>
               <i className="fi fi-sr-paper-plane"></i>
@@ -581,108 +705,43 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       {/* Right Panel - Learning Materials */}
       <div className="classroom-right">
-        {/* Material Navigation */}
-        <div className="material-nav">
-          {lessonSections.map((section, idx) => (
-            <button
-              key={section.id}
-              className={`material-nav-btn ${activeMaterialSection === idx ? 'active' : ''}`}
-              onClick={() => setActiveMaterialSection(idx)}
-            >
-              <span className="nav-number">{idx + 1}</span>
-              <span className="nav-label">{section.type.toUpperCase()}</span>
-            </button>
-          ))}
+        {/* Material Header */}
+        <div className="material-header">
+          <i className="fi fi-sr-book-open-reader"></i>
+          <span>Learning Material</span>
         </div>
 
-        {/* Material Content */}
-        <div className="material-content">
-          {lessonSections[activeMaterialSection].type === 'dialogue' && (
-            <div className="material-dialogue">
-              <h3 className="material-title">{lessonSections[activeMaterialSection].title}</h3>
-              <div className="dialogue-box">
-                {lessonSections[activeMaterialSection].content.dialogue.map((line: any, idx: number) => (
-                  <div key={idx} className="dialogue-line">
-                    <span className="speaker">{line.speaker}:</span>
-                    <span className="text">{line.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {lessonSections[activeMaterialSection].type === 'trivia' && (
-            <div className="material-trivia">
-              <h3 className="material-title">
-                <i className="fi fi-sr-lightbulb-on"></i>
-                {lessonSections[activeMaterialSection].title}
-              </h3>
-              <div className="trivia-box">
-                <p className="trivia-explanation">
-                  {lessonSections[activeMaterialSection].content.explanation}
-                </p>
-                <div className="trivia-examples">
-                  {lessonSections[activeMaterialSection].content.examples.map((ex: any, idx: number) => (
-                    <div key={idx} className="example-item">
-                      <span className="example-marker">○</span>
-                      <span className="example-text">{ex.text}</span>
-                      <span className="example-meaning">{ex.meaning}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {lessonSections[activeMaterialSection].type === 'practice' && (
-            <div className="material-practice">
-              <h3 className="material-title">
-                <i className="fi fi-sr-pencil"></i>
-                {lessonSections[activeMaterialSection].title}
-              </h3>
-              <div className="practice-box">
-                <p className="practice-instruction">
-                  {lessonSections[activeMaterialSection].content.instruction}
-                </p>
-                <div className="practice-exercises">
-                  {lessonSections[activeMaterialSection].content.exercises.map((ex: any) => (
-                    <div key={ex.id} className="exercise-item">
-                      <span className="exercise-number">{ex.id}.</span>
-                      <span className="exercise-text">{ex.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Tutor Instructions Sidebar */}
-        <div className="tutor-instructions">
-          <h4 className="instructions-title">
-            {lessonSections[activeMaterialSection].type.toUpperCase()}
-          </h4>
-          <div className="instructions-list">
-            {(lessonSections[activeMaterialSection].content.instructions ||
-              lessonSections[activeMaterialSection].content.tutorInstructions)?.map((inst: string, idx: number) => (
-              <div key={idx} className={`instruction-item ${inst.startsWith('"') ? 'quote' : ''}`}>
-                {inst.startsWith('"') ? (
-                  <span className="instruction-quote">{inst}</span>
-                ) : (
-                  <>
-                    <span className="instruction-number">{idx + 1}</span>
-                    <span className="instruction-text">{inst}</span>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-          <button className="next-section-btn" onClick={() => setActiveMaterialSection(prev => Math.min(prev + 1, lessonSections.length - 1))}>
-            <span>Next Section</span>
-            <i className="fi fi-sr-arrow-right"></i>
-          </button>
+        {/* PDF Viewer */}
+        <div className="pdf-viewer-container">
+          <PdfViewer socket={socketInstance} sessionId={currentSessionId} userType="student" />
         </div>
       </div>
+
+      {/* Lesson Ended Toast Notification */}
+      {lessonEndedMessage && (
+        <div className="lesson-ended-toast">
+          <div className="toast-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <div className="toast-content">
+            <span className="toast-title">Lesson Time Over</span>
+            <span className="toast-message">{lessonEndedMessage}</span>
+          </div>
+          <button 
+            className="toast-close"
+            onClick={() => setLessonEndedMessage(null)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
