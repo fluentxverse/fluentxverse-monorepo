@@ -23,6 +23,7 @@ export const TutorProfilePage = () => {
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [availability, setAvailability] = useState<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('morning');
+  const [preSelectedSlot, setPreSelectedSlot] = useState<{ date: string; time: string } | null>(null);
 
   // Generate 30-minute interval time slots for Asia/Seoul based on selected period
   // Tutor opens Philippine time 05:00 - 23:30; student sees equivalent in Asia/Seoul.
@@ -113,7 +114,30 @@ export const TutorProfilePage = () => {
   }, [tutorId]);
 
   const handleBookTrial = () => {
+    setPreSelectedSlot(null);
     setBookingModalOpen(true);
+  };
+
+  const handleSlotClick = (date: string, time: string, status: string) => {
+    if (status === 'AVAIL') {
+      // Convert display time (24h KST) to 12h PHT format for matching
+      // KST is +1 hour from PHT, so we subtract 1 hour
+      const [hourStr, minStr] = time.split(':');
+      let hour = parseInt(hourStr, 10);
+      const minute = minStr;
+      
+      // Convert KST to PHT (subtract 1 hour)
+      hour = hour - 1;
+      if (hour < 0) hour = 23; // Handle midnight rollover
+      
+      // Convert to 12-hour format
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      const time12 = `${hour12}:${minute} ${period}`;
+      
+      setPreSelectedSlot({ date, time: time12 });
+      setBookingModalOpen(true);
+    }
   };
 
   if (loading) {
@@ -494,8 +518,15 @@ export const TutorProfilePage = () => {
                               const slot = availability.find((s) => s.date === dateStr && s.time === time);
                               const status = slot?.status;
                               const label = status === 'TAKEN' ? 'TAKEN' : status === 'BOOKED' ? 'BOOKED' : status === 'AVAIL' ? 'AVAIL' : '';
+                              const isClickable = status === 'AVAIL';
                               return (
-                                <td key={dayIdx} className={`slot ${label || 'disabled'}`}>
+                                <td 
+                                  key={dayIdx} 
+                                  className={`slot ${label || 'disabled'} ${isClickable ? 'clickable' : ''}`}
+                                  onClick={() => isClickable && handleSlotClick(dateStr, time, status || '')}
+                                  style={isClickable ? { cursor: 'pointer' } : undefined}
+                                  title={isClickable ? 'Click to book this slot' : undefined}
+                                >
                                   {label}
                                 </td>
                               );
@@ -557,11 +588,16 @@ export const TutorProfilePage = () => {
       {tutor && (
         <BookingModal
           isOpen={bookingModalOpen}
-          onClose={() => setBookingModalOpen(false)}
+          onClose={() => {
+            setBookingModalOpen(false);
+            setPreSelectedSlot(null);
+          }}
           tutorId={tutor.userId}
           tutorName={displayName}
           tutorAvatar={tutor.profilePicture}
           hourlyRate={tutor.hourlyRate}
+          preSelectedDate={preSelectedSlot?.date}
+          preSelectedTime={preSelectedSlot?.time}
         />
       )}
     </>

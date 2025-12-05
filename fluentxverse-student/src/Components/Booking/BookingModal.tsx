@@ -10,6 +10,8 @@ interface BookingModalProps {
   tutorName: string;
   tutorAvatar?: string;
   hourlyRate?: number;
+  preSelectedDate?: string;
+  preSelectedTime?: string;
 }
 
 export const BookingModal = ({ 
@@ -18,7 +20,9 @@ export const BookingModal = ({
   tutorId, 
   tutorName,
   tutorAvatar,
-  hourlyRate
+  hourlyRate,
+  preSelectedDate,
+  preSelectedTime
 }: BookingModalProps) => {
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +36,18 @@ export const BookingModal = ({
       fetchAvailableSlots();
     }
   }, [isOpen, tutorId]);
+
+  // Auto-select slot when preSelectedDate/Time are provided
+  useEffect(() => {
+    if (preSelectedDate && preSelectedTime && availableSlots.length > 0) {
+      const matchingSlot = availableSlots.find(
+        slot => slot.date === preSelectedDate && slot.time === preSelectedTime
+      );
+      if (matchingSlot) {
+        setSelectedSlot(matchingSlot);
+      }
+    }
+  }, [preSelectedDate, preSelectedTime, availableSlots]);
 
   const fetchAvailableSlots = async () => {
     setLoading(true);

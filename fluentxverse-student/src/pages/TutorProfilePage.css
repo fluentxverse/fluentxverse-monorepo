@@ -330,6 +330,17 @@
   border: none;
 }
 
+.slot.avail.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slot.avail.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
 .slot.taken {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
