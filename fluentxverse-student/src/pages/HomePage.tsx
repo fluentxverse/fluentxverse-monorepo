@@ -17,6 +17,8 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
+  const [activityPage, setActivityPage] = useState(1);
+  const ACTIVITY_PER_PAGE = 5;
 
   // Fetch student stats
   useEffect(() => {
@@ -53,7 +55,7 @@ const HomePage = () => {
       try {
         setActivityLoading(true);
         console.log('Fetching recent activity...');
-        const data = await scheduleApi.getStudentActivity(10);
+        const data = await scheduleApi.getStudentActivity(50); // Get more items for pagination
         console.log('Recent activity received:', data.length, 'items');
         setRecentActivity(data);
       } catch (err: any) {
@@ -395,29 +397,55 @@ const HomePage = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="home-activity-list">
-                      {recentActivity.map((activity, idx) => (
-                        <div
-                          key={idx}
-                          className="home-activity-item"
-                        >
-                          <div className={`home-activity-icon ${activity.type === 'lesson_completed' ? 'lesson' : 'booking'}`}>
-                            <i className={`fas fa-${activity.type === 'lesson_completed' ? 'check-circle' : 'calendar-plus'}`}></i>
-                          </div>
-                          <div className="home-activity-content">
-                            <div className="home-activity-action">
-                              {activity.action}
+                    <>
+                      <div className="home-activity-list">
+                        {recentActivity
+                          .slice((activityPage - 1) * ACTIVITY_PER_PAGE, activityPage * ACTIVITY_PER_PAGE)
+                          .map((activity, idx) => (
+                          <div
+                            key={idx}
+                            className="home-activity-item"
+                          >
+                            <div className={`home-activity-icon ${activity.type === 'lesson_completed' ? 'lesson' : 'booking'}`}>
+                              <i className={`fas fa-${activity.type === 'lesson_completed' ? 'check-circle' : 'calendar-plus'}`}></i>
                             </div>
-                            <div className="home-activity-tutor">
-                              with {activity.tutorName}
+                            <div className="home-activity-content">
+                              <div className="home-activity-action">
+                                {activity.action}
+                              </div>
+                              <div className="home-activity-tutor">
+                                with {activity.tutorName}
+                              </div>
+                            </div>
+                            <div className="home-activity-date">
+                              {activity.date}
                             </div>
                           </div>
-                          <div className="home-activity-date">
-                            {activity.date}
-                          </div>
+                        ))}
+                      </div>
+                      {/* Pagination */}
+                      {recentActivity.length > ACTIVITY_PER_PAGE && (
+                        <div className="home-activity-pagination">
+                          <button
+                            className="home-activity-page-btn"
+                            onClick={() => setActivityPage(p => Math.max(1, p - 1))}
+                            disabled={activityPage === 1}
+                          >
+                            <i className="fas fa-chevron-left"></i>
+                          </button>
+                          <span className="home-activity-page-info">
+                            {activityPage} / {Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE)}
+                          </span>
+                          <button
+                            className="home-activity-page-btn"
+                            onClick={() => setActivityPage(p => Math.min(Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE), p + 1))}
+                            disabled={activityPage >= Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE)}
+                          >
+                            <i className="fas fa-chevron-right"></i>
+                          </button>
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
                 </div>
               </>

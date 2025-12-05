@@ -87,11 +87,22 @@ export class TutorService {
         }
       } else {
         // "All Dates" - show tutors who have ANY open slots from today onwards
-        matchPattern = `MATCH (u:User)
-          OPTIONAL MATCH (u)-[:OPENS_SLOT]->(s:TimeSlot)
+        // Also apply time range filtering if provided
+        matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
           WHERE s.slotDate >= $today AND s.status = 'open'`;
         whereClause = '';
-        console.log('📅 No date filter, showing tutors with any open slots from today');
+        
+        // Store time filters for post-processing
+        if (startTime) {
+          queryParams.startTimeMinutes = timeToMinutes(startTime);
+          console.log('📅 All Dates - Start time filter (minutes):', queryParams.startTimeMinutes);
+        }
+        if (endTime) {
+          queryParams.endTimeMinutes = timeToMinutes(endTime);
+          console.log('📅 All Dates - End time filter (minutes):', queryParams.endTimeMinutes);
+        }
+        
+        console.log('📅 No date filter, showing tutors with any open slots from today with time range filter');
       }
 
       // Get total count of tutors matching filter
@@ -99,7 +110,10 @@ export class TutorService {
       let countQuery: string;
       let tutorsQuery: string;
       
-      if (dateFilter && (startTime || endTime)) {
+      // Check if we need time filtering (either with date filter or "All Dates")
+      const needsTimeFiltering = startTime || endTime;
+      
+      if (needsTimeFiltering) {
         // For time filtering, we need to get slots and filter in code
         // because string comparison of 12-hour format doesn't work correctly
         countQuery = `
@@ -110,7 +124,7 @@ export class TutorService {
         
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
       } else if (!dateFilter) {
-        // "All Dates" mode - need to get tutors with their slot count
+        // "All Dates" mode without time filter - need to get tutors with their slot count
         countQuery = `
           ${matchPattern}
           WITH u, count(s) as slotCount
@@ -148,8 +162,8 @@ export class TutorService {
       let total: number;
       let tutors: Tutor[];
       
-      if (dateFilter && (startTime || endTime)) {
-        // Time filtering mode - fetch all matching tutors with their slots
+      if (needsTimeFiltering) {
+        // Time filtering mode (with or without date filter) - fetch all matching tutors with their slots
         const result = await session.run(countQuery, queryParams);
         
         // Filter tutors who have at least one slot in the time range
@@ -192,7 +206,7 @@ export class TutorService {
         
         console.log(`📅 Time filtering: ${result.records.length} tutors found, ${total} after time filter`);
       } else if (!dateFilter) {
-        // "All Dates" mode - tutors with any open slots
+        // "All Dates" mode without time filter - tutors with any open slots
         const countResult = await session.run(countQuery, queryParams);
         total = countResult.records[0]?.get('total')?.toNumber?.() || 0;
 

@@ -845,7 +845,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                       </a>
                     )}
                     {/* Text content with formatting */}
-                    {msg.text && !msg.text.startsWith() && (
+                    {msg.text && !msg.text.startsWith('*') && (
                       <span className="message-text">{formatMessageText(msg.text)}</span>
                     )}
                   </div>
