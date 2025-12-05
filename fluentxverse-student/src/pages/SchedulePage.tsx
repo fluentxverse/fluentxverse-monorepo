@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'preact/hooks';
-import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
@@ -12,22 +11,58 @@ interface Booking {
   tutorName: string;
   tutorAvatar?: string;
   date: Date;
+  dateStr: string;
   time: string;
-  duration: number; // in minutes
+  timeDisplay: string;
+  duration: number;
   status: 'upcoming' | 'completed' | 'cancelled';
+  originalStatus: string;
 }
 
 const SchedulePage = () => {
   useEffect(() => {
-    document.title = 'Schedule | FluentXVerse';
+    document.title = 'My Schedule | FluentXVerse';
   }, []);
 
   const { user } = useAuthContext();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
-  // Fetch bookings from API
+  // Convert 12-hour PHT time to 24-hour KST time
+  const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string; dateObj: Date } => {
+    const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) {
+      return { date: dateStr, time: '00:00', dateObj: new Date(dateStr) };
+    }
+
+    let hour = parseInt(match[1], 10);
+    const minute = parseInt(match[2], 10);
+    const isPM = match[3].toUpperCase() === 'PM';
+
+    if (hour === 12) {
+      hour = isPM ? 12 : 0;
+    } else if (isPM) {
+      hour += 12;
+    }
+
+    let kstHour = hour + 1;
+    let kstDate = dateStr;
+
+    if (kstHour >= 24) {
+      kstHour -= 24;
+      const nextDay = new Date(dateStr);
+      nextDay.setDate(nextDay.getDate() + 1);
+      kstDate = nextDay.toISOString().split('T')[0];
+    }
+
+    const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    const dateObj = new Date(`${kstDate}T${kstTime}:00`);
+
+    return { date: kstDate, time: kstTime, dateObj };
+  };
+
   useEffect(() => {
     const fetchBookings = async () => {
       if (!user) {
@@ -39,38 +74,38 @@ const SchedulePage = () => {
         setLoading(true);
         setError(null);
         const data = await scheduleApi.getStudentBookings();
-        
-        // Transform API data to component format
+
         const transformedBookings: Booking[] = data.map((booking: StudentBooking) => {
-          // Parse date and time from slot data
-          const slotDateTime = new Date(`${booking.slotDate}T${booking.slotTime}`);
-          
-          // Determine status based on date and booking status
+          const { date: kstDate, time: kstTime, dateObj } = convertPHTtoKST(booking.slotDate, booking.slotTime);
+
           let status: 'upcoming' | 'completed' | 'cancelled' = 'upcoming';
           if (booking.status === 'completed') {
             status = 'completed';
           } else if (booking.status === 'cancelled') {
             status = 'cancelled';
-          } else if (slotDateTime < new Date()) {
+          } else if (dateObj < new Date()) {
             status = 'completed';
           }
-          
+
           return {
             id: booking.bookingId,
             tutorId: booking.tutorId,
             tutorName: booking.tutorName,
             tutorAvatar: booking.tutorAvatar,
-            date: slotDateTime,
-            time: booking.slotTime,
+            date: dateObj,
+            dateStr: kstDate,
+            time: kstTime,
+            timeDisplay: kstTime,
             duration: booking.durationMinutes,
-            status
+            status,
+            originalStatus: booking.status
           };
         });
-        
+
         setBookings(transformedBookings);
       } catch (err) {
         console.error('Failed to fetch bookings:', err);
-        setError('Failed to load bookings. Please try again later.');
+        setError('Failed to load your schedule. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -79,350 +114,241 @@ const SchedulePage = () => {
     fetchBookings();
   }, [user]);
 
-  // Filter and sort upcoming lessons
+  const now = new Date();
   const upcomingLessons = bookings
-    .filter(b => b.status === 'upcoming' && new Date(b.date) > new Date())
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .filter(b => b.status === 'upcoming' && b.date > now)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const pastLessons = bookings
+    .filter(b => b.status === 'completed' || b.date <= now)
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const formatLessonDate = (date: Date) => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const tomorrowOnly = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
-    
+
     if (dateOnly.getTime() === todayOnly.getTime()) {
       return 'Today';
     } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
       return 'Tomorrow';
     } else {
-      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
   };
 
   const getTimeUntil = (date: Date) => {
-    const now = new Date();
-    const diff = new Date(date).getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const diff = date.getTime() - now.getTime();
+    if (diff < 0) return 'Started';
     
-    if (hours < 1) {
-      return `in ${minutes} minutes`;
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 60) {
+      return `in ${minutes} min`;
     } else if (hours < 24) {
-      return `in ${hours} hour${hours > 1 ? 's' : ''}`;
+      return `in ${hours}h ${minutes % 60}m`;
     } else {
-      const days = Math.floor(hours / 24);
       return `in ${days} day${days > 1 ? 's' : ''}`;
     }
   };
+
+  const getTimeSince = (date: Date) => {
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 30) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (days > 0) {
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    } else if (hours > 0) {
+      return `${hours}h ago`;
+    } else {
+      return `${minutes}m ago`;
+    }
+  };
+
+  const displayedLessons = activeTab === 'upcoming' ? upcomingLessons : pastLessons;
 
   return (
     <>
       <SideBar />
       <div className="main-content">
         <Header />
-        <main style={{ paddingTop: '120px', paddingBottom: '40px', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
+        <main className="schedule-page">
           <div className="container">
             {/* Header Section */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              marginBottom: '32px',
-              flexWrap: 'wrap',
-              gap: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)'
-                }}>
-                  <i className="fas fa-calendar-check" style={{ color: '#fff', fontSize: '22px' }}></i>
+            <div className="schedule-header">
+              <div className="schedule-header-left">
+                <div className="schedule-icon">
+                  <i className="fas fa-calendar-check"></i>
                 </div>
-                <h2 style={{ 
-                  margin: 0, 
-                  fontSize: '32px', 
-                  fontWeight: 800, 
-                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  letterSpacing: '0.5px'
-                }}>
-                  My Lessons
-                </h2>
+                <div>
+                  <h1 className="schedule-title">My Schedule</h1>
+                  <p className="schedule-subtitle">
+                    {upcomingLessons.length} upcoming lesson{upcomingLessons.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
               </div>
 
-              <button 
-                onClick={() => window.location.href = '/browse-tutors'}
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '14px',
-                  letterSpacing: '0.5px',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
-                }}
-              >
+              <a href="/browse-tutors" className="schedule-book-btn">
                 <i className="fas fa-plus-circle"></i>
                 Book a Lesson
+              </a>
+            </div>
+
+            {/* Tabs */}
+            <div className="schedule-tabs">
+              <button
+                className={`schedule-tab ${activeTab === 'upcoming' ? 'active' : ''}`}
+                onClick={() => setActiveTab('upcoming')}
+              >
+                <i className="fas fa-clock"></i>
+                Upcoming
+                {upcomingLessons.length > 0 && (
+                  <span className="tab-count">{upcomingLessons.length}</span>
+                )}
               </button>
+              <button
+                className={`schedule-tab ${activeTab === 'past' ? 'active' : ''}`}
+                onClick={() => setActiveTab('past')}
+              >
+                <i className="fas fa-history"></i>
+                Past Lessons
+                {pastLessons.length > 0 && (
+                  <span className="tab-count past">{pastLessons.length}</span>
+                )}
+              </button>
+            </div>
+
+            {/* Timezone Notice */}
+            <div className="schedule-timezone">
+              <i className="fas fa-globe-asia"></i>
+              <span>All times shown in Seoul Time (KST)</span>
             </div>
 
             {/* Loading State */}
             {loading && (
-              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  border: '4px solid rgba(2, 69, 174, 0.1)',
-                  borderTop: '4px solid #0245ae',
-                  borderRadius: '50%',
-                  margin: '0 auto 20px',
-                  animation: 'spin 1s linear infinite'
-                }}></div>
-                <p style={{ color: '#64748b', fontSize: '15px' }}>Loading your lessons...</p>
+              <div className="schedule-loading">
+                <div className="schedule-spinner"></div>
+                <p>Loading your schedule...</p>
               </div>
             )}
 
             {/* Error State */}
             {error && !loading && (
-              <div style={{
-                background: 'rgba(220, 38, 38, 0.1)',
-                border: '2px solid rgba(220, 38, 38, 0.2)',
-                borderRadius: '16px',
-                padding: '32px',
-                textAlign: 'center'
-              }}>
-                <i className="fas fa-exclamation-circle" style={{ fontSize: '48px', color: '#dc2626', marginBottom: '16px' }}></i>
-                <h3 style={{ margin: '0 0 8px 0', color: '#dc2626', fontSize: '18px', fontWeight: 700 }}>Error Loading Lessons</h3>
-                <p style={{ margin: '0 0 20px 0', color: '#64748b', fontSize: '14px' }}>{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  style={{
-                    background: '#dc2626',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '10px 24px',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  <i className="fas fa-redo" style={{ marginRight: '8px' }}></i>
+              <div className="schedule-error">
+                <i className="fas fa-exclamation-circle"></i>
+                <h3>Error Loading Schedule</h3>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()} className="retry-btn">
+                  <i className="fas fa-redo"></i>
                   Try Again
                 </button>
               </div>
             )}
 
             {/* Lessons List */}
-            {!loading && !error && upcomingLessons.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {upcomingLessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.95)',
-                      backdropFilter: 'blur(10px)',
-                      borderRadius: '16px',
-                      padding: '24px',
-                      boxShadow: '0 4px 20px rgba(2, 69, 174, 0.08)',
-                      border: '1px solid rgba(2, 69, 174, 0.06)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '20px',
-                      flexWrap: 'wrap',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = '0 6px 24px rgba(2, 69, 174, 0.12)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(2, 69, 174, 0.08)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
-                  >
+            {!loading && !error && displayedLessons.length > 0 && (
+              <div className="schedule-list">
+                {displayedLessons.map((lesson) => (
+                  <div key={lesson.id} className={`schedule-card ${activeTab}`}>
+                    {/* Date Badge */}
+                    <div className="schedule-card-date">
+                      <span className="date-day">{lesson.date.getDate()}</span>
+                      <span className="date-month">{lesson.date.toLocaleDateString('en-US', { month: 'short' })}</span>
+                    </div>
+
                     {/* Tutor Avatar */}
-                    <div style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '12px',
-                      background: lesson.tutorAvatar ? `url(${lesson.tutorAvatar})` : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 4px 12px rgba(2, 69, 174, 0.2)',
-                      flexShrink: 0
-                    }}>
-                      {!lesson.tutorAvatar && (
-                        <i className="fas fa-user" style={{ color: '#fff', fontSize: '24px' }}></i>
+                    <div className="schedule-card-avatar">
+                      {lesson.tutorAvatar ? (
+                        <img src={lesson.tutorAvatar} alt={lesson.tutorName} />
+                      ) : (
+                        <div className="avatar-placeholder">
+                          <i className="fas fa-user"></i>
+                        </div>
                       )}
                     </div>
 
                     {/* Lesson Info */}
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <h3 style={{ 
-                        margin: '0 0 8px 0', 
-                        fontSize: '18px', 
-                        fontWeight: 800, 
-                        color: '#0f172a'
-                      }}>
-                        {lesson.tutorName}
-                      </h3>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '14px', fontWeight: 600 }}>
-                          <i className="fas fa-calendar" style={{ color: '#0245ae' }}></i>
+                    <div className="schedule-card-info">
+                      <h3 className="tutor-name">{lesson.tutorName}</h3>
+                      <div className="lesson-details">
+                        <div className="lesson-detail">
+                          <i className="fas fa-calendar"></i>
                           <span>{formatLessonDate(lesson.date)}</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '14px', fontWeight: 600 }}>
-                          <i className="fas fa-clock" style={{ color: '#0245ae' }}></i>
-                          <span>{lesson.time} ({lesson.duration} min)</span>
+                        <div className="lesson-detail">
+                          <i className="fas fa-clock"></i>
+                          <span>{lesson.timeDisplay} KST ({lesson.duration} min)</span>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: 700 }}>
-                          <i className="fas fa-hourglass-half"></i>
-                          <span>{getTimeUntil(lesson.date)}</span>
-                        </div>
+                        {activeTab === 'upcoming' && (
+                          <div className="lesson-detail countdown">
+                            <i className="fas fa-hourglass-half"></i>
+                            <span>{getTimeUntil(lesson.date)}</span>
+                          </div>
+                        )}
+                        {activeTab === 'past' && (
+                          <div className="lesson-detail past-time">
+                            <i className="fas fa-check-circle"></i>
+                            <span>{getTimeSince(lesson.date)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Action Button */}
-                    <button
-                      onClick={() => window.open(`/lesson/${lesson.id}`, '_blank')}
-                      style={{
-                        background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '14px 28px',
-                        borderRadius: '12px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        fontSize: '14px',
-                        letterSpacing: '0.5px',
-                        transition: 'all 0.2s ease',
-                        flexShrink: 0
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(2, 69, 174, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(2, 69, 174, 0.3)';
-                      }}
-                    >
-                      <i className="fas fa-video"></i>
-                      Join Lesson
-                    </button>
+                    {/* Action Buttons */}
+                    <div className="schedule-card-actions">
+                      {activeTab === 'upcoming' ? (
+                        <>
+                          <a href={`/lesson/${lesson.id}`} className="action-btn primary">
+                            <i className="fas fa-video"></i>
+                            Join Lesson
+                          </a>
+                          <a href={`/tutor/${lesson.tutorId}`} className="action-btn secondary">
+                            <i className="fas fa-user"></i>
+                            View Tutor
+                          </a>
+                        </>
+                      ) : (
+                        <>
+                          <a href={`/tutor/${lesson.tutorId}`} className="action-btn secondary">
+                            <i className="fas fa-redo"></i>
+                            Book Again
+                          </a>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
             {/* Empty State */}
-            {!loading && !error && upcomingLessons.length === 0 && (
-              /* Empty State */
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '24px',
-                padding: '60px 40px',
-                textAlign: 'center',
-                boxShadow: '0 8px 32px rgba(2, 69, 174, 0.08)',
-                border: '1px solid rgba(2, 69, 174, 0.06)'
-              }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '20px',
-                  background: 'rgba(2, 69, 174, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 24px'
-                }}>
-                  <i className="fas fa-calendar-plus" style={{ color: '#0245ae', fontSize: '36px' }}></i>
+            {!loading && !error && displayedLessons.length === 0 && (
+              <div className="schedule-empty">
+                <div className="empty-icon">
+                  <i className={activeTab === 'upcoming' ? 'fas fa-calendar-plus' : 'fas fa-history'}></i>
                 </div>
-                <h3 style={{ 
-                  margin: '0 0 12px 0', 
-                  fontSize: '24px', 
-                  fontWeight: 800, 
-                  color: '#0f172a'
-                }}>
-                  No Upcoming Lessons
-                </h3>
-                <p style={{ 
-                  margin: '0 0 32px 0', 
-                  fontSize: '15px', 
-                  color: '#64748b', 
-                  lineHeight: '1.6',
-                  maxWidth: '400px',
-                  marginLeft: 'auto',
-                  marginRight: 'auto'
-                }}>
-                  Ready to start learning? Browse our tutors and book your first lesson today!
+                <h3>{activeTab === 'upcoming' ? 'No Upcoming Lessons' : 'No Past Lessons'}</h3>
+                <p>
+                  {activeTab === 'upcoming'
+                    ? "Ready to start learning? Browse our tutors and book your first lesson!"
+                    : "You haven't completed any lessons yet. Book your first lesson to get started!"}
                 </p>
-                <button
-                  onClick={() => window.location.href = '/browse-tutors'}
-                  style={{
-                    background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '16px 32px',
-                    borderRadius: '12px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 16px rgba(2, 69, 174, 0.3)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    fontSize: '15px',
-                    letterSpacing: '0.5px',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(2, 69, 174, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(2, 69, 174, 0.3)';
-                  }}
-                >
-                  <i className="fas fa-search"></i>
-                  Browse Tutors
-                </button>
+                {activeTab === 'upcoming' && (
+                  <a href="/browse-tutors" className="empty-cta">
+                    <i className="fas fa-search"></i>
+                    Browse Tutors
+                  </a>
+                )}
               </div>
             )}
           </div>

@@ -170,15 +170,22 @@ const SchedulePage = () => {
           
           if (dayIdx !== -1) {
             const key = `${dayIdx}-${slot.time}`;
+            
+            // Parse slot time and check if it's in the past
+            const { hour, minute } = parseTimeString(slot.time);
+            const slotDateTime = new Date(slotDate);
+            slotDateTime.setHours(hour, minute, 0, 0);
+            const now = new Date();
+            const isPast = slotDateTime < now;
 
-            if (slot.status === 'open') {
+            if (slot.status === 'open' && !isPast) {
+              // Only add to selected slots if not in the past
               newSelectedSlots.add(key);
-
             } else if (slot.status === 'booked' && slot.studentId) {
               newSelectedSlots.add(key); // Keep as open slot visually
               newBookedSlots.set(key, slot.studentId);
-
             }
+            // Past open slots are simply not added, so they show as PAST
           } else {
             console.warn('Could not find dayIdx for slot date:', slot.date);
           }

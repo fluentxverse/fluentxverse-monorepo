@@ -4,10 +4,14 @@ import { useRoute } from 'preact-iso';
 import { tutorApi } from '../api/tutor.api';
 import type { TutorProfile } from '../types/tutor.types';
 import Header from '../Components/Header/Header';
+import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
+import { useAuthContext } from '../context/AuthContext';
 import './TutorProfilePage.css';
 
 export const TutorProfilePage = () => {
+  const { user } = useAuthContext();
+  
   useEffect(() => {
     document.title = 'Tutor Profile | FluentXVerse';
   }, []);
@@ -26,32 +30,31 @@ export const TutorProfilePage = () => {
   const [preSelectedSlot, setPreSelectedSlot] = useState<{ date: string; time: string } | null>(null);
 
   // Generate 30-minute interval time slots for Asia/Seoul based on selected period
-  // Tutor opens Philippine time 05:00 - 23:30; student sees equivalent in Asia/Seoul.
-  // We only slice by period for UI, but total slots reflect full range.
+  // Tutor opens Philippine time 05:00 - 23:30; student sees equivalent in Asia/Seoul (+1 hour).
+  // PHT 05:00-23:30 => KST 06:00-00:30 (next day)
   const getPeriodTimeSlots = (period: 'morning' | 'afternoon' | 'evening') => {
-    // Full PH range converted visually to Seoul labels; slicing per period
-    // Define period visual ranges in Seoul time
-    // Manual mapping per user instruction
     let slots: string[] = [];
     if (period === 'morning') {
+      // KST 06:00 - 11:30
       for (let h = 6; h < 12; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
-      slots.push('11:30');
     } else if (period === 'afternoon') {
-      for (let h = 12; h < 17; h++) {
+      // KST 12:00 - 17:30
+      for (let h = 12; h < 18; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
-      slots.push('17:30');
     } else if (period === 'evening') {
+      // KST 18:00 - 00:30 (next day shown as 24:00, 24:30)
       for (let h = 18; h < 24; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
-      slots.push('24:00');
-      slots.push('24:30');
+      // Add next day times (00:00, 00:30 displayed as 24:00, 24:30 for continuity)
+      slots.push('00:00');
+      slots.push('00:30');
     }
     return slots;
   };
@@ -120,22 +123,9 @@ export const TutorProfilePage = () => {
 
   const handleSlotClick = (date: string, time: string, status: string) => {
     if (status === 'AVAIL') {
-      // Convert display time (24h KST) to 12h PHT format for matching
-      // KST is +1 hour from PHT, so we subtract 1 hour
-      const [hourStr, minStr] = time.split(':');
-      let hour = parseInt(hourStr, 10);
-      const minute = minStr;
-      
-      // Convert KST to PHT (subtract 1 hour)
-      hour = hour - 1;
-      if (hour < 0) hour = 23; // Handle midnight rollover
-      
-      // Convert to 12-hour format
-      const period = hour >= 12 ? 'PM' : 'AM';
-      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-      const time12 = `${hour12}:${minute} ${period}`;
-      
-      setPreSelectedSlot({ date, time: time12 });
+      // time is already in 24h KST format (e.g., "19:00")
+      // Pass it directly - the BookingModal will convert PHT slots to KST for matching
+      setPreSelectedSlot({ date, time });
       setBookingModalOpen(true);
     }
   };
@@ -143,10 +133,13 @@ export const TutorProfilePage = () => {
   if (loading) {
     return (
       <>
-        <Header />
-        <div className="tutor-profile-loading">
-          <div className="spinner"></div>
-          <p>Loading tutor profile...</p>
+        <SideBar />
+        <div className="main-content">
+          <Header />
+          <div className="tutor-profile-loading">
+            <div className="spinner"></div>
+            <p>Loading tutor profile...</p>
+          </div>
         </div>
       </>
     );
@@ -155,12 +148,15 @@ export const TutorProfilePage = () => {
   if (error || !tutor) {
     return (
       <>
-        <Header />
-        <div className="tutor-profile-error">
-          <i className="ri-error-warning-line"></i>
-          <h2>Tutor not found</h2>
-          <p>{error || 'The tutor you are looking for does not exist.'}</p>
-          <a href="/browse-tutors" className="btn-primary">Browse Tutors</a>
+        <SideBar />
+        <div className="main-content">
+          <Header />
+          <div className="tutor-profile-error">
+            <i className="ri-error-warning-line"></i>
+            <h2>Tutor not found</h2>
+            <p>{error || 'The tutor you are looking for does not exist.'}</p>
+            <a href="/browse-tutors" className="btn-primary">Browse Tutors</a>
+          </div>
         </div>
       </>
     );
@@ -172,16 +168,18 @@ export const TutorProfilePage = () => {
 
   return (
     <>
-      <Header />
-      <div className="tutor-profile-page">
-        <div className="profile-container">
-          {/* Hero Section */}
-          <div className="profile-hero">
-            <div className="profile-hero-content">
-              {/* Left: Avatar & Basic Info */}
-              <div className="profile-header-left">
-                <div className="profile-avatar-wrapper">
-                  {tutor.profilePicture ? (
+      <SideBar />
+      <div className="main-content">
+        <Header />
+        <div className="tutor-profile-page">
+          <div className="profile-container">
+            {/* Hero Section */}
+            <div className="profile-hero">
+              <div className="profile-hero-content">
+                {/* Left: Avatar & Basic Info */}
+                <div className="profile-header-left">
+                  <div className="profile-avatar-wrapper">
+                    {tutor.profilePicture ? (
                     <img src={tutor.profilePicture} alt={displayName} className="profile-avatar-large" />
                   ) : (
                     <div className="profile-avatar-large profile-avatar-placeholder">{initials}</div>
@@ -189,7 +187,7 @@ export const TutorProfilePage = () => {
                   {tutor.isAvailable && (
                     <div className="availability-badge">
                       <span className="pulse-dot"></span>
-                      Available Now
+                      Available
                     </div>
                   )}
                 </div>
@@ -517,15 +515,19 @@ export const TutorProfilePage = () => {
                               const dateStr = d.key;
                               const slot = availability.find((s) => s.date === dateStr && s.time === time);
                               const status = slot?.status;
-                              const label = status === 'TAKEN' ? 'TAKEN' : status === 'BOOKED' ? 'BOOKED' : status === 'AVAIL' ? 'AVAIL' : '';
-                              const isClickable = status === 'AVAIL';
+                              // Only show AVAIL or student's own BOOKED slots
+                              const isMyBooking = status === 'BOOKED' && slot?.studentId === user?.userId;
+                              const isAvailable = status === 'AVAIL';
+                              const showSlot = isAvailable || isMyBooking;
+                              const label = isMyBooking ? 'BOOKED' : isAvailable ? 'AVAIL' : '';
+                              const isClickable = isAvailable;
                               return (
                                 <td 
                                   key={dayIdx} 
-                                  className={`slot ${label || 'disabled'} ${isClickable ? 'clickable' : ''}`}
+                                  className={`slot ${showSlot ? (isMyBooking ? 'my-booking' : 'avail') : 'disabled'} ${isClickable ? 'clickable' : ''}`}
                                   onClick={() => isClickable && handleSlotClick(dateStr, time, status || '')}
                                   style={isClickable ? { cursor: 'pointer' } : undefined}
-                                  title={isClickable ? 'Click to book this slot' : undefined}
+                                  title={isClickable ? 'Click to book this slot' : isMyBooking ? 'Your booked lesson' : undefined}
                                 >
                                   {label}
                                 </td>
@@ -535,12 +537,6 @@ export const TutorProfilePage = () => {
                         ))}
                       </tbody>
                     </table>
-                    <div className="schedule-legend">
-                      <span className="legend-item avail">AVAIL</span>
-                      <span className="legend-item taken">TAKEN</span>
-                      <span className="legend-item booked">BOOKED</span>
-                      <span className="legend-item disabled">Unavailable</span>
-                    </div>
                   </div>
                 </section>
               </div>
@@ -582,6 +578,7 @@ export const TutorProfilePage = () => {
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Booking Modal */}

@@ -289,12 +289,14 @@ export class TutorService {
       const startDate = now.toISOString().split('T')[0];
       const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
+      // Get time slots with optional booking info (to get studentId from Booking node)
       const result = await session.run(
         `
         MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
         WHERE s.slotDate >= $startDate 
           AND s.slotDate <= $endDate
-        RETURN s
+        OPTIONAL MATCH (b:Booking)-[:BOOKS]->(s)
+        RETURN s, b.studentId as bookingStudentId
         ORDER BY s.slotDate, s.slotTime
         `,
         { tutorId, startDate, endDate }
@@ -317,53 +319,63 @@ export class TutorService {
         return { hour, minute };
       };
       
+      // Check if a slot is in the past (Philippine time)
+      const isSlotInPast = (dateStr: string, time12: string): boolean => {
+        const { hour, minute } = parse12hTime(time12);
+        const [year, month, day] = dateStr.split('-').map(Number);
+        
+        // Create slot datetime in Philippine time
+        const slotDate = new Date(year, month - 1, day, hour, minute);
+        const now = new Date();
+        
+        return slotDate < now;
+      };
+      
       // Convert Philippine time to KST (KST = PHT + 1 hour)
+      // IMPORTANT: Keep the tutor's original date, only convert the time
+      // So 11:00 PM PHT Dec 5 becomes 00:00 KST Dec 5 (not Dec 6)
       const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string } => {
         const { hour, minute } = parse12hTime(time12);
         
-        // Create date in PHT (assumed from tutor)
-        const [year, month, day] = dateStr.split('-').map(Number);
-        
         // Add 1 hour for KST
         let kstHour = hour + 1;
-        let kstDay = day;
-        let kstMonth = month;
-        let kstYear = year;
         
-        // Handle day overflow
+        // Handle hour overflow (wrap around to 00:00, 00:30, etc.)
         if (kstHour >= 24) {
           kstHour -= 24;
-          // Move to next day
-          const phtDate = new Date(year, month - 1, day);
-          phtDate.setDate(phtDate.getDate() + 1);
-          kstDay = phtDate.getDate();
-          kstMonth = phtDate.getMonth() + 1;
-          kstYear = phtDate.getFullYear();
         }
         
-        const kstDate = `${kstYear}-${String(kstMonth).padStart(2, '0')}-${String(kstDay).padStart(2, '0')}`;
+        // Keep the original date (tutor's schedule date)
         const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
         
-        return { date: kstDate, time: kstTime };
+        return { date: dateStr, time: kstTime };
       };
       
       return result.records.map(record => {
         const slot = record.get('s').properties;
+        const bookingStudentId = record.get('bookingStudentId');
         const { date, time } = convertPHTtoKST(slot.slotDate, slot.slotTime);
         
-        // Map status
+        // Check if slot is in the past
+        const isPast = isSlotInPast(slot.slotDate, slot.slotTime);
+        
+        // Map status - mark as TAKEN if in the past and was open
         let status: 'AVAIL' | 'TAKEN' | 'BOOKED' = 'AVAIL';
         if (slot.status === 'booked') {
           status = 'BOOKED';
-        } else if (slot.status === 'taken') {
+        } else if (slot.status === 'taken' || isPast) {
+          // Past unbooked slots are marked as TAKEN (unavailable)
           status = 'TAKEN';
         }
+        
+        // Get studentId from TimeSlot or from Booking node
+        const studentId = slot.studentId || bookingStudentId;
         
         return {
           date,
           time,
           status,
-          studentId: slot.studentId
+          studentId
         };
       });
     } finally {

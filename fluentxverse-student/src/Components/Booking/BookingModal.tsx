@@ -31,6 +31,42 @@ export const BookingModal = ({
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
+  // Helper function to convert PHT 12h to KST 24h format
+  // IMPORTANT: Keep the original date, only convert time (11 PM PHT Dec 5 -> 00:00 KST Dec 5)
+  const convertToKoreanTimeWithDate = (phDateString: string, phTimeString: string): { date: string; time: string } => {
+    // Parse Philippine time (12-hour format like "6:00 PM")
+    const timeMatch = phTimeString.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!timeMatch) return { date: phDateString, time: phTimeString };
+
+    let hours = parseInt(timeMatch[1], 10);
+    const minutes = timeMatch[2];
+    const period = timeMatch[3].toUpperCase();
+
+    // Convert to 24-hour format
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    // Add 1 hour for Korean timezone (UTC+9 vs UTC+8)
+    hours += 1;
+
+    // Handle hour overflow (wrap to 00:00, keep same date)
+    if (hours >= 24) {
+      hours -= 24;
+    }
+
+    // Keep the original date (tutor's schedule date)
+    return { date: phDateString, time: `${String(hours).padStart(2, '0')}:${minutes}` };
+  };
+
+  // Simple time-only conversion for display
+  const convertToKoreanTime = (phTimeString: string): string => {
+    const result = convertToKoreanTimeWithDate('2000-01-01', phTimeString);
+    return result.time;
+  };
+
   useEffect(() => {
     if (isOpen && tutorId) {
       fetchAvailableSlots();
@@ -38,11 +74,14 @@ export const BookingModal = ({
   }, [isOpen, tutorId]);
 
   // Auto-select slot when preSelectedDate/Time are provided
+  // preSelectedDate and preSelectedTime are in KST format, slots are in PHT format
   useEffect(() => {
     if (preSelectedDate && preSelectedTime && availableSlots.length > 0) {
-      const matchingSlot = availableSlots.find(
-        slot => slot.date === preSelectedDate && slot.time === preSelectedTime
-      );
+      const matchingSlot = availableSlots.find(slot => {
+        // Convert slot's PHT date+time to KST for comparison
+        const { date: kstDate, time: kstTime } = convertToKoreanTimeWithDate(slot.date, slot.time);
+        return kstDate === preSelectedDate && kstTime === preSelectedTime;
+      });
       if (matchingSlot) {
         setSelectedSlot(matchingSlot);
       }
@@ -121,40 +160,9 @@ export const BookingModal = ({
     return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
   };
 
-  const convertToKoreanTime = (phTimeString: string): string => {
-    // Parse Philippine time (12-hour format like "6:00 PM")
-    const timeMatch = phTimeString.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!timeMatch) return phTimeString;
-
-    let hours = parseInt(timeMatch[1], 10);
-    const minutes = timeMatch[2];
-    const period = timeMatch[3].toUpperCase();
-
-    // Convert to 24-hour format
-    if (period === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (period === 'AM' && hours === 12) {
-      hours = 0;
-    }
-
-    // Add 1 hour for Korean timezone (UTC+9 vs UTC+8)
-    hours += 1;
-
-    // Handle day rollover
-    if (hours >= 24) {
-      hours -= 24;
-    }
-
-    // Convert back to 12-hour format
-    const koreanPeriod = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-
-    return `${displayHours}:${minutes} ${koreanPeriod}`;
-  };
-
   const formatTime = (timeString: string) => {
     console.log('🕐 Formatting time:', timeString);
-    // Convert Philippine time to Korean time (add 1 hour)
+    // Convert Philippine time to Korean time (add 1 hour) - returns 24h format
     return convertToKoreanTime(timeString);
   };
 

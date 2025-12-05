@@ -423,7 +423,7 @@ export class ScheduleService {
         `
         MATCH (s:TimeSlot {slotId: $slotId})
         MATCH (student:Student {id: $studentId})
-        SET s.status = 'booked', s.updatedAt = datetime()
+        SET s.status = 'booked', s.studentId = $studentId, s.updatedAt = datetime()
         CREATE (b:Booking {
           bookingId: $bookingId,
           slotId: $slotId,

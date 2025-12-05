@@ -65,7 +65,7 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
             {tutor.isAvailable && (
               <div className="tutor-card-new__available-badge">
                 <span className="tutor-card-new__pulse"></span>
-                Available Now
+                Available
               </div>
             )}
           </div>
