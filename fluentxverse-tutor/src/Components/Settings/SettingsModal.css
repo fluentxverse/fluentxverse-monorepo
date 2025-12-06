@@ -426,13 +426,14 @@
   box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
 }
 
-.logout-btn:hover {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
+.settings-action-btn.logout-btn:hover {
+  border-color: #dc2626 !important;
+  box-shadow: 0 8px 16px rgba(220, 38, 38, 0.25) !important;
 }
 
-.dark-mode .logout-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
+.dark-mode .settings-action-btn.logout-btn:hover {
+  border-color: #ef4444 !important;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.35) !important;
 }
 
 /* Responsive */
