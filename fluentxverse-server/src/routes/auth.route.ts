@@ -80,9 +80,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           walletAddress: userData.walletAddress
         };
 
-
-        console.log('Normalized User:', normalizedUser);
-
         // Set cookie - don't specify domain for localhost to work correctly
         cookie.tutorAuth?.set({
           value: JSON.stringify({

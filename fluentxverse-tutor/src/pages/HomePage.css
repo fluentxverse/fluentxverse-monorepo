@@ -428,6 +428,32 @@
   font-size: 16px;
 }
 
+/* Test Processing Badge */
+.test-processing-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  animation: pulse-processing 2s ease-in-out infinite;
+}
+
+.test-processing-badge i {
+  font-size: 16px;
+}
+
+@keyframes pulse-processing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* Test Card States */
 .test-card.passed {
   border-color: #86efac;
@@ -437,6 +463,18 @@
 .test-card.failed {
   border-color: #fca5a5;
   background: linear-gradient(135deg, rgba(254, 226, 226, 0.3) 0%, rgba(254, 202, 202, 0.1) 100%);
+}
+
+.test-card.processing {
+  border-color: #fcd34d;
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.3) 0%, rgba(253, 230, 138, 0.1) 100%);
+}
+
+/* Processing Status Badge */
+.test-status-badge.processing {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border-color: #fcd34d;
 }
 
 .action-btn {

@@ -137,6 +137,7 @@ export interface SpeakingExamResult {
 export interface SpeakingExamStatus {
   hasActiveExam: boolean;
   hasCompletedExam: boolean;
+  isProcessing: boolean; // true when exam is submitted but still being graded
   passed: boolean | null;
   percentage: number | null;
   examId: string | null;

@@ -220,36 +220,41 @@ const HomePage = () => {
                 </div>
 
                 {/* Speaking Test */}
-                <div className={`test-card ${speakingStatus?.passed === true ? 'passed' : speakingStatus?.passed === false ? 'failed' : ''}`}>
+                <div className={`test-card ${speakingStatus?.passed === true ? 'passed' : speakingStatus?.passed === false ? 'failed' : speakingStatus?.isProcessing ? 'processing' : ''}`}>
                   <div className="test-icon" style={{ 
                     background: speakingStatus?.passed === true 
                       ? 'linear-gradient(135deg, #10b981 0%, #34d399 100%)' 
                       : speakingStatus?.passed === false
                         ? 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
-                        : 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)' 
+                        : speakingStatus?.isProcessing
+                          ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
+                          : 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)' 
                   }}>
-                    <i className={`fas ${speakingStatus?.passed === true ? 'fa-check' : speakingStatus?.passed === false ? 'fa-times' : 'fa-microphone'}`}></i>
+                    <i className={`fas ${speakingStatus?.passed === true ? 'fa-check' : speakingStatus?.passed === false ? 'fa-times' : speakingStatus?.isProcessing ? 'fa-spinner fa-spin' : 'fa-microphone'}`}></i>
                   </div>
                   <div className="test-content">
                     <div className="test-header">
                       <h4>SPEAKING TEST</h4>
                       {!loadingStatus && speakingStatus && (
-                        <span className={`test-status-badge ${speakingStatus.passed === true ? 'passed' : speakingStatus.passed === false ? 'failed' : 'pending'}`}>
-                          {speakingStatus.passed === true ? '✓ PASSED' : speakingStatus.passed === false ? '✗ FAILED' : 'NOT TAKEN'}
+                        <span className={`test-status-badge ${speakingStatus.passed === true ? 'passed' : speakingStatus.passed === false ? 'failed' : speakingStatus.isProcessing ? 'processing' : 'pending'}`}>
+                          {speakingStatus.passed === true ? '✓ PASSED' : speakingStatus.passed === false ? '✗ FAILED' : speakingStatus.isProcessing ? '⏳ PROCESSING' : 'NOT TAKEN'}
                           {speakingStatus.percentage !== null && ` (${Math.round(speakingStatus.percentage)}%)`}
                         </span>
                       )}
                     </div>
                     <p>
-                      An assessment to evaluate your pronunciation teaching ability, fluency, and conversational coaching skills. <a href="#">Learn more..</a>
+                      {speakingStatus?.isProcessing 
+                        ? 'Your exam is being graded. This may take a few minutes. Please refresh the page to check for results.'
+                        : 'An assessment to evaluate your pronunciation teaching ability, fluency, and conversational coaching skills.'
+                      } <a href="#">Learn more..</a>
                     </p>
-                    {!loadingStatus && speakingStatus && speakingStatus.passed !== true && (
+                    {!loadingStatus && speakingStatus && speakingStatus.passed !== true && !speakingStatus.isProcessing && (
                       <p className="attempts-info">
                         <i className="fas fa-info-circle"></i> {speakingStatus.attemptsThisMonth}/{speakingStatus.maxAttemptsPerMonth} attempts used this month
                       </p>
                     )}
                   </div>
-                  {speakingStatus?.passed !== true && (
+                  {speakingStatus?.passed !== true && !speakingStatus?.isProcessing && (
                     <button 
                       className="test-action-btn secondary" 
                       onClick={handleTakeSpeakingTest}
@@ -257,6 +262,12 @@ const HomePage = () => {
                     >
                       {speakingStatus?.hasActiveExam ? 'RESUME' : speakingStatus?.passed === false ? 'RETAKE' : 'TAKE TEST'} <i className="fas fa-arrow-right"></i>
                     </button>
+                  )}
+                  {speakingStatus?.isProcessing && (
+                    <div className="test-processing-badge">
+                      <i className="fas fa-hourglass-half"></i>
+                      GRADING...
+                    </div>
                   )}
                   {speakingStatus?.passed === true && (
                     <div className="test-complete-badge">

@@ -682,6 +682,37 @@
   margin-bottom: 24px;
 }
 
+.recording-actions {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.done-speaking-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(2, 69, 174, 0.25);
+}
+
+.done-speaking-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.35);
+}
+
+.done-speaking-btn i {
+  font-size: 14px;
+}
+
 .recording-hint {
   display: flex;
   align-items: center;
@@ -857,10 +888,83 @@
    SUBMITTING
    ============================================================================ */
 
+.submitting-exam h3 {
+  margin-bottom: 8px;
+}
+
+.submitting-exam > p {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
 .submitting-progress {
   margin-top: 16px;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.progress-steps .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  transition: all 0.3s ease;
+}
+
+.progress-steps .step i {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+}
+
+.progress-steps .step span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.progress-steps .step.active {
+  color: #0245ae;
+}
+
+.progress-steps .step.active i {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: white;
+  border-color: #0245ae;
+  animation: pulse-step 1.5s infinite;
+}
+
+@keyframes pulse-step {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.time-estimate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: #64748b;
   font-size: 14px;
+  background: #f8fafc;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.time-estimate i {
+  color: #f59e0b;
 }
 
 /* ============================================================================

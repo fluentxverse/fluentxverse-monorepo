@@ -7,8 +7,8 @@ import type {
   TaskScore,
   TaskRecording,
   SpeakingExamStatus,
-  EXAM_IMAGE_POOL,
 } from "./speaking.interface";
+import { EXAM_IMAGE_POOL } from "./speaking.interface";
 
 // Re-export types
 export type {
@@ -32,7 +32,7 @@ export type {
 // ============================================================================
 
 const PASSING_SCORE = 85; // 85% to pass
-const MAX_ATTEMPTS_PER_MONTH = 2;
+const MAX_ATTEMPTS_PER_MONTH = 20; // Increased for testing
 
 // ============================================================================
 // AI AGENTS
@@ -46,16 +46,23 @@ const speakingExamGeneratorAgent = new Agent({
   instructions: `You are an expert ESL speaking exam creator for FluentXVerse tutor certification.
 
 Your task is to create a unique speaking proficiency exam with exactly 10 tasks:
-- 4 Read Aloud sentences (varied difficulty and topics)
+- 3 Read Aloud sentences (varied difficulty and topics)
+- 2 Picture Description prompts (describing images)
 - 2 Situational Response scenarios (teaching-related situations)
 - 2 Teaching Demonstrations (explain grammar/vocabulary concepts)
-- 2 Open Response questions (opinion/discussion about teaching)
+- 1 Open Response question (opinion/discussion about teaching)
 
-READ ALOUD TASKS (4 total):
+READ ALOUD TASKS (3 total):
 - Create natural, flowing sentences (15-25 words each)
-- Mix: 1 simple, 2 intermediate, 1 complex sentence
+- Mix: 1 simple, 1 intermediate, 1 complex sentence
 - Include varied phonemes, intonation patterns, and stress points
 - Topics: education, daily life, professional contexts
+
+PICTURE DESCRIPTION TASKS (2 total):
+- Create prompts asking to describe what they see in an image
+- The actual image will be injected separately
+- Focus on: people, actions, setting, emotions, possible story
+- Example prompt: "Describe what you see in this image. Include details about the people, the setting, and what might be happening."
 
 SITUATIONAL RESPONSE TASKS (2 total):
 - Create realistic ESL teaching scenarios
@@ -67,7 +74,7 @@ TEACHING DEMO TASKS (2 total):
 - Vary target levels (beginner, intermediate, advanced)
 - Example: "Explain the difference between 'make' and 'do' to a beginner student"
 
-OPEN RESPONSE TASKS (2 total):
+OPEN RESPONSE TASKS (1 total):
 - Opinion questions about teaching methodology
 - Example: "What is the most effective way to build a student's confidence in speaking?"
 
@@ -84,7 +91,15 @@ Return ONLY valid JSON in this EXACT format:
       "timeLimit": 30
     },
     {
-      "id": 5,
+      "id": 4,
+      "type": "picture-description",
+      "instruction": "Look at the image and describe what you see in detail.",
+      "imageUrl": "PLACEHOLDER",
+      "imageDescription": "PLACEHOLDER",
+      "timeLimit": 60
+    },
+    {
+      "id": 6,
       "type": "situational-response",
       "instruction": "Listen to the scenario and respond appropriately.",
       "scenario": "You are teaching an online class and a student's microphone stops working.",
@@ -93,7 +108,7 @@ Return ONLY valid JSON in this EXACT format:
       "timeLimit": 45
     },
     {
-      "id": 7,
+      "id": 8,
       "type": "teaching-demo",
       "instruction": "Explain this concept as if teaching a student.",
       "topic": "Explain the difference between 'since' and 'for' when talking about time",
@@ -102,7 +117,7 @@ Return ONLY valid JSON in this EXACT format:
       "timeLimit": 90
     },
     {
-      "id": 9,
+      "id": 10,
       "type": "open-response",
       "instruction": "Share your thoughts on the following question.",
       "question": "What strategies do you use to help shy students participate more in class?",
@@ -259,10 +274,11 @@ Tutor ID: ${tutorId}
 Timestamp: ${new Date().toISOString()}
 
 Create 10 tasks total:
-- Tasks 1-4: Read Aloud (sentences to read clearly)
-- Tasks 5-6: Situational Response (teaching scenarios)
-- Tasks 7-8: Teaching Demonstration (explain concepts)
-- Tasks 9-10: Open Response (opinion questions about teaching)
+- Tasks 1-3: Read Aloud (sentences to read clearly)
+- Tasks 4-5: Picture Description (describe images - use PLACEHOLDER for imageUrl and imageDescription)
+- Tasks 6-7: Situational Response (teaching scenarios)
+- Tasks 8-9: Teaching Demonstration (explain concepts)
+- Task 10: Open Response (opinion question about teaching)
 
 Make this exam unique by varying topics, difficulty, and scenarios.`;
 
@@ -286,6 +302,23 @@ Make this exam unique by varying topics, difficulty, and scenarios.`;
       examData.tasks.reduce((sum, task) => sum + task.timeLimit, 0) / 60
     );
 
+    // Inject real images for picture-description tasks
+    const shuffledImages = [...EXAM_IMAGE_POOL].sort(() => Math.random() - 0.5);
+    let imageIndex = 0;
+    
+    const tasksWithImages = examData.tasks.map((task) => {
+      if (task.type === "picture-description") {
+        const image = shuffledImages[imageIndex % shuffledImages.length];
+        imageIndex++;
+        return {
+          ...task,
+          imageUrl: image!.url,
+          imageDescription: image!.description,
+        };
+      }
+      return task;
+    });
+
     // Create exam object
     const exam: SpeakingExam = {
       examId: `SPEAK-${tutorId}-${Date.now()}`,
@@ -294,7 +327,7 @@ Make this exam unique by varying topics, difficulty, and scenarios.`;
       totalTimeLimit: totalTimeLimit + 5, // Add 5 min buffer
       passingScore: PASSING_SCORE,
       createdAt: new Date().toISOString(),
-      tasks: examData.tasks || [],
+      tasks: tasksWithImages as SpeakingTask[],
     };
 
     // Validate task count
@@ -524,7 +557,63 @@ export const gradeSpeakingExam = async (
     const examNode = result.records[0]?.get("e").properties;
     const exam: SpeakingExam = JSON.parse(examNode.content);
 
-    console.log(`🎤 Grading speaking exam ${examId}...`);
+    console.log(`🎤 Grading speaking exam ${examId} with ${recordings.length} recordings...`);
+
+    // Mark exam as "processing" so the user can see it's being graded
+    await session.run(
+      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId})
+       SET e.status = 'processing',
+           e.processingStartedAt = $processingStartedAt
+       RETURN e`,
+      {
+        tutorId,
+        examId,
+        processingStartedAt: new Date().toISOString(),
+      }
+    );
+    console.log(`⏳ Exam ${examId} marked as processing...`);
+
+    // First, transcribe all recordings that don't have transcriptions
+    console.log(`📝 Transcribing ${recordings.length} recordings...`);
+    const transcribedRecordings: TaskRecording[] = [];
+    
+    for (const recording of recordings) {
+      if (recording.transcription) {
+        // Already has transcription
+        transcribedRecordings.push(recording);
+        continue;
+      }
+      
+      if (!recording.audioUrl || recording.audioUrl.length < 100) {
+        console.log(`⚠️ Task ${recording.taskId}: No valid audio data`);
+        transcribedRecordings.push({ ...recording, transcription: "" });
+        continue;
+      }
+      
+      try {
+        // Convert base64 to buffer
+        // audioUrl format: "data:audio/webm;base64,XXXXXX..."
+        const base64Data = recording.audioUrl.split(",")[1];
+        if (!base64Data) {
+          console.log(`⚠️ Task ${recording.taskId}: Invalid base64 format`);
+          transcribedRecordings.push({ ...recording, transcription: "" });
+          continue;
+        }
+        
+        const audioBuffer = Buffer.from(base64Data, "base64");
+        console.log(`🎙️ Task ${recording.taskId}: Transcribing ${audioBuffer.length} bytes...`);
+        
+        const transcription = await transcribeAudio(audioBuffer);
+        console.log(`✅ Task ${recording.taskId}: "${transcription.substring(0, 50)}..."`);
+        
+        transcribedRecordings.push({ ...recording, transcription });
+      } catch (err) {
+        console.error(`❌ Task ${recording.taskId}: Transcription failed`, err);
+        transcribedRecordings.push({ ...recording, transcription: "" });
+      }
+    }
+    
+    console.log(`📊 Grading ${transcribedRecordings.length} transcribed recordings...`);
 
     // Grade each task
     const taskScores: TaskScore[] = [];
@@ -538,7 +627,7 @@ export const gradeSpeakingExam = async (
     };
 
     for (const task of exam.tasks) {
-      const recording = recordings.find((r) => r.taskId === task.id);
+      const recording = transcribedRecordings.find((r) => r.taskId === task.id);
 
       if (!recording || !recording.transcription) {
         // No recording = 0 score
@@ -681,6 +770,7 @@ export const getSpeakingExamStatus = async (tutorId: string): Promise<SpeakingEx
         return {
           hasActiveExam: false,
           hasCompletedExam: true,
+          isProcessing: false,
           passed: true,
           percentage: score || 100,
           examId: null,
@@ -723,6 +813,7 @@ export const getSpeakingExamStatus = async (tutorId: string): Promise<SpeakingEx
       return {
         hasActiveExam: false,
         hasCompletedExam: false,
+        isProcessing: false,
         passed: null,
         percentage: null,
         examId: null,
@@ -733,12 +824,28 @@ export const getSpeakingExamStatus = async (tutorId: string): Promise<SpeakingEx
 
     const examNode = result.records[0]?.get("e").properties;
     const isCompleted = examNode.status === "completed";
+    const isProcessing = examNode.status === "processing";
+
+    // If exam is being processed (submitted but not yet graded)
+    if (isProcessing) {
+      return {
+        hasActiveExam: false,
+        hasCompletedExam: false,
+        isProcessing: true,
+        passed: null,
+        percentage: null,
+        examId: examNode.id,
+        attemptsThisMonth,
+        maxAttemptsPerMonth: MAX_ATTEMPTS_PER_MONTH,
+      };
+    }
 
     if (isCompleted && examNode.result) {
       const examResult: SpeakingExamResult = JSON.parse(examNode.result);
       return {
         hasActiveExam: false,
         hasCompletedExam: true,
+        isProcessing: false,
         passed: examResult.passed,
         percentage: examResult.overallScore,
         examId: examNode.id,
@@ -750,6 +857,7 @@ export const getSpeakingExamStatus = async (tutorId: string): Promise<SpeakingEx
     return {
       hasActiveExam: true,
       hasCompletedExam: false,
+      isProcessing: false,
       passed: null,
       percentage: null,
       examId: examNode.id,

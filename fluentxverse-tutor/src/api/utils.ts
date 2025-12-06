@@ -33,7 +33,7 @@ const getApiBaseUrl = () => {
 export const client = axios.create({
   baseURL: getApiBaseUrl(),
   withCredentials: true,
-  timeout: 15000,
+  timeout: 30000, // 30 seconds default
   headers: {
     'Cache-Control': 'no-cache',
     Pragma: 'no-cache'

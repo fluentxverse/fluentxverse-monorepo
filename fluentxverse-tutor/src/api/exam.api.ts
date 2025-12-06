@@ -322,6 +322,7 @@ export interface SpeakingExamResult {
 export interface SpeakingExamStatus {
   hasActiveExam: boolean;
   hasCompletedExam: boolean;
+  isProcessing: boolean; // true when exam is submitted but still being graded
   passed: boolean | null;
   percentage: number | null;
   examId: string | null;
@@ -391,10 +392,13 @@ export const submitSpeakingExam = async (
   recordings: TaskRecording[]
 ): Promise<{ success: boolean; message: string; result?: SpeakingExamResult }> => {
   try {
+    // Use longer timeout for speaking exam - transcription can take 2-3 minutes
     const response = await client.post('/exam/speaking/submit', {
       examId,
       tutorId,
       recordings,
+    }, {
+      timeout: 180000, // 3 minutes timeout for transcription + grading
     });
     return response.data;
   } catch (error) {

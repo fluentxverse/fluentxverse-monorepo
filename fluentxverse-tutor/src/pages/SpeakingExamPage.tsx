@@ -51,6 +51,7 @@ const SpeakingExamPage = () => {
   // Mic test state
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
   const [micLevel, setMicLevel] = useState(0);
+  const [micDetectedOnce, setMicDetectedOnce] = useState(false);
   const [micTestPassed, setMicTestPassed] = useState(false);
   const [speakerTestPassed, setSpeakerTestPassed] = useState(false);
   
@@ -83,26 +84,56 @@ const SpeakingExamPage = () => {
   // ============================================================================
   
   const requestMicPermission = async () => {
+    console.log('🎤 Requesting microphone permission...');
+    
+    // Check if we already have a stream
+    if (streamRef.current) {
+      console.log('✅ Stream already exists, setting up audio context');
+      setMicPermission('granted');
+      setupAudioContext(streamRef.current);
+      return;
+    }
+    
     try {
+      // Check existing permission state first
+      if (navigator.permissions) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          console.log('📋 Current permission state:', permissionStatus.state);
+        } catch (e) {
+          // permissions.query might not support microphone in all browsers
+          console.log('📋 Could not query permission state');
+        }
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('✅ Microphone permission granted');
       streamRef.current = stream;
       setMicPermission('granted');
-      
-      // Set up audio analysis for level visualization
-      audioContextRef.current = new AudioContext();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      source.connect(analyserRef.current);
-      
-      // Start level monitoring
-      startMicLevelMonitoring();
+      setupAudioContext(stream);
     } catch (err) {
-      console.error('Mic permission denied:', err);
+      console.error('❌ Mic permission denied:', err);
       setMicPermission('denied');
       setError('Microphone access is required for the speaking exam. Please allow microphone access and try again.');
       setPhase('error');
     }
+  };
+  
+  const setupAudioContext = (stream: MediaStream) => {
+    // Clean up existing audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+    }
+    
+    // Set up audio analysis for level visualization
+    audioContextRef.current = new AudioContext();
+    const source = audioContextRef.current.createMediaStreamSource(stream);
+    analyserRef.current = audioContextRef.current.createAnalyser();
+    analyserRef.current.fftSize = 256;
+    source.connect(analyserRef.current);
+    
+    // Start level monitoring
+    startMicLevelMonitoring();
   };
 
   const startMicLevelMonitoring = () => {
@@ -116,6 +147,12 @@ const SpeakingExamPage = () => {
       const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
       const normalizedLevel = Math.min(100, (average / 128) * 100);
       setMicLevel(normalizedLevel);
+      
+      // Once mic is detected, keep it detected
+      if (normalizedLevel > 5) {
+        setMicDetectedOnce(true);
+      }
+      
       animationFrameRef.current = requestAnimationFrame(updateLevel);
     };
     
@@ -147,6 +184,14 @@ const SpeakingExamPage = () => {
   // ============================================================================
 
   const startRecording = async () => {
+    console.log('🎙️ Starting recording for task:', currentTaskIndex + 1);
+    
+    // Clear any existing timer first to prevent race conditions
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
     if (!streamRef.current) {
       // Try to get mic permission again
       try {
@@ -181,21 +226,30 @@ const SpeakingExamPage = () => {
       mediaRecorderRef.current = mediaRecorder;
       recordingStartRef.current = Date.now();
       
-      // Start recording phase
-      setPhase('recording');
-      const taskTime = currentTask?.timeLimit || 30;
-      setTimeRemaining(taskTime);
+      // Play start cue sound
+      playStartCue();
       
-      // Start countdown
+      // Start recording phase
+      const taskTime = currentTask?.timeLimit || 30;
+      console.log('⏱️ Recording for', taskTime, 'seconds');
+      setTimeRemaining(taskTime);
+      setPhase('recording');
+      
+      // Start countdown - use a simple counter approach
+      let timeLeft = taskTime;
       timerRef.current = window.setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            // Time's up - stop recording
-            stopRecordingAndAdvance();
-            return 0;
+        timeLeft -= 1;
+        setTimeRemaining(timeLeft);
+        
+        if (timeLeft <= 0) {
+          // Time's up - clear timer and stop recording
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
           }
-          return prev - 1;
-        });
+          // Use setTimeout to avoid calling async from interval
+          setTimeout(() => stopRecordingAndAdvance(), 0);
+        }
       }, 1000);
     } catch (err) {
       console.error('Failed to start recording:', err);
@@ -205,12 +259,15 @@ const SpeakingExamPage = () => {
   };
 
   const stopRecordingAndAdvance = async () => {
+    console.log('🛑 Stopping recording and advancing...');
+    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
     
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+      console.log('⚠️ No active recording, advancing without saving');
       advanceToNextTask();
       return;
     }
@@ -218,24 +275,25 @@ const SpeakingExamPage = () => {
     const mediaRecorder = mediaRecorderRef.current;
     
     // Get final recording
-    await new Promise<void>((resolve) => {
+    const newRecording = await new Promise<TaskRecording>((resolve) => {
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const duration = Math.round((Date.now() - recordingStartRef.current) / 1000);
+        console.log('📼 Recording captured:', duration, 'seconds, size:', audioBlob.size);
         
         // Convert to base64 for submission
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64 = reader.result as string;
+          console.log('📦 Base64 converted, length:', base64.length);
           
           const recording: TaskRecording = {
             taskId: currentTask?.id || 0,
-            audioUrl: base64, // Will be processed by server
+            audioUrl: base64,
             duration,
           };
           
-          setRecordings(prev => [...prev, recording]);
-          resolve();
+          resolve(recording);
         };
         reader.readAsDataURL(audioBlob);
       };
@@ -243,18 +301,25 @@ const SpeakingExamPage = () => {
       mediaRecorder.stop();
     });
     
+    // Update recordings state
+    const updatedRecordings = [...recordings, newRecording];
+    setRecordings(updatedRecordings);
+    console.log('📝 Total recordings so far:', updatedRecordings.length);
+    
     mediaRecorderRef.current = null;
-    advanceToNextTask();
+    advanceToNextTask(updatedRecordings);
   };
 
-  const advanceToNextTask = () => {
+  const advanceToNextTask = (currentRecordings?: TaskRecording[]) => {
     if (!exam) return;
     
     const nextIndex = currentTaskIndex + 1;
+    console.log('➡️ Advancing to task', nextIndex + 1, 'of', exam.tasks.length);
     
     if (nextIndex >= exam.tasks.length) {
-      // All tasks completed - submit exam
-      submitExam();
+      // All tasks completed - submit exam with passed recordings
+      console.log('✅ All tasks completed, submitting exam with', currentRecordings?.length || recordings.length, 'recordings');
+      submitExam(currentRecordings || recordings);
     } else {
       // Move to next task
       setCurrentTaskIndex(nextIndex);
@@ -267,12 +332,13 @@ const SpeakingExamPage = () => {
   // ============================================================================
 
   const startMicTest = () => {
+    console.log('🔧 Starting mic test...');
     setPhase('mic-test');
     requestMicPermission();
   };
 
   const confirmMicTest = () => {
-    if (micLevel > 5) {
+    if (micDetectedOnce) {
       setMicTestPassed(true);
       setPhase('speaker-test');
     }
@@ -297,6 +363,33 @@ const SpeakingExamPage = () => {
       oscillator.stop();
       audioContext.close();
     }, 1000);
+  };
+
+  const playStartCue = () => {
+    // Play a short "toot" sound to indicate recording has started
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Higher pitch "toot" sound
+    oscillator.frequency.value = 880; // A5 note (higher pitch)
+    oscillator.type = 'sine';
+    gainNode.gain.value = 0.4;
+    
+    // Quick fade out for cleaner sound
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start();
+    
+    // Short beep - 300ms
+    setTimeout(() => {
+      oscillator.stop();
+      audioContext.close();
+    }, 300);
   };
 
   const confirmSpeakerTest = () => {
@@ -332,42 +425,54 @@ const SpeakingExamPage = () => {
   };
 
   const startPrepPhase = (task: SpeakingTask) => {
-    const prepTime = PREP_TIME[task.type];
-    setTimeRemaining(prepTime);
-    setPhase('prep');
-    
-    timerRef.current = window.setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          // Prep time over - start recording
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          startRecording();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const skipPrepTime = () => {
+    // Clear any existing timer first
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    startRecording();
+    
+    const prepTime = PREP_TIME[task.type];
+    console.log('📋 Starting prep phase for', prepTime, 'seconds');
+    setTimeRemaining(prepTime);
+    setPhase('prep');
+    
+    // Use a simple counter approach instead of setState callback
+    let timeLeft = prepTime;
+    timerRef.current = window.setInterval(() => {
+      timeLeft -= 1;
+      setTimeRemaining(timeLeft);
+      
+      if (timeLeft <= 0) {
+        // Prep time over - clear timer and start recording
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        console.log('📋 Prep time finished, starting recording');
+        setTimeout(() => startRecording(), 0);
+      }
+    }, 1000);
   };
 
-  const submitExam = async () => {
+  const skipPrepTime = () => {
+    console.log('⏭️ Skipping prep time');
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    // Use setTimeout to ensure clean transition
+    setTimeout(() => startRecording(), 0);
+  };
+
+  const submitExam = async (recordingsToSubmit: TaskRecording[]) => {
     if (!exam || !user?.userId) return;
     
+    console.log('📤 Submitting exam with', recordingsToSubmit.length, 'recordings');
     setPhase('submitting');
     stopStream();
     
     try {
-      const res = await submitSpeakingExam(exam.examId, user.userId, recordings);
+      const res = await submitSpeakingExam(exam.examId, user.userId, recordingsToSubmit);
       if (res.success && res.result) {
         setResult(res.result);
         setPhase('results');
@@ -376,6 +481,7 @@ const SpeakingExamPage = () => {
         setPhase('error');
       }
     } catch (err: any) {
+      console.error('❌ Submit error:', err);
       setError(err.message || 'Failed to submit exam');
       setPhase('error');
     }
@@ -525,7 +631,7 @@ const SpeakingExamPage = () => {
                 />
               </div>
               <span className="mic-level-label">
-                {micLevel > 5 ? '✓ Microphone detected' : 'Speak now...'}
+                {micDetectedOnce ? '✓ Microphone detected!' : 'Speak now...'}
               </span>
             </div>
 
@@ -534,9 +640,9 @@ const SpeakingExamPage = () => {
             </div>
 
             <button 
-              className={`confirm-test-btn ${micLevel > 5 ? 'active' : 'disabled'}`}
+              className={`confirm-test-btn ${micDetectedOnce ? 'active' : 'disabled'}`}
               onClick={confirmMicTest}
-              disabled={micLevel <= 5}
+              disabled={!micDetectedOnce}
             >
               <i className="fas fa-check-circle" /> Microphone Works
             </button>
@@ -734,6 +840,12 @@ const SpeakingExamPage = () => {
 
         {renderTaskContent()}
 
+        <div className="recording-actions">
+          <button className="done-speaking-btn" onClick={stopRecordingAndAdvance}>
+            <i className="fas fa-forward" /> Done Speaking - Next Task
+          </button>
+        </div>
+
         <div className="recording-hint">
           <i className="fas fa-info-circle" />
           <span>Speak clearly into your microphone. Recording will stop automatically.</span>
@@ -743,12 +855,28 @@ const SpeakingExamPage = () => {
   );
 
   const renderSubmitting = () => (
-    <div className="exam-loading">
+    <div className="exam-loading submitting-exam">
       <div className="loading-spinner" />
-      <h3>Submitting Your Exam</h3>
-      <p>Processing your recordings and generating your results...</p>
+      <h3>Processing Your Exam</h3>
+      <p>Your recordings are being transcribed and evaluated by our AI.</p>
       <div className="submitting-progress">
-        <span>This may take up to a minute</span>
+        <div className="progress-steps">
+          <div className="step active">
+            <i className="fas fa-upload" />
+            <span>Uploading</span>
+          </div>
+          <div className="step active">
+            <i className="fas fa-microphone" />
+            <span>Transcribing</span>
+          </div>
+          <div className="step">
+            <i className="fas fa-check-circle" />
+            <span>Grading</span>
+          </div>
+        </div>
+        <p className="time-estimate">
+          <i className="fas fa-clock" /> This usually takes 1-2 minutes. Please don't close this page.
+        </p>
       </div>
     </div>
   );
