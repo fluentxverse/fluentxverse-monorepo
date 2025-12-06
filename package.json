@@ -5,18 +5,21 @@
   "workspaces": [
     "fluentxverse-tutor",
     "fluentxverse-student",
-    "fluentxverse-server"
+    "fluentxverse-server",
+    "fluentxverse-dashboard"
   ],
   "scripts": {
     "dev:tutor": "cd fluentxverse-tutor && bun run dev",
     "dev:student": "cd fluentxverse-student && bun run dev",
     "dev:server": "cd fluentxverse-server && bun run dev",
-    "dev:all": "concurrently \"bun run dev:server\" \"bun run dev:tutor\" \"bun run dev:student\"",
+    "dev:dashboard": "cd fluentxverse-dashboard && bun run dev",
+    "dev:all": "concurrently \"bun run dev:server\" \"bun run dev:tutor\" \"bun run dev:student\" \"bun run dev:dashboard\"",
     "build:tutor": "cd fluentxverse-tutor && bun run build",
     "build:student": "cd fluentxverse-student && bun run build",
     "build:server": "cd fluentxverse-server && bunx tsc --noEmit",
-    "build:all": "bun run build:server && bun run build:tutor && bun run build:student",
-    "install:all": "bun install && cd fluentxverse-tutor && bun install && cd ../fluentxverse-student && bun install && cd ../fluentxverse-server && bun install"
+    "build:dashboard": "cd fluentxverse-dashboard && bun run build",
+    "build:all": "bun run build:server && bun run build:tutor && bun run build:student && bun run build:dashboard",
+    "install:all": "bun install && cd fluentxverse-tutor && bun install && cd ../fluentxverse-student && bun install && cd ../fluentxverse-server && bun install && cd ../fluentxverse-dashboard && bun install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

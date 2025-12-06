@@ -5,6 +5,7 @@ import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
 import Examination from "./routes/exam.route";
+import Admin from './routes/admin.route';
 import { initDriver } from './db/memgraph';
 import { getPool } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -30,8 +31,10 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
     origin: [
       'http://localhost:5173',
       'http://localhost:5174',
+      'http://localhost:5175',
       'http://192.168.0.102:5173',
       'http://192.168.0.102:5174',
+      'http://192.168.0.102:5175',
     ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
@@ -44,6 +47,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Student)
   .use(Debug)
   .use(Examination)
+  .use(Admin)
 
 
 
