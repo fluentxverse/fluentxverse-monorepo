@@ -22,8 +22,9 @@ const Debug = new Elysia({ name: 'debug', prefix: '/debug' })
     const driver = getDriver();
     const session = driver.session();
     try {
+      // User nodes ARE tutors - no role filter needed
       const result = await session.run(`
-        MATCH (u:User {role: 'tutor'})
+        MATCH (u:User)
         RETURN u.id as id, u.email as email, u.firstName as firstName, u.lastName as lastName,
                u.writtenExamPassed as writtenExamPassed, u.speakingExamPassed as speakingExamPassed,
                u.writtenExamScore as writtenExamScore, u.speakingExamScore as speakingExamScore,
@@ -41,6 +42,45 @@ const Debug = new Elysia({ name: 'debug', prefix: '/debug' })
         createdAt: r.get('createdAt')
       }));
       return { success: true, count: tutors.length, tutors };
+    } finally {
+      await session.close();
+    }
+  })
+  .get('/all-nodes', async () => {
+    const driver = getDriver();
+    const session = driver.session();
+    try {
+      // Get all node labels and counts
+      const result = await session.run(`
+        MATCH (n)
+        RETURN labels(n) as labels, count(*) as count
+      `);
+      const nodes = result.records.map(r => ({
+        labels: r.get('labels'),
+        count: r.get('count')?.toNumber?.() ?? r.get('count')
+      }));
+      return { success: true, nodes };
+    } finally {
+      await session.close();
+    }
+  })
+  .get('/exams-raw', async () => {
+    const driver = getDriver();
+    const session = driver.session();
+    try {
+      // Get all Exam nodes with their relationships
+      const result = await session.run(`
+        MATCH (e:Exam)
+        OPTIONAL MATCH (u:User)-[r]->(e)
+        RETURN e, u.id as tutorId, u.email as tutorEmail, type(r) as relType
+      `);
+      const exams = result.records.map(r => ({
+        exam: r.get('e')?.properties,
+        tutorId: r.get('tutorId'),
+        tutorEmail: r.get('tutorEmail'),
+        relType: r.get('relType')
+      }));
+      return { success: true, count: exams.length, exams };
     } finally {
       await session.close();
     }

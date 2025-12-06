@@ -10,6 +10,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { path: '/', icon: 'ri-dashboard-3-line', label: 'Dashboard' },
+  { path: '/interviews', icon: 'ri-calendar-schedule-line', label: 'Interviews' },
   { path: '/applications', icon: 'ri-file-user-line', label: 'Applications', badge: 12 },
   { path: '/tutors', icon: 'ri-user-star-line', label: 'Tutors' },
   { path: '/students', icon: 'ri-graduation-cap-line', label: 'Students' },
@@ -40,7 +41,7 @@ export function Sidebar() {
         <div className="nav-section">
           <span className="nav-section-title">Main Menu</span>
           <ul className="nav-list">
-            {navItems.slice(0, 4).map((item) => (
+            {navItems.slice(0, 5).map((item) => (
               <li key={item.path}>
                 <a
                   href={item.path}
@@ -58,7 +59,7 @@ export function Sidebar() {
         <div className="nav-section">
           <span className="nav-section-title">Management</span>
           <ul className="nav-list">
-            {navItems.slice(4).map((item) => (
+            {navItems.slice(5).map((item) => (
               <li key={item.path}>
                 <a
                   href={item.path}

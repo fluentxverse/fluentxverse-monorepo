@@ -77,7 +77,8 @@ class AuthService {
                 suspendedReason: $suspendedReason,
 
                 verifiedEmail: false,
-                verifiedMobile: false
+                verifiedMobile: false,
+                registeredAt: timestamp()
             })
             `,
             {
