@@ -32,7 +32,7 @@ export type {
 // ============================================================================
 
 const PASSING_SCORE = 85; // 85% to pass
-const MAX_ATTEMPTS_PER_MONTH = 20; // Increased for testing
+const MAX_ATTEMPTS_PER_MONTH = 2;
 
 // ============================================================================
 // AI AGENTS

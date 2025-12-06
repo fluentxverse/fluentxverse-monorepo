@@ -58,6 +58,9 @@ export class TutorService {
       let matchPattern = 'MATCH (u:User)';
       const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
       
+      // Certification requirement - tutor must have passed both exams
+      const certificationCheck = 'u.writtenExamPassed = true AND u.speakingExamPassed = true';
+      
       // Get today's date for "all dates" filter
       const today = new Date().toISOString().split('T')[0];
       queryParams.today = today;
@@ -65,9 +68,9 @@ export class TutorService {
       console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime);
       
       if (dateFilter) {
-        // Only show tutors who have open slots on the specified date
+        // Only show tutors who have open slots on the specified date AND are certified
         matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)`;
-        whereClause = `WHERE s.slotDate = $dateFilter AND s.status = 'open'`;
+        whereClause = `WHERE s.slotDate = $dateFilter AND s.status = 'open' AND ${certificationCheck}`;
         
         // Add time range filtering if provided - we'll filter in post-processing
         // because string comparison of 12-hour times doesn't work correctly
@@ -86,10 +89,10 @@ export class TutorService {
           console.log('📅 End time filter (minutes):', queryParams.endTimeMinutes);
         }
       } else {
-        // "All Dates" - show tutors who have ANY open slots from today onwards
+        // "All Dates" - show tutors who have ANY open slots from today onwards AND are certified
         // Also apply time range filtering if provided
         matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
-          WHERE s.slotDate >= $today AND s.status = 'open'`;
+          WHERE s.slotDate >= $today AND s.status = 'open' AND ${certificationCheck}`;
         whereClause = '';
         
         // Store time filters for post-processing

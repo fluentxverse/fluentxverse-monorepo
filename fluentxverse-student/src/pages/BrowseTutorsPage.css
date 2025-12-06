@@ -917,6 +917,27 @@
   margin-left: 8px;
 }
 
+/* Certified Badge - inline with name */
+.tutor-card-new__certified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #0245ae;
+  white-space: nowrap;
+  margin-left: 8px;
+  border: 1px solid rgba(2, 69, 174, 0.2);
+}
+
+.tutor-card-new__certified-badge i {
+  font-size: 11px;
+  color: #0245ae;
+}
+
 .tutor-card-new__pulse {
   width: 8px;
   height: 8px;

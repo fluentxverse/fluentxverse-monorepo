@@ -14,6 +14,20 @@ const HomePage = () => {
   const { user } = useAuthContext();
   const location = useLocation();
   
+  // Check if redirected due to certification requirement
+  const [showCertificationAlert, setShowCertificationAlert] = useState(false);
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('certification') === 'required') {
+      setShowCertificationAlert(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/home');
+      // Auto-hide after 5 seconds
+      setTimeout(() => setShowCertificationAlert(false), 5000);
+    }
+  }, []);
+  
   // Exam status state
   const [writtenStatus, setWrittenStatus] = useState<ExamStatus | null>(null);
   const [speakingStatus, setSpeakingStatus] = useState<SpeakingExamStatus | null>(null);
@@ -72,6 +86,22 @@ const HomePage = () => {
         <Header />
         <main className="home-page-container">
           <div className="container">
+            {/* Certification Required Alert */}
+            {showCertificationAlert && (
+              <div className="certification-alert">
+                <div className="certification-alert-icon">
+                  <i className="fas fa-lock"></i>
+                </div>
+                <div className="certification-alert-content">
+                  <strong>Certification Required</strong>
+                  <span>You must complete both the written and speaking exams before accessing that feature.</span>
+                </div>
+                <button className="certification-alert-close" onClick={() => setShowCertificationAlert(false)}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            )}
+            
             {/* Notification Banner */}
             <div className="notification-banner">
               <div className="notification-icon">

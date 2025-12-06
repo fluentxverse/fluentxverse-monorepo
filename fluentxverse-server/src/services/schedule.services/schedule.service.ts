@@ -335,6 +335,28 @@ export class ScheduleService {
       const slot = slotResult.records[0]?.get('s').properties;
       console.log('Slot found:', JSON.stringify(slot, null, 2));
       
+      // Check if tutor is certified (passed both written and speaking exams)
+      console.log('Checking tutor certification for tutorId:', slot.tutorId);
+      const certificationResult = await session.run(
+        `MATCH (u:User {id: $tutorId})
+         RETURN u.writtenExamPassed as writtenPassed, u.speakingExamPassed as speakingPassed`,
+        { tutorId: slot.tutorId }
+      );
+      
+      if (certificationResult.records.length > 0) {
+        const writtenPassed = certificationResult.records[0]?.get('writtenPassed');
+        const speakingPassed = certificationResult.records[0]?.get('speakingPassed');
+        
+        if (writtenPassed !== true || speakingPassed !== true) {
+          console.log('ERROR: Tutor is not certified - writtenPassed:', writtenPassed, 'speakingPassed:', speakingPassed);
+          throw new Error('This tutor is not yet certified to teach. Please choose a certified tutor.');
+        }
+        console.log('Tutor certification verified ✓');
+      } else {
+        console.log('ERROR: Tutor not found');
+        throw new Error('Tutor not found');
+      }
+      
       // Parse slotTime - it's already in 12-hour format like "6:00 PM"
       // Convert to 24-hour format for Date constructor
       const slotTime = slot.slotTime; // e.g., "6:00 PM"

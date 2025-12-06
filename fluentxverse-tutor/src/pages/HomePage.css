@@ -7,6 +7,78 @@
   min-height: 100vh;
 }
 
+/* Certification Required Alert */
+.certification-alert {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #fca5a5;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.certification-alert-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.certification-alert-icon i {
+  color: #fff;
+  font-size: 18px;
+}
+
+.certification-alert-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.certification-alert-content strong {
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.certification-alert-content span {
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.certification-alert-close {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.certification-alert-close:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* Notification Banner */
 .notification-banner {
   background: rgba(255, 255, 255, 0.9);

@@ -4,16 +4,18 @@ import { JSX } from "preact";
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
+import { getExamStatus, getSpeakingExamStatus } from '../../api/exam.api';
 
 interface MenuItem {
   href: string;
   icon: string;
+  requiresCertification?: boolean;
 }
 
 // Menu items for the static site
 const menuItems: MenuItem[] = [
   { href: "/home", icon: "fi-sr-home" },
-  { href: "/schedule", icon: "fi-sr-calendar" },
+  { href: "/schedule", icon: "fi-sr-calendar", requiresCertification: true },
   { href: "/material", icon: "fi-sr-book-alt" },
   { href: "/metrics", icon: "fi-sr-chart-histogram" },
   { href: "/about", icon: "fi-sr-info" }
@@ -24,11 +26,44 @@ const SideBar = (): JSX.Element | null => {
   const { isDarkMode, toggleTheme } = useThemeStore();
   const { user } = useAuthContext();
   const [showSettings, setShowSettings] = useState(false);
+  const [isCertified, setIsCertified] = useState<boolean | null>(null);
+
+  // Check certification status
+  useEffect(() => {
+    const checkCertification = async () => {
+      if (!user?.userId) return;
+      
+      try {
+        const [writtenRes, speakingRes] = await Promise.all([
+          getExamStatus(user.userId),
+          getSpeakingExamStatus(user.userId),
+        ]);
+        
+        const writtenPassed = writtenRes.success && writtenRes.status?.passed === true;
+        const speakingPassed = speakingRes.success && speakingRes.status?.passed === true;
+        
+        setIsCertified(writtenPassed && speakingPassed);
+      } catch (err) {
+        console.error('Failed to check certification:', err);
+        setIsCertified(false);
+      }
+    };
+
+    checkCertification();
+  }, [user?.userId]);
 
   // Don't render sidebar if user is not logged in
   if (!user) {
     return null;
   }
+
+  // Filter menu items based on certification
+  const visibleMenuItems = menuItems.filter(item => {
+    if (item.requiresCertification && isCertified === false) {
+      return false;
+    }
+    return true;
+  });
 
   const handleClick = useCallback(
     (e: JSX.TargetedMouseEvent<HTMLAnchorElement>, href: string) => {
@@ -58,7 +93,7 @@ const SideBar = (): JSX.Element | null => {
       </div>
       <div className="sidebar-icon">
         <ul>
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <li
               key={item.href}
               className={location === item.href ? "active" : ""}

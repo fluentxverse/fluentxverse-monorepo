@@ -227,18 +227,18 @@ label {
 ::-webkit-scrollbar-track {
 	box-shadow: none;
 	-webkit-box-shadow: none;
-	background-color: var(--primary-color);
+	background-color: #e5e7eb;
 	border-radius: 10px;
 }
 ::-webkit-scrollbar,
 ::-webkit-scrollbar {
 	width: 8px;
-	background-color: var(--primary-color);
+	background-color: #e5e7eb;
 }
 ::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
 	border-radius: 10px;
-	background-image: var(--nft-gradient-color);
+	background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
 }
 .theme-overlay {
 	position: relative
