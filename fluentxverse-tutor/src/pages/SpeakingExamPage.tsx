@@ -404,11 +404,11 @@ const SpeakingExamPage = () => {
 
   const getTaskIcon = (type: SpeakingTask['type']): string => {
     const icons: Record<SpeakingTask['type'], string> = {
-      'read-aloud': 'bi-book',
-      'picture-description': 'bi-image',
-      'situational-response': 'bi-chat-dots',
-      'teaching-demo': 'bi-mortarboard',
-      'open-response': 'bi-mic',
+      'read-aloud': 'fa-book',
+      'picture-description': 'fa-image',
+      'situational-response': 'fa-comments',
+      'teaching-demo': 'fa-chalkboard-teacher',
+      'open-response': 'fa-microphone',
     };
     return icons[type];
   };
@@ -421,7 +421,7 @@ const SpeakingExamPage = () => {
     <div className="exam-intro">
       <div className="exam-intro-card speaking">
         <div className="exam-intro-icon">
-          <i className="bi bi-mic-fill" />
+          <i className="fas fa-microphone" />
         </div>
         <h2>Speaking Proficiency Test</h2>
         <p className="exam-intro-description">
@@ -432,19 +432,19 @@ const SpeakingExamPage = () => {
 
         <div className="exam-info-grid">
           <div className="exam-info-item">
-            <i className="bi bi-list-task" />
+            <i className="fas fa-tasks" />
             <span>10 Tasks</span>
           </div>
           <div className="exam-info-item">
-            <i className="bi bi-clock" />
+            <i className="fas fa-clock" />
             <span>~15 mins</span>
           </div>
           <div className="exam-info-item">
-            <i className="bi bi-trophy" />
+            <i className="fas fa-trophy" />
             <span>85% to Pass</span>
           </div>
           <div className="exam-info-item">
-            <i className="bi bi-arrow-repeat" />
+            <i className="fas fa-redo" />
             <span>2 Attempts/Month</span>
           </div>
         </div>
@@ -453,25 +453,25 @@ const SpeakingExamPage = () => {
           <h4>Task Types</h4>
           <div className="category-tags">
             <span className="category-tag">
-              <i className="bi bi-book" /> Read Aloud
+              <i className="fas fa-book" /> Read Aloud
             </span>
             <span className="category-tag">
-              <i className="bi bi-image" /> Picture Description
+              <i className="fas fa-image" /> Picture Description
             </span>
             <span className="category-tag">
-              <i className="bi bi-chat-dots" /> Situational Response
+              <i className="fas fa-comments" /> Situational Response
             </span>
             <span className="category-tag">
-              <i className="bi bi-mortarboard" /> Teaching Demo
+              <i className="fas fa-chalkboard-teacher" /> Teaching Demo
             </span>
             <span className="category-tag">
-              <i className="bi bi-mic" /> Open Response
+              <i className="fas fa-microphone" /> Open Response
             </span>
           </div>
         </div>
 
         <div className="exam-rules speaking-rules">
-          <h4><i className="bi bi-exclamation-triangle" /> Important Instructions</h4>
+          <h4><i className="fas fa-exclamation-triangle" /> Important Instructions</h4>
           <ul>
             <li><strong>Microphone Required:</strong> You must have a working microphone.</li>
             <li><strong>Quiet Environment:</strong> Find a quiet place with minimal background noise.</li>
@@ -483,7 +483,7 @@ const SpeakingExamPage = () => {
         </div>
 
         <button className="start-exam-btn" onClick={startMicTest}>
-          <i className="bi bi-gear" /> Test Your Equipment
+          <i className="fas fa-cog" /> Test Your Equipment
         </button>
       </div>
     </div>
@@ -493,7 +493,7 @@ const SpeakingExamPage = () => {
     <div className="exam-intro">
       <div className="equipment-test-card">
         <div className="test-icon mic">
-          <i className="bi bi-mic-fill" />
+          <i className="fas fa-microphone" />
         </div>
         <h2>Microphone Test</h2>
         <p>Speak into your microphone to test it. The level meter should move when you speak.</p>
@@ -507,7 +507,7 @@ const SpeakingExamPage = () => {
 
         {micPermission === 'denied' && (
           <div className="permission-denied">
-            <i className="bi bi-x-circle" />
+            <i className="fas fa-times-circle" />
             <p>Microphone access denied. Please enable it in your browser settings.</p>
             <button className="retry-btn" onClick={requestMicPermission}>
               Try Again
@@ -538,7 +538,7 @@ const SpeakingExamPage = () => {
               onClick={confirmMicTest}
               disabled={micLevel <= 5}
             >
-              <i className="bi bi-check-circle" /> Microphone Works
+              <i className="fas fa-check-circle" /> Microphone Works
             </button>
           </>
         )}
@@ -550,33 +550,33 @@ const SpeakingExamPage = () => {
     <div className="exam-intro">
       <div className="equipment-test-card">
         <div className="test-icon speaker">
-          <i className="bi bi-volume-up-fill" />
+          <i className="fas fa-volume-up" />
         </div>
         <h2>Speaker Test</h2>
         <p>Click the button below to play a test sound. Make sure you can hear it clearly.</p>
 
         <button className="play-sound-btn" onClick={playSpeakerTest}>
-          <i className="bi bi-play-circle" /> Play Test Sound
+          <i className="fas fa-play-circle" /> Play Test Sound
         </button>
 
         <div className="speaker-confirm">
           <p>Did you hear the sound?</p>
           <div className="confirm-buttons">
             <button className="confirm-yes" onClick={confirmSpeakerTest}>
-              <i className="bi bi-check" /> Yes, I heard it
+              <i className="fas fa-check" /> Yes, I heard it
             </button>
             <button className="confirm-no" onClick={playSpeakerTest}>
-              <i className="bi bi-arrow-repeat" /> Play Again
+              <i className="fas fa-redo" /> Play Again
             </button>
           </div>
         </div>
 
         {speakerTestPassed && (
           <div className="all-tests-passed">
-            <i className="bi bi-check-circle-fill" />
+            <i className="fas fa-check-circle" />
             <p>All equipment tests passed!</p>
             <button className="start-exam-btn" onClick={startExam}>
-              <i className="bi bi-play-fill" /> Start Speaking Exam
+              <i className="fas fa-play" /> Start Speaking Exam
             </button>
           </div>
         )}
@@ -588,7 +588,7 @@ const SpeakingExamPage = () => {
     <div className="exam-loading">
       <div className="loading-spinner" />
       <h3>Generating Your Speaking Exam</h3>
-      <p>Our AI is creating personalized speaking tasks for you...</p>
+      <p>We are creating personalized speaking tasks for you...</p>
     </div>
   );
 
@@ -675,7 +675,7 @@ const SpeakingExamPage = () => {
           </div>
         </div>
         <div className="task-type-badge">
-          <i className={`bi ${getTaskIcon(currentTask?.type || 'read-aloud')}`} />
+          <i className={`fas ${getTaskIcon(currentTask?.type || 'read-aloud')}`} />
           <span>{getTaskTypeLabel(currentTask?.type || 'read-aloud')}</span>
         </div>
       </div>
@@ -689,13 +689,13 @@ const SpeakingExamPage = () => {
         </div>
 
         <div className="prep-instructions">
-          <p><i className="bi bi-eye" /> Read and prepare your response</p>
+          <p><i className="fas fa-eye" /> Read and prepare your response</p>
         </div>
 
         {renderTaskContent()}
 
         <button className="skip-prep-btn" onClick={skipPrepTime}>
-          <i className="bi bi-skip-forward" /> I'm Ready - Start Recording
+          <i className="fas fa-forward" /> I'm Ready - Start Recording
         </button>
       </div>
     </div>
@@ -714,7 +714,7 @@ const SpeakingExamPage = () => {
           </div>
         </div>
         <div className="task-type-badge">
-          <i className={`bi ${getTaskIcon(currentTask?.type || 'read-aloud')}`} />
+          <i className={`fas ${getTaskIcon(currentTask?.type || 'read-aloud')}`} />
           <span>{getTaskTypeLabel(currentTask?.type || 'read-aloud')}</span>
         </div>
       </div>
@@ -735,7 +735,7 @@ const SpeakingExamPage = () => {
         {renderTaskContent()}
 
         <div className="recording-hint">
-          <i className="bi bi-info-circle" />
+          <i className="fas fa-info-circle" />
           <span>Speak clearly into your microphone. Recording will stop automatically.</span>
         </div>
       </div>
@@ -767,7 +767,7 @@ const SpeakingExamPage = () => {
       <div className="exam-results speaking-results">
         <div className="results-header">
           <div className={`result-badge ${result.passed ? 'passed' : 'failed'}`}>
-            <i className={`bi ${result.passed ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}`} />
+            <i className={`fas ${result.passed ? 'fa-check-circle' : 'fa-times-circle'}`} />
             <span>{result.passed ? 'PASSED' : 'FAILED'}</span>
           </div>
           <h2>Speaking Exam Results</h2>
@@ -829,7 +829,7 @@ const SpeakingExamPage = () => {
 
         <div className="results-actions">
           <a href="/home" className="back-home-btn">
-            <i className="bi bi-house" /> Back to Dashboard
+            <i className="fas fa-home" /> Back to Dashboard
           </a>
         </div>
       </div>
@@ -840,13 +840,13 @@ const SpeakingExamPage = () => {
     <div className="exam-error">
       <div className="error-card">
         <div className="error-icon">
-          <i className="bi bi-x-circle-fill" />
+          <i className="fas fa-times-circle" />
         </div>
         <h2>Exam Failed</h2>
         <p>{error || 'An error occurred during the exam.'}</p>
         <div className="error-actions">
           <a href="/home" className="back-home-btn">
-            <i className="bi bi-house" /> Back to Dashboard
+            <i className="fas fa-home" /> Back to Dashboard
           </a>
         </div>
       </div>

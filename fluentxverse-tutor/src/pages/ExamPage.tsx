@@ -498,7 +498,7 @@ const ExamPage = () => {
     <div className="exam-loading">
       <div className="loading-spinner"></div>
       <h3>Generating Your Unique Exam...</h3>
-      <p>Our AI is creating personalized questions just for you.</p>
+      <p>We are creating personalized questions just for you.</p>
     </div>
   );
 
@@ -614,7 +614,7 @@ const ExamPage = () => {
           ) : (
             <button className="nav-btn submit" onClick={handleSubmit}>
               <i className="fas fa-check"></i>
-              Submit Exam
+              Submit
             </button>
           )}
         </div>

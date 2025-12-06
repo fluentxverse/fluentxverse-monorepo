@@ -3,6 +3,7 @@ import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { getExamStatus, getSpeakingExamStatus, type ExamStatus, type SpeakingExamStatus } from '../api/exam.api';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -12,7 +13,49 @@ const HomePage = () => {
 
   const { user } = useAuthContext();
   const location = useLocation();
-  const [activeStep] = useState(1); // User is on step 1: Skills Assessment
+  
+  // Exam status state
+  const [writtenStatus, setWrittenStatus] = useState<ExamStatus | null>(null);
+  const [speakingStatus, setSpeakingStatus] = useState<SpeakingExamStatus | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+
+  // Calculate active step based on exam status
+  const getActiveStep = () => {
+    if (!writtenStatus || !speakingStatus) return 1;
+    const bothPassed = writtenStatus.passed === true && speakingStatus.passed === true;
+    if (bothPassed) return 2; // Move to onboarding
+    return 1; // Still on assessment
+  };
+  
+  const activeStep = getActiveStep();
+
+  // Fetch exam statuses on mount
+  useEffect(() => {
+    const fetchExamStatus = async () => {
+      if (!user?.userId) return;
+      
+      setLoadingStatus(true);
+      try {
+        const [writtenRes, speakingRes] = await Promise.all([
+          getExamStatus(user.userId),
+          getSpeakingExamStatus(user.userId),
+        ]);
+        
+        if (writtenRes.success && writtenRes.status) {
+          setWrittenStatus(writtenRes.status);
+        }
+        if (speakingRes.success && speakingRes.status) {
+          setSpeakingStatus(speakingRes.status);
+        }
+      } catch (err) {
+        console.error('Failed to fetch exam status:', err);
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+
+    fetchExamStatus();
+  }, [user?.userId]);
 
   const handleTakeWrittenTest = () => {
     location.route('/exam/written');
@@ -130,35 +173,97 @@ const HomePage = () => {
                 </h3>
 
                 {/* Written Test */}
-                <div className="test-card">
-                  <div className="test-icon" style={{ background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' }}>
-                    <i className="fas fa-pen"></i>
+                <div className={`test-card ${writtenStatus?.passed === true ? 'passed' : writtenStatus?.passed === false ? 'failed' : ''}`}>
+                  <div className="test-icon" style={{ 
+                    background: writtenStatus?.passed === true 
+                      ? 'linear-gradient(135deg, #10b981 0%, #34d399 100%)' 
+                      : writtenStatus?.passed === false
+                        ? 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
+                        : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' 
+                  }}>
+                    <i className={`fas ${writtenStatus?.passed === true ? 'fa-check' : writtenStatus?.passed === false ? 'fa-times' : 'fa-pen'}`}></i>
                   </div>
                   <div className="test-content">
-                    <h4>WRITTEN TEST</h4>
+                    <div className="test-header">
+                      <h4>WRITTEN TEST</h4>
+                      {!loadingStatus && writtenStatus && (
+                        <span className={`test-status-badge ${writtenStatus.passed === true ? 'passed' : writtenStatus.passed === false ? 'failed' : 'pending'}`}>
+                          {writtenStatus.passed === true ? '✓ PASSED' : writtenStatus.passed === false ? '✗ FAILED' : 'NOT TAKEN'}
+                          {writtenStatus.percentage !== null && ` (${Math.round(writtenStatus.percentage)}%)`}
+                        </span>
+                      )}
+                    </div>
                     <p>
-                      A comprehensive AI-generated assessment covering grammar, vocabulary, reading comprehension, and teaching methodology. Each exam is uniquely generated for every applicant. <a href="#">Learn more..</a>
+                      A comprehensive assessment covering grammar, vocabulary, reading comprehension, and teaching methodology. Each exam is uniquely generated for every applicant. <a href="#">Learn more..</a>
                     </p>
+                    {!loadingStatus && writtenStatus && writtenStatus.passed !== true && (
+                      <p className="attempts-info">
+                        <i className="fas fa-info-circle"></i> {writtenStatus.attemptsThisMonth}/{writtenStatus.maxAttemptsPerMonth} attempts used this month
+                      </p>
+                    )}
                   </div>
-                  <button className="test-action-btn" onClick={handleTakeWrittenTest}>
-                    TAKE TEST <i className="fas fa-arrow-right"></i>
-                  </button>
+                  {writtenStatus?.passed !== true && (
+                    <button 
+                      className="test-action-btn" 
+                      onClick={handleTakeWrittenTest}
+                      disabled={(writtenStatus?.attemptsThisMonth ?? 0) >= (writtenStatus?.maxAttemptsPerMonth ?? 2)}
+                    >
+                      {writtenStatus?.hasActiveExam ? 'RESUME' : writtenStatus?.passed === false ? 'RETAKE' : 'TAKE TEST'} <i className="fas fa-arrow-right"></i>
+                    </button>
+                  )}
+                  {writtenStatus?.passed === true && (
+                    <div className="test-complete-badge">
+                      <i className="fas fa-check-circle"></i>
+                      COMPLETE
+                    </div>
+                  )}
                 </div>
 
                 {/* Speaking Test */}
-                <div className="test-card">
-                  <div className="test-icon" style={{ background: 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)' }}>
-                    <i className="fas fa-microphone"></i>
+                <div className={`test-card ${speakingStatus?.passed === true ? 'passed' : speakingStatus?.passed === false ? 'failed' : ''}`}>
+                  <div className="test-icon" style={{ 
+                    background: speakingStatus?.passed === true 
+                      ? 'linear-gradient(135deg, #10b981 0%, #34d399 100%)' 
+                      : speakingStatus?.passed === false
+                        ? 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
+                        : 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)' 
+                  }}>
+                    <i className={`fas ${speakingStatus?.passed === true ? 'fa-check' : speakingStatus?.passed === false ? 'fa-times' : 'fa-microphone'}`}></i>
                   </div>
                   <div className="test-content">
-                    <h4>SPEAKING TEST</h4>
+                    <div className="test-header">
+                      <h4>SPEAKING TEST</h4>
+                      {!loadingStatus && speakingStatus && (
+                        <span className={`test-status-badge ${speakingStatus.passed === true ? 'passed' : speakingStatus.passed === false ? 'failed' : 'pending'}`}>
+                          {speakingStatus.passed === true ? '✓ PASSED' : speakingStatus.passed === false ? '✗ FAILED' : 'NOT TAKEN'}
+                          {speakingStatus.percentage !== null && ` (${Math.round(speakingStatus.percentage)}%)`}
+                        </span>
+                      )}
+                    </div>
                     <p>
-                      An AI-powered assessment to evaluate your pronunciation teaching ability, fluency, and conversational coaching skills. <a href="#">Learn more..</a>
+                      An assessment to evaluate your pronunciation teaching ability, fluency, and conversational coaching skills. <a href="#">Learn more..</a>
                     </p>
+                    {!loadingStatus && speakingStatus && speakingStatus.passed !== true && (
+                      <p className="attempts-info">
+                        <i className="fas fa-info-circle"></i> {speakingStatus.attemptsThisMonth}/{speakingStatus.maxAttemptsPerMonth} attempts used this month
+                      </p>
+                    )}
                   </div>
-                  <button className="test-action-btn secondary" onClick={handleTakeSpeakingTest}>
-                    TAKE TEST <i className="fas fa-arrow-right"></i>
-                  </button>
+                  {speakingStatus?.passed !== true && (
+                    <button 
+                      className="test-action-btn secondary" 
+                      onClick={handleTakeSpeakingTest}
+                      disabled={(speakingStatus?.attemptsThisMonth ?? 0) >= (speakingStatus?.maxAttemptsPerMonth ?? 2)}
+                    >
+                      {speakingStatus?.hasActiveExam ? 'RESUME' : speakingStatus?.passed === false ? 'RETAKE' : 'TAKE TEST'} <i className="fas fa-arrow-right"></i>
+                    </button>
+                  )}
+                  {speakingStatus?.passed === true && (
+                    <div className="test-complete-badge">
+                      <i className="fas fa-check-circle"></i>
+                      COMPLETE
+                    </div>
+                  )}
                 </div>
               </div>
 
