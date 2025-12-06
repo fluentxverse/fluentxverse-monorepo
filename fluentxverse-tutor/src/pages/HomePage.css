@@ -301,6 +301,44 @@
   transition: transform 0.2s ease;
 }
 
+/* Test Action Button - inline in test card */
+.test-action-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.test-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.test-action-btn.secondary {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.3);
+}
+
+.test-action-btn.secondary:hover {
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.4);
+}
+
+.test-action-btn i {
+  font-size: 12px;
+}
+
 .action-btn {
   border: none;
   padding: 12px 24px;

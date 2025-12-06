@@ -7,6 +7,8 @@ import HomeProtected from './pages/HomeProtected';
 import SchedulePage from './pages/SchedulePage';
 import StudentProfilePage from './pages/StudentProfilePage';
 import ClassroomPage from './pages/ClassroomPage';
+import ExamPage from './pages/ExamPage';
+import SpeakingExamPage from './pages/SpeakingExamPage';
 
 import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -75,6 +77,8 @@ export function AppInner() {
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
 							<Route path="/classroom/:studentId" component={withProtected(ClassroomPage)} />
+							<Route path="/exam/written" component={withProtected(ExamPage)} />
+							<Route path="/exam/speaking" component={withProtected(SpeakingExamPage)} />
 
 							<Route path="/contact" component={ContactPage} />
 

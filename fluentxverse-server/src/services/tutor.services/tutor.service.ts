@@ -39,7 +39,7 @@ export class TutorService {
       const time12ToMinutes = (time12: string): number => {
         // Format: "11:30 PM" or "12:00 AM"
         const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        if (!match) return 0;
+        if (!match || !match[1] || !match[2] || !match[3]) return 0;
         let hour = parseInt(match[1], 10);
         const minute = parseInt(match[2], 10);
         const isPM = match[3].toUpperCase() === 'PM';
@@ -305,7 +305,7 @@ export class TutorService {
       // Helper to parse 12h time to {hour, minute}
       const parse12hTime = (time12: string): { hour: number; minute: number } => {
         const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        if (!match) return { hour: 0, minute: 0 };
+        if (!match || !match[1] || !match[2] || !match[3]) return { hour: 0, minute: 0 };
         let hour = parseInt(match[1], 10);
         const minute = parseInt(match[2], 10);
         const isPM = match[3].toUpperCase() === 'PM';
@@ -322,7 +322,10 @@ export class TutorService {
       // Check if a slot is in the past (Philippine time)
       const isSlotInPast = (dateStr: string, time12: string): boolean => {
         const { hour, minute } = parse12hTime(time12);
-        const [year, month, day] = dateStr.split('-').map(Number);
+        const dateParts = dateStr.split('-').map(Number);
+        const year = dateParts[0] ?? 0;
+        const month = dateParts[1] ?? 1;
+        const day = dateParts[2] ?? 1;
         
         // Create slot datetime in Philippine time
         const slotDate = new Date(year, month - 1, day, hour, minute);

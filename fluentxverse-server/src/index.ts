@@ -4,6 +4,7 @@ import { createServer } from "http";
 import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
+import Examination from './routes/exam.route';
 import { initDriver } from './db/memgraph';
 import { getPool } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -42,6 +43,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Schedule)
   .use(Student)
   .use(Debug)
+  .use(Examination)
 
 
 

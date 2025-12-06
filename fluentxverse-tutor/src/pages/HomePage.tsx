@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
@@ -10,7 +11,16 @@ const HomePage = () => {
   }, []);
 
   const { user } = useAuthContext();
+  const location = useLocation();
   const [activeStep] = useState(1); // User is on step 1: Skills Assessment
+
+  const handleTakeWrittenTest = () => {
+    location.route('/exam/written');
+  };
+
+  const handleTakeSpeakingTest = () => {
+    location.route('/exam/speaking');
+  };
 
   return (
     <>
@@ -127,12 +137,12 @@ const HomePage = () => {
                   <div className="test-content">
                     <h4>WRITTEN TEST</h4>
                     <p>
-                      A comprehensive assessment covering grammar, vocabulary, reading comprehension, and writing skills to evaluate your English proficiency. <a href="#">Learn more..</a>
+                      A comprehensive AI-generated assessment covering grammar, vocabulary, reading comprehension, and teaching methodology. Each exam is uniquely generated for every applicant. <a href="#">Learn more..</a>
                     </p>
                   </div>
-                  <div className="test-status done">
-                    DONE <i className="fas fa-check-circle"></i>
-                  </div>
+                  <button className="test-action-btn" onClick={handleTakeWrittenTest}>
+                    TAKE TEST <i className="fas fa-arrow-right"></i>
+                  </button>
                 </div>
 
                 {/* Speaking Test */}
@@ -143,17 +153,13 @@ const HomePage = () => {
                   <div className="test-content">
                     <h4>SPEAKING TEST</h4>
                     <p>
-                      An oral assessment to evaluate your pronunciation, fluency, and conversational abilities in English. <a href="#">Learn more..</a>
+                      An AI-powered assessment to evaluate your pronunciation teaching ability, fluency, and conversational coaching skills. <a href="#">Learn more..</a>
                     </p>
-                    <div className="exam-code">
-                      Use this exam code when you begin: <strong>FXV2025</strong>
-                    </div>
                   </div>
+                  <button className="test-action-btn secondary" onClick={handleTakeSpeakingTest}>
+                    TAKE TEST <i className="fas fa-arrow-right"></i>
+                  </button>
                 </div>
-
-                <button className="take-test-btn">
-                  TAKE THE TEST
-                </button>
               </div>
 
               {/* Interview Section */}
