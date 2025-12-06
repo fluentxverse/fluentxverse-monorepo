@@ -40,6 +40,11 @@ export interface RegisteredParams extends RegisterParams {
     id: string;
 }
 
+
+export interface LoginReturnParams extends Omit<RegisteredParams, 'smartWalletAddress' | 'password'> {
+    walletAddress: string;
+}
+
 export interface Suspended {
     until: Date | null;
     reason: string;
@@ -50,11 +55,10 @@ export interface LoginParams {
     password: string;
 }
 
-// Response types derived from schema to catch drift automatically
+
 export type MeResponse = Static<(typeof MeSchema)["response"][200]>
 
 
-// Cookie session payload. Optional fields align with MeSchema optionals.
 export interface AuthData {
     userId: string;
     email: string;

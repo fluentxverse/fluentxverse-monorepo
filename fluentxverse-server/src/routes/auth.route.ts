@@ -4,7 +4,7 @@ import Elysia, { t } from "elysia";
 //** SERVICE IMPORT */
 import AuthService from "../services/auth.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
-import type { AuthData, MeResponse, User } from "@/services/auth.services/auth.interface";
+import type { AuthData, LoginReturnParams, MeResponse } from "@/services/auth.services/auth.interface";
 import { refreshAuthCookie } from "../utils/refreshCookie";
 
 // Define routes as an Elysia plugin instance to preserve route types
@@ -16,12 +16,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         const result = await authService.register(body);
 
         // Immediately log the user in after successful registration
-        const userData = await authService.login({ email: body.email, password: body.password });
-
-        // Handle smartWalletAddress - it might be a string or object from DB
-        const walletAddress = typeof userData.smartWalletAddress === 'string' 
-          ? userData.smartWalletAddress 
-          : userData.smartWalletAddress?.address || '';
+        const userData: LoginReturnParams = await authService.login({ email: body.email, password: body.password });
 
         // Set httpOnly cookie with 1-hour expiration and basic profile
         cookie.tutorAuth?.set({
@@ -30,7 +25,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
             email: userData.email,
             firstName: userData.firstName,
             lastName: userData.lastName,
-            walletAddress: walletAddress,
+            walletAddress: userData.walletAddress,
             mobileNumber: userData.mobileNumber,
             tier: userData.tier
 
@@ -100,11 +95,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           // Don't set domain - let browser default to current host
         });
         
-
-        return {
-          success: true,
-          user: normalizedUser
-        };
+        return { success: true,user: normalizedUser };
       } catch (error: any) {
         console.log(error);
         throw error;

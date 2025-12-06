@@ -4,7 +4,7 @@ import { createServer } from "http";
 import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
-import Examination from './routes/exam.route';
+import Examination from "./routes/exam.route";
 import { initDriver } from './db/memgraph';
 import { getPool } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';

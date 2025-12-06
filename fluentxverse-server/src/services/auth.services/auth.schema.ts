@@ -28,6 +28,7 @@ export const RegisterSchema = {
         suffix: t.Optional(t.String()),
         birthDate: t.String(),
         mobileNumber: t.String(),
+        
     }),
     response: {
         200: t.Object({

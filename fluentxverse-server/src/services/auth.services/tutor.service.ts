@@ -5,7 +5,7 @@ import { nanoid } from "nanoid"
 import { hash, compare } from 'bcrypt-ts'
 
 //** TYPE IMPORT */
-import type { LoginParams, RegisteredParams, RegisterParams, Suspended, UpdatePersonalInfoParams, UpdateEmailParams, UpdatePasswordParams } from "./auth.interface";
+import type { LoginParams, RegisteredParams, RegisterParams, Suspended, UpdatePersonalInfoParams, UpdateEmailParams, UpdatePasswordParams, LoginReturnParams } from "./auth.interface";
 import WalletService from "../wallet.services/wallet.service";
 import { getDriver } from "../../db/memgraph";
 
@@ -106,16 +106,14 @@ class AuthService {
     }
 
 
-    public async login (params: LoginParams) {
-
+    public async login (params: LoginParams): Promise<LoginReturnParams> {
         try {
         const driver = getDriver();
         const session = driver.session();
 
         const result = await session.run(
-            `
-            MATCH (u:User { email: $email })
-            RETURN u
+            `MATCH (u:User { email: $email })
+             RETURN u
             `,
             { email: params.email }
         );
@@ -127,7 +125,7 @@ class AuthService {
         }
 
         const encryptedPassword: string = result.records[0]?.get('u').properties.password;
-        const isPasswordValid = await compare(params.password, encryptedPassword);
+        const isPasswordValid: boolean = await compare(params.password, encryptedPassword);
         if (!isPasswordValid) {
             throw new Error('Invalid email or password');
         }
@@ -140,7 +138,7 @@ class AuthService {
 
 
 
-        const safeUser = {
+        const safeUser: LoginReturnParams = {
             ...safeProperties,
             walletAddress: smartAccountAddress,
             tier: tierNumber
