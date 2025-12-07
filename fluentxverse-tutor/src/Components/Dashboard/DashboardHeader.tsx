@@ -1,5 +1,6 @@
-import { useState } from 'preact/hooks';
-import { useThemeStore } from '../../context/ThemeContext';
+import { useEffect, useRef } from 'preact/hooks';
+import { useNotifications, getNotificationIcon, formatRelativeTime } from '../../hooks/useNotifications';
+import { Link } from 'wouter';
 import './DashboardHeader.css';
 
 interface DashboardHeaderProps {
@@ -11,78 +12,132 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ user }: DashboardHeaderProps) => {
-  const { isDarkMode, toggleTheme } = useThemeStore();
-  const [showNotifications, setShowNotifications] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    isDropdownOpen,
+    markAsRead,
+    markAllAsRead,
+    setDropdownOpen,
+    toggleDropdown
+  } = useNotifications();
 
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen, setDropdownOpen]);
+
+  const handleNotificationClick = async (notification: any) => {
+    if (!notification.isRead) {
+      await markAsRead(notification.id);
+    }
+    
+    // Navigate if there's a link
+    if (notification.data?.link) {
+      window.location.href = notification.data.link;
+    }
+    
+    setDropdownOpen(false);
   };
 
   return (
-    <div className={`dashboard-header ${isDarkMode ? 'dark' : 'light'}`}>
+    <div className="dashboard-header light">
       <div className="logo">
-
+        {/* Logo space */}
       </div>
 
       <div className="dashboard-header-actions">
-        {/* Theme toggle */}
-        <button 
-          className="dashboard-action-btn theme-toggle"
-          onClick={toggleTheme}
-          aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-        </button>
-
         {/* Notifications */}
-        <div className="dashboard-notification-container">
+        <div className="dashboard-notification-container" ref={dropdownRef}>
           <button 
-            className={`dashboard-action-btn ${showNotifications ? 'active' : ''}`}
-            onClick={toggleNotifications}
+            className={`notification-btn ${isDropdownOpen ? 'active' : ''}`}
+            onClick={toggleDropdown}
             aria-label="Notifications"
           >
             <i className="fas fa-bell"></i>
-            <span className="notification-badge">3</span>
+            {unreadCount > 0 && (
+              <span className="notification-badge">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
 
-          {showNotifications && (
+          {isDropdownOpen && (
             <div className="notifications-dropdown">
               <div className="notifications-header">
                 <h4>Notifications</h4>
-                <button className="mark-all-read">Mark all as read</button>
+                {unreadCount > 0 && (
+                  <button className="mark-all-read" onClick={markAllAsRead}>
+                    Mark all as read
+                  </button>
+                )}
               </div>
+              
               <div className="notifications-list">
-                <div className="notification-item unread">
-                  <div className="notification-icon green">
-                    <i className="fas fa-leaf"></i>
+                {isLoading ? (
+                  <div className="notification-loading">
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <p>Loading notifications...</p>
                   </div>
-                  <div className="notification-content">
-                    <p>Your farm data has been analyzed. New insights available!</p>
-                    <span className="notification-time">2 hours ago</span>
+                ) : notifications.length === 0 ? (
+                  <div className="notification-empty">
+                    <i className="fas fa-bell-slash"></i>
+                    <p>No notifications yet</p>
+                    <span>We'll notify you when something happens</span>
                   </div>
-                </div>
-                <div className="notification-item unread">
-                  <div className="notification-icon blue">
-                    <i className="fas fa-tint"></i>
-                  </div>
-                  <div className="notification-content">
-                    <p>Weather alert: Light rain forecasted for your farm location tomorrow.</p>
-                    <span className="notification-time">5 hours ago</span>
-                  </div>
-                </div>
-                <div className="notification-item unread">
-                  <div className="notification-icon orange">
-                    <i className="fas fa-coins"></i>
-                  </div>
-                  <div className="notification-content">
-                    <p>New financial service available for sustainable farming practices.</p>
-                    <span className="notification-time">1 day ago</span>
-                  </div>
-                </div>
+                ) : (
+                  notifications.slice(0, 10).map(notification => {
+                    const { icon, color } = getNotificationIcon(notification.type);
+                    return (
+                      <div 
+                        key={notification.id} 
+                        className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div 
+                          className="notification-icon" 
+                          style={{ backgroundColor: `${color}20`, color }}
+                        >
+                          <i className={`fas ${icon}`}></i>
+                        </div>
+                        <div className="notification-content">
+                          <p className="notification-title">{notification.title}</p>
+                          <p className="notification-message">{notification.message}</p>
+                          <span className="notification-time">
+                            {formatRelativeTime(notification.timestamp)}
+                          </span>
+                        </div>
+                        {!notification.isRead && (
+                          <div className="notification-unread-dot"></div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
-              <div className="notifications-footer">
-                <button className="view-all-notifications">View all notifications</button>
-              </div>
+              
+              {notifications.length > 0 && (
+                <div className="notifications-footer">
+                  <Link href="/notifications" className="view-all-notifications">
+                    View all notifications
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>

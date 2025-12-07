@@ -1,5 +1,7 @@
 // Frontend Socket event types (mirror of backend types)
 
+import type { Notification } from './notification.types';
+
 export interface ServerToClientEvents {
   // Chat events
   'chat:message': (data: ChatMessageData) => void;
@@ -17,6 +19,12 @@ export interface ServerToClientEvents {
   'webrtc:answer': (data: { answer: RTCSessionDescriptionInit; from: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: RTCIceCandidate; from: string }) => void;
   'webrtc:peer-left': () => void;
+  
+  // Notification events
+  'notification:new': (notification: Notification) => void;
+  'notification:list': (data: { notifications: Notification[]; unreadCount: number }) => void;
+  'notification:read': (data: { notificationId: string; unreadCount: number }) => void;
+  'notification:read-all': (data: { unreadCount: number }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -34,6 +42,12 @@ export interface ClientToServerEvents {
   'webrtc:offer': (data: { offer: RTCSessionDescriptionInit; to: string }) => void;
   'webrtc:answer': (data: { answer: RTCSessionDescriptionInit; to: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: RTCIceCandidate; to: string }) => void;
+  
+  // Notification events
+  'notification:subscribe': () => void;
+  'notification:get-all': (data?: { limit?: number; offset?: number }) => void;
+  'notification:mark-read': (notificationId: string) => void;
+  'notification:mark-all-read': () => void;
 }
 
 // Data structures

@@ -1,11 +1,62 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
+import { adminApi, RecentActivity } from '../api/admin.api';
 import './Header.css';
 
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [notifications, setNotifications] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(false);
   const { user, logout } = useAuthContext();
+
+  useEffect(() => {
+    loadNotifications();
+    // Refresh notifications every 30 seconds
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getRecentActivity(10);
+      setNotifications(data);
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'tutor_registered':
+        return { icon: 'ri-user-add-line', class: 'info' };
+      case 'exam_passed':
+        return { icon: 'ri-checkbox-circle-line', class: 'success' };
+      case 'exam_failed':
+        return { icon: 'ri-error-warning-line', class: 'warning' };
+      case 'student_joined':
+        return { icon: 'ri-graduation-cap-line', class: 'info' };
+      case 'booking':
+        return { icon: 'ri-calendar-check-line', class: 'success' };
+      default:
+        return { icon: 'ri-notification-3-line', class: 'info' };
+    }
+  };
+
+  const formatTimeAgo = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
+    return date.toLocaleDateString();
+  };
 
   const getInitials = () => {
     if (!user) return 'AD';
@@ -51,46 +102,47 @@ export function Header() {
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <i className="ri-notification-3-line"></i>
-            <span className="notification-dot"></span>
+            {notifications.length > 0 && <span className="notification-dot"></span>}
           </button>
           
           {showNotifications && (
             <div className="notification-dropdown">
               <div className="notification-header">
-                <span>Notifications</span>
-                <button className="mark-read-btn">Mark all read</button>
+                <span>Activity Feed</span>
+                <button className="mark-read-btn" onClick={loadNotifications}>
+                  <i className="ri-refresh-line"></i> Refresh
+                </button>
               </div>
               <div className="notification-list">
-                <div className="notification-item unread">
-                  <div className="notification-icon success">
-                    <i className="ri-user-add-line"></i>
+                {loading && notifications.length === 0 ? (
+                  <div className="notification-empty">
+                    <i className="ri-loader-4-line spin"></i>
+                    <p>Loading...</p>
                   </div>
-                  <div className="notification-content">
-                    <p>New tutor application from <strong>John Doe</strong></p>
-                    <span>2 minutes ago</span>
+                ) : notifications.length === 0 ? (
+                  <div className="notification-empty">
+                    <i className="ri-notification-off-line"></i>
+                    <p>No recent activity</p>
                   </div>
-                </div>
-                <div className="notification-item unread">
-                  <div className="notification-icon warning">
-                    <i className="ri-error-warning-line"></i>
-                  </div>
-                  <div className="notification-content">
-                    <p>Tutor <strong>Jane Smith</strong> failed speaking exam</p>
-                    <span>15 minutes ago</span>
-                  </div>
-                </div>
-                <div className="notification-item">
-                  <div className="notification-icon info">
-                    <i className="ri-calendar-check-line"></i>
-                  </div>
-                  <div className="notification-content">
-                    <p>5 new sessions scheduled for today</p>
-                    <span>1 hour ago</span>
-                  </div>
-                </div>
+                ) : (
+                  notifications.map((notification) => {
+                    const iconInfo = getNotificationIcon(notification.type);
+                    return (
+                      <div key={notification.id} className="notification-item">
+                        <div className={`notification-icon ${iconInfo.class}`}>
+                          <i className={iconInfo.icon}></i>
+                        </div>
+                        <div className="notification-content">
+                          <p>{notification.message}</p>
+                          <span>{formatTimeAgo(notification.timestamp)}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
               <div className="notification-footer">
-                <a href="/notifications">View all notifications</a>
+                <span className="notification-count">{notifications.length} recent activities</span>
               </div>
             </div>
           )}

@@ -103,18 +103,21 @@
   flex: 1;
   min-width: 250px;
   position: relative;
+  display: flex;
+  gap: 8px;
 }
 
-.search-box i {
+.search-box > i {
   position: absolute;
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
+  pointer-events: none;
 }
 
 .search-box input {
-  width: 100%;
+  flex: 1;
   padding: 10px 14px 10px 40px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -132,6 +135,29 @@
 
 .search-box input::placeholder {
   color: var(--text-muted);
+}
+
+.btn-search {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #0245ae, #3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-search:hover {
+  background: linear-gradient(135deg, #023d9a, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.btn-search:active {
+  transform: translateY(0);
 }
 
 .filter-tabs {

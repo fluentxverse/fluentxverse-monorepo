@@ -4,7 +4,18 @@ import { chatHandler } from './handlers/chat.handler';
 import { webrtcHandler } from './handlers/webrtc.handler';
 import { sessionHandler } from './handlers/session.handler';
 import { highlightHandler } from './handlers/highlight.handler';
+import { notificationHandler } from './handlers/notification.handler';
 import { authMiddleware } from './middleware/auth.middleware';
+
+// Store the IO instance for access from other modules
+let ioInstance: SocketIOServer | null = null;
+
+/**
+ * Get the Socket.IO server instance
+ */
+export const getIO = (): SocketIOServer | null => {
+  return ioInstance;
+};
 
 export const initSocketServer = (httpServer: HTTPServer) => {
   const defaultOrigins = [
@@ -31,6 +42,9 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     pingInterval: 25000
   });
 
+  // Store the IO instance for global access
+  ioInstance = io;
+
   // Authentication middleware
   io.use(authMiddleware);
 
@@ -48,6 +62,7 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     webrtcHandler(io, socket);
     sessionHandler(io, socket);
     highlightHandler(io, socket);
+    notificationHandler(io, socket);
 
     socket.on('disconnect', (reason) => {
       console.log(`❌ Client disconnected: ${socket.id}, reason: ${reason}`);

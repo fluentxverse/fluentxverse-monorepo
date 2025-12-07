@@ -30,20 +30,33 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
     return socket;
   }
 
-  // Get auth cookie for authentication
-  const authCookie = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('auth='))
-    ?.split('=')[1];
-  
-  let authData = null;
-  if (authCookie) {
+  // Prefer explicit token passed in; fallback to tutorAuth cookie
+  let authData: any = null;
+  if (token) {
     try {
-      authData = JSON.parse(decodeURIComponent(authCookie));
+      authData = JSON.parse(token);
     } catch (e) {
-      console.warn('Failed to parse auth cookie');
+      console.warn('Failed to parse provided socket token');
+      authData = null;
     }
   }
+
+  if (!authData) {
+    const authCookie = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('tutorAuth='))
+      ?.split('=')[1];
+
+    if (authCookie) {
+      try {
+        authData = JSON.parse(decodeURIComponent(authCookie));
+      } catch (e) {
+        console.warn('Failed to parse tutorAuth cookie');
+      }
+    }
+  }
+
+  console.log('🔌 Socket auth data:', authData ? `userId: ${authData.userId}` : 'no auth data');
 
   socket = io(SOCKET_URL, {
     withCredentials: true,

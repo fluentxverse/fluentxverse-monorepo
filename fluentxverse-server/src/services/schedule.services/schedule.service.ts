@@ -19,6 +19,10 @@ import type {
   PenaltySummary
 } from './schedule.interface';
 import { determinePenaltyCode, PENALTY_RULES, PENALTY_CODE_DETAILS } from '../../config/penaltyCodes';
+import { NotificationService } from '../notification.services/notification.service';
+import { getIO } from '../../socket/socket.server';
+
+const notificationService = new NotificationService();
 
 export class ScheduleService {
   
@@ -252,9 +256,9 @@ export class ScheduleService {
       const convert12hTo24h = (time12: string): string => {
         const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
         if (!match) return '00:00';
-        let hour = parseInt(match[1], 10);
+        let hour = parseInt(match[1] || '', 10);
         const minute = match[2];
-        const isPM = match[3].toUpperCase() === 'PM';
+        const isPM = match[3] && match[3].toUpperCase() === 'PM';
         
         if (hour === 12) {
           hour = isPM ? 12 : 0;
@@ -371,8 +375,8 @@ export class ScheduleService {
           throw new Error(`Invalid time format: ${slotTime}`);
         }
         
-        let hours = parseInt(timeMatch[1]);
-        const minutes = parseInt(timeMatch[2]);
+        let hours = parseInt(timeMatch[1] || '', 10);
+        const minutes = parseInt(timeMatch[2] || '', 10);
         const meridiem = timeMatch[3].toUpperCase();
         
         console.log('Parsed time components:', { hours, minutes, meridiem });
@@ -472,6 +476,47 @@ export class ScheduleService {
       
       console.log('Booking query returned', bookingResult.records.length, 'records');
       console.log('Booking created successfully in database');
+      
+      // Send notification to tutor about new booking
+      try {
+        // Get student name for notification
+        const studentNameResult = await session.run(
+          `MATCH (s:Student {id: $studentId}) RETURN s.firstName as firstName, s.lastName as lastName`,
+          { studentId: input.studentId }
+        );
+        
+        const studentFirstName = studentNameResult.records[0]?.get('firstName') || '';
+        const studentLastName = studentNameResult.records[0]?.get('lastName') || '';
+        const studentName = `${studentFirstName} ${studentLastName}`.trim() || 'A student';
+        
+        // Format date for notification
+        const formattedDate = new Date(slot.slotDate).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric'
+        });
+        
+        await notificationService.notifyNewBooking(
+          slot.tutorId,
+          studentName,
+          formattedDate,
+          slot.slotTime,
+          bookingId
+        ).then(notification => {
+          // Emit real-time notification via Socket.IO
+          const io = getIO();
+          if (io) {
+            io.to(`notifications:${slot.tutorId}`).emit('notification:new', notification);
+            console.log('📢 Real-time notification emitted to tutor');
+          }
+        });
+        
+        console.log('📢 Notification sent to tutor about new booking');
+      } catch (notifError) {
+        console.error('Failed to send booking notification:', notifError);
+        // Don't fail the booking if notification fails
+      }
+      
       console.log('=== SERVICE: bookSlot END ===');
       
       return {

@@ -300,8 +300,14 @@ const InterviewSchedulePage = () => {
 
   return (
     <div className="interview-page">
+      {/* Page Header */}
       <div className="interview-header">
-        <h1>Interview Scheduling</h1>
+        <div className="interview-header-left">
+          <div className="interview-header-icon">
+            <i className="ri-calendar-schedule-line"></i>
+          </div>
+          <h1>Interview Scheduling</h1>
+        </div>
         <div className="interview-actions">
           <button className="btn btn-secondary" onClick={() => setCurrentWeekOffset(0)}>
             <i className="ri-calendar-check-line"></i> Today
@@ -309,43 +315,62 @@ const InterviewSchedulePage = () => {
         </div>
       </div>
 
-      {/* Calendar Navigation */}
-      <div className="calendar-nav">
-        <div className="week-navigation">
-          <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
-            <i className="ri-arrow-left-s-line"></i>
-          </button>
-          <span className="week-range">
-            {formatDate(weekDates[0])} - {formatDate(weekDates[6])}
-          </span>
-          <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
-            <i className="ri-arrow-right-s-line"></i>
-          </button>
+      {/* Info Banner */}
+      <div className="info-banner">
+        <div className="info-banner-icon">
+          <i className="ri-information-line"></i>
         </div>
-        
+        <p>
+          Click on empty slots to select them, then use the action bar to open interview slots. 
+          Pending tutors can book available slots for their speaking exam interview.
+        </p>
+      </div>
+
+      {/* Schedule Card */}
+      <div className="schedule-card">
+        {/* Calendar Navigation */}
+        <div className="calendar-nav">
+          <div className="week-navigation">
+            <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
+              <i className="ri-arrow-left-s-line"></i>
+              <span>Previous</span>
+            </button>
+            <span className="week-range">
+              {formatDate(weekDates[0])} - {formatDate(weekDates[6])}
+            </span>
+            <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
+              <span>Next</span>
+              <i className="ri-arrow-right-s-line"></i>
+            </button>
+          </div>
+        </div>
+
+        {/* Period Tabs */}
         <div className="period-tabs">
           <button 
             className={`period-tab ${selectedPeriod === 'morning' ? 'active' : ''}`}
             onClick={() => setSelectedPeriod('morning')}
           >
+            <i className="ri-sun-line"></i>
             Morning (5AM-12PM)
           </button>
           <button 
             className={`period-tab ${selectedPeriod === 'afternoon' ? 'active' : ''}`}
             onClick={() => setSelectedPeriod('afternoon')}
           >
+            <i className="ri-sun-cloudy-line"></i>
             Afternoon (12PM-6PM)
           </button>
           <button 
             className={`period-tab ${selectedPeriod === 'evening' ? 'active' : ''}`}
             onClick={() => setSelectedPeriod('evening')}
           >
+            <i className="ri-moon-line"></i>
             Evening (6PM-12AM)
           </button>
         </div>
-      </div>
 
-      {/* Calendar Grid */}
+        {/* Calendar Grid */}
       {loading && !slots.size ? (
         <div className="loading-container">
           <div className="loading-spinner"></div>
@@ -406,6 +431,7 @@ const InterviewSchedulePage = () => {
           </div>
         </div>
       )}
+      </div>
 
       {/* Selection Bar */}
       {selectedSlots.size > 0 && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import Header from '../Components/Header/Header';
+import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { interviewApi, type InterviewSlot, type MyInterview } from '../api/interview.api';
@@ -235,32 +235,43 @@ const InterviewBookingPage = () => {
 
   return (
     <>
-      <Header />
-      <main className="main-content">
-        <SideBar />
-        <div className="content-wrapper">
-          <div className="interview-booking-page">
-            <div className="interview-booking-header">
-              <h1>Book Your Interview</h1>
+      <SideBar />
+      <div className="main-content">
+        <DashboardHeader />
+        <div className="interview-booking-page">
+          <div className="container">
+            {/* Page Header */}
+            <div className="interview-header">
+              <div className="interview-header-left">
+                <div className="interview-header-icon">
+                  <i className="fas fa-calendar-alt"></i>
+                </div>
+                <h1>Book Your Interview</h1>
+              </div>
+              <div className="interview-header-actions">
+                <button className="btn-today" onClick={() => setCurrentWeekOffset(0)}>
+                  <i className="fas fa-calendar-check"></i> Today
+                </button>
+              </div>
             </div>
 
             {/* Current Booking */}
             {myBooking && (
               <div className="current-booking-card">
-                <h2><i className="ri-calendar-check-fill"></i> Your Scheduled Interview</h2>
+                <h2><i className="fas fa-calendar-check"></i> Your Scheduled Interview</h2>
                 <div className="booking-details">
                   <div className="booking-detail">
-                    <i className="ri-calendar-line"></i>
+                    <i className="fas fa-calendar-day"></i>
                     <span>{formatDateFull(myBooking.date)}</span>
                   </div>
                   <div className="booking-detail">
-                    <i className="ri-time-line"></i>
+                    <i className="fas fa-clock"></i>
                     <span>{myBooking.time}</span>
                   </div>
                 </div>
                 <div className="booking-actions">
                   <button className="btn-cancel" onClick={handleCancelBooking}>
-                    <i className="ri-close-line"></i> Cancel Interview
+                    <i className="fas fa-times"></i> Cancel Interview
                   </button>
                 </div>
               </div>
@@ -269,7 +280,9 @@ const InterviewBookingPage = () => {
             {/* Info Card */}
             {!myBooking && (
               <div className="info-card">
-                <i className="ri-information-line"></i>
+                <div className="info-card-icon">
+                  <i className="fas fa-info-circle"></i>
+                </div>
                 <p>
                   Select an available interview slot below. You can only have one scheduled interview at a time.
                   The interview will be conducted by a FluentXVerse administrator to verify your teaching capabilities.
@@ -277,135 +290,152 @@ const InterviewBookingPage = () => {
               </div>
             )}
 
-            {/* Calendar Navigation */}
-            <div className="calendar-nav">
-              <div className="week-navigation">
-                <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
-                  <i className="ri-arrow-left-s-line"></i>
-                </button>
-                <span className="week-range">
-                  {formatDate(weekDates[0])} - {formatDate(weekDates[6])}
-                </span>
-                <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
-                  <i className="ri-arrow-right-s-line"></i>
-                </button>
+            {/* Schedule Card */}
+            <div className="schedule-card">
+              {/* Calendar Navigation */}
+              <div className="calendar-nav">
+                <div className="week-navigation">
+                  <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
+                    <i className="fas fa-chevron-left"></i>
+                    <span>Previous</span>
+                  </button>
+                  <span className="week-range">
+                    {formatDate(weekDates[0])} - {formatDate(weekDates[6])}
+                  </span>
+                  <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
+                    <span>Next</span>
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
               </div>
-              
+
+              {/* Period Tabs */}
               <div className="period-tabs">
                 <button 
                   className={`period-tab ${selectedPeriod === 'morning' ? 'active' : ''}`}
                   onClick={() => setSelectedPeriod('morning')}
                 >
+                  <i className="fas fa-sun"></i>
                   Morning
                 </button>
                 <button 
                   className={`period-tab ${selectedPeriod === 'afternoon' ? 'active' : ''}`}
                   onClick={() => setSelectedPeriod('afternoon')}
                 >
+                  <i className="fas fa-cloud-sun"></i>
                   Afternoon
                 </button>
                 <button 
                   className={`period-tab ${selectedPeriod === 'evening' ? 'active' : ''}`}
                   onClick={() => setSelectedPeriod('evening')}
                 >
+                  <i className="fas fa-moon"></i>
                   Evening
                 </button>
               </div>
-            </div>
 
-            {/* Calendar Grid */}
-            {loading && !availableSlots.size ? (
-              <div className="loading-container">
-                <div className="loading-spinner"></div>
-                <p>Loading available slots...</p>
-              </div>
-            ) : error ? (
-              <div className="error-container">
-                <i className="ri-error-warning-line"></i>
-                <p>{error}</p>
-                <button className="btn btn-primary" onClick={() => setCurrentWeekOffset(currentWeekOffset)}>
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <div className="calendar-container">
-                <div className="calendar-grid">
-                  {/* Header Row */}
-                  <div className="calendar-header">
-                    <div className="time-header"></div>
-                    {weekDates.map((date, idx) => (
-                      <div key={idx} className={`day-header ${isToday(date) ? 'today' : ''}`}>
-                        <div className="day-name">{days[idx].substring(0, 3)}</div>
-                        <div className="day-date">{date.getDate()}</div>
+              {/* Calendar Grid */}
+              {loading && !availableSlots.size ? (
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p>Loading available slots...</p>
+                </div>
+              ) : error ? (
+                <div className="error-container">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <p>{error}</p>
+                  <button className="btn btn-primary" onClick={() => setCurrentWeekOffset(currentWeekOffset)}>
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <div className="calendar-container">
+                  <div className="calendar-grid">
+                    {/* Header Row */}
+                    <div className="calendar-header">
+                      <div className="time-header"></div>
+                      {weekDates.map((date, idx) => (
+                        <div key={idx} className={`day-header ${isToday(date) ? 'today' : ''}`}>
+                          <div className="day-name">{days[idx].substring(0, 3)}</div>
+                          <div className="day-date">{date.getDate()}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Time Rows */}
+                    {timeSlots[selectedPeriod].map(time => (
+                      <div key={time} className="time-row">
+                        <div className="time-label">{time}</div>
+                        {weekDates.map((date, dayIdx) => {
+                          const key = `${dayIdx}-${time}`;
+                          const slot = availableSlots.get(key);
+                          const isPast = isPastSlot(date, time);
+                          
+                          // Check if this slot is the user's booking
+                          const dateStr = date.toISOString().split('T')[0];
+                          const isMyBooking = myBooking && myBooking.date === dateStr && myBooking.time === time;
+                          
+                          return (
+                            <div 
+                              key={key}
+                              className={`slot-cell ${isPast ? 'past' : ''} ${isMyBooking ? 'booked' : ''} ${slot && !myBooking ? 'available' : ''}`}
+                            >
+                              {isMyBooking ? (
+                                <div className="slot-badge booked">
+                                  <i className="fas fa-check-circle"></i> Your Booking
+                                </div>
+                              ) : slot && !myBooking ? (
+                                <div 
+                                  className="slot-badge open"
+                                  onClick={() => handleSlotClick(slot)}
+                                >
+                                  <i className="fas fa-plus-circle"></i> Available
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     ))}
                   </div>
-
-                  {/* Time Rows */}
-                  {timeSlots[selectedPeriod].map(time => (
-                    <div key={time} className="time-row">
-                      <div className="time-label">{time}</div>
-                      {weekDates.map((date, dayIdx) => {
-                        const key = `${dayIdx}-${time}`;
-                        const slot = availableSlots.get(key);
-                        const isPast = isPastSlot(date, time);
-                        
-                        return (
-                          <div 
-                            key={key}
-                            className={`slot-cell ${isPast ? 'past' : ''} ${slot && !myBooking ? 'available' : ''}`}
-                          >
-                            {slot && (
-                              <div 
-                                className="slot-badge open"
-                                onClick={() => handleSlotClick(slot)}
-                              >
-                                <i className="ri-add-circle-line"></i> Available
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {availableSlots.size === 0 && !loading && !error && (
               <div className="empty-state">
-                <i className="ri-calendar-2-line"></i>
+                <i className="fas fa-calendar-times"></i>
                 <h3>No Available Slots</h3>
                 <p>There are no interview slots available for this week. Please check back later or try a different week.</p>
               </div>
             )}
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Confirm Modal */}
       {showConfirmModal && selectedSlot && (
-        <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="interview-modal-overlay" onClick={() => setShowConfirmModal(false)}>
+          <div className="interview-modal" onClick={e => e.stopPropagation()}>
             <h3>Confirm Interview Booking</h3>
             <p>You are about to book the following interview slot:</p>
             <div className="booking-confirm-details">
-              <p><i className="ri-calendar-line"></i> {formatDateFull(selectedSlot.date)}</p>
-              <p><i className="ri-time-line"></i> {selectedSlot.time}</p>
+              <p><i className="fas fa-calendar-day"></i> {formatDateFull(selectedSlot.date)}</p>
+              <p><i className="fas fa-clock"></i> {selectedSlot.time}</p>
             </div>
-            <p style={{ fontSize: '13px', color: '#6c757d' }}>
+            <p style={{ fontSize: '13px', color: '#64748b' }}>
               Please make sure you're available at this time. You can cancel up until the interview time.
             </p>
-            <div className="modal-actions">
+            <div className="interview-modal-actions">
               <button 
-                className="btn btn-secondary" 
+                className="interview-modal-btn interview-modal-btn-secondary" 
                 onClick={() => setShowConfirmModal(false)}
                 disabled={bookingInProgress}
               >
                 Cancel
               </button>
               <button 
-                className="btn btn-primary"
+                className="interview-modal-btn interview-modal-btn-primary"
                 onClick={handleConfirmBooking}
                 disabled={bookingInProgress}
               >

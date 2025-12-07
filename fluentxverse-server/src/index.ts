@@ -7,9 +7,11 @@ import Schedule from './routes/schedule.route';
 import Examination from "./routes/exam.route";
 import Admin from './routes/admin.route';
 import Interview from './routes/interview.route';
+import Notification from './routes/notification.route';
 import { initDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
+import { startReminderService } from './services/notification.services/reminder.service';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
 import Student from "./routes/student.route";
@@ -51,6 +53,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Examination)
   .use(Admin)
   .use(Interview)
+  .use(Notification)
 
 
 
@@ -70,5 +73,8 @@ const io = initSocketServer(httpServer);
 // Attach Socket.IO to run alongside Elysia - listen on all interfaces for LAN access
 httpServer.listen(8767, '0.0.0.0', () => {
   console.log(`✅ Socket.IO server is running on port 8767`);
+  
+  // Start the session reminder service after socket is ready
+  startReminderService();
 });
 

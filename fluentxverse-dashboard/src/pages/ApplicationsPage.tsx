@@ -4,12 +4,15 @@ import './ApplicationsPage.css';
 
 const ApplicationsPage = () => {
   const [applications, setApplications] = useState<PendingTutor[]>([]);
+  const [certifiedCount, setCertifiedCount] = useState(0);
+  const [pendingProfileCount, setPendingProfileCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
     loadApplications();
+    loadStats();
   }, []);
 
   const loadApplications = async () => {
@@ -22,6 +25,16 @@ const ApplicationsPage = () => {
       setError(err.message || 'Failed to load applications');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const stats = await adminApi.getStats();
+      setCertifiedCount(stats.certifiedTutors);
+      setPendingProfileCount(stats.pendingTutors);
+    } catch (err) {
+      console.error('Failed to load stats:', err);
     }
   };
 
@@ -106,6 +119,24 @@ const ApplicationsPage = () => {
           <div className="stat-content">
             <span className="stat-number">{stats.processing}</span>
             <span className="stat-label">Processing</span>
+          </div>
+        </div>
+        <div className="stat-card info-card">
+          <div className="stat-icon pending-profile">
+            <i className="ri-user-settings-line"></i>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{pendingProfileCount}</span>
+            <span className="stat-label">Pending Profile</span>
+          </div>
+        </div>
+        <div className="stat-card info-card">
+          <div className="stat-icon certified">
+            <i className="ri-verified-badge-line"></i>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{certifiedCount}</span>
+            <span className="stat-label">Certified</span>
           </div>
         </div>
       </div>

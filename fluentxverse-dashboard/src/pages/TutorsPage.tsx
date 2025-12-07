@@ -2,13 +2,10 @@ import { useState, useEffect } from 'preact/hooks';
 import { adminApi, TutorListItem } from '../api/admin.api';
 import './TutorsPage.css';
 
-type TutorStatus = 'all' | 'certified' | 'pending' | 'processing' | 'failed';
-
 const TutorsPage = () => {
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<TutorStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -16,7 +13,7 @@ const TutorsPage = () => {
 
   useEffect(() => {
     loadTutors();
-  }, [page, filter]);
+  }, [page]);
 
   const loadTutors = async () => {
     try {
@@ -25,7 +22,7 @@ const TutorsPage = () => {
       const result = await adminApi.getTutors({
         page,
         limit,
-        status: filter,
+        status: 'certified',
         search: searchQuery || undefined,
       });
       setTutors(result.tutors);
@@ -41,11 +38,6 @@ const TutorsPage = () => {
     e.preventDefault();
     setPage(1);
     loadTutors();
-  };
-
-  const handleFilterChange = (newFilter: TutorStatus) => {
-    setFilter(newFilter);
-    setPage(1);
   };
 
   const getStatusBadge = (tutor: TutorListItem) => {
@@ -66,39 +58,49 @@ const TutorsPage = () => {
 
   const totalPages = Math.ceil(total / limit);
 
-  const stats = {
-    total: total,
-    certified: tutors.filter(t => t.status === 'certified').length,
-    pending: tutors.filter(t => t.status === 'pending' || t.status === 'processing').length,
-    failed: tutors.filter(t => t.status === 'failed').length
-  };
+  // Calculate stats from the tutors list
+  const avgRating = tutors.length > 0 
+    ? (tutors.reduce((sum, t) => sum + (t.rating || 0), 0) / tutors.length).toFixed(1)
+    : '0.0';
+  const totalSessions = tutors.reduce((sum, t) => sum + (t.totalSessions || 0), 0);
 
   return (
     <div className="tutors-page">
       <div className="page-header">
         <div className="header-content">
-          <h1>Tutors Management</h1>
-          <p>Manage tutor accounts and certification status</p>
+          <h1>Certified Tutors</h1>
+          <p>View and manage certified tutors</p>
         </div>
       </div>
 
       {/* Quick Stats */}
       <div className="quick-stats">
-        <div className={`quick-stat ${filter === 'all' ? 'active' : ''}`} onClick={() => handleFilterChange('all')}>
-          <span className="stat-number">{total}</span>
-          <span className="stat-label">Total Tutors</span>
+        <div className="quick-stat">
+          <div className="stat-icon blue">
+            <i className="ri-user-star-line"></i>
+          </div>
+          <div className="stat-info">
+            <span className="stat-number">{total}</span>
+            <span className="stat-label">Total Certified</span>
+          </div>
         </div>
-        <div className={`quick-stat certified ${filter === 'certified' ? 'active' : ''}`} onClick={() => handleFilterChange('certified')}>
-          <span className="stat-number">{stats.certified}</span>
-          <span className="stat-label">Certified</span>
+        <div className="quick-stat">
+          <div className="stat-icon green">
+            <i className="ri-star-line"></i>
+          </div>
+          <div className="stat-info">
+            <span className="stat-number">{avgRating}</span>
+            <span className="stat-label">Avg Rating</span>
+          </div>
         </div>
-        <div className={`quick-stat pending ${filter === 'pending' ? 'active' : ''}`} onClick={() => handleFilterChange('pending')}>
-          <span className="stat-number">{stats.pending}</span>
-          <span className="stat-label">Pending</span>
-        </div>
-        <div className={`quick-stat failed ${filter === 'failed' ? 'active' : ''}`} onClick={() => handleFilterChange('failed')}>
-          <span className="stat-number">{stats.failed}</span>
-          <span className="stat-label">Failed</span>
+        <div className="quick-stat">
+          <div className="stat-icon purple">
+            <i className="ri-video-chat-line"></i>
+          </div>
+          <div className="stat-info">
+            <span className="stat-number">{totalSessions}</span>
+            <span className="stat-label">Total Sessions</span>
+          </div>
         </div>
       </div>
 
@@ -109,50 +111,18 @@ const TutorsPage = () => {
         </div>
       )}
 
-      {/* Filters & Search */}
+      {/* Search */}
       <div className="filters-bar">
         <form className="search-box" onSubmit={handleSearch}>
           <i className="ri-search-line"></i>
           <input 
             type="text" 
-            placeholder="Search tutors..." 
+            placeholder="Search certified tutors..." 
             value={searchQuery}
             onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
           />
           <button type="submit" className="btn-search">Search</button>
         </form>
-        <div className="filter-tabs">
-          <button 
-            className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('all')}
-          >
-            All
-          </button>
-          <button 
-            className={`filter-tab ${filter === 'certified' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('certified')}
-          >
-            Certified
-          </button>
-          <button 
-            className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('pending')}
-          >
-            Pending
-          </button>
-          <button 
-            className={`filter-tab ${filter === 'processing' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('processing')}
-          >
-            Processing
-          </button>
-          <button 
-            className={`filter-tab ${filter === 'failed' ? 'active' : ''}`}
-            onClick={() => handleFilterChange('failed')}
-          >
-            Failed
-          </button>
-        </div>
       </div>
 
       {/* Tutors Table */}

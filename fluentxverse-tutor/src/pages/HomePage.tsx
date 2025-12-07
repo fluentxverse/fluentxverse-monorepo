@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import Header from '../Components/Header/Header';
+import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { getExamStatus, getSpeakingExamStatus, type ExamStatus, type SpeakingExamStatus } from '../api/exam.api';
@@ -83,7 +83,7 @@ const HomePage = () => {
     <>
       <SideBar />
       <div className="main-content">
-        <Header />
+        <DashboardHeader user={user || undefined} />
         <main className="home-page-container">
           <div className="container">
             {/* Certification Required Alert */}
@@ -101,25 +101,6 @@ const HomePage = () => {
                 </button>
               </div>
             )}
-            
-            {/* Notification Banner */}
-            <div className="notification-banner">
-              <div className="notification-icon">
-                <i className="fas fa-bell"></i>
-              </div>
-              <div className="notification-content">
-                <div className="notification-title">
-                  PLATFORM UPDATE
-                </div>
-                <div className="notification-text">
-                  We're continuously improving our tutor scheduling and availability features to give you more flexibility.
-                </div>
-              </div>
-              <button className="notification-btn">
-                <i className="fas fa-inbox"></i>
-                View Inbox
-              </button>
-            </div>
 
             {/* Application Status Header */}
             <div className="status-header">

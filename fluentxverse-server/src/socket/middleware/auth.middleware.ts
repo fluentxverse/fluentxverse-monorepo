@@ -21,19 +21,39 @@ export const authMiddleware = async (
     }
 
     if (!authData && cookieString) {
-      const authCookie = cookieString
+      console.log('🍪 Cookie string received:', cookieString);
+      
+      // Check for tutorAuth cookie first (tutor app), then fallback to auth cookie (student app)
+      let authCookie = cookieString
         .split('; ')
-        .find(row => row.startsWith('auth='))
+        .find(row => row.startsWith('tutorAuth='))
         ?.split('=')[1];
+      
+      console.log('🍪 tutorAuth cookie found:', authCookie ? 'YES' : 'NO');
+      
+      if (!authCookie) {
+        authCookie = cookieString
+          .split('; ')
+          .find(row => row.startsWith('auth='))
+          ?.split('=')[1];
+        console.log('🍪 auth cookie found:', authCookie ? 'YES' : 'NO');
+      }
 
       if (authCookie) {
         const decodedCookie = decodeURIComponent(authCookie);
         try {
           authData = JSON.parse(decodedCookie) as AuthData;
-        } catch {
+          console.log('🍪 Auth data from cookie - userId:', authData.userId, 'email:', authData.email);
+        } catch (e) {
+          console.log('🍪 Failed to parse cookie:', e);
           authData = null;
         }
       }
+    }
+    
+    console.log('🔐 Token from handshake.auth:', tokenFromAuth ? 'EXISTS' : 'NULL');
+    if (tokenFromAuth && authData) {
+      console.log('🔐 Auth data from token - userId:', authData.userId);
     }
 
     // In development, allow anonymous sockets but mark as unauthenticated

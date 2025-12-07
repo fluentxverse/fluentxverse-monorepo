@@ -26,15 +26,15 @@
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 10px 16px;
+  padding: 10px 8px;
   transition: border-color var(--transition-fast), background var(--transition-fast);
 }
 
 .search-box:focus-within {
-  border-color: var(--primary);
+  border-color: var(--border-color);
   background: var(--bg-secondary);
-  outline: 2px solid rgba(2, 69, 174, 0.2);
-  outline-offset: 1px;
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: 0px;
 }
 
 .search-box i {
@@ -245,6 +245,43 @@
 
 .notification-footer a:hover {
   text-decoration: underline;
+}
+
+.notification-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.notification-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--text-tertiary);
+}
+
+.notification-empty i {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.notification-empty p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.mark-read-btn i {
+  margin-right: 4px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 /* Header Divider */

@@ -1,19 +1,21 @@
 import { useLocation } from 'preact-iso';
+import { useState, useEffect } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
+import { adminApi } from '../api/admin.api';
 import './Sidebar.css';
 
 interface NavItem {
   path: string;
   icon: string;
   label: string;
-  badge?: number;
+  badgeKey?: string;
   superadminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
   { path: '/', icon: 'ri-dashboard-3-line', label: 'Dashboard' },
   { path: '/interviews', icon: 'ri-calendar-schedule-line', label: 'Interviews' },
-  { path: '/applications', icon: 'ri-file-user-line', label: 'Applications', badge: 12 },
+  { path: '/applications', icon: 'ri-file-user-line', label: 'Applications', badgeKey: 'pendingApplications' },
   { path: '/tutors', icon: 'ri-user-star-line', label: 'Tutors' },
   { path: '/students', icon: 'ri-graduation-cap-line', label: 'Students' },
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
@@ -26,8 +28,28 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const { path } = useLocation();
   const { user, logout } = useAuthContext();
+  const [badges, setBadges] = useState<Record<string, number>>({});
 
   const isSuperAdmin = user?.role === 'superadmin';
+
+  // Fetch badge counts
+  useEffect(() => {
+    const fetchBadges = async () => {
+      try {
+        const pendingTutors = await adminApi.getPendingTutors();
+        setBadges({
+          pendingApplications: pendingTutors.length,
+        });
+      } catch (error) {
+        console.error('Failed to fetch badge counts:', error);
+      }
+    };
+
+    fetchBadges();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchBadges, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter nav items based on role
   const mainNavItems = navItems.slice(0, 5);
@@ -68,36 +90,46 @@ export function Sidebar() {
         <div className="nav-section">
           <span className="nav-section-title">Main Menu</span>
           <ul className="nav-list">
-            {mainNavItems.map((item) => (
-              <li key={item.path}>
-                <a
-                  href={item.path}
-                  className={`nav-item ${path === item.path ? 'active' : ''}`}
-                >
-                  <i className={item.icon}></i>
-                  <span>{item.label}</span>
-                  {item.badge && <span className="nav-badge">{item.badge}</span>}
-                </a>
-              </li>
-            ))}
+            {mainNavItems.map((item) => {
+              const badgeCount = item.badgeKey ? badges[item.badgeKey] : undefined;
+              return (
+                <li key={item.path}>
+                  <a
+                    href={item.path}
+                    className={`nav-item ${path === item.path ? 'active' : ''}`}
+                  >
+                    <i className={item.icon}></i>
+                    <span>{item.label}</span>
+                    {badgeCount !== undefined && badgeCount > 0 && (
+                      <span className="nav-badge">{badgeCount}</span>
+                    )}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
         <div className="nav-section">
           <span className="nav-section-title">Management</span>
           <ul className="nav-list">
-            {managementNavItems.map((item) => (
-              <li key={item.path}>
-                <a
-                  href={item.path}
-                  className={`nav-item ${path === item.path ? 'active' : ''}`}
-                >
-                  <i className={item.icon}></i>
-                  <span>{item.label}</span>
-                  {item.badge && <span className="nav-badge">{item.badge}</span>}
-                </a>
-              </li>
-            ))}
+            {managementNavItems.map((item) => {
+              const badgeCount = item.badgeKey ? badges[item.badgeKey] : undefined;
+              return (
+                <li key={item.path}>
+                  <a
+                    href={item.path}
+                    className={`nav-item ${path === item.path ? 'active' : ''}`}
+                  >
+                    <i className={item.icon}></i>
+                    <span>{item.label}</span>
+                    {badgeCount !== undefined && badgeCount > 0 && (
+                      <span className="nav-badge">{badgeCount}</span>
+                    )}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </nav>

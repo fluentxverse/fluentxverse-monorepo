@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { useAuthContext } from '../context/AuthContext';
+import { useAuthContext } from '@/context/AuthContext';
 import './LoginPage.css';
 
 const LoginPage = () => {

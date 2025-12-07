@@ -10,6 +10,7 @@ import ClassroomPage from './pages/ClassroomPage';
 import ExamPage from './pages/ExamPage';
 import SpeakingExamPage from './pages/SpeakingExamPage';
 import InterviewBookingPage from './pages/InterviewBookingPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 import { withProtected, withCertified } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -81,6 +82,7 @@ export function AppInner() {
 							<Route path="/exam/written" component={withProtected(ExamPage)} />
 							<Route path="/exam/speaking" component={withProtected(SpeakingExamPage)} />
 							<Route path="/interview" component={withProtected(InterviewBookingPage)} />
+							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 
 							<Route path="/contact" component={ContactPage} />
 
