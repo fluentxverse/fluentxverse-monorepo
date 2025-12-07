@@ -343,6 +343,237 @@ const Admin = new Elysia({ prefix: '/admin' })
       lastName: t.Optional(t.String()),
       role: t.Optional(t.Union([t.Literal('admin'), t.Literal('superadmin')]))
     })
+  })
+
+  /**
+   * List all admin users
+   * GET /admin/list
+   */
+  .get('/list', async ({ cookie }) => {
+    try {
+      const authCookie = cookie.adminAuth?.value;
+      if (!authCookie) {
+        return {
+          success: false,
+          error: 'Unauthorized'
+        };
+      }
+
+      let userData;
+      try {
+        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      } catch {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      if (!userData?.userId) {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      // Verify current user is superadmin
+      const currentAdmin = await adminService.getById(userData.userId);
+      if (!currentAdmin || currentAdmin.role !== 'superadmin') {
+        return {
+          success: false,
+          error: 'Only superadmins can list admin users'
+        };
+      }
+
+      const admins = await adminService.listAdmins();
+      return {
+        success: true,
+        data: admins
+      };
+    } catch (error) {
+      console.error('Error in /admin/list:', error);
+      return {
+        success: false,
+        error: 'Failed to list admins'
+      };
+    }
+  })
+
+  /**
+   * Delete an admin user
+   * DELETE /admin/:id
+   */
+  .delete('/:id', async ({ params, cookie }) => {
+    try {
+      const authCookie = cookie.adminAuth?.value;
+      if (!authCookie) {
+        return {
+          success: false,
+          error: 'Unauthorized'
+        };
+      }
+
+      let userData;
+      try {
+        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      } catch {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      if (!userData?.userId) {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      // Verify current user is superadmin
+      const currentAdmin = await adminService.getById(userData.userId);
+      if (!currentAdmin || currentAdmin.role !== 'superadmin') {
+        return {
+          success: false,
+          error: 'Only superadmins can delete admin users'
+        };
+      }
+
+      // Prevent self-deletion
+      if (params.id === userData.userId) {
+        return {
+          success: false,
+          error: 'Cannot delete your own account'
+        };
+      }
+
+      const deleted = await adminService.deleteAdmin(params.id);
+      return {
+        success: deleted,
+        message: deleted ? 'Admin deleted successfully' : 'Admin not found'
+      };
+    } catch (error) {
+      console.error('Error in DELETE /admin/:id:', error);
+      return {
+        success: false,
+        error: 'Failed to delete admin'
+      };
+    }
+  })
+
+  /**
+   * Update an admin user
+   * PUT /admin/:id
+   */
+  .put('/:id', async ({ params, body, cookie }) => {
+    try {
+      const authCookie = cookie.adminAuth?.value;
+      if (!authCookie) {
+        return {
+          success: false,
+          error: 'Unauthorized'
+        };
+      }
+
+      let userData;
+      try {
+        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      } catch {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      if (!userData?.userId) {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      // Verify current user is superadmin
+      const currentAdmin = await adminService.getById(userData.userId);
+      if (!currentAdmin || currentAdmin.role !== 'superadmin') {
+        return {
+          success: false,
+          error: 'Only superadmins can update admin users'
+        };
+      }
+
+      const { firstName, lastName, role } = body as {
+        firstName?: string;
+        lastName?: string;
+        role?: 'admin' | 'superadmin';
+      };
+
+      const updated = await adminService.updateAdmin(params.id, { firstName, lastName, role });
+      if (!updated) {
+        return {
+          success: false,
+          error: 'Admin not found'
+        };
+      }
+
+      return {
+        success: true,
+        data: updated
+      };
+    } catch (error) {
+      console.error('Error in PUT /admin/:id:', error);
+      return {
+        success: false,
+        error: 'Failed to update admin'
+      };
+    }
+  }, {
+    body: t.Object({
+      firstName: t.Optional(t.String()),
+      lastName: t.Optional(t.String()),
+      role: t.Optional(t.Union([t.Literal('admin'), t.Literal('superadmin')]))
+    })
+  })
+
+  /**
+   * Change password for current admin
+   * POST /admin/change-password
+   */
+  .post('/change-password', async ({ body, cookie }) => {
+    try {
+      const authCookie = cookie.adminAuth?.value;
+      if (!authCookie) {
+        return {
+          success: false,
+          error: 'Unauthorized'
+        };
+      }
+
+      let userData;
+      try {
+        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      } catch {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      if (!userData?.userId) {
+        return { success: false, error: 'Invalid session' };
+      }
+
+      const { currentPassword, newPassword } = body as {
+        currentPassword: string;
+        newPassword: string;
+      };
+
+      if (!currentPassword || !newPassword) {
+        return {
+          success: false,
+          error: 'Current password and new password are required'
+        };
+      }
+
+      if (newPassword.length < 8) {
+        return {
+          success: false,
+          error: 'New password must be at least 8 characters'
+        };
+      }
+
+      const result = await adminService.changePassword(userData.userId, currentPassword, newPassword);
+      return result;
+    } catch (error) {
+      console.error('Error in /admin/change-password:', error);
+      return {
+        success: false,
+        error: 'Failed to change password'
+      };
+    }
+  }, {
+    body: t.Object({
+      currentPassword: t.String(),
+      newPassword: t.String()
+    })
   });
 
 export default Admin;

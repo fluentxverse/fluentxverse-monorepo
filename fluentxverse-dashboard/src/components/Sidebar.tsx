@@ -1,4 +1,5 @@
 import { useLocation } from 'preact-iso';
+import { useAuthContext } from '../context/AuthContext';
 import './Sidebar.css';
 
 interface NavItem {
@@ -6,6 +7,7 @@ interface NavItem {
   icon: string;
   label: string;
   badge?: number;
+  superadminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -17,11 +19,36 @@ const navItems: NavItem[] = [
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
   { path: '/analytics', icon: 'ri-bar-chart-box-line', label: 'Analytics' },
   { path: '/payments', icon: 'ri-money-dollar-circle-line', label: 'Payments' },
+  { path: '/admins', icon: 'ri-admin-line', label: 'Admins', superadminOnly: true },
   { path: '/settings', icon: 'ri-settings-3-line', label: 'Settings' },
 ];
 
 export function Sidebar() {
   const { path } = useLocation();
+  const { user, logout } = useAuthContext();
+
+  const isSuperAdmin = user?.role === 'superadmin';
+
+  // Filter nav items based on role
+  const mainNavItems = navItems.slice(0, 5);
+  const managementNavItems = navItems.slice(5).filter(
+    (item) => !item.superadminOnly || isSuperAdmin
+  );
+
+  const getInitials = () => {
+    if (user?.username) {
+      return user.username.substring(0, 2).toUpperCase();
+    }
+    return 'AD';
+  };
+
+  const getDisplayName = () => {
+    return user?.username || 'Admin';
+  };
+
+  const getRoleLabel = () => {
+    return user?.role === 'superadmin' ? 'Super Admin' : 'Admin';
+  };
 
   return (
     <aside className="sidebar">
@@ -41,7 +68,7 @@ export function Sidebar() {
         <div className="nav-section">
           <span className="nav-section-title">Main Menu</span>
           <ul className="nav-list">
-            {navItems.slice(0, 5).map((item) => (
+            {mainNavItems.map((item) => (
               <li key={item.path}>
                 <a
                   href={item.path}
@@ -59,7 +86,7 @@ export function Sidebar() {
         <div className="nav-section">
           <span className="nav-section-title">Management</span>
           <ul className="nav-list">
-            {navItems.slice(5).map((item) => (
+            {managementNavItems.map((item) => (
               <li key={item.path}>
                 <a
                   href={item.path}
@@ -78,13 +105,13 @@ export function Sidebar() {
       <div className="sidebar-footer">
         <div className="admin-profile">
           <div className="avatar">
-            <span>AD</span>
+            <span>{getInitials()}</span>
           </div>
           <div className="admin-info">
-            <span className="admin-name">Admin User</span>
-            <span className="admin-role">Super Admin</span>
+            <span className="admin-name">{getDisplayName()}</span>
+            <span className="admin-role">{getRoleLabel()}</span>
           </div>
-          <button className="logout-btn" title="Logout">
+          <button className="logout-btn" title="Logout" onClick={logout}>
             <i className="ri-logout-box-r-line"></i>
           </button>
         </div>

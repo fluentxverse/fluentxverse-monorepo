@@ -1,9 +1,15 @@
 import { LocationProvider, Router, Route } from 'preact-iso';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
+
 import { Header } from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 import InterviewSchedulePage from './pages/InterviewSchedulePage';
+import { SettingsPage } from './pages/SettingsPage';
+import { AdminsPage } from './pages/AdminsPage';
+import TutorsPage from './pages/TutorsPage';
+import StudentsPage from './pages/StudentsPage';
+import ApplicationsPage from './pages/ApplicationsPage';
 import LoginPage from './pages/LoginPage';
 
 // Loading spinner component
@@ -46,6 +52,11 @@ const AppContent = () => {
       <Router>
         <Route path="/" component={DashboardPage} />
         <Route path="/interviews" component={InterviewSchedulePage} />
+        <Route path="/applications" component={ApplicationsPage} />
+        <Route path="/tutors" component={TutorsPage} />
+        <Route path="/students" component={StudentsPage} />
+        <Route path="/settings" component={SettingsPage} />
+        <Route path="/admins" component={AdminsPage} />
       </Router>
     </ProtectedLayout>
   );

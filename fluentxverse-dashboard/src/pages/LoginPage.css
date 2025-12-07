@@ -123,7 +123,6 @@
 .form-input {
   width: 100%;
   padding: 14px 16px;
-  padding-left: 46px;
   border: 2px solid var(--border-color);
   border-radius: 12px;
   font-size: 15px;
@@ -131,6 +130,7 @@
   background: var(--bg-secondary);
   transition: all var(--transition-fast);
   outline: none;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -144,11 +144,14 @@
 
 .form-input-icon {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-tertiary);
   font-size: 16px;
+  width: 20px;
+  text-align: center;
+  pointer-events: none;
   transition: color var(--transition-fast);
 }
 

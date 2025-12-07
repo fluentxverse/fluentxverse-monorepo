@@ -599,4 +599,165 @@ export class AdminService {
       await session.close();
     }
   }
+
+  /**
+   * List all admin users
+   */
+  async listAdmins(): Promise<AdminUser[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (a:Admin)
+        RETURN a
+        ORDER BY a.createdAt DESC
+      `);
+
+      return result.records.map(record => {
+        const admin = record.get('a').properties;
+        return {
+          id: admin.id,
+          username: admin.username,
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          role: admin.role || 'admin',
+          createdAt: admin.createdAt,
+        };
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Delete an admin by ID
+   */
+  async deleteAdmin(adminId: string): Promise<boolean> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (a:Admin {id: $adminId})
+        DELETE a
+        RETURN count(a) as deleted
+      `, { adminId });
+
+      const deleted = result.records[0]?.get('deleted');
+      return deleted?.toNumber?.() > 0 || deleted > 0;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Update admin profile
+   */
+  async updateAdmin(
+    adminId: string,
+    updates: { firstName?: string; lastName?: string; role?: 'admin' | 'superadmin' }
+  ): Promise<AdminUser | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const setClauses: string[] = [];
+      const params: Record<string, unknown> = { adminId };
+
+      if (updates.firstName !== undefined) {
+        setClauses.push('a.firstName = $firstName');
+        params.firstName = updates.firstName;
+      }
+      if (updates.lastName !== undefined) {
+        setClauses.push('a.lastName = $lastName');
+        params.lastName = updates.lastName;
+      }
+      if (updates.role !== undefined) {
+        setClauses.push('a.role = $role');
+        params.role = updates.role;
+      }
+
+      if (setClauses.length === 0) {
+        return this.getById(adminId);
+      }
+
+      const result = await session.run(`
+        MATCH (a:Admin {id: $adminId})
+        SET ${setClauses.join(', ')}
+        RETURN a
+      `, params);
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const record = result.records[0];
+      if (!record) {
+        return null;
+      }
+
+      const admin = record.get('a').properties;
+      return {
+        id: admin.id,
+        username: admin.username,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role || 'admin',
+        createdAt: admin.createdAt,
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Change admin password
+   */
+  async changePassword(
+    adminId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Get current admin with password
+      const result = await session.run(`
+        MATCH (a:Admin {id: $adminId})
+        RETURN a
+      `, { adminId });
+
+      if (result.records.length === 0) {
+        return { success: false, error: 'Admin not found' };
+      }
+
+      const record = result.records[0];
+      if (!record) {
+        return { success: false, error: 'Admin not found' };
+      }
+
+      const admin = record.get('a').properties;
+      
+      // Verify current password
+      const isValid = await compare(currentPassword, admin.password);
+      if (!isValid) {
+        return { success: false, error: 'Current password is incorrect' };
+      }
+
+      // Hash new password
+      const hashedPassword = await hash(newPassword, 12);
+
+      // Update password
+      await session.run(`
+        MATCH (a:Admin {id: $adminId})
+        SET a.password = $password
+      `, { adminId, password: hashedPassword });
+
+      return { success: true };
+    } finally {
+      await session.close();
+    }
+  }
 }

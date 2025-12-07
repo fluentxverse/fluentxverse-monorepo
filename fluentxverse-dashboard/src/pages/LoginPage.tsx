@@ -58,7 +58,6 @@ const LoginPage = () => {
                   disabled={loading}
                   autoComplete="username"
                 />
-                <i className="fas fa-user form-input-icon"></i>
               </div>
             </div>
 
@@ -75,7 +74,6 @@ const LoginPage = () => {
                   disabled={loading}
                   autoComplete="current-password"
                 />
-                <i className="fas fa-lock form-input-icon"></i>
                 <button
                   type="button"
                   className="password-toggle"

@@ -1,136 +1,73 @@
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
+import { adminApi, TutorListItem } from '../api/admin.api';
 import './TutorsPage.css';
 
-interface Tutor {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  registeredAt: string;
-  writtenExamPassed: boolean;
-  speakingExamPassed: boolean;
-  writtenExamScore?: number;
-  speakingExamScore?: number;
-  status: 'pending' | 'certified' | 'processing' | 'failed';
-  languages: string[];
-  totalSessions: number;
-  rating: number;
-}
+type TutorStatus = 'all' | 'certified' | 'pending' | 'processing' | 'failed';
 
 const TutorsPage = () => {
-  const [filter, setFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [tutors, setTutors] = useState<TutorListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState<TutorStatus>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 15;
 
-  // Mock data
-  const tutors: Tutor[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah@example.com',
-      registeredAt: '2024-01-10',
-      writtenExamPassed: true,
-      speakingExamPassed: true,
-      writtenExamScore: 92,
-      speakingExamScore: 88,
-      status: 'certified',
-      languages: ['English', 'Spanish'],
-      totalSessions: 156,
-      rating: 4.9
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael@example.com',
-      registeredAt: '2024-01-12',
-      writtenExamPassed: true,
-      speakingExamPassed: false,
-      writtenExamScore: 85,
-      status: 'pending',
-      languages: ['English', 'Mandarin'],
-      totalSessions: 0,
-      rating: 0
-    },
-    {
-      id: '3',
-      name: 'Emily Davis',
-      email: 'emily@example.com',
-      registeredAt: '2024-01-13',
-      writtenExamPassed: false,
-      speakingExamPassed: false,
-      status: 'pending',
-      languages: ['English', 'French'],
-      totalSessions: 0,
-      rating: 0
-    },
-    {
-      id: '4',
-      name: 'Robert Wilson',
-      email: 'robert@example.com',
-      registeredAt: '2024-01-14',
-      writtenExamPassed: true,
-      speakingExamPassed: false,
-      writtenExamScore: 78,
-      status: 'processing',
-      languages: ['English', 'German'],
-      totalSessions: 0,
-      rating: 0
-    },
-    {
-      id: '5',
-      name: 'Maria Garcia',
-      email: 'maria@example.com',
-      registeredAt: '2024-01-08',
-      writtenExamPassed: true,
-      speakingExamPassed: true,
-      writtenExamScore: 95,
-      speakingExamScore: 91,
-      status: 'certified',
-      languages: ['English', 'Spanish', 'Portuguese'],
-      totalSessions: 234,
-      rating: 4.8
-    },
-    {
-      id: '6',
-      name: 'James Brown',
-      email: 'james@example.com',
-      registeredAt: '2024-01-11',
-      writtenExamPassed: true,
-      speakingExamPassed: false,
-      writtenExamScore: 67,
-      speakingExamScore: 58,
-      status: 'failed',
-      languages: ['English'],
-      totalSessions: 0,
-      rating: 0
+  useEffect(() => {
+    loadTutors();
+  }, [page, filter]);
+
+  const loadTutors = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const result = await adminApi.getTutors({
+        page,
+        limit,
+        status: filter,
+        search: searchQuery || undefined,
+      });
+      setTutors(result.tutors);
+      setTotal(result.total);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load tutors');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const getStatusBadge = (tutor: Tutor) => {
+  const handleSearch = (e: Event) => {
+    e.preventDefault();
+    setPage(1);
+    loadTutors();
+  };
+
+  const handleFilterChange = (newFilter: TutorStatus) => {
+    setFilter(newFilter);
+    setPage(1);
+  };
+
+  const getStatusBadge = (tutor: TutorListItem) => {
     if (tutor.status === 'certified') {
-      return <span className="status-badge certified"><i className="fas fa-certificate"></i> Certified</span>;
+      return <span className="status-badge certified"><i className="ri-shield-check-line"></i> Certified</span>;
     } else if (tutor.status === 'processing') {
-      return <span className="status-badge processing"><i className="fas fa-spinner fa-spin"></i> Processing</span>;
+      return <span className="status-badge processing"><i className="ri-loader-4-line"></i> Processing</span>;
     } else if (tutor.status === 'failed') {
-      return <span className="status-badge failed"><i className="fas fa-times-circle"></i> Failed</span>;
+      return <span className="status-badge failed"><i className="ri-close-circle-line"></i> Failed</span>;
     } else {
       if (!tutor.writtenExamPassed) {
-        return <span className="status-badge pending"><i className="fas fa-file-alt"></i> Pending Written</span>;
+        return <span className="status-badge pending"><i className="ri-file-text-line"></i> Pending Written</span>;
       } else {
-        return <span className="status-badge pending-speaking"><i className="fas fa-microphone"></i> Pending Speaking</span>;
+        return <span className="status-badge pending-speaking"><i className="ri-mic-line"></i> Pending Speaking</span>;
       }
     }
   };
 
-  const filteredTutors = tutors.filter(tutor => {
-    const matchesFilter = filter === 'all' || tutor.status === filter;
-    const matchesSearch = tutor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          tutor.email.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const totalPages = Math.ceil(total / limit);
 
   const stats = {
-    total: tutors.length,
+    total: total,
     certified: tutors.filter(t => t.status === 'certified').length,
     pending: tutors.filter(t => t.status === 'pending' || t.status === 'processing').length,
     failed: tutors.filter(t => t.status === 'failed').length
@@ -143,70 +80,75 @@ const TutorsPage = () => {
           <h1>Tutors Management</h1>
           <p>Manage tutor accounts and certification status</p>
         </div>
-        <button className="btn-primary">
-          <i className="fas fa-plus"></i> Add Tutor
-        </button>
       </div>
 
       {/* Quick Stats */}
       <div className="quick-stats">
-        <div className="quick-stat" onClick={() => setFilter('all')}>
-          <span className="stat-number">{stats.total}</span>
+        <div className={`quick-stat ${filter === 'all' ? 'active' : ''}`} onClick={() => handleFilterChange('all')}>
+          <span className="stat-number">{total}</span>
           <span className="stat-label">Total Tutors</span>
         </div>
-        <div className="quick-stat certified" onClick={() => setFilter('certified')}>
+        <div className={`quick-stat certified ${filter === 'certified' ? 'active' : ''}`} onClick={() => handleFilterChange('certified')}>
           <span className="stat-number">{stats.certified}</span>
           <span className="stat-label">Certified</span>
         </div>
-        <div className="quick-stat pending" onClick={() => setFilter('pending')}>
+        <div className={`quick-stat pending ${filter === 'pending' ? 'active' : ''}`} onClick={() => handleFilterChange('pending')}>
           <span className="stat-number">{stats.pending}</span>
           <span className="stat-label">Pending</span>
         </div>
-        <div className="quick-stat failed" onClick={() => setFilter('failed')}>
+        <div className={`quick-stat failed ${filter === 'failed' ? 'active' : ''}`} onClick={() => handleFilterChange('failed')}>
           <span className="stat-number">{stats.failed}</span>
           <span className="stat-label">Failed</span>
         </div>
       </div>
 
+      {error && (
+        <div className="alert alert-error">
+          <i className="ri-error-warning-line"></i>
+          {error}
+        </div>
+      )}
+
       {/* Filters & Search */}
       <div className="filters-bar">
-        <div className="search-box">
-          <i className="fas fa-search"></i>
+        <form className="search-box" onSubmit={handleSearch}>
+          <i className="ri-search-line"></i>
           <input 
             type="text" 
             placeholder="Search tutors..." 
             value={searchQuery}
-            onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+            onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
           />
-        </div>
+          <button type="submit" className="btn-search">Search</button>
+        </form>
         <div className="filter-tabs">
           <button 
             className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
           >
             All
           </button>
           <button 
             className={`filter-tab ${filter === 'certified' ? 'active' : ''}`}
-            onClick={() => setFilter('certified')}
+            onClick={() => handleFilterChange('certified')}
           >
             Certified
           </button>
           <button 
             className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilter('pending')}
+            onClick={() => handleFilterChange('pending')}
           >
             Pending
           </button>
           <button 
             className={`filter-tab ${filter === 'processing' ? 'active' : ''}`}
-            onClick={() => setFilter('processing')}
+            onClick={() => handleFilterChange('processing')}
           >
             Processing
           </button>
           <button 
             className={`filter-tab ${filter === 'failed' ? 'active' : ''}`}
-            onClick={() => setFilter('failed')}
+            onClick={() => handleFilterChange('failed')}
           >
             Failed
           </button>
@@ -215,101 +157,129 @@ const TutorsPage = () => {
 
       {/* Tutors Table */}
       <div className="tutors-table-card">
-        <table className="tutors-table">
-          <thead>
-            <tr>
-              <th>Tutor</th>
-              <th>Languages</th>
-              <th>Written Exam</th>
-              <th>Speaking Exam</th>
-              <th>Status</th>
-              <th>Sessions</th>
-              <th>Rating</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTutors.map(tutor => (
-              <tr key={tutor.id}>
-                <td className="tutor-cell">
-                  <div className="tutor-info">
-                    <div className="tutor-avatar">
-                      {tutor.avatar ? (
-                        <img src={tutor.avatar} alt={tutor.name} />
-                      ) : (
-                        <span>{tutor.name.charAt(0)}</span>
+        {loading ? (
+          <div className="loading-state">
+            <i className="ri-loader-4-line spinning"></i>
+            <span>Loading tutors...</span>
+          </div>
+        ) : (
+          <table className="tutors-table">
+            <thead>
+              <tr>
+                <th>Tutor</th>
+                <th>Languages</th>
+                <th>Written Exam</th>
+                <th>Speaking Exam</th>
+                <th>Status</th>
+                <th>Sessions</th>
+                <th>Rating</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tutors.map(tutor => (
+                <tr key={tutor.id}>
+                  <td className="tutor-cell">
+                    <div className="tutor-info">
+                      <div className="tutor-avatar">
+                        <span>{tutor.name?.charAt(0) || 'T'}</span>
+                      </div>
+                      <div className="tutor-details">
+                        <span className="tutor-name">{tutor.name}</span>
+                        <span className="tutor-email">{tutor.email}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="language-tags">
+                      {(tutor.languages || []).slice(0, 2).map((lang, i) => (
+                        <span key={i} className="language-tag">{lang}</span>
+                      ))}
+                      {(tutor.languages || []).length > 2 && (
+                        <span className="language-tag more">+{tutor.languages.length - 2}</span>
                       )}
                     </div>
-                    <div className="tutor-details">
-                      <span className="tutor-name">{tutor.name}</span>
-                      <span className="tutor-email">{tutor.email}</span>
+                  </td>
+                  <td>
+                    {tutor.writtenExamScore !== undefined ? (
+                      <span className={`exam-score ${tutor.writtenExamPassed ? 'passed' : 'failed'}`}>
+                        {tutor.writtenExamScore}%
+                      </span>
+                    ) : (
+                      <span className="not-taken">Not taken</span>
+                    )}
+                  </td>
+                  <td>
+                    {tutor.speakingExamScore !== undefined ? (
+                      <span className={`exam-score ${tutor.speakingExamPassed ? 'passed' : 'failed'}`}>
+                        {tutor.speakingExamScore}%
+                      </span>
+                    ) : tutor.status === 'processing' ? (
+                      <span className="processing-text"><i className="ri-loader-4-line"></i> Processing</span>
+                    ) : (
+                      <span className="not-taken">Not taken</span>
+                    )}
+                  </td>
+                  <td>{getStatusBadge(tutor)}</td>
+                  <td className="sessions-cell">{tutor.totalSessions}</td>
+                  <td>
+                    {tutor.rating > 0 ? (
+                      <div className="rating">
+                        <i className="ri-star-fill"></i>
+                        <span>{tutor.rating.toFixed(1)}</span>
+                      </div>
+                    ) : (
+                      <span className="no-rating">—</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="action-btn view" title="View Profile">
+                        <i className="ri-eye-line"></i>
+                      </button>
+                      <button className="action-btn edit" title="Edit">
+                        <i className="ri-edit-line"></i>
+                      </button>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <div className="language-tags">
-                    {tutor.languages.map((lang, i) => (
-                      <span key={i} className="language-tag">{lang}</span>
-                    ))}
-                  </div>
-                </td>
-                <td>
-                  {tutor.writtenExamScore !== undefined ? (
-                    <span className={`exam-score ${tutor.writtenExamPassed ? 'passed' : 'failed'}`}>
-                      {tutor.writtenExamScore}%
-                    </span>
-                  ) : (
-                    <span className="not-taken">Not taken</span>
-                  )}
-                </td>
-                <td>
-                  {tutor.speakingExamScore !== undefined ? (
-                    <span className={`exam-score ${tutor.speakingExamPassed ? 'passed' : 'failed'}`}>
-                      {tutor.speakingExamScore}%
-                    </span>
-                  ) : tutor.status === 'processing' ? (
-                    <span className="processing-text"><i className="fas fa-spinner fa-spin"></i> Processing</span>
-                  ) : (
-                    <span className="not-taken">Not taken</span>
-                  )}
-                </td>
-                <td>{getStatusBadge(tutor)}</td>
-                <td className="sessions-cell">{tutor.totalSessions}</td>
-                <td>
-                  {tutor.rating > 0 ? (
-                    <div className="rating">
-                      <i className="fas fa-star"></i>
-                      <span>{tutor.rating}</span>
-                    </div>
-                  ) : (
-                    <span className="no-rating">—</span>
-                  )}
-                </td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="action-btn view" title="View Profile">
-                      <i className="fas fa-eye"></i>
-                    </button>
-                    <button className="action-btn edit" title="Edit">
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button className="action-btn delete" title="Delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
-        {filteredTutors.length === 0 && (
+        {!loading && tutors.length === 0 && (
           <div className="empty-state">
-            <i className="fas fa-user-slash"></i>
+            <i className="ri-user-search-line"></i>
             <p>No tutors found matching your criteria</p>
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            disabled={page === 1}
+            onClick={() => setPage(p => p - 1)}
+          >
+            <i className="ri-arrow-left-s-line"></i>
+            Previous
+          </button>
+          <div className="pagination-info">
+            Page {page} of {totalPages}
+          </div>
+          <button
+            className="pagination-btn"
+            disabled={page === totalPages}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Next
+            <i className="ri-arrow-right-s-line"></i>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
