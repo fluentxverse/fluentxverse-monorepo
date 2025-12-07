@@ -269,21 +269,130 @@
   background: var(--bg-tertiary);
 }
 
-.user-info {
+.header-user-wrapper {
+  position: relative;
+}
+
+.header-user {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.header-user:hover {
+  background: var(--bg-tertiary);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
-.user-info i {
+.user-role {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: capitalize;
+}
+
+.header-user > i {
   font-size: 16px;
   color: var(--text-tertiary);
+  margin-left: 4px;
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.user-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-tertiary);
+}
+
+.user-dropdown-header .avatar.large {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.user-dropdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-dropdown-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-dropdown-username {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.user-dropdown-divider {
+  height: 1px;
+  background: var(--border-color);
+}
+
+.user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-align: left;
+}
+
+.user-dropdown-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.user-dropdown-item i {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.user-dropdown-item:last-child {
+  color: var(--error);
+}
+
+.user-dropdown-item:last-child i {
+  color: var(--error);
 }
 
 /* Responsive */
@@ -300,7 +409,12 @@
     display: none;
   }
   
-  .user-name {
+  .user-name,
+  .user-role {
+    display: none;
+  }
+  
+  .header-user > i {
     display: none;
   }
 }

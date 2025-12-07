@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import { useAuthContext } from '../context/AuthContext';
 import { adminApi, type DashboardStats, type ExamStats, type PendingTutor, type RecentActivity } from '../api/admin.api';
 import './DashboardPage.css';
 
@@ -11,6 +12,7 @@ interface StatCard {
 }
 
 const DashboardPage = () => {
+  const { user } = useAuthContext();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [examStats, setExamStats] = useState<ExamStats | null>(null);
   const [pendingTutors, setPendingTutors] = useState<PendingTutor[]>([]);
@@ -170,8 +172,8 @@ const DashboardPage = () => {
   return (
     <div className="dashboard-page">
       <div className="page-header">
-        <h1>Dashboard</h1>
-        <p>Welcome back! Here's an overview of your platform.</p>
+        <h1>Welcome back, {user?.username || 'Admin'}!</h1>
+        <p>Here's an overview of your platform today.</p>
       </div>
 
       {/* Stats Cards */}
