@@ -353,7 +353,7 @@ const HomePage = () => {
                     <p>
                       Choose a convenient time for your interview with our recruitment team.
                     </p>
-                    <button className="action-btn green">
+                    <button className="action-btn green" onClick={() => location.route('/interview')}>
                       BOOK A SCHEDULE
                     </button>
                   </div>

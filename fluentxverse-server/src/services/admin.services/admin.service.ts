@@ -1,12 +1,15 @@
 import { getDriver } from '../../db/memgraph';
 import neo4j from 'neo4j-driver';
+import { hash, compare } from 'bcrypt-ts';
 import type { 
   DashboardStats, 
   ExamStats, 
   PendingTutor, 
   TutorListItem,
   StudentListItem,
-  RecentActivity 
+  RecentActivity,
+  AdminUser,
+  AdminLoginParams
 } from './admin.interface';
 
 // Helper to parse exam result and check if passed
@@ -439,6 +442,159 @@ export class AdminService {
       // Sort by timestamp and limit
       activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       return activities.slice(0, limit);
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Login admin user
+   */
+  async login(params: AdminLoginParams): Promise<AdminUser> {
+    const { username, password } = params;
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Find admin user by username
+      const result = await session.run(`
+        MATCH (a:Admin {username: $username})
+        RETURN a
+      `, { username: username.toLowerCase() });
+
+      if (result.records.length === 0) {
+        throw new Error('Invalid username or password');
+      }
+
+      const record = result.records[0];
+      if (!record) {
+        throw new Error('Invalid username or password');
+      }
+
+      const admin = record.get('a').properties;
+
+      // Verify password
+      const isValidPassword = await compare(password, admin.password);
+      if (!isValidPassword) {
+        throw new Error('Invalid username or password');
+      }
+
+      return {
+        id: admin.id,
+        username: admin.username,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role || 'admin',
+        createdAt: admin.createdAt,
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get admin by ID
+   */
+  async getById(adminId: string): Promise<AdminUser | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (a:Admin {id: $adminId})
+        RETURN a
+      `, { adminId });
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const record = result.records[0];
+      if (!record) {
+        return null;
+      }
+
+      const admin = record.get('a').properties;
+
+      return {
+        id: admin.id,
+        username: admin.username,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role || 'admin',
+        createdAt: admin.createdAt,
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Create an admin user (for initial setup)
+   */
+  async createAdmin(
+    username: string, 
+    password: string, 
+    firstName?: string, 
+    lastName?: string, 
+    role: 'admin' | 'superadmin' = 'admin'
+  ): Promise<AdminUser> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Check if admin already exists
+      const existing = await session.run(`
+        MATCH (a:Admin {username: $username})
+        RETURN a
+      `, { username: username.toLowerCase() });
+
+      if (existing.records.length > 0) {
+        throw new Error('Admin with this username already exists');
+      }
+
+      // Hash password
+      const hashedPassword = await hash(password, 12);
+      const adminId = `ADMIN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const now = new Date().toISOString();
+
+      // Create admin
+      const result = await session.run(`
+        CREATE (a:Admin {
+          id: $id,
+          username: $username,
+          password: $password,
+          firstName: $firstName,
+          lastName: $lastName,
+          role: $role,
+          createdAt: $createdAt
+        })
+        RETURN a
+      `, {
+        id: adminId,
+        username: username.toLowerCase(),
+        password: hashedPassword,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        role,
+        createdAt: now,
+      });
+
+      const record = result.records[0];
+      if (!record) {
+        throw new Error('Failed to create admin');
+      }
+
+      const admin = record.get('a').properties;
+
+      return {
+        id: admin.id,
+        username: admin.username,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role,
+        createdAt: admin.createdAt,
+      };
     } finally {
       await session.close();
     }

@@ -8,7 +8,7 @@ import Examination from "./routes/exam.route";
 import Admin from './routes/admin.route';
 import Interview from './routes/interview.route';
 import { initDriver } from './db/memgraph';
-import { getPool } from './db/postgres';
+import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
@@ -22,8 +22,7 @@ initDriver(
   process.env.MEMGRAPH_PASSWORD || 'devpassword123!ChangeMe'
 );
 
-// Initialize PostgreSQL pool
-getPool();
+// Bun SQL is auto-initialized on import (no need to call getPool)
 
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 

@@ -1,41 +1,45 @@
-import { Pool, type PoolClient } from 'pg';
+import { SQL } from "bun";
 
-let pool: Pool | null = null;
+// Create a single SQL instance using Bun's built-in postgres
+const sql = new SQL({
+  url: process.env.DATABASE_URL || 'postgresql://fluentxverse_user:fluentxverse_pass@localhost:5432/fluentxverse',
+  max: 20,
+  idleTimeout: 30,
+  connectionTimeout: 2,
+});
 
-export const getPool = (): Pool => {
-  if (!pool) {
-    pool = new Pool({
-      connectionString: process.env.DATABASE_URL || 'postgresql://fluentxverse_user:fluentxverse_pass@localhost:5432/fluentxverse',
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
+console.log('✅ Bun SQL (PostgreSQL) initialized');
 
-    pool.on('error', (err) => {
-      console.error('Unexpected error on idle PostgreSQL client', err);
-      process.exit(-1);
-    });
-
-    console.log('✅ PostgreSQL connection pool initialized');
-  }
-
-  return pool;
-};
-
+/**
+ * Execute a raw query with parameters (legacy compatibility)
+ * For new code, use the sql tagged template directly
+ */
 export const query = async (text: string, params?: any[]) => {
-  const pool = getPool();
-  return pool.query(text, params);
+  // Convert $1, $2, etc. placeholders to Bun SQL format
+  // Bun SQL uses tagged templates, so we need to use sql.unsafe for dynamic queries
+  const result = await sql.unsafe(text, params || []);
+  return {
+    rows: result,
+    rowCount: result.length,
+  };
 };
 
-export const getClient = async (): Promise<PoolClient> => {
-  const pool = getPool();
-  return pool.connect();
-};
+/**
+ * Get the SQL instance for tagged template queries
+ * Usage: const users = await db`SELECT * FROM users WHERE id = ${userId}`;
+ */
+export const db = sql;
 
+/**
+ * Close the SQL connection pool
+ */
 export const closePool = async () => {
-  if (pool) {
-    await pool.end();
-    pool = null;
-    console.log('PostgreSQL connection pool closed');
-  }
+  await sql.close();
+  console.log('Bun SQL connection pool closed');
+};
+
+// For backwards compatibility
+export const getPool = () => {
+  console.warn('getPool() is deprecated. Use db tagged template or query() instead.');
+  return sql;
 };

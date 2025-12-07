@@ -64,3 +64,18 @@ export interface StudentListItem {
   status: 'active' | 'inactive';
   lastActive: string;
 }
+
+// Admin Auth Types
+export interface AdminUser {
+  id: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  role: 'admin' | 'superadmin';
+  createdAt: string;
+}
+
+export interface AdminLoginParams {
+  username: string;
+  password: string;
+}
