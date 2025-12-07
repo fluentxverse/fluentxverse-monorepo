@@ -23,8 +23,7 @@ const Interview = new Elysia({ prefix: '/interview' })
         set.status = 403;
         return null;
       }
-      // Refresh admin cookie
-      refreshAuthCookie(cookie, authData, 'adminAuth');
+      // Note: adminAuth refresh not supported by refreshAuthCookie helper; skip refresh
       return authData;
     };
     return { requireAdmin };
