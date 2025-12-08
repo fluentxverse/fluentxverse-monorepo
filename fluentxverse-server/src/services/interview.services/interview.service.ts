@@ -390,4 +390,112 @@ export class InterviewService {
       await session.close();
     }
   }
+
+  /**
+   * Save interview result with rubric scores
+   */
+  async saveInterviewResult(data: {
+    slotId: string;
+    tutorId: string;
+    result: 'pass' | 'fail';
+    rubricScores: {
+      grammar: number;
+      fluency: number;
+      pronunciation: number;
+      vocabulary: number;
+      professionalism: number;
+    };
+    notes: string;
+    timestamps: { time: string; note: string }[];
+    adminId: string;
+  }): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const completedAt = new Date().toISOString();
+      
+      // Update the interview slot with result
+      await session.run(`
+        MATCH (s:InterviewSlot {id: $slotId})
+        SET s.status = 'completed',
+            s.completedAt = $completedAt,
+            s.result = $result,
+            s.rubricScores = $rubricScores,
+            s.notes = $notes,
+            s.timestamps = $timestamps,
+            s.reviewedBy = $adminId
+        RETURN s
+      `, { 
+        slotId: data.slotId, 
+        completedAt, 
+        result: data.result,
+        rubricScores: JSON.stringify(data.rubricScores),
+        notes: data.notes,
+        timestamps: JSON.stringify(data.timestamps),
+        adminId: data.adminId
+      });
+
+      // If passed, update tutor certification status
+      if (data.result === 'pass') {
+        await session.run(`
+          MATCH (t:Tutor {odIuser: $tutorId})
+          SET t.interviewPassed = true,
+              t.interviewPassedAt = $completedAt,
+              t.certificationStatus = CASE 
+                WHEN t.writtenExamPassed = true AND t.speakingExamPassed = true THEN 'certified'
+                ELSE t.certificationStatus
+              END
+          RETURN t
+        `, { tutorId: data.tutorId, completedAt });
+      } else {
+        // If failed, mark interview as failed
+        await session.run(`
+          MATCH (t:Tutor {odIuser: $tutorId})
+          SET t.interviewPassed = false,
+              t.interviewFailedAt = $completedAt
+          RETURN t
+        `, { tutorId: data.tutorId, completedAt });
+      }
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get interview result for a tutor
+   */
+  async getInterviewResult(tutorId: string): Promise<any | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (s:InterviewSlot {tutorId: $tutorId, status: 'completed'})
+        RETURN s
+        ORDER BY s.completedAt DESC
+        LIMIT 1
+      `, { tutorId });
+
+      const record = result.records[0];
+      if (!record) {
+        return null;
+      }
+
+      const s = record.get('s').properties;
+      return {
+        id: s.id,
+        date: s.date,
+        time: s.time,
+        status: s.status,
+        result: s.result,
+        rubricScores: s.rubricScores ? JSON.parse(s.rubricScores) : null,
+        notes: s.notes,
+        timestamps: s.timestamps ? JSON.parse(s.timestamps) : [],
+        completedAt: s.completedAt
+      };
+    } finally {
+      await session.close();
+    }
+  }
 }

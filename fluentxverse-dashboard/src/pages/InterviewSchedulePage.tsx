@@ -490,6 +490,12 @@ const InterviewSchedulePage = () => {
                 </div>
                 <div className="interview-actions">
                   <button 
+                    className="btn btn-primary btn-sm"
+                    onClick={() => window.location.href = `/interview-room/${interview.id}`}
+                  >
+                    <i className="ri-video-chat-line"></i> Join
+                  </button>
+                  <button 
                     className="btn btn-success btn-sm"
                     onClick={() => {
                       setFeedbackInterviewId(interview.id);

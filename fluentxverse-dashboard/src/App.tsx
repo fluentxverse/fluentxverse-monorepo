@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import DashboardPage from './pages/DashboardPage';
 import InterviewSchedulePage from './pages/InterviewSchedulePage';
+import InterviewRoomPage from './pages/InterviewRoomPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminsPage } from './pages/AdminsPage';
 import TutorsPage from './pages/TutorsPage';
@@ -47,6 +48,25 @@ const ProtectedLayout = ({ children }: { children: any }) => {
 
 // Main app content with routing
 const AppContent = () => {
+  const { isAuthenticated, loading } = useAuthContext();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  // Interview room is fullscreen, no sidebar/header
+  const path = window.location.pathname;
+  if (path.startsWith('/interview-room')) {
+    if (!isAuthenticated) {
+      return <LoginPage />;
+    }
+    return (
+      <Router>
+        <Route path="/interview-room/:interviewId?" component={InterviewRoomPage} />
+      </Router>
+    );
+  }
+
   return (
     <ProtectedLayout>
       <Router>

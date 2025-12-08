@@ -279,6 +279,12 @@ const InterviewBookingPage = () => {
                   </div>
                 </div>
                 <div className="booking-actions">
+                  <button 
+                    className="btn-join-interview" 
+                    onClick={() => window.location.href = `/interview/room/${myBooking.id}`}
+                  >
+                    <i className="fas fa-video"></i> Join Interview
+                  </button>
                   <button className="btn-cancel" onClick={() => setShowCancelConfirmModal(true)}>
                     <i className="fas fa-times"></i> Cancel Interview
                   </button>

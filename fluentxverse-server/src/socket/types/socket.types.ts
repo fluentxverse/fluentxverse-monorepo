@@ -17,6 +17,16 @@ export interface ServerToClientEvents {
   'webrtc:answer': (data: { answer: any; from: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: any; from: string }) => void;
   'webrtc:peer-left': () => void;
+  
+  // Interview events
+  'interview:admin-joined': () => void;
+  'interview:tutor-joined': () => void;
+  'interview:offer': (data: { offer: any }) => void;
+  'interview:answer': (data: { answer: any }) => void;
+  'interview:ice-candidate': (data: { candidate: any }) => void;
+  'interview:ended': () => void;
+  'interview:tutor-left': () => void;
+  'interview:admin-left': () => void;
 }
 
 export interface ClientToServerEvents {
@@ -34,6 +44,13 @@ export interface ClientToServerEvents {
   'webrtc:offer': (data: { offer: any; to: string }) => void;
   'webrtc:answer': (data: { answer: any; to: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: any; to: string }) => void;
+  
+  // Interview events
+  'interview:join': (data: { roomId: string; odIuser?: string; role: 'tutor' | 'admin' }) => void;
+  'interview:offer': (data: { roomId: string; offer: any }) => void;
+  'interview:answer': (data: { roomId: string; answer: any }) => void;
+  'interview:ice-candidate': (data: { roomId: string; candidate: any }) => void;
+  'interview:end': (data: { roomId: string }) => void;
 }
 
 export interface InterServerEvents {
@@ -44,6 +61,8 @@ export interface SocketData {
   userId: string;
   userType: 'tutor' | 'student';
   sessionId?: string;
+  interviewRoomId?: string;
+  interviewRole?: 'tutor' | 'admin';
 }
 
 // Data structures

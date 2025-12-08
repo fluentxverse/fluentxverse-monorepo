@@ -25,6 +25,17 @@ export interface ServerToClientEvents {
   'notification:list': (data: { notifications: Notification[]; unreadCount: number }) => void;
   'notification:read': (data: { notificationId: string; unreadCount: number }) => void;
   'notification:read-all': (data: { unreadCount: number }) => void;
+  'notification:delete': (data: { notificationId: string; unreadCount: number }) => void;
+  
+  // Interview events
+  'interview:admin-joined': () => void;
+  'interview:tutor-joined': () => void;
+  'interview:offer': (data: { offer: RTCSessionDescriptionInit }) => void;
+  'interview:answer': (data: { answer: RTCSessionDescriptionInit }) => void;
+  'interview:ice-candidate': (data: { candidate: RTCIceCandidateInit }) => void;
+  'interview:ended': () => void;
+  'interview:tutor-left': () => void;
+  'interview:admin-left': () => void;
 }
 
 export interface ClientToServerEvents {
@@ -48,6 +59,13 @@ export interface ClientToServerEvents {
   'notification:get-all': (data?: { limit?: number; offset?: number }) => void;
   'notification:mark-read': (notificationId: string) => void;
   'notification:mark-all-read': () => void;
+  
+  // Interview events
+  'interview:join': (data: { roomId: string; odIuser?: string; role: 'tutor' | 'admin' }) => void;
+  'interview:offer': (data: { roomId: string; offer: RTCSessionDescriptionInit }) => void;
+  'interview:answer': (data: { roomId: string; answer: RTCSessionDescriptionInit }) => void;
+  'interview:ice-candidate': (data: { roomId: string; candidate: RTCIceCandidateInit }) => void;
+  'interview:end': (data: { roomId: string }) => void;
 }
 
 // Data structures

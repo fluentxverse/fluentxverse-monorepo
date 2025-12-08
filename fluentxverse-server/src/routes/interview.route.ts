@@ -18,8 +18,9 @@ const Interview = new Elysia({ prefix: '/interview' })
         return null;
       }
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      // Optional: role check if present
-      if ((authData as any).role && (authData as any).role !== 'admin') {
+      // Check for admin or superadmin role
+      const role = (authData as any).role;
+      if (role && role !== 'admin' && role !== 'superadmin') {
         set.status = 403;
         return null;
       }
@@ -365,6 +366,86 @@ const Interview = new Elysia({ prefix: '/interview' })
       slotId: t.String(),
       notes: t.Optional(t.String())
     })
+  })
+
+  /**
+   * Admin: Save interview result with rubric scores
+   * POST /interview/result
+   */
+  .post('/result', async ({ body, set, requireAdmin }) => {
+    try {
+      const admin = requireAdmin();
+      if (!admin) {
+        return { success: false, error: 'Not authenticated' };
+      }
+      
+      await interviewService.saveInterviewResult({
+        slotId: body.slotId,
+        tutorId: body.tutorId,
+        result: body.result,
+        rubricScores: body.rubricScores,
+        notes: body.notes,
+        timestamps: body.timestamps,
+        adminId: (admin as any).userId
+      });
+
+      return {
+        success: true,
+        message: `Interview marked as ${body.result}`
+      };
+    } catch (error: any) {
+      console.error('Error in POST /interview/result:', error);
+      set.status = 400;
+      return {
+        success: false,
+        error: error.message || 'Failed to save interview result'
+      };
+    }
+  }, {
+    body: t.Object({
+      slotId: t.String(),
+      tutorId: t.String(),
+      result: t.Union([t.Literal('pass'), t.Literal('fail')]),
+      rubricScores: t.Object({
+        grammar: t.Number(),
+        fluency: t.Number(),
+        pronunciation: t.Number(),
+        vocabulary: t.Number(),
+        professionalism: t.Number()
+      }),
+      notes: t.String(),
+      timestamps: t.Array(t.Object({
+        time: t.String(),
+        note: t.String()
+      }))
+    })
+  })
+
+  /**
+   * Admin: Get interview result for a tutor
+   * GET /interview/result/:tutorId
+   */
+  .get('/result/:tutorId', async ({ params, set, requireAdmin }) => {
+    try {
+      const admin = requireAdmin();
+      if (!admin) {
+        return { success: false, error: 'Not authenticated' };
+      }
+      
+      const result = await interviewService.getInterviewResult(params.tutorId);
+
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      console.error('Error in GET /interview/result:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get interview result'
+      };
+    }
   })
 
   /**
