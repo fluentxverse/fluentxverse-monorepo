@@ -39,6 +39,13 @@ const ApplicationsPage = () => {
   };
 
   const getStatusInfo = (app: PendingTutor) => {
+    // Check interview result first
+    if (app.interviewResult === 'pass') {
+      return { label: 'Interview Passed', class: 'interview-pass', icon: 'ri-check-double-line' };
+    }
+    if (app.interviewResult === 'fail') {
+      return { label: 'Interview Failed', class: 'interview-fail', icon: 'ri-close-circle-line' };
+    }
     if (app.status === 'processing') {
       return { label: 'Interview Processing', class: 'processing', icon: 'ri-loader-4-line' };
     }
@@ -56,6 +63,8 @@ const ApplicationsPage = () => {
     if (filter === 'pending_written') return !app.writtenExamPassed;
     if (filter === 'pending_speaking') return app.writtenExamPassed && !app.speakingExamPassed;
     if (filter === 'processing') return app.status === 'processing';
+    if (filter === 'interview_passed') return app.interviewResult === 'pass';
+    if (filter === 'interview_failed') return app.interviewResult === 'fail';
     return true;
   });
 
@@ -72,6 +81,8 @@ const ApplicationsPage = () => {
     pendingWritten: applications.filter(a => !a.writtenExamPassed).length,
     pendingSpeaking: applications.filter(a => a.writtenExamPassed && !a.speakingExamPassed).length,
     processing: applications.filter(a => a.status === 'processing').length,
+    interviewPassed: applications.filter(a => a.interviewResult === 'pass').length,
+    interviewFailed: applications.filter(a => a.interviewResult === 'fail').length,
   };
 
   return (
@@ -119,6 +130,24 @@ const ApplicationsPage = () => {
           <div className="stat-content">
             <span className="stat-number">{stats.processing}</span>
             <span className="stat-label">Processing</span>
+          </div>
+        </div>
+        <div className={`stat-card ${filter === 'interview_passed' ? 'active' : ''}`} onClick={() => setFilter('interview_passed')}>
+          <div className="stat-icon interview-pass">
+            <i className="ri-check-double-line"></i>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{stats.interviewPassed}</span>
+            <span className="stat-label">Interview Passed</span>
+          </div>
+        </div>
+        <div className={`stat-card ${filter === 'interview_failed' ? 'active' : ''}`} onClick={() => setFilter('interview_failed')}>
+          <div className="stat-icon interview-fail">
+            <i className="ri-close-circle-line"></i>
+          </div>
+          <div className="stat-content">
+            <span className="stat-number">{stats.interviewFailed}</span>
+            <span className="stat-label">Interview Failed</span>
           </div>
         </div>
         <div className="stat-card info-card">

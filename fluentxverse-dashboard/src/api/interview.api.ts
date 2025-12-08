@@ -98,5 +98,57 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to complete interview');
     }
+  },
+
+  /**
+   * Save interview result with rubric scores (Admin)
+   */
+  saveResult: async (
+    slotId: string,
+    tutorId: string,
+    data: {
+      rubricScores: {
+        grammar: number;
+        fluency: number;
+        pronunciation: number;
+        vocabulary: number;
+        professionalism: number;
+      };
+      timestamps: { time: string; note: string }[];
+      result: 'pass' | 'fail';
+      notes: string;
+    }
+  ): Promise<void> => {
+    const response = await api.post('/interview/result', {
+      slotId,
+      tutorId,
+      ...data
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to save interview result');
+    }
+  },
+
+  /**
+   * Get interview result (Admin)
+   */
+  getResult: async (tutorId: string): Promise<{
+    rubricScores: {
+      grammar: number;
+      fluency: number;
+      pronunciation: number;
+      vocabulary: number;
+      professionalism: number;
+    };
+    timestamps: { time: string; note: string }[];
+    result: 'pass' | 'fail' | null;
+    notes: string;
+    completedAt: string | null;
+  } | null> => {
+    const response = await api.get(`/interview/result/${tutorId}`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get interview result');
+    }
+    return response.data.data;
   }
 };

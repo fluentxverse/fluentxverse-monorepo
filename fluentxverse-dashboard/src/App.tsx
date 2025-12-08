@@ -1,4 +1,4 @@
-import { LocationProvider, Router, Route } from 'preact-iso';
+import { LocationProvider, Router, Route, useLocation } from 'preact-iso';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
 
@@ -49,13 +49,14 @@ const ProtectedLayout = ({ children }: { children: any }) => {
 // Main app content with routing
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuthContext();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingScreen />;
   }
 
   // Interview room is fullscreen, no sidebar/header
-  const path = window.location.pathname;
+  const path = location.path || location.url || window.location.pathname;
   if (path.startsWith('/interview-room')) {
     if (!isAuthenticated) {
       return <LoginPage />;

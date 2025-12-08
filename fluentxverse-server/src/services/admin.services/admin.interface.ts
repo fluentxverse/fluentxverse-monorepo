@@ -37,6 +37,8 @@ export interface PendingTutor {
   status: 'pending_written' | 'pending_speaking' | 'processing';
   writtenExamPassed: boolean;
   speakingExamPassed: boolean;
+  interviewResult?: 'pass' | 'fail' | null;
+  interviewDate?: string | null;
 }
 
 export interface TutorListItem {

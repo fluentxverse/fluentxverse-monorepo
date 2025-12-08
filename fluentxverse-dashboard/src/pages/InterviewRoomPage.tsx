@@ -63,6 +63,11 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [resultSubmitted, setResultSubmitted] = useState(false);
   
+  // Confirmation dialog states
+  const [showEndCallConfirm, setShowEndCallConfirm] = useState(false);
+  const [showPassConfirm, setShowPassConfirm] = useState(false);
+  const [showFailConfirm, setShowFailConfirm] = useState(false);
+  
   // Refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -209,6 +214,19 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
     }
   }, [localStream]);
+
+  // Re-attach stream when transitioning to call view (DOM element changes)
+  useEffect(() => {
+    if (setupComplete && localStream && localVideoRef.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (localVideoRef.current && localStream) {
+          localVideoRef.current.srcObject = localStream;
+          localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+        }
+      }, 100);
+    }
+  }, [setupComplete, localStream]);
 
   // Sync remote video element
   useEffect(() => {
@@ -552,6 +570,13 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
         <div className="interview-call">
           <div className="call-header">
             <div className="call-info">
+              <button 
+                className="btn-back-header" 
+                title="Back to Interviews"
+                onClick={() => window.location.href = '/interviews'}
+              >
+                <i className="ri-arrow-left-line"></i>
+              </button>
               <span className="call-status">
                 {isConnected ? (
                   <><i className="ri-record-circle-fill live"></i> Live</>

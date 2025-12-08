@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { interviewApi, type InterviewSlot, type PendingInterview } from '@api/interview.api';
 import InterviewFeedback from '../Components/InterviewFeedback';
+import InterviewResultModal from '../Components/InterviewResultModal';
 import './InterviewSchedulePage.css';
 
 const InterviewSchedulePage = () => {
@@ -15,6 +16,9 @@ const InterviewSchedulePage = () => {
   const [modalAction, setModalAction] = useState<'open' | 'delete' | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackInterviewId, setFeedbackInterviewId] = useState<string | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [resultTutorId, setResultTutorId] = useState<string | null>(null);
+  const [resultTutorName, setResultTutorName] = useState<string | null>(null);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -142,11 +146,19 @@ const InterviewSchedulePage = () => {
     const key = `${dayIdx}-${time}`;
     const date = weekDates[dayIdx];
     
+    // Check if slot is completed - show result modal
+    const existingSlot = slots.get(key);
+    if (existingSlot && existingSlot.status === 'completed' && existingSlot.tutorId) {
+      setResultTutorId(existingSlot.tutorId);
+      setResultTutorName(existingSlot.tutorName || null);
+      setShowResultModal(true);
+      return;
+    }
+    
     // Don't allow selecting past slots
     if (isPastSlot(date, time)) return;
     
     // Check if slot is already booked
-    const existingSlot = slots.get(key);
     if (existingSlot && existingSlot.status === 'booked') return;
     
     const newSelected = new Set(selectedSlots);
@@ -556,6 +568,19 @@ const InterviewSchedulePage = () => {
             setFeedbackInterviewId(null);
             // Reload pending interviews
             interviewApi.getPendingInterviews().then(setPendingInterviews);
+          }}
+        />
+      )}
+
+      {/* Interview Result Modal */}
+      {showResultModal && resultTutorId && (
+        <InterviewResultModal
+          tutorId={resultTutorId}
+          tutorName={resultTutorName || undefined}
+          onClose={() => {
+            setShowResultModal(false);
+            setResultTutorId(null);
+            setResultTutorName(null);
           }}
         />
       )}

@@ -173,16 +173,19 @@ export class AdminService {
     const session = driver.session();
 
     try {
-      // Get all tutors with their exam results to determine certification status
+      // Get all tutors with their exam results and interview status to determine certification status
       const result = await session.run(`
         MATCH (u:User)
         OPTIONAL MATCH (u)-[:TAKES]->(we:Exam {type: 'written', status: 'completed'})
         OPTIONAL MATCH (u)-[:TAKES]->(se:Exam {type: 'speaking', status: 'completed'})
         OPTIONAL MATCH (u)-[:TAKES]->(sp:Exam {type: 'speaking', status: 'processing'})
+        OPTIONAL MATCH (slot:InterviewSlot {tutorId: u.id, status: 'completed'})
         RETURN u,
                collect(DISTINCT we.result) as writtenResults,
                collect(DISTINCT se.result) as speakingResults,
-               count(DISTINCT sp) as processingCount
+               count(DISTINCT sp) as processingCount,
+               slot.result as interviewResult,
+               slot.completedAt as interviewDate
         ORDER BY u.createdAt DESC
         LIMIT $limit
       `, { limit: neo4j.int(limit * 2) }); // Get more to filter
@@ -194,6 +197,8 @@ export class AdminService {
         const writtenResults = record.get('writtenResults') || [];
         const speakingResults = record.get('speakingResults') || [];
         const processingCount = record.get('processingCount')?.toNumber?.() ?? record.get('processingCount') ?? 0;
+        const interviewResult = record.get('interviewResult') as 'pass' | 'fail' | null;
+        const interviewDate = record.get('interviewDate') as string | null;
         
         const writtenPassed = writtenResults.some((r: string) => examPassed(r));
         const speakingPassed = speakingResults.some((r: string) => examPassed(r));
@@ -218,7 +223,9 @@ export class AdminService {
           registeredAt: u.createdAt || new Date().toISOString(),
           status,
           writtenExamPassed: writtenPassed,
-          speakingExamPassed: speakingPassed
+          speakingExamPassed: speakingPassed,
+          interviewResult: interviewResult || null,
+          interviewDate: interviewDate || null
         });
         
         if (pendingTutors.length >= limit) break;
