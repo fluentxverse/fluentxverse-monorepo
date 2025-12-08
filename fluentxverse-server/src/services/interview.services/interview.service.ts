@@ -1,4 +1,5 @@
 import { getDriver } from '../../db/memgraph';
+import { cacheGetOrSet, invalidateCache } from '../../db/redis';
 import neo4j from 'neo4j-driver';
 import type { 
   InterviewSlot, 
@@ -142,44 +143,49 @@ export class InterviewService {
    * Get available interview slots for tutors
    */
   async getAvailableSlots(weekOffset: number = 0): Promise<InterviewSlot[]> {
-    const driver = getDriver();
-    const session = driver.session();
+    const cacheKey = `interview:available:week:${weekOffset}`;
+    const cacheTTL = 5 * 60; // 5 minutes
+    
+    return cacheGetOrSet(cacheKey, cacheTTL, async () => {
+      const driver = getDriver();
+      const session = driver.session();
 
-    try {
-      // Calculate week boundaries
-      const today = new Date();
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - today.getDay() + 1 + (weekOffset * 7));
-      monday.setHours(0, 0, 0, 0);
-      
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      sunday.setHours(23, 59, 59, 999);
+      try {
+        // Calculate week boundaries
+        const today = new Date();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - today.getDay() + 1 + (weekOffset * 7));
+        monday.setHours(0, 0, 0, 0);
+        
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
 
-      const weekStart = formatDateISO(monday);
-      const weekEnd = formatDateISO(sunday);
+        const weekStart = formatDateISO(monday);
+        const weekEnd = formatDateISO(sunday);
 
-      // Get only open interview slots for this week
-      const result = await session.run(`
-        MATCH (s:InterviewSlot {status: 'open'})
-        WHERE s.date >= $weekStart AND s.date <= $weekEnd
-        RETURN s
-        ORDER BY s.date, s.time
-      `, { weekStart, weekEnd });
+        // Get only open interview slots for this week
+        const result = await session.run(`
+          MATCH (s:InterviewSlot {status: 'open'})
+          WHERE s.date >= $weekStart AND s.date <= $weekEnd
+          RETURN s
+          ORDER BY s.date, s.time
+        `, { weekStart, weekEnd });
 
-      return result.records.map(record => {
-        const s = record.get('s').properties;
-        return {
-          id: s.id,
-          date: s.date,
-          time: s.time,
-          status: s.status as 'open',
-          createdAt: s.createdAt
-        };
-      });
-    } finally {
-      await session.close();
-    }
+        return result.records.map(record => {
+          const s = record.get('s').properties;
+          return {
+            id: s.id,
+            date: s.date,
+            time: s.time,
+            status: s.status as 'open',
+            createdAt: s.createdAt
+          };
+        });
+      } finally {
+        await session.close();
+      }
+    });
   }
 
   /**
@@ -217,6 +223,9 @@ export class InterviewService {
       }
 
       const s = record.get('s').properties;
+      // Invalidate cache when booking/cancelling
+      await invalidateCache('interview:available:week:*');
+
       return {
         id: s.id,
         date: s.date,
@@ -266,6 +275,9 @@ export class InterviewService {
           throw new Error('Interview booking not found');
         }
       }
+
+      // Invalidate cache when booking/cancelling
+      await invalidateCache('interview:available:week:*');
     } finally {
       await session.close();
     }

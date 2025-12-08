@@ -1,8 +1,9 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import { useAuthContext } from '../context/AuthContext';
 import { useNotifications, getNotificationIcon, formatRelativeTime } from '../hooks/useNotifications';
+import { useNotificationStore } from '../context/NotificationContext';
 import './NotificationsPage.css';
 
 const NotificationsPage = () => {
@@ -19,6 +20,12 @@ const NotificationsPage = () => {
     markAllAsRead,
     deleteNotification
   } = useNotifications();
+
+  // Local UI state for filters and pagination
+  const [filterUnread, setFilterUnread] = useState(false);
+  const pageOffsetRef = useRef(0);
+  const pageLimit = 20;
+  const setStoreState = useNotificationStore.setState;
 
   const handleNotificationClick = async (notification: any) => {
     if (!notification.isRead) {
@@ -62,6 +69,33 @@ const NotificationsPage = () => {
               )}
             </div>
 
+            {/* Filters */}
+            <div className="notifications-filters">
+              <button
+                className={`btn-filter ${filterUnread ? 'active' : ''}`}
+                onClick={() => {
+                  const next = !filterUnread;
+                  setFilterUnread(next);
+                  const params = new URLSearchParams();
+                  params.set('limit', String(pageLimit));
+                  params.set('offset', '0');
+                  if (next) params.set('isRead', 'false');
+                  fetch(`/notifications?${params.toString()}`, { credentials: 'include' })
+                    .then(r => r.json())
+                    .then(({ data }) => {
+                      setStoreState({
+                        notifications: data.notifications,
+                        unreadCount: data.unreadCount
+                      });
+                      pageOffsetRef.current = 0;
+                    });
+                }}
+              >
+                <i className="fas fa-filter"></i>
+                {filterUnread ? 'Showing Unread' : 'Show Unread'}
+              </button>
+            </div>
+
             {/* Notifications List */}
             <div className="notifications-list-container">
               {isLoading ? (
@@ -69,7 +103,15 @@ const NotificationsPage = () => {
                   <div className="loading-spinner"></div>
                   <p>Loading notifications...</p>
                 </div>
-              ) : notifications.length === 0 ? (
+              ) : filterUnread && notifications.length === 0 ? (
+                <div className="notifications-empty-unread">
+                  <div className="empty-unread-icon">
+                    <i className="fas fa-check-circle"></i>
+                  </div>
+                  <h3>No unread notifications</h3>
+                  <p>You're all caught up! All your notifications have been read.</p>
+                </div>
+              ) : !filterUnread && notifications.length === 0 ? (
                 <div className="notifications-empty">
                   <div className="empty-icon">
                     <i className="fas fa-bell-slash"></i>
@@ -78,9 +120,11 @@ const NotificationsPage = () => {
                   <p>We'll notify you when something important happens, like new bookings, session reminders, and more.</p>
                 </div>
               ) : (
+                <>
                 <div className="notifications-list-full">
                   {notifications.map(notification => {
                     const { icon, color } = getNotificationIcon(notification.type);
+                    const isInterviewType = (notification.type || '').startsWith('interview');
                     return (
                       <div 
                         key={notification.id} 
@@ -88,8 +132,11 @@ const NotificationsPage = () => {
                         onClick={() => handleNotificationClick(notification)}
                       >
                         <div 
-                          className="notification-card-icon" 
-                          style={{ backgroundColor: `${color}20`, color }}
+                          className={`notification-card-icon type-${notification.type}`} 
+                          style={{ 
+                            backgroundColor: isInterviewType ? color : `${color}20`, 
+                            color: isInterviewType ? '#ffffff' : color 
+                          }}
                         >
                           <i className={`fas ${icon}`}></i>
                         </div>
@@ -117,6 +164,31 @@ const NotificationsPage = () => {
                     );
                   })}
                 </div>
+                {/* Pagination */}
+                <div className="notifications-pagination">
+                  <button
+                    className="btn-load-more"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set('limit', String(pageLimit));
+                      pageOffsetRef.current += pageLimit;
+                      params.set('offset', String(pageOffsetRef.current));
+                      if (filterUnread) params.set('isRead', 'false');
+                      fetch(`/notifications?${params.toString()}`, { credentials: 'include' })
+                        .then(r => r.json())
+                        .then(({ data }) => {
+                          setStoreState((state: any) => ({
+                            notifications: [...state.notifications, ...data.notifications],
+                            unreadCount: data.unreadCount
+                          }));
+                        });
+                    }}
+                  >
+                    <i className="fas fa-chevron-down"></i>
+                    Load more
+                  </button>
+                </div>
+                </>
               )}
             </div>
           </div>

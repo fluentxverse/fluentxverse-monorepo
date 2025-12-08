@@ -1,5 +1,7 @@
 import Elysia, { t } from 'elysia';
 import { getDriver } from '../db/memgraph';
+import { getRetentionHistory } from '../db/redis';
+import { createAdminGuard } from '../middleware/auth.middleware';
 
 const Debug = new Elysia({ name: 'debug', prefix: '/debug' })
   .post('/log', async ({ body }) => {
@@ -83,6 +85,29 @@ const Debug = new Elysia({ name: 'debug', prefix: '/debug' })
       return { success: true, count: exams.length, exams };
     } finally {
       await session.close();
+    }
+  })
+  .get('/retention-history', async ({ set, cookie }) => {
+    const adminAuth = createAdminGuard(cookie, set);
+    if (!adminAuth) {
+      set.status = 403;
+      return { error: 'Unauthorized - Admin access required' };
+    }
+
+    try {
+      const history = await getRetentionHistory();
+      const totalDeleted = history.reduce((sum, entry) => sum + entry.deletedCount, 0);
+
+      return {
+        success: true,
+        totalCleanupRuns: history.length,
+        totalDeletedNotifications: totalDeleted,
+        history: history.slice(-20), // Last 20 cleanup runs
+      };
+    } catch (error) {
+      console.error('Retention history error:', error);
+      set.status = 500;
+      return { error: 'Failed to retrieve retention history' };
     }
   });
   

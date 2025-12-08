@@ -2,6 +2,7 @@ import Elysia, { t } from 'elysia';
 import { NotificationService } from '../services/notification.services/notification.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { refreshAuthCookie } from '../utils/refreshCookie';
+import { getIO } from '../socket/socket.server';
 
 const notificationService = new NotificationService();
 
@@ -30,11 +31,29 @@ const Notification = new Elysia({ prefix: '/notifications' })
       const limit = query.limit ? parseInt(query.limit, 10) : 50;
       const offset = query.offset ? parseInt(query.offset, 10) : 0;
 
-      const notifications = await notificationService.getNotifications({
+      const filters: any = {
         userId,
         limit,
         offset
-      });
+      };
+
+      // Support unread-only filtering: /notifications?isRead=false
+      if (typeof query.isRead !== 'undefined') {
+        const isReadStr = Array.isArray(query.isRead) ? query.isRead[0] : query.isRead;
+        if (typeof isReadStr === 'string') {
+          filters.isRead = isReadStr.toLowerCase() === 'true';
+        }
+      }
+
+      // Optional type filter: /notifications?type=interview_scheduled
+      if (typeof query.type !== 'undefined') {
+        const typeStr = Array.isArray(query.type) ? query.type[0] : query.type;
+        if (typeof typeStr === 'string' && typeStr.length > 0) {
+          filters.type = typeStr;
+        }
+      }
+
+      const notifications = await notificationService.getNotifications(filters);
 
       const unreadCount = await notificationService.getUnreadCount(userId);
 
@@ -116,6 +135,15 @@ const Notification = new Elysia({ prefix: '/notifications' })
         return { success: false, error: 'Notification not found' };
       }
 
+      // Emit live sync over sockets
+      const io = getIO();
+      if (io) {
+        io.to(`notifications:${userId}`).emit('notification:read', {
+          notificationId: params.id,
+          unreadCount: await notificationService.getUnreadCount(userId)
+        });
+      }
+
       return { success: true };
     } catch (error) {
       console.error('Error in POST /notifications/:id/read:', error);
@@ -147,6 +175,14 @@ const Notification = new Elysia({ prefix: '/notifications' })
       refreshAuthCookie(cookie, authData, cookieName);
 
       const updated = await notificationService.markAllAsRead(userId);
+
+      // Emit live sync over sockets
+      const io = getIO();
+      if (io) {
+        io.to(`notifications:${userId}`).emit('notification:read-all', {
+          unreadCount: 0
+        });
+      }
 
       return {
         success: true,
@@ -186,6 +222,15 @@ const Notification = new Elysia({ prefix: '/notifications' })
       if (!success) {
         set.status = 404;
         return { success: false, error: 'Notification not found' };
+      }
+
+      // Emit live sync over sockets
+      const io = getIO();
+      if (io) {
+        io.to(`notifications:${userId}`).emit('notification:delete', {
+          notificationId: params.id,
+          unreadCount: await notificationService.getUnreadCount(userId)
+        });
       }
 
       return { success: true };

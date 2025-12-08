@@ -12,6 +12,8 @@ import { initDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
 import { startReminderService } from './services/notification.services/reminder.service';
+import { NotificationService } from './services/notification.services/notification.service';
+import { initRedis, logRetentionCleanup } from './db/redis';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
 import Student from "./routes/student.route";
@@ -23,6 +25,9 @@ initDriver(
   process.env.MEMGRAPH_USER || 'fluentxverse',
   process.env.MEMGRAPH_PASSWORD || 'devpassword123!ChangeMe'
 );
+
+// Initialize Redis cache
+initRedis().catch(err => console.warn('Redis initialization skipped:', err));
 
 // Bun SQL is auto-initialized on import (no need to call getPool)
 
@@ -76,5 +81,32 @@ httpServer.listen(8767, '0.0.0.0', () => {
   
   // Start the session reminder service after socket is ready
   startReminderService();
+
+  // Start daily notification retention cleanup (delete read > N days)
+  const notificationService = new NotificationService();
+  const daysToKeep = parseInt(process.env.NOTIFICATION_RETENTION_DAYS || '30', 10);
+  console.log(`🧹 Notification retention enabled: keeping ${daysToKeep} days`);
+  // Run once a day
+  setInterval(async () => {
+    try {
+      const deleted = await notificationService.deleteOldNotifications(daysToKeep);
+      if (deleted > 0) {
+        console.log(`🧹 Deleted ${deleted} old notifications (> ${daysToKeep} days)`);
+        await logRetentionCleanup(deleted);
+      }
+    } catch (err) {
+      console.error('Error running notification retention cleanup:', err);
+    }
+  }, 24 * 60 * 60 * 1000);
+  // Also run once on startup
+  (async () => {
+    try {
+      const deleted = await notificationService.deleteOldNotifications(daysToKeep);
+      if (deleted > 0) {
+        console.log(`🧹 Startup cleanup deleted ${deleted} old notifications`);
+        await logRetentionCleanup(deleted);
+      }
+    } catch {}
+  })();
 });
 

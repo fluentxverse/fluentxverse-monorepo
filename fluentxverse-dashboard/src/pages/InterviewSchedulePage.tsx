@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { interviewApi, type InterviewSlot, type PendingInterview } from '@api/interview.api';
+import InterviewFeedback from '../Components/InterviewFeedback';
 import './InterviewSchedulePage.css';
 
 const InterviewSchedulePage = () => {
@@ -12,6 +13,8 @@ const InterviewSchedulePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [modalAction, setModalAction] = useState<'open' | 'delete' | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackInterviewId, setFeedbackInterviewId] = useState<string | null>(null);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -487,10 +490,13 @@ const InterviewSchedulePage = () => {
                 </div>
                 <div className="interview-actions">
                   <button 
-                    className="btn btn-primary btn-sm"
-                    onClick={() => handleCompleteInterview(interview.id)}
+                    className="btn btn-success btn-sm"
+                    onClick={() => {
+                      setFeedbackInterviewId(interview.id);
+                      setShowFeedbackModal(true);
+                    }}
                   >
-                    <i className="ri-check-line"></i> Complete
+                    <i className="ri-edit-line"></i> Feedback
                   </button>
                   <button 
                     className="btn btn-danger btn-sm"
@@ -529,6 +535,23 @@ const InterviewSchedulePage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Interview Feedback Modal */}
+      {showFeedbackModal && feedbackInterviewId && (
+        <InterviewFeedback
+          interviewId={feedbackInterviewId}
+          onClose={() => {
+            setShowFeedbackModal(false);
+            setFeedbackInterviewId(null);
+          }}
+          onSuccess={() => {
+            setShowFeedbackModal(false);
+            setFeedbackInterviewId(null);
+            // Reload pending interviews
+            interviewApi.getPendingInterviews().then(setPendingInterviews);
+          }}
+        />
       )}
     </div>
   );

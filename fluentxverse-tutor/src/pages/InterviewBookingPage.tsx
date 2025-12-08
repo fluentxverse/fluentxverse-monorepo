@@ -20,6 +20,9 @@ const InterviewBookingPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<InterviewSlot | null>(null);
   const [bookingInProgress, setBookingInProgress] = useState(false);
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
+  const [cancelInProgress, setCancelInProgress] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -190,11 +193,11 @@ const InterviewBookingPage = () => {
     }
   };
 
-  // Cancel booking
+  // Cancel booking with confirmation
   const handleCancelBooking = async () => {
     if (!myBooking) return;
     
-    if (!confirm('Are you sure you want to cancel your interview booking?')) return;
+    setCancelInProgress(true);
     
     try {
       await interviewApi.cancelBooking(myBooking.id);
@@ -221,8 +224,14 @@ const InterviewBookingPage = () => {
       
       setAvailableSlots(newSlots);
       setMyBooking(bookingData);
+      setShowCancelConfirmModal(false);
+      setToastMessage({ text: 'Interview cancelled successfully', type: 'success' });
+      setTimeout(() => setToastMessage(null), 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to cancel booking');
+      setToastMessage({ text: err.message || 'Failed to cancel booking', type: 'error' });
+      setTimeout(() => setToastMessage(null), 3000);
+    } finally {
+      setCancelInProgress(false);
     }
   };
 
@@ -270,10 +279,46 @@ const InterviewBookingPage = () => {
                   </div>
                 </div>
                 <div className="booking-actions">
-                  <button className="btn-cancel" onClick={handleCancelBooking}>
+                  <button className="btn-cancel" onClick={() => setShowCancelConfirmModal(true)}>
                     <i className="fas fa-times"></i> Cancel Interview
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Cancel Confirmation Modal */}
+            {showCancelConfirmModal && (
+              <div className="modal-overlay" onClick={() => setShowCancelConfirmModal(false)}>
+                <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h2><i className="fas fa-exclamation-circle"></i> Confirm Cancellation</h2>
+                    <button className="modal-close" onClick={() => setShowCancelConfirmModal(false)}>
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div className="modal-body">
+                    <p>Are you sure you want to cancel your interview booking?</p>
+                    <p className="modal-date">
+                      <strong>Scheduled for:</strong> {myBooking && formatDateFull(myBooking.date)} at {myBooking?.time}
+                    </p>
+                  </div>
+                  <div className="modal-actions">
+                    <button className="btn-secondary" onClick={() => setShowCancelConfirmModal(false)} disabled={cancelInProgress}>
+                      Keep Booking
+                    </button>
+                    <button className="btn-danger" onClick={handleCancelBooking} disabled={cancelInProgress}>
+                      {cancelInProgress ? <span><i className="fas fa-spinner fa-spin"></i> Cancelling...</span> : <span><i className="fas fa-times"></i> Cancel Interview</span>}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Toast Notification */}
+            {toastMessage && (
+              <div className={`toast-notification ${toastMessage.type}`}>
+                <i className={`fas ${toastMessage.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                {toastMessage.text}
               </div>
             )}
 

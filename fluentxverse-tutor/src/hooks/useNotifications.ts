@@ -88,12 +88,29 @@ export const useNotifications = () => {
 
       // Listen for read updates
       socket.on('notification:read', (data: { notificationId: string; unreadCount: number }) => {
+        // Update unread count
         setUnreadCount(data.unreadCount);
+        // Update local list: mark the specific notification as read
+        useNotificationStore.setState((state) => ({
+          notifications: state.notifications.map(n => n.id === data.notificationId ? { ...n, isRead: true } : n)
+        }));
       });
 
       // Listen for read-all updates
       socket.on('notification:read-all', (data: { unreadCount: number }) => {
         setUnreadCount(data.unreadCount);
+        // Update all to read
+        useNotificationStore.setState((state) => ({
+          notifications: state.notifications.map(n => ({ ...n, isRead: true }))
+        }));
+      });
+
+      // Listen for deletion
+      socket.on('notification:delete', (data: { notificationId: string; unreadCount: number }) => {
+        setUnreadCount(data.unreadCount);
+        useNotificationStore.setState((state) => ({
+          notifications: state.notifications.filter(n => n.id !== data.notificationId)
+        }));
       });
 
       return () => {
@@ -101,6 +118,7 @@ export const useNotifications = () => {
         socket.off('notification:list');
         socket.off('notification:read');
         socket.off('notification:read-all');
+        socket.off('notification:delete');
       };
     } catch (error) {
       console.warn('Socket not connected, falling back to HTTP');
@@ -143,7 +161,8 @@ export const getNotificationIcon = (type: string): { icon: string; color: string
     case 'session_started':
       return { icon: 'fa-video', color: '#3b82f6' };
     case 'interview_scheduled':
-      return { icon: 'fa-user-tie', color: '#8b5cf6' };
+      // Use blue to match modal styling
+      return { icon: 'fa-user-tie', color: '#3b82f6' };
     case 'interview_reminder':
       return { icon: 'fa-clock', color: '#f59e0b' };
     case 'payment_received':
