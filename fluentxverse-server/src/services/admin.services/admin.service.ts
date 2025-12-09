@@ -12,6 +12,19 @@ import type {
   AdminLoginParams
 } from './admin.interface';
 
+// Helper to safely convert Neo4j Integer to JavaScript number
+function toNumber(value: any): number {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'number') return value;
+  if (neo4j.isInt(value)) return value.toNumber();
+  if (typeof value === 'object' && 'low' in value && 'high' in value) {
+    // Manual conversion for Neo4j Integer-like objects
+    return neo4j.int(value.low, value.high).toNumber();
+  }
+  if (typeof value?.toNumber === 'function') return value.toNumber();
+  return Number(value) || 0;
+}
+
 // Helper to parse exam result and check if passed
 function examPassed(resultJson: string | null): boolean {
   if (!resultJson) return false;
@@ -421,18 +434,21 @@ export class AdminService {
 
     try {
       // Get recent tutor registrations - User nodes are tutors
+      // Use registeredAt field which is stored as timestamp()
       const tutorResult = await session.run(`
         MATCH (u:User)
-        RETURN u.id as id, u.firstName as firstName, u.lastName as lastName, u.createdAt as timestamp, 'tutor_registered' as type
-        ORDER BY u.createdAt DESC
+        WHERE u.registeredAt IS NOT NULL
+        RETURN u.id as id, u.firstName as firstName, u.lastName as lastName, u.registeredAt as timestamp, 'tutor_registered' as type
+        ORDER BY u.registeredAt DESC
         LIMIT $limit
       `, { limit: neo4j.int(Math.ceil(limit / 2)) });
 
       // Get recent student registrations - Students have their own label
+      // Use signUpdate as a fallback since students don't have createdAt
       const studentResult = await session.run(`
         MATCH (s:Student)
-        RETURN s.id as id, s.givenName as firstName, s.familyName as lastName, s.createdAt as timestamp, 'student_joined' as type
-        ORDER BY s.createdAt DESC
+        RETURN s.id as id, s.givenName as firstName, s.familyName as lastName, s.signUpdate as timestamp, 'student_joined' as type
+        ORDER BY s.signUpdate DESC
         LIMIT $limit
       `, { limit: neo4j.int(Math.ceil(limit / 2)) });
 
@@ -442,11 +458,25 @@ export class AdminService {
       tutorResult.records.forEach(record => {
         const firstName = record.get('firstName') || '';
         const lastName = record.get('lastName') || '';
+        const rawTimestamp = record.get('timestamp');
+        
+        // Handle Neo4j Integer timestamp (milliseconds since epoch)
+        let timestamp: string;
+        if (rawTimestamp && typeof rawTimestamp === 'object' && 'toNumber' in rawTimestamp) {
+          timestamp = new Date(rawTimestamp.toNumber()).toISOString();
+        } else if (rawTimestamp && typeof rawTimestamp === 'number') {
+          timestamp = new Date(rawTimestamp).toISOString();
+        } else if (rawTimestamp && typeof rawTimestamp === 'string') {
+          timestamp = rawTimestamp;
+        } else {
+          timestamp = new Date().toISOString();
+        }
+        
         activities.push({
           id: record.get('id'),
           type: 'tutor_registered',
           message: `New tutor registered: ${firstName} ${lastName}`.trim(),
-          timestamp: record.get('timestamp') || new Date().toISOString(),
+          timestamp,
           userId: record.get('id')
         });
       });
@@ -455,11 +485,25 @@ export class AdminService {
       studentResult.records.forEach(record => {
         const firstName = record.get('firstName') || '';
         const lastName = record.get('lastName') || '';
+        const rawTimestamp = record.get('timestamp');
+        
+        // Handle signUpdate (stored as Date.now() milliseconds)
+        let timestamp: string;
+        if (rawTimestamp && typeof rawTimestamp === 'object' && 'toNumber' in rawTimestamp) {
+          timestamp = new Date(rawTimestamp.toNumber()).toISOString();
+        } else if (rawTimestamp && typeof rawTimestamp === 'number') {
+          timestamp = new Date(rawTimestamp).toISOString();
+        } else if (rawTimestamp && typeof rawTimestamp === 'string') {
+          timestamp = rawTimestamp;
+        } else {
+          timestamp = new Date().toISOString();
+        }
+        
         activities.push({
           id: record.get('id'),
           type: 'student_joined',
           message: `New student: ${firstName} ${lastName}`.trim(),
-          timestamp: record.get('timestamp') || new Date().toISOString(),
+          timestamp,
           userId: record.get('id')
         });
       });
@@ -989,7 +1033,7 @@ export class AdminService {
 
       const tutorTrend = tutorTrendResult.records.map(r => ({
         date: r.get('day')?.toString() || '',
-        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+        count: toNumber(r.get('count'))
       }));
 
       // Get student registration trend
@@ -1002,7 +1046,7 @@ export class AdminService {
 
       const studentTrend = studentTrendResult.records.map(r => ({
         date: r.get('day')?.toString() || '',
-        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+        count: toNumber(r.get('count'))
       }));
 
       // Get exam pass rates
@@ -1016,8 +1060,8 @@ export class AdminService {
 
       const examStats = examResult.records.map(r => ({
         type: r.get('examType') || 'unknown',
-        total: r.get('total')?.toNumber?.() || r.get('total') || 0,
-        passed: r.get('passed')?.toNumber?.() || r.get('passed') || 0
+        total: toNumber(r.get('total')),
+        passed: toNumber(r.get('passed'))
       }));
 
       // Get suspension counts
@@ -1030,7 +1074,7 @@ export class AdminService {
       const suspensionStats = suspensionResult.records.map(r => ({
         action: r.get('action') || '',
         targetType: r.get('targetType') || '',
-        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+        count: toNumber(r.get('count'))
       }));
 
       // Get current counts
@@ -1045,11 +1089,11 @@ export class AdminService {
         RETURN tutorCount, studentCount, suspendedTutors, count(s2) as suspendedStudents
       `);
 
-      const counts = countsResult.records[0] || {};
-      const totalTutors = counts.get?.('tutorCount')?.toNumber?.() || counts.get?.('tutorCount') || 0;
-      const totalStudents = counts.get?.('studentCount')?.toNumber?.() || counts.get?.('studentCount') || 0;
-      const suspendedTutors = counts.get?.('suspendedTutors')?.toNumber?.() || counts.get?.('suspendedTutors') || 0;
-      const suspendedStudents = counts.get?.('suspendedStudents')?.toNumber?.() || counts.get?.('suspendedStudents') || 0;
+      const counts = countsResult.records[0];
+      const totalTutors = counts ? toNumber(counts.get('tutorCount')) : 0;
+      const totalStudents = counts ? toNumber(counts.get('studentCount')) : 0;
+      const suspendedTutors = counts ? toNumber(counts.get('suspendedTutors')) : 0;
+      const suspendedStudents = counts ? toNumber(counts.get('suspendedStudents')) : 0;
 
       return {
         period,
@@ -1111,7 +1155,7 @@ export class AdminService {
 
       const reasonDistribution = reasonResult.records.map(r => ({
         reason: r.get('reason') || 'Unknown',
-        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+        count: toNumber(r.get('count'))
       }));
 
       // Get monthly trend
@@ -1124,10 +1168,10 @@ export class AdminService {
       `);
 
       const monthlyTrend = monthlyResult.records.map(r => ({
-        month: r.get('month')?.toNumber?.() || r.get('month') || 0,
-        year: r.get('year')?.toNumber?.() || r.get('year') || 0,
+        month: toNumber(r.get('month')),
+        year: toNumber(r.get('year')),
         action: r.get('action') || '',
-        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+        count: toNumber(r.get('count'))
       }));
 
       return {

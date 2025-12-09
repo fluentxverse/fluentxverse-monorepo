@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { adminApi, RecentActivity } from '../api/admin.api';
 import './Header.css';
@@ -9,6 +9,9 @@ export function Header() {
   const [notifications, setNotifications] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, logout } = useAuthContext();
+  
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadNotifications();
@@ -16,6 +19,26 @@ export function Header() {
     const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Close notifications if clicking outside
+      if (showNotifications && notificationRef.current && !notificationRef.current.contains(target)) {
+        setShowNotifications(false);
+      }
+      
+      // Close user menu if clicking outside
+      if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications, showUserMenu]);
 
   const loadNotifications = async () => {
     try {
@@ -96,7 +119,7 @@ export function Header() {
           <i className="ri-question-line"></i>
         </button>
         
-        <div className="notification-wrapper">
+        <div className="notification-wrapper" ref={notificationRef}>
           <button 
             className="header-btn notification-btn"
             onClick={() => setShowNotifications(!showNotifications)}
@@ -150,7 +173,7 @@ export function Header() {
 
         <div className="header-divider"></div>
 
-        <div className="header-user-wrapper">
+        <div className="header-user-wrapper" ref={userMenuRef}>
           <div 
             className="header-user"
             onClick={() => setShowUserMenu(!showUserMenu)}
