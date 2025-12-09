@@ -27,7 +27,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -35,12 +35,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
 }
 
 .create-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 16px rgba(2, 69, 174, 0.4);
 }
 
 /* Alerts */
@@ -206,7 +206,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -368,9 +368,9 @@
 }
 
 .action-btn.edit-btn:hover {
-  background: #eef2ff;
-  border-color: #6366f1;
-  color: #6366f1;
+  background: #e0f2fe;
+  border-color: #0245ae;
+  color: #0245ae;
 }
 
 .action-btn.delete-btn:hover {
@@ -396,12 +396,12 @@
 
 .modal {
   background: white;
-  border-radius: 20px;
+  border-radius: 16px;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .modal.modal-small {
@@ -413,33 +413,47 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border-bottom: none;
 }
 
 .modal-header h2 {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
   font-weight: 600;
-  color: #1e293b;
+  color: #ffffff;
   margin: 0;
 }
 
+.modal-header.delete-header {
+  background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
+}
+
 .close-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   border: none;
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.2);
   font-size: 20px;
-  color: #64748b;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
 }
 
 .close-btn:hover {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+.modal-content-wrapper {
+  max-height: calc(90vh - 100px);
+  overflow-y: auto;
 }
 
 .modal form,
@@ -475,8 +489,8 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
 }
 
 .form-group textarea {
@@ -532,7 +546,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -542,7 +556,7 @@
 }
 
 .submit-btn:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.4);
 }
 
 .submit-btn:disabled {

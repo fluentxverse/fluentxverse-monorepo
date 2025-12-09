@@ -293,61 +293,65 @@ const InboxPage = () => {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingMessage ? 'Edit Message' : 'Create New Message'}</h2>
+              <h2>
+                <i className={editingMessage ? 'fas fa-edit' : 'fas fa-plus-circle'}></i>
+                {editingMessage ? 'Edit Message' : 'Create New Message'}
+              </h2>
               <button className="close-btn" onClick={closeModal}>&times;</button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Title *</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onInput={(e) => setFormData({ ...formData, title: (e.target as HTMLInputElement).value })}
-                  placeholder="Enter message title"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Content *</label>
-                <textarea
-                  value={formData.content}
-                  onInput={(e) => setFormData({ ...formData, content: (e.target as HTMLTextAreaElement).value })}
-                  placeholder="Enter your message content..."
-                  rows={5}
-                  required
-                />
-              </div>
-
-              <div className="form-row">
+            <div className="modal-content-wrapper">
+              <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label>Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: (e.target as HTMLSelectElement).value as MessageCategory })}
-                  >
-                    <option value="announcement">📢 Announcement</option>
-                    <option value="update">🔄 Update</option>
-                    <option value="alert">⚠️ Alert</option>
-                    <option value="news">📰 News</option>
-                    <option value="promotion">🎁 Promotion</option>
-                  </select>
+                  <label>Title *</label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onInput={(e) => setFormData({ ...formData, title: (e.target as HTMLInputElement).value })}
+                    placeholder="Enter message title"
+                    required
+                  />
                 </div>
 
                 <div className="form-group">
-                  <label>Target Audience *</label>
-                  <select
-                    value={formData.targetAudience}
-                    onChange={(e) => setFormData({ ...formData, targetAudience: (e.target as HTMLSelectElement).value as TargetAudience })}
-                  >
-                    <option value="all">👥 All Users</option>
-                    <option value="students">🎓 Students Only</option>
-                    <option value="tutors">👨‍🏫 Tutors Only</option>
-                  </select>
+                  <label>Content *</label>
+                  <textarea
+                    value={formData.content}
+                    onInput={(e) => setFormData({ ...formData, content: (e.target as HTMLTextAreaElement).value })}
+                    placeholder="Enter your message content..."
+                    rows={5}
+                    required
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Priority</label>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: (e.target as HTMLSelectElement).value as MessageCategory })}
+                    >
+                      <option value="announcement">📢 Announcement</option>
+                      <option value="update">🔄 Update</option>
+                      <option value="alert">⚠️ Alert</option>
+                      <option value="news">📰 News</option>
+                      <option value="promotion">🎁 Promotion</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Target Audience *</label>
+                    <select
+                      value={formData.targetAudience}
+                      onChange={(e) => setFormData({ ...formData, targetAudience: (e.target as HTMLSelectElement).value as TargetAudience })}
+                    >
+                      <option value="all">👥 All Users</option>
+                      <option value="students">🎓 Students Only</option>
+                      <option value="tutors">👨‍🏫 Tutors Only</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Priority</label>
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: (e.target as HTMLSelectElement).value as MessagePriority })}
@@ -383,7 +387,8 @@ const InboxPage = () => {
                   )}
                 </button>
               </div>
-            </form>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -392,23 +397,28 @@ const InboxPage = () => {
       {showDeleteModal && deletingMessage && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
           <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Delete Message</h2>
+            <div className="modal-header delete-header">
+              <h2>
+                <i className="fas fa-trash-alt"></i>
+                Delete Message
+              </h2>
               <button className="close-btn" onClick={() => setShowDeleteModal(false)}>&times;</button>
             </div>
-            <div className="modal-body">
-              <p>Are you sure you want to delete this message?</p>
-              <p className="message-preview">"{deletingMessage.title}"</p>
-              <p className="warning-text">This action cannot be undone.</p>
-            </div>
-            <div className="modal-actions">
-              <button className="cancel-btn" onClick={() => setShowDeleteModal(false)}>
-                Cancel
-              </button>
-              <button className="delete-confirm-btn" onClick={handleDelete}>
-                <i className="fas fa-trash"></i>
-                Delete
-              </button>
+            <div className="modal-content-wrapper">
+              <div className="modal-body">
+                <p>Are you sure you want to delete this message?</p>
+                <p className="message-preview">"{deletingMessage.title}"</p>
+                <p className="warning-text">This action cannot be undone.</p>
+              </div>
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={() => setShowDeleteModal(false)}>
+                  Cancel
+                </button>
+                <button className="delete-confirm-btn" onClick={handleDelete}>
+                  <i className="fas fa-trash"></i>
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

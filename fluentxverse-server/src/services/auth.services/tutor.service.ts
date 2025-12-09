@@ -423,11 +423,66 @@ class AuthService {
         }
     }
 
+    public async getPersonalInfo(userId: string): Promise<any> {
+        try {
+            const driver = getDriver();
+            const session = driver.session();
 
+            const result = await session.run(
+                `
+                MATCH (u:User { id: $userId })
+                RETURN u.phoneNumber as phoneNumber,
+                       u.country as country,
+                       u.region as region,
+                       u.regionName as regionName,
+                       u.province as province,
+                       u.provinceName as provinceName,
+                       u.city as city,
+                       u.cityName as cityName,
+                       u.zipCode as zipCode,
+                       u.addressLine as addressLine,
+                       u.sameAsPermanent as sameAsPermanent,
+                       u.schoolAttended as schoolAttended,
+                       u.educationalAttainment as educationalAttainment,
+                       u.major as major,
+                       u.teachingExperience as teachingExperience,
+                       u.teachingQualifications as teachingQualifications
+                `,
+                { userId }
+            );
 
+            await session.close();
 
+            if (result.records.length === 0 || !result.records[0]) {
+                return null;
+            }
 
-    
+            const record = result.records[0]!;
+            const qualificationsRaw = record.get('teachingQualifications');
+            
+            return {
+                phoneNumber: record.get('phoneNumber') || '',
+                country: record.get('country') || 'Philippines',
+                region: record.get('region') || '',
+                regionName: record.get('regionName') || '',
+                province: record.get('province') || '',
+                provinceName: record.get('provinceName') || '',
+                city: record.get('city') || '',
+                cityName: record.get('cityName') || '',
+                zipCode: record.get('zipCode') || '',
+                addressLine: record.get('addressLine') || '',
+                sameAsPermanent: record.get('sameAsPermanent') || false,
+                schoolAttended: record.get('schoolAttended') || '',
+                educationalAttainment: record.get('educationalAttainment') || '',
+                major: record.get('major') || '',
+                teachingExperience: record.get('teachingExperience') || '',
+                teachingQualifications: qualificationsRaw ? (typeof qualificationsRaw === 'string' ? JSON.parse(qualificationsRaw) : qualificationsRaw) : []
+            };
+        } catch (error: any) {
+            console.error('Get personal info error:', error);
+            throw error;
+        }
+    }
 }
 
 export default AuthService

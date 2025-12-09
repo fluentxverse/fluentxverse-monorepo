@@ -1,12 +1,13 @@
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useMemo, useEffect } from 'preact/hooks';
 import { JSX } from 'preact';
 import './SettingsModal.css';
 import './SettingsModal.extra.css';
 import './SettingsModal.align.css';
 import { useAuthContext } from '../../context/AuthContext';
 import { listRegions, PSGCRegion, PSGCProvince, PSGCCity } from '../../data/ph_psgc';
-import { updatePersonalInfo, updateEmail, updatePassword } from '../../api/auth.api';
+import { updatePersonalInfo, updateEmail, updatePassword, getPersonalInfo } from '../../api/auth.api';
 import { tutorApi } from '../../api/tutor.api';
+import univData from '../../data/univ.json';
 
 // Helper type alias for municipalities (same as PSGCCity)
 
@@ -65,14 +66,58 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [sameAsPermanent, setSameAsPermanent] = useState(false);
   // Qualifications
   const [schoolAttended, setSchoolAttended] = useState('');
+  const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
   const [educationalAttainment, setEducationalAttainment] = useState('');
   const [major, setMajor] = useState('');
   const [teachingExperience, setTeachingExperience] = useState('');
   const [teachingQualifications, setTeachingQualifications] = useState<string[]>([]);
+
+  // Universities list
+  const universities = univData.universitiesAndColleges;
+  const filteredUniversities = useMemo(() => {
+    if (!schoolSearchQuery.trim()) return universities.slice(0, 50); // Show first 50 by default
+    const query = schoolSearchQuery.toLowerCase();
+    return universities.filter(u => u.text.toLowerCase().includes(query)).slice(0, 50);
+  }, [schoolSearchQuery, universities]);
+
   // Form state
   const [infoError, setInfoError] = useState('');
   const [infoSuccess, setInfoSuccess] = useState('');
   const [infoLoading, setInfoLoading] = useState(false);
+  const [infoDataLoading, setInfoDataLoading] = useState(false);
+
+  // Load personal info when switching to update-info view
+  useEffect(() => {
+    if (currentView === 'update-info') {
+      const loadPersonalInfo = async () => {
+        try {
+          setInfoDataLoading(true);
+          const data = await getPersonalInfo();
+          if (data) {
+            setPhoneNumber(data.phoneNumber || '');
+            setCountry(data.country || 'Philippines');
+            setRegion(data.region || '');
+            setProvince(data.province || '');
+            setCity(data.city || '');
+            setZipCode(data.zipCode || '');
+            setAddressLine(data.addressLine || '');
+            setSameAsPermanent(data.sameAsPermanent || false);
+            setSchoolAttended(data.schoolAttended || '');
+            setEducationalAttainment(data.educationalAttainment || '');
+            setMajor(data.major || '');
+            setTeachingExperience(data.teachingExperience || '');
+            setTeachingQualifications(data.teachingQualifications || []);
+          }
+        } catch (err) {
+          console.error('Failed to load personal info:', err);
+        } finally {
+          setInfoDataLoading(false);
+        }
+      };
+      loadPersonalInfo();
+    }
+  }, [currentView]);
 
   // Profile picture upload state
   const [profileUploading, setProfileUploading] = useState(false);
@@ -934,13 +979,59 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                 
                 <div className="settings-form-group">
                   <label className="settings-form-label">School Attended</label>
-                  <input
-                    type="text"
-                    value={schoolAttended}
-                    onChange={(e) => setSchoolAttended((e.target as HTMLInputElement).value)}
-                    className="settings-form-input settings-form-input-no-toggle"
-                    placeholder="Enter school name"
-                  />
+                  <div className="school-dropdown-container">
+                    <div 
+                      className="school-dropdown-trigger"
+                      onClick={() => setShowSchoolDropdown(!showSchoolDropdown)}
+                    >
+                      <span className={schoolAttended ? '' : 'placeholder'}>
+                        {schoolAttended || 'Select your school'}
+                      </span>
+                      <i className={`fas fa-chevron-down dropdown-arrow ${showSchoolDropdown ? 'open' : ''}`}></i>
+                    </div>
+                    {showSchoolDropdown && (
+                      <>
+                        <div 
+                          className="school-dropdown-backdrop" 
+                          onClick={() => {
+                            setShowSchoolDropdown(false);
+                            setSchoolSearchQuery('');
+                          }}
+                        />
+                        <div className="school-dropdown-panel">
+                          <div className="school-dropdown-search">
+                            <i className="fas fa-search"></i>
+                            <input
+                              type="text"
+                              value={schoolSearchQuery}
+                              onInput={(e) => setSchoolSearchQuery((e.target as HTMLInputElement).value)}
+                              placeholder="Search schools..."
+                              autoFocus
+                            />
+                          </div>
+                          <div className="school-dropdown-list">
+                            {filteredUniversities.length > 0 ? (
+                              filteredUniversities.map(uni => (
+                                <div
+                                  key={uni.value}
+                                  className={`school-dropdown-item ${schoolAttended === uni.text ? 'selected' : ''}`}
+                                  onClick={() => {
+                                    setSchoolAttended(uni.text);
+                                    setSchoolSearchQuery('');
+                                    setShowSchoolDropdown(false);
+                                  }}
+                                >
+                                  {uni.text}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="school-dropdown-empty">No schools found</div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="settings-form-group">

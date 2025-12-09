@@ -208,6 +208,25 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       }
     }, UpdatePersonalInfoSchema)
 
+    .get('/user/personal-info', async ({ cookie, set }) => {
+      try {
+        const raw = cookie.tutorAuth?.value;
+        if (!raw) throw new Error('Not authenticated');
+        const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+
+        const authService = new AuthService();
+        const result = await authService.getPersonalInfo(authData.userId);
+
+        set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        set.headers['Pragma'] = 'no-cache';
+
+        return { success: true, data: result };
+      } catch (error: any) {
+        console.error('Error getting personal info:', error);
+        throw error;
+      }
+    })
+
     .put('/user/email', async ({ body, cookie, set }) => {
       try {
         const raw = cookie.tutorAuth?.value;

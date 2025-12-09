@@ -66,6 +66,30 @@ export const updatePersonalInfo = async (params: UpdatePersonalInfoParams) => {
     return data;
 }
 
+export interface PersonalInfoData {
+    phoneNumber: string;
+    country: string;
+    region: string;
+    regionName: string;
+    province: string;
+    provinceName: string;
+    city: string;
+    cityName: string;
+    zipCode: string;
+    addressLine: string;
+    sameAsPermanent: boolean;
+    schoolAttended: string;
+    educationalAttainment: string;
+    major: string;
+    teachingExperience: string;
+    teachingQualifications: string[];
+}
+
+export const getPersonalInfo = async (): Promise<PersonalInfoData | null> => {
+    const { data } = await client.get('/tutor/user/personal-info')
+    return data.data;
+}
+
 export const updateEmail = async (newEmail: string, currentPassword: string) => {
     const { data } = await client.put('/tutor/user/email', { newEmail, currentPassword })
     return data;
