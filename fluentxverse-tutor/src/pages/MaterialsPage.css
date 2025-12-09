@@ -356,47 +356,4 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .materials-search input {
-    background: #1e293b;
-    border-color: #334155;
-    color: #f1f5f9;
-  }
-
-  .materials-search input::placeholder {
-    color: #64748b;
-  }
-
-  .filter-btn {
-    background: #1e293b;
-    border-color: #334155;
-    color: #94a3b8;
-  }
-
-  .filter-btn:hover {
-    border-color: #4a9eff;
-    color: #4a9eff;
-  }
-
-  .material-card {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  .material-card:hover {
-    border-color: #4a9eff;
-  }
-
-  .material-card-title {
-    color: #f1f5f9;
-  }
-
-  .material-card-description {
-    color: #94a3b8;
-  }
-
-  .material-card-arrow {
-    background: #334155;
-  }
-}
+/* Light mode only - dark mode disabled */

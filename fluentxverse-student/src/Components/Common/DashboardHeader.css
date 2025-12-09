@@ -1,0 +1,178 @@
+/* Dashboard Header Styles */
+.dashboard-header {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Light theme styles - always light */
+.dashboard-header.light {
+  background-color: #ffffff;
+  color: #2c2c2c;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+/* Header Left Section */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Philippine Clock Styles */
+.philippine-clock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.philippine-clock > i {
+  font-size: 18px;
+  color: #6366f1;
+}
+
+.clock-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clock-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+.clock-date {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.clock-timezone {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 3px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* Header Actions */
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Inbox Button */
+.inbox-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.inbox-btn:hover {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  transform: scale(1.02);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Notification Button */
+.notification-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.notification-btn:hover {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  transform: scale(1.02);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 0 16px;
+  }
+
+  .philippine-clock {
+    padding: 8px 12px;
+  }
+
+  .clock-time {
+    font-size: 14px;
+  }
+
+  .clock-date {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .philippine-clock {
+    padding: 6px 10px;
+  }
+
+  .philippine-clock > i {
+    display: none;
+  }
+
+  .clock-time {
+    font-size: 13px;
+  }
+
+  .clock-timezone {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .inbox-btn,
+  .notification-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+  }
+}

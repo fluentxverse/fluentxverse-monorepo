@@ -30,6 +30,7 @@ import { useAuthContext } from './context/AuthContext';
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
 import "./assets/css/mobile-global.css";
+import "./assets/css/force-light-mode.css";
 
 
 

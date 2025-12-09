@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { useNotifications, getNotificationIcon, formatRelativeTime } from '../../hooks/useNotifications';
 import { Link } from 'wouter';
 import './DashboardHeader.css';
@@ -13,6 +13,8 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ user }: DashboardHeaderProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [philippineTime, setPhilippineTime] = useState<string>('');
+  const [philippineDate, setPhilippineDate] = useState<string>('');
   
   const {
     notifications,
@@ -24,6 +26,33 @@ const DashboardHeader = ({ user }: DashboardHeaderProps) => {
     setDropdownOpen,
     toggleDropdown
   } = useNotifications();
+
+  // Philippine Time Clock
+  useEffect(() => {
+    const updatePhilippineTime = () => {
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: 'Asia/Manila',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      };
+      const dateOptions: Intl.DateTimeFormatOptions = {
+        timeZone: 'Asia/Manila',
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      };
+      setPhilippineTime(now.toLocaleTimeString('en-US', options));
+      setPhilippineDate(now.toLocaleDateString('en-US', dateOptions));
+    };
+
+    updatePhilippineTime();
+    const interval = setInterval(updatePhilippineTime, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -57,11 +86,23 @@ const DashboardHeader = ({ user }: DashboardHeaderProps) => {
 
   return (
     <div className="dashboard-header light">
-      <div className="logo">
-        {/* Logo space */}
+      <div className="header-left">
+        <div className="philippine-clock">
+          <i className="fas fa-clock"></i>
+          <div className="clock-content">
+            <span className="clock-time">{philippineTime}</span>
+            <span className="clock-date">{philippineDate}</span>
+          </div>
+          <span className="clock-timezone">PHT</span>
+        </div>
       </div>
 
       <div className="dashboard-header-actions">
+        {/* Inbox Button */}
+        <Link href="/inbox" className="inbox-btn" aria-label="Inbox">
+          <i className="fas fa-envelope"></i>
+        </Link>
+
         {/* Notifications */}
         <div className="dashboard-notification-container" ref={dropdownRef}>
           <button 
