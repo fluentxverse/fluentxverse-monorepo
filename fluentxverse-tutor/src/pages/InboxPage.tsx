@@ -13,6 +13,14 @@ const categoryInfo = {
 };
 
 export default function InboxPage() {
+  // Set page title for browser tab
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = 'Inbox | FluentXVerse';
+    return () => {
+      document.title = prevTitle;
+    };
+  }, []);
   const [messages, setMessages] = useState<SystemMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<SystemMessage | null>(null);
   const [filter, setFilter] = useState<'all' | 'unread' | 'pinned'>('all');
@@ -122,7 +130,7 @@ export default function InboxPage() {
     <>
       <SideBar />
       <div className="inbox-page main-content">
-        <DashboardHeader title="Inbox" />
+        <DashboardHeader title='Inbox' />
         
         <div className="inbox-container">
         <div className="inbox-header">

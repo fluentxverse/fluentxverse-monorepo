@@ -10,9 +10,10 @@ interface DashboardHeaderProps {
     profilePicture?: string;
     email?: string;
   };
+  title?: string;
 }
 
-const DashboardHeader = ({ user }: DashboardHeaderProps) => {
+const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [philippineTime, setPhilippineTime] = useState<string>('');
   const [philippineDate, setPhilippineDate] = useState<string>('');
@@ -110,6 +111,9 @@ const DashboardHeader = ({ user }: DashboardHeaderProps) => {
   return (
     <div className="dashboard-header light">
       <div className="header-left">
+        {title && (
+          <h1 className="dashboard-page-title">{title}</h1>
+        )}
         <div className="philippine-clock">
           <i className="fas fa-clock"></i>
           <div className="clock-content">
