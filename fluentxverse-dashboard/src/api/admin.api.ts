@@ -66,6 +66,11 @@ export interface TutorListItem {
   languages: string[];
   totalSessions: number;
   rating: number;
+  // Suspension fields
+  isSuspended: boolean;
+  suspendedUntil?: string;
+  suspendedReason?: string;
+  suspendedAt?: string;
 }
 
 export interface StudentListItem {
@@ -77,6 +82,11 @@ export interface StudentListItem {
   totalSpent: number;
   status: 'active' | 'inactive';
   lastActive: string;
+  // Suspension fields
+  isSuspended: boolean;
+  suspendedUntil?: string;
+  suspendedReason?: string;
+  suspendedAt?: string;
 }
 
 // API Response type
@@ -169,6 +179,19 @@ export const adminApi = {
       throw new Error(response.data.error || 'Failed to get students');
     }
     return response.data.data!;
+  },
+
+  /**
+   * Suspend a tutor
+   */
+  async suspendTutor(tutorId: string, reason: string, until: string): Promise<void> {
+    const response = await api.post<ApiResponse<void>>(`/admin/tutors/${tutorId}/suspend`, {
+      reason,
+      until
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to suspend tutor');
+    }
   }
 };
 

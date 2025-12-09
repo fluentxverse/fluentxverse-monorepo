@@ -150,5 +150,50 @@ export const interviewApi = {
       throw new Error(response.data.error || 'Failed to get interview result');
     }
     return response.data.data;
+  },
+
+  /**
+   * Get interview statistics (Admin)
+   */
+  getStats: async (): Promise<{
+    total: number;
+    passed: number;
+    failed: number;
+    pending: number;
+    passRate: number;
+    avgScores: {
+      grammar: number;
+      fluency: number;
+      pronunciation: number;
+      vocabulary: number;
+      professionalism: number;
+      overall: number;
+    };
+    weeklyData: { week: string; passed: number; failed: number }[];
+    rubricDistribution: { category: string; scores: number[] }[];
+  }> => {
+    const response = await api.get('/interview/stats');
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get interview stats');
+    }
+    return response.data.data;
+  },
+
+  /**
+   * Get today's interview queue (Admin)
+   */
+  getTodayQueue: async (): Promise<{
+    id: string;
+    time: string;
+    tutorId: string;
+    tutorName: string;
+    tutorEmail: string;
+    status: string;
+  }[]> => {
+    const response = await api.get('/interview/today');
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get today\'s queue');
+    }
+    return response.data.data;
   }
 };

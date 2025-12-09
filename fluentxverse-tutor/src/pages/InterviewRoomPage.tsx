@@ -156,12 +156,30 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       if (pc.connectionState === 'connected') {
         setIsConnecting(false);
         setWaitingForAdmin(false);
+        setError(null);
         startCallTimer();
       }
       
-      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-        setError('Connection lost. Please try rejoining.');
+      if (pc.connectionState === 'failed') {
+        setError('Connection failed. The video call could not be established. Please check your network and try again.');
         stopCallTimer();
+        setIsConnecting(false);
+      }
+      
+      if (pc.connectionState === 'disconnected') {
+        setError('Connection lost. Attempting to reconnect...');
+      }
+      
+      if (pc.connectionState === 'closed') {
+        setError(null);
+        stopCallTimer();
+      }
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed') {
+        setError('Network connection failed. Please check your firewall settings or try a different network.');
       }
     };
     
@@ -326,6 +344,18 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
     }
   }, [localStream]);
+
+  // Re-attach stream when transitioning to call view (DOM element changes)
+  useEffect(() => {
+    if (setupComplete && localStream && localVideoRef.current) {
+      setTimeout(() => {
+        if (localVideoRef.current && localStream) {
+          localVideoRef.current.srcObject = localStream;
+          localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+        }
+      }, 100);
+    }
+  }, [setupComplete, localStream]);
 
   // Device change handler
   useEffect(() => {

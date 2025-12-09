@@ -298,7 +298,14 @@ export class AdminService {
         }
 
         // Filter by status if specified
-        if (status !== 'all' && tutorStatus !== status) continue;
+        if (status !== 'all' && status !== 'suspended' && tutorStatus !== status) continue;
+        
+        // Check suspension status
+        const suspendedUntil = u.suspendedUntil ? new Date(u.suspendedUntil) : null;
+        const isSuspended = suspendedUntil ? suspendedUntil > new Date() : false;
+        
+        // Filter by suspended if specified
+        if (status === 'suspended' && !isSuspended) continue;
 
         allTutors.push({
           id: u.id,
@@ -312,7 +319,11 @@ export class AdminService {
           status: tutorStatus,
           languages: u.languages || ['English'],
           totalSessions: u.totalSessions || 0,
-          rating: u.rating || 0
+          rating: u.rating || 0,
+          isSuspended,
+          suspendedUntil: u.suspendedUntil || undefined,
+          suspendedReason: u.suspendedReason || undefined,
+          suspendedAt: u.suspendedAt || undefined
         });
       }
 
@@ -763,6 +774,29 @@ export class AdminService {
       `, { adminId, password: hashedPassword });
 
       return { success: true };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Suspend a tutor
+   */
+  async suspendTutor(tutorId: string, reason: string, until: Date): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      await session.run(`
+        MATCH (u:User {id: $tutorId})
+        SET u.suspendedUntil = $until,
+            u.suspendedReason = $reason,
+            u.suspendedAt = datetime()
+      `, {
+        tutorId,
+        until: until.toISOString(),
+        reason
+      });
     } finally {
       await session.close();
     }

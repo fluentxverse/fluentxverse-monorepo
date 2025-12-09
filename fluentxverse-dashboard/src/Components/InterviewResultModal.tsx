@@ -18,6 +18,7 @@ interface InterviewResult {
   notes: string;
   timestamps: { time: string; note: string }[];
   completedAt: string | null;
+  recordingUrl: string | null;
   tutorName?: string;
   tutorEmail?: string;
 }
@@ -164,6 +165,33 @@ const InterviewResultModal = ({ tutorId, tutorName, onClose }: InterviewResultMo
                         <span className="timestamp-text">{ts.note}</span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recording */}
+              {result.recordingUrl && (
+                <div className="result-section">
+                  <h4><i className="ri-vidicon-line"></i> Interview Recording</h4>
+                  <div className="recording-player">
+                    <video 
+                      controls 
+                      preload="metadata"
+                      className="recording-video"
+                    >
+                      <source src={result.recordingUrl} type="video/webm" />
+                      Your browser does not support the video tag.
+                    </video>
+                    <a 
+                      href={result.recordingUrl} 
+                      download 
+                      className="recording-download"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <i className="ri-download-line"></i>
+                      Download Recording
+                    </a>
                   </div>
                 </div>
               )}

@@ -492,10 +492,243 @@ export class InterviewService {
         rubricScores: s.rubricScores ? JSON.parse(s.rubricScores) : null,
         notes: s.notes,
         timestamps: s.timestamps ? JSON.parse(s.timestamps) : [],
-        completedAt: s.completedAt
+        completedAt: s.completedAt,
+        recordingUrl: s.recordingUrl || null
       };
     } finally {
       await session.close();
     }
+  }
+
+  /**
+   * Save recording URL for an interview
+   */
+  async saveRecordingUrl(slotId: string, tutorId: string, recordingUrl: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      await session.run(`
+        MATCH (s:InterviewSlot {id: $slotId, tutorId: $tutorId})
+        SET s.recordingUrl = $recordingUrl
+        RETURN s
+      `, { slotId, tutorId, recordingUrl });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get interview statistics for analytics
+   */
+  async getInterviewStats(): Promise<{
+    total: number;
+    passed: number;
+    failed: number;
+    pending: number;
+    passRate: number;
+    avgScores: {
+      grammar: number;
+      fluency: number;
+      pronunciation: number;
+      vocabulary: number;
+      professionalism: number;
+      overall: number;
+    };
+    weeklyData: { week: string; passed: number; failed: number }[];
+    rubricDistribution: { category: string; scores: number[] }[];
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Get counts
+      const countResult = await session.run(`
+        MATCH (s:InterviewSlot)
+        RETURN 
+          count(s) as total,
+          sum(CASE WHEN s.status = 'completed' AND s.result = 'pass' THEN 1 ELSE 0 END) as passed,
+          sum(CASE WHEN s.status = 'completed' AND s.result = 'fail' THEN 1 ELSE 0 END) as failed,
+          sum(CASE WHEN s.status = 'booked' THEN 1 ELSE 0 END) as pending
+      `);
+
+      const countRecord = countResult.records[0];
+      const total = countRecord ? this.toNumber(countRecord.get('total')) : 0;
+      const passed = countRecord ? this.toNumber(countRecord.get('passed')) : 0;
+      const failed = countRecord ? this.toNumber(countRecord.get('failed')) : 0;
+      const pending = countRecord ? this.toNumber(countRecord.get('pending')) : 0;
+      const completed = passed + failed;
+      const passRate = completed > 0 ? Math.round((passed / completed) * 100) : 0;
+
+      // Get average scores from completed interviews
+      const scoresResult = await session.run(`
+        MATCH (s:InterviewSlot {status: 'completed'})
+        WHERE s.rubricScores IS NOT NULL
+        RETURN s.rubricScores as scores
+      `);
+
+      let avgScores = {
+        grammar: 0,
+        fluency: 0,
+        pronunciation: 0,
+        vocabulary: 0,
+        professionalism: 0,
+        overall: 0
+      };
+
+      if (scoresResult.records.length > 0) {
+        const allScores = scoresResult.records.map(r => {
+          try {
+            return JSON.parse(r.get('scores'));
+          } catch {
+            return null;
+          }
+        }).filter(Boolean);
+
+        if (allScores.length > 0) {
+          const sums = { grammar: 0, fluency: 0, pronunciation: 0, vocabulary: 0, professionalism: 0 };
+          for (const s of allScores) {
+            sums.grammar += s.grammar || 0;
+            sums.fluency += s.fluency || 0;
+            sums.pronunciation += s.pronunciation || 0;
+            sums.vocabulary += s.vocabulary || 0;
+            sums.professionalism += s.professionalism || 0;
+          }
+          const count = allScores.length;
+          avgScores = {
+            grammar: Math.round((sums.grammar / count) * 10) / 10,
+            fluency: Math.round((sums.fluency / count) * 10) / 10,
+            pronunciation: Math.round((sums.pronunciation / count) * 10) / 10,
+            vocabulary: Math.round((sums.vocabulary / count) * 10) / 10,
+            professionalism: Math.round((sums.professionalism / count) * 10) / 10,
+            overall: 0
+          };
+          avgScores.overall = Math.round(
+            ((avgScores.grammar + avgScores.fluency + avgScores.pronunciation + avgScores.vocabulary + avgScores.professionalism) / 5) * 10
+          ) / 10;
+        }
+      }
+
+      // Get weekly data for the last 8 weeks
+      const weeklyResult = await session.run(`
+        MATCH (s:InterviewSlot {status: 'completed'})
+        WHERE s.completedAt IS NOT NULL
+        RETURN s.date as date, s.result as result
+        ORDER BY s.date DESC
+      `);
+
+      // Group by week
+      const weeklyMap = new Map<string, { passed: number; failed: number }>();
+      for (const record of weeklyResult.records) {
+        const dateStr = record.get('date');
+        const result = record.get('result');
+        const date = new Date(dateStr);
+        // Get week start (Monday)
+        const dayOfWeek = date.getDay() || 7;
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - dayOfWeek + 1);
+        const weekKey = formatDateISO(weekStart);
+        
+        if (!weeklyMap.has(weekKey)) {
+          weeklyMap.set(weekKey, { passed: 0, failed: 0 });
+        }
+        const week = weeklyMap.get(weekKey)!;
+        if (result === 'pass') week.passed++;
+        else if (result === 'fail') week.failed++;
+      }
+
+      const weeklyData = Array.from(weeklyMap.entries())
+        .map(([week, data]) => ({ week, ...data }))
+        .sort((a, b) => a.week.localeCompare(b.week))
+        .slice(-8);
+
+      // Get rubric distribution
+      const rubricDistribution = [
+        { category: 'Grammar', scores: [0, 0, 0, 0, 0] },
+        { category: 'Fluency', scores: [0, 0, 0, 0, 0] },
+        { category: 'Pronunciation', scores: [0, 0, 0, 0, 0] },
+        { category: 'Vocabulary', scores: [0, 0, 0, 0, 0] },
+        { category: 'Professionalism', scores: [0, 0, 0, 0, 0] }
+      ];
+
+      for (const record of scoresResult.records) {
+        try {
+          const scores = JSON.parse(record.get('scores'));
+          const categories = ['grammar', 'fluency', 'pronunciation', 'vocabulary', 'professionalism'];
+          categories.forEach((cat, idx) => {
+            const score = Math.min(5, Math.max(1, Math.round(scores[cat] || 1)));
+            const dist = rubricDistribution[idx];
+            if (dist && dist.scores && score >= 1 && score <= 5) {
+              const currentVal = dist.scores[score - 1] ?? 0;
+              dist.scores[score - 1] = currentVal + 1;
+            }
+          });
+        } catch {}
+      }
+
+      return {
+        total,
+        passed,
+        failed,
+        pending,
+        passRate,
+        avgScores,
+        weeklyData,
+        rubricDistribution
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get today's interview queue
+   */
+  async getTodayQueue(): Promise<{
+    id: string;
+    time: string;
+    tutorId: string;
+    tutorName: string;
+    tutorEmail: string;
+    status: string;
+  }[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const today = formatDateISO(new Date());
+      
+      const result = await session.run(`
+        MATCH (s:InterviewSlot {date: $today})
+        WHERE s.status IN ['booked', 'in_progress']
+        OPTIONAL MATCH (u:User {id: s.tutorId})
+        RETURN s, u
+        ORDER BY s.time ASC
+      `, { today });
+
+      return result.records.map(record => {
+        const s = record.get('s').properties;
+        const u = record.get('u')?.properties;
+        const tutorName = u ? `${u.firstName || ''} ${u.lastName || ''}`.trim() : '';
+        return {
+          id: s.id,
+          time: s.time,
+          tutorId: s.tutorId || '',
+          tutorName: tutorName || 'Unknown Tutor',
+          tutorEmail: u?.email || '',
+          status: s.status
+        };
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  // Helper to convert neo4j integers
+  private toNumber(value: any): number {
+    if (neo4j.isInt(value)) {
+      return value.toNumber();
+    }
+    return Number(value) || 0;
   }
 }

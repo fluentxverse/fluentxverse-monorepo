@@ -2,6 +2,8 @@ import { useState, useEffect } from 'preact/hooks';
 import { adminApi, TutorListItem } from '../api/admin.api';
 import './TutorsPage.css';
 
+type TabType = 'certified' | 'all';
+
 const TutorsPage = () => {
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -9,11 +11,20 @@ const TutorsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [activeTab, setActiveTab] = useState<TabType>('certified');
+  
+  // Suspend modal state
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [suspendingTutor, setSuspendingTutor] = useState<TutorListItem | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendUntil, setSuspendUntil] = useState('');
+  const [suspendLoading, setSuspendLoading] = useState(false);
+  
   const limit = 15;
 
   useEffect(() => {
     loadTutors();
-  }, [page]);
+  }, [page, activeTab]);
 
   const loadTutors = async () => {
     try {
@@ -22,7 +33,7 @@ const TutorsPage = () => {
       const result = await adminApi.getTutors({
         page,
         limit,
-        status: 'certified',
+        status: activeTab === 'certified' ? 'certified' : 'all',
         search: searchQuery || undefined,
       });
       setTutors(result.tutors);
@@ -31,6 +42,40 @@ const TutorsPage = () => {
       setError(err.message || 'Failed to load tutors');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setPage(1);
+  };
+
+  const openSuspendModal = (tutor: TutorListItem) => {
+    setSuspendingTutor(tutor);
+    setSuspendReason('');
+    setSuspendUntil('');
+    setShowSuspendModal(true);
+  };
+
+  const closeSuspendModal = () => {
+    setShowSuspendModal(false);
+    setSuspendingTutor(null);
+    setSuspendReason('');
+    setSuspendUntil('');
+  };
+
+  const handleSuspendTutor = async () => {
+    if (!suspendingTutor || !suspendReason.trim() || !suspendUntil) return;
+    
+    try {
+      setSuspendLoading(true);
+      await adminApi.suspendTutor(suspendingTutor.id, suspendReason.trim(), suspendUntil);
+      closeSuspendModal();
+      loadTutors(); // Refresh list
+    } catch (err: any) {
+      setError(err.message || 'Failed to suspend tutor');
+    } finally {
+      setSuspendLoading(false);
     }
   };
 
@@ -68,9 +113,27 @@ const TutorsPage = () => {
     <div className="tutors-page">
       <div className="page-header">
         <div className="header-content">
-          <h1>Certified Tutors</h1>
-          <p>View and manage certified tutors</p>
+          <h1>Tutors Management</h1>
+          <p>View and manage platform tutors</p>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tutor-tabs">
+        <button
+          className={`tutor-tab ${activeTab === 'certified' ? 'active' : ''}`}
+          onClick={() => handleTabChange('certified')}
+        >
+          <i className="ri-shield-check-line"></i>
+          Certified Tutors
+        </button>
+        <button
+          className={`tutor-tab ${activeTab === 'all' ? 'active' : ''}`}
+          onClick={() => handleTabChange('all')}
+        >
+          <i className="ri-group-line"></i>
+          All Tutors
+        </button>
       </div>
 
       {/* Quick Stats */}
@@ -81,7 +144,7 @@ const TutorsPage = () => {
           </div>
           <div className="stat-info">
             <span className="stat-number">{total}</span>
-            <span className="stat-label">Total Certified</span>
+            <span className="stat-label">{activeTab === 'certified' ? 'Total Certified' : 'Total Tutors'}</span>
           </div>
         </div>
         <div className="quick-stat">
@@ -117,7 +180,7 @@ const TutorsPage = () => {
           <i className="ri-search-line"></i>
           <input 
             type="text" 
-            placeholder="Search certified tutors..." 
+            placeholder={activeTab === 'certified' ? 'Search certified tutors...' : 'Search all tutors...'}
             value={searchQuery}
             onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
           />
@@ -210,6 +273,13 @@ const TutorsPage = () => {
                       <button className="action-btn edit" title="Edit">
                         <i className="ri-edit-line"></i>
                       </button>
+                      <button 
+                        className="action-btn suspend" 
+                        title="Suspend Tutor"
+                        onClick={() => openSuspendModal(tutor)}
+                      >
+                        <i className="ri-forbid-line"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -248,6 +318,69 @@ const TutorsPage = () => {
             Next
             <i className="ri-arrow-right-s-line"></i>
           </button>
+        </div>
+      )}
+
+      {/* Suspend Modal */}
+      {showSuspendModal && suspendingTutor && (
+        <div className="modal-overlay" onClick={closeSuspendModal}>
+          <div className="suspend-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="ri-forbid-line"></i> Suspend Tutor</h3>
+              <button className="modal-close" onClick={closeSuspendModal}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="suspend-tutor-info">
+                <div className="tutor-avatar">
+                  <span>{suspendingTutor.name?.charAt(0) || 'T'}</span>
+                </div>
+                <div className="tutor-details">
+                  <span className="tutor-name">{suspendingTutor.name}</span>
+                  <span className="tutor-email">{suspendingTutor.email}</span>
+                </div>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="suspendReason">Suspension Reason *</label>
+                <textarea
+                  id="suspendReason"
+                  placeholder="Enter the reason for suspension..."
+                  value={suspendReason}
+                  onInput={(e) => setSuspendReason((e.target as HTMLTextAreaElement).value)}
+                  rows={4}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="suspendUntil">Suspend Until *</label>
+                <input
+                  type="date"
+                  id="suspendUntil"
+                  value={suspendUntil}
+                  onInput={(e) => setSuspendUntil((e.target as HTMLInputElement).value)}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeSuspendModal}>
+                Cancel
+              </button>
+              <button 
+                className="btn-suspend" 
+                onClick={handleSuspendTutor}
+                disabled={!suspendReason.trim() || !suspendUntil || suspendLoading}
+              >
+                {suspendLoading ? (
+                  <><i className="ri-loader-4-line spinning"></i> Suspending...</>
+                ) : (
+                  <><i className="ri-forbid-line"></i> Suspend Tutor</>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

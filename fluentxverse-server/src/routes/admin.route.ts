@@ -92,6 +92,41 @@ const Admin = new Elysia({ prefix: '/admin' })
   })
 
   /**
+   * Suspend a tutor
+   * POST /admin/tutors/:tutorId/suspend
+   */
+  .post('/tutors/:tutorId/suspend', async ({ params, body }) => {
+    try {
+      const { tutorId } = params;
+      const { reason, until } = body as { reason: string; until: string };
+      
+      if (!reason || !until) {
+        return {
+          success: false,
+          error: 'Reason and suspension end date are required'
+        };
+      }
+
+      await adminService.suspendTutor(tutorId, reason, new Date(until));
+      return {
+        success: true,
+        data: { message: 'Tutor suspended successfully' }
+      };
+    } catch (error) {
+      console.error('Error in /admin/tutors/:tutorId/suspend:', error);
+      return {
+        success: false,
+        error: 'Failed to suspend tutor'
+      };
+    }
+  }, {
+    body: t.Object({
+      reason: t.String(),
+      until: t.String()
+    })
+  })
+
+  /**
    * Get all students with filters
    * GET /admin/students
    */

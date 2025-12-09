@@ -473,6 +473,126 @@ const Interview = new Elysia({ prefix: '/interview' })
         error: error.message || 'Failed to get pending interviews'
       };
     }
+  })
+
+  /**
+   * Admin: Upload interview recording
+   * POST /interview/recording
+   */
+  .post('/recording', async ({ request, set, requireAdmin }) => {
+    try {
+      const admin = requireAdmin();
+      if (!admin) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const form = await request.formData();
+      const file = form.get('recording');
+      const slotId = form.get('slotId') as string;
+      const tutorId = form.get('tutorId') as string;
+
+      if (!(file instanceof File)) {
+        set.status = 400;
+        return { success: false, error: 'Missing recording file' };
+      }
+
+      if (!slotId || !tutorId) {
+        set.status = 400;
+        return { success: false, error: 'Missing slotId or tutorId' };
+      }
+
+      // Build SeaweedFS Filer path: /interview/{tutorId}/{slotId}_{timestamp}.webm
+      const timestamp = Date.now();
+      const filerPath = `/interview/${tutorId}/${slotId}_${timestamp}.webm`;
+      const filerBase = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
+      const uploadUrl = `${filerBase}${filerPath}`;
+
+      // Upload to SeaweedFS Filer
+      const res = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file.stream(),
+        headers: {
+          'Content-Type': file.type || 'video/webm'
+        }
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        console.error('SeaweedFS upload failed:', res.status, text);
+        set.status = 500;
+        return { success: false, error: `Upload failed: ${res.status}` };
+      }
+
+      // Save recording URL to the interview result
+      await interviewService.saveRecordingUrl(slotId, tutorId, uploadUrl);
+
+      return {
+        success: true,
+        url: uploadUrl,
+        message: 'Recording uploaded successfully'
+      };
+    } catch (error: any) {
+      console.error('Error in POST /interview/recording:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to upload recording'
+      };
+    }
+  })
+
+  /**
+   * Admin: Get interview statistics for analytics
+   * GET /interview/stats
+   */
+  .get('/stats', async ({ set, requireAdmin }) => {
+    try {
+      const admin = requireAdmin();
+      if (!admin) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const stats = await interviewService.getInterviewStats();
+
+      return {
+        success: true,
+        data: stats
+      };
+    } catch (error: any) {
+      console.error('Error in GET /interview/stats:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get interview stats'
+      };
+    }
+  })
+
+  /**
+   * Admin: Get today's interview queue
+   * GET /interview/today
+   */
+  .get('/today', async ({ set, requireAdmin }) => {
+    try {
+      const admin = requireAdmin();
+      if (!admin) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const queue = await interviewService.getTodayQueue();
+
+      return {
+        success: true,
+        data: queue
+      };
+    } catch (error: any) {
+      console.error('Error in GET /interview/today:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get today\'s queue'
+      };
+    }
   });
 
 export default Interview;

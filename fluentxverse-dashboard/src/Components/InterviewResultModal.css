@@ -257,6 +257,42 @@
   color: var(--text-primary);
 }
 
+/* Recording Player */
+.recording-player {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recording-video {
+  width: 100%;
+  max-height: 360px;
+  border-radius: 12px;
+  background: #000;
+  object-fit: contain;
+}
+
+.recording-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  align-self: flex-start;
+}
+
+.recording-download:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 /* Notes Content */
 .notes-content {
   background: var(--card-background);

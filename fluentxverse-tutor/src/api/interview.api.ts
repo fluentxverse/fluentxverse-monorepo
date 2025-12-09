@@ -28,7 +28,7 @@ export interface MyInterview {
   id: string;
   date: string;
   time: string;
-  status: 'booked';
+  status: 'booked' | 'completed' | 'in_progress';
   bookedAt: string;
 }
 

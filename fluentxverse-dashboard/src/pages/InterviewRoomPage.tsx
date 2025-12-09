@@ -68,6 +68,11 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   const [showPassConfirm, setShowPassConfirm] = useState(false);
   const [showFailConfirm, setShowFailConfirm] = useState(false);
   
+  // Recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingUploading, setRecordingUploading] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  
   // Refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -77,6 +82,8 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   const callTimerRef = useRef<number | null>(null);
   const roomIdRef = useRef<string>(`interview-${interviewId || 'default'}`);
   const autoSaveTimerRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // ICE servers configuration
   const iceServers = {
@@ -305,12 +312,31 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       if (pc.connectionState === 'connected') {
         setIsConnecting(false);
         setTutorConnected(true);
+        setError(null);
         startCallTimer();
       }
       
-      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-        setError('Connection lost. Please try rejoining.');
+      if (pc.connectionState === 'failed') {
+        setError('Connection failed. The video call could not be established. Please check your network and try again.');
         stopCallTimer();
+        setIsConnecting(false);
+      }
+      
+      if (pc.connectionState === 'disconnected') {
+        setError('Connection lost. Attempting to reconnect...');
+        // WebRTC will automatically try to reconnect
+      }
+      
+      if (pc.connectionState === 'closed') {
+        setError(null);
+        stopCallTimer();
+      }
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed') {
+        setError('Network connection failed. Please check your firewall settings or try a different network.');
       }
     };
     
@@ -403,6 +429,101 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoEnabled(videoTrack.enabled);
       }
+    }
+  };
+
+  // Recording functions
+  const startRecording = () => {
+    if (!localStream && !remoteStream) {
+      setError('No streams available to record');
+      return;
+    }
+
+    try {
+      // Create a combined stream with local and remote audio/video
+      const audioContext = new AudioContext();
+      const destination = audioContext.createMediaStreamDestination();
+      
+      // Add local audio
+      if (localStream) {
+        const localAudio = audioContext.createMediaStreamSource(localStream);
+        localAudio.connect(destination);
+      }
+      
+      // Add remote audio
+      if (remoteStream) {
+        const remoteAudio = audioContext.createMediaStreamSource(remoteStream);
+        remoteAudio.connect(destination);
+      }
+
+      // Use local video for now (we could do picture-in-picture later)
+      const combinedStream = new MediaStream([
+        ...(localStream?.getVideoTracks() || []),
+        ...destination.stream.getAudioTracks()
+      ]);
+
+      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        // Fallback
+        options.mimeType = 'video/webm';
+      }
+
+      const mediaRecorder = new MediaRecorder(combinedStream, options);
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        // Upload the recording
+        await uploadRecording();
+      };
+
+      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Failed to start recording:', err);
+      setError('Failed to start recording. Your browser may not support this feature.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const uploadRecording = async () => {
+    if (recordedChunksRef.current.length === 0) return;
+
+    setRecordingUploading(true);
+    try {
+      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+      const formData = new FormData();
+      formData.append('file', blob, `interview-${interviewId}-${Date.now()}.webm`);
+      formData.append('interviewId', interviewId || 'unknown');
+      formData.append('tutorId', tutorId || 'unknown');
+
+      const response = await api.post('/interview/recording', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (response.data.success) {
+        setRecordingUrl(response.data.url);
+      } else {
+        throw new Error(response.data.error);
+      }
+    } catch (err: any) {
+      console.error('Failed to upload recording:', err);
+      setError('Failed to upload recording: ' + (err.message || 'Unknown error'));
+    } finally {
+      setRecordingUploading(false);
+      recordedChunksRef.current = [];
     }
   };
 
@@ -636,7 +757,15 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                 <button className={`control-btn ${!isVideoEnabled ? 'off' : ''}`} onClick={toggleVideo} title={isVideoEnabled ? 'Turn off camera' : 'Turn on camera'}>
                   <i className={isVideoEnabled ? 'ri-camera-line' : 'ri-camera-off-line'}></i>
                 </button>
-                <button className="control-btn end-call" onClick={handleEndCall} title="End interview">
+                <button 
+                  className={`control-btn ${isRecording ? 'recording' : ''}`} 
+                  onClick={isRecording ? stopRecording : startRecording}
+                  title={isRecording ? 'Stop recording' : 'Start recording'}
+                  disabled={recordingUploading}
+                >
+                  <i className={isRecording ? 'ri-stop-circle-line' : 'ri-record-circle-line'}></i>
+                </button>
+                <button className="control-btn end-call" onClick={() => setShowEndCallConfirm(true)} title="End interview">
                   <i className="ri-phone-line"></i>
                 </button>
               </div>
@@ -707,7 +836,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                 <div className="result-buttons">
                   <button 
                     className="btn-result btn-pass"
-                    onClick={() => submitResult('pass')}
+                    onClick={() => setShowPassConfirm(true)}
                     disabled={isSaving}
                   >
                     <i className="ri-checkbox-circle-fill"></i>
@@ -715,7 +844,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                   </button>
                   <button 
                     className="btn-result btn-fail"
-                    onClick={() => submitResult('fail')}
+                    onClick={() => setShowFailConfirm(true)}
                     disabled={isSaving}
                   >
                     <i className="ri-close-circle-fill"></i>
@@ -737,6 +866,84 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
               <button onClick={() => setError(null)}><i className="ri-close-line"></i></button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* End Call Confirmation Modal */}
+      {showEndCallConfirm && (
+        <div className="confirm-modal-overlay" onClick={() => setShowEndCallConfirm(false)}>
+          <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="confirm-icon warning">
+              <i className="ri-phone-off-line"></i>
+            </div>
+            <h3>End Interview?</h3>
+            <p>Are you sure you want to end this interview? You can still submit the result afterwards.</p>
+            <div className="confirm-actions">
+              <button className="btn-cancel" onClick={() => setShowEndCallConfirm(false)}>
+                Cancel
+              </button>
+              <button className="btn-confirm danger" onClick={() => {
+                setShowEndCallConfirm(false);
+                handleEndCall();
+              }}>
+                End Interview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pass Confirmation Modal */}
+      {showPassConfirm && (
+        <div className="confirm-modal-overlay" onClick={() => setShowPassConfirm(false)}>
+          <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="confirm-icon success">
+              <i className="ri-checkbox-circle-line"></i>
+            </div>
+            <h3>Pass This Candidate?</h3>
+            <p>This will mark the interview as passed and certify the tutor if they've completed all other requirements. This action cannot be undone.</p>
+            <div className="rubric-summary">
+              <span>Average Score: <strong>{(Object.values(rubricScores).reduce((a, b) => a + b, 0) / 5).toFixed(1)}/5</strong></span>
+            </div>
+            <div className="confirm-actions">
+              <button className="btn-cancel" onClick={() => setShowPassConfirm(false)}>
+                Cancel
+              </button>
+              <button className="btn-confirm success" onClick={() => {
+                setShowPassConfirm(false);
+                submitResult('pass');
+              }}>
+                Confirm Pass
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fail Confirmation Modal */}
+      {showFailConfirm && (
+        <div className="confirm-modal-overlay" onClick={() => setShowFailConfirm(false)}>
+          <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="confirm-icon danger">
+              <i className="ri-close-circle-line"></i>
+            </div>
+            <h3>Fail This Candidate?</h3>
+            <p>This will mark the interview as failed. The tutor will not be certified. This action cannot be undone.</p>
+            <div className="rubric-summary">
+              <span>Average Score: <strong>{(Object.values(rubricScores).reduce((a, b) => a + b, 0) / 5).toFixed(1)}/5</strong></span>
+            </div>
+            <div className="confirm-actions">
+              <button className="btn-cancel" onClick={() => setShowFailConfirm(false)}>
+                Cancel
+              </button>
+              <button className="btn-confirm danger" onClick={() => {
+                setShowFailConfirm(false);
+                submitResult('fail');
+              }}>
+                Confirm Fail
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
