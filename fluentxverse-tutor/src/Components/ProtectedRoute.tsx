@@ -32,6 +32,9 @@ export const withProtected = (Cmp: any) => () => <ProtectedRoute Component={Cmp}
 // CERTIFIED ROUTE - Only allows access if tutor has passed both exams
 // ============================================================================
 
+// Test accounts that bypass certification requirements
+const TEST_ACCOUNTS = ['paulanthonyarriola@gmail.com'];
+
 interface CertifiedRouteProps {
   Component: any;
 }
@@ -53,6 +56,13 @@ export const CertifiedRoute = ({ Component }: CertifiedRouteProps): JSX.Element 
   useEffect(() => {
     const checkCertification = async () => {
       if (!user?.userId) return;
+      
+      // Bypass for test accounts
+      if (user.email && TEST_ACCOUNTS.includes(user.email)) {
+        setIsCertified(true);
+        setCertificationLoading(false);
+        return;
+      }
       
       try {
         const [writtenRes, speakingRes] = await Promise.all([

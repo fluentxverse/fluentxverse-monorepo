@@ -33,8 +33,14 @@ const HomePage = () => {
   const [speakingStatus, setSpeakingStatus] = useState<SpeakingExamStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
 
+  // Test accounts that bypass certification requirements
+  const TEST_ACCOUNTS = ['paulanthonyarriola@gmail.com'];
+  const isTestAccount = user?.email && TEST_ACCOUNTS.includes(user.email);
+
   // Calculate active step based on exam status
   const getActiveStep = () => {
+    // Test accounts always show as certified
+    if (isTestAccount) return 2;
     if (!writtenStatus || !speakingStatus) return 1;
     const bothPassed = writtenStatus.passed === true && speakingStatus.passed === true;
     if (bothPassed) return 2; // Move to onboarding

@@ -3,6 +3,7 @@
   border-radius: 12px;
   padding: 20px;
   border: 1px solid var(--border-color);
+  min-width: 0;
 }
 
 .chart-title {
@@ -20,9 +21,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 150px;
-  color: var(--text-muted);
+  min-height: 120px;
+  color: var(--text-secondary);
   font-size: 14px;
+  text-align: center;
+  padding: 24px;
+  width: 100%;
 }
 
 /* Bar Chart */
@@ -196,6 +200,14 @@
   height: 100%;
   border-radius: 4px;
   transition: width 0.3s ease;
+}
+
+/* When chart is inside a card-body, remove duplicate styling */
+.card-body .simple-chart {
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 0;
 }
 
 /* Responsive */
