@@ -13,6 +13,7 @@ import InterviewBookingPage from './pages/InterviewBookingPage';
 import InterviewRoomPage from './pages/InterviewRoomPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MaterialsPage from './pages/MaterialsPage';
+import InboxPage from './pages/InboxPage';
 
 import { withProtected, withCertified } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -88,6 +89,7 @@ export function AppInner() {
 							<Route path="/interview/room/:interviewId?" component={withProtected(InterviewRoomPage)} />
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
+							<Route path="/inbox" component={withProtected(InboxPage)} />
 
 							<Route path="/contact" component={ContactPage} />
 
