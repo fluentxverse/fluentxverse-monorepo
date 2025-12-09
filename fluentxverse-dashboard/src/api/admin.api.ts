@@ -131,6 +131,32 @@ export interface SuspensionAnalytics {
   monthlyTrend: { month: number; year: number; action: string; count: number }[];
 }
 
+// Inbox/System Message types
+export type MessageCategory = 'announcement' | 'update' | 'alert' | 'news' | 'promotion';
+export type TargetAudience = 'all' | 'students' | 'tutors';
+export type MessagePriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface SystemMessage {
+  id: string;
+  title: string;
+  content: string;
+  category: MessageCategory;
+  targetAudience: TargetAudience;
+  priority: MessagePriority;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMessageParams {
+  title: string;
+  content: string;
+  category: MessageCategory;
+  targetAudience: TargetAudience;
+  priority?: MessagePriority;
+  createdBy: string;
+}
+
 // API Response type
 interface ApiResponse<T> {
   success: boolean;
@@ -313,6 +339,58 @@ export const adminApi = {
       throw new Error(response.data.error || 'Failed to get suspension analytics');
     }
     return response.data.data!;
+  },
+
+  // ============ INBOX / SYSTEM MESSAGES ============
+
+  /**
+   * Get all system messages
+   */
+  async getSystemMessages(params?: {
+    category?: MessageCategory;
+    targetAudience?: TargetAudience;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ messages: SystemMessage[]; total: number }> {
+    const response = await api.get<ApiResponse<{ messages: SystemMessage[]; total: number }>>('/inbox/admin/messages', {
+      params
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get system messages');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Create a new system message
+   */
+  async createSystemMessage(params: CreateMessageParams): Promise<SystemMessage> {
+    const response = await api.post<ApiResponse<SystemMessage>>('/inbox/admin/create', params);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to create message');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Update a system message
+   */
+  async updateSystemMessage(messageId: string, updates: Partial<CreateMessageParams>): Promise<SystemMessage> {
+    const response = await api.put<ApiResponse<SystemMessage>>(`/inbox/admin/update/${messageId}`, updates);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to update message');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Delete a system message
+   */
+  async deleteSystemMessage(messageId: string): Promise<void> {
+    const response = await api.delete<ApiResponse<void>>(`/inbox/admin/delete/${messageId}`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to delete message');
+    }
   }
 };
 

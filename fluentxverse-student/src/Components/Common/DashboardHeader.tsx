@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Link } from 'wouter';
+import { inboxApi } from '../../api/inbox.api';
 import './DashboardHeader.css';
 
 interface DashboardHeaderProps {
@@ -14,6 +15,28 @@ interface DashboardHeaderProps {
 const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
   const [philippineTime, setPhilippineTime] = useState<string>('');
   const [philippineDate, setPhilippineDate] = useState<string>('');
+  const [inboxUnreadCount, setInboxUnreadCount] = useState<number>(0);
+
+  // Get user ID from localStorage
+  const userId = localStorage.getItem('fxv_user_id') || '';
+
+  // Fetch unread inbox count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!userId) return;
+      try {
+        const count = await inboxApi.getUnreadCount(userId);
+        setInboxUnreadCount(count);
+      } catch (err) {
+        console.error('Failed to fetch inbox unread count:', err);
+      }
+    };
+
+    fetchUnreadCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchUnreadCount, 60000);
+    return () => clearInterval(interval);
+  }, [userId]);
 
   // Philippine Time Clock
   useEffect(() => {
@@ -59,6 +82,11 @@ const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
         {/* Inbox Button */}
         <Link href="/inbox" className="inbox-btn" aria-label="Inbox">
           <i className="fas fa-envelope"></i>
+          {inboxUnreadCount > 0 && (
+            <span className="inbox-badge">
+              {inboxUnreadCount > 9 ? '9+' : inboxUnreadCount}
+            </span>
+          )}
         </Link>
 
         {/* Notifications Button */}

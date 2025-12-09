@@ -8,6 +8,7 @@ import Examination from "./routes/exam.route";
 import Admin from './routes/admin.route';
 import Interview from './routes/interview.route';
 import Notification from './routes/notification.route';
+import Inbox from './routes/inbox.route';
 import { initDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -60,6 +61,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Admin)
   .use(Interview)
   .use(Notification)
+  .use(Inbox)
 
 
 

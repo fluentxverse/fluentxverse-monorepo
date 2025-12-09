@@ -559,15 +559,11 @@
   letter-spacing: 0.5px;
   transition: transform 0.2s ease;
   color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   white-space: nowrap;
   margin-top: 12px;
-  /* Prevent text fill transparency from inherited background-clip */
-  -webkit-background-clip: padding-box;
-  background-clip: padding-box;
-  -webkit-text-fill-color: #fff;
+  width: auto !important;
+  height: auto !important;
 }
 
 .action-btn.blue {

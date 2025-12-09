@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import DashboardHeader from '../Components/Common/DashboardHeader';
+import DashboardHeader from '@/Components/Common/DashboardHeader';
 import './MaterialsPage.css';
 
 interface Course {

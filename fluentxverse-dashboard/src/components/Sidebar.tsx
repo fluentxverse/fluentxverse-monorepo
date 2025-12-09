@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { path: '/applications', icon: 'ri-file-user-line', label: 'Applications', badgeKey: 'pendingApplications' },
   { path: '/tutors', icon: 'ri-user-star-line', label: 'Tutors' },
   { path: '/students', icon: 'ri-graduation-cap-line', label: 'Students' },
+  { path: '/inbox', icon: 'ri-mail-send-line', label: 'Inbox Messages' },
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
   { path: '/analytics', icon: 'ri-bar-chart-box-line', label: 'Analytics' },
   { path: '/payments', icon: 'ri-money-dollar-circle-line', label: 'Payments' },
@@ -52,8 +53,8 @@ export function Sidebar() {
   }, []);
 
   // Filter nav items based on role
-  const mainNavItems = navItems.slice(0, 5);
-  const managementNavItems = navItems.slice(5).filter(
+  const mainNavItems = navItems.slice(0, 6);
+  const managementNavItems = navItems.slice(6).filter(
     (item) => !item.superadminOnly || isSuperAdmin
   );
 

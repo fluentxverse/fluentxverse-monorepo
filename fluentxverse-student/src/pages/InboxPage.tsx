@@ -1,66 +1,8 @@
 import { useState, useEffect } from 'preact/hooks';
 import DashboardHeader from '../Components/Common/DashboardHeader';
+import SideBar from '../Components/IndexOne/SideBar';
+import { inboxApi, SystemMessage, MessageCategory } from '../api/inbox.api';
 import './InboxPage.css';
-
-interface SystemMessage {
-  id: string;
-  title: string;
-  message: string;
-  category: 'announcement' | 'update' | 'alert' | 'news' | 'promotion';
-  isRead: boolean;
-  isPinned: boolean;
-  timestamp: Date;
-  expiresAt?: Date;
-}
-
-// Mock data - would be fetched from API in production
-const mockMessages: SystemMessage[] = [
-  {
-    id: '1',
-    title: 'Welcome to FluentXVerse!',
-    message: 'Thank you for joining our English learning community! Start by browsing our tutors and booking your first lesson. We\'re excited to help you on your language learning journey.',
-    category: 'announcement',
-    isRead: false,
-    isPinned: true,
-    timestamp: new Date('2024-12-09T08:00:00'),
-  },
-  {
-    id: '2',
-    title: 'New Feature: Learning Materials',
-    message: 'We\'ve added a new Materials section where you can access course content and study resources. Check it out from the sidebar!',
-    category: 'update',
-    isRead: false,
-    isPinned: false,
-    timestamp: new Date('2024-12-08T14:30:00'),
-  },
-  {
-    id: '3',
-    title: 'Holiday Special: Extra Lessons',
-    message: 'Book 5 lessons and get 1 free! This holiday season, accelerate your English learning with our special promotion. Valid until December 31, 2024.',
-    category: 'promotion',
-    isRead: true,
-    isPinned: false,
-    timestamp: new Date('2024-12-07T10:00:00'),
-  },
-  {
-    id: '4',
-    title: 'Platform Maintenance - December 15',
-    message: 'We will be performing scheduled maintenance on December 15, 2024, from 2:00 AM to 4:00 AM PHT. The platform may be temporarily unavailable during this time.',
-    category: 'alert',
-    isRead: true,
-    isPinned: false,
-    timestamp: new Date('2024-12-05T09:00:00'),
-  },
-  {
-    id: '5',
-    title: 'Tips for Better Online Learning',
-    message: 'Check out our latest blog post with tips on how to get the most out of your online English lessons. From preparation to practice!',
-    category: 'news',
-    isRead: true,
-    isPinned: false,
-    timestamp: new Date('2024-12-03T16:00:00'),
-  },
-];
 
 const categoryInfo = {
   announcement: { icon: 'fa-bullhorn', color: '#6366f1', label: 'Announcement' },
@@ -75,16 +17,42 @@ export default function InboxPage() {
   const [selectedMessage, setSelectedMessage] = useState<SystemMessage | null>(null);
   const [filter, setFilter] = useState<'all' | 'unread' | 'pinned'>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get user ID from localStorage
+  const userId = localStorage.getItem('fxv_user_id') || '';
 
   useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setMessages(mockMessages);
-      setIsLoading(false);
-    }, 500);
-  }, []);
+    loadMessages();
+  }, [filter]);
 
-  const formatDate = (date: Date) => {
+  const loadMessages = async () => {
+    if (!userId) {
+      setError('Please log in to view your inbox');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const params: any = { userId };
+      if (filter === 'unread') params.isRead = false;
+      if (filter === 'pinned') params.isPinned = true;
+      
+      const response = await inboxApi.getMessages(params);
+      setMessages(response.messages);
+    } catch (err: any) {
+      console.error('Failed to load messages:', err);
+      setError(err.message || 'Failed to load messages');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -100,20 +68,38 @@ export default function InboxPage() {
     }
   };
 
-  const markAsRead = (messageId: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, isRead: true } : msg
-    ));
+  const markAsRead = async (messageId: string) => {
+    try {
+      await inboxApi.markAsRead(messageId, userId);
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? { ...msg, isRead: true } : msg
+      ));
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+    }
   };
 
-  const markAllAsRead = () => {
-    setMessages(prev => prev.map(msg => ({ ...msg, isRead: true })));
+  const markAllAsRead = async () => {
+    try {
+      await inboxApi.markAllAsRead(userId);
+      setMessages(prev => prev.map(msg => ({ ...msg, isRead: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
   };
 
-  const togglePin = (messageId: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, isPinned: !msg.isPinned } : msg
-    ));
+  const togglePin = async (messageId: string) => {
+    try {
+      const isPinned = await inboxApi.togglePin(messageId, userId);
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? { ...msg, isPinned } : msg
+      ));
+      if (selectedMessage?.id === messageId) {
+        setSelectedMessage({ ...selectedMessage, isPinned });
+      }
+    } catch (err) {
+      console.error('Failed to toggle pin:', err);
+    }
   };
 
   const handleMessageClick = (message: SystemMessage) => {
@@ -123,24 +109,22 @@ export default function InboxPage() {
     }
   };
 
-  const filteredMessages = messages.filter(msg => {
-    if (filter === 'unread') return !msg.isRead;
-    if (filter === 'pinned') return msg.isPinned;
-    return true;
-  }).sort((a, b) => {
-    // Pinned messages first, then by date
+  // Sort messages: pinned first, then by date
+  const sortedMessages = [...messages].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
-    return b.timestamp.getTime() - a.timestamp.getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   const unreadCount = messages.filter(m => !m.isRead).length;
 
   return (
-    <div className="inbox-page">
-      <DashboardHeader title="Inbox" />
-      
-      <div className="inbox-container">
+    <>
+      <SideBar />
+      <div className="inbox-page main-content">
+        <DashboardHeader title="Inbox" />
+        
+        <div className="inbox-container">
         <div className="inbox-header">
           <div className="inbox-header-content">
             <div className="inbox-icon-wrapper">
@@ -158,6 +142,14 @@ export default function InboxPage() {
             </button>
           )}
         </div>
+
+        {error && (
+          <div className="inbox-error">
+            <i className="fas fa-exclamation-circle"></i>
+            <p>{error}</p>
+            <button onClick={loadMessages}>Try Again</button>
+          </div>
+        )}
 
         <div className="inbox-filters">
           <button 
@@ -192,7 +184,7 @@ export default function InboxPage() {
                 <i className="fas fa-spinner fa-spin"></i>
                 <p>Loading messages...</p>
               </div>
-            ) : filteredMessages.length === 0 ? (
+            ) : sortedMessages.length === 0 ? (
               <div className="inbox-empty">
                 <i className="fas fa-inbox"></i>
                 <p>No messages</p>
@@ -203,7 +195,7 @@ export default function InboxPage() {
                 </span>
               </div>
             ) : (
-              filteredMessages.map(message => {
+              sortedMessages.map(message => {
                 const catInfo = categoryInfo[message.category];
                 return (
                   <div 
@@ -217,9 +209,9 @@ export default function InboxPage() {
                     <div className="message-preview">
                       <div className="message-header">
                         <h4 className="message-title">{message.title}</h4>
-                        <span className="message-time">{formatDate(message.timestamp)}</span>
+                        <span className="message-time">{formatDate(message.createdAt)}</span>
                       </div>
-                      <p className="message-snippet">{message.message}</p>
+                      <p className="message-snippet">{message.content}</p>
                       <div className="message-meta">
                         <span className="message-category" style={{ backgroundColor: `${catInfo.color}15`, color: catInfo.color }}>
                           {catInfo.label}
@@ -247,7 +239,7 @@ export default function InboxPage() {
                   </button>
                   <div className="detail-actions">
                     <button 
-                      className={`action-btn ${selectedMessage.isPinned ? 'active' : ''}`}
+                      className={`inbox-action-btn ${selectedMessage.isPinned ? 'active' : ''}`}
                       onClick={() => togglePin(selectedMessage.id)}
                       title={selectedMessage.isPinned ? 'Unpin' : 'Pin'}
                     >
@@ -262,7 +254,7 @@ export default function InboxPage() {
                   </div>
                   <h2 className="detail-title">{selectedMessage.title}</h2>
                   <span className="detail-date">
-                    {selectedMessage.timestamp.toLocaleDateString('en-US', { 
+                    {new Date(selectedMessage.createdAt).toLocaleDateString('en-US', { 
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
@@ -272,7 +264,7 @@ export default function InboxPage() {
                     })}
                   </span>
                   <div className="detail-body">
-                    <p>{selectedMessage.message}</p>
+                    <p>{selectedMessage.content}</p>
                   </div>
                 </div>
               </>
@@ -286,5 +278,6 @@ export default function InboxPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
