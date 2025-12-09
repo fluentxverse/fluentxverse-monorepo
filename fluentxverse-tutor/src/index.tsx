@@ -12,6 +12,7 @@ import SpeakingExamPage from './pages/SpeakingExamPage';
 import InterviewBookingPage from './pages/InterviewBookingPage';
 import InterviewRoomPage from './pages/InterviewRoomPage';
 import NotificationsPage from './pages/NotificationsPage';
+import MaterialsPage from './pages/MaterialsPage';
 
 import { withProtected, withCertified } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -79,12 +80,13 @@ export function AppInner() {
 
 					<Route path="/schedule" component={withCertified(SchedulePage)} />
 						<Route path="/student/:studentId" component={withCertified(StudentProfilePage)} />
-							<Route path="/classroom/:studentId" component={withCertified(ClassroomPage)} />
+							<Route path="/classroom/:sessionId" component={withCertified(ClassroomPage)} />
 							<Route path="/exam/written" component={withProtected(ExamPage)} />
 							<Route path="/exam/speaking" component={withProtected(SpeakingExamPage)} />
 							<Route path="/interview" component={withProtected(InterviewBookingPage)} />
 							<Route path="/interview/room/:interviewId?" component={withProtected(InterviewRoomPage)} />
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
+							<Route path="/materials" component={withProtected(MaterialsPage)} />
 
 							<Route path="/contact" component={ContactPage} />
 

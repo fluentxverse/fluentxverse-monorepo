@@ -10,6 +10,7 @@ import ClassroomPage from './pages/ClassroomPage';
 import LessonPage from './pages/LessonPage';
 import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
 import { TutorProfilePage } from './pages/TutorProfilePage';
+import MaterialsPage from './pages/MaterialsPage';
 import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
@@ -72,6 +73,7 @@ export function AppInner() {
 					<Route path="/browse-tutors" component={BrowseTutorsPage} />
 					<Route path="/tutor/:tutorId" component={TutorProfilePage} />
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
+						<Route path="/materials" component={withProtected(MaterialsPage)} />
 						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
 						<Route path="/lesson/:bookingId" component={withProtected(LessonPage)} />
 							<Route path="/classroom/:sessionId" component={withProtected(ClassroomPage)} />

@@ -21,6 +21,7 @@ import type {
 import { determinePenaltyCode, PENALTY_RULES, PENALTY_CODE_DETAILS } from '../../config/penaltyCodes';
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
+import { emitSlotBooked } from '../../socket/handlers/schedule.handler';
 
 const notificationService = new NotificationService();
 
@@ -340,22 +341,28 @@ export class ScheduleService {
       console.log('Slot found:', JSON.stringify(slot, null, 2));
       
       // Check if tutor is certified (passed both written and speaking exams)
+      // OR is a test account (bypass for development)
+      const TEST_TUTOR_EMAILS = ['paulanthonyarriola@gmail.com'];
       console.log('Checking tutor certification for tutorId:', slot.tutorId);
       const certificationResult = await session.run(
         `MATCH (u:User {id: $tutorId})
-         RETURN u.writtenExamPassed as writtenPassed, u.speakingExamPassed as speakingPassed`,
+         RETURN u.writtenExamPassed as writtenPassed, u.speakingExamPassed as speakingPassed, u.email as email`,
         { tutorId: slot.tutorId }
       );
       
       if (certificationResult.records.length > 0) {
         const writtenPassed = certificationResult.records[0]?.get('writtenPassed');
         const speakingPassed = certificationResult.records[0]?.get('speakingPassed');
+        const tutorEmail = certificationResult.records[0]?.get('email');
         
-        if (writtenPassed !== true || speakingPassed !== true) {
+        // Bypass certification check for test accounts
+        const isTestAccount = TEST_TUTOR_EMAILS.includes(tutorEmail);
+        
+        if (!isTestAccount && (writtenPassed !== true || speakingPassed !== true)) {
           console.log('ERROR: Tutor is not certified - writtenPassed:', writtenPassed, 'speakingPassed:', speakingPassed);
           throw new Error('This tutor is not yet certified to teach. Please choose a certified tutor.');
         }
-        console.log('Tutor certification verified ✓');
+        console.log('Tutor certification verified ✓', isTestAccount ? '(test account bypass)' : '');
       } else {
         console.log('ERROR: Tutor not found');
         throw new Error('Tutor not found');
@@ -508,6 +515,16 @@ export class ScheduleService {
           if (io) {
             io.to(`notifications:${slot.tutorId}`).emit('notification:new', notification);
             console.log('📢 Real-time notification emitted to tutor');
+            
+            // Emit real-time schedule update
+            emitSlotBooked(io, slot.tutorId, {
+              slotKey: input.slotId,
+              studentId: input.studentId,
+              studentName: studentName,
+              date: formattedDate,
+              time: slot.slotTime
+            });
+            console.log('📅 Real-time schedule update emitted to tutor');
           }
         });
         

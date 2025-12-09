@@ -285,9 +285,13 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
 
               {/* Action Buttons - Right side */}
               <div className="profile-action-buttons">
-                <button className="enter-classroom-btn" onClick={() => route(`/classroom/${studentData.id}`)}>
-                  <i className="fi fi-sr-video-camera"></i>
-                  <span>Enter Classroom</span>
+                <button 
+                  className="enter-classroom-btn" 
+                  onClick={() => route('/schedule')}
+                  title="View your schedule to enter a classroom session"
+                >
+                  <i className="fi fi-sr-calendar"></i>
+                  <span>View Sessions</span>
                 </button>
                 <button className="test-headset-btn" onClick={openHeadsetModal}>
                   <i className="fi fi-sr-headset"></i>

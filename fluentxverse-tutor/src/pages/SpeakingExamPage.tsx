@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import Header from '../Components/Header/Header';
+import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import {
@@ -1012,13 +1012,13 @@ const SpeakingExamPage = () => {
 
   return (
     <>
-      <Header />
       <SideBar />
-      <main className="main-content">
-        <div className="speaking-exam-page">
+      <div className="main-content">
+        <DashboardHeader user={user || undefined} />
+        <main className="speaking-exam-page">
           {renderContent()}
-        </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 };

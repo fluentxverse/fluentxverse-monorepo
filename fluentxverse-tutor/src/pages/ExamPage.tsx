@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import Header from '../Components/Header/Header';
+import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import {
@@ -813,7 +813,7 @@ const ExamPage = () => {
     <>
       <SideBar />
       <div className="main-content">
-        <Header />
+        <DashboardHeader user={user || undefined} />
         <main className="exam-page">
           <div className="container">
             {phase === 'intro' && renderIntro()}

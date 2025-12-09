@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import Header from '../Components/Header/Header';
+import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import './StudentProfilePage.css';
@@ -300,7 +300,7 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
       <>
         <SideBar />
         <div className="main-content">
-          <Header />
+          <DashboardHeader user={user || undefined} />
           <div style={{ padding: '2rem', textAlign: 'center' }}>
             <p>Loading student profile...</p>
           </div>
@@ -315,7 +315,7 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
       <>
         <SideBar />
         <div className="main-content">
-          <Header />
+          <DashboardHeader user={user || undefined} />
           <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
             <p>{error || 'Student not found'}</p>
           </div>
@@ -380,7 +380,7 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
       <SideBar />
       
       <div className="student-profile-content">
-        <Header />
+        <DashboardHeader user={user || undefined} />
         
         <div className="student-profile-main">
           {/* Back Button */}
@@ -450,9 +450,16 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
 
               {/* Action Buttons - Right side */}
               <div className="profile-action-buttons">
-                <button className="enter-classroom-btn" onClick={() => window.location.href = `/classroom/${displayData.id}`}>
-                  <i className="fi fi-sr-video-camera"></i>
-                  <span>Enter Classroom</span>
+                <button 
+                  className="enter-classroom-btn" 
+                  onClick={() => {
+                    // Navigate to schedule to see booked sessions with this student
+                    window.location.href = '/schedule';
+                  }}
+                  title="View your schedule to enter a classroom session"
+                >
+                  <i className="fi fi-sr-calendar"></i>
+                  <span>View Sessions</span>
                 </button>
                 <button className="test-headset-btn" onClick={openHeadsetModal}>
                   <i className="fi fi-sr-headset"></i>

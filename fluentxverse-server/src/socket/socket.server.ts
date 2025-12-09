@@ -6,6 +6,7 @@ import { sessionHandler } from './handlers/session.handler';
 import { highlightHandler } from './handlers/highlight.handler';
 import { notificationHandler } from './handlers/notification.handler';
 import { interviewHandler } from './handlers/interview.handler';
+import { registerScheduleHandlers } from './handlers/schedule.handler';
 import { authMiddleware } from './middleware/auth.middleware';
 
 // Store the IO instance for access from other modules
@@ -65,6 +66,7 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     highlightHandler(io, socket);
     notificationHandler(io, socket);
     interviewHandler(io, socket);
+    registerScheduleHandlers(io, socket);
 
     socket.on('disconnect', (reason) => {
       console.log(`❌ Client disconnected: ${socket.id}, reason: ${reason}`);

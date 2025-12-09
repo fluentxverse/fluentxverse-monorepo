@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import Header from '../Components/Header/Header';
+import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi } from '../api/schedule.api';
+import { initSocket, getSocket, connectSocket, disconnectSocket } from '../client/socket/socket.client';
 
 // Penalty code types
 type PenaltyCode = '301' | '302' | '303' | '401' | '501' | '502' | '601';
@@ -38,16 +39,15 @@ const SchedulePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Initialize with a test booking for Nov 25, 2025 at 11:30 PM
-  const initializeBookedSlots = () => {
-    const map = new Map<string, string>();
-    // Nov 25, 2025 is a Tuesday (day index 1 in the current week)
-    const testKey = '1-11:30 PM';
-    map.set(testKey, 'STD001');
-    return map;
-  };
+  // Booked slot info type
+  interface BookedSlotInfo {
+    studentId: string;
+    bookingId: string;
+    studentName?: string;
+  }
   
-  const [bookedSlots, setBookedSlots] = useState<Map<string, string>>(initializeBookedSlots()); // Map of slot key to student ID
+  // Initialize booked slots map
+  const [bookedSlots, setBookedSlots] = useState<Map<string, BookedSlotInfo>>(new Map()); // Map of slot key to booking info
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('evening');
   const [showModal, setShowModal] = useState(false);
@@ -55,6 +55,7 @@ const SchedulePage = () => {
   const [bulkAction, setBulkAction] = useState<'open' | 'close' | 'attendance' | null>(null);
   const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent' | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [bookingToast, setBookingToast] = useState<{ studentName?: string; time: string; date: string } | null>(null);
 
   // Refresh handler
   const handleRefresh = () => {
@@ -151,7 +152,7 @@ const SchedulePage = () => {
         
         // Convert schedule data to local state format
         const newSelectedSlots = new Set<string>();
-        const newBookedSlots = new Map<string, string>();
+        const newBookedSlots = new Map<string, BookedSlotInfo>();
         
         scheduleData.slots.forEach(slot => {
 
@@ -181,9 +182,13 @@ const SchedulePage = () => {
             if (slot.status === 'open' && !isPast) {
               // Only add to selected slots if not in the past
               newSelectedSlots.add(key);
-            } else if (slot.status === 'booked' && slot.studentId) {
+            } else if (slot.status === 'booked' && slot.studentId && slot.bookingId) {
               newSelectedSlots.add(key); // Keep as open slot visually
-              newBookedSlots.set(key, slot.studentId);
+              newBookedSlots.set(key, {
+                studentId: slot.studentId,
+                bookingId: slot.bookingId,
+                studentName: slot.studentName
+              });
             }
             // Past open slots are simply not added, so they show as PAST
           } else {
@@ -205,6 +210,72 @@ const SchedulePage = () => {
     
     loadSchedule();
   }, [currentWeekOffset, userId, refreshTrigger]);
+
+  // WebSocket subscription for real-time schedule updates
+  useEffect(() => {
+    if (!userId) return;
+    
+    // Initialize and connect socket
+    initSocket();
+    connectSocket();
+    
+    try {
+      const socket = getSocket();
+      
+      // Subscribe to schedule updates for this tutor
+      socket.emit('schedule:subscribe', { tutorId: userId });
+      
+      // Listen for slot booked events
+      const handleSlotBooked = (data: { 
+        tutorId: string; 
+        slotKey: string; 
+        studentId: string; 
+        studentName?: string; 
+        date: string; 
+        time: string 
+      }) => {
+        console.log('📅 Real-time booking received:', data);
+        
+        // Show toast notification
+        setBookingToast({
+          studentName: data.studentName,
+          time: data.time,
+          date: data.date
+        });
+        
+        // Auto-hide toast after 5 seconds
+        setTimeout(() => setBookingToast(null), 5000);
+        
+        // Refresh the schedule to show updated data
+        setRefreshTrigger(prev => prev + 1);
+      };
+      
+      // Listen for slot cancelled events
+      const handleSlotCancelled = (data: {
+        tutorId: string;
+        slotKey: string;
+        date: string;
+        time: string;
+      }) => {
+        console.log('📅 Real-time cancellation received:', data);
+        
+        // Refresh the schedule
+        setRefreshTrigger(prev => prev + 1);
+      };
+      
+      socket.on('schedule:slot-booked', handleSlotBooked);
+      socket.on('schedule:slot-cancelled', handleSlotCancelled);
+      
+      return () => {
+        // Cleanup: unsubscribe and remove listeners
+        socket.emit('schedule:unsubscribe');
+        socket.off('schedule:slot-booked', handleSlotBooked);
+        socket.off('schedule:slot-cancelled', handleSlotCancelled);
+      };
+    } catch (error) {
+      console.warn('Socket not available for schedule updates:', error);
+    }
+  }, [userId]);
 
   // Check if slot can be opened (more than 5 minutes away)
   const canOpenSlot = (date: Date, timeStr: string): boolean => {
@@ -237,12 +308,11 @@ const SchedulePage = () => {
 
   const handleSlotDoubleClick = (dayIdx: number, time: string) => {
     const key = `${dayIdx}-${time}`;
-    const isBooked = bookedSlots.has(key);
+    const bookingInfo = bookedSlots.get(key);
     
-    if (isBooked) {
-      const studentId = bookedSlots.get(key);
-      // Open in new tab
-      window.open(`/student/${studentId}`, '_blank');
+    if (bookingInfo) {
+      // Open classroom with bookingId (sessionId)
+      window.open(`/classroom/${bookingInfo.bookingId}`, '_blank');
     }
   };
 
@@ -453,9 +523,81 @@ const SchedulePage = () => {
 
   return (
     <>
+      {/* Real-time booking toast notification */}
+      {bookingToast && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '90px',
+            right: '24px',
+            zIndex: 10000,
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            padding: '16px 24px',
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(16, 185, 129, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            animation: 'slideInRight 0.3s ease-out',
+            maxWidth: '400px'
+          }}
+        >
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <i className="fas fa-calendar-check" style={{ fontSize: '22px' }}></i>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '4px' }}>
+              New Booking!
+            </div>
+            <div style={{ fontSize: '13px', opacity: 0.9 }}>
+              {bookingToast.studentName || 'A student'} booked your {bookingToast.time} slot on {bookingToast.date}
+            </div>
+          </div>
+          <button
+            onClick={() => setBookingToast(null)}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              color: 'white',
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+          </button>
+        </div>
+      )}
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
       <SideBar />
       <div className="main-content">
-        <Header />
+        <DashboardHeader user={user || undefined} />
         <main style={{ padding: '40px 0', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
           <style>{`
             /* Custom scrollbar styling for schedule page */
@@ -717,75 +859,6 @@ const SchedulePage = () => {
                 ))}
               </div>
 
-              {/* Penalty Code Legend */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '12px',
-                padding: '20px',
-                marginBottom: '24px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                border: '1px solid rgba(2, 69, 174, 0.1)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '16px'
-                }}>
-                  <i className="fas fa-info-circle" style={{ color: '#0245ae', fontSize: '18px' }}></i>
-                  <h4 style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    color: '#0f172a'
-                  }}>
-                    Penalty Code Reference
-                  </h4>
-                </div>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '12px'
-                }}>
-                  {Object.entries(PENALTY_LABELS).map(([code, info]) => (
-                    <div
-                      key={code}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 12px',
-                        background: info.bgColor,
-                        borderRadius: '8px',
-                        border: `1px solid ${info.color}30`
-                      }}
-                    >
-                      <span style={{
-                        fontWeight: 800,
-                        fontSize: '11px',
-                        color: info.color,
-                        letterSpacing: '0.5px'
-                      }}>
-                        {info.label}
-                      </span>
-                      <span style={{
-                        fontSize: '10px',
-                        color: '#64748b',
-                        flex: 1
-                      }}>
-                        {code === '301' && 'Absent (Booked)'}
-                        {code === '302' && 'Absent (Unbooked)'}
-                        {code === '303' && 'Short Notice Cancel'}
-                        {code === '401' && 'Substitution'}
-                        {code === '501' && 'System Issue'}
-                        {code === '502' && 'Student Absent'}
-                        {code === '601' && 'Penalty Block'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Calendar Grid */}
               <div style={{ overflowX: 'auto' }} className="schedule-scrollable">
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '8px' }}>
@@ -847,7 +920,7 @@ const SchedulePage = () => {
                         {weekDates.map((date, dayIdx) => {
                           const key = `${dayIdx}-${time}`;
                           const isBooked = bookedSlots.has(key);
-                          const studentId = bookedSlots.get(key);
+                          const bookingInfo = bookedSlots.get(key);
                           const isSelected = selectedTimeSlots.has(key);
                           const isMarkedPresent = attendanceMarked.has(key);
                           const isPendingSelection = pendingSelections.has(key);
@@ -864,8 +937,8 @@ const SchedulePage = () => {
                           if (penalty) {
                             const penaltyInfo = PENALTY_LABELS[penalty.code];
                             slotLabel = penaltyInfo.label;
-                          } else if (isBooked) {
-                            slotLabel = studentId || 'BOOKED';
+                          } else if (isBooked && bookingInfo) {
+                            slotLabel = bookingInfo.studentId || 'BOOKED';
                           } else if (isPastOrNear) {
                             slotLabel = 'PAST';
                           } else if (isPendingSelection) {
@@ -1057,6 +1130,170 @@ const SchedulePage = () => {
                   <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{item.label}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Penalty Code Reference */}
+            <div style={{
+              marginTop: '32px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(2, 69, 174, 0.1)'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '18px' }}></i>
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
+                    Penalty Code Reference
+                  </h4>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                    Applied to schedule slots for attendance and compliance tracking
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  {
+                    code: '301',
+                    label: 'TA-301',
+                    title: 'Tutor Absence (Booked)',
+                    description: 'Tutor failed to attend a booked lesson slot. Includes short-notice cancellations (less than 48 hours), failure to confirm attendance, or technical issues not properly reported.',
+                    severity: 'critical',
+                    color: '#dc2626',
+                    bgColor: '#fef2f2'
+                  },
+                  {
+                    code: '302',
+                    label: 'TA-302',
+                    title: 'Tutor Absence (Unbooked)',
+                    description: 'Tutor failed to attend an unbooked (open) lesson slot or failed to confirm attendance for an open slot.',
+                    severity: 'high',
+                    color: '#ea580c',
+                    bgColor: '#fff7ed'
+                  },
+                  {
+                    code: '303',
+                    label: 'TA-303',
+                    title: 'Short Notice Cancellation',
+                    description: 'Open slot cancelled on short notice (within 48 hours of lesson time). Multiple occurrences may lead to slot restrictions.',
+                    severity: 'medium',
+                    color: '#f59e0b',
+                    bgColor: '#fffbeb'
+                  },
+                  {
+                    code: '401',
+                    label: 'SUB-401',
+                    title: 'Substitution',
+                    description: 'Slot temporarily closed for potential substitution. Becomes available again 30 minutes before lesson if no transfer occurs.',
+                    severity: 'low',
+                    color: '#6366f1',
+                    bgColor: '#eef2ff'
+                  },
+                  {
+                    code: '501',
+                    label: 'SYS-501',
+                    title: 'System Issue',
+                    description: 'Lesson terminated or not conducted due to system or student-side issues. Tutor is compensated.',
+                    severity: 'low',
+                    color: '#8b5cf6',
+                    bgColor: '#f5f3ff'
+                  },
+                  {
+                    code: '502',
+                    label: 'STU-502',
+                    title: 'Student Absent',
+                    description: 'Student failed to attend the booked lesson. Tutor is compensated.',
+                    severity: 'low',
+                    color: '#06b6d4',
+                    bgColor: '#ecfeff'
+                  },
+                  {
+                    code: '601',
+                    label: 'BLK-601',
+                    title: 'Penalty Block',
+                    description: 'Temporary block on future unbooked slots due to repeated absences (3+ TA-301 codes in 30 days).',
+                    severity: 'critical',
+                    color: '#991b1b',
+                    bgColor: '#fef2f2'
+                  }
+                ].map((item) => (
+                  <div
+                    key={item.code}
+                    style={{
+                      display: 'flex',
+                      gap: '16px',
+                      padding: '16px',
+                      background: item.bgColor,
+                      borderRadius: '12px',
+                      border: `1px solid ${item.color}20`,
+                      alignItems: 'flex-start'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '4px',
+                      minWidth: '70px'
+                    }}>
+                      <span style={{
+                        fontWeight: 800,
+                        fontSize: '12px',
+                        color: item.color,
+                        letterSpacing: '0.5px',
+                        background: `${item.color}15`,
+                        padding: '4px 8px',
+                        borderRadius: '6px'
+                      }}>
+                        {item.label}
+                      </span>
+                      <span style={{
+                        fontSize: '9px',
+                        fontWeight: 600,
+                        color: item.color,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {item.severity}
+                      </span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        color: '#0f172a',
+                        marginBottom: '4px'
+                      }}>
+                        {item.title}
+                      </div>
+                      <div style={{
+                        fontSize: '12px',
+                        color: '#64748b',
+                        lineHeight: 1.5
+                      }}>
+                        {item.description}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </main>

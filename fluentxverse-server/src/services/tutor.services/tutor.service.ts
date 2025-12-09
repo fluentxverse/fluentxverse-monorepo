@@ -59,7 +59,9 @@ export class TutorService {
       const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
       
       // Certification requirement - tutor must have passed both exams
-      const certificationCheck = 'u.writtenExamPassed = true AND u.speakingExamPassed = true';
+      // OR be a test account (bypass for development)
+      const TEST_ACCOUNT_IDS = ['paulanthonyarriola@gmail.com']; // Test tutor emails
+      const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true) OR u.email IN ['paulanthonyarriola@gmail.com']`;
       
       // Get today's date for "all dates" filter
       const today = new Date().toISOString().split('T')[0];

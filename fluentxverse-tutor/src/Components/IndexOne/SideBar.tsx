@@ -16,7 +16,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { href: "/home", icon: "fi-sr-home" },
   { href: "/schedule", icon: "fi-sr-calendar", requiresCertification: true },
-  { href: "/material", icon: "fi-sr-book-alt" },
+  { href: "/materials", icon: "fi-sr-book-alt" },
   { href: "/metrics", icon: "fi-sr-chart-histogram" },
   { href: "/about", icon: "fi-sr-info" }
 ];
@@ -28,10 +28,20 @@ const SideBar = (): JSX.Element | null => {
   const [showSettings, setShowSettings] = useState(false);
   const [isCertified, setIsCertified] = useState<boolean | null>(null);
 
+  // Test accounts that bypass certification requirements
+  const TEST_ACCOUNTS = ['paulanthonyarriola@gmail.com'];
+  const isTestAccount = user?.email && TEST_ACCOUNTS.includes(user.email);
+
   // Check certification status
   useEffect(() => {
     const checkCertification = async () => {
       if (!user?.userId) return;
+      
+      // Bypass for test accounts
+      if (isTestAccount) {
+        setIsCertified(true);
+        return;
+      }
       
       try {
         const [writtenRes, speakingRes] = await Promise.all([
@@ -50,7 +60,7 @@ const SideBar = (): JSX.Element | null => {
     };
 
     checkCertification();
-  }, [user?.userId]);
+  }, [user?.userId, isTestAccount]);
 
   // Don't render sidebar if user is not logged in
   if (!user) {

@@ -36,6 +36,10 @@ export interface ServerToClientEvents {
   'interview:ended': () => void;
   'interview:tutor-left': () => void;
   'interview:admin-left': () => void;
+  
+  // Schedule events
+  'schedule:slot-booked': (data: { tutorId: string; slotKey: string; studentId: string; studentName?: string; date: string; time: string }) => void;
+  'schedule:slot-cancelled': (data: { tutorId: string; slotKey: string; date: string; time: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -66,6 +70,10 @@ export interface ClientToServerEvents {
   'interview:answer': (data: { roomId: string; answer: RTCSessionDescriptionInit }) => void;
   'interview:ice-candidate': (data: { roomId: string; candidate: RTCIceCandidateInit }) => void;
   'interview:end': (data: { roomId: string }) => void;
+  
+  // Schedule events
+  'schedule:subscribe': (data: { tutorId: string }) => void;
+  'schedule:unsubscribe': () => void;
 }
 
 // Data structures

@@ -27,6 +27,10 @@ export interface ServerToClientEvents {
   'interview:ended': () => void;
   'interview:tutor-left': () => void;
   'interview:admin-left': () => void;
+  
+  // Schedule events
+  'schedule:slot-booked': (data: { tutorId: string; slotKey: string; studentId: string; studentName?: string; date: string; time: string }) => void;
+  'schedule:slot-cancelled': (data: { tutorId: string; slotKey: string; date: string; time: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -51,6 +55,10 @@ export interface ClientToServerEvents {
   'interview:answer': (data: { roomId: string; answer: any }) => void;
   'interview:ice-candidate': (data: { roomId: string; candidate: any }) => void;
   'interview:end': (data: { roomId: string }) => void;
+  
+  // Schedule events
+  'schedule:subscribe': (data: { tutorId: string }) => void;
+  'schedule:unsubscribe': () => void;
 }
 
 export interface InterServerEvents {
@@ -63,6 +71,7 @@ export interface SocketData {
   sessionId?: string;
   interviewRoomId?: string;
   interviewRole?: 'tutor' | 'admin';
+  scheduleSubscribedTo?: string; // Tutor ID for schedule subscription
 }
 
 // Data structures
