@@ -89,6 +89,48 @@ export interface StudentListItem {
   suspendedAt?: string;
 }
 
+export interface SuspensionHistoryItem {
+  id: string;
+  action: 'suspended' | 'unsuspended' | 'auto-unsuspended';
+  reason: string;
+  until?: string;
+  previousSuspendedUntil?: string;
+  previousReason?: string;
+  createdAt: string;
+  targetType: 'tutor' | 'student';
+  suspendedBy?: string;
+  unsuspendedBy?: string;
+}
+
+export interface AnalyticsData {
+  period: string;
+  tutorTrend: { date: string; count: number }[];
+  studentTrend: { date: string; count: number }[];
+  examStats: { type: string; total: number; passed: number }[];
+  suspensionStats: { action: string; targetType: string; count: number }[];
+  summary: {
+    totalTutors: number;
+    totalStudents: number;
+    suspendedTutors: number;
+    suspendedStudents: number;
+    newTutors: number;
+    newStudents: number;
+  };
+}
+
+export interface SuspensionAnalytics {
+  recentLogs: {
+    id: string;
+    action: string;
+    reason: string;
+    targetType: string;
+    createdAt: string;
+    adminName: string | null;
+  }[];
+  reasonDistribution: { reason: string; count: number }[];
+  monthlyTrend: { month: number; year: number; action: string; count: number }[];
+}
+
 // API Response type
 interface ApiResponse<T> {
   success: boolean;
@@ -225,6 +267,52 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to unsuspend student');
     }
+  },
+
+  /**
+   * Get suspension history for a tutor
+   */
+  async getTutorSuspensionHistory(tutorId: string): Promise<SuspensionHistoryItem[]> {
+    const response = await api.get<ApiResponse<SuspensionHistoryItem[]>>(`/admin/tutors/${tutorId}/suspension-history`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get suspension history');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Get suspension history for a student
+   */
+  async getStudentSuspensionHistory(studentId: string): Promise<SuspensionHistoryItem[]> {
+    const response = await api.get<ApiResponse<SuspensionHistoryItem[]>>(`/admin/students/${studentId}/suspension-history`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get suspension history');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Get comprehensive analytics data
+   */
+  async getAnalytics(period: string = 'week'): Promise<AnalyticsData> {
+    const response = await api.get<ApiResponse<AnalyticsData>>('/admin/analytics', {
+      params: { period }
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get analytics');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Get suspension analytics
+   */
+  async getSuspensionAnalytics(): Promise<SuspensionAnalytics> {
+    const response = await api.get<ApiResponse<SuspensionAnalytics>>('/admin/analytics/suspensions');
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get suspension analytics');
+    }
+    return response.data.data!;
   }
 };
 

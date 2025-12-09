@@ -13,6 +13,7 @@ import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
 import { startReminderService } from './services/notification.services/reminder.service';
 import { NotificationService } from './services/notification.services/notification.service';
+import { startSuspensionJob } from './services/admin.services/suspension.job';
 import { initRedis, logRetentionCleanup } from './db/redis';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
@@ -81,6 +82,9 @@ httpServer.listen(8767, '0.0.0.0', () => {
   
   // Start the session reminder service after socket is ready
   startReminderService();
+  
+  // Start the auto-unsuspend background job
+  startSuspensionJob();
 
   // Start daily notification retention cleanup (delete read > N days)
   const notificationService = new NotificationService();

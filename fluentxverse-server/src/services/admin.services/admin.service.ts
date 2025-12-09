@@ -949,4 +949,223 @@ export class AdminService {
       await session.close();
     }
   }
+
+  /**
+   * Get comprehensive analytics data
+   */
+  async getAnalytics(period: string = 'week'): Promise<AnalyticsData> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Calculate date range based on period
+      const now = new Date();
+      const startDate = new Date();
+      
+      switch (period) {
+        case 'week':
+          startDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'quarter':
+          startDate.setMonth(now.getMonth() - 3);
+          break;
+        case 'year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
+        default:
+          startDate.setDate(now.getDate() - 7);
+      }
+
+      // Get tutor registration trend
+      const tutorTrendResult = await session.run(`
+        MATCH (u:User)
+        WHERE u.createdAt >= $startDate
+        RETURN date(u.createdAt) as day, count(u) as count
+        ORDER BY day
+      `, { startDate: startDate.toISOString() });
+
+      const tutorTrend = tutorTrendResult.records.map(r => ({
+        date: r.get('day')?.toString() || '',
+        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+      }));
+
+      // Get student registration trend
+      const studentTrendResult = await session.run(`
+        MATCH (s:Student)
+        WHERE s.createdAt >= $startDate
+        RETURN date(s.createdAt) as day, count(s) as count
+        ORDER BY day
+      `, { startDate: startDate.toISOString() });
+
+      const studentTrend = studentTrendResult.records.map(r => ({
+        date: r.get('day')?.toString() || '',
+        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+      }));
+
+      // Get exam pass rates
+      const examResult = await session.run(`
+        MATCH (e:Exam)
+        WHERE e.createdAt >= $startDate AND e.status = 'completed'
+        RETURN e.type as examType,
+               count(e) as total,
+               sum(CASE WHEN e.result CONTAINS '"passed":true' THEN 1 ELSE 0 END) as passed
+      `, { startDate: startDate.toISOString() });
+
+      const examStats = examResult.records.map(r => ({
+        type: r.get('examType') || 'unknown',
+        total: r.get('total')?.toNumber?.() || r.get('total') || 0,
+        passed: r.get('passed')?.toNumber?.() || r.get('passed') || 0
+      }));
+
+      // Get suspension counts
+      const suspensionResult = await session.run(`
+        MATCH (log:SuspensionLog)
+        WHERE log.createdAt >= datetime($startDate)
+        RETURN log.action as action, log.targetType as targetType, count(log) as count
+      `, { startDate: startDate.toISOString() });
+
+      const suspensionStats = suspensionResult.records.map(r => ({
+        action: r.get('action') || '',
+        targetType: r.get('targetType') || '',
+        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+      }));
+
+      // Get current counts
+      const countsResult = await session.run(`
+        OPTIONAL MATCH (u:User)
+        WITH count(u) as tutorCount
+        OPTIONAL MATCH (s:Student)
+        WITH tutorCount, count(s) as studentCount
+        OPTIONAL MATCH (u2:User) WHERE u2.suspendedUntil IS NOT NULL AND u2.suspendedUntil > datetime()
+        WITH tutorCount, studentCount, count(u2) as suspendedTutors
+        OPTIONAL MATCH (s2:Student) WHERE s2.suspendedUntil IS NOT NULL AND s2.suspendedUntil > datetime()
+        RETURN tutorCount, studentCount, suspendedTutors, count(s2) as suspendedStudents
+      `);
+
+      const counts = countsResult.records[0] || {};
+      const totalTutors = counts.get?.('tutorCount')?.toNumber?.() || counts.get?.('tutorCount') || 0;
+      const totalStudents = counts.get?.('studentCount')?.toNumber?.() || counts.get?.('studentCount') || 0;
+      const suspendedTutors = counts.get?.('suspendedTutors')?.toNumber?.() || counts.get?.('suspendedTutors') || 0;
+      const suspendedStudents = counts.get?.('suspendedStudents')?.toNumber?.() || counts.get?.('suspendedStudents') || 0;
+
+      return {
+        period,
+        tutorTrend,
+        studentTrend,
+        examStats,
+        suspensionStats,
+        summary: {
+          totalTutors,
+          totalStudents,
+          suspendedTutors,
+          suspendedStudents,
+          newTutors: tutorTrend.reduce((sum, t) => sum + t.count, 0),
+          newStudents: studentTrend.reduce((sum, s) => sum + s.count, 0)
+        }
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get suspension analytics
+   */
+  async getSuspensionAnalytics(): Promise<SuspensionAnalytics> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Get all suspension logs with details
+      const result = await session.run(`
+        MATCH (log:SuspensionLog)
+        OPTIONAL MATCH (log)-[:SUSPENDED_BY]->(admin:Admin)
+        RETURN log, admin.username as adminName
+        ORDER BY log.createdAt DESC
+        LIMIT 100
+      `);
+
+      const logs = result.records.map(r => {
+        const log = r.get('log').properties;
+        return {
+          id: log.id,
+          action: log.action,
+          reason: log.reason,
+          targetType: log.targetType,
+          createdAt: log.createdAt?.toString() || '',
+          adminName: r.get('adminName') || null
+        };
+      });
+
+      // Get reason distribution
+      const reasonResult = await session.run(`
+        MATCH (log:SuspensionLog)
+        WHERE log.action = 'suspended'
+        RETURN log.reason as reason, count(log) as count
+        ORDER BY count DESC
+        LIMIT 10
+      `);
+
+      const reasonDistribution = reasonResult.records.map(r => ({
+        reason: r.get('reason') || 'Unknown',
+        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+      }));
+
+      // Get monthly trend
+      const monthlyResult = await session.run(`
+        MATCH (log:SuspensionLog)
+        WHERE log.createdAt >= datetime() - duration('P6M')
+        RETURN date(log.createdAt).month as month, date(log.createdAt).year as year,
+               log.action as action, count(log) as count
+        ORDER BY year, month
+      `);
+
+      const monthlyTrend = monthlyResult.records.map(r => ({
+        month: r.get('month')?.toNumber?.() || r.get('month') || 0,
+        year: r.get('year')?.toNumber?.() || r.get('year') || 0,
+        action: r.get('action') || '',
+        count: r.get('count')?.toNumber?.() || r.get('count') || 0
+      }));
+
+      return {
+        recentLogs: logs,
+        reasonDistribution,
+        monthlyTrend
+      };
+    } finally {
+      await session.close();
+    }
+  }
+}
+
+interface AnalyticsData {
+  period: string;
+  tutorTrend: { date: string; count: number }[];
+  studentTrend: { date: string; count: number }[];
+  examStats: { type: string; total: number; passed: number }[];
+  suspensionStats: { action: string; targetType: string; count: number }[];
+  summary: {
+    totalTutors: number;
+    totalStudents: number;
+    suspendedTutors: number;
+    suspendedStudents: number;
+    newTutors: number;
+    newStudents: number;
+  };
+}
+
+interface SuspensionAnalytics {
+  recentLogs: {
+    id: string;
+    action: string;
+    reason: string;
+    targetType: string;
+    createdAt: string;
+    adminName: string | null;
+  }[];
+  reasonDistribution: { reason: string; count: number }[];
+  monthlyTrend: { month: number; year: number; action: string; count: number }[];
 }

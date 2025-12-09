@@ -1,5 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { AdminService } from '../services/admin.services/admin.service';
+import { suspensionJobService } from '../services/admin.services/suspension.job';
 
 const adminService = new AdminService();
 
@@ -225,6 +226,48 @@ const Admin = new Elysia({ prefix: '/admin' })
       return {
         success: false,
         error: 'Failed to unsuspend student'
+      };
+    }
+  })
+
+  /**
+   * Get suspension history for a tutor
+   * GET /admin/tutors/:tutorId/suspension-history
+   */
+  .get('/tutors/:tutorId/suspension-history', async ({ params }) => {
+    try {
+      const { tutorId } = params;
+      const history = await suspensionJobService.getSuspensionHistory(tutorId, 'tutor');
+      return {
+        success: true,
+        data: history
+      };
+    } catch (error) {
+      console.error('Error in /admin/tutors/:tutorId/suspension-history:', error);
+      return {
+        success: false,
+        error: 'Failed to get suspension history'
+      };
+    }
+  })
+
+  /**
+   * Get suspension history for a student
+   * GET /admin/students/:studentId/suspension-history
+   */
+  .get('/students/:studentId/suspension-history', async ({ params }) => {
+    try {
+      const { studentId } = params;
+      const history = await suspensionJobService.getSuspensionHistory(studentId, 'student');
+      return {
+        success: true,
+        data: history
+      };
+    } catch (error) {
+      console.error('Error in /admin/students/:studentId/suspension-history:', error);
+      return {
+        success: false,
+        error: 'Failed to get suspension history'
       };
     }
   })
@@ -686,6 +729,47 @@ const Admin = new Elysia({ prefix: '/admin' })
       currentPassword: t.String(),
       newPassword: t.String()
     })
+  })
+
+  /**
+   * Get comprehensive analytics data
+   * GET /admin/analytics
+   */
+  .get('/analytics', async ({ query }) => {
+    try {
+      const period = (query.period as string) || 'week';
+      const analytics = await adminService.getAnalytics(period);
+      return {
+        success: true,
+        data: analytics
+      };
+    } catch (error) {
+      console.error('Error in /admin/analytics:', error);
+      return {
+        success: false,
+        error: 'Failed to get analytics data'
+      };
+    }
+  })
+
+  /**
+   * Get suspension analytics
+   * GET /admin/analytics/suspensions
+   */
+  .get('/analytics/suspensions', async () => {
+    try {
+      const data = await adminService.getSuspensionAnalytics();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error('Error in /admin/analytics/suspensions:', error);
+      return {
+        success: false,
+        error: 'Failed to get suspension analytics'
+      };
+    }
   });
 
 export default Admin;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { adminApi, StudentListItem } from '../api/admin.api';
+import { adminApi, StudentListItem, SuspensionHistoryItem } from '../api/admin.api';
 import './StudentsPage.css';
 
 type StudentStatus = 'all' | 'active' | 'inactive' | 'suspended';
@@ -24,6 +24,12 @@ const StudentsPage = () => {
   // View profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [viewingStudent, setViewingStudent] = useState<StudentListItem | null>(null);
+  
+  // Suspension history modal state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyStudent, setHistoryStudent] = useState<StudentListItem | null>(null);
+  const [suspensionHistory, setSuspensionHistory] = useState<SuspensionHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   
   const limit = 12;
 
@@ -111,6 +117,26 @@ const StudentsPage = () => {
   const closeProfileModal = () => {
     setShowProfileModal(false);
     setViewingStudent(null);
+  };
+
+  const openHistoryModal = async (student: StudentListItem) => {
+    setHistoryStudent(student);
+    setShowHistoryModal(true);
+    setHistoryLoading(true);
+    try {
+      const history = await adminApi.getStudentSuspensionHistory(student.id);
+      setSuspensionHistory(history);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load suspension history');
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const closeHistoryModal = () => {
+    setShowHistoryModal(false);
+    setHistoryStudent(null);
+    setSuspensionHistory([]);
   };
 
   const stats = {
@@ -298,6 +324,13 @@ const StudentsPage = () => {
                     onClick={() => openProfileModal(student)}
                   >
                     <i className="ri-eye-line"></i>
+                  </button>
+                  <button 
+                    className="action-btn history" 
+                    title="Suspension History"
+                    onClick={() => openHistoryModal(student)}
+                  >
+                    <i className="ri-history-line"></i>
                   </button>
                   <button className="action-btn" title="Message">
                     <i className="ri-mail-line"></i>
@@ -524,6 +557,85 @@ const StudentsPage = () => {
                   <i className="ri-forbid-line"></i> Suspend Student
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Suspension History Modal */}
+      {showHistoryModal && historyStudent && (
+        <div className="modal-overlay" onClick={closeHistoryModal}>
+          <div className="modal-content history-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="ri-history-line"></i> Suspension History</h3>
+              <button className="modal-close" onClick={closeHistoryModal}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="history-user-info">
+                <div className="history-avatar">
+                  <span>{historyStudent.name?.charAt(0) || 'S'}</span>
+                </div>
+                <div className="history-details">
+                  <span className="history-name">{historyStudent.name}</span>
+                  <span className="history-email">{historyStudent.email}</span>
+                </div>
+              </div>
+              
+              {historyLoading ? (
+                <div className="history-loading">
+                  <i className="ri-loader-4-line spinning"></i>
+                  <span>Loading history...</span>
+                </div>
+              ) : suspensionHistory.length === 0 ? (
+                <div className="history-empty">
+                  <i className="ri-shield-check-line"></i>
+                  <p>No suspension history for this student</p>
+                </div>
+              ) : (
+                <div className="history-timeline">
+                  {suspensionHistory.map((item, index) => (
+                    <div key={item.id} className={`history-item ${item.action}`}>
+                      <div className="history-icon">
+                        {item.action === 'suspended' && <i className="ri-forbid-line"></i>}
+                        {item.action === 'unsuspended' && <i className="ri-checkbox-circle-line"></i>}
+                        {item.action === 'auto-unsuspended' && <i className="ri-time-line"></i>}
+                      </div>
+                      <div className="history-content">
+                        <div className="history-action">
+                          {item.action === 'suspended' && 'Suspended'}
+                          {item.action === 'unsuspended' && 'Unsuspended'}
+                          {item.action === 'auto-unsuspended' && 'Auto-Unsuspended'}
+                        </div>
+                        <div className="history-date">{formatDate(item.createdAt)}</div>
+                        <div className="history-reason">{item.reason}</div>
+                        {item.until && item.action === 'suspended' && (
+                          <div className="history-until">
+                            <i className="ri-calendar-line"></i> Until: {formatDate(item.until)}
+                          </div>
+                        )}
+                        {item.suspendedBy && (
+                          <div className="history-by">
+                            <i className="ri-user-line"></i> By: {item.suspendedBy}
+                          </div>
+                        )}
+                        {item.unsuspendedBy && (
+                          <div className="history-by">
+                            <i className="ri-user-line"></i> By: {item.unsuspendedBy}
+                          </div>
+                        )}
+                      </div>
+                      {index < suspensionHistory.length - 1 && <div className="history-line"></div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeHistoryModal}>
+                Close
+              </button>
             </div>
           </div>
         </div>
