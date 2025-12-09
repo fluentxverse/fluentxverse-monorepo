@@ -127,6 +127,27 @@ const Admin = new Elysia({ prefix: '/admin' })
   })
 
   /**
+   * Unsuspend a tutor
+   * POST /admin/tutors/:tutorId/unsuspend
+   */
+  .post('/tutors/:tutorId/unsuspend', async ({ params }) => {
+    try {
+      const { tutorId } = params;
+      await adminService.unsuspendTutor(tutorId);
+      return {
+        success: true,
+        data: { message: 'Tutor unsuspended successfully' }
+      };
+    } catch (error) {
+      console.error('Error in /admin/tutors/:tutorId/unsuspend:', error);
+      return {
+        success: false,
+        error: 'Failed to unsuspend tutor'
+      };
+    }
+  })
+
+  /**
    * Get all students with filters
    * GET /admin/students
    */
@@ -148,6 +169,62 @@ const Admin = new Elysia({ prefix: '/admin' })
       return {
         success: false,
         error: 'Failed to get students'
+      };
+    }
+  })
+
+  /**
+   * Suspend a student
+   * POST /admin/students/:studentId/suspend
+   */
+  .post('/students/:studentId/suspend', async ({ params, body }) => {
+    try {
+      const { studentId } = params;
+      const { reason, until } = body as { reason: string; until: string };
+      
+      if (!reason || !until) {
+        return {
+          success: false,
+          error: 'Reason and suspension end date are required'
+        };
+      }
+
+      await adminService.suspendStudent(studentId, reason, new Date(until));
+      return {
+        success: true,
+        data: { message: 'Student suspended successfully' }
+      };
+    } catch (error) {
+      console.error('Error in /admin/students/:studentId/suspend:', error);
+      return {
+        success: false,
+        error: 'Failed to suspend student'
+      };
+    }
+  }, {
+    body: t.Object({
+      reason: t.String(),
+      until: t.String()
+    })
+  })
+
+  /**
+   * Unsuspend a student
+   * POST /admin/students/:studentId/unsuspend
+   */
+  .post('/students/:studentId/unsuspend', async ({ params }) => {
+    try {
+      const { studentId } = params;
+      await adminService.unsuspendStudent(studentId);
+      return {
+        success: true,
+        data: { message: 'Student unsuspended successfully' }
+      };
+    } catch (error) {
+      console.error('Error in /admin/students/:studentId/unsuspend:', error);
+      return {
+        success: false,
+        error: 'Failed to unsuspend student'
       };
     }
   })

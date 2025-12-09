@@ -2,12 +2,13 @@ import { useState, useEffect } from 'preact/hooks';
 import { adminApi, TutorListItem } from '../api/admin.api';
 import './TutorsPage.css';
 
-type TabType = 'certified' | 'all';
+type TabType = 'certified' | 'all' | 'suspended';
 
 const TutorsPage = () => {
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -20,6 +21,10 @@ const TutorsPage = () => {
   const [suspendUntil, setSuspendUntil] = useState('');
   const [suspendLoading, setSuspendLoading] = useState(false);
   
+  // View profile modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [viewingTutor, setViewingTutor] = useState<TutorListItem | null>(null);
+  
   const limit = 15;
 
   useEffect(() => {
@@ -30,10 +35,15 @@ const TutorsPage = () => {
     try {
       setLoading(true);
       setError('');
+      const statusMap: Record<TabType, string> = {
+        'certified': 'certified',
+        'all': 'all',
+        'suspended': 'suspended'
+      };
       const result = await adminApi.getTutors({
         page,
         limit,
-        status: activeTab === 'certified' ? 'certified' : 'all',
+        status: statusMap[activeTab] as any,
         search: searchQuery || undefined,
       });
       setTutors(result.tutors);
@@ -71,12 +81,43 @@ const TutorsPage = () => {
       setSuspendLoading(true);
       await adminApi.suspendTutor(suspendingTutor.id, suspendReason.trim(), suspendUntil);
       closeSuspendModal();
+      setSuccessMessage(`${suspendingTutor.name} has been suspended successfully.`);
+      setTimeout(() => setSuccessMessage(''), 5000);
       loadTutors(); // Refresh list
     } catch (err: any) {
       setError(err.message || 'Failed to suspend tutor');
     } finally {
       setSuspendLoading(false);
     }
+  };
+
+  const handleUnsuspendTutor = async (tutor: TutorListItem) => {
+    try {
+      await adminApi.unsuspendTutor(tutor.id);
+      setSuccessMessage(`${tutor.name} has been unsuspended successfully.`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+      loadTutors(); // Refresh list
+    } catch (err: any) {
+      setError(err.message || 'Failed to unsuspend tutor');
+    }
+  };
+
+  const openProfileModal = (tutor: TutorListItem) => {
+    setViewingTutor(tutor);
+    setShowProfileModal(true);
+  };
+
+  const closeProfileModal = () => {
+    setShowProfileModal(false);
+    setViewingTutor(null);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const handleSearch = (e: Event) => {
@@ -134,6 +175,13 @@ const TutorsPage = () => {
           <i className="ri-group-line"></i>
           All Tutors
         </button>
+        <button
+          className={`tutor-tab ${activeTab === 'suspended' ? 'active' : ''}`}
+          onClick={() => handleTabChange('suspended')}
+        >
+          <i className="ri-forbid-line"></i>
+          Suspended
+        </button>
       </div>
 
       {/* Quick Stats */}
@@ -144,7 +192,9 @@ const TutorsPage = () => {
           </div>
           <div className="stat-info">
             <span className="stat-number">{total}</span>
-            <span className="stat-label">{activeTab === 'certified' ? 'Total Certified' : 'Total Tutors'}</span>
+            <span className="stat-label">
+              {activeTab === 'certified' ? 'Total Certified' : activeTab === 'suspended' ? 'Suspended Tutors' : 'Total Tutors'}
+            </span>
           </div>
         </div>
         <div className="quick-stat">
@@ -171,6 +221,13 @@ const TutorsPage = () => {
         <div className="alert alert-error">
           <i className="ri-error-warning-line"></i>
           {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="alert alert-success">
+          <i className="ri-check-line"></i>
+          {successMessage}
         </div>
       )}
 
@@ -211,14 +268,21 @@ const TutorsPage = () => {
             </thead>
             <tbody>
               {tutors.map(tutor => (
-                <tr key={tutor.id}>
+                <tr key={tutor.id} className={tutor.isSuspended ? 'suspended-row' : ''}>
                   <td className="tutor-cell">
                     <div className="tutor-info">
-                      <div className="tutor-avatar">
+                      <div className={`tutor-avatar ${tutor.isSuspended ? 'suspended' : ''}`}>
                         <span>{tutor.name?.charAt(0) || 'T'}</span>
                       </div>
                       <div className="tutor-details">
-                        <span className="tutor-name">{tutor.name}</span>
+                        <span className="tutor-name">
+                          {tutor.name}
+                          {tutor.isSuspended && (
+                            <span className="suspended-badge" title={`Suspended until ${formatDate(tutor.suspendedUntil!)}\nReason: ${tutor.suspendedReason}`}>
+                              <i className="ri-forbid-line"></i> Suspended
+                            </span>
+                          )}
+                        </span>
                         <span className="tutor-email">{tutor.email}</span>
                       </div>
                     </div>
@@ -267,19 +331,33 @@ const TutorsPage = () => {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button className="action-btn view" title="View Profile">
+                      <button 
+                        className="action-btn view" 
+                        title="View Profile"
+                        onClick={() => openProfileModal(tutor)}
+                      >
                         <i className="ri-eye-line"></i>
                       </button>
                       <button className="action-btn edit" title="Edit">
                         <i className="ri-edit-line"></i>
                       </button>
-                      <button 
-                        className="action-btn suspend" 
-                        title="Suspend Tutor"
-                        onClick={() => openSuspendModal(tutor)}
-                      >
-                        <i className="ri-forbid-line"></i>
-                      </button>
+                      {tutor.isSuspended ? (
+                        <button 
+                          className="action-btn unsuspend" 
+                          title="Unsuspend Tutor"
+                          onClick={() => handleUnsuspendTutor(tutor)}
+                        >
+                          <i className="ri-checkbox-circle-line"></i>
+                        </button>
+                      ) : (
+                        <button 
+                          className="action-btn suspend" 
+                          title="Suspend Tutor"
+                          onClick={() => openSuspendModal(tutor)}
+                        >
+                          <i className="ri-forbid-line"></i>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -379,6 +457,149 @@ const TutorsPage = () => {
                   <><i className="ri-forbid-line"></i> Suspend Tutor</>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Profile Modal */}
+      {showProfileModal && viewingTutor && (
+        <div className="modal-overlay" onClick={closeProfileModal}>
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="ri-user-line"></i> Tutor Profile</h3>
+              <button className="modal-close" onClick={closeProfileModal}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="profile-header">
+                <div className={`profile-avatar ${viewingTutor.isSuspended ? 'suspended' : ''}`}>
+                  <span>{viewingTutor.name?.charAt(0) || 'T'}</span>
+                </div>
+                <div className="profile-info">
+                  <h2>{viewingTutor.name}</h2>
+                  <p>{viewingTutor.email}</p>
+                  {viewingTutor.isSuspended && (
+                    <span className="profile-suspended-badge">
+                      <i className="ri-forbid-line"></i> Suspended until {formatDate(viewingTutor.suspendedUntil!)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="profile-section">
+                <h4>Status & Certification</h4>
+                <div className="profile-grid">
+                  <div className="profile-item">
+                    <span className="label">Status</span>
+                    <span className={`value status-${viewingTutor.status}`}>
+                      {viewingTutor.status.charAt(0).toUpperCase() + viewingTutor.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="profile-item">
+                    <span className="label">Registered</span>
+                    <span className="value">{formatDate(viewingTutor.registeredAt)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="profile-section">
+                <h4>Exam Results</h4>
+                <div className="profile-grid">
+                  <div className="profile-item">
+                    <span className="label">Written Exam</span>
+                    <span className={`value ${viewingTutor.writtenExamPassed ? 'passed' : 'failed'}`}>
+                      {viewingTutor.writtenExamScore !== undefined ? `${viewingTutor.writtenExamScore}%` : 'Not taken'}
+                      {viewingTutor.writtenExamPassed && <i className="ri-check-line"></i>}
+                    </span>
+                  </div>
+                  <div className="profile-item">
+                    <span className="label">Speaking Exam</span>
+                    <span className={`value ${viewingTutor.speakingExamPassed ? 'passed' : 'failed'}`}>
+                      {viewingTutor.speakingExamScore !== undefined ? `${viewingTutor.speakingExamScore}%` : 'Not taken'}
+                      {viewingTutor.speakingExamPassed && <i className="ri-check-line"></i>}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="profile-section">
+                <h4>Teaching Stats</h4>
+                <div className="profile-grid">
+                  <div className="profile-item">
+                    <span className="label">Total Sessions</span>
+                    <span className="value">{viewingTutor.totalSessions}</span>
+                  </div>
+                  <div className="profile-item">
+                    <span className="label">Rating</span>
+                    <span className="value rating">
+                      {viewingTutor.rating > 0 ? (
+                        <><i className="ri-star-fill"></i> {viewingTutor.rating.toFixed(1)}</>
+                      ) : (
+                        'No ratings yet'
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="profile-section">
+                <h4>Languages</h4>
+                <div className="language-tags">
+                  {(viewingTutor.languages || []).map((lang, i) => (
+                    <span key={i} className="language-tag">{lang}</span>
+                  ))}
+                </div>
+              </div>
+              
+              {viewingTutor.isSuspended && (
+                <div className="profile-section suspension-section">
+                  <h4><i className="ri-error-warning-line"></i> Suspension Details</h4>
+                  <div className="suspension-details">
+                    <div className="suspension-item">
+                      <span className="label">Suspended Until</span>
+                      <span className="value">{formatDate(viewingTutor.suspendedUntil!)}</span>
+                    </div>
+                    <div className="suspension-item">
+                      <span className="label">Reason</span>
+                      <span className="value reason">{viewingTutor.suspendedReason}</span>
+                    </div>
+                    {viewingTutor.suspendedAt && (
+                      <div className="suspension-item">
+                        <span className="label">Suspended On</span>
+                        <span className="value">{formatDate(viewingTutor.suspendedAt)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cancel" onClick={closeProfileModal}>
+                Close
+              </button>
+              {viewingTutor.isSuspended ? (
+                <button 
+                  className="btn-unsuspend" 
+                  onClick={() => {
+                    handleUnsuspendTutor(viewingTutor);
+                    closeProfileModal();
+                  }}
+                >
+                  <i className="ri-checkbox-circle-line"></i> Unsuspend Tutor
+                </button>
+              ) : (
+                <button 
+                  className="btn-suspend" 
+                  onClick={() => {
+                    closeProfileModal();
+                    openSuspendModal(viewingTutor);
+                  }}
+                >
+                  <i className="ri-forbid-line"></i> Suspend Tutor
+                </button>
+              )}
             </div>
           </div>
         </div>

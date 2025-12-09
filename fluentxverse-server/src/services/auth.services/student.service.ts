@@ -96,6 +96,16 @@ class StudentService {
         throw new Error("Invalid email or password");
       }
       const user = result.records[0]?.get("s").properties;
+      
+      // Check if user is suspended
+      if (user.suspendedUntil) {
+        const suspendedUntil = new Date(user.suspendedUntil);
+        if (suspendedUntil > new Date()) {
+          const formattedDate = suspendedUntil.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          throw new Error(`Your account is suspended until ${formattedDate}. Reason: ${user.suspendedReason || 'Not specified'}`);
+        }
+      }
+      
       const encryptedPassword: string = user.password;
       const isPasswordValid = await compare(params.password, encryptedPassword);
       if (!isPasswordValid) {

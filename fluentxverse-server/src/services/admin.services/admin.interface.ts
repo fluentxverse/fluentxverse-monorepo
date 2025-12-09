@@ -54,6 +54,11 @@ export interface TutorListItem {
   languages: string[];
   totalSessions: number;
   rating: number;
+  // Suspension fields
+  isSuspended: boolean;
+  suspendedUntil?: string;
+  suspendedReason?: string;
+  suspendedAt?: string;
 }
 
 export interface StudentListItem {
@@ -65,6 +70,11 @@ export interface StudentListItem {
   totalSpent: number;
   status: 'active' | 'inactive';
   lastActive: string;
+  // Suspension fields
+  isSuspended: boolean;
+  suspendedUntil?: string;
+  suspendedReason?: string;
+  suspendedAt?: string;
 }
 
 // Admin Auth Types

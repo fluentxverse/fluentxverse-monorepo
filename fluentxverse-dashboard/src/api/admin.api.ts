@@ -192,6 +192,39 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to suspend tutor');
     }
+  },
+
+  /**
+   * Unsuspend a tutor
+   */
+  async unsuspendTutor(tutorId: string): Promise<void> {
+    const response = await api.post<ApiResponse<void>>(`/admin/tutors/${tutorId}/unsuspend`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to unsuspend tutor');
+    }
+  },
+
+  /**
+   * Suspend a student
+   */
+  async suspendStudent(studentId: string, reason: string, until: string): Promise<void> {
+    const response = await api.post<ApiResponse<void>>(`/admin/students/${studentId}/suspend`, {
+      reason,
+      until
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to suspend student');
+    }
+  },
+
+  /**
+   * Unsuspend a student
+   */
+  async unsuspendStudent(studentId: string): Promise<void> {
+    const response = await api.post<ApiResponse<void>>(`/admin/students/${studentId}/unsuspend`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to unsuspend student');
+    }
   }
 };
 

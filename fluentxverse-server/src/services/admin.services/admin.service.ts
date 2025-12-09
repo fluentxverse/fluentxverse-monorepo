@@ -342,7 +342,7 @@ export class AdminService {
   async getStudents(params: {
     page?: number;
     limit?: number;
-    status?: 'all' | 'active' | 'inactive';
+    status?: 'all' | 'active' | 'inactive' | 'suspended';
     search?: string;
   }): Promise<{ students: StudentListItem[]; total: number }> {
     const driver = getDriver();
@@ -360,34 +360,34 @@ export class AdminService {
 
       const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
-      // Get total count
-      const countResult = await session.run(`
-        MATCH (s:Student)
-        ${whereClause}
-        RETURN count(s) as total
-      `, { search });
-      const total = countResult.records[0]?.get('total')?.toNumber?.() ?? 
-                   countResult.records[0]?.get('total') ?? 0;
-
-      // Get students
+      // Get students (no pagination first to filter)
       const result = await session.run(`
         MATCH (s:Student)
         ${whereClause}
         RETURN s
         ORDER BY s.createdAt DESC
-        SKIP $skip
-        LIMIT $limit
-      `, { search, skip: neo4j.int(skip), limit: neo4j.int(limit) });
+      `, { search });
 
-      const students: StudentListItem[] = result.records.map(record => {
+      const allStudents: StudentListItem[] = [];
+      
+      for (const record of result.records) {
         const s = record.get('s').properties;
         
         // Calculate if active (active in last 7 days)
         const lastActive = s.lastActive ? new Date(s.lastActive) : new Date(s.createdAt);
         const daysSinceActive = Math.floor((Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
         const isActive = daysSinceActive <= 7;
+        
+        // Check suspension status
+        const suspendedUntil = s.suspendedUntil ? new Date(s.suspendedUntil) : null;
+        const isSuspended = suspendedUntil ? suspendedUntil > new Date() : false;
+        
+        // Filter by status
+        if (status === 'suspended' && !isSuspended) continue;
+        if (status === 'active' && (!isActive || isSuspended)) continue;
+        if (status === 'inactive' && (isActive || isSuspended)) continue;
 
-        return {
+        allStudents.push({
           id: s.id,
           name: `${s.givenName || ''} ${s.familyName || ''}`.trim(),
           email: s.email,
@@ -395,9 +395,16 @@ export class AdminService {
           totalSessions: s.totalSessions || 0,
           totalSpent: s.totalSpent || 0,
           status: isActive ? 'active' : 'inactive',
-          lastActive: s.lastActive || s.createdAt || new Date().toISOString()
-        };
-      });
+          lastActive: s.lastActive || s.createdAt || new Date().toISOString(),
+          isSuspended,
+          suspendedUntil: s.suspendedUntil || undefined,
+          suspendedReason: s.suspendedReason || undefined,
+          suspendedAt: s.suspendedAt || undefined
+        });
+      }
+
+      const total = allStudents.length;
+      const students = allStudents.slice(skip, skip + limit);
 
       return { students, total };
     } finally {
@@ -787,15 +794,156 @@ export class AdminService {
     const session = driver.session();
 
     try {
+      // Update user suspension status and create history record
       await session.run(`
         MATCH (u:User {id: $tutorId})
         SET u.suspendedUntil = $until,
             u.suspendedReason = $reason,
             u.suspendedAt = datetime()
+        CREATE (sh:SuspensionHistory {
+          id: randomUUID(),
+          action: 'suspended',
+          reason: $reason,
+          until: $until,
+          createdAt: datetime(),
+          targetType: 'tutor'
+        })
+        CREATE (u)-[:HAS_SUSPENSION_HISTORY]->(sh)
       `, {
         tutorId,
         until: until.toISOString(),
         reason
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Unsuspend a tutor
+   */
+  async unsuspendTutor(tutorId: string, adminId?: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Remove suspension and create history record
+      const logId = crypto.randomUUID();
+      await session.run(`
+        MATCH (u:User {id: $tutorId})
+        CREATE (log:SuspensionLog {
+          id: $logId,
+          action: 'unsuspended',
+          reason: 'Manually unsuspended by admin',
+          previousSuspendedUntil: u.suspendedUntil,
+          previousReason: u.suspendedReason,
+          createdAt: datetime(),
+          targetType: 'tutor'
+        })
+        CREATE (u)-[:HAS_SUSPENSION]->(log)
+        ${adminId ? 'WITH u, log MATCH (a:Admin {id: $adminId}) CREATE (log)-[:UNSUSPENDED_BY]->(a)' : ''}
+        WITH u
+        REMOVE u.suspendedUntil, u.suspendedReason, u.suspendedAt
+      `, { tutorId, logId, adminId });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Suspend a student
+   */
+  async suspendStudent(studentId: string, reason: string, until: Date, adminId?: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Update student suspension status and create history record
+      const logId = crypto.randomUUID();
+      await session.run(`
+        MATCH (s:Student {id: $studentId})
+        SET s.suspendedUntil = $until,
+            s.suspendedReason = $reason,
+            s.suspendedAt = datetime()
+        CREATE (log:SuspensionLog {
+          id: $logId,
+          action: 'suspended',
+          reason: $reason,
+          until: $until,
+          createdAt: datetime(),
+          targetType: 'student'
+        })
+        CREATE (s)-[:HAS_SUSPENSION]->(log)
+        ${adminId ? 'WITH log MATCH (a:Admin {id: $adminId}) CREATE (log)-[:SUSPENDED_BY]->(a)' : ''}
+      `, {
+        studentId,
+        until: until.toISOString(),
+        reason,
+        logId,
+        adminId
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Unsuspend a student
+   */
+  async unsuspendStudent(studentId: string, adminId?: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Remove suspension and create history record
+      const logId = crypto.randomUUID();
+      await session.run(`
+        MATCH (s:Student {id: $studentId})
+        CREATE (log:SuspensionLog {
+          id: $logId,
+          action: 'unsuspended',
+          reason: 'Manually unsuspended by admin',
+          previousSuspendedUntil: s.suspendedUntil,
+          previousReason: s.suspendedReason,
+          createdAt: datetime(),
+          targetType: 'student'
+        })
+        CREATE (s)-[:HAS_SUSPENSION]->(log)
+        ${adminId ? 'WITH s, log MATCH (a:Admin {id: $adminId}) CREATE (log)-[:UNSUSPENDED_BY]->(a)' : ''}
+        WITH s
+        REMOVE s.suspendedUntil, s.suspendedReason, s.suspendedAt
+      `, { studentId, logId, adminId });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get suspension history for a user
+   */
+  async getSuspensionHistory(userId: string, userType: 'tutor' | 'student'): Promise<SuspensionHistoryItem[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const label = userType === 'tutor' ? 'User' : 'Student';
+      const result = await session.run(`
+        MATCH (u:${label} {id: $userId})-[:HAS_SUSPENSION_HISTORY]->(sh:SuspensionHistory)
+        RETURN sh
+        ORDER BY sh.createdAt DESC
+      `, { userId });
+
+      return result.records.map(record => {
+        const sh = record.get('sh').properties;
+        return {
+          id: sh.id,
+          action: sh.action,
+          reason: sh.reason,
+          until: sh.until,
+          previousReason: sh.previousReason,
+          previousSuspendedUntil: sh.previousSuspendedUntil,
+          createdAt: sh.createdAt
+        };
       });
     } finally {
       await session.close();

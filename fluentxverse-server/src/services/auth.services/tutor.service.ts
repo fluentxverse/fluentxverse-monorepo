@@ -125,13 +125,22 @@ class AuthService {
             throw new Error('Invalid email or password');
         }
 
+        const user: RegisteredParams & { suspendedUntil?: string; suspendedReason?: string } = result.records[0]?.get('u').properties;
+        
+        // Check if user is suspended
+        if (user.suspendedUntil) {
+            const suspendedUntil = new Date(user.suspendedUntil);
+            if (suspendedUntil > new Date()) {
+                const formattedDate = suspendedUntil.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                throw new Error(`Your account is suspended until ${formattedDate}. Reason: ${user.suspendedReason || 'Not specified'}`);
+            }
+        }
+
         const encryptedPassword: string = result.records[0]?.get('u').properties.password;
         const isPasswordValid: boolean = await compare(params.password, encryptedPassword);
         if (!isPasswordValid) {
             throw new Error('Invalid email or password');
         }
-
-        const user: RegisteredParams = result.records[0]?.get('u').properties;
 
         const {  password, tier, smartWalletAddress, ...safeProperties    } = user
         const tierNumber = Number(tier);
