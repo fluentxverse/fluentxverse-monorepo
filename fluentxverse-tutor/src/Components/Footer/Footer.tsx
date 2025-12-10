@@ -8,33 +8,57 @@ const Footer = () => {
       <div className="footer-top-wrap">
         <div className="container">
           <div className="row justify-content-between">
-            <div className="col-xl-3 col-lg-4 col-md-5 col-sm-9">
+            <div className="col-xl-4 col-lg-4 col-md-6 col-sm-12">
               <div className="footer-widget">
                 <div className="footer-logo mb-25">
-                  <a href="/"><img src="assets/img/logo/logo.png" alt="" /></a>
+                  <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" />
+                    <div className="footer-brand-text"><span className="brand-fluent">Fluent</span><span className="brand-xverse">XVerse</span></div>
+                  </a>
                 </div>
+                <p style={{ marginBottom: '20px', color: '#666', lineHeight: '1.6' }}>
+                  Empowering language learners worldwide through innovative technology and dedicated tutors.
+                </p>
                 <p className="footer-email">Email us:<br />
-                  <a href="mailto:hello@decentragri.com" style={{ color: 'var(--purple-color)', textDecoration: 'underline' }}>
-                    hello@decentragri.com
+                  <a href="mailto:support@fluentxverse.com" style={{ color: '#0245ae', textDecoration: 'underline' }}>
+                    support@fluentxverse.com
                   </a>
                 </p>
                 <ul className="footer-social">
-                  <li><a href="https://x.com/decentragri" target="_blank" rel="noopener noreferrer" style={{ background: '#3a3a3a', color: '#fff' }}><i className="fab fa-twitter" /></a></li>
-                  <li><a href="https://www.facebook.com/profile.php?id=61577572165938" target="_blank" rel="noopener noreferrer" style={{ background: '#3a3a3a', color: '#fff' }}><i className="fab fa-facebook-f" /></a></li>
-                  {/* <li><a href="https://www.linkedin.com/in/decentragri-a598bb36b/" target="_blank" rel="noopener noreferrer" style={{ background: '#3a3a3a', color: '#fff' }}><i className="fab fa-linkedin-in" /></a></li> */}
-                  <li><a href="https://www.youtube.com/@decentragri" target="_blank" rel="noopener noreferrer" style={{ background: '#3a3a3a', color: '#fff' }}><i className="fab fa-youtube" /></a></li>
+                  <li><a href="https://facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer" style={{ background: '#0245ae', color: '#fff' }}><i className="fab fa-facebook-f" /></a></li>
+                  <li><a href="https://twitter.com/fluentxverse" target="_blank" rel="noopener noreferrer" style={{ background: '#0245ae', color: '#fff' }}><i className="fab fa-twitter" /></a></li>
+                  <li><a href="https://linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer" style={{ background: '#0245ae', color: '#fff' }}><i className="fab fa-linkedin-in" /></a></li>
                 </ul>
               </div>
             </div>
             <div className="col-lg-2 col-md-3 col-sm-6">
               <div className="footer-widget">
-                <h4 className="fw-title">Navigation</h4>
+                <h4 className="fw-title">Platform</h4>
                 <ul className="fw-links">
                   <li><a href="/">Home</a></li>
-                  <li><a href="/farms">Farms</a></li>
-                  <li><a href="/assets/whitepaper/whitepaper.pdf" target="_blank" rel="noopener noreferrer">Whitepaper</a></li>
-                  <li><a href="/about">About</a></li>
-                  <li><a href="/contact">Contact</a></li>
+                  <li><a href="/about">About Us</a></li>
+                </ul>
+              </div>
+            </div>
+            <div className="col-lg-2 col-md-3 col-sm-6">
+              <div className="footer-widget">
+                <h4 className="fw-title">Support</h4>
+                <ul className="fw-links">
+                  <li><a href="/contact">Contact Us</a></li>
+                  {/* <li><a href="/faq">FAQ</a></li>
+                  <li><a href="/help">Help Center</a></li>
+                  <li><a href="/feedback">Feedback</a></li> */}
+                </ul>
+              </div>
+            </div>
+            <div className="col-lg-2 col-md-3 col-sm-6">
+              <div className="footer-widget">
+                <h4 className="fw-title">Resources</h4>
+                <ul className="fw-links">
+                  {/* <li><a href="/blog">Blog</a></li>
+                  <li><a href="/learning-resources">Learning Tips</a></li> */}
+                  <li><a href="/become-tutor">Become a Tutor</a></li>
+                  {/* <li><a href="/community">Community</a></li> */}
                 </ul>
               </div>
             </div>
@@ -46,7 +70,7 @@ const Footer = () => {
           <div className="row align-items-center">
             <div className="col-md-6">
               <div className="copyright-text">
-                <p>All rights reserved © {currentYear} by <a href="/">Decentragri</a></p>
+                <p>All rights reserved © {currentYear} by <a href="/">FluentXVerse</a></p>
               </div>
             </div>
             <div className="col-md-6">
@@ -55,13 +79,6 @@ const Footer = () => {
                 <li><a href="/terms-of-service">Terms of Service</a></li>
               </ul>
             </div>
-          </div>
-        </div>
-      </div>
-      <div className="moving-text-banner">
-        <div className="moving-text-container">
-          <div className="moving-text">
-            <span>Agriculture Web3-Powered • Agriculture Web3-Powered • Agriculture Web3-Powered • Agriculture Web3-Powered • Agriculture Web3-Powered • Agriculture Web3-Powered • Agriculture Web3-Powered • Agriculture Web3-Powered • </span>
           </div>
         </div>
       </div>

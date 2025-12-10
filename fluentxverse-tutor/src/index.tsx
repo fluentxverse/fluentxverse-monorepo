@@ -20,6 +20,7 @@ import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import ContactUsPage from "./pages/ContactUsPage";
 import AboutUsPage from "./pages/AboutUsPage";
+import BecomeTutorPage from "./pages/BecomeTutorPage";
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -94,6 +95,7 @@ export function AppInner() {
 
 							<Route path="/contact" component={ContactUsPage} />
 							<Route path="/about" component={AboutUsPage} />
+							<Route path="/become-tutor" component={BecomeTutorPage} />
 
 							{/* <Route path="/blog" component={Blog} />
 							<Route path="/blog-details" component={BlogDetails} /> */}

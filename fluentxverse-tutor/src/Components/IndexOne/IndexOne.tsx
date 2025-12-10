@@ -3,6 +3,7 @@ import VisionSection from './VisionSection'
 import NarrativeSection from './NarrativeSection'
 import TokenizationSection from './TokenizationSection'
 import FieldCarousel from './FieldCarousel'
+import CareerSection from './CareerSection'
 // Decentragri components disabled during rebrand
 // import DecentragriFeatures from './DecentragriFeatures'
 // import DecentragriTech from './DecentragriTech'
@@ -17,6 +18,8 @@ const IndexOne = () => {
   return (
     <main>
         <Banner/>
+        <CareerSection />
+        <CallToAction />
 
         
         {/* <NarrativeSection /> */}

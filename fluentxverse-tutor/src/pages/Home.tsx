@@ -2,8 +2,6 @@ import { useEffect } from 'preact/hooks';
 import Footer from '../Components/Footer/Footer';
 import Header from '../Components/Header/Header';
 import IndexOne from '../Components/IndexOne/IndexOne';
-import SideBar from '../Components/IndexOne/SideBar';
-import CallToAction from '../Components/Common/CallToAction';
 import { useAuthContext } from '../context/AuthContext';
 
 const Home = () => {
@@ -17,13 +15,9 @@ const Home = () => {
 
   return (
     <>
-      <SideBar/>
-      <div className="main-content">
-        <Header/>
-        <IndexOne/>
-        {/* <CallToAction />
-        <Footer /> */}
-      </div>
+      <Header/>
+      <IndexOne/>
+      <Footer />
     </>
   );
 };

@@ -15,6 +15,30 @@ footer * {
   border-top: none !important;
 }
 
+.footer-logo img {
+  max-width: 40px;
+  height: auto;
+}
+
+.footer-brand-text {
+  font-size: 22px;
+  font-weight: 600;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.footer-brand-text .brand-fluent {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.footer-brand-text .brand-xverse {
+  color: #0245ae;
+  font-weight: 600;
+}
+
 .footer-widget .fw-title {
   font-size: 20px;
   font-weight: 700;
@@ -82,7 +106,7 @@ footer * {
 }
 
 .copyright-text p a {
-  color: var(--primary-color);
+  color: #0245ae;
 }
 
 .copyright-link-list {
