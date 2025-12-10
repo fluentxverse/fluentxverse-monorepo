@@ -18,7 +18,7 @@ import InboxPage from './pages/InboxPage';
 import { withProtected, withCertified } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
-import ContactPage from "./pages/ContactPage";
+import ContactUsPage from "./pages/ContactUsPage";
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -91,7 +91,7 @@ export function AppInner() {
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 
-							<Route path="/contact" component={ContactPage} />
+							<Route path="/contact" component={ContactUsPage} />
 
 							{/* <Route path="/blog" component={Blog} />
 							<Route path="/blog-details" component={BlogDetails} /> */}
