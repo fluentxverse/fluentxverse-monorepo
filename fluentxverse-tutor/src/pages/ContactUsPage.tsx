@@ -119,7 +119,7 @@ const ContactUsPage = () => {
                     <i className="fas fa-money-bill-wave"></i>
                   </div>
                   <h4>How do I get paid?</h4>
-                  <p>Payments are processed weekly. You can receive payments via bank transfer or digital wallets.</p>
+                  <p>Payments are processed weekly. You can receive payments via bank digital wallets.</p>
                 </div>
 
                 <div className="faq-card">
