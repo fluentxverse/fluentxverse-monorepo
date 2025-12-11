@@ -7,6 +7,7 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
 import { useAuthContext } from '../context/AuthContext';
+import VideoPlayer from '../Components/Common/VideoPlayer';
 import './TutorProfilePage.css';
 
 export const TutorProfilePage = () => {
@@ -172,179 +173,132 @@ export const TutorProfilePage = () => {
       <div className="main-content">
         <Header />
         <div className="tutor-profile-page">
-          <div className="profile-container">
-            {/* Hero Section */}
-            <div className="profile-hero">
-              <div className="profile-hero-content">
-                {/* Left: Avatar & Basic Info */}
-                <div className="profile-header-left">
-                  <div className="profile-avatar-wrapper">
-                    {tutor.profilePicture ? (
-                    <img src={tutor.profilePicture} alt={displayName} className="profile-avatar-large" />
-                  ) : (
-                    <div className="profile-avatar-large profile-avatar-placeholder">{initials}</div>
+          <div className="profile-layout">
+            {/* Main Content Column */}
+            <div className="profile-main-column">
+              {/* Hero Section */}
+              <div className="profile-hero">
+                <div className="profile-hero-content">
+                  {/* Left: Avatar & Basic Info */}
+                  <div className="profile-header-left">
+                    <div className="profile-avatar-wrapper">
+                      {tutor.profilePicture ? (
+                      <img src={tutor.profilePicture} alt={displayName} className="profile-avatar-large" />
+                    ) : (
+                      <div className="profile-avatar-large profile-avatar-placeholder">{initials}</div>
+                    )}
+                    {tutor.isAvailable && (
+                      <div className="availability-badge">
+                        <span className="pulse-dot"></span>
+                        Available
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mobile Book Button */}
+                  <button onClick={handleBookTrial} className="btn-book-mobile">
+                    <i className="fi-sr-calendar"></i>
+                    Book Trial Lesson
+                  </button>
+                </div>
+
+                {/* Right: Details */}
+                <div className="profile-header-right">
+                  <div className="profile-title-row">
+                    <h1 className="profile-name">{displayName}</h1>
+                    {tutor.isVerified && (
+                      <div className="verified-badge">
+                        <i className="fi-sr-badge-check"></i>
+                        <span>Verified</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Stats - Only show rating if available */}
+                  {tutor.rating && (tutor?.totalReviews ?? 0) > 0 && (
+                    <div className="profile-quick-stats">
+                      <div className="stat-item">
+                        <i className="fi-sr-star"></i>
+                        <span className="stat-value">{tutor.rating.toFixed(1)}</span>
+                        <span className="stat-label">({tutor.totalReviews} reviews)</span>
+                      </div>
+                    </div>
                   )}
-                  {tutor.isAvailable && (
-                    <div className="availability-badge">
-                      <span className="pulse-dot"></span>
-                      Available
+
+                  {/* Languages & Country */}
+                  <div className="profile-meta">
+                    {tutor.languages && tutor.languages.length > 0 && (
+                      <div className="meta-item">
+                        <i className="fi-sr-globe"></i>
+                        <span>Speaks: {tutor.languages.join(', ')}</span>
+                      </div>
+                    )}
+                    {tutor.country && (
+                      <div className="meta-item">
+                        <i className="fi-sr-marker"></i>
+                        <span>{tutor.country}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Short Bio */}
+                  {tutor.bio && (
+                    <p className="profile-bio-short">
+                      {tutor.bio.length > 150 ? `${tutor.bio.substring(0, 150)}...` : tutor.bio}
+                    </p>
+                  )}
+
+                  {/* Specializations Tags */}
+                  {tutor.specializations && tutor.specializations.length > 0 && (
+                    <div className="profile-tags">
+                      {tutor.specializations.slice(0, 5).map((spec, idx) => (
+                        <span key={idx} className="tag">{spec}</span>
+                      ))}
+                      {tutor.specializations.length > 5 && (
+                        <span className="tag tag-more">+{tutor.specializations.length - 5} more</span>
+                      )}
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Mobile Book Button */}
-                <button onClick={handleBookTrial} className="btn-book-mobile">
+              {/* Video Introduction - Inside Hero Card but outside hero-content for full width */}
+              {tutor.videoIntroUrl && (
+                <div className="hero-video-section">
+                  <VideoPlayer src={tutor.videoIntroUrl} />
+                </div>
+              )}
+            </div>
+
+              {/* Tabs Navigation */}
+              <div className="profile-tabs">
+                <button 
+                  className={`tab-btn ${activeTab === 'about' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('about')}
+                >
+                  <i className="fi-sr-user"></i>
+                  About
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('schedule')}
+                >
                   <i className="fi-sr-calendar"></i>
-                  Book Trial Lesson
+                  Schedule
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('reviews')}
+                >
+                  <i className="fi-sr-star"></i>
+                  Reviews ({tutor.totalReviews || 0})
                 </button>
               </div>
 
-              {/* Right: Details */}
-              <div className="profile-header-right">
-                <div className="profile-title-row">
-                  <h1 className="profile-name">{displayName}</h1>
-                  {tutor.isVerified && (
-                    <div className="verified-badge">
-                      <i className="fi-sr-badge-check"></i>
-                      <span>Verified</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Quick Stats - Only show rating if available */}
-                {tutor.rating && (tutor?.totalReviews ?? 0) > 0 && (
-                  <div className="profile-quick-stats">
-                    <div className="stat-item">
-                      <i className="fi-sr-star"></i>
-                      <span className="stat-value">{tutor.rating.toFixed(1)}</span>
-                      <span className="stat-label">({tutor.totalReviews} reviews)</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Languages & Country */}
-                <div className="profile-meta">
-                  {tutor.languages && tutor.languages.length > 0 && (
-                    <div className="meta-item">
-                      <i className="fi-sr-globe"></i>
-                      <span>Speaks: {tutor.languages.join(', ')}</span>
-                    </div>
-                  )}
-                  {tutor.country && (
-                    <div className="meta-item">
-                      <i className="fi-sr-marker"></i>
-                      <span>{tutor.country}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Short Bio */}
-                {tutor.bio && (
-                  <p className="profile-bio-short">
-                    {tutor.bio.length > 150 ? `${tutor.bio.substring(0, 150)}...` : tutor.bio}
-                  </p>
-                )}
-
-                {/* Specializations Tags */}
-                {tutor.specializations && tutor.specializations.length > 0 && (
-                  <div className="profile-tags">
-                    {tutor.specializations.slice(0, 5).map((spec, idx) => (
-                      <span key={idx} className="tag">{spec}</span>
-                    ))}
-                    {tutor.specializations.length > 5 && (
-                      <span className="tag tag-more">+{tutor.specializations.length - 5} more</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Booking Card (Desktop) */}
-            <div className="profile-booking-card">
-              <div className="booking-card-price">
-                <span className="price-label">Trial Lesson</span>
-                <div className="price-value">{hourlyRate}<span className="price-unit">/30min</span></div>
-              </div>
-              
-              <button onClick={handleBookTrial} className="btn-book-trial">
-                <i className="fi-sr-calendar"></i>
-                Book Trial Lesson
-              </button>
-
-              <div className="booking-features">
-                <div className="feature-item">
-                  <i className="fi-sr-checkbox"></i>
-                  <span>Cancel anytime</span>
-                </div>
-                <div className="feature-item">
-                  <i className="fi-sr-checkbox"></i>
-                  <span>25-minute session</span>
-                </div>
-                <div className="feature-item">
-                  <i className="fi-sr-checkbox"></i>
-                  <span>Instant confirmation</span>
-                </div>
-              </div>
-
-              <button className="btn-message">
-                <i className="fi-sr-comment"></i>
-                Send Message
-              </button>
-
-              <div className="booking-note">
-                <i className="fi-sr-info"></i>
-                <span>Get to know this tutor with a trial lesson</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tabs Navigation */}
-          <div className="profile-tabs">
-            <button 
-              className={`tab-btn ${activeTab === 'about' ? 'active' : ''}`}
-              onClick={() => setActiveTab('about')}
-            >
-              <i className="fi-sr-user"></i>
-              About
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
-              onClick={() => setActiveTab('schedule')}
-            >
-              <i className="fi-sr-calendar"></i>
-              Schedule
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reviews')}
-            >
-              <i className="fi-sr-star"></i>
-              Reviews ({tutor.totalReviews || 0})
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          <div className="profile-content">
+              {/* Tab Content */}
+              <div className="profile-content">
             {activeTab === 'about' && (
               <div className="tab-content">
-                {/* Introduction Video */}
-                {tutor.videoIntroUrl && (
-                  <section className="content-section">
-                    <h2 className="section-title">
-                      <i className="fi-sr-video-camera"></i>
-                      Introduction Video
-                    </h2>
-                    <div className="video-player-wrapper">
-                      <div className="video-placeholder">
-                        <i className="fi-sr-play"></i>
-                        <button onClick={() => setShowVideoModal(true)} className="btn-play">
-                          Watch Introduction
-                        </button>
-                      </div>
-                    </div>
-                  </section>
-                )}
-
                 {/* About Me */}
                 <section className="content-section">
                   <h2 className="section-title">
@@ -514,27 +468,51 @@ export const TutorProfilePage = () => {
                 </section>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-      </div>
+              </div>
+            </div>
 
-      {/* Video Modal */}
-      {showVideoModal && tutor?.videoIntroUrl && (
-        <div className="video-modal-overlay" onClick={() => setShowVideoModal(false)}>
-          <div className="video-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="video-modal-close" onClick={() => setShowVideoModal(false)}>
-              <i className="fi-sr-cross"></i>
-            </button>
-            <video 
-              src={tutor.videoIntroUrl} 
-              controls 
-              autoPlay
-              className="video-modal-player"
-            />
+            {/* Sidebar: Booking Card (Desktop) */}
+            <div className="profile-sidebar">
+              <div className="profile-booking-card">
+                <div className="booking-card-price">
+                  <span className="price-label">Trial Lesson</span>
+                  <div className="price-value">{hourlyRate}<span className="price-unit">/30min</span></div>
+                </div>
+                
+                <button onClick={handleBookTrial} className="btn-book-trial">
+                  <i className="fi-sr-calendar"></i>
+                  Book Trial Lesson
+                </button>
+
+                <div className="booking-features">
+                  <div className="feature-item">
+                    <i className="fi-sr-checkbox"></i>
+                    <span>Cancel anytime</span>
+                  </div>
+                  <div className="feature-item">
+                    <i className="fi-sr-checkbox"></i>
+                    <span>25-minute session</span>
+                  </div>
+                  <div className="feature-item">
+                    <i className="fi-sr-checkbox"></i>
+                    <span>Instant confirmation</span>
+                  </div>
+                </div>
+
+                <button className="btn-message">
+                  <i className="fi-sr-comment"></i>
+                  Send Message
+                </button>
+
+                <div className="booking-note">
+                  <i className="fi-sr-info"></i>
+                  <span>Get to know this tutor with a trial lesson</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Booking Modal */}
       {tutor && (

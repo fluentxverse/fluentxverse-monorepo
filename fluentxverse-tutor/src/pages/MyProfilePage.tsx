@@ -7,6 +7,7 @@ import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SettingsModal from '../Components/Settings/SettingsModal';
 import ImageCropper from '../Components/Common/ImageCropper';
+import VideoPlayer from '../Components/Common/VideoPlayer';
 import './MyProfilePage.css';
 
 interface TutorProfileData {
@@ -406,6 +407,46 @@ export const MyProfilePage = () => {
                   )}
                 </div>
               </div>
+
+              {/* Video Introduction - Inside Hero Card */}
+              <div className="hero-video-section">
+                {profileData?.videoIntroUrl ? (
+                  <div className="hero-video-container">
+                    <VideoPlayer src={profileData.videoIntroUrl} hideBigPlayButton={true} />
+                    <label className="video-replace-overlay">
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoUpload}
+                        style={{ display: 'none' }}
+                        ref={videoInputRef}
+                      />
+                      <div className="video-replace-btn">
+                        <i className="fi-sr-refresh"></i>
+                        <span>{videoUploading ? 'Uploading...' : 'Replace Video'}</span>
+                      </div>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="hero-video-placeholder">
+                    <div className="video-placeholder-content">
+                      <i className="fi-sr-video-plus"></i>
+                      <span>Add intro video</span>
+                    </div>
+                    <label className="btn-video-action">
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoUpload}
+                        style={{ display: 'none' }}
+                        ref={videoInputRef}
+                      />
+                      <i className="fi-sr-plus"></i>
+                      {videoUploading ? 'Uploading...' : 'Upload Video'}
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Tabs Navigation */}
@@ -437,149 +478,63 @@ export const MyProfilePage = () => {
             <div className="profile-content">
               {activeTab === 'about' && (
                 <div className="tab-content">
-                  {/* Video Introduction */}
-                  <section className="content-section video-intro-section">
-                    <div className="section-header">
-                      <h2 className="section-title">
-                        <i className="fi-sr-video-camera"></i>
-                        Video Introduction
-                      </h2>
-                      {profileData?.videoIntroUrl && (
-                        <button className="btn-edit-section btn-delete" onClick={handleDeleteVideo}>
-                          <i className="fas fa-trash"></i>
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                    <div className="section-content">
-                      {profileData?.videoIntroUrl ? (
-                        <div className="video-container">
-                          <div className="video-preview">
-                            <video 
-                              src={profileData.videoIntroUrl} 
-                              controls 
-                              preload="metadata"
-                              className="intro-video"
-                            />
-                          </div>
-                          <div className="video-actions">
-                            <label className="btn-upload-video">
-                              <input
-                                type="file"
-                                accept="video/*"
-                                onChange={handleVideoUpload}
-                                style={{ display: 'none' }}
-                                ref={videoInputRef}
-                              />
-                              <i className="fi-sr-refresh"></i>
-                              {videoUploading ? 'Uploading...' : 'Replace Video'}
-                            </label>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="video-upload-placeholder">
-                          <div className="upload-icon">
-                            <i className="fi-sr-video-plus"></i>
-                          </div>
-                          <p>Add a video introduction to help students get to know you better</p>
-                          <p className="upload-hint">Max 100MB • MP4, WebM, or MOV recommended</p>
-                          <label className="btn-add-video">
-                            <input
-                              type="file"
-                              accept="video/*"
-                              onChange={handleVideoUpload}
-                              style={{ display: 'none' }}
-                              ref={videoInputRef}
-                            />
-                            <i className="fi-sr-plus"></i>
-                            {videoUploading ? 'Uploading...' : 'Add Video'}
-                          </label>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-
                   {/* About Me */}
                   <section className="content-section">
-                    <div className="section-header">
-                      <h2 className="section-title">
-                        <i className="fi-sr-user"></i>
-                        About Me
-                      </h2>
-                      <button className="btn-edit-section" onClick={() => startEditing('introduction', profileData?.introduction || '')}>
-                        <i className="fas fa-pencil-alt"></i>
-                        Edit
-                      </button>
-                    </div>
+                    <h2 className="section-title">
+                      <i className="fi-sr-user"></i>
+                      About Me
+                    </h2>
                     <div className="section-content">
                       <p>{profileData?.introduction || profileData?.bio || 'Tell students about yourself, your teaching philosophy, and what makes your lessons unique.'}</p>
                     </div>
                   </section>
 
                   {/* Education */}
-                  <section className="content-section">
-                    <div className="section-header">
+                  {(personalInfo?.schoolAttended || (profileData?.education && profileData.education.length > 0)) && (
+                    <section className="content-section">
                       <h2 className="section-title">
-                        <i className="fi-sr-trophy"></i>
+                        <i className="fi-sr-graduation-cap"></i>
                         Education
                       </h2>
-                      <button className="btn-edit-section" onClick={() => setSettingsOpen(true)}>
-                        <i className="fas fa-pencil-alt"></i>
-                        Edit
-                      </button>
-                    </div>
-                    <div className="section-content">
-                      {personalInfo?.schoolAttended ? (
+                      <div className="section-content">
                         <div className="education-info">
-                          <div className="education-row">
-                            <div className="education-details">
-                              <i className="fi-sr-school"></i>
-                              <span className="education-label">University:</span>
-                              <strong>{personalInfo.schoolAttended}</strong>
-                            </div>
-                          </div>
-                          {personalInfo.major && (
-                            <div className="education-row">
-                              <div className="education-details">
-                                <i className="fi-sr-diploma"></i>
-                                <span className="education-label">Degree:</span>
-                                <strong>{personalInfo.major}</strong>
+                          {personalInfo?.schoolAttended ? (
+                            <>
+                              <div className="education-row">
+                                <i className="fi-sr-school"></i>
+                                <span className="education-label">University:</span>
+                                <strong>{personalInfo.schoolAttended}</strong>
                               </div>
-                            </div>
-                          )}
-                          {/* Teaching Qualifications - only show if available */}
-                          {personalInfo.teachingQualifications && personalInfo.teachingQualifications.length > 0 && (
-                            <div className="education-row qualifications-row">
-                              <div className="education-details">
-                                <span className="education-label">Teaching Qualifications:</span>
-                                <div className="qualifications-list">
-                                  {personalInfo.teachingQualifications.map((qual, idx) => (
-                                    <span key={idx} className="qualification-badge">{qual}</span>
-                                  ))}
+                              {personalInfo.major && (
+                                <div className="education-row">
+                                  <i className="fi-sr-diploma"></i>
+                                  <span className="education-label">Degree:</span>
+                                  <strong>{personalInfo.major}</strong>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            profileData?.education?.map((edu, idx) => (
+                              <div key={idx} className="education-row">
+                                <div className="education-details">
+                                  <i className="fi-sr-school"></i>
+                                  <strong>{edu}</strong>
                                 </div>
                               </div>
-                            </div>
+                            ))
                           )}
                         </div>
-                      ) : (
-                        <p className="empty-state">Add your educational background to build trust with students.</p>
-                      )}
-                    </div>
-                  </section>
+                      </div>
+                    </section>
+                  )}
 
                   {/* Areas of Expertise */}
                   {profileData?.specializations && profileData.specializations.length > 0 && (
                     <section className="content-section">
-                      <div className="section-header">
-                        <h2 className="section-title">
-                          <i className="fi-sr-bulb"></i>
-                          Areas of Expertise
-                        </h2>
-                        <button className="btn-edit-section" onClick={() => alert('Specializations editing coming soon!')}>
-                          <i className="fas fa-pencil-alt"></i>
-                          Edit
-                        </button>
-                      </div>
+                      <h2 className="section-title">
+                        <i className="fi-sr-bulb"></i>
+                        Areas of Expertise
+                      </h2>
                       <div className="section-content">
                         <div className="specializations-grid">
                           {profileData.specializations.map((spec, idx) => (

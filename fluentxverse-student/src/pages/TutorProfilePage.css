@@ -15,6 +15,27 @@
   padding: 0 20px;
 }
 
+/* Two-column layout */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  align-items: start;
+}
+
+.profile-main-column {
+  min-width: 0;
+}
+
+.profile-sidebar {
+  position: sticky;
+  top: 100px;
+  align-self: start;
+}
+
 /* ================================
    Loading & Error States
    ================================ */
@@ -74,9 +95,6 @@
   padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   margin-bottom: 24px;
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 32px;
 }
 
 .profile-hero-content {
@@ -271,6 +289,24 @@
 }
 
 /* ================================
+   Hero Video Section (Inside Profile Card)
+   ================================ */
+.hero-video-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
+}
+
+.hero-video-section .fxv-video-player {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ================================
    Schedule Tab
    ================================ */
 .schedule-grid {
@@ -393,9 +429,6 @@
   border: 2px solid #e2e8f0;
   border-radius: 16px;
   padding: 24px;
-  position: sticky;
-  top: 100px;
-  max-height: fit-content;
 }
 
 .booking-card-price {
@@ -723,11 +756,16 @@
   margin-bottom: 16px;
 }
 
-/* Video Player */
+/* Video Section */
+.video-section .video-player-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
 .video-player-wrapper {
   border-radius: 12px;
   overflow: hidden;
-  background: #000;
+  background: transparent;
 }
 
 .video-placeholder {
@@ -978,18 +1016,26 @@
    Responsive Design
    ================================ */
 @media (max-width: 1024px) {
-  .profile-hero {
+  .profile-layout {
     grid-template-columns: 1fr;
   }
 
-  .profile-booking-card {
-    position: static;
+  .profile-sidebar {
+    display: none;
+  }
+
+  .btn-book-mobile {
+    display: flex;
   }
 }
 
 @media (max-width: 768px) {
   .tutor-profile-page {
     padding-top: 70px;
+  }
+
+  .profile-layout {
+    padding: 0 16px;
   }
 
   .profile-hero {
@@ -1020,10 +1066,6 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-  }
-
-  .profile-booking-card {
-    display: none;
   }
 
   .profile-name {

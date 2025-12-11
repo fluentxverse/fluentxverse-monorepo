@@ -6,7 +6,7 @@
 .my-profile-page {
   background: #f8fafc;
   min-height: 100vh;
-  padding: 100px 20px 60px;
+  padding: 24px 20px 60px;
 }
 
 .profile-container {
@@ -447,55 +447,31 @@
   margin-bottom: 0;
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.section-title {
+.my-profile-page .section-title {
   font-size: 22px;
   font-weight: 700;
   color: #1e293b;
-  margin: 0;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
+  /* Reset any global gradient/text styles applied to .section-title elsewhere */
+  background: none;
+  background-clip: initial;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: initial;
 }
 
-.section-title i {
+.my-profile-page .section-title i {
   color: #0245ae;
   font-size: 24px;
 }
-
-.btn-edit-section {
-  padding: 8px 16px;
-  background: #f1f5f9;
-  border: none;
-  border-radius: 8px;
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-}
-
-.btn-edit-section:hover {
-  background: #0245ae;
-  color: white;
-}
-
-.section-content {
+.my-profile-page .section-content {
   color: #475569;
   line-height: 1.7;
   font-size: 15px;
 }
-
-.section-content p {
+.my-profile-page .section-content p {
   margin-bottom: 16px;
 }
 
@@ -676,8 +652,10 @@
   font-size: 14px;
   font-weight: 600;
   color: #64748b;
+  min-width: 80px;
 }
 
+.education-row strong,
 .education-details strong {
   font-size: 15px;
   color: #1e293b;
@@ -1093,7 +1071,179 @@
 }
 
 /* ================================
-   Video Introduction Section
+   Hero Video Section (Inside Profile Card)
+   ================================ */
+.hero-video-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
+}
+
+.hero-video-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-video-container .fxv-video-player {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Video Replace Overlay - appears on hover in center only */
+.video-replace-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hero-video-container:hover .video-replace-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-replace-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.95) 0%, rgba(74, 158, 255, 0.95) 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.hero-video-container:hover .video-replace-btn {
+  transform: scale(1);
+}
+
+.video-replace-btn:hover {
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, rgba(2, 69, 174, 1) 0%, rgba(74, 158, 255, 1) 100%);
+}
+
+.video-replace-btn i {
+  font-size: 18px;
+}
+
+.hero-video-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-video-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-video-action:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-video-action.btn-video-delete {
+  color: #dc2626;
+}
+
+.btn-video-action.btn-video-delete:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.hero-video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px dashed #93c5fd;
+  border-radius: 12px;
+}
+
+.video-placeholder-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #475569;
+}
+
+.video-placeholder-content i {
+  font-size: 24px;
+  color: #0245ae;
+}
+
+.video-placeholder-content span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Dark mode for hero video section */
+[data-theme="dark"] .hero-video-section {
+  border-top-color: #334155;
+}
+
+[data-theme="dark"] .btn-video-action {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-video-action:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .hero-video-placeholder {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+  border-color: #475569;
+}
+
+[data-theme="dark"] .video-placeholder-content {
+  color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+  .hero-video-container .fxv-video-player {
+    max-width: 100%;
+  }
+  
+  .hero-video-placeholder {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
+
+/* ================================
+   Video Introduction Section (Legacy - Tab Content)
    ================================ */
 .video-intro-section {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -1103,21 +1253,12 @@
 .video-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 16px;
 }
 
-.video-preview {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-}
-
-.intro-video {
-  width: 100%;
-  max-height: 400px;
-  display: block;
-  border-radius: 12px;
+.video-container .fxv-video-player {
+  max-width: 100%;
 }
 
 .video-actions {

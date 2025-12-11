@@ -1,0 +1,335 @@
+/* ================================
+   FluentXVerse Custom Video Player
+   ================================ */
+
+/* Base Player Container */
+.fxv-video-player {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.fxv-video-player.fxv-video-modal {
+  max-width: 900px;
+  width: 100%;
+}
+
+.fxv-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  cursor: pointer;
+}
+
+/* Loading Spinner */
+.fxv-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.fxv-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: fxv-spin 0.8s linear infinite;
+}
+
+@keyframes fxv-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Big Play Button */
+.fxv-big-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(2, 69, 174, 0.4);
+  z-index: 5;
+}
+
+.fxv-big-play i {
+  font-size: 28px;
+  color: white;
+  margin-left: 4px; /* Visual centering for play icon */
+}
+
+.fxv-big-play:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 12px 40px rgba(2, 69, 174, 0.5);
+}
+
+/* Controls Overlay */
+.fxv-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.fxv-video-player.show-controls .fxv-controls,
+.fxv-controls.visible {
+  opacity: 1;
+}
+
+/* Progress Bar */
+.fxv-progress-container {
+  width: 100%;
+  height: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.fxv-progress-bar {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: height 0.2s ease;
+}
+
+.fxv-progress-container:hover .fxv-progress-bar {
+  height: 6px;
+}
+
+.fxv-progress-filled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #0245ae, #0ea5e9);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.fxv-progress-handle {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fxv-progress-container:hover .fxv-progress-handle {
+  opacity: 1;
+}
+
+/* Controls Row */
+.fxv-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fxv-controls-left,
+.fxv-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Control Buttons */
+.fxv-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.fxv-btn i {
+  font-size: 14px;
+}
+
+.fxv-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.fxv-close-btn {
+  background: rgba(220, 38, 38, 0.8);
+}
+
+.fxv-close-btn:hover {
+  background: rgba(220, 38, 38, 1);
+}
+
+/* Volume Group */
+.fxv-volume-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fxv-volume-slider {
+  width: 0;
+  opacity: 0;
+  transition: all 0.3s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.fxv-volume-group:hover .fxv-volume-slider {
+  width: 80px;
+  opacity: 1;
+}
+
+.fxv-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.fxv-volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Time Display */
+.fxv-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  min-width: 90px;
+}
+
+/* Branding */
+.fxv-branding {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Modal Overlay */
+.fxv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fxv-fade-in 0.3s ease;
+}
+
+@keyframes fxv-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fxv-modal-content {
+  width: 100%;
+  max-width: 900px;
+  animation: fxv-scale-in 0.3s ease;
+}
+
+@keyframes fxv-scale-in {
+  from { 
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .fxv-big-play {
+    width: 64px;
+    height: 64px;
+  }
+
+  .fxv-big-play i {
+    font-size: 22px;
+  }
+
+  .fxv-controls {
+    padding: 12px;
+  }
+
+  .fxv-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .fxv-btn i {
+    font-size: 12px;
+  }
+
+  .fxv-time {
+    font-size: 11px;
+    min-width: 70px;
+  }
+
+  .fxv-branding {
+    display: none;
+  }
+
+  .fxv-volume-group:hover .fxv-volume-slider {
+    width: 60px;
+  }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .fxv-video-player {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
