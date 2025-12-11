@@ -49,7 +49,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
     ],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   }))
   .use(cookie())
   .use(Auth)

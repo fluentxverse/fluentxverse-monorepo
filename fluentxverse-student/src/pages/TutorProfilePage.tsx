@@ -519,6 +519,23 @@ export const TutorProfilePage = () => {
       </div>
       </div>
 
+      {/* Video Modal */}
+      {showVideoModal && tutor?.videoIntroUrl && (
+        <div className="video-modal-overlay" onClick={() => setShowVideoModal(false)}>
+          <div className="video-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="video-modal-close" onClick={() => setShowVideoModal(false)}>
+              <i className="fi-sr-cross"></i>
+            </button>
+            <video 
+              src={tutor.videoIntroUrl} 
+              controls 
+              autoPlay
+              className="video-modal-player"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Booking Modal */}
       {tutor && (
         <BookingModal

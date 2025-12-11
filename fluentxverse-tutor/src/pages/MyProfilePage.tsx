@@ -2,9 +2,11 @@ import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { getPersonalInfo, PersonalInfoData } from '../api/auth.api';
+import { client } from '../api/utils';
 import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SettingsModal from '../Components/Settings/SettingsModal';
+import ImageCropper from '../Components/Common/ImageCropper';
 import './MyProfilePage.css';
 
 interface TutorProfileData {
@@ -29,6 +31,7 @@ interface TutorProfileData {
   isVerified?: boolean;
   isAvailable?: boolean;
   profilePicture?: string;
+  videoIntroUrl?: string;
 }
 
 export const MyProfilePage = () => {
@@ -42,6 +45,12 @@ export const MyProfilePage = () => {
   const [editValue, setEditValue] = useState<string>('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -52,6 +61,17 @@ export const MyProfilePage = () => {
   const loadProfile = async () => {
     try {
       setLoading(true);
+      
+      // Load tutor's own profile data (bio, introduction, etc.)
+      try {
+        const profileResponse = await client.get('/tutor/profile');
+        if (profileResponse.data.success && profileResponse.data.data) {
+          setProfileData(profileResponse.data.data);
+        }
+      } catch (err) {
+        console.error('Failed to load tutor profile:', err);
+      }
+      
       // Load personal info (education, qualifications from Settings)
       const personalData = await getPersonalInfo();
       console.log('Personal info loaded:', personalData);
@@ -75,7 +95,7 @@ export const MyProfilePage = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: Event) => {
+  const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];
     if (!file) return;
@@ -85,41 +105,115 @@ export const MyProfilePage = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image must be less than 10MB');
       return;
     }
 
+    // Store the file and open cropper
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCropperImage(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset the input so the same file can be selected again
+    target.value = '';
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setCropperImage(null);
+    setSelectedFile(null);
     setUploading(true);
+    
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', croppedBlob, 'profile.jpg');
 
-      const uploadResponse = await fetch(
-        `${import.meta.env.VITE_SEAWEED_URL || 'http://localhost:8888'}/profile-pictures/${user?.userId}_${Date.now()}_${file.name}`,
-        { method: 'POST', body: formData }
-      );
-
-      if (!uploadResponse.ok) throw new Error('Upload failed');
-
-      const result = await uploadResponse.json();
-      const imageUrl = `${import.meta.env.VITE_SEAWEED_URL || 'http://localhost:8888'}${result.name}`;
-
-      const saveResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/tutors/profile-picture`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ profilePicture: imageUrl })
+      // Use the server endpoint which handles both upload and saving
+      const response = await client.post('/tutor/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      if (saveResponse.ok) {
-        setProfileData(prev => prev ? { ...prev, profilePicture: imageUrl } : null);
+      if (response.data.success) {
+        // Update local state immediately with cache-busted URL
+        const newUrl = response.data.url + '?t=' + Date.now();
+        setAvatarUrl(newUrl);
+        setProfileData(prev => prev ? { ...prev, profilePicture: newUrl } : { profilePicture: newUrl } as TutorProfileData);
+      } else {
+        throw new Error(response.data.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload image');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setCropperImage(null);
+    setSelectedFile(null);
+  };
+
+  const handleVideoUpload = async (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      alert('Please select a video file');
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      alert('Video must be less than 100MB');
+      return;
+    }
+
+    setVideoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await client.post('/tutor/intro-video', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        const newUrl = response.data.url + '?t=' + Date.now();
+        setProfileData(prev => prev ? { ...prev, videoIntroUrl: newUrl } : { videoIntroUrl: newUrl } as TutorProfileData);
+        alert('Video uploaded successfully!');
+      } else {
+        throw new Error(response.data.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Video upload error:', error);
+      alert('Failed to upload video');
+    } finally {
+      setVideoUploading(false);
+      target.value = '';
+    }
+  };
+
+  const handleDeleteVideo = async () => {
+    if (!confirm('Are you sure you want to delete your introduction video?')) return;
+
+    try {
+      const response = await client.delete('/tutor/intro-video');
+      if (response.data.success) {
+        setProfileData(prev => prev ? { ...prev, videoIntroUrl: undefined } : null);
+      } else {
+        throw new Error(response.data.error || 'Delete failed');
+      }
+    } catch (error) {
+      console.error('Delete video error:', error);
+      alert('Failed to delete video');
     }
   };
 
@@ -134,11 +228,11 @@ export const MyProfilePage = () => {
   };
 
   const viewAvatar = () => {
-    const avatarUrl = profileData?.profilePicture || user?.profilePicture;
-    if (!avatarUrl) return;
+    const currentAvatarUrl = avatarUrl || profileData?.profilePicture || user?.profilePicture;
+    if (!currentAvatarUrl) return;
     const w = window.open('', '_blank');
     if (w) {
-      w.document.write(`<title>Profile Picture</title><img style="max-width:100%;display:block;margin:0 auto" src="${avatarUrl}" />`);
+      w.document.write(`<title>Profile Picture</title><img style="max-width:100%;display:block;margin:0 auto" src="${currentAvatarUrl}" />`);
     }
   };
 
@@ -147,16 +241,24 @@ export const MyProfilePage = () => {
     
     setSaving(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tutors/profile`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ [editingField]: editValue })
-      });
+      const response = await client.patch('/tutor/profile', { [editingField]: editValue });
 
-      if (response.ok) {
-        setProfileData(prev => prev ? { ...prev, [editingField]: editValue } : null);
+      if (response.data.success) {
+        setProfileData(prev => {
+          if (prev) {
+            return { ...prev, [editingField]: editValue };
+          }
+          // Create a minimal profile data object if none exists
+          return { 
+            firstName: user?.firstName || '', 
+            lastName: user?.lastName || '', 
+            email: user?.email || '',
+            [editingField]: editValue 
+          } as TutorProfileData;
+        });
         cancelEditing();
+      } else {
+        throw new Error(response.data.error || 'Failed to save');
       }
     } catch (error) {
       console.error('Save error:', error);
@@ -188,6 +290,9 @@ export const MyProfilePage = () => {
       || user?.email?.split('@')[0] 
       || 'Tutor';
   const initials = `${user?.firstName?.[0] || profileData?.firstName?.[0] || ''}${user?.lastName?.[0] || profileData?.lastName?.[0] || ''}`.toUpperCase() || 'T';
+  
+  // Use avatarUrl state first, then fallback to profileData or user
+  const currentAvatar = avatarUrl || profileData?.profilePicture || user?.profilePicture;
 
   return (
     <>
@@ -206,9 +311,9 @@ export const MyProfilePage = () => {
                       <div className="profile-avatar-large profile-avatar-uploading">
                         <div className="upload-spinner"></div>
                       </div>
-                    ) : profileData?.profilePicture || user?.profilePicture ? (
+                    ) : currentAvatar ? (
                       <img 
-                        src={profileData?.profilePicture || user?.profilePicture} 
+                        src={currentAvatar} 
                         alt={displayName} 
                         className="profile-avatar-large" 
                       />
@@ -228,7 +333,7 @@ export const MyProfilePage = () => {
                       <button
                         type="button"
                         className="avatar-btn secondary"
-                        disabled={!(profileData?.profilePicture || user?.profilePicture)}
+                        disabled={!currentAvatar}
                         onClick={viewAvatar}
                       >
                         View
@@ -332,6 +437,68 @@ export const MyProfilePage = () => {
             <div className="profile-content">
               {activeTab === 'about' && (
                 <div className="tab-content">
+                  {/* Video Introduction */}
+                  <section className="content-section video-intro-section">
+                    <div className="section-header">
+                      <h2 className="section-title">
+                        <i className="fi-sr-video-camera"></i>
+                        Video Introduction
+                      </h2>
+                      {profileData?.videoIntroUrl && (
+                        <button className="btn-edit-section btn-delete" onClick={handleDeleteVideo}>
+                          <i className="fas fa-trash"></i>
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <div className="section-content">
+                      {profileData?.videoIntroUrl ? (
+                        <div className="video-container">
+                          <div className="video-preview">
+                            <video 
+                              src={profileData.videoIntroUrl} 
+                              controls 
+                              preload="metadata"
+                              className="intro-video"
+                            />
+                          </div>
+                          <div className="video-actions">
+                            <label className="btn-upload-video">
+                              <input
+                                type="file"
+                                accept="video/*"
+                                onChange={handleVideoUpload}
+                                style={{ display: 'none' }}
+                                ref={videoInputRef}
+                              />
+                              <i className="fi-sr-refresh"></i>
+                              {videoUploading ? 'Uploading...' : 'Replace Video'}
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="video-upload-placeholder">
+                          <div className="upload-icon">
+                            <i className="fi-sr-video-plus"></i>
+                          </div>
+                          <p>Add a video introduction to help students get to know you better</p>
+                          <p className="upload-hint">Max 100MB • MP4, WebM, or MOV recommended</p>
+                          <label className="btn-add-video">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={handleVideoUpload}
+                              style={{ display: 'none' }}
+                              ref={videoInputRef}
+                            />
+                            <i className="fi-sr-plus"></i>
+                            {videoUploading ? 'Uploading...' : 'Add Video'}
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
                   {/* About Me */}
                   <section className="content-section">
                     <div className="section-header">
@@ -545,6 +712,15 @@ export const MyProfilePage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image Cropper Modal */}
+      {cropperImage && (
+        <ImageCropper
+          imageSrc={cropperImage}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
       )}
 
       {/* Settings Modal for editing personal info */}

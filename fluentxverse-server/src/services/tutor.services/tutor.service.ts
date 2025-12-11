@@ -411,6 +411,35 @@ export class TutorService {
   }
 
   /**
+   * Update tutor profile fields (bio, introduction, etc.)
+   */
+  public async updateProfile(userId: string, data: Record<string, any>): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+    try {
+      const setStatements: string[] = [];
+      const params: Record<string, any> = { userId };
+
+      for (const [key, value] of Object.entries(data)) {
+        setStatements.push(`u.${key} = $${key}`);
+        params[key] = value;
+      }
+
+      if (setStatements.length === 0) return;
+
+      await session.run(
+        `
+        MATCH (u:User { id: $userId })
+        SET ${setStatements.join(', ')}
+        `,
+        params
+      );
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
    * Get current profile picture URL for a user
    */
   public async getCurrentProfilePicture(userId: string): Promise<string | undefined> {
@@ -426,6 +455,28 @@ export class TutorService {
       );
       const record = res.records[0];
       const url = record?.get('profilePicture');
+      return url || undefined;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get current video intro URL for a user
+   */
+  public async getVideoIntroUrl(userId: string): Promise<string | undefined> {
+    const driver = getDriver();
+    const session = driver.session();
+    try {
+      const res = await session.run(
+        `
+        MATCH (u:User { id: $userId })
+        RETURN u.videoIntroUrl as videoIntroUrl
+        `,
+        { userId }
+      );
+      const record = res.records[0];
+      const url = record?.get('videoIntroUrl');
       return url || undefined;
     } finally {
       await session.close();

@@ -41,6 +41,109 @@ const Tutor = new Elysia({ prefix: '/tutor' })
   })
 
   /**
+   * Upload tutor intro video (multipart/form-data)
+   * Field name: file
+   */
+  .post('/intro-video', async ({ request, cookie }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) return { success: false, error: 'Not authenticated' };
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const userId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      const form = await request.formData();
+      const file = form.get('file');
+      if (!(file instanceof File)) {
+        return { success: false, error: 'Missing file' };
+      }
+
+      // Max 100MB for video
+      const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+      if (file.size > MAX_VIDEO_BYTES) {
+        return { success: false, error: `File too large. Max 100MB` };
+      }
+
+      // Validate video type
+      if (!file.type.startsWith('video/')) {
+        return { success: false, error: 'File must be a video' };
+      }
+
+      // Build Seaweed Filer path: /user/{userId}/video/{timestamp}_{originalName}
+      const timestamp = Date.now();
+      const safeName = file.name?.replace(/[^a-zA-Z0-9._-]/g, '_') || 'intro.mp4';
+      const filerPath = `/user/${userId}/video/${timestamp}_${safeName}`;
+      const filerBase = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
+      const uploadUrl = `${filerBase}${filerPath}`;
+
+      // Delete previous video if exists
+      const previousVideo = await tutorService.getVideoIntroUrl(userId);
+      if (previousVideo) {
+        try {
+          await fetch(previousVideo, { method: 'DELETE' });
+        } catch (e) {
+          console.warn('Failed to delete previous intro video:', e);
+        }
+      }
+
+      // Upload new file to Seaweed Filer
+      const res = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file.stream(),
+        headers: {
+          'Content-Type': file.type || 'video/mp4'
+        }
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        return { success: false, error: `Upload failed: ${res.status} ${text}` };
+      }
+
+      // Save video URL to database
+      await tutorService.updateProfile(userId, { videoIntroUrl: uploadUrl });
+
+      return { success: true, url: uploadUrl };
+    } catch (error) {
+      console.error('Error in /tutor/intro-video:', error);
+      return { success: false, error: 'Failed to upload intro video' };
+    }
+  })
+
+  /**
+   * Delete tutor intro video
+   */
+  .delete('/intro-video', async ({ cookie }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) return { success: false, error: 'Not authenticated' };
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const userId = authData.userId;
+
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      // Delete from storage
+      const previousVideo = await tutorService.getVideoIntroUrl(userId);
+      if (previousVideo) {
+        try {
+          await fetch(previousVideo, { method: 'DELETE' });
+        } catch (e) {
+          console.warn('Failed to delete intro video:', e);
+        }
+      }
+
+      // Clear from database
+      await tutorService.updateProfile(userId, { videoIntroUrl: null });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error in DELETE /tutor/intro-video:', error);
+      return { success: false, error: 'Failed to delete intro video' };
+    }
+  })
+
+  /**
    * Upload tutor profile picture (multipart/form-data)
    * Field name: file
    */
@@ -100,6 +203,72 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     } catch (error) {
       console.error('Error in /tutor/profile-picture:', error);
       return { success: false, error: 'Failed to upload profile picture' };
+    }
+  })
+
+  /**
+   * Get current tutor's own profile data (bio, introduction, etc.)
+   * GET /tutor/profile
+   */
+  .get('/profile', async ({ cookie }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) return { success: false, error: 'Not authenticated' };
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const userId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      const tutor = await tutorService.getTutorProfile(userId);
+      
+      if (!tutor) {
+        return { success: false, error: 'Tutor profile not found' };
+      }
+
+      return { success: true, data: tutor };
+    } catch (error) {
+      console.error('Error in GET /tutor/profile:', error);
+      return { success: false, error: 'Failed to get profile' };
+    }
+  })
+
+  /**
+   * Update tutor profile fields (bio, introduction, etc.)
+   * PATCH /tutor/profile
+   */
+  .patch('/profile', async ({ body, cookie }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) return { success: false, error: 'Not authenticated' };
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const userId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      const updateData = body as Record<string, any>;
+      
+      // Only allow updating specific fields
+      const allowedFields = ['bio', 'introduction', 'teachingStyle', 'hourlyRate', 'videoIntroUrl'];
+      const filteredData: Record<string, any> = {};
+      
+      for (const key of allowedFields) {
+        if (updateData[key] !== undefined) {
+          filteredData[key] = updateData[key];
+        }
+      }
+
+      if (Object.keys(filteredData).length === 0) {
+        return { success: false, error: 'No valid fields to update' };
+      }
+
+      await tutorService.updateProfile(userId, filteredData);
+
+      return { success: true, data: filteredData };
+    } catch (error) {
+      console.error('Error in PATCH /tutor/profile:', error);
+      return { success: false, error: 'Failed to update profile' };
     }
   })
 

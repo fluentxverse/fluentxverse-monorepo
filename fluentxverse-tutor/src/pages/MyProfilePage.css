@@ -1091,3 +1091,142 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ================================
+   Video Introduction Section
+   ================================ */
+.video-intro-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+}
+
+.video-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.video-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.intro-video {
+  width: 100%;
+  max-height: 400px;
+  display: block;
+  border-radius: 12px;
+}
+
+.video-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-upload-video,
+.btn-add-video {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #0245ae;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-upload-video:hover,
+.btn-add-video:hover {
+  background: #0369a1;
+  transform: translateY(-2px);
+}
+
+.btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.btn-delete:hover {
+  background: #fecaca;
+}
+
+.video-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.video-upload-placeholder .upload-icon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dbeafe;
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.video-upload-placeholder .upload-icon i {
+  font-size: 32px;
+  color: #0245ae;
+}
+
+.video-upload-placeholder p {
+  color: #475569;
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.video-upload-placeholder .upload-hint {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .video-intro-section {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+  border-color: #334155;
+}
+
+[data-theme="dark"] .video-upload-placeholder {
+  border-color: #475569;
+  background: rgba(30, 41, 59, 0.5);
+}
+
+[data-theme="dark"] .video-upload-placeholder .upload-icon {
+  background: #1e3a5f;
+}
+
+[data-theme="dark"] .video-upload-placeholder p {
+  color: #cbd5e1;
+}
+
+@media (max-width: 640px) {
+  .video-upload-placeholder {
+    padding: 32px 16px;
+  }
+
+  .video-upload-placeholder .upload-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .video-upload-placeholder .upload-icon i {
+    font-size: 24px;
+  }
+}
