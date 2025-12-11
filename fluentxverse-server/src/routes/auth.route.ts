@@ -3,6 +3,7 @@ import Elysia, { t } from "elysia";
 
 //** SERVICE IMPORT */
 import AuthService from "../services/auth.services/tutor.service";
+import { TutorService } from "../services/tutor.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
 import type { AuthData, LoginReturnParams, MeResponse } from "@/services/auth.services/auth.interface";
 import { refreshAuthCookie } from "../utils/refreshCookie";
@@ -161,6 +162,10 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         // Refresh cookie on every /me call
         refreshAuthCookie(cookie, authData, 'tutorAuth');
 
+        // Fetch profile picture from database
+        const tutorService = new TutorService();
+        const profilePicture = await tutorService.getCurrentProfilePicture(authData.userId);
+
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
         set.headers['Vary'] = 'Cookie';
@@ -171,7 +176,8 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           lastName: authData.lastName ?? undefined,
           walletAddress: authData.walletAddress ?? undefined,
           mobileNumber: authData.mobileNumber ?? undefined,
-          tier: authData.tier
+          tier: authData.tier,
+          profilePicture: profilePicture ?? undefined
         } };
       } catch (error: any) {
         throw new Error('Invalid session');

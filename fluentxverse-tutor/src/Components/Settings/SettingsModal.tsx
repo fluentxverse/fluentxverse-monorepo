@@ -404,9 +404,16 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   };
 
   // Local state for avatar preview & upload status
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.profilePicture || null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Update avatar preview when user profile picture changes
+  useEffect(() => {
+    if (user?.profilePicture) {
+      setAvatarPreview(user.profilePicture);
+    }
+  }, [user?.profilePicture]);
 
   const onSelectAvatar = async (e: Event) => {
     const target = e.target as HTMLInputElement;

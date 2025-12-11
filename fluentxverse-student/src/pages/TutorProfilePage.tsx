@@ -152,7 +152,7 @@ export const TutorProfilePage = () => {
         <div className="main-content">
           <Header />
           <div className="tutor-profile-error">
-            <i className="ri-error-warning-line"></i>
+            <i className="fi-sr-exclamation"></i>
             <h2>Tutor not found</h2>
             <p>{error || 'The tutor you are looking for does not exist.'}</p>
             <a href="/browse-tutors" className="btn-primary">Browse Tutors</a>
@@ -194,7 +194,7 @@ export const TutorProfilePage = () => {
 
                 {/* Mobile Book Button */}
                 <button onClick={handleBookTrial} className="btn-book-mobile">
-                  <i className="ri-calendar-line"></i>
+                  <i className="fi-sr-calendar"></i>
                   Book Trial Lesson
                 </button>
               </div>
@@ -205,48 +205,34 @@ export const TutorProfilePage = () => {
                   <h1 className="profile-name">{displayName}</h1>
                   {tutor.isVerified && (
                     <div className="verified-badge">
-                      <i className="ri-verified-badge-fill"></i>
+                      <i className="fi-sr-badge-check"></i>
                       <span>Verified</span>
                     </div>
                   )}
                 </div>
 
-                {/* Quick Stats */}
-                <div className="profile-quick-stats">
-                  <div className="stat-item">
-                    <i className="ri-star-fill"></i>
-                    <span className="stat-value">{tutor.rating ? tutor.rating.toFixed(1) : 'New'}</span>
-                    {(tutor?.totalReviews ?? 0) > 0 && <span className="stat-label">({tutor.totalReviews} reviews)</span>}
+                {/* Quick Stats - Only show rating if available */}
+                {tutor.rating && (tutor?.totalReviews ?? 0) > 0 && (
+                  <div className="profile-quick-stats">
+                    <div className="stat-item">
+                      <i className="fi-sr-star"></i>
+                      <span className="stat-value">{tutor.rating.toFixed(1)}</span>
+                      <span className="stat-label">({tutor.totalReviews} reviews)</span>
+                    </div>
                   </div>
-                  <div className="stat-divider"></div>
-                  <div className="stat-item">
-                    <i className="ri-video-chat-line"></i>
-                    <span className="stat-value">{tutor.totalSessions || 0}</span>
-                    <span className="stat-label">lessons</span>
-                  </div>
-                  {tutor.experienceYears && (
-                    <>
-                      <div className="stat-divider"></div>
-                      <div className="stat-item">
-                        <i className="ri-award-line"></i>
-                        <span className="stat-value">{tutor.experienceYears}</span>
-                        <span className="stat-label">years exp.</span>
-                      </div>
-                    </>
-                  )}
-                </div>
+                )}
 
                 {/* Languages & Country */}
                 <div className="profile-meta">
                   {tutor.languages && tutor.languages.length > 0 && (
                     <div className="meta-item">
-                      <i className="ri-translate-2"></i>
+                      <i className="fi-sr-globe"></i>
                       <span>Speaks: {tutor.languages.join(', ')}</span>
                     </div>
                   )}
                   {tutor.country && (
                     <div className="meta-item">
-                      <i className="ri-map-pin-line"></i>
+                      <i className="fi-sr-marker"></i>
                       <span>{tutor.country}</span>
                     </div>
                   )}
@@ -281,32 +267,32 @@ export const TutorProfilePage = () => {
               </div>
               
               <button onClick={handleBookTrial} className="btn-book-trial">
-                <i className="ri-calendar-check-line"></i>
+                <i className="fi-sr-calendar"></i>
                 Book Trial Lesson
               </button>
 
               <div className="booking-features">
                 <div className="feature-item">
-                  <i className="ri-checkbox-circle-line"></i>
+                  <i className="fi-sr-checkbox"></i>
                   <span>Cancel anytime</span>
                 </div>
                 <div className="feature-item">
-                  <i className="ri-checkbox-circle-line"></i>
+                  <i className="fi-sr-checkbox"></i>
                   <span>25-minute session</span>
                 </div>
                 <div className="feature-item">
-                  <i className="ri-checkbox-circle-line"></i>
+                  <i className="fi-sr-checkbox"></i>
                   <span>Instant confirmation</span>
                 </div>
               </div>
 
               <button className="btn-message">
-                <i className="ri-message-3-line"></i>
+                <i className="fi-sr-comment"></i>
                 Send Message
               </button>
 
               <div className="booking-note">
-                <i className="ri-information-line"></i>
+                <i className="fi-sr-info"></i>
                 <span>Get to know this tutor with a trial lesson</span>
               </div>
             </div>
@@ -318,21 +304,21 @@ export const TutorProfilePage = () => {
               className={`tab-btn ${activeTab === 'about' ? 'active' : ''}`}
               onClick={() => setActiveTab('about')}
             >
-              <i className="ri-user-line"></i>
+              <i className="fi-sr-user"></i>
               About
             </button>
             <button 
               className={`tab-btn ${activeTab === 'schedule' ? 'active' : ''}`}
               onClick={() => setActiveTab('schedule')}
             >
-              <i className="ri-calendar-line"></i>
+              <i className="fi-sr-calendar"></i>
               Schedule
             </button>
             <button 
               className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
               onClick={() => setActiveTab('reviews')}
             >
-              <i className="ri-star-line"></i>
+              <i className="fi-sr-star"></i>
               Reviews ({tutor.totalReviews || 0})
             </button>
           </div>
@@ -345,12 +331,12 @@ export const TutorProfilePage = () => {
                 {tutor.videoIntroUrl && (
                   <section className="content-section">
                     <h2 className="section-title">
-                      <i className="ri-video-line"></i>
+                      <i className="fi-sr-video-camera"></i>
                       Introduction Video
                     </h2>
                     <div className="video-player-wrapper">
                       <div className="video-placeholder">
-                        <i className="ri-play-circle-fill"></i>
+                        <i className="fi-sr-play"></i>
                         <button onClick={() => setShowVideoModal(true)} className="btn-play">
                           Watch Introduction
                         </button>
@@ -362,7 +348,7 @@ export const TutorProfilePage = () => {
                 {/* About Me */}
                 <section className="content-section">
                   <h2 className="section-title">
-                    <i className="ri-user-smile-line"></i>
+                    <i className="fi-sr-user"></i>
                     About Me
                   </h2>
                   <div className="section-content">
@@ -370,89 +356,41 @@ export const TutorProfilePage = () => {
                   </div>
                 </section>
 
-                {/* Teaching Experience */}
-                <section className="content-section">
-                  <h2 className="section-title">
-                    <i className="ri-graduation-cap-line"></i>
-                    Teaching Experience
-                  </h2>
-                  <div className="section-content">
-                    <div className="experience-grid">
-                      {tutor.experienceYears && (
-                        <div className="experience-item">
-                          <div className="experience-icon">
-                            <i className="ri-time-line"></i>
-                          </div>
-                          <div className="experience-details">
-                            <strong>{tutor.experienceYears} Years</strong>
-                            <span>Teaching Experience</span>
-                          </div>
-                        </div>
-                      )}
-                      <div className="experience-item">
-                        <div className="experience-icon">
-                          <i className="ri-user-voice-line"></i>
-                        </div>
-                        <div className="experience-details">
-                          <strong>{tutor.totalSessions || 0} Lessons</strong>
-                          <span>Completed on Platform</span>
-                        </div>
-                      </div>
-                      {tutor.rating && (
-                        <div className="experience-item">
-                          <div className="experience-icon">
-                            <i className="ri-star-line"></i>
-                          </div>
-                          <div className="experience-details">
-                            <strong>{tutor.rating.toFixed(1)} Rating</strong>
-                            <span>Average Student Rating</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {tutor.teachingStyle && (
-                      <div className="teaching-style">
-                        <h3>Teaching Approach</h3>
-                        <p>{tutor.teachingStyle}</p>
-                      </div>
-                    )}
-                  </div>
-                </section>
-
-                {/* Education & Certifications */}
-                {(tutor.education?.length || tutor.certifications?.length) && (
+                {/* Education */}
+                {(tutor.schoolAttended || (tutor.education && tutor.education.length > 0)) && (
                   <section className="content-section">
                     <h2 className="section-title">
-                      <i className="ri-award-line"></i>
-                      Education & Certifications
+                      <i className="fi-sr-graduation-cap"></i>
+                      Education
                     </h2>
                     <div className="section-content">
-                      {tutor.education && tutor.education.length > 0 && (
-                        <div className="credentials-group">
-                          <h3>Education</h3>
-                          <ul className="credentials-list">
-                            {tutor.education.map((edu, idx) => (
-                              <li key={idx}>
-                                <i className="ri-book-line"></i>
-                                <span>{edu}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {tutor.certifications && tutor.certifications.length > 0 && (
-                        <div className="credentials-group">
-                          <h3>Certifications</h3>
-                          <ul className="credentials-list">
-                            {tutor.certifications.map((cert, idx) => (
-                              <li key={idx}>
-                                <i className="ri-medal-line"></i>
-                                <span>{cert}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      <div className="education-info">
+                        {tutor.schoolAttended ? (
+                          <>
+                            <div className="education-row">
+                              <i className="fi-sr-school"></i>
+                              <span className="education-label">University:</span>
+                              <strong>{tutor.schoolAttended}</strong>
+                            </div>
+                            {tutor.major && (
+                              <div className="education-row">
+                                <i className="fi-sr-diploma"></i>
+                                <span className="education-label">Degree:</span>
+                                <strong>{tutor.major}</strong>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          tutor.education?.map((edu, idx) => (
+                            <div key={idx} className="education-row">
+                              <div className="education-details">
+                                <i className="fi-sr-school"></i>
+                                <strong>{edu}</strong>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
                     </div>
                   </section>
                 )}
@@ -461,14 +399,14 @@ export const TutorProfilePage = () => {
                 {tutor.specializations && tutor.specializations.length > 0 && (
                   <section className="content-section">
                     <h2 className="section-title">
-                      <i className="ri-lightbulb-line"></i>
+                      <i className="fi-sr-bulb"></i>
                       Areas of Expertise
                     </h2>
                     <div className="section-content">
                       <div className="specializations-grid">
                         {tutor.specializations.map((spec, idx) => (
                           <div key={idx} className="specialization-card">
-                            <i className="ri-check-line"></i>
+                            <i className="fi-sr-check"></i>
                             <span>{spec}</span>
                           </div>
                         ))}
@@ -483,7 +421,7 @@ export const TutorProfilePage = () => {
               <div className="tab-content">
                 <section className="content-section">
                   <h2 className="section-title">
-                    <i className="ri-calendar-check-line"></i>
+                    <i className="fi-sr-calendar"></i>
                     Available Time Slots
                   </h2>
                   {/* Period Tabs */}

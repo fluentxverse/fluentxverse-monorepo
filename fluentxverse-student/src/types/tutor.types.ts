@@ -41,6 +41,11 @@ export interface TutorProfile extends Tutor {
   introduction?: string;
   videoIntroUrl?: string;
   
+  // Personal info education fields
+  schoolAttended?: string;
+  major?: string;
+  teachingQualifications?: string;
+  
   // Detailed stats
   completionRate?: number;
   responseTime?: string; // e.g., "within 2 hours"

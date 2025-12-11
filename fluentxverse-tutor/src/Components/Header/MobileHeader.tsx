@@ -12,6 +12,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { href: "/home", icon: "fi-sr-home", label: "Home" },
+  { href: "/profile", icon: "fi-sr-user", label: "My Profile" },
   { href: "/schedule", icon: "fi-sr-calendar", label: "Schedule" },
   { href: "/material", icon: "fi-sr-book-alt", label: "Materials" },
   { href: "/metrics", icon: "fi-sr-chart-histogram", label: "Metrics" },
@@ -68,9 +69,17 @@ const MobileHeader = () => {
             <span className="mobile-header-brand">FluentXVerse</span>
           </div>
 
-          <div className="mobile-header-user">
-            <i className="fas fa-user-circle"></i>
-          </div>
+          <Link href="/profile" className="mobile-header-user">
+            {user.profilePicture ? (
+              <img 
+                src={user.profilePicture} 
+                alt="Profile" 
+                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              <i className="fas fa-user-circle"></i>
+            )}
+          </Link>
         </div>
       </div>
 
@@ -92,7 +101,19 @@ const MobileHeader = () => {
             {/* User Info */}
             <div className="mobile-menu-user">
               <div className="user-avatar">
-                <i className="fas fa-user-circle"></i>
+                {user.profilePicture ? (
+                  <img 
+                    src={user.profilePicture} 
+                    alt="Profile" 
+                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).parentElement?.querySelector('i')?.style.setProperty('display', 'block');
+                    }}
+                  />
+                ) : (
+                  <i className="fas fa-user-circle"></i>
+                )}
               </div>
               <div className="user-info">
                 <span className="user-name">{user.firstName} {user.lastName}</span>

@@ -74,7 +74,8 @@ export const MeSchema = {
                 lastName: t.Optional(t.String()),
                 walletAddress: t.Optional(t.String()),
                 mobileNumber: t.Optional(t.String()),
-                tier: t.Number()
+                tier: t.Number(),
+                profilePicture: t.Optional(t.String())
             })
         })
     }

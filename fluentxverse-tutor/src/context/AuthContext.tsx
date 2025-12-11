@@ -19,6 +19,7 @@ interface AuthUser {
   tier?: number;
   walletAddress?: string;
   role?: string;
+  profilePicture?: string;
 }
 
 interface AuthContextValue {
