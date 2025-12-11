@@ -646,6 +646,12 @@
   font-size: 24px;
 }
 
+/* Ensure no horizontal divider lines under About/Education titles */
+.tutor-profile-page .section-title {
+  border: none;
+  border-bottom: none;
+}
+
 .section-content {
   color: #475569;
   line-height: 1.7;

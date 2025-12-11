@@ -36,6 +36,14 @@ export const VideoPlayer = ({ src, poster, onClose, isModal = false, hideBigPlay
       setCurrentTime(video.currentTime);
     };
 
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
     const handleEnded = () => {
       setIsPlaying(false);
     };
@@ -45,6 +53,8 @@ export const VideoPlayer = ({ src, poster, onClose, isModal = false, hideBigPlay
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
     video.addEventListener('ended', handleEnded);
     video.addEventListener('waiting', handleWaiting);
     video.addEventListener('playing', handlePlaying);
@@ -52,6 +62,8 @@ export const VideoPlayer = ({ src, poster, onClose, isModal = false, hideBigPlay
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('waiting', handleWaiting);
       video.removeEventListener('playing', handlePlaying);
@@ -69,12 +81,11 @@ export const VideoPlayer = ({ src, poster, onClose, isModal = false, hideBigPlay
     const video = videoRef.current;
     if (!video) return;
 
-    if (isPlaying) {
-      video.pause();
-    } else {
+    if (video.paused) {
       video.play();
+    } else {
+      video.pause();
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleProgressClick = (e: MouseEvent) => {
