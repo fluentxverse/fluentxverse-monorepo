@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'preact/hooks';
-import { adminApi, PendingTutor } from '../api/admin.api';
+import { adminApi, PendingTutor, PendingProfileReview } from '../api/admin.api';
 import './ApplicationsPage.css';
 
 const ApplicationsPage = () => {
+  const [activeTab, setActiveTab] = useState<'applications' | 'profiles'>('applications');
   const [applications, setApplications] = useState<PendingTutor[]>([]);
+  const [pendingProfiles, setPendingProfiles] = useState<PendingProfileReview[]>([]);
   const [certifiedCount, setCertifiedCount] = useState(0);
   const [pendingProfileCount, setPendingProfileCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState<PendingProfileReview | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
     loadApplications();
+    loadPendingProfiles();
     loadStats();
   }, []);
 
@@ -35,6 +41,46 @@ const ApplicationsPage = () => {
       setPendingProfileCount(stats.pendingTutors);
     } catch (err) {
       console.error('Failed to load stats:', err);
+    }
+  };
+
+  const loadPendingProfiles = async () => {
+    try {
+      const data = await adminApi.getPendingProfiles(50);
+      setPendingProfiles(data);
+    } catch (err) {
+      console.error('Failed to load pending profiles:', err);
+    }
+  };
+
+  const handleApproveProfile = async (tutorId: string) => {
+    try {
+      setReviewingId(tutorId);
+      await adminApi.reviewProfile(tutorId, 'approve');
+      setPendingProfiles(prev => prev.filter(p => p.id !== tutorId));
+      setShowProfileModal(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to approve profile');
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const handleRejectProfile = async (tutorId: string) => {
+    if (!rejectReason.trim()) {
+      setError('Please provide a reason for rejection');
+      return;
+    }
+    try {
+      setReviewingId(tutorId);
+      await adminApi.reviewProfile(tutorId, 'reject', rejectReason);
+      setPendingProfiles(prev => prev.filter(p => p.id !== tutorId));
+      setShowProfileModal(null);
+      setRejectReason('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to reject profile');
+    } finally {
+      setReviewingId(null);
     }
   };
 
@@ -90,12 +136,32 @@ const ApplicationsPage = () => {
       <div className="page-header">
         <div className="header-content">
           <h1>Tutor Applications</h1>
-          <p>Review and process tutor applications</p>
+          <p>Review and process tutor applications and profile submissions</p>
+        </div>
+        <div className="page-tabs">
+          <button 
+            className={`tab-btn ${activeTab === 'applications' ? 'active' : ''}`}
+            onClick={() => setActiveTab('applications')}
+          >
+            <i className="ri-file-user-line"></i>
+            Exam Applications
+            <span className="tab-badge">{applications.length}</span>
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'profiles' ? 'active' : ''}`}
+            onClick={() => setActiveTab('profiles')}
+          >
+            <i className="ri-user-settings-line"></i>
+            Profile Reviews
+            <span className="tab-badge">{pendingProfiles.length}</span>
+          </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
+      {activeTab === 'applications' && (
+        <>
+          {/* Stats Cards */}
+          <div className="stats-grid">
         <div className={`stat-card ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
           <div className="stat-icon total">
             <i className="ri-file-user-line"></i>
@@ -268,6 +334,200 @@ const ApplicationsPage = () => {
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {activeTab === 'profiles' && (
+        <div className="profiles-container">
+          <div className="container-header">
+            <h2>Profile Reviews ({pendingProfiles.length})</h2>
+            <button className="btn-refresh" onClick={loadPendingProfiles}>
+              <i className="ri-refresh-line"></i>
+              Refresh
+            </button>
+          </div>
+
+          {pendingProfiles.length === 0 ? (
+            <div className="empty-state">
+              <i className="ri-user-settings-line"></i>
+              <p>No pending profile reviews</p>
+              <span className="empty-hint">Tutors who complete their profile will appear here for review</span>
+            </div>
+          ) : (
+            <div className="profiles-grid">
+              {pendingProfiles.map(profile => (
+                <div key={profile.id} className="profile-review-card">
+                  <div className="profile-card-header">
+                    <div className="profile-avatar-wrapper">
+                      {profile.profilePicture ? (
+                        <img src={profile.profilePicture} alt={profile.name} className="profile-avatar" />
+                      ) : (
+                        <div className="profile-avatar placeholder">
+                          {profile.name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="profile-info">
+                      <h3 className="profile-name">{profile.name}</h3>
+                      <p className="profile-email">{profile.email}</p>
+                      <span className="profile-submitted">
+                        <i className="ri-time-line"></i>
+                        Submitted {formatDate(profile.submittedAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="profile-details">
+                    <div className="detail-row">
+                      <span className="detail-label">Bio:</span>
+                      <span className={`detail-value ${profile.bio ? '' : 'missing'}`}>
+                        {profile.bio ? (profile.bio.length > 100 ? `${profile.bio.substring(0, 100)}...` : profile.bio) : 'Not provided'}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Education:</span>
+                      <span className={`detail-value ${profile.schoolAttended ? '' : 'missing'}`}>
+                        {profile.schoolAttended ? `${profile.schoolAttended}${profile.major ? ` - ${profile.major}` : ''}` : 'Not provided'}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Interests:</span>
+                      <span className={`detail-value ${profile.interests?.length ? '' : 'missing'}`}>
+                        {profile.interests?.length ? profile.interests.join(', ') : 'Not provided'}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Video:</span>
+                      <span className={`detail-value ${profile.videoIntroUrl ? 'has-video' : 'missing'}`}>
+                        {profile.videoIntroUrl ? (
+                          <a href={profile.videoIntroUrl} target="_blank" rel="noopener noreferrer">
+                            <i className="ri-video-line"></i> View Video
+                          </a>
+                        ) : 'Not uploaded'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="profile-card-actions">
+                    <button 
+                      className="btn-action approve"
+                      onClick={() => handleApproveProfile(profile.id)}
+                      disabled={reviewingId === profile.id}
+                    >
+                      {reviewingId === profile.id ? (
+                        <i className="ri-loader-4-line spinning"></i>
+                      ) : (
+                        <i className="ri-check-line"></i>
+                      )}
+                      Approve
+                    </button>
+                    <button 
+                      className="btn-action view"
+                      onClick={() => setShowProfileModal(profile)}
+                    >
+                      <i className="ri-eye-line"></i>
+                      Review
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Profile Review Modal */}
+      {showProfileModal && (
+        <div className="modal-overlay" onClick={() => setShowProfileModal(null)}>
+          <div className="profile-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Review Profile</h2>
+              <button className="modal-close" onClick={() => setShowProfileModal(null)}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="modal-profile-header">
+                {showProfileModal.profilePicture ? (
+                  <img src={showProfileModal.profilePicture} alt={showProfileModal.name} className="modal-avatar" />
+                ) : (
+                  <div className="modal-avatar placeholder">{showProfileModal.name.charAt(0)}</div>
+                )}
+                <div>
+                  <h3>{showProfileModal.name}</h3>
+                  <p>{showProfileModal.email}</p>
+                </div>
+              </div>
+
+              <div className="modal-section">
+                <h4>Bio</h4>
+                <p>{showProfileModal.bio || 'Not provided'}</p>
+              </div>
+
+              <div className="modal-section">
+                <h4>Education</h4>
+                <p>
+                  {showProfileModal.schoolAttended 
+                    ? `${showProfileModal.schoolAttended}${showProfileModal.major ? ` - ${showProfileModal.major}` : ''}`
+                    : 'Not provided'}
+                </p>
+              </div>
+
+              <div className="modal-section">
+                <h4>Interests</h4>
+                {showProfileModal.interests?.length ? (
+                  <div className="interests-chips">
+                    {showProfileModal.interests.map((interest, idx) => (
+                      <span key={idx} className="interest-chip">{interest}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="missing">Not provided</p>
+                )}
+              </div>
+
+              {showProfileModal.videoIntroUrl && (
+                <div className="modal-section">
+                  <h4>Introduction Video</h4>
+                  <video src={showProfileModal.videoIntroUrl} controls className="modal-video" />
+                </div>
+              )}
+
+              <div className="modal-section reject-section">
+                <h4>Rejection Reason (if rejecting)</h4>
+                <textarea 
+                  value={rejectReason}
+                  onChange={e => setRejectReason((e.target as HTMLTextAreaElement).value)}
+                  placeholder="Provide reason for rejection..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn-reject"
+                onClick={() => handleRejectProfile(showProfileModal.id)}
+                disabled={reviewingId === showProfileModal.id}
+              >
+                <i className="ri-close-circle-line"></i>
+                Reject
+              </button>
+              <button 
+                className="btn-approve"
+                onClick={() => handleApproveProfile(showProfileModal.id)}
+                disabled={reviewingId === showProfileModal.id}
+              >
+                {reviewingId === showProfileModal.id ? (
+                  <i className="ri-loader-4-line spinning"></i>
+                ) : (
+                  <i className="ri-check-double-line"></i>
+                )}
+                Approve Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -518,11 +518,6 @@ export const TutorProfilePage = () => {
                   </div>
                 </div>
 
-                <button className="btn-message">
-                  <i className="fi-sr-comment"></i>
-                  Send Message
-                </button>
-
                 <div className="booking-note">
                   <i className="fi-sr-info"></i>
                   <span>Get to know this tutor with a trial lesson</span>

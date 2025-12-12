@@ -119,22 +119,7 @@
   overflow: hidden;
 }
 
-.profile-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #0245ae 0%, #4a9eff 50%, #0245ae 100%);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
 
-@keyframes shimmer {
-  0%, 100% { background-position: 0% 0; }
-  50% { background-position: 100% 0; }
-}
 
 .profile-hero-content {
   display: flex;

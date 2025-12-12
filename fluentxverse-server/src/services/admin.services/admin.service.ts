@@ -4,13 +4,16 @@ import { hash, compare } from 'bcrypt-ts';
 import type { 
   DashboardStats, 
   ExamStats, 
-  PendingTutor, 
+  PendingTutor,
+  PendingProfileReview,
   TutorListItem,
   StudentListItem,
   RecentActivity,
   AdminUser,
   AdminLoginParams
 } from './admin.interface';
+import { NotificationService } from '../notification.services/notification.service';
+import { getIO } from '../../socket/socket.server';
 
 // Helper to safely convert Neo4j Integer to JavaScript number
 function toNumber(value: any): number {
@@ -245,6 +248,93 @@ export class AdminService {
       }
 
       return pendingTutors;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get pending profile reviews (tutors who submitted their profile for admin review)
+   */
+  async getPendingProfileReviews(limit: number = 20): Promise<PendingProfileReview[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (u:User)
+        WHERE u.profileStatus = 'pending_review'
+        RETURN u
+        ORDER BY u.profileSubmittedAt DESC
+        LIMIT $limit
+      `, { limit: neo4j.int(limit) });
+
+      return result.records.map(record => {
+        const u = record.get('u').properties;
+        return {
+          id: u.id,
+          name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+          email: u.email,
+          profilePicture: u.profilePicture || undefined,
+          bio: u.bio || undefined,
+          videoIntroUrl: u.videoIntroUrl || undefined,
+          schoolAttended: u.schoolAttended || undefined,
+          major: u.major || undefined,
+          interests: u.interests ? JSON.parse(u.interests) : [],
+          submittedAt: u.profileSubmittedAt || u.createdAt || new Date().toISOString(),
+          profileStatus: 'pending_review' as const
+        };
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Approve or reject a tutor profile
+   */
+  async reviewTutorProfile(tutorId: string, action: 'approve' | 'reject', reason?: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      const result = await session.run(`
+        MATCH (u:User { id: $tutorId })
+        SET u.profileStatus = $newStatus,
+            u.profileReviewedAt = datetime(),
+            u.profileRejectionReason = $reason
+        RETURN u.firstName as firstName, u.lastName as lastName
+      `, { 
+        tutorId, 
+        newStatus, 
+        reason: action === 'reject' ? reason : null 
+      });
+      
+      // Send notification to the tutor
+      const notificationService = new NotificationService();
+      const io = getIO();
+      
+      const record = result.records[0];
+      const tutorName = record ? `${record.get('firstName') || ''} ${record.get('lastName') || ''}`.trim() : 'Your';
+      
+      const notification = await notificationService.createNotification({
+        userId: tutorId,
+        userType: 'tutor',
+        type: action === 'approve' ? 'profile_approved' : 'profile_rejected',
+        title: action === 'approve' ? 'Profile Approved! 🎉' : 'Profile Needs Revision',
+        message: action === 'approve' 
+          ? 'Congratulations! Your profile has been approved. Students can now find and book sessions with you.'
+          : `Your profile was not approved. ${reason || 'Please review and update your information, then submit again.'}`,
+        data: {
+          link: '/profile'
+        }
+      });
+      
+      // Emit real-time notification via socket
+      if (io) {
+        io.to(`notifications:${tutorId}`).emit('notification:new', notification);
+      }
     } finally {
       await session.close();
     }

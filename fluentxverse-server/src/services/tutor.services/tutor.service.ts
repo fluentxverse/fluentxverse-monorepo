@@ -1,6 +1,8 @@
 import { getDriver } from '../../db/memgraph';
 import neo4j from 'neo4j-driver';
 import type { Tutor, TutorProfile, TutorSearchParams, TutorSearchResponse } from './tutor.interface';
+import { NotificationService } from '../notification.services/notification.service';
+import { getIO } from '../../socket/socket.server';
 
 export class TutorService {
   /**
@@ -440,6 +442,63 @@ export class TutorService {
   }
 
   /**
+   * Submit profile for admin review
+   */
+  public async submitProfileForReview(userId: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+    try {
+      // Update profile status and get tutor info
+      const result = await session.run(
+        `
+        MATCH (u:User { id: $userId })
+        SET u.profileStatus = 'pending_review',
+            u.profileSubmittedAt = datetime()
+        RETURN u.firstName as firstName, u.lastName as lastName, u.email as email
+        `,
+        { userId }
+      );
+      
+      const record = result.records[0];
+      const tutorName = record ? `${record.get('firstName') || ''} ${record.get('lastName') || ''}`.trim() : 'A tutor';
+      
+      // Get all admin users to notify them
+      const adminResult = await session.run(
+        `MATCH (a:User) WHERE a.role = 'admin' OR a.isAdmin = true RETURN a.id as adminId`
+      );
+      
+      const notificationService = new NotificationService();
+      const io = getIO();
+      
+      // Send notification to each admin
+      for (const adminRecord of adminResult.records) {
+        const adminId = adminRecord.get('adminId');
+        if (adminId) {
+          const notification = await notificationService.createNotification({
+            userId: adminId,
+            userType: 'admin',
+            type: 'profile_submitted',
+            title: 'New Profile Submission',
+            message: `${tutorName} has submitted their profile for review.`,
+            data: {
+              tutorId: userId,
+              tutorName: tutorName,
+              link: '/applications'
+            }
+          });
+          
+          // Emit real-time notification via socket
+          if (io) {
+            io.to(`notifications:${adminId}`).emit('notification:new', notification);
+          }
+        }
+      }
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
    * Get current profile picture URL for a user
    */
   public async getCurrentProfilePicture(userId: string): Promise<string | undefined> {
@@ -539,7 +598,9 @@ export class TutorService {
         totalSessions: user.totalSessions ? parseInt(user.totalSessions) : 0,
         isVerified: user.isVerified || false,
         isAvailable: user.isAvailable || false,
-        joinedDate: user.createdAt
+        joinedDate: user.createdAt,
+        profileStatus: user.profileStatus || 'incomplete',
+        profileSubmittedAt: user.profileSubmittedAt || undefined
       };
     } catch (error) {
       console.error('Error getting tutor profile:', error);

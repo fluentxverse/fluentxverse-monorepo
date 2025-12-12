@@ -284,6 +284,52 @@ const Tutor = new Elysia({ prefix: '/tutor' })
   })
 
   /**
+   * Submit profile for admin review
+   * POST /tutor/profile/submit
+   * Called when tutor completes their profile and wants admin to review
+   */
+  .post('/profile/submit', async ({ cookie }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) return { success: false, error: 'Not authenticated' };
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const userId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      // Check profile completeness
+      const profile = await tutorService.getTutorProfile(userId);
+      if (!profile) {
+        return { success: false, error: 'Profile not found' };
+      }
+
+      // Validate required fields
+      const missingFields: string[] = [];
+      if (!profile.bio || profile.bio.length < 10) missingFields.push('Bio');
+      if (!profile.profilePicture) missingFields.push('Profile Picture');
+      if (!profile.videoIntroUrl) missingFields.push('Introduction Video');
+      if (!profile.schoolAttended && (!profile.education || profile.education.length === 0)) missingFields.push('Education');
+      if (!profile.interests || profile.interests.length === 0) missingFields.push('Interests');
+
+      if (missingFields.length > 0) {
+        return { 
+          success: false, 
+          error: `Please complete the following before submitting: ${missingFields.join(', ')}` 
+        };
+      }
+
+      // Mark profile as submitted for review
+      await tutorService.submitProfileForReview(userId);
+
+      return { success: true, message: 'Profile submitted for review' };
+    } catch (error) {
+      console.error('Error in POST /tutor/profile/submit:', error);
+      return { success: false, error: 'Failed to submit profile for review' };
+    }
+  })
+
+  /**
    * Get tutor profile by ID
    * GET /tutor/:tutorId
    * IMPORTANT: This must be last because it's a catch-all route

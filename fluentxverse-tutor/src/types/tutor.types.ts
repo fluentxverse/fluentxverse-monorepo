@@ -45,6 +45,10 @@ export interface TutorProfile extends Tutor {
   completionRate?: number;
   responseTime?: string; // e.g., "within 2 hours"
   repeatStudents?: number;
+  
+  // Profile review status
+  profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
+  profileSubmittedAt?: string;
 }
 
 export interface TutorFilters {

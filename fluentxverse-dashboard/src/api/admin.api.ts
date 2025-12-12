@@ -45,6 +45,20 @@ export interface PendingTutor {
   interviewDate?: string | null;
 }
 
+export interface PendingProfileReview {
+  id: string;
+  name: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string;
+  videoIntroUrl?: string;
+  schoolAttended?: string;
+  major?: string;
+  interests?: string[];
+  submittedAt: string;
+  profileStatus: 'pending_review';
+}
+
 export interface RecentActivity {
   id: string;
   type: 'tutor_registered' | 'exam_passed' | 'exam_failed' | 'student_joined' | 'booking';
@@ -198,6 +212,32 @@ export const adminApi = {
       throw new Error(response.data.error || 'Failed to get pending tutors');
     }
     return response.data.data!;
+  },
+
+  /**
+   * Get pending profile reviews
+   */
+  async getPendingProfiles(limit: number = 20): Promise<PendingProfileReview[]> {
+    const response = await api.get<ApiResponse<PendingProfileReview[]>>('/admin/pending-profiles', {
+      params: { limit }
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get pending profiles');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Review a tutor profile (approve/reject)
+   */
+  async reviewProfile(tutorId: string, action: 'approve' | 'reject', reason?: string): Promise<void> {
+    const response = await api.post<ApiResponse<void>>(`/admin/profile/${tutorId}/review`, {
+      action,
+      reason
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to review profile');
+    }
   },
 
   /**

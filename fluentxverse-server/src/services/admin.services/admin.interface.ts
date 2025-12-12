@@ -41,6 +41,20 @@ export interface PendingTutor {
   interviewDate?: string | null;
 }
 
+export interface PendingProfileReview {
+  id: string;
+  name: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string;
+  videoIntroUrl?: string;
+  schoolAttended?: string;
+  major?: string;
+  interests?: string[];
+  submittedAt: string;
+  profileStatus: 'pending_review';
+}
+
 export interface TutorListItem {
   id: string;
   name: string;

@@ -9,6 +9,9 @@ export type NotificationType =
   | 'interview_reminder'
   | 'payment_received'
   | 'review_received'
+  | 'profile_submitted'
+  | 'profile_approved'
+  | 'profile_rejected'
   | 'system'
   | 'message';
 

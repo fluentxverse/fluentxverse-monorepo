@@ -34,6 +34,8 @@ interface TutorProfileData {
   isAvailable?: boolean;
   profilePicture?: string;
   videoIntroUrl?: string;
+  profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
+  profileSubmittedAt?: string;
 }
 
 export const MyProfilePage = () => {
@@ -45,6 +47,8 @@ export const MyProfilePage = () => {
   const [uploading, setUploading] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
+  const [interestChips, setInterestChips] = useState<string[]>([]);
+  const [newInterest, setNewInterest] = useState<string>('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [cropperImage, setCropperImage] = useState<string | null>(null);
@@ -52,6 +56,7 @@ export const MyProfilePage = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [videoUploading, setVideoUploading] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [submittingProfile, setSubmittingProfile] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -222,11 +227,39 @@ export const MyProfilePage = () => {
   const startEditing = (field: string, currentValue: string) => {
     setEditingField(field);
     setEditValue(currentValue || '');
+    
+    // Initialize interest chips when editing interests
+    if (field === 'interests') {
+      const existingInterests = profileData?.interests || [];
+      setInterestChips(existingInterests);
+      setNewInterest('');
+    }
   };
 
   const cancelEditing = () => {
     setEditingField(null);
     setEditValue('');
+    setInterestChips([]);
+    setNewInterest('');
+  };
+
+  const addInterest = () => {
+    const trimmed = newInterest.trim();
+    if (trimmed && interestChips.length < 5 && !interestChips.includes(trimmed)) {
+      setInterestChips([...interestChips, trimmed]);
+      setNewInterest('');
+    }
+  };
+
+  const removeInterest = (index: number) => {
+    setInterestChips(interestChips.filter((_, i) => i !== index));
+  };
+
+  const handleInterestKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addInterest();
+    }
   };
 
   const viewAvatar = () => {
@@ -243,18 +276,13 @@ export const MyProfilePage = () => {
     
     setSaving(true);
     try {
-      // Handle interests field - parse comma-separated values, limit to 5
+      // Handle interests field - use interestChips array
       let valueToSend: string | string[] = editValue;
       let valueToStore: string | string[] = editValue;
       
       if (editingField === 'interests') {
-        const interestsArray = editValue
-          .split(',')
-          .map(i => i.trim())
-          .filter(i => i.length > 0)
-          .slice(0, 5); // Limit to 5 interests
-        valueToSend = interestsArray;
-        valueToStore = interestsArray;
+        valueToSend = interestChips;
+        valueToStore = interestChips;
       }
       
       const response = await client.patch('/tutor/profile', { [editingField]: valueToSend });
@@ -284,6 +312,35 @@ export const MyProfilePage = () => {
     }
   };
 
+  const handleSubmitForReview = async () => {
+    if (submittingProfile) return;
+    
+    if (!confirm('Are you sure you want to submit your profile for review? Once submitted, you cannot edit your profile until it is reviewed.')) {
+      return;
+    }
+    
+    setSubmittingProfile(true);
+    try {
+      const response = await client.post('/tutor/profile/submit');
+      
+      if (response.data.success) {
+        setProfileData(prev => prev ? { 
+          ...prev, 
+          profileStatus: 'pending_review',
+          profileSubmittedAt: new Date().toISOString()
+        } : null);
+        alert('Your profile has been submitted for review! An admin will review it shortly.');
+      } else {
+        throw new Error(response.data.error || 'Failed to submit profile');
+      }
+    } catch (error: any) {
+      console.error('Submit error:', error);
+      alert(error.response?.data?.error || error.message || 'Failed to submit profile for review');
+    } finally {
+      setSubmittingProfile(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -309,6 +366,18 @@ export const MyProfilePage = () => {
   
   // Use avatarUrl state first, then fallback to profileData or user
   const currentAvatar = avatarUrl || profileData?.profilePicture || user?.profilePicture;
+
+  // Calculate profile completeness
+  const profileFields = [
+    { name: 'Bio', complete: !!(profileData?.bio && profileData.bio.length > 10) },
+    { name: 'Profile Picture', complete: !!currentAvatar },
+    { name: 'Introduction Video', complete: !!profileData?.videoIntroUrl },
+    { name: 'Education', complete: !!((personalInfo?.schoolAttended && personalInfo?.major) || (profileData?.education && profileData.education.length > 0)) },
+    { name: 'Interests', complete: !!(profileData?.interests && profileData.interests.length > 0) },
+  ];
+  const completedCount = profileFields.filter(f => f.complete).length;
+  const completionPercent = Math.round((completedCount / profileFields.length) * 100);
+  const incompleteFields = profileFields.filter(f => !f.complete);
 
   return (
     <>
@@ -462,6 +531,120 @@ export const MyProfilePage = () => {
                 )}
               </div>
             </div>
+
+            {/* Profile Completeness Indicator */}
+            {completionPercent < 100 && (
+              <div className="profile-completeness-card">
+                <div className="completeness-header">
+                  <div className="completeness-title">
+                    <i className="fi-sr-chart-pie-alt"></i>
+                    <span>Profile Completeness</span>
+                  </div>
+                  <div className="completeness-percent">{completionPercent}%</div>
+                </div>
+                <div className="completeness-bar">
+                  <div 
+                    className="completeness-bar-fill" 
+                    style={{ width: `${completionPercent}%` }}
+                  ></div>
+                </div>
+                {incompleteFields.length > 0 && (
+                  <div className="completeness-missing">
+                    <span className="missing-label">Complete your profile:</span>
+                    <div className="missing-items">
+                      {incompleteFields.slice(0, 3).map((field, idx) => (
+                        <span key={idx} className="missing-item">
+                          <i className="fi-sr-plus-small"></i>
+                          {field.name}
+                        </span>
+                      ))}
+                      {incompleteFields.length > 3 && (
+                        <span className="missing-item more">+{incompleteFields.length - 3} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Profile Status Card - Show when profile is 100% complete or has a status */}
+            {(completionPercent === 100 || profileData?.profileStatus) && (
+              <div className={`profile-status-card status-${profileData?.profileStatus || 'ready'}`}>
+                {profileData?.profileStatus === 'pending_review' && (
+                  <>
+                    <div className="status-icon pending">
+                      <i className="fi-sr-time-half-past"></i>
+                    </div>
+                    <div className="status-content">
+                      <h3>Profile Under Review</h3>
+                      <p>Your profile has been submitted and is awaiting admin review. You'll be notified once it's approved.</p>
+                      {profileData.profileSubmittedAt && (
+                        <span className="status-date">
+                          Submitted on {new Date(profileData.profileSubmittedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+                {profileData?.profileStatus === 'approved' && (
+                  <>
+                    <div className="status-icon approved">
+                      <i className="fi-sr-badge-check"></i>
+                    </div>
+                    <div className="status-content">
+                      <h3>Profile Approved</h3>
+                      <p>Your profile has been reviewed and approved! Students can now find and book sessions with you.</p>
+                    </div>
+                  </>
+                )}
+                {profileData?.profileStatus === 'rejected' && (
+                  <>
+                    <div className="status-icon rejected">
+                      <i className="fi-sr-cross-circle"></i>
+                    </div>
+                    <div className="status-content">
+                      <h3>Profile Needs Revision</h3>
+                      <p>Your profile was not approved. Please review and update your information, then submit again.</p>
+                      <button 
+                        className="btn-submit-profile"
+                        onClick={handleSubmitForReview}
+                        disabled={submittingProfile || completionPercent < 100}
+                      >
+                        {submittingProfile ? 'Submitting...' : 'Resubmit for Review'}
+                      </button>
+                    </div>
+                  </>
+                )}
+                {(!profileData?.profileStatus || profileData.profileStatus === 'incomplete') && completionPercent === 100 && (
+                  <>
+                    <div className="status-icon ready">
+                      <i className="fi-sr-rocket-lunch"></i>
+                    </div>
+                    <div className="status-content">
+                      <h3>Profile Complete!</h3>
+                      <p>Your profile is 100% complete. Submit it for review to start teaching on FluentXVerse.</p>
+                      <button 
+                        className="btn-submit-profile"
+                        onClick={handleSubmitForReview}
+                        disabled={submittingProfile}
+                      >
+                        {submittingProfile ? (
+                          <>
+                            <span className="btn-spinner"></span>
+                            Submitting...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fi-sr-paper-plane"></i>
+                            Submit for Review
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Tabs Navigation */}
             <div className="profile-tabs">
@@ -692,15 +875,47 @@ export const MyProfilePage = () => {
                   rows={5}
                 />
               ) : editingField === 'interests' ? (
-                <>
-                  <input
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue((e.target as HTMLInputElement).value)}
-                    placeholder="e.g. Reading, Hiking, Photography, Cooking, Music"
-                  />
-                  <p className="input-hint">Enter up to 5 interests, separated by commas</p>
-                </>
+                <div className="interests-editor">
+                  <div className="interests-chips">
+                    {interestChips.map((interest, idx) => (
+                      <div key={idx} className="interest-chip">
+                        <span>{interest}</span>
+                        <button 
+                          type="button" 
+                          className="chip-remove" 
+                          onClick={() => removeInterest(idx)}
+                          aria-label={`Remove ${interest}`}
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {interestChips.length < 5 && (
+                    <div className="interest-input-row">
+                      <input
+                        type="text"
+                        value={newInterest}
+                        onChange={(e) => setNewInterest((e.target as HTMLInputElement).value)}
+                        onKeyDown={handleInterestKeyDown}
+                        placeholder="Type an interest and press Enter..."
+                        maxLength={30}
+                      />
+                      <button 
+                        type="button" 
+                        className="btn-add-interest" 
+                        onClick={addInterest}
+                        disabled={!newInterest.trim()}
+                      >
+                        <i className="fas fa-plus"></i>
+                        Add
+                      </button>
+                    </div>
+                  )}
+                  <p className="input-hint">
+                    {interestChips.length}/5 interests added. {interestChips.length < 5 ? 'Press Enter or click Add to add more.' : 'Maximum reached.'}
+                  </p>
+                </div>
               ) : (
                 <input
                   type="text"

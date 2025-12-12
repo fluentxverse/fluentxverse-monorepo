@@ -74,22 +74,7 @@
   overflow: hidden;
 }
 
-.profile-hero::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #0245ae 0%, #4a9eff 50%, #0245ae 100%);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
-}
 
-@keyframes shimmer {
-  0%, 100% { background-position: 0% 0; }
-  50% { background-position: 100% 0; }
-}
 
 .profile-hero-content {
   display: flex;
@@ -511,6 +496,276 @@
   color: white;
   font-weight: 600;
   border: none;
+}
+
+/* ================================
+   Profile Completeness Indicator
+   ================================ */
+.profile-completeness-card {
+  background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+}
+
+.completeness-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.completeness-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.completeness-title i {
+  font-size: 18px;
+  color: #f59e0b;
+}
+
+.completeness-percent {
+  font-size: 20px;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.completeness-bar {
+  height: 8px;
+  background: rgba(251, 191, 36, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.completeness-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.completeness-missing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.missing-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.missing-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.missing-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid #fcd34d;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+.missing-item i {
+  font-size: 10px;
+}
+
+.missing-item.more {
+  background: transparent;
+  border-color: transparent;
+  color: #b45309;
+}
+
+/* ================================
+   Profile Status Card
+   ================================ */
+.profile-status-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.profile-status-card.status-ready {
+  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #10b981;
+}
+
+.profile-status-card.status-pending_review {
+  background: linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+}
+
+.profile-status-card.status-approved {
+  background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #10b981;
+}
+
+.profile-status-card.status-rejected {
+  background: linear-gradient(145deg, #fef2f2 0%, #fecaca 100%);
+  border: 1px solid #ef4444;
+}
+
+.profile-status-card.status-incomplete {
+  background: linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+}
+
+.status-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-icon i {
+  font-size: 24px;
+}
+
+.status-icon.ready {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.status-icon.ready i {
+  color: white;
+}
+
+.status-icon.pending {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.status-icon.pending i {
+  color: white;
+}
+
+.status-icon.approved {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.status-icon.approved i {
+  color: white;
+}
+
+.status-icon.rejected {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.status-icon.rejected i {
+  color: white;
+}
+
+.status-content {
+  flex: 1;
+}
+
+.status-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.status-content p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.status-date {
+  display: inline-block;
+  font-size: 12px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.btn-submit-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.btn-submit-profile:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(2, 69, 174, 0.4);
+}
+
+.btn-submit-profile:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-submit-profile i {
+  font-size: 14px;
+}
+
+.btn-submit-profile .btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-status-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .btn-submit-profile {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ================================
@@ -1236,6 +1491,115 @@
 
 .btn-save:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================================
+   Interests Chip Editor
+   ================================ */
+.interests-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.interests-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 40px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.interest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: chipIn 0.2s ease-out;
+}
+
+@keyframes chipIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.interest-chip .chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.2s ease;
+}
+
+.interest-chip .chip-remove:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.interest-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.interest-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.interest-input-row input:focus {
+  outline: none;
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.btn-add-interest {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #0245ae;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-interest:hover:not(:disabled) {
+  background: #0356d1;
+  transform: translateY(-1px);
+}
+
+.btn-add-interest:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

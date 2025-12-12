@@ -67,6 +67,52 @@ const Admin = new Elysia({ prefix: '/admin' })
   })
 
   /**
+   * Get pending profile reviews (tutors who submitted their profile)
+   * GET /admin/pending-profiles
+   */
+  .get('/pending-profiles', async ({ query }) => {
+    try {
+      const limit = query.limit ? Number(query.limit) : 20;
+      const profiles = await adminService.getPendingProfileReviews(limit);
+      return {
+        success: true,
+        data: profiles
+      };
+    } catch (error) {
+      console.error('Error in /admin/pending-profiles:', error);
+      return {
+        success: false,
+        error: 'Failed to get pending profiles'
+      };
+    }
+  })
+
+  /**
+   * Approve or reject a tutor profile
+   * POST /admin/profile/:tutorId/review
+   */
+  .post('/profile/:tutorId/review', async ({ params, body }) => {
+    try {
+      const { tutorId } = params;
+      const { action, reason } = body as { action: 'approve' | 'reject'; reason?: string };
+
+      if (!action || !['approve', 'reject'].includes(action)) {
+        return { success: false, error: 'Invalid action. Must be "approve" or "reject"' };
+      }
+
+      await adminService.reviewTutorProfile(tutorId, action, reason);
+
+      return { 
+        success: true, 
+        message: `Profile ${action === 'approve' ? 'approved' : 'rejected'} successfully` 
+      };
+    } catch (error) {
+      console.error('Error in /admin/profile/:tutorId/review:', error);
+      return { success: false, error: 'Failed to review profile' };
+    }
+  })
+
+  /**
    * Get all tutors with filters
    * GET /admin/tutors
    */

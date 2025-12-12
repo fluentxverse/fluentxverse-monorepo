@@ -111,5 +111,16 @@ export const tutorApi = {
     }
 
     return response.data.url;
+  },
+
+  /**
+   * Submit profile for admin review
+   */
+  submitProfileForReview: async (): Promise<{ success: boolean; message?: string; error?: string }> => {
+    const response = await api.post<{ success: boolean; message?: string; error?: string }>(
+      '/tutor/profile/submit'
+    );
+
+    return response.data;
   }
 };

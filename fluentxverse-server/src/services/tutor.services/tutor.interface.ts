@@ -32,9 +32,13 @@ export interface TutorProfile extends Tutor {
   introduction?: string;
   videoIntroUrl?: string;
   interests?: string[];
+  schoolAttended?: string;
+  major?: string;
   completionRate?: number;
   responseTime?: string;
   repeatStudents?: number;
+  profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
+  profileSubmittedAt?: string;
 }
 
 export interface TutorFilters {
