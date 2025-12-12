@@ -340,26 +340,30 @@ export class ScheduleService {
       const slot = slotResult.records[0]?.get('s').properties;
       console.log('Slot found:', JSON.stringify(slot, null, 2));
       
-      // Check if tutor is certified (passed both written and speaking exams)
+      // Check if tutor is certified (passed both exams AND profile approved)
       // OR is a test account (bypass for development)
       const TEST_TUTOR_EMAILS = ['paulanthonyarriola@gmail.com'];
       console.log('Checking tutor certification for tutorId:', slot.tutorId);
       const certificationResult = await session.run(
         `MATCH (u:User {id: $tutorId})
-         RETURN u.writtenExamPassed as writtenPassed, u.speakingExamPassed as speakingPassed, u.email as email`,
+         RETURN u.writtenExamPassed as writtenPassed, u.speakingExamPassed as speakingPassed, u.profileStatus as profileStatus, u.email as email`,
         { tutorId: slot.tutorId }
       );
       
       if (certificationResult.records.length > 0) {
         const writtenPassed = certificationResult.records[0]?.get('writtenPassed');
         const speakingPassed = certificationResult.records[0]?.get('speakingPassed');
+        const profileStatus = certificationResult.records[0]?.get('profileStatus');
         const tutorEmail = certificationResult.records[0]?.get('email');
         
         // Bypass certification check for test accounts
         const isTestAccount = TEST_TUTOR_EMAILS.includes(tutorEmail);
         
-        if (!isTestAccount && (writtenPassed !== true || speakingPassed !== true)) {
-          console.log('ERROR: Tutor is not certified - writtenPassed:', writtenPassed, 'speakingPassed:', speakingPassed);
+        // Full certification requires: passed both exams AND profile approved
+        const isFullyCertified = writtenPassed === true && speakingPassed === true && profileStatus === 'approved';
+        
+        if (!isTestAccount && !isFullyCertified) {
+          console.log('ERROR: Tutor is not certified - writtenPassed:', writtenPassed, 'speakingPassed:', speakingPassed, 'profileStatus:', profileStatus);
           throw new Error('This tutor is not yet certified to teach. Please choose a certified tutor.');
         }
         console.log('Tutor certification verified ✓', isTestAccount ? '(test account bypass)' : '');

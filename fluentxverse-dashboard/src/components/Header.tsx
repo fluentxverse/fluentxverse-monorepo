@@ -64,6 +64,8 @@ export function Header() {
         return { icon: 'ri-graduation-cap-line', class: 'info' };
       case 'booking':
         return { icon: 'ri-calendar-check-line', class: 'success' };
+      case 'profile_submitted':
+        return { icon: 'ri-user-settings-line', class: 'primary' };
       default:
         return { icon: 'ri-notification-3-line', class: 'info' };
     }

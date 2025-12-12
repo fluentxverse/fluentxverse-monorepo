@@ -381,6 +381,11 @@
   color: #f59e0b;
 }
 
+.status-badge.pending-profile {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
 .status-badge.processing {
   background: rgba(139, 92, 246, 0.1);
   color: #8b5cf6;

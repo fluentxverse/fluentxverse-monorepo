@@ -47,6 +47,7 @@ const ApplicationsPage = () => {
   const loadPendingProfiles = async () => {
     try {
       const data = await adminApi.getPendingProfiles(50);
+      console.log('Loaded pending profiles:', data);
       setPendingProfiles(data);
     } catch (err) {
       console.error('Failed to load pending profiles:', err);
@@ -56,6 +57,7 @@ const ApplicationsPage = () => {
   const handleApproveProfile = async (tutorId: string) => {
     try {
       setReviewingId(tutorId);
+      setError('');
       await adminApi.reviewProfile(tutorId, 'approve');
       setPendingProfiles(prev => prev.filter(p => p.id !== tutorId));
       setShowProfileModal(null);
@@ -73,6 +75,7 @@ const ApplicationsPage = () => {
     }
     try {
       setReviewingId(tutorId);
+      setError('');
       await adminApi.reviewProfile(tutorId, 'reject', rejectReason);
       setPendingProfiles(prev => prev.filter(p => p.id !== tutorId));
       setShowProfileModal(null);
@@ -356,7 +359,15 @@ const ApplicationsPage = () => {
           ) : (
             <div className="profiles-grid">
               {pendingProfiles.map(profile => (
-                <div key={profile.id} className="profile-review-card">
+                <div 
+                  key={profile.id} 
+                  className="profile-review-card clickable"
+                  onClick={() => {
+                    console.log('Card clicked:', profile);
+                    setShowProfileModal(profile);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="profile-card-header">
                     <div className="profile-avatar-wrapper">
                       {profile.profilePicture ? (
@@ -370,64 +381,37 @@ const ApplicationsPage = () => {
                     <div className="profile-info">
                       <h3 className="profile-name">{profile.name}</h3>
                       <p className="profile-email">{profile.email}</p>
-                      <span className="profile-submitted">
-                        <i className="ri-time-line"></i>
-                        Submitted {formatDate(profile.submittedAt)}
-                      </span>
+                    </div>
+                    <div className="profile-submitted-badge">
+                      <i className="ri-time-line"></i>
+                      <span>{formatDate(profile.submittedAt)}</span>
                     </div>
                   </div>
 
-                  <div className="profile-details">
-                    <div className="detail-row">
-                      <span className="detail-label">Bio:</span>
-                      <span className={`detail-value ${profile.bio ? '' : 'missing'}`}>
-                        {profile.bio ? (profile.bio.length > 100 ? `${profile.bio.substring(0, 100)}...` : profile.bio) : 'Not provided'}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Education:</span>
-                      <span className={`detail-value ${profile.schoolAttended ? '' : 'missing'}`}>
-                        {profile.schoolAttended ? `${profile.schoolAttended}${profile.major ? ` - ${profile.major}` : ''}` : 'Not provided'}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Interests:</span>
-                      <span className={`detail-value ${profile.interests?.length ? '' : 'missing'}`}>
-                        {profile.interests?.length ? profile.interests.join(', ') : 'Not provided'}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Video:</span>
-                      <span className={`detail-value ${profile.videoIntroUrl ? 'has-video' : 'missing'}`}>
-                        {profile.videoIntroUrl ? (
-                          <a href={profile.videoIntroUrl} target="_blank" rel="noopener noreferrer">
-                            <i className="ri-video-line"></i> View Video
-                          </a>
-                        ) : 'Not uploaded'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="profile-card-actions">
-                    <button 
-                      className="btn-action approve"
-                      onClick={() => handleApproveProfile(profile.id)}
-                      disabled={reviewingId === profile.id}
-                    >
-                      {reviewingId === profile.id ? (
-                        <i className="ri-loader-4-line spinning"></i>
-                      ) : (
-                        <i className="ri-check-line"></i>
+                  <div className="profile-preview">
+                    {profile.bio && (
+                      <p className="preview-bio">
+                        {profile.bio.length > 80 ? `${profile.bio.substring(0, 80)}...` : profile.bio}
+                      </p>
+                    )}
+                    <div className="preview-badges">
+                      {profile.profilePicture && (
+                        <span className="preview-badge has"><i className="ri-image-line"></i> Photo</span>
                       )}
-                      Approve
-                    </button>
-                    <button 
-                      className="btn-action view"
-                      onClick={() => setShowProfileModal(profile)}
-                    >
-                      <i className="ri-eye-line"></i>
-                      Review
-                    </button>
+                      {profile.videoIntroUrl && (
+                        <span className="preview-badge has"><i className="ri-video-line"></i> Video</span>
+                      )}
+                      {profile.schoolAttended && (
+                        <span className="preview-badge has"><i className="ri-graduation-cap-line"></i> Education</span>
+                      )}
+                      {profile.interests?.length > 0 && (
+                        <span className="preview-badge has"><i className="ri-heart-line"></i> Interests</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="click-hint">
+                    <span>Click to review</span>
                   </div>
                 </div>
               ))}
@@ -438,35 +422,49 @@ const ApplicationsPage = () => {
 
       {/* Profile Review Modal */}
       {showProfileModal && (
-        <div className="modal-overlay" onClick={() => setShowProfileModal(null)}>
+        <div className="modal-overlay" onClick={() => { setShowProfileModal(null); setRejectReason(''); setError(''); }}>
           <div className="profile-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Review Profile</h2>
-              <button className="modal-close" onClick={() => setShowProfileModal(null)}>
+              <button className="modal-close" onClick={() => { setShowProfileModal(null); setRejectReason(''); setError(''); }}>
                 <i className="ri-close-line"></i>
               </button>
             </div>
             <div className="modal-body">
+              {error && (
+                <div className="modal-error">
+                  <i className="ri-error-warning-line"></i>
+                  {error}
+                </div>
+              )}
+              
               <div className="modal-profile-header">
                 {showProfileModal.profilePicture ? (
-                  <img src={showProfileModal.profilePicture} alt={showProfileModal.name} className="modal-avatar" />
+                  <a href={showProfileModal.profilePicture} target="_blank" rel="noopener noreferrer" className="avatar-link">
+                    <img src={showProfileModal.profilePicture} alt={showProfileModal.name} className="modal-avatar" />
+                    <span className="avatar-zoom"><i className="ri-zoom-in-line"></i></span>
+                  </a>
                 ) : (
                   <div className="modal-avatar placeholder">{showProfileModal.name.charAt(0)}</div>
                 )}
-                <div>
+                <div className="modal-profile-info">
                   <h3>{showProfileModal.name}</h3>
                   <p>{showProfileModal.email}</p>
+                  <span className="submitted-date">
+                    <i className="ri-time-line"></i>
+                    Submitted {formatDate(showProfileModal.submittedAt)}
+                  </span>
                 </div>
               </div>
 
               <div className="modal-section">
-                <h4>Bio</h4>
-                <p>{showProfileModal.bio || 'Not provided'}</p>
+                <h4><i className="ri-file-text-line"></i> Bio</h4>
+                <p className={showProfileModal.bio ? '' : 'missing'}>{showProfileModal.bio || 'Not provided'}</p>
               </div>
 
               <div className="modal-section">
-                <h4>Education</h4>
-                <p>
+                <h4><i className="ri-graduation-cap-line"></i> Education</h4>
+                <p className={showProfileModal.schoolAttended ? '' : 'missing'}>
                   {showProfileModal.schoolAttended 
                     ? `${showProfileModal.schoolAttended}${showProfileModal.major ? ` - ${showProfileModal.major}` : ''}`
                     : 'Not provided'}
@@ -474,7 +472,7 @@ const ApplicationsPage = () => {
               </div>
 
               <div className="modal-section">
-                <h4>Interests</h4>
+                <h4><i className="ri-heart-line"></i> Interests</h4>
                 {showProfileModal.interests?.length ? (
                   <div className="interests-chips">
                     {showProfileModal.interests.map((interest, idx) => (
@@ -486,15 +484,18 @@ const ApplicationsPage = () => {
                 )}
               </div>
 
-              {showProfileModal.videoIntroUrl && (
-                <div className="modal-section">
-                  <h4>Introduction Video</h4>
+              <div className="modal-section">
+                <h4><i className="ri-video-line"></i> Introduction Video</h4>
+                {showProfileModal.videoIntroUrl ? (
                   <video src={showProfileModal.videoIntroUrl} controls className="modal-video" />
-                </div>
-              )}
+                ) : (
+                  <p className="missing">Not uploaded</p>
+                )}
+              </div>
 
               <div className="modal-section reject-section">
-                <h4>Rejection Reason (if rejecting)</h4>
+                <h4><i className="ri-edit-line"></i> Rejection Notes</h4>
+                <p className="reject-hint">If rejecting, provide feedback for the tutor to improve their profile.</p>
                 <textarea 
                   value={rejectReason}
                   onChange={e => setRejectReason((e.target as HTMLTextAreaElement).value)}

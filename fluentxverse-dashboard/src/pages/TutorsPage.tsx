@@ -155,6 +155,8 @@ const TutorsPage = () => {
   const getStatusBadge = (tutor: TutorListItem) => {
     if (tutor.status === 'certified') {
       return <span className="status-badge certified"><i className="ri-shield-check-line"></i> Certified</span>;
+    } else if (tutor.status === 'pending_profile') {
+      return <span className="status-badge pending-profile"><i className="ri-user-search-line"></i> Pending Profile Review</span>;
     } else if (tutor.status === 'processing') {
       return <span className="status-badge processing"><i className="ri-loader-4-line"></i> Processing</span>;
     } else if (tutor.status === 'failed') {

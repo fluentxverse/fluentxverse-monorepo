@@ -12,6 +12,7 @@ import type {
   AdminUser,
   AdminLoginParams
 } from './admin.interface';
+import type { SuspensionHistoryItem } from './suspension.job';
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
 
@@ -48,12 +49,13 @@ export class AdminService {
     const session = driver.session();
 
     try {
-      // Get all tutors with their exam results
+      // Get all tutors with their exam results and profile status
       const tutorResult = await session.run(`
         MATCH (u:User)
         OPTIONAL MATCH (u)-[:TAKES]->(we:Exam {type: 'written', status: 'completed'})
         OPTIONAL MATCH (u)-[:TAKES]->(se:Exam {type: 'speaking', status: 'completed'})
         RETURN u.id as tutorId,
+               u.profileStatus as profileStatus,
                collect(DISTINCT we.result) as writtenResults,
                collect(DISTINCT se.result) as speakingResults
       `);
@@ -66,13 +68,17 @@ export class AdminService {
         totalTutors++;
         const writtenResults = record.get('writtenResults') || [];
         const speakingResults = record.get('speakingResults') || [];
+        const profileStatus = record.get('profileStatus');
         
         // Check if any written exam passed
         const writtenPassed = writtenResults.some((r: string) => examPassed(r));
         // Check if any speaking exam passed
         const speakingPassed = speakingResults.some((r: string) => examPassed(r));
+        // Check if profile is approved
+        const profileApproved = profileStatus === 'approved';
         
-        if (writtenPassed && speakingPassed) {
+        // Certified = passed both exams AND profile approved
+        if (writtenPassed && speakingPassed && profileApproved) {
           certifiedTutors++;
         } else {
           pendingTutors++;
@@ -271,6 +277,29 @@ export class AdminService {
 
       return result.records.map(record => {
         const u = record.get('u').properties;
+        
+        // Convert Neo4j DateTime to ISO string
+        let submittedAt = new Date().toISOString();
+        if (u.profileSubmittedAt) {
+          if (typeof u.profileSubmittedAt === 'string') {
+            submittedAt = u.profileSubmittedAt;
+          } else if (u.profileSubmittedAt.toStandardDate) {
+            submittedAt = u.profileSubmittedAt.toStandardDate().toISOString();
+          } else if (u.profileSubmittedAt.year) {
+            // Manual conversion from Neo4j DateTime object
+            const dt = u.profileSubmittedAt;
+            const year = dt.year.low || dt.year;
+            const month = (dt.month.low || dt.month) - 1;
+            const day = dt.day.low || dt.day;
+            const hour = dt.hour?.low || dt.hour || 0;
+            const minute = dt.minute?.low || dt.minute || 0;
+            const second = dt.second?.low || dt.second || 0;
+            submittedAt = new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
+          }
+        } else if (u.createdAt) {
+          submittedAt = typeof u.createdAt === 'string' ? u.createdAt : new Date().toISOString();
+        }
+        
         return {
           id: u.id,
           name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
@@ -281,7 +310,7 @@ export class AdminService {
           schoolAttended: u.schoolAttended || undefined,
           major: u.major || undefined,
           interests: u.interests ? JSON.parse(u.interests) : [],
-          submittedAt: u.profileSubmittedAt || u.createdAt || new Date().toISOString(),
+          submittedAt,
           profileStatus: 'pending_review' as const
         };
       });
@@ -346,7 +375,7 @@ export class AdminService {
   async getTutors(params: {
     page?: number;
     limit?: number;
-    status?: 'all' | 'certified' | 'pending' | 'processing' | 'failed';
+    status?: 'all' | 'certified' | 'pending' | 'processing' | 'failed' | 'suspended' | 'pending_profile';
     search?: string;
   }): Promise<{ tutors: TutorListItem[]; total: number }> {
     const driver = getDriver();
@@ -390,10 +419,15 @@ export class AdminService {
         const writtenPassed = writtenResults.some((r: string) => examPassed(r));
         const speakingPassed = speakingResults.some((r: string) => examPassed(r));
         const isProcessing = processingCount > 0;
+        const profileStatus = u.profileStatus || 'incomplete';
 
-        let tutorStatus: 'pending' | 'certified' | 'processing' | 'failed';
-        if (writtenPassed && speakingPassed) {
+        // Determine tutor status - now includes profile review requirement
+        let tutorStatus: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
+        if (writtenPassed && speakingPassed && profileStatus === 'approved') {
           tutorStatus = 'certified';
+        } else if (writtenPassed && speakingPassed && profileStatus !== 'approved') {
+          // Passed exams but profile not approved yet
+          tutorStatus = 'pending_profile';
         } else if (isProcessing) {
           tutorStatus = 'processing';
         } else {
@@ -420,6 +454,7 @@ export class AdminService {
           writtenExamScore: u.writtenExamScore,
           speakingExamScore: u.speakingExamScore,
           status: tutorStatus,
+          profileStatus: profileStatus as 'incomplete' | 'pending_review' | 'approved' | 'rejected',
           languages: u.languages || ['English'],
           totalSessions: u.totalSessions || 0,
           rating: u.rating || 0,
@@ -593,6 +628,49 @@ export class AdminService {
           id: record.get('id'),
           type: 'student_joined',
           message: `New student: ${firstName} ${lastName}`.trim(),
+          timestamp,
+          userId: record.get('id')
+        });
+      });
+
+      // Get profile submissions for review
+      const profileResult = await session.run(`
+        MATCH (u:User)
+        WHERE u.profileStatus = 'pending_review' AND u.profileSubmittedAt IS NOT NULL
+        RETURN u.id as id, u.firstName as firstName, u.lastName as lastName, u.profileSubmittedAt as timestamp, 'profile_submitted' as type
+        ORDER BY u.profileSubmittedAt DESC
+        LIMIT $limit
+      `, { limit: neo4j.int(limit) });
+
+      // Process profile submissions
+      profileResult.records.forEach(record => {
+        const firstName = record.get('firstName') || '';
+        const lastName = record.get('lastName') || '';
+        const rawTimestamp = record.get('timestamp');
+        
+        // Handle Neo4j DateTime
+        let timestamp: string;
+        if (rawTimestamp && typeof rawTimestamp === 'string') {
+          timestamp = rawTimestamp;
+        } else if (rawTimestamp && rawTimestamp.toStandardDate) {
+          timestamp = rawTimestamp.toStandardDate().toISOString();
+        } else if (rawTimestamp && rawTimestamp.year) {
+          const dt = rawTimestamp;
+          const year = dt.year.low ?? dt.year;
+          const month = (dt.month.low ?? dt.month) - 1;
+          const day = dt.day.low ?? dt.day;
+          const hour = dt.hour?.low ?? dt.hour ?? 0;
+          const minute = dt.minute?.low ?? dt.minute ?? 0;
+          const second = dt.second?.low ?? dt.second ?? 0;
+          timestamp = new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
+        } else {
+          timestamp = new Date().toISOString();
+        }
+        
+        activities.push({
+          id: `profile_${record.get('id')}`,
+          type: 'profile_submitted',
+          message: `Profile submitted for review: ${firstName} ${lastName}`.trim(),
           timestamp,
           userId: record.get('id')
         });
@@ -1076,7 +1154,10 @@ export class AdminService {
           until: sh.until,
           previousReason: sh.previousReason,
           previousSuspendedUntil: sh.previousSuspendedUntil,
-          createdAt: sh.createdAt
+          createdAt: sh.createdAt,
+          targetType: userType,
+          suspendedBy: sh.suspendedBy,
+          unsuspendedBy: sh.unsuspendedBy
         };
       });
     } finally {

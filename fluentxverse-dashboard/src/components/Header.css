@@ -214,6 +214,11 @@
   color: var(--info);
 }
 
+.notification-icon.primary {
+  background: rgba(99, 102, 241, 0.15);
+  color: #6366f1;
+}
+
 .notification-content {
   flex: 1;
 }

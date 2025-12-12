@@ -4,6 +4,25 @@ import type { Tutor, TutorProfile, TutorSearchParams, TutorSearchResponse } from
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
 
+// Helper to convert Neo4j DateTime to ISO string
+function neo4jDateTimeToISO(dt: any): string | undefined {
+  if (!dt) return undefined;
+  if (typeof dt === 'string') return dt;
+  if (dt.toStandardDate) {
+    return dt.toStandardDate().toISOString();
+  }
+  if (dt.year) {
+    const year = dt.year.low ?? dt.year;
+    const month = (dt.month.low ?? dt.month) - 1;
+    const day = dt.day.low ?? dt.day;
+    const hour = dt.hour?.low ?? dt.hour ?? 0;
+    const minute = dt.minute?.low ?? dt.minute ?? 0;
+    const second = dt.second?.low ?? dt.second ?? 0;
+    return new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
+  }
+  return undefined;
+}
+
 export class TutorService {
   /**
    * Search and filter tutors
@@ -60,10 +79,10 @@ export class TutorService {
       let matchPattern = 'MATCH (u:User)';
       const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
       
-      // Certification requirement - tutor must have passed both exams
+      // Certification requirement - tutor must have passed both exams AND have approved profile
       // OR be a test account (bypass for development)
       const TEST_ACCOUNT_IDS = ['paulanthonyarriola@gmail.com']; // Test tutor emails
-      const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true) OR u.email IN ['paulanthonyarriola@gmail.com']`;
+      const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR u.email IN ['paulanthonyarriola@gmail.com']`;
       
       // Get today's date for "all dates" filter
       const today = new Date().toISOString().split('T')[0];
@@ -600,7 +619,7 @@ export class TutorService {
         isAvailable: user.isAvailable || false,
         joinedDate: user.createdAt,
         profileStatus: user.profileStatus || 'incomplete',
-        profileSubmittedAt: user.profileSubmittedAt || undefined
+        profileSubmittedAt: neo4jDateTimeToISO(user.profileSubmittedAt)
       };
     } catch (error) {
       console.error('Error getting tutor profile:', error);

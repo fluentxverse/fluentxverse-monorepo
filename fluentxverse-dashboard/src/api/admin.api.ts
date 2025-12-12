@@ -76,7 +76,8 @@ export interface TutorListItem {
   speakingExamPassed: boolean;
   writtenExamScore?: number;
   speakingExamScore?: number;
-  status: 'pending' | 'certified' | 'processing' | 'failed';
+  status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
+  profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
   languages: string[];
   totalSessions: number;
   rating: number;
