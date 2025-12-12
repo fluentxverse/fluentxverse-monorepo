@@ -1,0 +1,1280 @@
+/* ================================
+   Performance Metrics Page
+   ================================ */
+
+.performance-metrics-page {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  min-height: 100vh;
+  padding: 24px 20px 60px;
+  animation: pageLoad 0.5s ease-out;
+}
+
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.performance-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.performance-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.performance-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ================================
+   Header
+   ================================ */
+.performance-header {
+  margin-bottom: 32px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #0245ae;
+}
+
+.back-link i {
+  font-size: 16px;
+}
+
+/* Page Title Row - Icon + Gradient Text */
+.performance-metrics-page .page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.performance-metrics-page .page-title-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+  flex-shrink: 0;
+}
+
+.performance-metrics-page .page-title-icon i {
+  color: #fff;
+  font-size: 22px;
+}
+
+.performance-metrics-page .page-title-gradient {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}
+
+.performance-subtitle {
+  color: #64748b;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ================================
+   Summary Cards
+   ================================ */
+.performance-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(2, 69, 174, 0.12);
+  border-color: rgba(2, 69, 174, 0.1);
+}
+
+.summary-card.active {
+  border-color: #0245ae;
+  box-shadow: 0 8px 24px rgba(2, 69, 174, 0.2);
+}
+
+.summary-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.summary-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.summary-value i {
+  font-size: 24px;
+  color: #0245ae;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ================================
+   Tabs
+   ================================ */
+.performance-tabs {
+  display: flex;
+  gap: 8px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(2, 69, 174, 0.05);
+}
+
+.performance-tabs .tab-btn {
+  flex: 1;
+  padding: 14px 20px;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.performance-tabs .tab-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+  color: #475569;
+}
+
+.performance-tabs .tab-btn.active {
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.35);
+}
+
+.performance-tabs .tab-btn i {
+  font-size: 18px;
+}
+
+/* ================================
+   Content Cards
+   ================================ */
+.performance-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-card {
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(2, 69, 174, 0.05);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 24px 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.card-title i {
+  color: #0245ae;
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  border-radius: 12px;
+}
+
+/* ================================
+   Lessons Tab
+   ================================ */
+.lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.lesson-stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(145deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(2, 69, 174, 0.06);
+}
+
+.lesson-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.lesson-stat-icon.completed {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.lesson-stat-icon.cancelled {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.lesson-stat-icon.noshow {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.lesson-stat-icon.total {
+  background: rgba(2, 69, 174, 0.1);
+  color: #0245ae;
+}
+
+.lesson-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.lesson-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.lesson-stat-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ================================
+   Rating Tab
+   ================================ */
+.rating-overview {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.rating-big-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.rating-number {
+  font-size: 72px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 8px;
+}
+
+.rating-stars i {
+  font-size: 28px;
+  color: #e2e8f0;
+}
+
+.rating-stars i.filled {
+  color: #f59e0b;
+}
+
+.rating-count {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.rating-breakdown {
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+
+.rating-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rating-bar-label {
+  font-size: 14px;
+  color: #64748b;
+  width: 60px;
+}
+
+.rating-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rating-bar-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.rating-bar-count {
+  font-size: 14px;
+  color: #64748b;
+  width: 30px;
+  text-align: right;
+}
+
+/* ================================
+   Reliability Tab
+   ================================ */
+.reliability-display {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.reliability-circle {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.reliability-circle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.reliability-bg {
+  opacity: 0.3;
+}
+
+.reliability-fill {
+  transition: stroke-dasharray 1s ease;
+}
+
+.reliability-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.reliability-number {
+  display: block;
+  font-size: 42px;
+  font-weight: 800;
+  color: #10b981;
+}
+
+.reliability-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.reliability-factors h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.factor-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.factor-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.factor-item.positive {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.factor-item.positive i {
+  color: #10b981;
+}
+
+.factor-item.negative {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.factor-item.negative i {
+  color: #ef4444;
+}
+
+/* ================================
+   Formula Tab
+   ================================ */
+.formula-section {
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.formula-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 24px;
+}
+
+.formula-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.formula-section h3 i {
+  color: #0245ae;
+  font-size: 20px;
+}
+
+.formula-box {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.formula-box code {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 15px;
+  color: #4ade80;
+}
+
+.formula-desc {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.penalty-table {
+  margin-top: 20px;
+}
+
+.penalty-table h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.penalty-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.penalty-table th,
+.penalty-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.penalty-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.penalty-table td.positive {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.penalty-table td.neutral {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.penalty-table td.negative {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* ================================
+   Formula Section - Reliability Formula
+   ================================ */
+.formula-section {
+  margin-bottom: 24px;
+}
+
+.formula-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.formula-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.formula-header-icon i {
+  color: #fff;
+  font-size: 20px;
+}
+
+.formula-header-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Formula Display */
+.formula-display {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #22c55e;
+  border-radius: 16px;
+  padding: 32px 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.formula-equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.formula-fraction-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fraction-numerator,
+.fraction-denominator {
+  font-size: 16px;
+  font-weight: 600;
+  color: #166534;
+  padding: 4px 12px;
+}
+
+.fraction-line {
+  width: 100%;
+  height: 2px;
+  background: #166534;
+  margin: 4px 0;
+}
+
+.formula-operator {
+  font-size: 20px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.formula-100 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #166534;
+}
+
+.formula-result {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  background: #22c55e;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+/* Slot Definitions */
+.slot-definitions {
+  margin-bottom: 24px;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.slot-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.slot-item.booked {
+  background: #eff6ff;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.slot-item.unbooked {
+  background: #f0fdf4;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.slot-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.slot-item.booked .slot-icon {
+  background: #3b82f6;
+}
+
+.slot-item.unbooked .slot-icon {
+  background: #22c55e;
+}
+
+.slot-icon i {
+  color: #fff;
+  font-size: 16px;
+}
+
+.slot-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.slot-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.slot-desc {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Penalty Weights */
+.penalty-weights {
+  margin-bottom: 24px;
+}
+
+.weights-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.weights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.weight-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+.weight-item.critical {
+  background: #fef2f2;
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.weight-item.high {
+  background: #fff7ed;
+  border-color: rgba(234, 88, 12, 0.2);
+}
+
+.weight-item.medium {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.weight-item.low {
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.weight-item.neutral {
+  background: #f1f5f9;
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+.weight-code {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.weight-item.critical .weight-code {
+  color: #dc2626;
+}
+
+.weight-item.high .weight-code {
+  color: #ea580c;
+}
+
+.weight-item.medium .weight-code {
+  color: #f59e0b;
+}
+
+.weight-item.low .weight-code {
+  color: #6366f1;
+}
+
+.weight-item.neutral .weight-code {
+  color: #64748b;
+}
+
+.weight-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+/* Formula Example */
+.formula-example {
+  margin-bottom: 0;
+}
+
+.example-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.example-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.example-box p {
+  font-size: 14px;
+  color: #475569;
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+.example-calc {
+  font-size: 14px;
+  color: #1e293b;
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.example-calc:last-child {
+  margin-bottom: 0;
+}
+
+.example-calc strong {
+  color: #22c55e;
+}
+
+/* ================================
+   Penalty Code Reference Section
+   ================================ */
+.penalty-reference-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.penalty-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.penalty-header-icon i {
+  color: #fff;
+  font-size: 20px;
+}
+
+.penalty-header-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.formula-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+.formula-title.red {
+  color: #ef4444;
+}
+
+.formula-title.yellow {
+  color: #eab308;
+}
+
+.formula-title.green {
+  color: #22c55e;
+}
+
+.formula-title.blue {
+  color: #3b82f6;
+}
+
+.formula-title.orange {
+  color: #f97316;
+}
+
+.formula-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.formula-fraction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.formula-fraction .numerator {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1e293b;
+  text-align: center;
+}
+
+.formula-fraction .denominator {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+  padding-top: 4px;
+  text-align: center;
+}
+
+.formula-multiply {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Metric Items - Penalty Code Cards */
+.metric-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+}
+
+.metric-item.critical {
+  background: #fef2f2;
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.metric-item.critical-dark {
+  background: #fef2f2;
+  border-color: rgba(153, 27, 27, 0.2);
+}
+
+.metric-item.high {
+  background: #fff7ed;
+  border-color: rgba(234, 88, 12, 0.2);
+}
+
+.metric-item.medium {
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.metric-item.low-purple {
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.metric-item.low-violet {
+  background: #f5f3ff;
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.metric-item.low-cyan {
+  background: #ecfeff;
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+/* Metric Code Badge */
+.metric-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.code-label {
+  font-size: 14px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.metric-item.critical .code-label {
+  color: #dc2626;
+}
+
+.metric-item.critical-dark .code-label {
+  color: #991b1b;
+}
+
+.metric-item.high .code-label {
+  color: #ea580c;
+}
+
+.metric-item.medium .code-label {
+  color: #f59e0b;
+}
+
+.metric-item.low-purple .code-label {
+  color: #6366f1;
+}
+
+.metric-item.low-violet .code-label {
+  color: #8b5cf6;
+}
+
+.metric-item.low-cyan .code-label {
+  color: #06b6d4;
+}
+
+.severity-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.severity-label.critical {
+  color: #dc2626;
+}
+
+.severity-label.high {
+  color: #ea580c;
+}
+
+.severity-label.medium {
+  color: #f59e0b;
+}
+
+.severity-label.low {
+  color: #22c55e;
+}
+
+.metric-item .metric-info h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.metric-item .metric-info p {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ================================
+   Info Box
+   ================================ */
+.info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.05) 0%, rgba(74, 158, 255, 0.05) 100%);
+  border-radius: 12px;
+  border-left: 4px solid #0245ae;
+}
+
+.info-box i {
+  color: #0245ae;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-box p {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.info-box.warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(249, 115, 22, 0.05) 100%);
+  border-left-color: #f59e0b;
+}
+
+.info-box.warning i {
+  color: #f59e0b;
+}
+
+/* ================================
+   Responsive
+   ================================ */
+@media (max-width: 768px) {
+  .performance-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lessons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .factor-list {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-tabs {
+    flex-wrap: wrap;
+  }
+
+  .performance-tabs .tab-btn {
+    flex: 1 1 45%;
+  }
+
+  .content-card {
+    padding: 24px;
+  }
+
+  .performance-metrics-page .page-title-row {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .performance-metrics-page .page-title-gradient {
+    font-size: 24px;
+  }
+
+  .weights-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .formula-equation {
+    gap: 12px;
+  }
+
+  .fraction-numerator,
+  .fraction-denominator {
+    font-size: 14px;
+  }
+
+  .formula-100 {
+    font-size: 20px;
+  }
+
+  .slot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .performance-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .lessons-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-tabs .tab-btn {
+    flex: 1 1 100%;
+  }
+
+  .weights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .formula-display {
+    padding: 20px 16px;
+  }
+
+  .formula-equation {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .formula-result {
+    margin-top: 8px;
+  }
+
+  .fraction-numerator,
+  .fraction-denominator {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .performance-metrics-page .page-title-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .performance-metrics-page .page-title-icon i {
+    font-size: 18px;
+  }
+
+  .performance-metrics-page .page-title-gradient {
+    font-size: 20px;
+  }
+}

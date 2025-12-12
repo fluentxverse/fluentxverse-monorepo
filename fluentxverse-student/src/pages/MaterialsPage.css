@@ -1,32 +1,107 @@
 .materials-page {
-  min-height: 100vh;
-  background-color: #f8fafc;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  min-height: calc(100vh - 80px);
+  padding: 120px 20px 60px;
+  animation: pageLoad 0.5s ease-out;
+}
+
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .materials-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px 40px;
 }
 
+/* Header */
 .materials-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-  border-radius: 16px;
-  padding: 40px;
-  margin-bottom: 30px;
-  color: #fff;
+  margin-bottom: 24px;
+}
+
+.materials-header .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.materials-header .back-link:hover {
+  color: #0245ae;
+}
+
+.materials-header .back-link i {
+  font-size: 14px;
 }
 
 .materials-header-content h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.materials-header-content h1 i {
+  color: #0245ae;
+  font-size: 28px;
 }
 
 .materials-header-content p {
-  font-size: 1rem;
-  opacity: 0.9;
+  color: #64748b;
+  font-size: 16px;
   margin: 0;
+}
+
+/* Search */
+.materials-search {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.materials-search i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 16px;
+}
+
+.materials-search input {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  background: #ffffff;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+
+.materials-search input:focus {
+  outline: none;
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.materials-search input::placeholder {
+  color: #94a3b8;
 }
 
 /* Category Tabs */
@@ -34,33 +109,31 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 30px;
-  padding: 0 4px;
+  margin-bottom: 24px;
 }
 
 .category-tab {
   padding: 10px 20px;
-  border: none;
+  border: 2px solid #e2e8f0;
   border-radius: 25px;
   background-color: #ffffff;
   color: #1e293b;
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 1px solid #e2e8f0;
 }
 
 .category-tab:hover {
-  background-color: #6366f1;
+  background-color: #0245ae;
   color: #fff;
-  border-color: #6366f1;
+  border-color: #0245ae;
 }
 
 .category-tab.active {
-  background-color: #6366f1;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #fff;
-  border-color: #6366f1;
+  border-color: transparent;
 }
 
 /* Course Grid */
@@ -75,7 +148,7 @@
   background-color: #ffffff;
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
@@ -83,8 +156,8 @@
 
 .course-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-  border-color: #6366f1;
+  box-shadow: 0 12px 24px rgba(2, 69, 174, 0.15);
+  border-color: #0245ae;
 }
 
 .course-card.coming-soon {
@@ -95,13 +168,14 @@
 .course-card.coming-soon:hover {
   transform: none;
   box-shadow: none;
+  border-color: #e2e8f0;
 }
 
 .coming-soon-badge {
   position: absolute;
   top: 12px;
   right: 12px;
-  background-color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
   color: #fff;
   padding: 4px 12px;
   border-radius: 20px;
@@ -116,7 +190,7 @@
   align-items: center;
   justify-content: center;
   font-size: 3.5rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.08) 0%, rgba(74, 158, 255, 0.08) 100%);
 }
 
 .course-content {
@@ -125,7 +199,7 @@
 
 .course-title {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #1e293b;
   margin: 0 0 8px;
 }
@@ -160,7 +234,7 @@
 
 .course-level i,
 .course-lessons i {
-  color: #6366f1;
+  color: #0245ae;
 }
 
 .course-footer {
@@ -184,42 +258,27 @@
   color: #f59e0b;
 }
 
-.course-progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.progress-bar {
-  width: 80px;
-  height: 6px;
-  background-color: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.course-progress span {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
+.course-category {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0245ae;
+  background: rgba(2, 69, 174, 0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .materials-header {
-    padding: 30px 20px;
-    margin-bottom: 20px;
+  .materials-container {
+    padding: 16px 16px 40px;
   }
 
   .materials-header-content h1 {
-    font-size: 1.5rem;
+    font-size: 22px;
+  }
+
+  .materials-header-content h1 i {
+    font-size: 26px;
   }
 
   .category-tabs {
@@ -248,16 +307,11 @@
 
 @media (max-width: 480px) {
   .materials-container {
-    padding: 0 15px 30px;
-  }
-
-  .materials-header {
-    padding: 25px 15px;
-    border-radius: 12px;
+    padding: 12px 15px 30px;
   }
 
   .materials-header-content h1 {
-    font-size: 1.3rem;
+    font-size: 20px;
   }
 
   .materials-header-content p {

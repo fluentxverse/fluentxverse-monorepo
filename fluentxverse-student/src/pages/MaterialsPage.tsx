@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'preact/hooks';
-import DashboardHeader from '@/Components/Common/DashboardHeader';
+import { useState, useEffect } from 'preact/hooks';
+import Header from '../Components/Header/Header';
+import SideBar from '../Components/IndexOne/SideBar';
 import './MaterialsPage.css';
 
 interface Course {
@@ -8,250 +9,183 @@ interface Course {
   description: string;
   icon: string;
   category: string;
-  level: string;
   lessons: number;
-  progress?: number;
   rating: number;
-  isComingSoon?: boolean;
 }
 
 const courses: Course[] = [
   {
-    id: 'intensive-conversation',
-    title: 'Intensive Conversation',
-    description: 'Master conversational English with intensive speaking practice and real-world scenarios.',
-    icon: '💬',
-    category: 'Conversation',
-    level: 'Intermediate - Advanced',
-    lessons: 24,
-    progress: 0,
-    rating: 4.8,
-  },
-  {
-    id: 'basic-phonics',
-    title: 'Basic Phonics',
-    description: 'Learn the fundamentals of English pronunciation through phonics-based training.',
-    icon: '🔤',
-    category: 'Pronunciation',
-    level: 'Beginner',
-    lessons: 16,
-    progress: 0,
-    rating: 4.9,
-  },
-  {
-    id: 'level-up-reading',
-    title: 'Level Up Reading',
-    description: 'Improve reading comprehension and speed with graded reading materials.',
-    icon: '📚',
-    category: 'Reading',
-    level: 'All Levels',
-    lessons: 32,
-    progress: 0,
-    rating: 4.7,
-  },
-  {
-    id: 'discussion-writing',
-    title: 'Discussion and Writing',
-    description: 'Develop critical thinking and writing skills through structured discussions.',
-    icon: '✍️',
-    category: 'Writing',
-    level: 'Intermediate - Advanced',
-    lessons: 20,
-    progress: 0,
-    rating: 4.6,
-  },
-  {
-    id: 'toeic-speaking',
-    title: 'TOEIC Speaking Booster',
-    description: 'Targeted preparation for TOEIC Speaking test with mock exams and strategies.',
-    icon: '🎯',
-    category: 'Test Preparation',
-    level: 'Intermediate - Advanced',
-    lessons: 18,
-    progress: 0,
-    rating: 4.9,
-  },
-  {
-    id: 'ielts-speaking',
-    title: 'IELTS Speaking Booster',
-    description: 'Comprehensive IELTS Speaking preparation with band score improvement techniques.',
-    icon: '🇬🇧',
-    category: 'Test Preparation',
-    level: 'Intermediate - Advanced',
-    lessons: 22,
-    progress: 0,
-    rating: 4.8,
-  },
-  {
-    id: 'toefl-speaking',
-    title: 'TOEFL Speaking Booster',
-    description: 'Strategic TOEFL Speaking section preparation with integrated task practice.',
-    icon: '🇺🇸',
-    category: 'Test Preparation',
-    level: 'Advanced',
-    lessons: 20,
-    progress: 0,
-    rating: 4.7,
-  },
-  {
-    id: 'opic',
-    title: 'OPIc',
-    description: 'Oral Proficiency Interview preparation with personalized coaching strategies.',
-    icon: '🎤',
-    category: 'Test Preparation',
-    level: 'All Levels',
-    lessons: 15,
-    progress: 0,
-    rating: 4.8,
-  },
-  {
-    id: 'all-the-way',
-    title: 'All the Way',
-    description: 'Comprehensive English course covering all skills from beginner to advanced.',
-    icon: '🚀',
-    category: 'General',
-    level: 'All Levels',
-    lessons: 48,
-    progress: 0,
-    rating: 4.9,
-  },
-  {
-    id: 'daily-english',
-    title: 'Daily English',
-    description: 'Practical everyday English for real-life situations and conversations.',
-    icon: '☀️',
-    category: 'Conversation',
-    level: 'Beginner - Intermediate',
-    lessons: 30,
-    progress: 0,
-    rating: 4.7,
-  },
-  {
-    id: 'business-essentials',
-    title: 'Business Essentials',
-    description: 'Professional English for business meetings, presentations, and negotiations.',
+    id: 'business-english',
+    title: 'Business English',
+    description: 'Professional communication, meetings, presentations, and workplace vocabulary.',
     icon: '💼',
     category: 'Business',
-    level: 'Intermediate - Advanced',
-    lessons: 25,
-    progress: 0,
+    lessons: 24,
     rating: 4.8,
   },
   {
-    id: 'catch-up',
-    title: 'Catch Up',
-    description: 'Refresher course for learners returning to English after a break.',
-    icon: '🔄',
-    category: 'General',
-    level: 'Beginner - Intermediate',
-    lessons: 12,
-    progress: 0,
-    rating: 4.6,
+    id: 'conversational-skills',
+    title: 'Conversational Skills',
+    description: 'Everyday conversations, casual discussions, and natural speaking patterns.',
+    icon: '💬',
+    category: 'Conversation',
+    lessons: 30,
+    rating: 4.9,
   },
   {
-    id: 'special-class',
-    title: 'Special Class',
-    description: 'Customized lessons for specific topics or special learning needs.',
-    icon: '⭐',
-    category: 'General',
-    level: 'All Levels',
-    lessons: 10,
-    progress: 0,
-    rating: 4.9,
-    isComingSoon: true,
+    id: 'job-interview-prep',
+    title: 'Job Interview Preparation',
+    description: 'Interview techniques, common questions, and confidence building.',
+    icon: '👔',
+    category: 'Career',
+    lessons: 18,
+    rating: 4.8,
   },
+  {
+    id: 'travel-english',
+    title: 'Travel English',
+    description: 'Airport, hotel, restaurant, and tourism-related vocabulary and phrases.',
+    icon: '✈️',
+    category: 'Travel',
+    lessons: 20,
+    rating: 4.7,
+  },
+  {
+    id: 'academic-english',
+    title: 'Academic English',
+    description: 'Essay writing, research presentations, and academic vocabulary.',
+    icon: '🎓',
+    category: 'Academic',
+    lessons: 22,
+    rating: 4.8,
+  },
+  {
+    id: 'pronunciation',
+    title: 'Pronunciation',
+    description: 'Phonetics, intonation, stress patterns, and accent improvement.',
+    icon: '🎤',
+    category: 'Speaking',
+    lessons: 16,
+    rating: 4.9,
+  },
+  {
+    id: 'grammar-improvement',
+    title: 'Grammar Improvement',
+    description: 'Tenses, sentence structure, common mistakes, and advanced grammar.',
+    icon: '📝',
+    category: 'Grammar',
+    lessons: 28,
+    rating: 4.7,
+  },
+  {
+    id: 'vocabulary-building',
+    title: 'Vocabulary Building',
+    description: 'Word roots, synonyms, idioms, and expanding your word bank.',
+    icon: '📚',
+    category: 'Vocabulary',
+    lessons: 25,
+    rating: 4.8,
+  }
 ];
 
-const categories = ['All', 'Conversation', 'Reading', 'Writing', 'Pronunciation', 'Test Preparation', 'Business', 'General'];
+const categories = ['All', 'Business', 'Conversation', 'Career', 'Travel', 'Academic', 'Speaking', 'Grammar', 'Vocabulary'];
 
 export default function MaterialsPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [filteredCourses, setFilteredCourses] = useState(courses);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (selectedCategory === 'All') {
-      setFilteredCourses(courses);
-    } else {
-      setFilteredCourses(courses.filter(course => course.category === selectedCategory));
-    }
-  }, [selectedCategory]);
+    document.title = 'Materials | FluentXVerse';
+  }, []);
 
-  const handleCourseClick = (course: Course) => {
-    if (course.isComingSoon) {
-      return;
-    }
-    // Navigate to course details (to be implemented)
-    console.log('Opening course:', course.id);
+  const filteredCourses = courses.filter(course => {
+    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
+    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleCourseClick = (courseId: string) => {
+    window.location.href = `/materials/${courseId}`;
   };
 
   return (
-    <div className="materials-page">
-      <DashboardHeader title="Materials" />
-      
-      <div className="materials-container">
-        <div className="materials-header">
-          <div className="materials-header-content">
-            <h1>Learning Materials</h1>
-            <p>Explore our comprehensive collection of English learning courses</p>
-          </div>
-        </div>
-
-        <div className="category-tabs">
-          {categories.map(category => (
-            <button
-              key={category}
-              className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        <div className="courses-grid">
-          {filteredCourses.map(course => (
-            <div
-              key={course.id}
-              className={`course-card ${course.isComingSoon ? 'coming-soon' : ''}`}
-              onClick={() => handleCourseClick(course)}
-            >
-              {course.isComingSoon && (
-                <div className="coming-soon-badge">Coming Soon</div>
-              )}
-              <div className="course-icon">{course.icon}</div>
-              <div className="course-content">
-                <h3 className="course-title">{course.title}</h3>
-                <p className="course-description">{course.description}</p>
-                <div className="course-meta">
-                  <span className="course-level">
-                    <i className="ri-bar-chart-line" /> {course.level}
-                  </span>
-                  <span className="course-lessons">
-                    <i className="ri-book-2-line" /> {course.lessons} Lessons
-                  </span>
-                </div>
-                <div className="course-footer">
-                  <div className="course-rating">
-                    <i className="ri-star-fill" />
-                    <span>{course.rating.toFixed(1)}</span>
-                  </div>
-                  {course.progress !== undefined && course.progress > 0 && (
-                    <div className="course-progress">
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill" 
-                          style={{ width: `${course.progress}%` }}
-                        />
-                      </div>
-                      <span>{course.progress}%</span>
-                    </div>
-                  )}
-                </div>
+    <>
+      <SideBar />
+      <div className="main-content">
+        <Header />
+        <div className="materials-page">
+          <div className="materials-container">
+            {/* Header */}
+            <div className="materials-header">
+              <a href="/home" className="back-link">
+                <i className="fas fa-arrow-left"></i>
+                Back to Dashboard
+              </a>
+              <div className="materials-header-content">
+                <h1>
+                  <i className="fas fa-book-open"></i>
+                  Learning Materials
+                </h1>
+                <p>Explore our comprehensive collection of {courses.length} English learning courses</p>
               </div>
             </div>
-          ))}
+
+            {/* Search */}
+            <div className="materials-search">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                placeholder="Search courses..."
+                value={searchQuery}
+                onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+              />
+            </div>
+
+            {/* Category Tabs */}
+            <div className="category-tabs">
+              {categories.map(category => (
+                <button
+                  key={category}
+                  className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+
+            {/* Courses Grid */}
+            <div className="courses-grid">
+              {filteredCourses.map(course => (
+                <div
+                  key={course.id}
+                  className="course-card"
+                  onClick={() => handleCourseClick(course.id)}
+                >
+                  <div className="course-icon">{course.icon}</div>
+                  <div className="course-content">
+                    <h3 className="course-title">{course.title}</h3>
+                    <p className="course-description">{course.description}</p>
+                    <div className="course-meta">
+                      <span className="course-lessons">
+                        <i className="fas fa-file-alt" /> {course.lessons} Lessons
+                      </span>
+                    </div>
+                    <div className="course-footer">
+                      <div className="course-rating">
+                        <i className="fas fa-star" />
+                        <span>{course.rating.toFixed(1)}</span>
+                      </div>
+                      <span className="course-category">{course.category}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

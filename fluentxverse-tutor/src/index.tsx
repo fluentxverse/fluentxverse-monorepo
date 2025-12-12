@@ -15,6 +15,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import MaterialsPage from './pages/MaterialsPage';
 import InboxPage from './pages/InboxPage';
 import MyProfilePage from "./pages/MyProfilePage";
+import PerformanceMetricsPage from "./pages/PerformanceMetricsPage";
 
 import { withProtected, withCertified } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -94,6 +95,7 @@ export function AppInner() {
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 							<Route path="/profile" component={withProtected(MyProfilePage)} />
+							<Route path="/performance-metrics" component={withProtected(PerformanceMetricsPage)} />
 
 							<Route path="/contact" component={ContactUsPage} />
 							<Route path="/about" component={AboutUsPage} />

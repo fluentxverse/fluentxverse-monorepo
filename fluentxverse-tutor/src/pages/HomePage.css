@@ -1,5 +1,10 @@
 /* HomePage Mobile Responsive Styles */
 
+/* Main content background fix */
+.main-content {
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
 /* Container responsive padding */
 .home-page-container {
   padding: 40px 0;
@@ -144,15 +149,15 @@
   white-space: nowrap;
 }
 
-/* Status Header */
-.status-header {
+/* Common Page Title Styling */
+.page-title-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 28px;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
-.status-header-icon {
+.page-title-icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -164,12 +169,12 @@
   flex-shrink: 0;
 }
 
-.status-header-icon i {
+.page-title-icon i {
   color: #fff;
   font-size: 22px;
 }
 
-.status-header-title {
+.page-title-gradient {
   margin: 0;
   font-size: 32px;
   font-weight: 800;
@@ -621,14 +626,14 @@
     justify-content: center;
   }
 
-  /* Status Header */
-  .status-header {
+  /* Page Title Row - Responsive */
+  .page-title-row {
     flex-direction: column;
     text-align: center;
     gap: 12px;
   }
 
-  .status-header-title {
+  .page-title-gradient {
     font-size: 24px;
   }
 
@@ -751,20 +756,20 @@
     font-size: 14px;
   }
 
-  .status-header {
+  .page-title-row {
     margin-bottom: 20px;
   }
 
-  .status-header-icon {
+  .page-title-icon {
     width: 40px;
     height: 40px;
   }
 
-  .status-header-icon i {
+  .page-title-icon i {
     font-size: 18px;
   }
 
-  .status-header-title {
+  .page-title-gradient {
     font-size: 20px;
   }
 

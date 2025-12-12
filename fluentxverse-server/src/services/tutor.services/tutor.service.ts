@@ -524,6 +524,7 @@ export class TutorService {
         country: user.country,
         languages: user.languages ? JSON.parse(user.languages) : [],
         specializations: user.specializations ? JSON.parse(user.specializations) : [],
+        interests: user.interests ? JSON.parse(user.interests) : [],
         hourlyRate: user.hourlyRate ? parseFloat(user.hourlyRate) : undefined,
         experienceYears: user.experienceYears ? parseInt(user.experienceYears) : undefined,
         education: user.education ? JSON.parse(user.education) : [],

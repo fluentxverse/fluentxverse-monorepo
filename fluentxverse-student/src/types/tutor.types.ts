@@ -46,6 +46,9 @@ export interface TutorProfile extends Tutor {
   major?: string;
   teachingQualifications?: string;
   
+  // Interests
+  interests?: string[];
+  
   // Detailed stats
   completionRate?: number;
   responseTime?: string; // e.g., "within 2 hours"

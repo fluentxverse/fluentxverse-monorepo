@@ -239,8 +239,20 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
 
               {/* Profile Info */}
               <div className="profile-info">
-                <div className="profile-name-row">
-                  <h1 className="profile-name">{studentData.name}</h1>
+                <h1 className="profile-name">{studentData.name}</h1>
+
+                {/* Star Rating */}
+                <div className="profile-rating-row">
+                  <div className="star-rating">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <i 
+                        key={star} 
+                        className={`fi-sr-star ${star <= Math.round(studentData.averageRating) ? 'filled' : 'empty'}`}
+                      ></i>
+                    ))}
+                  </div>
+                  <span className="rating-score">{studentData.averageRating.toFixed(1)}</span>
+                  <span className="rating-count">({studentData.totalLessons} lessons)</span>
                   <span className="profile-id-badge">{studentData.id}</span>
                 </div>
 

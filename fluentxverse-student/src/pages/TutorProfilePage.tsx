@@ -135,7 +135,7 @@ export const TutorProfilePage = () => {
     return (
       <>
         <SideBar />
-        <div className="main-content">
+        <div className={`main-content ${!user ? 'no-sidebar' : ''}`}>
           <Header />
           <div className="tutor-profile-loading">
             <div className="spinner"></div>
@@ -150,7 +150,7 @@ export const TutorProfilePage = () => {
     return (
       <>
         <SideBar />
-        <div className="main-content">
+        <div className={`main-content ${!user ? 'no-sidebar' : ''}`}>
           <Header />
           <div className="tutor-profile-error">
             <i className="fi-sr-exclamation"></i>
@@ -170,7 +170,7 @@ export const TutorProfilePage = () => {
   return (
     <>
       <SideBar />
-      <div className="main-content">
+      <div className={`main-content ${!user ? 'no-sidebar' : ''}`}>
         <Header />
         <div className="tutor-profile-page">
           <div className="profile-layout">
@@ -204,8 +204,20 @@ export const TutorProfilePage = () => {
 
                 {/* Right: Details */}
                 <div className="profile-header-right">
-                  <div className="profile-title-row">
-                    <h1 className="profile-name">{displayName}</h1>
+                  <h1 className="profile-name">{displayName}</h1>
+
+                  {/* Star Rating */}
+                  <div className="profile-rating-row">
+                    <div className="star-rating">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <i 
+                          key={star} 
+                          className={`fi-sr-star ${star <= Math.round(tutor.rating || 0) ? 'filled' : 'empty'}`}
+                        ></i>
+                      ))}
+                    </div>
+                    <span className="rating-score">{(tutor.rating || 0).toFixed(1)}</span>
+                    <span className="rating-count">({tutor.totalReviews || 0} reviews)</span>
                     {tutor.isVerified && (
                       <div className="verified-badge">
                         <i className="fi-sr-badge-check"></i>
@@ -214,29 +226,12 @@ export const TutorProfilePage = () => {
                     )}
                   </div>
 
-                  {/* Quick Stats - Only show rating if available */}
-                  {tutor.rating && (tutor?.totalReviews ?? 0) > 0 && (
-                    <div className="profile-quick-stats">
-                      <div className="stat-item">
-                        <i className="fi-sr-star"></i>
-                        <span className="stat-value">{tutor.rating.toFixed(1)}</span>
-                        <span className="stat-label">({tutor.totalReviews} reviews)</span>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Languages & Country */}
                   <div className="profile-meta">
                     {tutor.languages && tutor.languages.length > 0 && (
                       <div className="meta-item">
                         <i className="fi-sr-globe"></i>
                         <span>Speaks: {tutor.languages.join(', ')}</span>
-                      </div>
-                    )}
-                    {tutor.country && (
-                      <div className="meta-item">
-                        <i className="fi-sr-marker"></i>
-                        <span>{tutor.country}</span>
                       </div>
                     )}
                   </div>
@@ -265,6 +260,10 @@ export const TutorProfilePage = () => {
               {/* Video Introduction - Inside Hero Card but outside hero-content for full width */}
               {tutor.videoIntroUrl && (
                 <div className="hero-video-section">
+                  <h3 className="video-section-title">
+                    <i className="fi-sr-play"></i>
+                    Introduction Video
+                  </h3>
                   <VideoPlayer src={tutor.videoIntroUrl} />
                 </div>
               )}
@@ -344,6 +343,26 @@ export const TutorProfilePage = () => {
                             </div>
                           ))
                         )}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Interests */}
+                {tutor.interests && tutor.interests.length > 0 && (
+                  <section className="content-section">
+                    <h2 className="section-title">
+                      <i className="fi-sr-heart"></i>
+                      Interests
+                    </h2>
+                    <div className="section-content">
+                      <div className="interests-grid">
+                        {tutor.interests.map((interest, idx) => (
+                          <div key={idx} className="interest-tag">
+                            <i className="fi-sr-star"></i>
+                            <span>{interest}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </section>
@@ -438,7 +457,7 @@ export const TutorProfilePage = () => {
               <div className="tab-content">
                 <section className="content-section">
                   <h2 className="section-title">
-                    <i className="ri-star-line"></i>
+                    <i className="fi-sr-star"></i>
                     Student Reviews
                   </h2>
                   {tutor.totalReviews && tutor.totalReviews > 0 ? (
@@ -476,7 +495,7 @@ export const TutorProfilePage = () => {
               <div className="profile-booking-card">
                 <div className="booking-card-price">
                   <span className="price-label">Trial Lesson</span>
-                  <div className="price-value">{hourlyRate}<span className="price-unit">/30min</span></div>
+                  <div className="price-value">{hourlyRate}<span className="price-unit">/25min</span></div>
                 </div>
                 
                 <button onClick={handleBookTrial} className="btn-book-trial">

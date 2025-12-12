@@ -2,11 +2,28 @@
    Tutor Profile Page - ESL Style
    ================================ */
 
+/* Remove sidebar padding when user is not logged in */
+.main-content.no-sidebar {
+  padding-left: 0 !important;
+}
+
 .tutor-profile-page {
-  background: #f8fafc;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
   min-height: 100vh;
   padding-top: 100px;
   padding-bottom: 60px;
+  animation: pageLoad 0.5s ease-out;
+}
+
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .profile-container {
@@ -90,16 +107,39 @@
    Hero Section
    ================================ */
 .profile-hero {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(2, 69, 174, 0.03);
   margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0245ae 0%, #4a9eff 50%, #0245ae 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 0; }
+  50% { background-position: 100% 0; }
 }
 
 .profile-hero-content {
   display: flex;
-  gap: 24px;
+  gap: 48px;
+  align-items: flex-start;
 }
 
 .profile-header-left {
@@ -108,15 +148,25 @@
 
 .profile-avatar-wrapper {
   position: relative;
-  margin-bottom: 16px;
 }
 
 .profile-avatar-large {
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid #e2e8f0;
+  box-shadow: 
+    0 8px 24px rgba(2, 69, 174, 0.15),
+    0 0 0 4px rgba(255, 255, 255, 0.8);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-avatar-wrapper:hover .profile-avatar-large {
+  transform: scale(1.05);
+  box-shadow: 
+    0 12px 32px rgba(2, 69, 174, 0.25),
+    0 0 0 4px rgba(255, 255, 255, 1);
 }
 
 .profile-avatar-placeholder {
@@ -174,18 +224,54 @@
   flex: 1;
 }
 
-.profile-title-row {
+.profile-name {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Star Rating Row */
+.profile-rating-row {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.profile-name {
-  font-size: 32px;
-  font-weight: 700;
+.star-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.star-rating i {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.star-rating i.filled {
+  color: #f59e0b;
+}
+
+.star-rating i.empty {
+  color: #e2e8f0;
+}
+
+.rating-score {
+  font-size: 18px;
+  font-weight: 800;
   color: #1e293b;
-  margin: 0;
+}
+
+.rating-count {
+  font-size: 14px;
+  color: #64748b;
 }
 
 .verified-badge {
@@ -204,30 +290,23 @@
   font-size: 16px;
 }
 
-.profile-quick-stats {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: #475569;
 }
 
 .stat-item i {
   color: #f59e0b;
-  font-size: 18px;
+  font-size: 20px;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
 }
 
 .stat-value {
-  font-weight: 700;
+  font-weight: 800;
   color: #1e293b;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .stat-label {
@@ -237,28 +316,36 @@
 
 .stat-divider {
   width: 1px;
-  height: 20px;
-  background: #e2e8f0;
+  height: 24px;
+  background: linear-gradient(180deg, transparent, rgba(245, 158, 11, 0.3), transparent);
 }
 
 .profile-meta {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: #475569;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .meta-item i {
-  color: #94a3b8;
+  color: #0245ae;
   font-size: 16px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 69, 174, 0.08);
+  border-radius: 6px;
 }
 
 .profile-bio-short {
@@ -275,9 +362,12 @@
 }
 
 .tag {
-  padding: 6px 14px;
-  background: #f1f5f9;
-  color: #475569;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #334155;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(2, 69, 174, 0.08);
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
@@ -294,8 +384,30 @@
 .hero-video-section {
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid rgba(2, 69, 174, 0.08);
   width: 100%;
+}
+
+.video-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.video-section-title i {
+  color: #0245ae;
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  border-radius: 10px;
 }
 
 .hero-video-section .fxv-video-player {
@@ -310,10 +422,13 @@
    Schedule Tab
    ================================ */
 .schedule-grid {
-  background: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.03),
+    0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(2, 69, 174, 0.05);
 }
 
 .schedule-table {
@@ -323,24 +438,25 @@
 }
 
 .schedule-table thead th {
-  background: rgba(2, 69, 174, 0.08);
-  padding: 12px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.08) 0%, rgba(74, 158, 255, 0.08) 100%);
+  padding: 14px;
   border-radius: 12px;
   text-align: center;
-  color: #64748b;
+  color: #475569;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 0.5px;
 }
 
 .schedule-table thead th:first-child {
-  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.25);
 }
 
 .schedule-table .time-col {
-  background: rgba(248, 250, 252, 0.8);
-  padding: 12px;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+  padding: 14px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 13px;
@@ -425,62 +541,74 @@
    Booking Card
    ================================ */
 .profile-booking-card {
-  background: white;
-  border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 24px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(2, 69, 174, 0.08);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
 .booking-card-price {
   text-align: center;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid rgba(2, 69, 174, 0.08);
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.03) 0%, rgba(74, 158, 255, 0.03) 100%);
+  margin: -28px -28px 24px -28px;
+  padding: 28px 28px 24px 28px;
+  border-radius: 20px 20px 0 0;
 }
 
 .price-label {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
   margin-bottom: 8px;
   text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 .price-value {
-  font-size: 36px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 42px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b 0%, #0245ae 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .price-unit {
-  font-size: 18px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
   color: #64748b;
 }
 
 .btn-book-trial {
   width: 100%;
-  padding: 14px 24px;
-  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(2, 69, 174, 0.25);
 }
 
 .btn-book-trial:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(2, 69, 174, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(2, 69, 174, 0.35);
+  background: linear-gradient(135deg, #0245ae 0%, #034694 100%);
 }
 
 .btn-book-trial i {
@@ -490,17 +618,18 @@
 .booking-features {
   margin: 20px 0;
   padding: 20px 0;
-  border-top: 1px solid #f1f5f9;
-  border-bottom: 1px solid #f1f5f9;
+  border-top: 1px solid rgba(2, 69, 174, 0.06);
+  border-bottom: 1px solid rgba(2, 69, 174, 0.06);
 }
 
 .feature-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 14px;
   color: #475569;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .feature-item:last-child {
@@ -510,45 +639,55 @@
 .feature-item i {
   color: #10b981;
   font-size: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
 }
 
 .btn-message {
   width: 100%;
-  padding: 12px 24px;
+  padding: 14px 24px;
   background: white;
-  color: #475569;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  color: #0245ae;
+  border: 2px solid rgba(2, 69, 174, 0.15);
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   transition: all 0.3s ease;
   margin-bottom: 16px;
 }
 
 .btn-message:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: #0245ae;
+  background: rgba(2, 69, 174, 0.03);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.1);
 }
 
 .booking-note {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
   font-size: 13px;
   color: #64748b;
-  line-height: 1.5;
+  line-height: 1.6;
+  border: 1px solid rgba(2, 69, 174, 0.05);
 }
 
 .booking-note i {
-  color: #94a3b8;
+  color: #0245ae;
   font-size: 16px;
   flex-shrink: 0;
   margin-top: 2px;
@@ -560,11 +699,15 @@
 .profile-tabs {
   display: flex;
   gap: 8px;
-  background: white;
-  border-radius: 12px;
-  padding: 6px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 8px;
   margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(2, 69, 174, 0.05);
 }
 
 .tab-btn {
@@ -590,8 +733,12 @@
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
   color: white;
+  box-shadow: 
+    0 4px 12px rgba(2, 69, 174, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .tab-btn i {
@@ -602,10 +749,14 @@
    Content Sections
    ================================ */
 .profile-content {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(2, 69, 174, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .tab-content {
@@ -632,24 +783,27 @@
 }
 
 .section-title {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
 }
 
 .section-title i {
   color: #0245ae;
-  font-size: 24px;
-}
-
-/* Ensure no horizontal divider lines under About/Education titles */
-.tutor-profile-page .section-title {
-  border: none;
-  border-bottom: none;
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  border-radius: 12px;
 }
 
 .section-content {
@@ -914,6 +1068,38 @@
   flex-shrink: 0;
 }
 
+/* Interests Grid */
+.interests-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.interest-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.08) 0%, rgba(219, 39, 119, 0.08) 100%);
+  border: 2px solid rgba(236, 72, 153, 0.2);
+  border-radius: 24px;
+  color: #be185d;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.interest-tag:hover {
+  border-color: #ec4899;
+  background: rgba(236, 72, 153, 0.12);
+  transform: translateY(-2px);
+}
+
+.interest-tag i {
+  color: #ec4899;
+  font-size: 14px;
+}
+
 /* Specializations Grid */
 .specializations-grid {
   display: grid;
@@ -978,44 +1164,54 @@
 }
 
 .reviews-overview {
-  padding: 24px;
-  background: #f8fafc;
-  border-radius: 12px;
+  padding: 28px;
+  background: linear-gradient(145deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 16px;
   margin-bottom: 24px;
+  border: 1px solid rgba(2, 69, 174, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .overall-rating {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .rating-big {
-  font-size: 48px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 56px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .rating-stars {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .rating-stars i {
-  font-size: 20px;
+  font-size: 22px;
   color: #f59e0b;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
 }
 
 .rating-count {
   font-size: 14px;
   color: #64748b;
+  font-weight: 500;
 }
 
 .reviews-list-placeholder {
   text-align: center;
-  padding: 40px;
+  padding: 48px;
   color: #94a3b8;
+  background: linear-gradient(145deg, #fafbfc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px dashed rgba(2, 69, 174, 0.1);
 }
 
 /* ================================

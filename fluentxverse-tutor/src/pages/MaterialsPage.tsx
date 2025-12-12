@@ -9,94 +9,87 @@ interface Course {
   title: string;
   description: string;
   icon: string;
-  color: string;
-  bgColor: string;
-  lessonCount: number;
-  category: 'core' | 'specialized' | 'exam-prep';
+  category: string;
+  lessons: number;
+  rating: number;
 }
 
 const COURSES: Course[] = [
   {
     id: 'business-english',
     title: 'Business English',
-    description: 'Professional communication, meetings, presentations, and workplace vocabulary',
-    icon: 'fas fa-briefcase',
-    color: '#0245ae',
-    bgColor: '#e0f2fe',
-    lessonCount: 24,
-    category: 'core'
+    description: 'Professional communication, meetings, presentations, and workplace vocabulary.',
+    icon: '💼',
+    category: 'Business',
+    lessons: 24,
+    rating: 4.8,
   },
   {
     id: 'conversational-skills',
     title: 'Conversational Skills',
-    description: 'Everyday conversations, casual discussions, and natural speaking patterns',
-    icon: 'fas fa-comments',
-    color: '#059669',
-    bgColor: '#d1fae5',
-    lessonCount: 30,
-    category: 'core'
+    description: 'Everyday conversations, casual discussions, and natural speaking patterns.',
+    icon: '💬',
+    category: 'Conversation',
+    lessons: 30,
+    rating: 4.9,
   },
   {
     id: 'job-interview-prep',
     title: 'Job Interview Preparation',
-    description: 'Interview techniques, common questions, and confidence building',
-    icon: 'fas fa-user-tie',
-    color: '#7c3aed',
-    bgColor: '#ede9fe',
-    lessonCount: 18,
-    category: 'specialized'
+    description: 'Interview techniques, common questions, and confidence building.',
+    icon: '👔',
+    category: 'Career',
+    lessons: 18,
+    rating: 4.8,
   },
   {
     id: 'travel-english',
     title: 'Travel English',
-    description: 'Airport, hotel, restaurant, and tourism-related vocabulary and phrases',
-    icon: 'fas fa-plane-departure',
-    color: '#f59e0b',
-    bgColor: '#fef3c7',
-    lessonCount: 20,
-    category: 'specialized'
+    description: 'Airport, hotel, restaurant, and tourism-related vocabulary and phrases.',
+    icon: '✈️',
+    category: 'Travel',
+    lessons: 20,
+    rating: 4.7,
   },
   {
     id: 'academic-english',
     title: 'Academic English',
-    description: 'Essay writing, research presentations, and academic vocabulary',
-    icon: 'fas fa-graduation-cap',
-    color: '#dc2626',
-    bgColor: '#fee2e2',
-    lessonCount: 22,
-    category: 'specialized'
+    description: 'Essay writing, research presentations, and academic vocabulary.',
+    icon: '🎓',
+    category: 'Academic',
+    lessons: 22,
+    rating: 4.8,
   },
   {
     id: 'pronunciation',
     title: 'Pronunciation',
-    description: 'Phonetics, intonation, stress patterns, and accent improvement',
-    icon: 'fas fa-microphone-alt',
-    color: '#ec4899',
-    bgColor: '#fce7f3',
-    lessonCount: 16,
-    category: 'core'
+    description: 'Phonetics, intonation, stress patterns, and accent improvement.',
+    icon: '🎤',
+    category: 'Speaking',
+    lessons: 16,
+    rating: 4.9,
   },
   {
     id: 'grammar-improvement',
     title: 'Grammar Improvement',
-    description: 'Tenses, sentence structure, common mistakes, and advanced grammar',
-    icon: 'fas fa-spell-check',
-    color: '#0891b2',
-    bgColor: '#cffafe',
-    lessonCount: 28,
-    category: 'core'
+    description: 'Tenses, sentence structure, common mistakes, and advanced grammar.',
+    icon: '📝',
+    category: 'Grammar',
+    lessons: 28,
+    rating: 4.7,
   },
   {
     id: 'vocabulary-building',
     title: 'Vocabulary Building',
-    description: 'Word roots, synonyms, idioms, and expanding your word bank',
-    icon: 'fas fa-book-open',
-    color: '#ea580c',
-    bgColor: '#ffedd5',
-    lessonCount: 25,
-    category: 'core'
+    description: 'Word roots, synonyms, idioms, and expanding your word bank.',
+    icon: '📚',
+    category: 'Vocabulary',
+    lessons: 25,
+    rating: 4.8,
   }
 ];
+
+const categories = ['All', 'Business', 'Conversation', 'Career', 'Travel', 'Academic', 'Speaking', 'Grammar', 'Vocabulary'];
 
 const MaterialsPage = () => {
   useEffect(() => {
@@ -104,18 +97,17 @@ const MaterialsPage = () => {
   }, []);
 
   const { user } = useAuthContext();
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'core' | 'specialized' | 'exam-prep'>('all');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCourses = COURSES.filter(course => {
-    const matchesCategory = selectedCategory === 'all' || course.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           course.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   const handleCourseClick = (courseId: string) => {
-    // Navigate to course detail page (can be implemented later)
     window.location.href = `/materials/${courseId}`;
   };
 
@@ -125,24 +117,28 @@ const MaterialsPage = () => {
       <div className="main-content">
         <DashboardHeader user={user || undefined} />
         <div className="materials-page">
-          <div className="container">
+          <div className="materials-container">
             {/* Page Header */}
-            <div className="materials-page-header">
-              <div className="materials-page-title">
-                <div className="materials-icon-wrapper">
-                  <i className="fas fa-book"></i>
+            <div className="materials-header">
+              <a href="/home" className="back-link">
+                <i className="fi-sr-angle-left"></i>
+                Back to Dashboard
+              </a>
+              <div className="page-title-row">
+                <div className="page-title-icon">
+                  <i className="fi-sr-book-alt"></i>
                 </div>
-                <div>
-                  <h1>Teaching Materials</h1>
-                  <p>{COURSES.length} courses available</p>
-                </div>
+                <h1 className="page-title-gradient">Teaching Materials</h1>
               </div>
+              <p className="materials-subtitle">
+                {COURSES.length} courses available to help you deliver engaging lessons
+              </p>
             </div>
 
-            {/* Search and Filters */}
+            {/* Search */}
             <div className="materials-controls">
               <div className="materials-search">
-                <i className="fas fa-search"></i>
+                <i className="fi-sr-search"></i>
                 <input
                   type="text"
                   placeholder="Search courses..."
@@ -150,54 +146,45 @@ const MaterialsPage = () => {
                   onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
                 />
               </div>
-              <div className="materials-filters">
-                {[
-                  { key: 'all', label: 'All Courses', icon: 'fas fa-th-large' },
-                  { key: 'core', label: 'Core', icon: 'fas fa-star' },
-                  { key: 'specialized', label: 'Specialized', icon: 'fas fa-bullseye' },
-                ].map((filter) => (
-                  <button
-                    key={filter.key}
-                    className={`filter-btn ${selectedCategory === filter.key ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(filter.key as any)}
-                  >
-                    <i className={filter.icon}></i>
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="category-tabs">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
             </div>
 
             {/* Courses Grid */}
-            <div className="materials-grid">
+            <div className="courses-grid">
               {filteredCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="material-card"
+                  className="course-card"
                   onClick={() => handleCourseClick(course.id)}
                 >
-                  <div
-                    className="material-card-icon"
-                    style={{ backgroundColor: course.bgColor, color: course.color }}
-                  >
-                    <i className={course.icon}></i>
-                  </div>
-                  <div className="material-card-content">
-                    <h3 className="material-card-title">{course.title}</h3>
-                    <p className="material-card-description">{course.description}</p>
-                    <div className="material-card-meta">
-                      <span className="lesson-count">
-                        <i className="fas fa-file-alt"></i>
-                        {course.lessonCount} lessons
-                      </span>
-                      <span className={`category-badge ${course.category}`}>
-                        {course.category === 'core' ? 'Core' : 
-                         course.category === 'specialized' ? 'Specialized' : 'Exam Prep'}
+                  <div className="course-icon">{course.icon}</div>
+                  <div className="course-content">
+                    <h3 className="course-title">{course.title}</h3>
+                    <p className="course-description">{course.description}</p>
+                    <div className="course-meta">
+                      <span className="course-lessons">
+                        <i className="fi-sr-document"></i> {course.lessons} Lessons
                       </span>
                     </div>
-                  </div>
-                  <div className="material-card-arrow">
-                    <i className="fas fa-chevron-right"></i>
+                    <div className="course-footer">
+                      <div className="course-rating">
+                        <i className="fi-sr-star"></i>
+                        <span>{course.rating.toFixed(1)}</span>
+                      </div>
+                      <span className="course-category">{course.category}</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -207,7 +194,7 @@ const MaterialsPage = () => {
             {filteredCourses.length === 0 && (
               <div className="materials-empty">
                 <div className="empty-icon">
-                  <i className="fas fa-search"></i>
+                  <i className="fi-sr-search"></i>
                 </div>
                 <h3>No courses found</h3>
                 <p>Try adjusting your search or filter criteria</p>
@@ -215,10 +202,10 @@ const MaterialsPage = () => {
                   className="btn-reset"
                   onClick={() => {
                     setSearchQuery('');
-                    setSelectedCategory('all');
+                    setSelectedCategory('All');
                   }}
                 >
-                  <i className="fas fa-redo"></i>
+                  <i className="fi-sr-refresh"></i>
                   Reset Filters
                 </button>
               </div>

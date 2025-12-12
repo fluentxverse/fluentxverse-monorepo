@@ -109,13 +109,11 @@ const HomePage = () => {
             )}
 
             {/* Application Status Header */}
-            <div className="status-header">
-              <div className="status-header-icon">
+            <div className="page-title-row">
+              <div className="page-title-icon">
                 <i className="fas fa-tasks"></i>
               </div>
-              <h2 className="status-header-title">
-                APPLICATION STATUS
-              </h2>
+              <h2 className="page-title-gradient">Application Status</h2>
             </div>
 
             {/* Main Status Card */}

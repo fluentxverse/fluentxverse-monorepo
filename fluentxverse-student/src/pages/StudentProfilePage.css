@@ -104,7 +104,16 @@
   flex: 1;
 }
 
-.profile-name-row {
+.profile-name {
+  font-size: 36px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  line-height: 1;
+}
+
+/* Star Rating Row */
+.profile-rating-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -112,12 +121,33 @@
   flex-wrap: wrap;
 }
 
-.profile-name {
-  font-size: 36px;
-  font-weight: 900;
-  color: #0f172a;
-  margin: 0;
-  line-height: 1;
+.star-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.star-rating i {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.star-rating i.filled {
+  color: #f59e0b;
+}
+
+.star-rating i.empty {
+  color: #e2e8f0;
+}
+
+.rating-score {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.rating-count {
+  font-size: 14px;
+  color: #64748b;
 }
 
 .profile-id-badge {

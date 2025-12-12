@@ -31,6 +31,7 @@ export interface TutorProfile extends Tutor {
   teachingStyle?: string;
   introduction?: string;
   videoIntroUrl?: string;
+  interests?: string[];
   completionRate?: number;
   responseTime?: string;
   repeatStudents?: number;

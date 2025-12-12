@@ -22,6 +22,7 @@ interface TutorProfileData {
   teachingStyle?: string;
   languages?: string[];
   specializations?: string[];
+  interests?: string[];
   education?: string[];
   certifications?: string[];
   experienceYears?: number;
@@ -242,19 +243,33 @@ export const MyProfilePage = () => {
     
     setSaving(true);
     try {
-      const response = await client.patch('/tutor/profile', { [editingField]: editValue });
+      // Handle interests field - parse comma-separated values, limit to 5
+      let valueToSend: string | string[] = editValue;
+      let valueToStore: string | string[] = editValue;
+      
+      if (editingField === 'interests') {
+        const interestsArray = editValue
+          .split(',')
+          .map(i => i.trim())
+          .filter(i => i.length > 0)
+          .slice(0, 5); // Limit to 5 interests
+        valueToSend = interestsArray;
+        valueToStore = interestsArray;
+      }
+      
+      const response = await client.patch('/tutor/profile', { [editingField]: valueToSend });
 
       if (response.data.success) {
         setProfileData(prev => {
           if (prev) {
-            return { ...prev, [editingField]: editValue };
+            return { ...prev, [editingField]: valueToStore };
           }
           // Create a minimal profile data object if none exists
           return { 
             firstName: user?.firstName || '', 
             lastName: user?.lastName || '', 
             email: user?.email || '',
-            [editingField]: editValue 
+            [editingField]: valueToStore 
           } as TutorProfileData;
         });
         cancelEditing();
@@ -345,8 +360,20 @@ export const MyProfilePage = () => {
 
                 {/* Right: Details */}
                 <div className="profile-header-right">
-                  <div className="profile-title-row">
-                    <h1 className="profile-name">{displayName}</h1>
+                  <h1 className="profile-name">{displayName}</h1>
+
+                  {/* Star Rating */}
+                  <div className="profile-rating-row">
+                    <div className="star-rating">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <i 
+                          key={star} 
+                          className={`fi-sr-star ${star <= Math.round(profileData?.rating || 0) ? 'filled' : 'empty'}`}
+                        ></i>
+                      ))}
+                    </div>
+                    <span className="rating-score">{(profileData?.rating || 0).toFixed(1)}</span>
+                    <span className="rating-count">({profileData?.totalReviews || 0} reviews)</span>
                     {profileData?.isVerified && (
                       <div className="verified-badge">
                         <i className="fi-sr-badge-check"></i>
@@ -355,29 +382,12 @@ export const MyProfilePage = () => {
                     )}
                   </div>
 
-                  {/* Quick Stats - Only show rating when available */}
-                  {profileData?.rating && (profileData?.totalReviews ?? 0) > 0 && (
-                    <div className="profile-quick-stats">
-                      <div className="stat-item">
-                        <i className="fi-sr-star"></i>
-                        <span className="stat-value">{profileData.rating.toFixed(1)}</span>
-                        <span className="stat-label">({profileData?.totalReviews} reviews)</span>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Languages & Country */}
                   <div className="profile-meta">
                     {profileData?.languages && profileData.languages.length > 0 && (
                       <div className="meta-item">
                         <i className="fi-sr-globe"></i>
                         <span>Speaks: {profileData.languages.join(', ')}</span>
-                      </div>
-                    )}
-                    {profileData?.country && (
-                      <div className="meta-item">
-                        <i className="fi-sr-marker"></i>
-                        <span>{profileData.country}</span>
                       </div>
                     )}
                   </div>
@@ -410,6 +420,10 @@ export const MyProfilePage = () => {
 
               {/* Video Introduction - Inside Hero Card */}
               <div className="hero-video-section">
+                <h3 className="video-section-title">
+                  <i className="fi-sr-play"></i>
+                  Introduction Video
+                </h3>
                 {profileData?.videoIntroUrl ? (
                   <div className="hero-video-container">
                     <VideoPlayer src={profileData.videoIntroUrl} hideBigPlayButton={true} />
@@ -528,6 +542,33 @@ export const MyProfilePage = () => {
                     </section>
                   )}
 
+                  {/* Interests */}
+                  <section className="content-section">
+                    <div className="section-header-row">
+                      <h2 className="section-title">
+                        <i className="fi-sr-heart"></i>
+                        Interests
+                      </h2>
+                      <button className="btn-edit-inline" onClick={() => startEditing('interests', profileData?.interests?.join(', ') || '')}>
+                        <i className="fas fa-pencil-alt"></i>
+                      </button>
+                    </div>
+                    <div className="section-content">
+                      {profileData?.interests && profileData.interests.length > 0 ? (
+                        <div className="interests-grid">
+                          {profileData.interests.map((interest, idx) => (
+                            <div key={idx} className="interest-tag">
+                              <i className="fi-sr-star"></i>
+                              <span>{interest}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="empty-state">Share your hobbies and interests to help students connect with you.</p>
+                      )}
+                    </div>
+                  </section>
+
                   {/* Areas of Expertise */}
                   {profileData?.specializations && profileData.specializations.length > 0 && (
                     <section className="content-section">
@@ -558,34 +599,34 @@ export const MyProfilePage = () => {
                       Your Performance
                     </h2>
                     <div className="stats-grid">
-                      <div className="stat-card">
+                      <a href="/performance-metrics#lessons" className="stat-card clickable">
                         <div className="stat-card-icon">
-                          <i className="fi-sr-video-camera-alt"></i>
+                          <i className="fi-sr-book-alt"></i>
                         </div>
                         <div className="stat-card-value">{profileData?.totalSessions || 0}</div>
                         <div className="stat-card-label">Total Lessons</div>
-                      </div>
-                      <div className="stat-card">
+                      </a>
+                      <a href="/performance-metrics#rating" className="stat-card clickable">
                         <div className="stat-card-icon">
                           <i className="fi-sr-star"></i>
                         </div>
                         <div className="stat-card-value">{profileData?.rating?.toFixed(1) || '-'}</div>
                         <div className="stat-card-label">Average Rating</div>
-                      </div>
-                      <div className="stat-card">
+                      </a>
+                      <a href="/performance-metrics#rating" className="stat-card clickable">
                         <div className="stat-card-icon">
                           <i className="fi-sr-comment"></i>
                         </div>
                         <div className="stat-card-value">{profileData?.totalReviews || 0}</div>
                         <div className="stat-card-label">Total Reviews</div>
-                      </div>
-                      <div className="stat-card">
+                      </a>
+                      <a href="/performance-metrics#reliability" className="stat-card clickable">
                         <div className="stat-card-icon">
-                          <i className="fi-sr-dollar"></i>
+                          <i className="fi-sr-shield-check"></i>
                         </div>
-                        <div className="stat-card-value">₱{profileData?.hourlyRate || 0}</div>
-                        <div className="stat-card-label">Hourly Rate</div>
-                      </div>
+                        <div className="stat-card-value">100%</div>
+                        <div className="stat-card-label">Reliability</div>
+                      </a>
                     </div>
                   </section>
                 </div>
@@ -650,6 +691,16 @@ export const MyProfilePage = () => {
                   placeholder={`Enter your ${editingField.replace(/([A-Z])/g, ' $1').toLowerCase()}...`}
                   rows={5}
                 />
+              ) : editingField === 'interests' ? (
+                <>
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue((e.target as HTMLInputElement).value)}
+                    placeholder="e.g. Reading, Hiking, Photography, Cooking, Music"
+                  />
+                  <p className="input-hint">Enter up to 5 interests, separated by commas</p>
+                </>
               ) : (
                 <input
                   type="text"

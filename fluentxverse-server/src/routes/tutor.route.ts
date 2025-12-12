@@ -250,12 +250,23 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       const updateData = body as Record<string, any>;
       
       // Only allow updating specific fields
-      const allowedFields = ['bio', 'introduction', 'teachingStyle', 'hourlyRate', 'videoIntroUrl'];
+      const allowedFields = ['bio', 'introduction', 'teachingStyle', 'hourlyRate', 'videoIntroUrl', 'interests'];
       const filteredData: Record<string, any> = {};
       
       for (const key of allowedFields) {
         if (updateData[key] !== undefined) {
-          filteredData[key] = updateData[key];
+          // Handle interests array - ensure it's an array with max 5 items, stored as JSON string
+          if (key === 'interests') {
+            let interests = updateData[key];
+            if (typeof interests === 'string') {
+              interests = interests.split(',').map((i: string) => i.trim()).filter((i: string) => i.length > 0);
+            }
+            if (Array.isArray(interests)) {
+              filteredData[key] = JSON.stringify(interests.slice(0, 5)); // Store as JSON string like other arrays
+            }
+          } else {
+            filteredData[key] = updateData[key];
+          }
         }
       }
 

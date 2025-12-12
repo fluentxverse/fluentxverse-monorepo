@@ -15,11 +15,10 @@ interface MenuItem {
 // Menu items for the static site
 const menuItems: MenuItem[] = [
   { href: "/home", icon: "fi-sr-home" },
-  { href: "/profile", icon: "fi-sr-user" },
   { href: "/schedule", icon: "fi-sr-calendar", requiresCertification: true },
   { href: "/materials", icon: "fi-sr-book-alt" },
-  { href: "/metrics", icon: "fi-sr-chart-histogram" },
-  { href: "/about", icon: "fi-sr-info" }
+  { href: "/profile", icon: "fi-sr-user" },
+  { href: "/performance-metrics", icon: "fi-sr-chart-histogram" },
 ];
 
 const SideBar = (): JSX.Element | null => {
