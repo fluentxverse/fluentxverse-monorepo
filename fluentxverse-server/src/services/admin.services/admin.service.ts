@@ -10,7 +10,8 @@ import type {
   StudentListItem,
   RecentActivity,
   AdminUser,
-  AdminLoginParams
+  AdminLoginParams,
+  ProfileItemStatuses
 } from './admin.interface';
 import type { SuspensionHistoryItem } from './suspension.job';
 import { NotificationService } from '../notification.services/notification.service';
@@ -299,6 +300,20 @@ export class AdminService {
         } else if (u.createdAt) {
           submittedAt = typeof u.createdAt === 'string' ? u.createdAt : new Date().toISOString();
         }
+
+        // Parse profile item statuses from stored JSON or create default
+        let profileItemStatuses;
+        if (u.profileItemStatuses) {
+          try {
+            profileItemStatuses = typeof u.profileItemStatuses === 'string' 
+              ? JSON.parse(u.profileItemStatuses) 
+              : u.profileItemStatuses;
+          } catch {
+            profileItemStatuses = this.getDefaultItemStatuses();
+          }
+        } else {
+          profileItemStatuses = this.getDefaultItemStatuses();
+        }
         
         return {
           id: u.id,
@@ -311,7 +326,276 @@ export class AdminService {
           major: u.major || undefined,
           interests: u.interests ? JSON.parse(u.interests) : [],
           submittedAt,
-          profileStatus: 'pending_review' as const
+          profileStatus: 'pending_review' as const,
+          profileItemStatuses
+        };
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get default item statuses for a new profile submission
+   */
+  private getDefaultItemStatuses() {
+    return {
+      profilePicture: { status: 'pending' as const },
+      videoIntro: { status: 'pending' as const },
+      bio: { status: 'pending' as const },
+      education: { status: 'pending' as const },
+      interests: { status: 'pending' as const }
+    };
+  }
+
+  /**
+   * Review a specific profile item (approve/reject)
+   */
+  async reviewProfileItem(
+    tutorId: string, 
+    itemKey: 'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests',
+    action: 'approve' | 'reject',
+    reason?: string
+  ): Promise<{ profileItemStatuses: any; allApproved: boolean }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // First get current item statuses
+      const getResult = await session.run(`
+        MATCH (u:User { id: $tutorId })
+        RETURN u.profileItemStatuses as itemStatuses
+      `, { tutorId });
+
+      if (getResult.records.length === 0) {
+        throw new Error('Tutor not found');
+      }
+
+      let currentStatuses: Record<string, { status: string; rejectionReason?: string; reviewedAt?: string }> = this.getDefaultItemStatuses();
+      const record = getResult.records[0];
+      const storedStatuses = record ? record.get('itemStatuses') : null;
+      if (storedStatuses) {
+        try {
+          currentStatuses = typeof storedStatuses === 'string' 
+            ? JSON.parse(storedStatuses) 
+            : storedStatuses;
+        } catch {}
+      }
+
+      // Update the specific item
+      currentStatuses[itemKey] = {
+        status: action === 'approve' ? 'approved' : 'rejected',
+        rejectionReason: action === 'reject' ? reason : undefined,
+        reviewedAt: new Date().toISOString()
+      };
+
+      // Check if all items are approved
+      const allApproved = Object.values(currentStatuses).every(
+        (item: any) => item.status === 'approved'
+      );
+
+      // Check if any item is rejected
+      const hasRejected = Object.values(currentStatuses).some(
+        (item: any) => item.status === 'rejected'
+      );
+
+      // Determine overall profile status
+      let overallStatus = 'pending_review';
+      if (allApproved) {
+        overallStatus = 'approved';
+      } else if (hasRejected) {
+        overallStatus = 'rejected';
+      }
+
+      // Update the database
+      await session.run(`
+        MATCH (u:User { id: $tutorId })
+        SET u.profileItemStatuses = $itemStatuses,
+            u.profileStatus = $overallStatus,
+            u.profileReviewedAt = datetime()
+        RETURN u
+      `, { 
+        tutorId, 
+        itemStatuses: JSON.stringify(currentStatuses),
+        overallStatus
+      });
+
+      // If overall status changed to approved or rejected, notify the tutor
+      if (allApproved || hasRejected) {
+        const notificationService = new NotificationService();
+        const io = getIO();
+        
+        const notification = await notificationService.createNotification({
+          userId: tutorId,
+          userType: 'tutor',
+          type: allApproved ? 'profile_approved' : 'profile_rejected',
+          title: allApproved ? 'Profile Approved! 🎉' : 'Profile Needs Revision',
+          message: allApproved 
+            ? 'Congratulations! Your profile has been fully approved. Students can now find and book sessions with you.'
+            : 'Some items in your profile were not approved. Please review the feedback and make the necessary changes.',
+          data: {
+            link: '/profile'
+          }
+        });
+        
+        if (io) {
+          io.to(`notifications:${tutorId}`).emit('notification:new', notification);
+        }
+      }
+
+      return { profileItemStatuses: currentStatuses, allApproved };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Review a pending profile change for an already-approved profile
+   * Approving applies the change to the live profile
+   * Rejecting discards the change with feedback
+   */
+  async reviewPendingChange(
+    tutorId: string,
+    changeIndex: number,
+    action: 'approve' | 'reject',
+    reason?: string
+  ): Promise<{ success: boolean; remainingChanges: number }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Get current pending changes
+      const result = await session.run(`
+        MATCH (u:User { id: $tutorId })
+        RETURN u.pendingProfileChanges as pendingChanges,
+               u.firstName as firstName,
+               u.lastName as lastName
+      `, { tutorId });
+
+      if (result.records.length === 0) {
+        throw new Error('Tutor not found');
+      }
+
+      const record = result.records[0];
+      const pendingChangesStr = record.get('pendingChanges');
+      const tutorName = `${record.get('firstName') || ''} ${record.get('lastName') || ''}`.trim();
+      
+      if (!pendingChangesStr) {
+        throw new Error('No pending changes found');
+      }
+
+      let pendingChanges: any[];
+      try {
+        pendingChanges = JSON.parse(pendingChangesStr);
+      } catch {
+        throw new Error('Invalid pending changes data');
+      }
+
+      if (changeIndex < 0 || changeIndex >= pendingChanges.length) {
+        throw new Error('Invalid change index');
+      }
+
+      const change = pendingChanges[changeIndex];
+      const fieldKey = change.fieldKey || change.itemKey;
+
+      if (action === 'approve') {
+        // Apply the change to the live profile
+        await session.run(`
+          MATCH (u:User { id: $tutorId })
+          SET u.${fieldKey} = $newValue
+        `, { tutorId, newValue: change.newValue });
+      }
+
+      // Remove this change from the pending list
+      pendingChanges.splice(changeIndex, 1);
+
+      // Update pending changes list
+      const hasPendingChanges = pendingChanges.length > 0;
+      await session.run(`
+        MATCH (u:User { id: $tutorId })
+        SET u.pendingProfileChanges = $pendingChanges,
+            u.hasPendingChanges = $hasPendingChanges
+      `, { 
+        tutorId, 
+        pendingChanges: pendingChanges.length > 0 ? JSON.stringify(pendingChanges) : null,
+        hasPendingChanges
+      });
+
+      // Notify the tutor
+      const notificationService = new NotificationService();
+      const io = getIO();
+      
+      const itemLabels: Record<string, string> = {
+        'bio': 'Bio',
+        'profilePicture': 'Profile Photo',
+        'videoIntro': 'Introduction Video',
+        'videoIntroUrl': 'Introduction Video',
+        'education': 'Education',
+        'schoolAttended': 'Education',
+        'major': 'Education',
+        'interests': 'Interests'
+      };
+      
+      const itemLabel = itemLabels[change.itemKey] || change.itemKey;
+      
+      const notification = await notificationService.createNotification({
+        userId: tutorId,
+        userType: 'tutor',
+        type: action === 'approve' ? 'profile_change_approved' : 'profile_change_rejected',
+        title: action === 'approve' ? 'Profile Update Approved' : 'Profile Update Rejected',
+        message: action === 'approve' 
+          ? `Your ${itemLabel} update has been approved and is now live on your profile.`
+          : `Your ${itemLabel} update was not approved. ${reason || 'Please make adjustments and try again.'}`,
+        data: {
+          link: '/profile',
+          itemKey: change.itemKey,
+          rejectionReason: action === 'reject' ? reason : undefined
+        }
+      });
+      
+      if (io) {
+        io.to(`notifications:${tutorId}`).emit('notification:new', notification);
+      }
+
+      return { success: true, remainingChanges: pendingChanges.length };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get tutors with pending profile changes (for admin dashboard)
+   */
+  async getTutorsWithPendingChanges(limit: number = 20): Promise<any[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (u:User)
+        WHERE u.hasPendingChanges = true AND u.profileStatus = 'approved'
+        RETURN u
+        ORDER BY u.pendingProfileChanges DESC
+        LIMIT $limit
+      `, { limit: neo4j.int(limit) });
+
+      return result.records.map(record => {
+        const u = record.get('u').properties;
+        let pendingChanges: any[] = [];
+        
+        if (u.pendingProfileChanges) {
+          try {
+            pendingChanges = JSON.parse(u.pendingProfileChanges);
+          } catch {}
+        }
+        
+        return {
+          id: u.id,
+          name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+          email: u.email,
+          profilePicture: u.profilePicture,
+          pendingChanges,
+          profileStatus: u.profileStatus
         };
       });
     } finally {

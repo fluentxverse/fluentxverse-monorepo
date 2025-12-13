@@ -10,6 +10,29 @@ import ImageCropper from '../Components/Common/ImageCropper';
 import VideoPlayer from '../Components/Common/VideoPlayer';
 import './MyProfilePage.css';
 
+interface ProfileItemStatus {
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  reviewedAt?: string;
+}
+
+interface ProfileItemStatuses {
+  profilePicture?: ProfileItemStatus;
+  videoIntro?: ProfileItemStatus;
+  bio?: ProfileItemStatus;
+  education?: ProfileItemStatus;
+  interests?: ProfileItemStatus;
+}
+
+interface PendingProfileChange {
+  itemKey: string;
+  fieldKey?: string;
+  newValue: any;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  submittedAt: string;
+}
+
 interface TutorProfileData {
   firstName: string;
   lastName: string;
@@ -36,6 +59,10 @@ interface TutorProfileData {
   videoIntroUrl?: string;
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
   profileSubmittedAt?: string;
+  profileItemStatuses?: ProfileItemStatuses;
+  profileRejectionReason?: string;
+  pendingProfileChanges?: PendingProfileChange[];
+  hasPendingChanges?: boolean;
 }
 
 export const MyProfilePage = () => {
@@ -578,6 +605,19 @@ export const MyProfilePage = () => {
                     <div className="status-content">
                       <h3>Profile Under Review</h3>
                       <p>Your profile has been submitted and is awaiting admin review. You'll be notified once it's approved.</p>
+                      {profileData.profileItemStatuses && (
+                        <div className="review-progress">
+                          <div className="progress-label">
+                            Review Progress: {Object.values(profileData.profileItemStatuses).filter(s => s?.status === 'approved').length}/5 items approved
+                          </div>
+                          <div className="progress-bar-container">
+                            <div 
+                              className="progress-bar-fill" 
+                              style={{ width: `${(Object.values(profileData.profileItemStatuses).filter(s => s?.status === 'approved').length / 5) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                       {profileData.profileSubmittedAt && (
                         <span className="status-date">
                           Submitted on {new Date(profileData.profileSubmittedAt).toLocaleDateString()}
@@ -594,6 +634,38 @@ export const MyProfilePage = () => {
                     <div className="status-content">
                       <h3>Profile Approved</h3>
                       <p>Your profile has been reviewed and approved! Students can now find and book sessions with you.</p>
+                      
+                      {/* Show pending changes if any */}
+                      {profileData.hasPendingChanges && profileData.pendingProfileChanges && profileData.pendingProfileChanges.length > 0 && (
+                        <div className="pending-changes-notice">
+                          <div className="pending-changes-header">
+                            <i className="fi-sr-time-half-past"></i>
+                            <span>Pending Updates ({profileData.pendingProfileChanges.length})</span>
+                          </div>
+                          <p className="pending-changes-desc">
+                            You have changes awaiting admin review. Your current approved profile remains visible to students until changes are approved.
+                          </p>
+                          <div className="pending-changes-list">
+                            {profileData.pendingProfileChanges.map((change, idx) => {
+                              const itemLabels: Record<string, string> = {
+                                'bio': 'Bio',
+                                'profilePicture': 'Profile Photo',
+                                'videoIntro': 'Introduction Video',
+                                'education': 'Education',
+                                'interests': 'Interests'
+                              };
+                              return (
+                                <div key={idx} className="pending-change-item">
+                                  <span className="change-label">{itemLabels[change.itemKey] || change.itemKey}</span>
+                                  <span className="change-status pending">
+                                    <i className="fi-sr-clock"></i> Pending Review
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -604,7 +676,68 @@ export const MyProfilePage = () => {
                     </div>
                     <div className="status-content">
                       <h3>Profile Needs Revision</h3>
-                      <p>Your profile was not approved. Please review and update your information, then submit again.</p>
+                      <p>Some items in your profile were not approved. Please review the feedback below and make the necessary changes.</p>
+                      
+                      {/* Show item-level feedback */}
+                      {profileData.profileItemStatuses && (
+                        <div className="rejection-feedback">
+                          {profileData.profileItemStatuses.profilePicture?.status === 'rejected' && (
+                            <div className="feedback-item">
+                              <span className="feedback-label"><i className="fi-sr-picture"></i> Profile Photo:</span>
+                              <span className="feedback-reason">{profileData.profileItemStatuses.profilePicture.rejectionReason || 'Needs improvement'}</span>
+                            </div>
+                          )}
+                          {profileData.profileItemStatuses.bio?.status === 'rejected' && (
+                            <div className="feedback-item">
+                              <span className="feedback-label"><i className="fi-sr-document"></i> Bio:</span>
+                              <span className="feedback-reason">{profileData.profileItemStatuses.bio.rejectionReason || 'Needs improvement'}</span>
+                            </div>
+                          )}
+                          {profileData.profileItemStatuses.education?.status === 'rejected' && (
+                            <div className="feedback-item">
+                              <span className="feedback-label"><i className="fi-sr-graduation-cap"></i> Education:</span>
+                              <span className="feedback-reason">{profileData.profileItemStatuses.education.rejectionReason || 'Needs improvement'}</span>
+                            </div>
+                          )}
+                          {profileData.profileItemStatuses.interests?.status === 'rejected' && (
+                            <div className="feedback-item">
+                              <span className="feedback-label"><i className="fi-sr-heart"></i> Interests:</span>
+                              <span className="feedback-reason">{profileData.profileItemStatuses.interests.rejectionReason || 'Needs improvement'}</span>
+                            </div>
+                          )}
+                          {profileData.profileItemStatuses.videoIntro?.status === 'rejected' && (
+                            <div className="feedback-item">
+                              <span className="feedback-label"><i className="fi-sr-play-circle"></i> Video Intro:</span>
+                              <span className="feedback-reason">{profileData.profileItemStatuses.videoIntro.rejectionReason || 'Needs improvement'}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Show approved items */}
+                      {profileData.profileItemStatuses && Object.values(profileData.profileItemStatuses).some(s => s?.status === 'approved') && (
+                        <div className="approved-items">
+                          <span className="approved-label">Approved items:</span>
+                          <div className="approved-badges">
+                            {profileData.profileItemStatuses.profilePicture?.status === 'approved' && (
+                              <span className="approved-badge"><i className="fi-sr-check"></i> Photo</span>
+                            )}
+                            {profileData.profileItemStatuses.bio?.status === 'approved' && (
+                              <span className="approved-badge"><i className="fi-sr-check"></i> Bio</span>
+                            )}
+                            {profileData.profileItemStatuses.education?.status === 'approved' && (
+                              <span className="approved-badge"><i className="fi-sr-check"></i> Education</span>
+                            )}
+                            {profileData.profileItemStatuses.interests?.status === 'approved' && (
+                              <span className="approved-badge"><i className="fi-sr-check"></i> Interests</span>
+                            )}
+                            {profileData.profileItemStatuses.videoIntro?.status === 'approved' && (
+                              <span className="approved-badge"><i className="fi-sr-check"></i> Video</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
                       <button 
                         className="btn-submit-profile"
                         onClick={handleSubmitForReview}

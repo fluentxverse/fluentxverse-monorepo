@@ -754,6 +754,191 @@
   }
 }
 
+/* Review Progress Bar */
+.review-progress {
+  margin: 12px 0;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+}
+
+.progress-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Rejection Feedback */
+.rejection-feedback {
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.feedback-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.feedback-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.feedback-item:first-child {
+  padding-top: 0;
+}
+
+.feedback-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.feedback-label i {
+  font-size: 14px;
+}
+
+.feedback-reason {
+  font-size: 13px;
+  color: #64748b;
+  padding-left: 20px;
+  line-height: 1.4;
+}
+
+/* Approved Items Display */
+.approved-items {
+  margin: 16px 0;
+  padding: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.approved-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 8px;
+}
+
+/* Pending Changes Notice for Approved Profiles */
+.pending-changes-notice {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.pending-changes-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #d97706;
+  margin-bottom: 8px;
+}
+
+.pending-changes-header i {
+  font-size: 16px;
+}
+
+.pending-changes-desc {
+  font-size: 13px;
+  color: #78716c;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.pending-changes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pending-change-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.pending-change-item .change-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #44403c;
+}
+
+.pending-change-item .change-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.pending-change-item .change-status.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.pending-change-item .change-status i {
+  font-size: 10px;
+}
+
+.approved-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.approved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.approved-badge i {
+  font-size: 10px;
+}
+
 @media (max-width: 576px) {
   .profile-status-card {
     flex-direction: column;

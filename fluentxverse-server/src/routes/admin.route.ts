@@ -113,6 +113,93 @@ const Admin = new Elysia({ prefix: '/admin' })
   })
 
   /**
+   * Approve or reject a specific profile item
+   * POST /admin/profile/:tutorId/review-item
+   */
+  .post('/profile/:tutorId/review-item', async ({ params, body }) => {
+    try {
+      const { tutorId } = params;
+      const { itemKey, action, reason } = body as { 
+        itemKey: 'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests';
+        action: 'approve' | 'reject'; 
+        reason?: string 
+      };
+
+      const validItems = ['profilePicture', 'videoIntro', 'bio', 'education', 'interests'];
+      if (!itemKey || !validItems.includes(itemKey)) {
+        return { success: false, error: 'Invalid item key' };
+      }
+
+      if (!action || !['approve', 'reject'].includes(action)) {
+        return { success: false, error: 'Invalid action. Must be "approve" or "reject"' };
+      }
+
+      const result = await adminService.reviewProfileItem(tutorId, itemKey, action, reason);
+
+      return { 
+        success: true, 
+        message: `${itemKey} ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error in /admin/profile/:tutorId/review-item:', error);
+      return { success: false, error: 'Failed to review profile item' };
+    }
+  })
+
+  /**
+   * Get tutors with pending profile changes
+   * GET /admin/pending-changes
+   */
+  .get('/pending-changes', async ({ query }) => {
+    try {
+      const limit = query.limit ? Number(query.limit) : 20;
+      const tutors = await adminService.getTutorsWithPendingChanges(limit);
+      return {
+        success: true,
+        data: tutors
+      };
+    } catch (error) {
+      console.error('Error in /admin/pending-changes:', error);
+      return { success: false, error: 'Failed to get pending changes' };
+    }
+  })
+
+  /**
+   * Review a pending profile change for an approved tutor
+   * POST /admin/profile/:tutorId/review-change
+   */
+  .post('/profile/:tutorId/review-change', async ({ params, body }) => {
+    try {
+      const { tutorId } = params;
+      const { changeIndex, action, reason } = body as { 
+        changeIndex: number;
+        action: 'approve' | 'reject'; 
+        reason?: string 
+      };
+
+      if (typeof changeIndex !== 'number' || changeIndex < 0) {
+        return { success: false, error: 'Invalid change index' };
+      }
+
+      if (!action || !['approve', 'reject'].includes(action)) {
+        return { success: false, error: 'Invalid action. Must be "approve" or "reject"' };
+      }
+
+      const result = await adminService.reviewPendingChange(tutorId, changeIndex, action, reason);
+
+      return { 
+        success: true, 
+        message: `Change ${action === 'approve' ? 'approved and applied' : 'rejected'} successfully`,
+        data: result
+      };
+    } catch (error) {
+      console.error('Error in /admin/profile/:tutorId/review-change:', error);
+      return { success: false, error: 'Failed to review change' };
+    }
+  })
+
+  /**
    * Get all tutors with filters
    * GET /admin/tutors
    */

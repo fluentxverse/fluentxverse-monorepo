@@ -41,6 +41,31 @@ export interface PendingTutor {
   interviewDate?: string | null;
 }
 
+export interface ProfileItemStatus {
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  reviewedAt?: string;
+}
+
+export interface ProfileItemStatuses {
+  profilePicture: ProfileItemStatus;
+  videoIntro: ProfileItemStatus;
+  bio: ProfileItemStatus;
+  education: ProfileItemStatus;
+  interests: ProfileItemStatus;
+}
+
+// Pending changes for already-approved profiles
+export interface PendingProfileChange {
+  itemKey: 'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests';
+  newValue: any;
+  oldValue?: any;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  submittedAt: string;
+  reviewedAt?: string;
+}
+
 export interface PendingProfileReview {
   id: string;
   name: string;
@@ -52,7 +77,11 @@ export interface PendingProfileReview {
   major?: string;
   interests?: string[];
   submittedAt: string;
-  profileStatus: 'pending_review';
+  profileStatus: 'pending_review' | 'approved' | 'rejected';
+  profileItemStatuses?: ProfileItemStatuses;
+  // For approved profiles with pending changes
+  pendingChanges?: PendingProfileChange[];
+  isInitialReview?: boolean; // true for first-time review, false for change review
 }
 
 export interface TutorListItem {

@@ -45,6 +45,20 @@ export interface PendingTutor {
   interviewDate?: string | null;
 }
 
+export interface ProfileItemStatus {
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  reviewedAt?: string;
+}
+
+export interface ProfileItemStatuses {
+  profilePicture: ProfileItemStatus;
+  videoIntro: ProfileItemStatus;
+  bio: ProfileItemStatus;
+  education: ProfileItemStatus;
+  interests: ProfileItemStatus;
+}
+
 export interface PendingProfileReview {
   id: string;
   name: string;
@@ -56,7 +70,8 @@ export interface PendingProfileReview {
   major?: string;
   interests?: string[];
   submittedAt: string;
-  profileStatus: 'pending_review';
+  profileStatus: 'pending_review' | 'approved' | 'rejected';
+  profileItemStatuses?: ProfileItemStatuses;
 }
 
 export interface RecentActivity {
@@ -239,6 +254,57 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to review profile');
     }
+  },
+
+  /**
+   * Review a specific profile item (approve/reject)
+   */
+  async reviewProfileItem(
+    tutorId: string, 
+    itemKey: 'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests',
+    action: 'approve' | 'reject', 
+    reason?: string
+  ): Promise<{ profileItemStatuses: ProfileItemStatuses; allApproved: boolean }> {
+    const response = await api.post<ApiResponse<{ profileItemStatuses: ProfileItemStatuses; allApproved: boolean }>>(
+      `/admin/profile/${tutorId}/review-item`, 
+      { itemKey, action, reason }
+    );
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to review profile item');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Get tutors with pending profile changes
+   */
+  async getPendingChanges(limit: number = 20): Promise<any[]> {
+    const response = await api.get<ApiResponse<any[]>>('/admin/pending-changes', {
+      params: { limit }
+    });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get pending changes');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Review a pending profile change for an approved tutor
+   */
+  async reviewPendingChange(
+    tutorId: string,
+    changeIndex: number,
+    action: 'approve' | 'reject',
+    reason?: string
+  ): Promise<{ success: boolean; remainingChanges: number }> {
+    const response = await api.post<ApiResponse<{ success: boolean; remainingChanges: number }>>(
+      `/admin/profile/${tutorId}/review-change`,
+      { changeIndex, action, reason }
+    );
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to review change');
+    }
+    return response.data.data!;
   },
 
   /**

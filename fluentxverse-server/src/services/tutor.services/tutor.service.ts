@@ -433,28 +433,148 @@ export class TutorService {
 
   /**
    * Update tutor profile fields (bio, introduction, etc.)
+   * If profile is already approved, reviewable changes go to pending queue
    */
-  public async updateProfile(userId: string, data: Record<string, any>): Promise<void> {
+  public async updateProfile(userId: string, data: Record<string, any>): Promise<{ hasPendingChanges: boolean }> {
     const driver = getDriver();
     const session = driver.session();
     try {
-      const setStatements: string[] = [];
-      const params: Record<string, any> = { userId };
-
-      for (const [key, value] of Object.entries(data)) {
-        setStatements.push(`u.${key} = $${key}`);
-        params[key] = value;
-      }
-
-      if (setStatements.length === 0) return;
-
-      await session.run(
-        `
-        MATCH (u:User { id: $userId })
-        SET ${setStatements.join(', ')}
-        `,
-        params
+      // First check if profile is already approved
+      const statusResult = await session.run(
+        `MATCH (u:User { id: $userId }) RETURN u.profileStatus as profileStatus, u.pendingProfileChanges as pendingChanges`,
+        { userId }
       );
+      
+      const record = statusResult.records[0];
+      const profileStatus = record?.get('profileStatus');
+      const isApproved = profileStatus === 'approved';
+      
+      // Fields that require re-approval after profile is approved
+      const reviewableFields = ['bio', 'profilePicture', 'videoIntroUrl', 'schoolAttended', 'major', 'interests'];
+      
+      // Separate reviewable vs non-reviewable changes
+      const directUpdates: Record<string, any> = {};
+      const pendingUpdates: Record<string, any> = {};
+      
+      for (const [key, value] of Object.entries(data)) {
+        if (isApproved && reviewableFields.includes(key)) {
+          pendingUpdates[key] = value;
+        } else {
+          directUpdates[key] = value;
+        }
+      }
+      
+      // Apply direct updates immediately
+      if (Object.keys(directUpdates).length > 0) {
+        const setStatements: string[] = [];
+        const params: Record<string, any> = { userId };
+
+        for (const [key, value] of Object.entries(directUpdates)) {
+          setStatements.push(`u.${key} = $${key}`);
+          params[key] = value;
+        }
+
+        await session.run(
+          `
+          MATCH (u:User { id: $userId })
+          SET ${setStatements.join(', ')}
+          `,
+          params
+        );
+      }
+      
+      // If profile is approved, save reviewable changes as pending
+      if (isApproved && Object.keys(pendingUpdates).length > 0) {
+        // Get current pending changes
+        let currentPendingChanges: any[] = [];
+        const existingPending = record?.get('pendingChanges');
+        if (existingPending) {
+          try {
+            currentPendingChanges = typeof existingPending === 'string' 
+              ? JSON.parse(existingPending) 
+              : existingPending;
+          } catch {}
+        }
+        
+        // Map field keys to item keys
+        const fieldToItemKey: Record<string, string> = {
+          'bio': 'bio',
+          'profilePicture': 'profilePicture',
+          'videoIntroUrl': 'videoIntro',
+          'schoolAttended': 'education',
+          'major': 'education',
+          'interests': 'interests'
+        };
+        
+        // Add or update pending changes
+        for (const [key, value] of Object.entries(pendingUpdates)) {
+          const itemKey = fieldToItemKey[key] || key;
+          
+          // Remove existing pending change for this item
+          currentPendingChanges = currentPendingChanges.filter(c => c.itemKey !== itemKey);
+          
+          // Add new pending change
+          currentPendingChanges.push({
+            itemKey,
+            fieldKey: key, // Store original field key for when we apply the change
+            newValue: value,
+            status: 'pending',
+            submittedAt: new Date().toISOString()
+          });
+        }
+        
+        // Save pending changes and notify admins
+        await session.run(
+          `
+          MATCH (u:User { id: $userId })
+          SET u.pendingProfileChanges = $pendingChanges,
+              u.hasPendingChanges = true
+          `,
+          { userId, pendingChanges: JSON.stringify(currentPendingChanges) }
+        );
+        
+        // Notify admins about pending changes
+        const adminResult = await session.run(
+          `MATCH (a:User) WHERE a.role = 'admin' OR a.isAdmin = true RETURN a.id as adminId`
+        );
+        
+        const notificationService = new NotificationService();
+        const io = getIO();
+        
+        // Get tutor name for notification
+        const tutorResult = await session.run(
+          `MATCH (u:User { id: $userId }) RETURN u.firstName as firstName, u.lastName as lastName`,
+          { userId }
+        );
+        const tutorRecord = tutorResult.records[0];
+        const tutorName = tutorRecord ? `${tutorRecord.get('firstName') || ''} ${tutorRecord.get('lastName') || ''}`.trim() : 'A tutor';
+        
+        for (const adminRecord of adminResult.records) {
+          const adminId = adminRecord.get('adminId');
+          if (adminId) {
+            const notification = await notificationService.createNotification({
+              userId: adminId,
+              userType: 'admin',
+              type: 'profile_change_submitted',
+              title: 'Profile Change Request',
+              message: `${tutorName} has made changes to their approved profile that require review.`,
+              data: {
+                tutorId: userId,
+                tutorName: tutorName,
+                link: '/applications'
+              }
+            });
+            
+            if (io) {
+              io.to(`notifications:${adminId}`).emit('notification:new', notification);
+            }
+          }
+        }
+        
+        return { hasPendingChanges: true };
+      }
+      
+      return { hasPendingChanges: false };
     } finally {
       await session.close();
     }
@@ -619,7 +739,11 @@ export class TutorService {
         isAvailable: user.isAvailable || false,
         joinedDate: user.createdAt,
         profileStatus: user.profileStatus || 'incomplete',
-        profileSubmittedAt: neo4jDateTimeToISO(user.profileSubmittedAt)
+        profileSubmittedAt: neo4jDateTimeToISO(user.profileSubmittedAt),
+        profileItemStatuses: user.profileItemStatuses ? JSON.parse(user.profileItemStatuses) : undefined,
+        profileRejectionReason: user.profileRejectionReason || undefined,
+        pendingProfileChanges: user.pendingProfileChanges ? JSON.parse(user.pendingProfileChanges) : undefined,
+        hasPendingChanges: user.hasPendingChanges || false
       };
     } catch (error) {
       console.error('Error getting tutor profile:', error);
