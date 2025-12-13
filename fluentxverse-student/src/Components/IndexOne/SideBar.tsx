@@ -14,6 +14,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { href: "/home", icon: "fi-sr-home" },
   { href: "/schedule", icon: "fi-sr-calendar" },
+  { href: "/tickets", icon: "fi-sr-ticket" },
   { href: "/materials", icon: "fi-sr-book-alt" },
   { href: "/metrics", icon: "fi-sr-chart-histogram" },
   { href: "/about", icon: "fi-sr-info" }

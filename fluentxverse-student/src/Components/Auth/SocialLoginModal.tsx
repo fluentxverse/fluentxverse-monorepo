@@ -142,7 +142,7 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
         {/* Title */}
         <div className="login-title">
           <h2>Welcome Back</h2>
-          <p>Sign in to continue your learning journey</p>
+          <p>Register or login using the options below</p>
         </div>
 
         {/* Social Login Buttons */}

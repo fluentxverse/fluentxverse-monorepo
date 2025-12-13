@@ -12,6 +12,7 @@ import LessonPage from './pages/LessonPage';
 import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
 import { TutorProfilePage } from './pages/TutorProfilePage';
 import MaterialsPage from './pages/MaterialsPage';
+import TicketsPage from './pages/TicketsPage';
 import InboxPage from './pages/InboxPage';
 import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -81,6 +82,7 @@ export function AppInner() {
 					<Route path="/tutor/:tutorId" component={TutorProfilePage} />
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
+						<Route path="/tickets" component={withProtected(TicketsPage)} />
 						<Route path="/inbox" component={withProtected(InboxPage)} />
 						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
 						<Route path="/lesson/:bookingId" component={withProtected(LessonPage)} />
