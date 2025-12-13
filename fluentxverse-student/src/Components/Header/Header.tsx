@@ -1,18 +1,13 @@
 import { useEffect, useCallback, useState } from 'preact/hooks';
-import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
-import { loginUser } from '../../api/auth.api';
+import { SocialLoginModal } from '../Auth/SocialLoginModal';
+
 import "./Header.css";
 
 
 const Header = () => {
-  const { isDarkMode, toggleTheme } = useThemeStore();
-  const { isAuthenticated, login } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
 
   // Handler to open mobile menu
   const openMobileMenu = useCallback(() => {
@@ -36,28 +31,10 @@ const Header = () => {
     document.body.style.overflow = 'unset';
   }, []);
 
-  const handleLoginSubmit = useCallback(async (e: any) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setLoginError('Please enter both email and password.');
-      return;
-    }
-    setLoginError('');
-    setLoginLoading(true);
-    try {
-      const result = await loginUser(email, password);
-      if (result?.success && result.user) {
-        // Optionally update context if needed
-        window.location.href = '/home';
-      } else {
-        setLoginError('Login failed. Please check your credentials.');
-      }
-    } catch (err: any) {
-      setLoginError(err?.message || 'Invalid credentials');
-    } finally {
-      setLoginLoading(false);
-    }
-  }, [email, password]);
+  const handleLoginSuccess = useCallback(() => {
+    // Redirect to home after successful login
+    window.location.href = '/home';
+  }, []);
 
   useEffect(() => {
     // Sticky header on scroll
@@ -100,6 +77,12 @@ const Header = () => {
       }
     };
   }, [isAuthenticated]);
+
+
+ 
+
+
+
 
   return (
     <header>
@@ -241,61 +224,12 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="login-modal-overlay" onMouseDown={closeLoginModal}>
-          <div className="login-modal-content" onMouseDown={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={closeLoginModal}>
-              <i className="fas fa-times"></i>
-            </button>
-            <div className="modal-header">
-              <div className="modal-logo">
-                <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" />
-              </div>
-              <div className="modal-brand-text">FluentXVerse</div>
-            </div>
-            <form className="login-form" onSubmit={handleLoginSubmit as unknown as (e: any) => void}>
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
-                  required
-                />
-              </div>
-              <div className="form-options">
-                <a href="#" className="forgot-password">Forgot password?</a>
-              </div>
-              {loginError && (
-                <div className="modal-error" style={{ color: '#b00020', marginBottom: '8px' }}>{loginError}</div>
-              )}
-              <button type="submit" className="login-submit-btn" disabled={loginLoading}>
-                {loginLoading ? 'Signing In...' : 'Sign In'}
-              </button>
-              <div style={{ marginTop:'8px', fontSize:'12px', color:'#718096', textAlign:'center' }}>
-
-              </div>
-            </form>
-            <div className="modal-footer">
-              <p>Don't have an account? <a href="/register">Join Now</a></p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Social Login Modal */}
+      <SocialLoginModal
+        isOpen={showLoginModal}
+        onClose={closeLoginModal}
+        onSuccess={handleLoginSuccess}
+      />
     </header>
   )
 }

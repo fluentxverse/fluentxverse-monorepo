@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "preact/hooks";
 import { LocationProvider, Router, Route, hydrate, prerender as ssr } from 'preact-iso';
-
+import { createThirdwebClient } from "thirdweb";
+import { ThirdwebProvider } from "thirdweb/react";
 
 import Home from './pages/Home';
 import HomeProtected from './pages/HomeProtected';
@@ -16,6 +17,11 @@ import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import ContactPage from "./pages/ContactPage";
+
+// Initialize Thirdweb client - replace with your actual client ID from https://thirdweb.com/dashboard
+export const thirdwebClient = createThirdwebClient({
+	clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || "your-client-id"
+});
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -97,9 +103,12 @@ export function AppInner() {
 
 export function App() {
 	return (
-		<AuthProvider>
-			<AppInner />
-		</AuthProvider>
+		<ThirdwebProvider>
+			{/* @ts-expect-error Preact/React type mismatch with thirdweb */}
+			<AuthProvider>
+				<AppInner />
+			</AuthProvider>
+		</ThirdwebProvider>
 	);
 }
 
