@@ -379,6 +379,212 @@ class StudentService {
       throw error;
     }
   }
+
+  /**
+   * Authenticate or check registration status by wallet address
+   * Returns user data if wallet exists and registration is complete
+   * Returns partial status if wallet exists but registration incomplete
+   * Returns null if wallet doesn't exist (needs registration)
+   */
+  public async loginByWallet(walletAddress: string): Promise<{
+    status: 'authenticated' | 'incomplete_registration' | 'not_found';
+    user: any | null;
+    missingFields?: string[];
+  }> {
+    try {
+      const driver = getDriver();
+      const session = driver.session();
+      
+      // Search for student by wallet address (could be smartWalletAddress from server wallet or external wallet)
+      const result = await session.run(
+        `MATCH (s:Student)
+         WHERE s.smartWalletAddress = $walletAddress 
+            OR s.externalWalletAddress = $walletAddress
+         RETURN s`,
+        { walletAddress: walletAddress.toLowerCase() }
+      );
+      await session.close();
+
+      if (result.records.length === 0) {
+        // Wallet not found - user needs to register
+        return { status: 'not_found', user: null };
+      }
+
+      const user = result.records[0]?.get('s').properties;
+      
+      // Check if user is suspended
+      if (user.suspendedUntil) {
+        const suspendedUntil = new Date(user.suspendedUntil);
+        if (suspendedUntil > new Date()) {
+          const formattedDate = suspendedUntil.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+          throw new Error(`Your account is suspended until ${formattedDate}. Reason: ${user.suspendedReason || 'Not specified'}`);
+        }
+      }
+
+      // Check for required fields to determine if registration is complete
+      const requiredFields = ['email', 'givenName', 'familyName'];
+      const missingFields = requiredFields.filter(field => !user[field]);
+
+      if (missingFields.length > 0) {
+        // Registration incomplete - return partial user with missing fields info
+        const { password, ...safeUser } = user;
+        return {
+          status: 'incomplete_registration',
+          user: { ...safeUser, tier: Number(user.tier) || 0 },
+          missingFields
+        };
+      }
+
+      // Full authentication - return user data
+      const { password, tier, ...safeProperties } = user;
+      return {
+        status: 'authenticated',
+        user: {
+          ...safeProperties,
+          tier: Number(tier) || 0
+        }
+      };
+    } catch (error: any) {
+      console.error('Wallet login error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Register a new student with wallet address (from Thirdweb social login)
+   * Creates a new student node linked to the external wallet address
+   */
+  public async registerByWallet(params: {
+    walletAddress: string;
+    email?: string;
+    givenName?: string;
+    familyName?: string;
+    birthDate?: string;
+    mobileNumber?: string;
+  }): Promise<{ message: string; user: any }> {
+    try {
+      const id = nanoid(12);
+      const signUpdate = Date.now();
+      const { walletAddress, email, givenName, familyName, birthDate, mobileNumber } = params;
+
+      const driver = getDriver();
+      const session = driver.session();
+
+      // Check if wallet address already exists
+      const walletExists = await session.run(
+        `MATCH (s:Student)
+         WHERE s.smartWalletAddress = $walletAddress 
+            OR s.externalWalletAddress = $walletAddress
+         RETURN s LIMIT 1`,
+        { walletAddress: walletAddress.toLowerCase() }
+      );
+
+      if (walletExists.records.length > 0) {
+        await session.close();
+        const err: any = new Error('WALLET_EXISTS');
+        err.code = 'WALLET_EXISTS';
+        throw err;
+      }
+
+      // Check if email already exists (if provided)
+      if (email) {
+        const emailExists = await session.run(
+          `MATCH (s:Student { email: $email }) RETURN s LIMIT 1`,
+          { email: email.toLowerCase() }
+        );
+        if (emailExists.records.length > 0) {
+          await session.close();
+          const err: any = new Error('EMAIL_EXISTS');
+          err.code = 'EMAIL_EXISTS';
+          throw err;
+        }
+      }
+
+      // Create student with wallet address (no password required for wallet-based auth)
+      await session.run(
+        `CREATE (s:Student {
+          id: $id,
+          email: $email,
+          role: 'student',
+          familyName: $familyName,
+          givenName: $givenName,
+          birthDate: $birthDate,
+          mobileNumber: $mobileNumber,
+          signUpdate: $signUpdate,
+          suspendedUntil: null,
+          suspendedReason: '',
+          externalWalletAddress: $walletAddress,
+          verifiedEmail: false,
+          verifiedMobile: false,
+          tier: 0
+        })`,
+        {
+          id,
+          email: email ? email.toLowerCase() : null,
+          familyName: familyName || null,
+          givenName: givenName || null,
+          birthDate: birthDate || null,
+          mobileNumber: mobileNumber || null,
+          signUpdate,
+          walletAddress: walletAddress.toLowerCase()
+        }
+      );
+
+      // Fetch the created user
+      const result = await session.run(
+        `MATCH (s:Student { id: $id }) RETURN s`,
+        { id }
+      );
+      await session.close();
+
+      const user = result.records[0]?.get('s').properties;
+      const { password: _, ...safeUser } = user;
+
+      return {
+        message: 'Registration successful',
+        user: safeUser
+      };
+    } catch (error: any) {
+      console.error('Wallet registration error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Link an external wallet address to an existing student account
+   */
+  public async linkWallet(userId: string, walletAddress: string): Promise<{ message: string }> {
+    try {
+      const driver = getDriver();
+      const session = driver.session();
+
+      // Check if wallet is already linked to another account
+      const walletExists = await session.run(
+        `MATCH (s:Student)
+         WHERE (s.smartWalletAddress = $walletAddress OR s.externalWalletAddress = $walletAddress)
+           AND s.id <> $userId
+         RETURN s LIMIT 1`,
+        { walletAddress: walletAddress.toLowerCase(), userId }
+      );
+
+      if (walletExists.records.length > 0) {
+        await session.close();
+        throw new Error('This wallet is already linked to another account');
+      }
+
+      await session.run(
+        `MATCH (s:Student { id: $userId })
+         SET s.externalWalletAddress = $walletAddress`,
+        { userId, walletAddress: walletAddress.toLowerCase() }
+      );
+
+      await session.close();
+      return { message: 'Wallet linked successfully' };
+    } catch (error: any) {
+      console.error('Link wallet error:', error);
+      throw error;
+    }
+  }
 }
 
 export default StudentService;

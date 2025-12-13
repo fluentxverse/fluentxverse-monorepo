@@ -36,6 +36,23 @@ const Header = () => {
     window.location.href = '/home';
   }, []);
 
+  // Handle wallet connected but user needs to register
+  const handleNeedsRegistration = useCallback((walletAddress: string) => {
+    // Store wallet address for registration flow
+    localStorage.setItem('fxv_pending_wallet', walletAddress);
+    // Redirect to registration page
+    window.location.href = '/register';
+  }, []);
+
+  // Handle wallet connected but profile is incomplete
+  const handleIncompleteProfile = useCallback((walletAddress: string, missingFields: string[]) => {
+    // Store wallet address and missing fields for completion flow
+    localStorage.setItem('fxv_pending_wallet', walletAddress);
+    localStorage.setItem('fxv_missing_fields', JSON.stringify(missingFields));
+    // Redirect to register page to complete profile (same form can handle it)
+    window.location.href = '/register';
+  }, []);
+
   useEffect(() => {
     // Sticky header on scroll
     const handleScroll = () => {
@@ -229,6 +246,8 @@ const Header = () => {
         isOpen={showLoginModal}
         onClose={closeLoginModal}
         onSuccess={handleLoginSuccess}
+        onNeedsRegistration={handleNeedsRegistration}
+        onIncompleteProfile={handleIncompleteProfile}
       />
     </header>
   )

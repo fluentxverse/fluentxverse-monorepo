@@ -88,6 +88,60 @@ export const loginUser = async (email: string, password: string) => {
   return data;
 };
 
+// Wallet-based authentication types and methods
+export interface WalletAuthResponse {
+  success: boolean;
+  status: 'authenticated' | 'incomplete_registration' | 'not_found' | 'error';
+  user: any | null;
+  message: string;
+  missingFields?: string[];
+}
+
+export interface WalletRegisterParams {
+  walletAddress: string;
+  signature: string;
+  message: string;
+  email?: string;
+  givenName?: string;
+  familyName?: string;
+  birthDate?: string;
+  mobileNumber?: string;
+}
+
+export interface NonceResponse {
+  success: boolean;
+  nonce: string;
+  message: string;
+}
+
+/**
+ * Request a nonce for wallet authentication (SIWE)
+ */
+export const requestWalletNonce = async (walletAddress: string): Promise<NonceResponse> => {
+  const { data } = await client.post('/student/auth/wallet/nonce', { walletAddress });
+  return data;
+};
+
+/**
+ * Authenticate user by wallet address with signature verification
+ */
+export const loginWithWallet = async (
+  walletAddress: string,
+  signature: string,
+  message: string
+): Promise<WalletAuthResponse> => {
+  const { data } = await client.post('/student/auth/wallet', { walletAddress, signature, message });
+  return data;
+};
+
+/**
+ * Register a new student using wallet address with signature verification
+ */
+export const registerWithWallet = async (params: WalletRegisterParams) => {
+  const { data } = await client.post('/student/register/wallet', params);
+  return data;
+};
+
 
 export const logoutUser = async () => {
     const { data } = await client.post('/student/logout')

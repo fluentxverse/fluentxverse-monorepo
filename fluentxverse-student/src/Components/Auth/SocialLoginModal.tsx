@@ -2,12 +2,16 @@ import { useState, useCallback } from 'preact/hooks';
 import { useConnect } from "thirdweb/react";
 import { inAppWallet } from "thirdweb/wallets";
 import { thirdwebClient } from '../../index';
+import { useAuthContext } from '../../context/AuthContext';
+import { requestWalletNonce } from '../../api/auth.api';
 import './SocialLoginModal.css';
 
 interface SocialLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onNeedsRegistration?: (walletAddress: string) => void;
+  onIncompleteProfile?: (walletAddress: string, missingFields: string[]) => void;
 }
 
 const wallet = inAppWallet({
@@ -20,8 +24,15 @@ const wallet = inAppWallet({
   },
 });
 
-export function SocialLoginModal({ isOpen, onClose, onSuccess }: SocialLoginModalProps) {
+export function SocialLoginModal({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  onNeedsRegistration,
+  onIncompleteProfile 
+}: SocialLoginModalProps) {
   const { connect, isConnecting, error } = useConnect();
+  const { loginByWallet } = useAuthContext();
   const [connectingProvider, setConnectingProvider] = useState<string | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -30,6 +41,7 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess }: SocialLoginModa
     setLoginError(null);
     
     try {
+      // Step 1: Connect wallet via Thirdweb OAuth
       await connect(async () => {
         await wallet.connect({
           client: thirdwebClient,
@@ -37,8 +49,67 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess }: SocialLoginModa
         });
         return wallet;
       });
+
+      // Step 2: Get wallet address from the connected wallet
+      const account = wallet.getAccount();
+      const walletAddress = account?.address;
       
-      // Success - close modal and trigger callback
+      if (!walletAddress || !account) {
+        throw new Error('Failed to get wallet address. Please try again.');
+      }
+
+      console.log('Connected wallet address:', walletAddress);
+
+      // Step 3: Request nonce from backend (SIWE flow)
+      console.log('Requesting nonce for SIWE...');
+      const nonceResponse = await requestWalletNonce(walletAddress);
+      
+      if (!nonceResponse.success || !nonceResponse.message) {
+        throw new Error('Failed to get authentication nonce. Please try again.');
+      }
+
+      // Step 4: Sign the message with the wallet
+      console.log('Signing message with wallet...');
+      const signature = await account.signMessage({ message: nonceResponse.message });
+      
+      if (!signature) {
+        throw new Error('Failed to sign authentication message. Please try again.');
+      }
+
+      console.log('Message signed successfully');
+
+      // Step 5: Authenticate with backend using signature
+      const result = await loginByWallet({
+        walletAddress,
+        signature,
+        message: nonceResponse.message
+      });
+      
+      if (result.status === 'not_found') {
+        // Wallet doesn't exist - redirect to registration
+        // Store signature info for registration
+        console.log('Wallet not found, needs registration');
+        localStorage.setItem('fxv_pending_wallet', walletAddress);
+        localStorage.setItem('fxv_pending_signature', signature);
+        localStorage.setItem('fxv_pending_message', nonceResponse.message);
+        onClose();
+        onNeedsRegistration?.(walletAddress);
+        return;
+      }
+
+      if (result.status === 'incomplete_registration') {
+        // Wallet exists but profile incomplete
+        console.log('Incomplete registration, missing fields:', result.missingFields);
+        localStorage.setItem('fxv_pending_wallet', walletAddress);
+        localStorage.setItem('fxv_pending_signature', signature);
+        localStorage.setItem('fxv_pending_message', nonceResponse.message);
+        onClose();
+        onIncompleteProfile?.(walletAddress, result.missingFields || []);
+        return;
+      }
+
+      // Full authentication successful
+      console.log('Wallet login successful:', result.user);
       onSuccess?.();
       onClose();
     } catch (err: any) {
@@ -47,7 +118,7 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess }: SocialLoginModa
     } finally {
       setConnectingProvider(null);
     }
-  }, [connect, onClose, onSuccess]);
+  }, [connect, onClose, onSuccess, onNeedsRegistration, onIncompleteProfile, loginByWallet]);
 
   const handleOverlayClick = useCallback((e: MouseEvent) => {
     if ((e.target as HTMLElement).classList.contains('social-login-overlay')) {

@@ -1,6 +1,21 @@
 import Elysia, { t } from "elysia";
 import StudentService from "../services/auth.services/student.service";
 import { refreshAuthCookie } from "../utils/refreshCookie";
+import { nanoid } from "nanoid";
+import { verifyMessage } from "thirdweb/utils";
+
+// In-memory nonce store (use Redis in production for multi-instance deployments)
+const nonceStore = new Map<string, { nonce: string; expires: number }>();
+
+// Clean up expired nonces periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of nonceStore.entries()) {
+    if (value.expires < now) {
+      nonceStore.delete(key);
+    }
+  }
+}, 60000); // Clean every minute
 
 const Student = new Elysia({ name: "student" })
   .post("/student/register", async ({ body, cookie, set }) => {
@@ -362,6 +377,305 @@ const Student = new Elysia({ name: "student" })
       200: t.Object({
         success: t.Boolean(),
         message: t.String()
+      })
+    }
+  })
+
+  // Generate a nonce for wallet authentication (SIWE - Sign-In With Wallet)
+  .post('/student/auth/wallet/nonce', async ({ body, set }) => {
+    try {
+      const { walletAddress } = body;
+      
+      // Generate a unique nonce
+      const nonce = nanoid(32);
+      const expires = Date.now() + 5 * 60 * 1000; // 5 minutes expiry
+      
+      // Store nonce associated with wallet address
+      nonceStore.set(walletAddress.toLowerCase(), { nonce, expires });
+      
+      // Create the message to be signed
+      const message = `Sign this message to authenticate with FluentXVerse.\n\nNonce: ${nonce}\nWallet: ${walletAddress}\nTimestamp: ${new Date().toISOString()}`;
+      
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      
+      return {
+        success: true,
+        nonce,
+        message
+      };
+    } catch (error: any) {
+      console.error('Nonce generation error:', error);
+      throw error;
+    }
+  }, {
+    body: t.Object({
+      walletAddress: t.String()
+    }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        nonce: t.String(),
+        message: t.String()
+      })
+    }
+  })
+
+  // Wallet-based authentication with signature verification (SIWE)
+  .post('/student/auth/wallet', async ({ body, cookie, set }) => {
+    try {
+      const { walletAddress, signature, message } = body;
+      const normalizedAddress = walletAddress.toLowerCase();
+      
+      // Step 1: Verify nonce exists and hasn't expired
+      const storedNonce = nonceStore.get(normalizedAddress);
+      if (!storedNonce) {
+        set.status = 401;
+        return {
+          success: false,
+          status: 'error',
+          user: null,
+          message: 'Invalid or expired nonce. Please request a new one.'
+        };
+      }
+      
+      if (storedNonce.expires < Date.now()) {
+        nonceStore.delete(normalizedAddress);
+        set.status = 401;
+        return {
+          success: false,
+          status: 'error',
+          user: null,
+          message: 'Nonce expired. Please request a new one.'
+        };
+      }
+      
+      // Verify the nonce is in the message
+      if (!message.includes(storedNonce.nonce)) {
+        set.status = 401;
+        return {
+          success: false,
+          status: 'error',
+          user: null,
+          message: 'Invalid message format.'
+        };
+      }
+      
+      // Step 2: Verify signature
+      const isValid = await verifyMessage({
+        address: walletAddress as `0x${string}`,
+        message,
+        signature: signature as `0x${string}`
+      });
+      
+      if (!isValid) {
+        set.status = 401;
+        return {
+          success: false,
+          status: 'error',
+          user: null,
+          message: 'Invalid signature. Authentication failed.'
+        };
+      }
+      
+      // Step 3: Delete used nonce (one-time use)
+      nonceStore.delete(normalizedAddress);
+      
+      // Step 4: Check if wallet exists in database
+      const studentService = new StudentService();
+      const result = await studentService.loginByWallet(walletAddress);
+
+      if (result.status === 'not_found') {
+        return {
+          success: true,
+          status: 'not_found',
+          user: null,
+          message: 'Wallet not found. Please complete registration.'
+        };
+      }
+
+      if (result.status === 'incomplete_registration') {
+        return {
+          success: true,
+          status: 'incomplete_registration',
+          user: result.user,
+          missingFields: result.missingFields,
+          message: 'Registration incomplete. Please complete your profile.'
+        };
+      }
+
+      // Full authentication - set cookie
+      const userData = result.user;
+      const normalizedUser = {
+        id: userData.id || userData.userId || userData.uid,
+        userId: userData.id || userData.userId || userData.uid,
+        email: userData.email,
+        givenName: userData.givenName || userData.firstName || userData.given_name || null,
+        familyName: userData.familyName || userData.lastName || userData.family_name || null,
+        mobileNumber: userData.mobileNumber || userData.phone || null,
+        tier: userData.tier ?? 0,
+        role: userData.role || 'student',
+        walletAddress: userData.externalWalletAddress || userData.smartWalletAddress || null
+      };
+
+      cookie.studentAuth?.set({
+        value: JSON.stringify({
+          userId: normalizedUser.userId,
+          email: normalizedUser.email,
+          familyName: normalizedUser.familyName,
+          givenName: normalizedUser.givenName,
+          mobileNumber: normalizedUser.mobileNumber,
+          tier: normalizedUser.tier,
+          role: normalizedUser.role,
+          walletAddress: normalizedUser.walletAddress
+        }),
+        httpOnly: true,
+        secure: false, // False for localhost HTTP
+        sameSite: "lax", // Lax works for localhost
+        maxAge: 60 * 60,
+        path: "/"
+      });
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+
+      return {
+        success: true,
+        status: 'authenticated',
+        user: normalizedUser,
+        message: 'Login successful'
+      };
+    } catch (error: any) {
+      console.error('Wallet auth error:', error);
+      throw error;
+    }
+  }, {
+    body: t.Object({
+      walletAddress: t.String(),
+      signature: t.String(),
+      message: t.String()
+    }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        status: t.String(),
+        user: t.Any(),
+        message: t.String(),
+        missingFields: t.Optional(t.Array(t.String()))
+      })
+    }
+  })
+
+  // Register new student with wallet (from Thirdweb social login) - requires signature verification
+  .post('/student/register/wallet', async ({ body, cookie, set }) => {
+    try {
+      const { walletAddress, signature, message, email, givenName, familyName, birthDate, mobileNumber } = body;
+      const normalizedAddress = walletAddress.toLowerCase();
+      
+      // Verify nonce exists and hasn't expired
+      const storedNonce = nonceStore.get(normalizedAddress);
+      if (!storedNonce) {
+        set.status = 401;
+        return { success: false, message: 'Invalid or expired nonce. Please request a new one.', user: null };
+      }
+      
+      if (storedNonce.expires < Date.now()) {
+        nonceStore.delete(normalizedAddress);
+        set.status = 401;
+        return { success: false, message: 'Nonce expired. Please request a new one.', user: null };
+      }
+      
+      // Verify the nonce is in the message
+      if (!message.includes(storedNonce.nonce)) {
+        set.status = 401;
+        return { success: false, message: 'Invalid message format.', user: null };
+      }
+      
+      // Verify signature
+      const isValid = await verifyMessage({
+        address: walletAddress as `0x${string}`,
+        message,
+        signature: signature as `0x${string}`
+      });
+      
+      if (!isValid) {
+        set.status = 401;
+        return { success: false, message: 'Invalid signature. Authentication failed.', user: null };
+      }
+      
+      // Delete used nonce (one-time use)
+      nonceStore.delete(normalizedAddress);
+      
+      const studentService = new StudentService();
+      const result = await studentService.registerByWallet({ walletAddress, email, givenName, familyName, birthDate, mobileNumber });
+
+      const userData = result.user;
+      const normalizedUser = {
+        id: userData.id,
+        userId: userData.id,
+        email: userData.email,
+        givenName: userData.givenName || null,
+        familyName: userData.familyName || null,
+        mobileNumber: userData.mobileNumber || null,
+        tier: userData.tier ?? 0,
+        role: userData.role || 'student',
+        walletAddress: userData.externalWalletAddress || null
+      };
+
+      cookie.studentAuth?.set({
+        value: JSON.stringify({
+          userId: normalizedUser.userId,
+          email: normalizedUser.email,
+          familyName: normalizedUser.familyName,
+          givenName: normalizedUser.givenName,
+          mobileNumber: normalizedUser.mobileNumber,
+          tier: normalizedUser.tier,
+          role: normalizedUser.role,
+          walletAddress: normalizedUser.walletAddress
+        }),
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 60 * 60,
+        path: "/"
+      });
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+
+      return {
+        success: true,
+        message: result.message,
+        user: normalizedUser
+      };
+    } catch (error: any) {
+      console.error('Wallet registration error:', error);
+      if (error?.code === 'WALLET_EXISTS') {
+        if (set) set.status = 409;
+        return { success: false, message: 'Wallet is already registered', user: null };
+      }
+      if (error?.code === 'EMAIL_EXISTS') {
+        if (set) set.status = 409;
+        return { success: false, message: 'Email is already registered', user: null };
+      }
+      throw error;
+    }
+  }, {
+    body: t.Object({
+      walletAddress: t.String(),
+      signature: t.String(),
+      message: t.String(),
+      email: t.Optional(t.String()),
+      givenName: t.Optional(t.String()),
+      familyName: t.Optional(t.String()),
+      birthDate: t.Optional(t.String()),
+      mobileNumber: t.Optional(t.String())
+    }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        message: t.String(),
+        user: t.Any()
       })
     }
   });

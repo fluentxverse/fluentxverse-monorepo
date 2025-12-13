@@ -502,6 +502,23 @@
   font-size: 18px;
 }
 
+/* Wallet connected banner for social login registration */
+.wallet-connected-banner {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.wallet-connected-banner i {
+  font-size: 18px;
+}
+
 .step-indicator {
   display: flex;
   align-items: center;

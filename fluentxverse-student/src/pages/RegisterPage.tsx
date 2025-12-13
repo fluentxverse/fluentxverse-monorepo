@@ -3,30 +3,20 @@ import { useState, useEffect } from 'preact/compat';
 import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import Footer from '../Components/Footer/Footer';
-import { register } from '../api/auth.api';
+import { register, registerWithWallet } from '../api/auth.api';
 import { useAuthContext } from '../context/AuthContext';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
-  useEffect(() => {
-    document.title = 'Register | FluentXVerse';
-    // Ensure body overflow is reset (in case user came from a modal)
-    document.body.style.overflow = 'unset';
-    
-    return () => {
-      // Cleanup on unmount
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
-
   const { route } = useLocation();
-  const { user, login } = useAuthContext();
+  const { user, login, registerByWallet } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
   const [tutorId, setTutorId] = useState<string | null>(null);
+  const [pendingWallet, setPendingWallet] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     familyName: '',
@@ -43,6 +33,23 @@ const RegisterPage = () => {
     referral: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   });
+
+  useEffect(() => {
+    document.title = 'Register | FluentXVerse';
+    // Ensure body overflow is reset (in case user came from a modal)
+    document.body.style.overflow = 'unset';
+    
+    // Check for pending wallet address from social login
+    const walletAddress = localStorage.getItem('fxv_pending_wallet');
+    if (walletAddress) {
+      setPendingWallet(walletAddress);
+    }
+    
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Get tutor ID from URL if booking directly
   useEffect(() => {
@@ -93,23 +100,34 @@ const RegisterPage = () => {
     setIsSubmitting(true);
     
     try {
-      // Map form data to match server schema
-      const result = await register({
-        email: formData.email,
-        password: formData.password,
-        familyName: formData.familyName,
-        givenName: formData.givenName,
-        birthDate: formData.birthDate,
-        mobileNumber: formData.mobileNumber,
-      });
-      
-      if (result?.success) {
-        setSuccess(true);
-        try {
-          await login(formData.email, formData.password);
-        } catch {
-          // Cookie already set, proceed
+      if (pendingWallet) {
+        // Wallet-based registration (from social login)
+        // Get stored signature and message from SIWE flow
+        const signature = localStorage.getItem('fxv_pending_signature');
+        const message = localStorage.getItem('fxv_pending_message');
+        
+        if (!signature || !message) {
+          throw new Error('Authentication session expired. Please try signing in again.');
         }
+        
+        await registerByWallet({
+          walletAddress: pendingWallet,
+          signature,
+          message,
+          email: formData.email || undefined,
+          givenName: formData.givenName,
+          familyName: formData.familyName,
+          birthDate: formData.birthDate || undefined,
+          mobileNumber: formData.mobileNumber || undefined,
+        });
+        
+        // Clear pending wallet data from storage
+        localStorage.removeItem('fxv_pending_wallet');
+        localStorage.removeItem('fxv_pending_signature');
+        localStorage.removeItem('fxv_pending_message');
+        localStorage.removeItem('fxv_missing_fields');
+        
+        setSuccess(true);
         
         // Redirect to tutor profile if booking, otherwise home
         if (tutorId) {
@@ -122,7 +140,37 @@ const RegisterPage = () => {
           }, 1500);
         }
       } else {
-        setError('Registration failed. Please try again.');
+        // Traditional email/password registration
+        const result = await register({
+          email: formData.email,
+          password: formData.password,
+          familyName: formData.familyName,
+          givenName: formData.givenName,
+          birthDate: formData.birthDate,
+          mobileNumber: formData.mobileNumber,
+        });
+        
+        if (result?.success) {
+          setSuccess(true);
+          try {
+            await login(formData.email, formData.password);
+          } catch {
+            // Cookie already set, proceed
+          }
+          
+          // Redirect to tutor profile if booking, otherwise home
+          if (tutorId) {
+            setTimeout(() => {
+              window.location.href = `/tutor/${tutorId}`;
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              window.location.href = '/home';
+            }, 1500);
+          }
+        } else {
+          setError('Registration failed. Please try again.');
+        }
       }
     } catch (err: any) {
       setError(err?.message || 'An unexpected error occurred. Please try again.');
@@ -185,6 +233,13 @@ const RegisterPage = () => {
           {/* Right Side - Registration Form */}
           <div className={`register-right-side ${step === 2 ? 'step-2-active' : ''} ${step === 1 ? 'step-1-active' : ''}`}>
             <div className="register-form-card">
+              {pendingWallet && (
+                <div className="wallet-connected-banner">
+                  <i className="fas fa-wallet"></i>
+                  <span>Wallet connected! Complete your profile below.</span>
+                </div>
+              )}
+              
               {tutorId && (
                 <div className="tutor-booking-banner">
                   <i className="ri-bookmark-line"></i>
@@ -263,23 +318,25 @@ const RegisterPage = () => {
                         </div>
                         <div className="form-row">
                           <div className="form-group">
-                            <label className="form-label">이메일 <span className="required">*</span></label>
-                            <input type="email" className="form-input" placeholder="your@email.com" value={formData.email} onChange={(e) => handleChange('email', (e.target as HTMLInputElement).value)} required />
+                            <label className="form-label">이메일 <span className={pendingWallet ? '' : 'required'}>{pendingWallet ? '(선택사항)' : '*'}</span></label>
+                            <input type="email" className="form-input" placeholder="your@email.com" value={formData.email} onChange={(e) => handleChange('email', (e.target as HTMLInputElement).value)} required={!pendingWallet} />
                           </div>
                           <div className="form-group">
-                            <label className="form-label">휴대폰 번호 <span className="required">*</span></label>
-                            <input type="tel" className="form-input" placeholder="예: 010-1234-5678" value={formData.mobileNumber} onChange={(e) => handleChange('mobileNumber', (e.target as HTMLInputElement).value)} required />
+                            <label className="form-label">휴대폰 번호 <span className={pendingWallet ? '' : 'required'}>{pendingWallet ? '(선택사항)' : '*'}</span></label>
+                            <input type="tel" className="form-input" placeholder="예: 010-1234-5678" value={formData.mobileNumber} onChange={(e) => handleChange('mobileNumber', (e.target as HTMLInputElement).value)} required={!pendingWallet} />
                           </div>
                         </div>
-                        <div className="form-group">
-                          <label className="form-label">비밀번호 <span className="required">*</span></label>
-                          <div className="password-wrapper">
-                            <input type={showPassword ? 'text' : 'password'} className="form-input" placeholder="최소 6자" value={formData.password} onChange={(e) => handleChange('password', (e.target as HTMLInputElement).value)} required minLength={6} />
-                            <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
-                              <i className={`ri-eye-${showPassword ? 'off' : ''}-line`}></i>
-                            </button>
+                        {!pendingWallet && (
+                          <div className="form-group">
+                            <label className="form-label">비밀번호 <span className="required">*</span></label>
+                            <div className="password-wrapper">
+                              <input type={showPassword ? 'text' : 'password'} className="form-input" placeholder="최소 6자" value={formData.password} onChange={(e) => handleChange('password', (e.target as HTMLInputElement).value)} required minLength={6} />
+                              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
+                                <i className={`ri-eye-${showPassword ? 'off' : ''}-line`}></i>
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                       <button type="submit" className="btn-primary btn-full">
                         계속하기 <i className="ri-arrow-right-line"></i>

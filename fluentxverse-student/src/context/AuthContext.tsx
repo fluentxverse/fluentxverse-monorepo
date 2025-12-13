@@ -2,7 +2,7 @@
   const allowedRole = 'student';
 import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
-import { loginUser, logoutUser, getMe } from '../api/auth.api';
+import { loginUser, logoutUser, getMe, loginWithWallet, registerWithWallet, type WalletAuthResponse, type WalletRegisterParams } from '../api/auth.api';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
 import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
 
@@ -19,12 +19,26 @@ interface AuthUser {
   role?: string;
 }
 
+interface WalletLoginResult {
+  status: 'authenticated' | 'incomplete_registration' | 'not_found' | 'error';
+  user: AuthUser | null;
+  missingFields?: string[];
+}
+
+interface WalletAuthParams {
+  walletAddress: string;
+  signature: string;
+  message: string;
+}
+
 interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   initialLoading: boolean; // initial /me check
   loginLoading: boolean; // active login attempt
   login: (email: string, password: string) => Promise<void>;
+  loginByWallet: (params: WalletAuthParams) => Promise<WalletLoginResult>;
+  registerByWallet: (params: WalletRegisterParams) => Promise<void>;
   logout: () => void;
   getUserId: () => string | undefined;
 }
@@ -153,6 +167,115 @@ export const AuthProvider = ({ children }: { children: any }) => {
     return user?.userId;
   };
 
+  /**
+   * Login by wallet address with signature verification (SIWE)
+   * Returns status to indicate if user needs registration or has incomplete profile
+   */
+  const loginByWallet = async ({ walletAddress, signature, message }: WalletAuthParams): Promise<WalletLoginResult> => {
+    setLoginLoading(true);
+    setLoginInProgress(true);
+    forceAuthCleanup();
+
+    try {
+      console.log('Starting wallet login request with signature...');
+      const response = await loginWithWallet(walletAddress, signature, message);
+      console.log('Wallet auth response:', response);
+
+      if (response.status === 'error') {
+        throw new Error(response.message || 'Authentication failed');
+      }
+
+      if (response.status === 'not_found') {
+        // User doesn't exist - needs registration
+        return { status: 'not_found', user: null };
+      }
+
+      if (response.status === 'incomplete_registration') {
+        // User exists but profile incomplete
+        return {
+          status: 'incomplete_registration',
+          user: response.user as AuthUser,
+          missingFields: response.missingFields
+        };
+      }
+
+      // Full authentication
+      if (response.user) {
+        const loggedInUser = response.user as AuthUser;
+        
+        if (loggedInUser.role && loggedInUser.role !== allowedRole) {
+          setUser(null);
+          throw new Error('You are not allowed to log in to the student app.');
+        }
+
+        setUser(loggedInUser);
+        
+        // Persist name for cases where /me returns minimal fields
+        const first = loggedInUser.givenName || '';
+        const last = loggedInUser.familyName || '';
+        if (first || last) {
+          localStorage.setItem('fxv_user_fullname', `${first} ${last}`.trim());
+        }
+        if (loggedInUser.userId) {
+          localStorage.setItem('fxv_user_id', loggedInUser.userId);
+        }
+
+        return { status: 'authenticated', user: loggedInUser };
+      }
+
+      throw new Error('Wallet login failed - no user data returned');
+    } catch (err: any) {
+      setUser(null);
+      throw new Error(err?.message || 'Wallet login failed');
+    } finally {
+      setLoginLoading(false);
+      setTimeout(() => setLoginInProgress(false), 500);
+    }
+  };
+
+  /**
+   * Register a new user with wallet address
+   */
+  const registerByWallet = async (params: WalletRegisterParams): Promise<void> => {
+    setLoginLoading(true);
+    setLoginInProgress(true);
+    forceAuthCleanup();
+
+    try {
+      console.log('Starting wallet registration...');
+      const response = await registerWithWallet(params);
+      console.log('Wallet registration response:', response);
+
+      if (response.success && response.user) {
+        const newUser = response.user as AuthUser;
+        
+        if (newUser.role && newUser.role !== allowedRole) {
+          setUser(null);
+          throw new Error('You are not allowed to log in to the student app.');
+        }
+
+        setUser(newUser);
+        
+        const first = newUser.givenName || '';
+        const last = newUser.familyName || '';
+        if (first || last) {
+          localStorage.setItem('fxv_user_fullname', `${first} ${last}`.trim());
+        }
+        if (newUser.userId) {
+          localStorage.setItem('fxv_user_id', newUser.userId);
+        }
+      } else {
+        throw new Error(response.message || 'Registration failed');
+      }
+    } catch (err: any) {
+      setUser(null);
+      throw new Error(err?.message || 'Wallet registration failed');
+    } finally {
+      setLoginLoading(false);
+      setTimeout(() => setLoginInProgress(false), 500);
+    }
+  };
+
   const logout = async () => {
     try {
       await logoutUser();
@@ -172,7 +295,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout, getUserId }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, loginByWallet, registerByWallet, logout, getUserId }}>
       {children}
     </AuthContext.Provider>
   );
