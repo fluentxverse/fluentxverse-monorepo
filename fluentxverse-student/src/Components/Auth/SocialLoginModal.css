@@ -233,6 +233,51 @@
   box-shadow: 0 4px 12px rgba(6, 199, 85, 0.3);
 }
 
+/* TikTok Button */
+.tiktok-btn {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  position: relative;
+  overflow: hidden;
+}
+
+.tiktok-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #25F4EE 0%, #FE2C55 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tiktok-btn:hover:not(:disabled) {
+  background: #1a1a1a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tiktok-btn:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+/* Telegram Button */
+.telegram-btn {
+  background: #0088cc;
+  color: #ffffff;
+  border-color: #0088cc;
+}
+
+.telegram-btn:hover:not(:disabled) {
+  background: #007ab8;
+  border-color: #007ab8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
+}
+
 /* Loading State */
 .btn-loading {
   display: flex;

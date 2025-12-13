@@ -18,7 +18,6 @@ import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import ContactPage from "./pages/ContactPage";
 
-// Initialize Thirdweb client - replace with your actual client ID from https://thirdweb.com/dashboard
 export const thirdwebClient = createThirdwebClient({
 	clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || "your-client-id"
 });
