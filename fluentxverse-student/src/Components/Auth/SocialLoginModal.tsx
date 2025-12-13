@@ -5,6 +5,7 @@ import { thirdwebClient } from '../../index';
 import { useAuthContext } from '../../context/AuthContext';
 import { requestWalletNonce } from '../../api/auth.api';
 import './SocialLoginModal.css';
+import { arbitrumSepolia, baseSepolia } from 'thirdweb/chains';
 
 interface SocialLoginModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
         await wallet.connect({
           client: thirdwebClient,
           strategy,
+          chain: arbitrumSepolia
         });
         return wallet;
       });

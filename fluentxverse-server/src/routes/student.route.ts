@@ -2,7 +2,7 @@ import Elysia, { t } from "elysia";
 import StudentService from "../services/auth.services/student.service";
 import { refreshAuthCookie } from "../utils/refreshCookie";
 import { nanoid } from "nanoid";
-import { verifyMessage } from "thirdweb/utils";
+import { verifyMessage } from "viem";
 
 // In-memory nonce store (use Redis in production for multi-instance deployments)
 const nonceStore = new Map<string, { nonce: string; expires: number }>();
@@ -478,14 +478,12 @@ const Student = new Elysia({ name: "student" })
         };
       }
       
-      // Step 3: Delete used nonce (one-time use)
-      nonceStore.delete(normalizedAddress);
-      
-      // Step 4: Check if wallet exists in database
+      // Step 3: Check if wallet exists in database
       const studentService = new StudentService();
       const result = await studentService.loginByWallet(walletAddress);
 
       if (result.status === 'not_found') {
+        // Keep nonce for registration - don't delete it yet
         return {
           success: true,
           status: 'not_found',
@@ -495,6 +493,7 @@ const Student = new Elysia({ name: "student" })
       }
 
       if (result.status === 'incomplete_registration') {
+        // Keep nonce for registration completion - don't delete it yet
         return {
           success: true,
           status: 'incomplete_registration',
@@ -504,7 +503,9 @@ const Student = new Elysia({ name: "student" })
         };
       }
 
-      // Full authentication - set cookie
+      // Full authentication - delete nonce and set cookie
+      nonceStore.delete(normalizedAddress);
+      
       const userData = result.user;
       const normalizedUser = {
         id: userData.id || userData.userId || userData.uid,
