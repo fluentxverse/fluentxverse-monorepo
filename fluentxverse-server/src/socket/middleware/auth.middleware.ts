@@ -1,6 +1,14 @@
 import type { Socket } from 'socket.io';
 import type { AuthData } from '../../services/auth.services/auth.interface';
 
+type AdminCookieAuth = {
+  userId: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+};
+
 export const authMiddleware = async (
   socket: Socket,
   next: (err?: Error) => void
@@ -22,6 +30,28 @@ export const authMiddleware = async (
 
     if (!authData && cookieString) {
       console.log('🍪 Cookie string received:', cookieString);
+
+      // Admin dashboard cookie
+      const adminAuthCookie = cookieString
+        .split('; ')
+        .find(row => row.startsWith('adminAuth='))
+        ?.split('=')[1];
+
+      if (adminAuthCookie) {
+        const decodedCookie = decodeURIComponent(adminAuthCookie);
+        try {
+          const adminAuth = JSON.parse(decodedCookie) as AdminCookieAuth;
+          if (adminAuth?.userId) {
+            socket.data.userId = adminAuth.userId;
+            socket.data.userType = 'admin';
+            socket.data.email = undefined;
+            console.log(`✅ Socket authenticated: Admin ${adminAuth.userId}`);
+            return next();
+          }
+        } catch (e) {
+          console.log('🍪 Failed to parse adminAuth cookie:', e);
+        }
+      }
       
       // Check for tutorAuth cookie first (tutor app), then fallback to auth cookie (student app)
       let authCookie = cookieString

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [preact()],
   server: {
     port: 5175,
+    strictPort: true,
     host: '0.0.0.0',
     hmr: {
       port: 5175,

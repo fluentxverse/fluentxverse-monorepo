@@ -13,9 +13,10 @@ const Notification = new Elysia({ prefix: '/notifications' })
    */
   .get('/', async ({ query, cookie, set }) => {
     try {
-      // Check for tutor auth first, then student auth
-      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value;
-      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : 'studentAuth';
+      // Check auth cookies (tutor, student, admin)
+      const isAdmin = !!cookie.adminAuth?.value;
+      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value || cookie.adminAuth?.value;
+      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : cookie.studentAuth?.value ? 'studentAuth' : 'adminAuth';
       
       if (!raw) {
         set.status = 401;
@@ -25,8 +26,10 @@ const Notification = new Elysia({ prefix: '/notifications' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, cookieName);
+      // Refresh cookie on every request (adminAuth refresh not supported by helper)
+      if (!isAdmin) {
+        refreshAuthCookie(cookie, authData, cookieName);
+      }
 
       const limit = query.limit ? parseInt(query.limit, 10) : 50;
       const offset = query.offset ? parseInt(query.offset, 10) : 0;
@@ -80,8 +83,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
    */
   .get('/unread-count', async ({ cookie, set }) => {
     try {
-      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value;
-      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : 'studentAuth';
+      const isAdmin = !!cookie.adminAuth?.value;
+      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value || cookie.adminAuth?.value;
+      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : cookie.studentAuth?.value ? 'studentAuth' : 'adminAuth';
       
       if (!raw) {
         set.status = 401;
@@ -91,7 +95,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
 
-      refreshAuthCookie(cookie, authData, cookieName);
+      if (!isAdmin) {
+        refreshAuthCookie(cookie, authData, cookieName);
+      }
 
       const unreadCount = await notificationService.getUnreadCount(userId);
 
@@ -115,8 +121,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
    */
   .post('/:id/read', async ({ params, cookie, set }) => {
     try {
-      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value;
-      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : 'studentAuth';
+      const isAdmin = !!cookie.adminAuth?.value;
+      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value || cookie.adminAuth?.value;
+      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : cookie.studentAuth?.value ? 'studentAuth' : 'adminAuth';
       
       if (!raw) {
         set.status = 401;
@@ -126,7 +133,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
 
-      refreshAuthCookie(cookie, authData, cookieName);
+      if (!isAdmin) {
+        refreshAuthCookie(cookie, authData, cookieName);
+      }
 
       const success = await notificationService.markAsRead(params.id, userId);
 
@@ -161,8 +170,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
    */
   .post('/read-all', async ({ cookie, set }) => {
     try {
-      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value;
-      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : 'studentAuth';
+      const isAdmin = !!cookie.adminAuth?.value;
+      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value || cookie.adminAuth?.value;
+      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : cookie.studentAuth?.value ? 'studentAuth' : 'adminAuth';
       
       if (!raw) {
         set.status = 401;
@@ -172,7 +182,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
 
-      refreshAuthCookie(cookie, authData, cookieName);
+      if (!isAdmin) {
+        refreshAuthCookie(cookie, authData, cookieName);
+      }
 
       const updated = await notificationService.markAllAsRead(userId);
 
@@ -204,8 +216,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
    */
   .delete('/:id', async ({ params, cookie, set }) => {
     try {
-      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value;
-      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : 'studentAuth';
+      const isAdmin = !!cookie.adminAuth?.value;
+      let raw = cookie.tutorAuth?.value || cookie.studentAuth?.value || cookie.adminAuth?.value;
+      const cookieName = cookie.tutorAuth?.value ? 'tutorAuth' : cookie.studentAuth?.value ? 'studentAuth' : 'adminAuth';
       
       if (!raw) {
         set.status = 401;
@@ -215,7 +228,9 @@ const Notification = new Elysia({ prefix: '/notifications' })
       const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
       const userId = authData.userId;
 
-      refreshAuthCookie(cookie, authData, cookieName);
+      if (!isAdmin) {
+        refreshAuthCookie(cookie, authData, cookieName);
+      }
 
       const success = await notificationService.deleteNotification(params.id, userId);
 

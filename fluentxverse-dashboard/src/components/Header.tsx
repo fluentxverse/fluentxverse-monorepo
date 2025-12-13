@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { io, type Socket } from 'socket.io-client';
 import { useAuthContext } from '../context/AuthContext';
 import { adminApi, RecentActivity } from '../api/admin.api';
 import './Header.css';
@@ -9,6 +10,7 @@ export function Header() {
   const [notifications, setNotifications] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, logout } = useAuthContext();
+  const socketRef = useRef<Socket | null>(null);
   
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -40,7 +42,7 @@ export function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showNotifications, showUserMenu]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const data = await adminApi.getRecentActivity(10);
@@ -50,7 +52,35 @@ export function Header() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Real-time activity feed updates via Socket.IO notifications
+  useEffect(() => {
+    if (!user?.userId) return;
+
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:8767', {
+      transports: ['websocket', 'polling'],
+      withCredentials: true
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      socket.emit('notification:subscribe');
+    });
+
+    socket.on('notification:new', () => {
+      // Keep header consistent with existing API formatting
+      loadNotifications();
+    });
+
+    return () => {
+      socket.off('notification:new');
+      socket.off('connect');
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [user?.userId, loadNotifications]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -65,6 +95,8 @@ export function Header() {
       case 'booking':
         return { icon: 'ri-calendar-check-line', class: 'success' };
       case 'profile_submitted':
+        return { icon: 'ri-user-settings-line', class: 'primary' };
+      case 'profile_change_submitted':
         return { icon: 'ri-user-settings-line', class: 'primary' };
       default:
         return { icon: 'ri-notification-3-line', class: 'info' };

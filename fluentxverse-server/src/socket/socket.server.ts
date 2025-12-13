@@ -23,8 +23,10 @@ export const initSocketServer = (httpServer: HTTPServer) => {
   const defaultOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:5175',
     'http://192.168.0.102:5173',
-    'http://192.168.0.102:5174'
+    'http://192.168.0.102:5174',
+    'http://192.168.0.102:5175'
   ];
   
   const envOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')

@@ -960,6 +960,33 @@ export class AdminService {
         });
       });
 
+      // Include admin-targeted persisted notifications (e.g., pending profile changes)
+      const adminNotifResult = await session.run(`
+        MATCH (n:Notification)
+        WHERE n.userType = 'admin' AND n.type = 'profile_change_submitted'
+        RETURN n
+        ORDER BY n.timestamp DESC
+        LIMIT $limit
+      `, { limit: neo4j.int(limit) });
+
+      adminNotifResult.records.forEach(record => {
+        const n = record.get('n').properties;
+        let data: any = {};
+        try {
+          data = n.data ? JSON.parse(n.data) : {};
+        } catch {
+          data = {};
+        }
+
+        activities.push({
+          id: n.id,
+          type: n.type,
+          message: n.message,
+          timestamp: n.timestamp,
+          userId: data.tutorId || data.userId || n.userId
+        });
+      });
+
       // Sort by timestamp and limit
       activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       return activities.slice(0, limit);

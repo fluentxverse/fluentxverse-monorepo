@@ -525,7 +525,7 @@ export class TutorService {
         
         // Notify admins about pending changes
         const adminResult = await session.run(
-          `MATCH (a:User) WHERE a.role = 'admin' OR a.isAdmin = true RETURN a.id as adminId`
+          `MATCH (a:Admin) RETURN a.id as adminId`
         );
         
         const notificationService = new NotificationService();
@@ -593,7 +593,7 @@ export class TutorService {
       
       // Get all admin users to notify them
       const adminResult = await session.run(
-        `MATCH (a:User) WHERE a.role = 'admin' OR a.isAdmin = true RETURN a.id as adminId`
+        `MATCH (a:Admin) RETURN a.id as adminId`
       );
       
       const notificationService = new NotificationService();
