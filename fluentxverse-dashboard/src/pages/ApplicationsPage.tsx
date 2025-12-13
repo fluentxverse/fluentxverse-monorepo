@@ -237,14 +237,32 @@ const ApplicationsPage = () => {
         <video src={change.newValue} controls className="change-video-preview" />
       );
     }
-    if (change.itemKey === 'interests' && Array.isArray(change.newValue)) {
-      return (
-        <div className="interests-chips">
-          {change.newValue.map((interest: string, idx: number) => (
-            <span key={idx} className="interest-chip">{interest}</span>
-          ))}
-        </div>
-      );
+    if (change.itemKey === 'interests') {
+      // Handle both array and JSON string formats
+      let interests: string[] = [];
+      if (Array.isArray(change.newValue)) {
+        interests = change.newValue;
+      } else if (typeof change.newValue === 'string') {
+        try {
+          const parsed = JSON.parse(change.newValue);
+          if (Array.isArray(parsed)) {
+            interests = parsed;
+          }
+        } catch {
+          // Not valid JSON, treat as single interest
+          interests = [change.newValue];
+        }
+      }
+      
+      if (interests.length > 0) {
+        return (
+          <div className="interests-chips">
+            {interests.map((interest: string, idx: number) => (
+              <span key={idx} className="interest-chip">{interest}</span>
+            ))}
+          </div>
+        );
+      }
     }
     return <p>{String(change.newValue)}</p>;
   };

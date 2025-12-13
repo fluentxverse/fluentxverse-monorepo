@@ -119,9 +119,15 @@ export const ImageCropper = ({
     const cropAreaLeft = (containerRect.width - CROP_SIZE) / 2;
     const cropAreaTop = (containerRect.height - CROP_SIZE) / 2;
 
-    // Calculate what part of the image is in the crop area
-    const imgDisplayWidth = img.naturalWidth * zoom;
-    const imgDisplayHeight = img.naturalHeight * zoom;
+    // Calculate the base display size (image is scaled to fit container height via CSS)
+    const containerHeight = containerRect.height;
+    const baseScale = containerHeight / img.naturalHeight;
+    const baseDisplayWidth = img.naturalWidth * baseScale;
+    const baseDisplayHeight = containerHeight;
+
+    // Apply zoom to get the actual displayed dimensions
+    const imgDisplayWidth = baseDisplayWidth * zoom;
+    const imgDisplayHeight = baseDisplayHeight * zoom;
     
     const imgLeft = (containerRect.width - imgDisplayWidth) / 2 + position.x;
     const imgTop = (containerRect.height - imgDisplayHeight) / 2 + position.y;

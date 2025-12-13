@@ -220,7 +220,7 @@ export const TutorProfilePage = () => {
                     <span className="rating-count">({tutor.totalReviews || 0} reviews)</span>
                     {tutor.isVerified && (
                       <div className="verified-badge">
-                        <i className="fi-sr-badge-check"></i>
+                        <i className="fi-sr-check"></i>
                         <span>Verified</span>
                       </div>
                     )}

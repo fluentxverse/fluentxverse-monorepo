@@ -413,22 +413,12 @@ export class TutorService {
   }
 
   /**
-   * Set user's profile picture URL, optionally clearing previous one
+   * Set user's profile picture URL
+   * For approved profiles, this goes through the pending changes queue
    */
-  public async setProfilePicture(userId: string, url: string): Promise<void> {
-    const driver = getDriver();
-    const session = driver.session();
-    try {
-      await session.run(
-        `
-        MATCH (u:User { id: $userId })
-        SET u.profilePicture = $url
-        `,
-        { userId, url }
-      );
-    } finally {
-      await session.close();
-    }
+  public async setProfilePicture(userId: string, url: string): Promise<{ hasPendingChanges: boolean }> {
+    // Use updateProfile to handle the pending changes flow for approved profiles
+    return this.updateProfile(userId, { profilePicture: url });
   }
 
   /**
@@ -676,6 +666,27 @@ export class TutorService {
       const record = res.records[0];
       const url = record?.get('videoIntroUrl');
       return url || undefined;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get profile status for a user
+   */
+  public async getProfileStatus(userId: string): Promise<string | undefined> {
+    const driver = getDriver();
+    const session = driver.session();
+    try {
+      const res = await session.run(
+        `
+        MATCH (u:User { id: $userId })
+        RETURN u.profileStatus as profileStatus
+        `,
+        { userId }
+      );
+      const record = res.records[0];
+      return record?.get('profileStatus') || undefined;
     } finally {
       await session.close();
     }

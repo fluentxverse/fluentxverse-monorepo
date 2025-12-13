@@ -84,8 +84,17 @@ export const MyProfilePage = () => {
   const [videoUploading, setVideoUploading] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [submittingProfile, setSubmittingProfile] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-hide toast after 5 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   useEffect(() => {
     document.title = 'My Profile | FluentXVerse';
@@ -100,7 +109,12 @@ export const MyProfilePage = () => {
       try {
         const profileResponse = await client.get('/tutor/profile');
         if (profileResponse.data.success && profileResponse.data.data) {
-          setProfileData(profileResponse.data.data);
+          const data = profileResponse.data.data as TutorProfileData;
+          setProfileData(data);
+          // Keep avatarUrl in sync with the currently approved profile picture
+          if (data.profilePicture) {
+            setAvatarUrl(data.profilePicture);
+          }
         }
       } catch (err) {
         console.error('Failed to load tutor profile:', err);
@@ -173,16 +187,29 @@ export const MyProfilePage = () => {
       });
 
       if (response.data.success) {
-        // Update local state immediately with cache-busted URL
-        const newUrl = response.data.url + '?t=' + Date.now();
-        setAvatarUrl(newUrl);
-        setProfileData(prev => prev ? { ...prev, profilePicture: newUrl } : { profilePicture: newUrl } as TutorProfileData);
+        // Check if changes are pending review (for approved profiles)
+        if (response.data.hasPendingChanges) {
+          // Don't update avatarUrl or profileData - keep showing current approved photo
+          // Just show message that it's pending review
+          setToastMessage({ 
+            text: 'Photo submitted for review. Your current photo remains visible until approved.', 
+            type: 'info' 
+          });
+          // Don't reload profile here - it would reset state unnecessarily
+          // The pending changes will be visible in the profile status section
+        } else {
+          // Update local state immediately with cache-busted URL
+          const newUrl = response.data.url + '?t=' + Date.now();
+          setAvatarUrl(newUrl);
+          setProfileData(prev => prev ? { ...prev, profilePicture: newUrl } : { profilePicture: newUrl } as TutorProfileData);
+          setToastMessage({ text: 'Profile photo updated successfully!', type: 'success' });
+        }
       } else {
         throw new Error(response.data.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload image');
+      setToastMessage({ text: 'Failed to upload image', type: 'error' });
     } finally {
       setUploading(false);
     }
@@ -199,12 +226,12 @@ export const MyProfilePage = () => {
     if (!file) return;
 
     if (!file.type.startsWith('video/')) {
-      alert('Please select a video file');
+      setToastMessage({ text: 'Please select a video file', type: 'error' });
       return;
     }
 
     if (file.size > 100 * 1024 * 1024) {
-      alert('Video must be less than 100MB');
+      setToastMessage({ text: 'Video must be less than 100MB', type: 'error' });
       return;
     }
 
@@ -220,15 +247,24 @@ export const MyProfilePage = () => {
       });
 
       if (response.data.success) {
-        const newUrl = response.data.url + '?t=' + Date.now();
-        setProfileData(prev => prev ? { ...prev, videoIntroUrl: newUrl } : { videoIntroUrl: newUrl } as TutorProfileData);
-        alert('Video uploaded successfully!');
+        // Check if changes are pending review (for approved profiles)
+        if (response.data.hasPendingChanges) {
+          setToastMessage({ 
+            text: 'Video submitted for review. Your current video remains visible until approved.', 
+            type: 'info' 
+          });
+          // Don't reload - keep current state
+        } else {
+          const newUrl = response.data.url + '?t=' + Date.now();
+          setProfileData(prev => prev ? { ...prev, videoIntroUrl: newUrl } : { videoIntroUrl: newUrl } as TutorProfileData);
+          setToastMessage({ text: 'Video uploaded successfully!', type: 'success' });
+        }
       } else {
         throw new Error(response.data.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Video upload error:', error);
-      alert('Failed to upload video');
+      setToastMessage({ text: 'Failed to upload video', type: 'error' });
     } finally {
       setVideoUploading(false);
       target.value = '';
@@ -315,25 +351,36 @@ export const MyProfilePage = () => {
       const response = await client.patch('/tutor/profile', { [editingField]: valueToSend });
 
       if (response.data.success) {
-        setProfileData(prev => {
-          if (prev) {
-            return { ...prev, [editingField]: valueToStore };
-          }
-          // Create a minimal profile data object if none exists
-          return { 
-            firstName: user?.firstName || '', 
-            lastName: user?.lastName || '', 
-            email: user?.email || '',
-            [editingField]: valueToStore 
-          } as TutorProfileData;
-        });
+        // Check if changes are pending review (for approved profiles)
+        if (response.data.hasPendingChanges) {
+          setToastMessage({ 
+            text: 'Changes submitted for review. Your current profile remains visible until approved.', 
+            type: 'info' 
+          });
+          // Don't reload - keep current state
+        } else {
+          // Update local state immediately
+          setProfileData(prev => {
+            if (prev) {
+              return { ...prev, [editingField]: valueToStore };
+            }
+            // Create a minimal profile data object if none exists
+            return { 
+              firstName: user?.firstName || '', 
+              lastName: user?.lastName || '', 
+              email: user?.email || '',
+              [editingField]: valueToStore 
+            } as TutorProfileData;
+          });
+          setToastMessage({ text: 'Profile updated successfully!', type: 'success' });
+        }
         cancelEditing();
       } else {
         throw new Error(response.data.error || 'Failed to save');
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save changes');
+      setToastMessage({ text: 'Failed to save changes', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -408,9 +455,21 @@ export const MyProfilePage = () => {
 
   return (
     <>
+      {/* Toast Notification - outside main-content to float independently */}
+      {toastMessage && (
+        <div className={`toast-notification toast-${toastMessage.type}`}>
+          <i className={`fi-sr-${toastMessage.type === 'success' ? 'check-circle' : toastMessage.type === 'info' ? 'info' : 'exclamation'}`}></i>
+          <span>{toastMessage.text}</span>
+          <button className="toast-close" onClick={() => setToastMessage(null)}>
+            <i className="fi-sr-cross-small"></i>
+          </button>
+        </div>
+      )}
+      
       <SideBar />
       <div className="main-content">
         <DashboardHeader />
+        
         <div className="my-profile-page">
           <div className="profile-container">
             {/* Hero Section */}
@@ -472,7 +531,7 @@ export const MyProfilePage = () => {
                     <span className="rating-count">({profileData?.totalReviews || 0} reviews)</span>
                     {profileData?.isVerified && (
                       <div className="verified-badge">
-                        <i className="fi-sr-badge-check"></i>
+                        <i className="fi-sr-check"></i>
                         <span>Verified</span>
                       </div>
                     )}
@@ -629,7 +688,7 @@ export const MyProfilePage = () => {
                 {profileData?.profileStatus === 'approved' && (
                   <>
                     <div className="status-icon approved">
-                      <i className="fi-sr-badge-check"></i>
+                      <i className="fi-sr-check"></i>
                     </div>
                     <div className="status-content">
                       <h3>Profile Approved</h3>

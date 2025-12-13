@@ -984,8 +984,10 @@
 
 .modal-video {
   width: 100%;
-  border-radius: 8px;
-  max-height: 300px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: #000;
+  object-fit: contain;
 }
 
 .reject-section textarea {
@@ -1313,9 +1315,10 @@
 /* Modal Video in granular review */
 .review-item-card .modal-video {
   width: 100%;
-  max-height: 200px;
-  border-radius: 8px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
   background: #000;
+  object-fit: contain;
 }
 
 /* ==========================================
@@ -1522,9 +1525,10 @@
 
 .change-video-preview {
   width: 100%;
-  max-height: 200px;
-  border-radius: 8px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
   background: #000;
+  object-fit: contain;
 }
 
 .change-submitted {

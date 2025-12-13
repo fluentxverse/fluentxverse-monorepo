@@ -78,13 +78,19 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       const filerBase = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
       const uploadUrl = `${filerBase}${filerPath}`;
 
-      // Delete previous video if exists
-      const previousVideo = await tutorService.getVideoIntroUrl(userId);
-      if (previousVideo) {
-        try {
-          await fetch(previousVideo, { method: 'DELETE' });
-        } catch (e) {
-          console.warn('Failed to delete previous intro video:', e);
+      // Check if profile is approved - if so, we keep the old video (new one goes to pending)
+      const profileStatus = await tutorService.getProfileStatus(userId);
+      const isApproved = profileStatus === 'approved';
+
+      // Only delete previous video if profile is NOT approved (direct update)
+      if (!isApproved) {
+        const previousVideo = await tutorService.getVideoIntroUrl(userId);
+        if (previousVideo) {
+          try {
+            await fetch(previousVideo, { method: 'DELETE' });
+          } catch (e) {
+            console.warn('Failed to delete previous intro video:', e);
+          }
         }
       }
 
@@ -102,9 +108,16 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       }
 
       // Save video URL to database
-      await tutorService.updateProfile(userId, { videoIntroUrl: uploadUrl });
+      const result = await tutorService.updateProfile(userId, { videoIntroUrl: uploadUrl });
 
-      return { success: true, url: uploadUrl };
+      return { 
+        success: true, 
+        url: uploadUrl,
+        hasPendingChanges: result.hasPendingChanges,
+        message: result.hasPendingChanges 
+          ? 'Video uploaded and submitted for review. Your current video will remain visible until approved.'
+          : undefined
+      };
     } catch (error) {
       console.error('Error in /tutor/intro-video:', error);
       return { success: false, error: 'Failed to upload intro video' };
@@ -174,13 +187,19 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       const filerBase = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
       const uploadUrl = `${filerBase}${filerPath}`;
 
-      // Delete previous file if exists
-      const previous = await tutorService.getCurrentProfilePicture(userId);
-      if (previous) {
-        try {
-          await fetch(previous, { method: 'DELETE' });
-        } catch (e) {
-          console.warn('Failed to delete previous profile picture:', e);
+      // Check if profile is approved - if so, we keep the old picture (new one goes to pending)
+      const profileStatus = await tutorService.getProfileStatus(userId);
+      const isApproved = profileStatus === 'approved';
+      
+      // Only delete previous file if profile is NOT approved (direct update)
+      if (!isApproved) {
+        const previous = await tutorService.getCurrentProfilePicture(userId);
+        if (previous) {
+          try {
+            await fetch(previous, { method: 'DELETE' });
+          } catch (e) {
+            console.warn('Failed to delete previous profile picture:', e);
+          }
         }
       }
 
@@ -197,9 +216,16 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         return { success: false, error: `Upload failed: ${res.status} ${text}` };
       }
 
-      await tutorService.setProfilePicture(userId, uploadUrl);
+      const result = await tutorService.setProfilePicture(userId, uploadUrl);
 
-      return { success: true, url: uploadUrl };
+      return { 
+        success: true, 
+        url: uploadUrl,
+        hasPendingChanges: result.hasPendingChanges,
+        message: result.hasPendingChanges 
+          ? 'Photo uploaded and submitted for review. Your current photo will remain visible until approved.'
+          : undefined
+      };
     } catch (error) {
       console.error('Error in /tutor/profile-picture:', error);
       return { success: false, error: 'Failed to upload profile picture' };
@@ -274,9 +300,16 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         return { success: false, error: 'No valid fields to update' };
       }
 
-      await tutorService.updateProfile(userId, filteredData);
+      const result = await tutorService.updateProfile(userId, filteredData);
 
-      return { success: true, data: filteredData };
+      return { 
+        success: true, 
+        data: filteredData,
+        hasPendingChanges: result.hasPendingChanges,
+        message: result.hasPendingChanges 
+          ? 'Changes submitted for review. Your current profile will remain visible until approved.'
+          : 'Profile updated successfully.'
+      };
     } catch (error) {
       console.error('Error in PATCH /tutor/profile:', error);
       return { success: false, error: 'Failed to update profile' };
