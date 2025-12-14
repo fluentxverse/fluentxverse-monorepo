@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { CheckoutWidget, BuyWidget, lightTheme, useActiveAccount } from "thirdweb/react";
+import { CheckoutWidget, lightTheme, useActiveAccount } from "thirdweb/react";
 import { defineChain } from "thirdweb";
 import { Bridge } from "thirdweb";
 import { thirdwebClient } from '../index';
@@ -8,13 +8,13 @@ import SideBar from '../Components/IndexOne/SideBar';
 import './TicketsPage.css';
 
 // Arbitrum chain
-const arbitrumChain = defineChain(8453);
+const CHAIN = defineChain(42161);
 
 // Seller wallet address - replace with your actual seller wallet
 const SELLER_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // USDC token address on Arbitrum
-const USDC_ADDRESS = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+const USDC_ADDRESS = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
 
 // Custom theme matching FluentXVerse style
 const fluentXVerseTheme = lightTheme({
@@ -126,7 +126,6 @@ const ticketPackages: TicketPackage[] = [
 export default function TicketsPage() {
   const [selectedPackage, setSelectedPackage] = useState<TicketPackage | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showBuyWidget, setShowBuyWidget] = useState(false);
   const [userTickets, setUserTickets] = useState(3); // Mock current tickets
   const [selectedTier, setSelectedTier] = useState<'all' | 'basic' | 'premium'>('all');
   const [adjustedAmount, setAdjustedAmount] = useState<string | null>(null);
@@ -156,15 +155,18 @@ export default function TicketsPage() {
       const quote = await Bridge.Onramp.prepare({
         client: thirdwebClient,
         onramp: "stripe",
-        chainId: 8453, // Base chain
+        chainId: 42161, // Arbitrum chain
         tokenAddress: USDC_ADDRESS as `0x${string}`,
         receiver: receiverAddress as `0x${string}`,
         amount: targetAmountWei,
         currency: "USD",
       });
       
-      // currencyAmount is what the user will actually pay in fiat
-      const actualFiatCost = quote.currencyAmount;
+      // Debug: log the full quote response
+      console.log('Full quote response:', quote);
+      
+      // currencyAmount is what the user will actually pay in fiat (ensure it's a number)
+      const actualFiatCost = Number(quote.currencyAmount);
       const targetPrice = pkg.price;
       
       // Calculate the fee/markup
@@ -174,7 +176,15 @@ export default function TicketsPage() {
       // newAmount = targetAmount - (feeAmount in USDC terms)
       const adjustedUsdcAmount = targetPrice - feeAmount;
       
-      console.log(`Target: $${targetPrice}, Quoted: $${actualFiatCost}, Fee: $${feeAmount.toFixed(2)}, Adjusted: $${adjustedUsdcAmount.toFixed(2)}`);
+      console.log('=== Price Adjustment Details ===');
+      console.log(`Package: ${pkg.name}`);
+      console.log(`Displayed Price: $${targetPrice.toFixed(2)}`);
+      console.log(`Provider Quoted Price: $${actualFiatCost.toFixed(2)}`);
+      console.log(`Fee Added by Provider: $${feeAmount.toFixed(2)} (${((feeAmount / targetPrice) * 100).toFixed(2)}%)`);
+      console.log(`Amount Deducted to Compensate: $${feeAmount.toFixed(2)}`);
+      console.log(`Adjusted USDC Amount: $${adjustedUsdcAmount.toFixed(2)}`);
+      console.log(`Expected Final Price for Customer: ~$${targetPrice.toFixed(2)}`);
+      console.log('================================');
       
       setAdjustedAmount(adjustedUsdcAmount.toFixed(2));
       setShowCheckout(true);
@@ -205,10 +215,6 @@ export default function TicketsPage() {
     setShowCheckout(false);
     setSelectedPackage(null);
     setAdjustedAmount(null);
-  };
-
-  const handleBuyWidgetClose = () => {
-    setShowBuyWidget(false);
   };
 
   return (
@@ -246,16 +252,10 @@ export default function TicketsPage() {
                     {userTickets} Ticket{userTickets !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="balance-actions">
-                  <button className="buy-usdc-btn" onClick={() => setShowBuyWidget(true)}>
-                    <i className="fas fa-coins"></i>
-                    Buy USDC
-                  </button>
-                  <a href="/schedule" className="use-tickets-btn">
-                    <i className="fas fa-calendar-plus"></i>
-                    Book a Lesson
-                  </a>
-                </div>
+                <a href="/schedule" className="use-tickets-btn">
+                  <i className="fas fa-calendar-plus"></i>
+                  Book a Lesson
+                </a>
               </div>
             </div>
 
@@ -468,7 +468,7 @@ export default function TicketsPage() {
             <div className="checkout-body">
               <CheckoutWidget
                 client={thirdwebClient}
-                chain={arbitrumChain}
+                chain={CHAIN}
                 amount={adjustedAmount || selectedPackage.price.toString()}
                 currency="USD"
                 tokenAddress={USDC_ADDRESS}
@@ -494,38 +494,6 @@ export default function TicketsPage() {
         </div>
       )}
 
-      {/* Buy USDC Modal */}
-      {showBuyWidget && (
-        <div className="checkout-modal-overlay" onClick={handleBuyWidgetClose}>
-          <div className="checkout-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="checkout-close-btn" onClick={handleBuyWidgetClose}>
-              <i className="fas fa-times"></i>
-            </button>
-            <div className="checkout-header">
-              <div className="checkout-header-icon">
-                <i className="fi fi-sr-usd-circle"></i>
-              </div>
-              <h2>Buy USDC</h2>
-              <p>Purchase USDC to pay for lesson tickets</p>
-            </div>
-            <div className="checkout-body">
-              <BuyWidget
-                client={thirdwebClient}
-                chain={arbitrumChain}
-                tokenAddress={USDC_ADDRESS}
-                theme={fluentXVerseTheme}
-                title=""
-                showThirdwebBranding={false}
-                connectOptions={{
-                  connectModal: {
-                    size: "compact",
-                  },
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

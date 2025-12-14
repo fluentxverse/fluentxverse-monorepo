@@ -142,38 +142,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Balance Actions */
-.balance-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.buy-usdc-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.buy-usdc-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
-  transform: translateY(-2px);
-}
-
-.buy-usdc-btn i {
-  font-size: 16px;
-}
-
 /* How it Works */
 .how-it-works {
   margin-bottom: 48px;
@@ -715,18 +683,6 @@
   
   .balance-info {
     align-items: center;
-  }
-  
-  .balance-actions {
-    flex-direction: column;
-    width: 100%;
-    gap: 10px;
-  }
-  
-  .buy-usdc-btn,
-  .use-tickets-btn {
-    width: 100%;
-    justify-content: center;
   }
   
   .tier-comparison {
