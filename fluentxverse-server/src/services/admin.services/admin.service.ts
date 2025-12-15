@@ -960,10 +960,10 @@ export class AdminService {
         });
       });
 
-      // Include admin-targeted persisted notifications (e.g., pending profile changes)
+      // Include admin-targeted persisted notifications (e.g., pending profile changes, minting)
       const adminNotifResult = await session.run(`
         MATCH (n:Notification)
-        WHERE n.userType = 'admin' AND n.type = 'profile_change_submitted'
+        WHERE n.userType = 'admin' AND n.type IN ['profile_change_submitted', 'minting_started', 'minting_success', 'minting_failed']
         RETURN n
         ORDER BY n.timestamp DESC
         LIMIT $limit

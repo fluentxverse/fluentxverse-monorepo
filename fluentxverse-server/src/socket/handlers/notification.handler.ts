@@ -17,13 +17,19 @@ export const notificationHandler = (io: Server, socket: Socket) => {
       const room = `notifications:${userId}`;
       socket.join(room);
       
+      // If admin, also join the admin notifications room
+      if (userType === 'admin') {
+        socket.join('notifications:admin');
+        console.log(`📢 Admin ${userId} joined notifications:admin room`);
+      }
+      
       // Track socket in userSockets map
       if (!userSockets.has(userId)) {
         userSockets.set(userId, new Set());
       }
       userSockets.get(userId)?.add(socket.id);
       
-      console.log(`📢 User ${userId} subscribed to notifications`);
+      console.log(`📢 User ${userId} (${userType}) subscribed to notifications`);
       
       // Send initial notifications
       const notifications = await notificationService.getNotifications({
@@ -39,6 +45,16 @@ export const notificationHandler = (io: Server, socket: Socket) => {
       });
     } catch (error) {
       console.error('Error subscribing to notifications:', error);
+    }
+  });
+
+  // Join admin room explicitly (for dashboard)
+  socket.on('join:admin', async () => {
+    try {
+      socket.join('notifications:admin');
+      console.log(`📢 User ${userId} explicitly joined notifications:admin room`);
+    } catch (error) {
+      console.error('Error joining admin room:', error);
     }
   });
 

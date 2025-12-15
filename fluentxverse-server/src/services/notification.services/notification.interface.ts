@@ -13,7 +13,10 @@ export type NotificationType =
   | 'profile_approved'
   | 'profile_rejected'
   | 'system'
-  | 'message';
+  | 'message'
+  | 'minting_started'
+  | 'minting_success'
+  | 'minting_failed';
 
 export interface Notification {
   id: string;
@@ -36,6 +39,13 @@ export interface Notification {
     amount?: number;
     rating?: number;
     link?: string;
+    // Minting-related data
+    transactionId?: string;
+    tokenId?: string;
+    tier?: string;
+    supply?: number;
+    mintType?: 'create' | 'additional';
+    errorMessage?: string;
   };
 }
 

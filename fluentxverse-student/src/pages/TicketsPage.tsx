@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'preact/hooks';
-import { CheckoutWidget, lightTheme, useActiveAccount } from "thirdweb/react";
+import { BridgePrepareResult, CheckoutWidget, CompletedStatusResult, lightTheme, useActiveAccount } from "thirdweb/react";
 import { defineChain } from "thirdweb";
 import { Bridge } from "thirdweb";
+
+// Development mode flag - set to true to use mock checkout
+const DEV_MODE = true;
+
+// Type for checkout success callback
+type CheckoutSuccessData = {
+  quote: BridgePrepareResult;
+  statuses: Array<CompletedStatusResult>;
+};
 import { thirdwebClient } from '../index';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import './TicketsPage.css';
+
+// Get ticket image URL from server
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+const getTicketImageUrl = (tier: 'basic' | 'premium'): string => {
+  return `${API_BASE_URL}/tickets/image/${tier}`;
+};
 
 // Arbitrum chain
 const CHAIN = defineChain(42161);
@@ -16,7 +31,7 @@ const SELLER_ADDRESS = "0x0000000000000000000000000000000000000000";
 // USDC token address on Arbitrum
 const USDC_ADDRESS = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
 
-// Custom theme matching FluentXVerse style
+// Custom theme matching FluentXVerse style - Basic (blue)
 const fluentXVerseTheme = lightTheme({
   colors: {
     accentText: "#0245ae",
@@ -33,6 +48,28 @@ const fluentXVerseTheme = lightTheme({
     secondaryButtonBg: "#f1f5f9",
     secondaryButtonHoverBg: "#e2e8f0",
     secondaryButtonText: "#475569",
+    success: "#10b981",
+    danger: "#ef4444",
+  },
+});
+
+// Premium theme with gold colors
+const premiumTheme = lightTheme({
+  colors: {
+    accentText: "#d97706",
+    accentButtonBg: "#f59e0b",
+    accentButtonText: "#ffffff",
+    primaryButtonBg: "#f59e0b",
+    primaryButtonText: "#ffffff",
+    primaryText: "#1e293b",
+    secondaryText: "#64748b",
+    modalBg: "#ffffff",
+    borderColor: "#fcd34d",
+    separatorLine: "#fef3c7",
+    tertiaryBg: "#fffbeb",
+    secondaryButtonBg: "#fef3c7",
+    secondaryButtonHoverBg: "#fde68a",
+    secondaryButtonText: "#92400e",
     success: "#10b981",
     danger: "#ef4444",
   },
@@ -123,6 +160,162 @@ const ticketPackages: TicketPackage[] = [
   }
 ];
 
+// Mock Checkout Widget for Development Testing
+interface MockCheckoutWidgetProps {
+  pkg: TicketPackage;
+  onSuccess: (data: CheckoutSuccessData) => void;
+  onCancel: () => void;
+  imageUrl: string;
+}
+
+function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckoutWidgetProps) {
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto'>('card');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [step, setStep] = useState<'select' | 'processing' | 'success'>('select');
+  const isPremium = pkg.tier === 'premium';
+
+  const simulatePayment = () => {
+    setIsProcessing(true);
+    setStep('processing');
+    
+    // Simulate payment processing (2-3 seconds)
+    setTimeout(() => {
+      setStep('success');
+      
+      // After showing success for 1.5 seconds, call onSuccess
+      setTimeout(() => {
+        // Create mock success data - cast through unknown to bypass strict type checking
+        const mockSuccessData = {
+          quote: {} as BridgePrepareResult,
+          statuses: [{
+            type: 'transfer',
+            status: 'COMPLETED',
+            paymentId: `mock_payment_${Date.now()}`,
+            originAmount: BigInt(pkg.price * 1_000_000),
+            destinationAmount: BigInt(pkg.price * 1_000_000),
+            originChainId: 42161,
+            destinationChainId: 42161,
+            originTokenAddress: '0x0',
+            destinationTokenAddress: '0x0',
+            sender: '0x0',
+            receiver: '0x0',
+            originTxHash: `0xmock_${Date.now().toString(16)}`,
+            destinationTxHash: `0xmock_${Date.now().toString(16)}`,
+            originToken: { chainId: 42161, address: '0x0', decimals: 6, symbol: 'USDC', name: 'USD Coin' },
+            destinationToken: { chainId: 42161, address: '0x0', decimals: 6, symbol: 'USDC', name: 'USD Coin' },
+            transactions: [],
+          }],
+        } as unknown as CheckoutSuccessData;
+        onSuccess(mockSuccessData);
+      }, 1500);
+    }, 2000 + Math.random() * 1000); // 2-3 second random delay
+  };
+
+  return (
+    <div className={`mock-checkout ${isPremium ? 'mock-checkout-premium' : ''}`}>
+      {step === 'select' && (
+        <>
+          <div className="mock-checkout-summary">
+            <div className="mock-checkout-product">
+              <img src={imageUrl} alt={pkg.name} className="mock-checkout-image" />
+              <div className="mock-checkout-details">
+                <span className="mock-checkout-name">{pkg.name}</span>
+                <span className="mock-checkout-desc">{pkg.tickets} {pkg.tier} ticket{pkg.tickets > 1 ? 's' : ''}</span>
+              </div>
+            </div>
+            <div className="mock-checkout-price">${pkg.price.toFixed(2)}</div>
+          </div>
+
+          <div className="mock-payment-methods">
+            <p className="mock-payment-label">Payment Method</p>
+            <div className="mock-payment-options">
+              <button 
+                className={`mock-payment-option ${paymentMethod === 'card' ? 'selected' : ''}`}
+                onClick={() => setPaymentMethod('card')}
+              >
+                <i className="fas fa-credit-card"></i>
+                Credit Card
+              </button>
+              <button 
+                className={`mock-payment-option ${paymentMethod === 'crypto' ? 'selected' : ''}`}
+                onClick={() => setPaymentMethod('crypto')}
+              >
+                <i className="fab fa-ethereum"></i>
+                Crypto
+              </button>
+            </div>
+          </div>
+
+          {paymentMethod === 'card' && (
+            <div className="mock-card-form">
+              <div className="mock-input-group">
+                <label>Card Number</label>
+                <input type="text" placeholder="4242 4242 4242 4242" disabled value="4242 4242 4242 4242" />
+              </div>
+              <div className="mock-input-row">
+                <div className="mock-input-group">
+                  <label>Expiry</label>
+                  <input type="text" placeholder="MM/YY" disabled value="12/28" />
+                </div>
+                <div className="mock-input-group">
+                  <label>CVC</label>
+                  <input type="text" placeholder="123" disabled value="123" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {paymentMethod === 'crypto' && (
+            <div className="mock-crypto-info">
+              <div className="mock-crypto-badge">
+                <i className="fas fa-wallet"></i>
+                <span>Connected Wallet</span>
+              </div>
+              <p className="mock-crypto-note">
+                <i className="fas fa-info-circle"></i>
+                Payment will be simulated using mock USDC
+              </p>
+            </div>
+          )}
+
+          <button 
+            className={`mock-pay-button ${isPremium ? 'premium' : ''}`}
+            onClick={simulatePayment}
+          >
+            <i className="fas fa-lock"></i>
+            Pay ${pkg.price.toFixed(2)}
+          </button>
+
+          <div className="mock-checkout-footer">
+            <span className="mock-dev-badge">
+              <i className="fas fa-code"></i>
+              DEV MODE - No real payment
+            </span>
+          </div>
+        </>
+      )}
+
+      {step === 'processing' && (
+        <div className="mock-processing">
+          <div className={`mock-spinner ${isPremium ? 'premium' : ''}`}></div>
+          <h3>Processing Payment...</h3>
+          <p>Please wait while we simulate your payment</p>
+        </div>
+      )}
+
+      {step === 'success' && (
+        <div className="mock-success">
+          <div className={`mock-success-icon ${isPremium ? 'premium' : ''}`}>
+            <i className="fas fa-check"></i>
+          </div>
+          <h3>Payment Successful!</h3>
+          <p>You've purchased {pkg.tickets} {pkg.tier} ticket{pkg.tickets > 1 ? 's' : ''}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TicketsPage() {
   const [selectedPackage, setSelectedPackage] = useState<TicketPackage | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -202,8 +395,31 @@ export default function TicketsPage() {
     fetchQuoteAndAdjust(pkg);
   };
 
-  const handleCheckoutSuccess = () => {
+  const handleCheckoutSuccess = async (transactionData: CheckoutSuccessData) => {
+    console.log('=== Payment Success ===');
+    console.log('Transaction Data:', transactionData);
+    console.log('=======================');
+    
+    // TODO: Send transaction hash to backend for verification
+    // Example:
+    // const response = await fetch(`${API_URL}/api/verify-payment`, {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({
+    //     transactionData,
+    //     packageId: selectedPackage?.id,
+    //     studentWallet: activeAccount?.address,
+    //   }),
+    // });
+    // 
+    // Backend will:
+    // 1. Query blockchain for the transaction hash
+    // 2. Verify recipient === SELLER_ADDRESS (from env)
+    // 3. Verify amount matches package price
+    // 4. Credit tickets to user if valid
+    
     if (selectedPackage) {
+      // For now, still updating locally - replace with backend response
       setUserTickets(prev => prev + selectedPackage.tickets);
     }
     setShowCheckout(false);
@@ -356,7 +572,9 @@ export default function TicketsPage() {
                     )}
                     
                     <span className={`tier-badge ${pkg.tier}`}>{pkg.tier === 'basic' ? 'Basic' : 'Premium'}</span>
-                    <div className="package-icon">{pkg.icon}</div>
+                    <div className="package-icon">
+                      <img src={getTicketImageUrl(pkg.tier)} alt={`${pkg.tier} ticket`} />
+                    </div>
                     <h3 className="package-name">{pkg.name}</h3>
                     <p className="package-description">{pkg.description}</p>
                     
@@ -406,34 +624,6 @@ export default function TicketsPage() {
               </div>
             </div>
 
-            {/* FAQ Section */}
-            <div className="tickets-faq">
-              <h2>Frequently Asked Questions</h2>
-              <div className="faq-grid">
-                <div className="faq-item">
-                  <h4>
-                    <i className="fas fa-question-circle"></i>
-                    How long are tickets valid?
-                  </h4>
-                  <p>All tickets are valid for 1 year from the date of purchase.</p>
-                </div>
-                <div className="faq-item">
-                  <h4>
-                    <i className="fas fa-question-circle"></i>
-                    Can I book any tutor?
-                  </h4>
-                  <p>Yes! All tickets can be used to book lessons with any available tutor on our platform.</p>
-                </div>
-                <div className="faq-item">
-                  <h4>
-                    <i className="fas fa-question-circle"></i>
-                    What if I need to cancel?
-                  </h4>
-                  <p>Cancellations made 24+ hours before a lesson will refund your ticket. Last-minute cancellations may forfeit the ticket.</p>
-                </div>
-              </div>
-            </div>
-
             {/* Trust Badges */}
             <div className="trust-section">
               <div className="trust-badges">
@@ -454,41 +644,51 @@ export default function TicketsPage() {
       {/* Checkout Modal */}
       {showCheckout && selectedPackage && (
         <div className="checkout-modal-overlay" onClick={handleCheckoutCancel}>
-          <div className="checkout-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className={`checkout-modal-content ${selectedPackage.tier === 'premium' ? 'premium-checkout' : ''}`} onClick={(e) => e.stopPropagation()}>
             <button className="checkout-close-btn" onClick={handleCheckoutCancel}>
               <i className="fas fa-times"></i>
             </button>
-            <div className="checkout-header">
+            <div className={`checkout-header ${selectedPackage.tier === 'premium' ? 'premium-header' : ''}`}>
               <div className="checkout-header-icon">
-                <i className={`fi fi-sr-ticket ${selectedPackage.tier === 'premium' ? 'premium-ticket' : ''}`}></i>
+                <img src={getTicketImageUrl(selectedPackage.tier)} alt={`${selectedPackage.tier} ticket`} />
               </div>
               <h2>Complete Your Purchase</h2>
               <p>You're buying: <strong>{selectedPackage.name}</strong></p>
             </div>
             <div className="checkout-body">
-              <CheckoutWidget
-                client={thirdwebClient}
-                chain={CHAIN}
-                amount={adjustedAmount || selectedPackage.price.toString()}
-                currency="USD"
-                tokenAddress={USDC_ADDRESS}
-                feePayer='seller'
-                seller={SELLER_ADDRESS}
-                name={selectedPackage.name}
-                description={`${selectedPackage.tickets} ${selectedPackage.tier} ticket${selectedPackage.tickets > 1 ? 's' : ''} for FluentXVerse lessons`}
-                image="/assets/img/logo/icon_logo.png"
-                theme={fluentXVerseTheme}
-                buttonLabel={`Pay $${selectedPackage.price}`}
-                onSuccess={handleCheckoutSuccess}
-                onCancel={handleCheckoutCancel}
-                showThirdwebBranding={false}
-                paymentMethods={["crypto", "card"]}
-                connectOptions={{
-                  connectModal: {
-                    size: "compact",
-                  },
-                }}
-              />
+              {DEV_MODE ? (
+                <MockCheckoutWidget
+                  pkg={selectedPackage}
+                  onSuccess={handleCheckoutSuccess}
+                  onCancel={handleCheckoutCancel}
+                  imageUrl={getTicketImageUrl(selectedPackage.tier)}
+                />
+              ) : (
+                <CheckoutWidget
+                  client={thirdwebClient}
+                  
+                  chain={CHAIN}
+                  amount={adjustedAmount || selectedPackage.price.toString()}
+                  currency="USD"
+                  tokenAddress={USDC_ADDRESS}
+                  feePayer='seller'
+                  seller={SELLER_ADDRESS}
+                  name={selectedPackage.name}
+                  description={`${selectedPackage.tickets} ${selectedPackage.tier} ticket${selectedPackage.tickets > 1 ? 's' : ''} for FluentXVerse lessons`}
+                  image={getTicketImageUrl(selectedPackage.tier)}
+                  theme={selectedPackage.tier === 'premium' ? premiumTheme : fluentXVerseTheme}
+                  buttonLabel={`Pay $${selectedPackage.price}`}
+                  onSuccess={handleCheckoutSuccess}
+                  onCancel={handleCheckoutCancel}
+                  showThirdwebBranding={false}
+                  paymentMethods={["crypto", "card"]}
+                  connectOptions={{
+                    connectModal: {
+                      size: "compact",
+                    },
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

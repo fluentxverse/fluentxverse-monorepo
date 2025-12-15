@@ -122,3 +122,6 @@ COMMENT ON TABLE chat_messages IS 'Stores chat messages exchanged during tutorin
 COMMENT ON TABLE session_participants IS 'Tracks users who join tutoring sessions via WebSocket';
 COMMENT ON TABLE system_messages IS 'Stores system-wide announcements and messages from FluentXVerse admin';
 COMMENT ON TABLE system_message_recipients IS 'Tracks which users have read/pinned system messages';
+
+-- NOTE: Ticket Types are stored in Memgraph (graph database) instead of PostgreSQL
+-- See fluentxverse-server/src/services/ticket.services/ticket.service.ts

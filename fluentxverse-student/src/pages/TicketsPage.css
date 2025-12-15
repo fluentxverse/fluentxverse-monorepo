@@ -245,8 +245,8 @@
 }
 
 .tier-info.premium-tier {
-  border-color: #8b5cf6;
-  background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
 }
 
 .tier-header {
@@ -286,7 +286,7 @@
 }
 
 .tier-badge.premium {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
@@ -341,8 +341,8 @@
 .package-card {
   position: relative;
   background: white;
-  border-radius: 20px;
-  padding: 28px 24px;
+  border-radius: 16px;
+  padding: 20px 18px;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   border: 2px solid transparent;
@@ -371,22 +371,22 @@
 }
 
 .package-card.premium-tier {
-  border-color: #8b5cf6;
-  background: linear-gradient(180deg, #ffffff 0%, #faf5ff 100%);
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, #ffffff 0%, #fffbeb 100%);
 }
 
 .package-card.premium-tier:hover {
-  border-color: #7c3aed;
-  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+  border-color: #d97706;
+  box-shadow: 0 12px 40px rgba(245, 158, 11, 0.2);
 }
 
 .package-card.premium-tier.popular {
-  border-color: #7c3aed;
-  background: linear-gradient(180deg, #ffffff 0%, #f3e8ff 100%);
+  border-color: #d97706;
+  background: linear-gradient(180deg, #ffffff 0%, #fef3c7 100%);
 }
 
 .package-card .tier-badge {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .package-card.selected {
@@ -434,22 +434,33 @@
 }
 
 .package-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 10px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.package-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 .package-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #1e293b;
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
 }
 
 .package-description {
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
-  margin: 0 0 16px 0;
-  min-height: 36px;
+  margin: 0 0 12px 0;
+  min-height: 32px;
 }
 
 .package-tickets {
@@ -457,18 +468,18 @@
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .ticket-count {
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 800;
   color: #0245ae;
   line-height: 1;
 }
 
 .ticket-label {
-  font-size: 16px;
+  font-size: 14px;
   color: #64748b;
   font-weight: 500;
 }
@@ -477,34 +488,34 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 20px;
+  gap: 2px;
+  margin-bottom: 12px;
 }
 
 .original-price {
-  font-size: 16px;
+  font-size: 14px;
   color: #94a3b8;
   text-decoration: line-through;
 }
 
 .current-price {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
   color: #1e293b;
 }
 
 .price-per-ticket {
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
   background: #f1f5f9;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 6px;
 }
 
 .package-features {
   list-style: none;
   padding: 0;
-  margin: 0 0 20px 0;
+  margin: 0 0 12px 0;
   text-align: left;
   flex: 1;
 }
@@ -512,10 +523,10 @@
 .package-features li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: 8px;
+  font-size: 12px;
   color: #475569;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -535,10 +546,10 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 14px 20px;
+  padding: 12px 16px;
   border: none;
-  border-radius: 12px;
-  font-size: 15px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -561,16 +572,16 @@
 }
 
 .purchase-btn.premium-btn {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
 }
 
 .purchase-btn.premium-btn:hover {
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
 }
 
 .purchase-btn.premium-btn.popular-btn {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
 .purchase-btn:disabled {
@@ -825,7 +836,7 @@
 }
 
 .dark-mode .tier-comparison .tier-info.premium-tier {
-  background: linear-gradient(135deg, #1e293b 0%, #2e1065 100%);
+  background: linear-gradient(135deg, #1e293b 0%, #451a03 100%);
 }
 
 .dark-mode .tier-price {
@@ -855,7 +866,7 @@
 }
 
 .dark-mode .package-card.premium-tier {
-  background: linear-gradient(180deg, #1e293b 0%, #2e1065 100%);
+  background: linear-gradient(180deg, #1e293b 0%, #451a03 100%);
 }
 
 /* Checkout Modal */
@@ -899,6 +910,15 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+/* Premium checkout modal - gold accent */
+.checkout-modal-content.premium-checkout {
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.25),
+    0 10px 30px rgba(245, 158, 11, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 @keyframes modalSlideUp {
@@ -948,6 +968,11 @@
   overflow: hidden;
 }
 
+/* Premium checkout header - gold gradient */
+.checkout-header.premium-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+}
+
 .checkout-header::before {
   content: '';
   position: absolute;
@@ -980,10 +1005,10 @@
 }
 
 .checkout-header-icon {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -993,6 +1018,14 @@
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   animation: iconPulse 2s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.checkout-header-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 @keyframes iconPulse {
@@ -1123,4 +1156,450 @@
     border-radius: 10px;
     font-size: 14px;
   }
+}
+
+/* ==========================================
+   Mock Checkout Widget Styles
+   ========================================== */
+
+.mock-checkout {
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+.mock-checkout-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.mock-checkout-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mock-checkout-image {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.mock-checkout-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mock-checkout-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.mock-checkout-desc {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.mock-checkout-price {
+  font-weight: 700;
+  font-size: 20px;
+  color: #0245ae;
+}
+
+.mock-checkout-premium .mock-checkout-price {
+  color: #f59e0b;
+}
+
+.mock-payment-methods {
+  margin-bottom: 20px;
+}
+
+.mock-payment-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mock-payment-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mock-payment-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.mock-payment-option:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.mock-payment-option.selected {
+  border-color: #0245ae;
+  background: #eff6ff;
+  color: #0245ae;
+}
+
+.mock-checkout-premium .mock-payment-option.selected {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.mock-payment-option i {
+  font-size: 16px;
+}
+
+.mock-card-form {
+  margin-bottom: 20px;
+}
+
+.mock-input-group {
+  margin-bottom: 12px;
+}
+
+.mock-input-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mock-input-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: monospace;
+  color: #475569;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.mock-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mock-crypto-info {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.mock-crypto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #e0f2fe;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0369a1;
+  margin-bottom: 12px;
+}
+
+.mock-checkout-premium .mock-crypto-badge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mock-crypto-badge i {
+  font-size: 14px;
+}
+
+.mock-crypto-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.mock-crypto-note i {
+  color: #94a3b8;
+}
+
+.mock-pay-button {
+  width: 100%;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(2, 69, 174, 0.3);
+}
+
+.mock-pay-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.4);
+}
+
+.mock-pay-button.premium {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.mock-pay-button.premium:hover {
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.mock-checkout-footer {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.mock-dev-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fef3c7;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mock-dev-badge i {
+  font-size: 10px;
+}
+
+/* Processing State */
+.mock-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.mock-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: mockSpin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.mock-spinner.premium {
+  border-top-color: #f59e0b;
+}
+
+@keyframes mockSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mock-processing h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.mock-processing p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Success State */
+.mock-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.mock-success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: mockSuccessPop 0.4s ease-out;
+}
+
+.mock-success-icon.premium {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.mock-success-icon i {
+  font-size: 32px;
+  color: #ffffff;
+}
+
+@keyframes mockSuccessPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.mock-success h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #10b981;
+  margin: 0 0 8px;
+}
+
+.mock-success.premium h3 {
+  color: #f59e0b;
+}
+
+.mock-success p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Dark mode for mock checkout */
+.dark-mode .mock-checkout {
+  background: #1e293b;
+}
+
+.dark-mode .mock-checkout-summary {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.dark-mode .mock-checkout-name {
+  color: #f1f5f9;
+}
+
+.dark-mode .mock-checkout-desc {
+  color: #94a3b8;
+}
+
+.dark-mode .mock-payment-option {
+  background: #0f172a;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.dark-mode .mock-payment-option:hover {
+  border-color: #475569;
+  background: #1e293b;
+}
+
+.dark-mode .mock-payment-option.selected {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.dark-mode .mock-checkout-premium .mock-payment-option.selected {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.dark-mode .mock-input-group label {
+  color: #94a3b8;
+}
+
+.dark-mode .mock-input-group input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.dark-mode .mock-crypto-info {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.dark-mode .mock-crypto-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.dark-mode .mock-checkout-premium .mock-crypto-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.dark-mode .mock-crypto-note {
+  color: #94a3b8;
+}
+
+.dark-mode .mock-processing h3,
+.dark-mode .mock-success h3 {
+  color: #f1f5f9;
+}
+
+.dark-mode .mock-processing p,
+.dark-mode .mock-success p {
+  color: #94a3b8;
+}
+
+.dark-mode .mock-spinner {
+  border-color: #334155;
+  border-top-color: #3b82f6;
+}
+
+.dark-mode .mock-dev-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
 }
