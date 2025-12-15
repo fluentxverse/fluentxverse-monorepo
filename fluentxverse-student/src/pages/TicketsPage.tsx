@@ -100,7 +100,7 @@ const ticketPackages: TicketPackage[] = [
     description: 'Try a single basic lesson',
     features: [
       '1 Basic ticket',
-      'Valid for 1 year',
+      'Never expires',
       'Book any tutor',
       '25-minute lesson'
     ],
@@ -117,7 +117,7 @@ const ticketPackages: TicketPackage[] = [
     description: 'Best value for basic lessons',
     features: [
       '30 Basic tickets',
-      'Valid for 1 year',
+      'Never expires',
       'Book any tutor',
       '25-minute lessons',
       'Save $30'
@@ -134,7 +134,7 @@ const ticketPackages: TicketPackage[] = [
     description: 'Try a single premium lesson',
     features: [
       '1 Premium ticket',
-      'Valid for 1 year',
+      'Never expires',
       'Premium tutors only',
       '25-minute premium lesson'
     ],
@@ -151,7 +151,7 @@ const ticketPackages: TicketPackage[] = [
     description: 'Ultimate premium experience',
     features: [
       '30 Premium tickets',
-      'Valid for 1 year',
+      'Never expires',
       'Premium tutors only',
       '25-minute premium lessons',
       'Save $45'
@@ -669,8 +669,8 @@ export default function TicketsPage() {
                   <span>Secure Payment</span>
                 </div>
                 <div className="trust-badge">
-                  <i className="fas fa-calendar-check"></i>
-                  <span>Valid for 1 Year</span>
+                  <i className="fas fa-infinity"></i>
+                  <span>Never Expires</span>
                 </div>
               </div>
             </div>

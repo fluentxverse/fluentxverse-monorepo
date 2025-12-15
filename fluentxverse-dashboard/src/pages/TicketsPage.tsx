@@ -342,8 +342,8 @@ const TicketsPage = () => {
                       <span>{stats.basicTicket.supply.toLocaleString()} supply</span>
                     </div>
                     <div className="info-item">
-                      <i className="ri-calendar-line"></i>
-                      <span>Valid for 1 year</span>
+                      <i className="ri-infinity-line"></i>
+                      <span>Never expires</span>
                     </div>
                     <div className="info-item">
                       <i className="ri-time-line"></i>
@@ -395,8 +395,8 @@ const TicketsPage = () => {
                       <span>{stats.premiumTicket.supply.toLocaleString()} supply</span>
                     </div>
                     <div className="info-item">
-                      <i className="ri-calendar-line"></i>
-                      <span>Valid for 1 year</span>
+                      <i className="ri-infinity-line"></i>
+                      <span>Never expires</span>
                     </div>
                     <div className="info-item">
                       <i className="ri-time-line"></i>
@@ -429,7 +429,7 @@ const TicketsPage = () => {
             <ul>
               <li><strong>Basic Tickets:</strong> Standard 25-minute lesson sessions at $6 per ticket</li>
               <li><strong>Premium Tickets:</strong> 25-minute sessions for premium courses or premium learning materials with priority booking at $9 per ticket</li>
-              <li><strong>Validity:</strong> All tickets are valid for 1 year from the date of purchase</li>
+              <li><strong>Never Expires:</strong> All tickets are valid forever once purchased</li>
               <li><strong>On-Chain:</strong> Tickets are ERC-1155 NFTs stored on Arbitrum</li>
             </ul>
           </div>
@@ -513,7 +513,7 @@ const TicketsPage = () => {
                 </div>
                 <div className="preview-item">
                   <span>Validity:</span>
-                  <span>1 Year</span>
+                  <span>Never expires</span>
                 </div>
                 <div className="preview-item">
                   <span>Initial Supply:</span>

@@ -1,6 +1,6 @@
 import { thirdwebClient } from "../utils.services/utils";
 import { defineChain, Engine, getContract } from "thirdweb";
-import { mintTo, mintAdditionalSupplyTo, getNFTs, totalSupply, safeTransferFrom, updateMetadata, uri } from "thirdweb/extensions/erc1155";
+import { mintTo, mintAdditionalSupplyTo, getNFTs, getNFT, totalSupply, safeTransferFrom } from "thirdweb/extensions/erc1155";
 import { upload } from "thirdweb/storage";
 import * as fs from "fs";
 import * as path from "path";
@@ -279,7 +279,7 @@ export class TicketService {
 
     const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
     const name = `${tierName} Lesson Ticket`;
-    const description = `FluentXverse ${tierName} Lesson Ticket - Valid for 1 year from purchase date. Redeem for one 25-minute lesson session.`;
+    const description = `FluentXverse ${tierName} Lesson Ticket - Redeem for one 25-minute lesson session. Never expires.`;
 
     // Create NFT metadata with simple attributes
     const nftMetadata = {
@@ -289,7 +289,6 @@ export class TicketService {
       attributes: [
         { trait_type: "Tier", value: tierName },
         { trait_type: "Price", value: `$${price}` },
-        { trait_type: "Validity", value: "1 Year" },
         { trait_type: "Created", value: createdAt },
       ],
     };
@@ -375,12 +374,7 @@ export class TicketService {
           return null;
         }
 
-        // Also check for Validity attribute to ensure it's a proper ticket
-        const validityAttr = attributes.find(a => a.trait_type === 'Validity');
-        if (!validityAttr?.value) {
-          console.log(`Skipping token ${nft.id}: No Validity attribute found`);
-          return null;
-        }
+        // Note: Tickets never expire, no validity check needed
 
         // Get supply for this token
         let supply = 0n;
@@ -522,14 +516,15 @@ export class TicketService {
   }
 
   /**
-   * Process a ticket purchase - transfers NFT to buyer and updates metadata with purchase date
-   * This is for DEV MODE simulation - in production, this would be called after payment verification
+   * Process a ticket purchase - transfers NFT to buyer
+   * The NFT metadata is immutable on IPFS, so purchase date tracking
+   * should be done in the database instead
    */
   async processPurchase(params: {
     buyerWallet: string;
     tier: TicketTier;
     quantity: number;
-    mockTransactionHash?: string; // Optional mock transaction hash from dev mode
+    mockTransactionHash?: string;
   }): Promise<{
     success: boolean;
     transactionId: string;
@@ -542,7 +537,7 @@ export class TicketService {
     const { buyerWallet, tier, quantity, mockTransactionHash } = params;
     const purchaseDate = new Date().toISOString();
 
-    console.log(`Processing ticket purchase: ${quantity} ${tier} tickets for ${buyerWallet}`);
+    console.log(`Processing ticket purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
 
     // Get the token ID for this tier
     const tickets = await this.getTickets();
@@ -560,7 +555,15 @@ export class TicketService {
     }
 
     try {
-      // Step 1: Transfer the NFT tickets from server wallet to buyer
+      // Get current NFT metadata for logging
+      console.log(`Getting NFT metadata for token ${ticket.tokenId}...`);
+      const nft = await getNFT({
+        contract,
+        tokenId,
+      });
+      console.log('Current NFT metadata:', nft.metadata);
+
+      // Transfer the NFT tickets from server wallet to buyer
       console.log(`Transferring ${quantity} ${tier} ticket(s) to ${buyerWallet}...`);
       
       const transferTransaction = safeTransferFrom({
@@ -582,7 +585,7 @@ export class TicketService {
       // Send notification about the purchase
       const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
       await this.sendAdminNotification(
-        'minting_success', // Re-using this type for now
+        'minting_success',
         `${tierName} Ticket Purchased`,
         `${quantity} ${tierName} ticket(s) transferred to ${buyerWallet.slice(0, 6)}...${buyerWallet.slice(-4)}`,
         {
@@ -593,8 +596,18 @@ export class TicketService {
           purchaseDate,
           mockTransactionHash,
           action: 'purchase',
+          nftMetadata: nft.metadata,
         }
       );
+
+      // TODO: Store purchase record in database with:
+      // - buyerWallet
+      // - tokenId
+      // - tier
+      // - quantity
+      // - purchaseDate
+      // - transferTxId
+      // This allows tracking individual purchases and calculating expiry dates
 
       return {
         success: true,
@@ -607,7 +620,6 @@ export class TicketService {
     } catch (error) {
       console.error('Error processing ticket purchase:', error);
       
-      // Send failure notification
       const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
       await this.sendAdminNotification(
         'minting_failed',
@@ -633,15 +645,6 @@ export class TicketService {
         error: error instanceof Error ? error.message : 'Failed to process purchase',
       };
     }
-  }
-
-  /**
-   * Get ticket token ID for a specific tier
-   */
-  async getTicketTokenId(tier: TicketTier): Promise<string | null> {
-    const tickets = await this.getTickets();
-    const ticket = tickets.find(t => t.tier === tier);
-    return ticket?.tokenId || null;
   }
 }
 
