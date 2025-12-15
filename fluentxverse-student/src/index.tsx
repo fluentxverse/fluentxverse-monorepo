@@ -43,13 +43,24 @@ export function AppInner() {
 	
 	// Auto-connect wallet if user has previously connected
 	// This restores the wallet session on page reload
-	useAutoConnect({
+	const { data: autoConnected } = useAutoConnect({
 		client: thirdwebClient,
 		wallets: [appWallet],
 		onConnect: (wallet) => {
 			console.log('✅ Wallet auto-connected:', wallet.getAccount()?.address);
 		},
 	});
+
+	// Disconnect wallet if user is not authenticated (logged out)
+	// This ensures wallet state stays in sync with auth state
+	useEffect(() => {
+		if (!isAuthenticated && autoConnected) {
+			console.log('User not authenticated, disconnecting wallet...');
+			appWallet.disconnect().catch(err => {
+				console.warn('Failed to disconnect wallet:', err);
+			});
+		}
+	}, [isAuthenticated, autoConnected]);
 
 	const handleClick = useCallback((e: MouseEvent) => {
 		const target = e.target as HTMLElement;

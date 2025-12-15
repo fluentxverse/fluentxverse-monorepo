@@ -510,29 +510,6 @@ export default function TicketsPage() {
                   Book a Lesson
                 </a>
               </div>
-              
-              {/* Wallet Status Indicator */}
-              <div className="wallet-status-card">
-                <div className="wallet-status-icon">
-                  <i className={`fas ${activeAccount ? 'fa-link' : 'fa-unlink'}`}></i>
-                </div>
-                <div className="wallet-status-info">
-                  <span className="wallet-status-label">
-                    {activeAccount ? 'Wallet Connected' : 'Wallet Not Connected'}
-                  </span>
-                  <span className="wallet-status-address">
-                    {activeAccount 
-                      ? `${activeAccount.address.slice(0, 6)}...${activeAccount.address.slice(-4)}`
-                      : 'Tickets will be sent to test wallet in DEV MODE'
-                    }
-                  </span>
-                </div>
-                {activeAccount && (
-                  <div className="wallet-status-badge connected">
-                    <i className="fas fa-check-circle"></i>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* How it Works */}

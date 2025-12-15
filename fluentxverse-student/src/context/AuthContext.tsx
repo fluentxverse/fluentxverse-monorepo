@@ -5,6 +5,7 @@ import { useContext, useState, useEffect, useRef } from 'preact/hooks';
 import { loginUser, logoutUser, getMe, loginWithWallet, registerWithWallet, type WalletAuthResponse, type WalletRegisterParams } from '../api/auth.api';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
 import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
+import { appWallet } from '../config/wallet';
 
 interface AuthUser {
   userId: string;
@@ -279,6 +280,14 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const logout = async () => {
     try {
       await logoutUser();
+      
+      // Disconnect Thirdweb wallet to clear the wallet session
+      try {
+        await appWallet.disconnect();
+        console.log('Wallet disconnected on logout');
+      } catch (walletErr) {
+        console.warn('Failed to disconnect wallet:', walletErr);
+      }
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
