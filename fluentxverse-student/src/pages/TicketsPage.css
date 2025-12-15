@@ -142,6 +142,65 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Wallet Status Card */
+.wallet-status-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 16px;
+}
+
+.wallet-status-icon {
+  width: 44px;
+  height: 44px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallet-status-icon i {
+  font-size: 18px;
+  color: #64748b;
+}
+
+.wallet-status-card:has(.wallet-status-badge.connected) .wallet-status-icon {
+  background: #dcfce7;
+}
+
+.wallet-status-card:has(.wallet-status-badge.connected) .wallet-status-icon i {
+  color: #16a34a;
+}
+
+.wallet-status-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wallet-status-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.wallet-status-address {
+  font-size: 12px;
+  color: #64748b;
+  font-family: monospace;
+}
+
+.wallet-status-badge.connected {
+  color: #16a34a;
+  font-size: 20px;
+}
+
 /* How it Works */
 .how-it-works {
   margin-bottom: 48px;

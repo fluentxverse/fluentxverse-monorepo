@@ -160,6 +160,89 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       set.status = 500;
       return { error: 'Failed to get ticket image' };
     }
+  })
+
+  /**
+   * Process ticket purchase (DEV MODE - simulates purchase after mock checkout success)
+   * In production, this would verify the payment transaction before transferring tickets
+   * POST /tickets/purchase
+   */
+  .post('/purchase', async ({ body }) => {
+    console.log('=== POST /tickets/purchase called ===');
+    console.log('Request body:', body);
+    
+    try {
+      const { buyerWallet, tier, quantity, mockTransactionHash } = body;
+
+      // Validate input
+      if (!buyerWallet || !buyerWallet.startsWith('0x')) {
+        console.log('❌ Invalid buyer wallet address');
+        return {
+          success: false,
+          error: 'Invalid buyer wallet address'
+        };
+      }
+
+      if (tier !== 'basic' && tier !== 'premium') {
+        console.log('❌ Invalid tier:', tier);
+        return {
+          success: false,
+          error: 'Invalid tier. Must be "basic" or "premium"'
+        };
+      }
+
+      if (!quantity || quantity < 1) {
+        console.log('❌ Invalid quantity:', quantity);
+        return {
+          success: false,
+          error: 'Quantity must be at least 1'
+        };
+      }
+
+      console.log(`✅ Validation passed. Processing purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
+
+      // Process the purchase - transfer NFT to buyer
+      const result = await ticketService.processPurchase({
+        buyerWallet,
+        tier,
+        quantity: Number(quantity),
+        mockTransactionHash,
+      });
+
+      console.log('Purchase result:', result);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error || 'Failed to process purchase'
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          transactionId: result.transactionId,
+          tokenId: result.tokenId,
+          tier: result.tier,
+          quantity: result.quantity,
+          purchaseDate: result.purchaseDate,
+        },
+        message: `Successfully processed purchase of ${quantity} ${tier} ticket(s). Transfer initiated.`
+      };
+    } catch (error) {
+      console.error('Error in POST /tickets/purchase:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to process purchase'
+      };
+    }
+  }, {
+    body: t.Object({
+      buyerWallet: t.String(),
+      tier: t.Union([t.Literal('basic'), t.Literal('premium')]),
+      quantity: t.Number(),
+      mockTransactionHash: t.Optional(t.String()),
+    })
   });
 
 export default Ticket;

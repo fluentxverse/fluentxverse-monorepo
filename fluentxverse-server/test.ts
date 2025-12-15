@@ -1,100 +1,110 @@
+/**
+ * Test file for ticket purchase simulation
+ * This demonstrates the NFT transfer flow that happens when a user purchases tickets
+ * 
+ * The actual implementation is in:
+ * - ticket.service.ts: processPurchase() method
+ * - ticket.route.ts: POST /tickets/purchase endpoint
+ * - TicketsPage.tsx: handleCheckoutSuccess() function
+ */
+
 import { thirdwebClient } from "@/services/utils.services/utils";
-import { createThirdwebClient, defineChain, Engine, getContract, sendTransaction } from "thirdweb";
-import { mintTo } from "thirdweb/extensions/erc1155";
-import { mintAdditionalSupplyTo } from "thirdweb/extensions/erc1155";
-import { createWallet } from "thirdweb/wallets";
-import { upload } from "thirdweb/storage";
-import * as fs from "fs";
-import * as path from "path";
+import { defineChain, Engine, getContract } from "thirdweb";
+import { safeTransferFrom, getNFTs, totalSupply } from "thirdweb/extensions/erc1155";
+import { getUserEmail } from "thirdweb/wallets";
 
 
 const client = thirdwebClient;
 
-
-
-
-// connect to your contract
-const contract =  getContract({
+// Connect to ticket contract
+const contract = getContract({
   client,
-  chain: defineChain(421614),
+  chain: defineChain(421614), // Arbitrum Sepolia
   address: "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db",
 });
 
-
+// Server wallet for signing transactions
 const serverWallet = Engine.serverWallet({
   client,
   address: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
   vaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN!,
 });
 
+/**
+ * Test function to simulate a ticket purchase
+ * This transfers NFT tickets from the server wallet to a buyer
+ */
+const testPurchase = async () => {
+  try {
+    // Test buyer wallet address
+    const buyerWallet = "0xa2a3D233b95fCB94409555B12444399d4b72E239";
+    const tokenId = 1n; // Basic ticket token ID
+    const quantity = 1n;
 
+    console.log("=== Test Ticket Purchase ===");
+    console.log(`Buyer: ${buyerWallet}`);
+    console.log(`Token ID: ${tokenId}`);
+    console.log(`Quantity: ${quantity}`);
+    console.log("============================");
 
-const test = async () => {
-    try {
-        // Step 1: Upload the image to IPFS
-        console.log("Uploading image to IPFS...");
-        
-        // Option A: Upload from a local file
-        // const imagePath = path.join(__dirname, "assets", "ticket-basic.png");
-        // const imageBuffer = fs.readFileSync(imagePath);
-        // const imageFile = new File([imageBuffer], "ticket-basic.png", { type: "image/png" });
-        
-        // Option B: Upload from a URL/buffer (example with a placeholder)
-        const imageFile = new File(
-            [Buffer.from("placeholder-image-data")], 
-            "ticket-nft.png", 
-            { type: "image/png" }
-        );
-        
-        const imageUri = await upload({
-            client,
-            files: [imageFile],
-        });
-        
-        console.log("Image uploaded to IPFS:", imageUri);
-        
-        // Step 2: Mint the NFT with the uploaded image URI
-        console.log("Minting NFT...");
-        
-        const transaction = mintTo({
-            contract,
-            to: "0xa2a3D233b95fCB94409555B12444399d4b72E239",
-            nft: {
-                name: "Basic Lesson Ticket",
-                description: "1 Basic lesson ticket for FluentXVerse - Valid for 1 year",
-                image: imageUri, // Use the uploaded IPFS URI
-                attributes: [
-                    { trait_type: "Tier", value: "Basic" },
-                    { trait_type: "Tickets", value: "1" },
-                    { trait_type: "Validity", value: "1 Year" },
-                    { trait_type: "Lesson Duration", value: "25 minutes" },
-                ],
-            },
-            supply: 1n,
-        });
+    // Check current supply
+    const supply = await totalSupply({ contract, id: tokenId });
+    console.log(`Current supply for token ${tokenId}: ${supply}`);
 
-        const { transactionId } = await serverWallet.enqueueTransaction({
-            transaction,
-            simulate: false,
-        });
+    // Transfer the NFT ticket to buyer
+    console.log("Transferring NFT ticket...");
+    
+    const transaction = safeTransferFrom({
+      contract,
+      from: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
+      to: buyerWallet as `0x${string}`,
+      tokenId,
+      value: quantity,
+      data: "0x",
+    });
 
-        console.log("Transaction ID:", transactionId);
-        console.log("NFT minted successfully!");
-    } catch (error) {
-        console.error("Error minting NFT:", error);
+    const { transactionId } = await serverWallet.enqueueTransaction({
+      transaction,
+      simulate: false,
+    });
+
+    console.log("✅ Transaction submitted!");
+    console.log(`Transaction ID: ${transactionId}`);
+    console.log("NFT ticket transfer initiated successfully!");
+    console.log("");
+    console.log("Note: The user will receive the ticket in their wallet once the transaction is confirmed.");
+    console.log("Check the transaction status using the transaction ID.");
+  } catch (error) {
+    console.error("❌ Error during test purchase:", error);
+  }
+};
+
+/**
+ * List all NFTs in the contract
+ */
+const listNFTs = async () => {
+  try {
+    console.log("=== Listing Contract NFTs ===");
+    const nfts = await getNFTs({
+      contract,
+      start: 0,
+      count: 10,
+    });
+
+    for (const nft of nfts) {
+      const supply = await totalSupply({ contract, id: nft.id });
+      console.log(`Token ID ${nft.id}: ${nft.metadata.name} - Supply: ${supply}`);
     }
-}
+    console.log("=============================");
+  } catch (error) {
+    console.error("Error listing NFTs:", error);
+  }
+};
+
+// Run tests
+await listNFTs();
+// Uncomment to test purchase:
+// await testPurchase();
 
 
-
-await test();
-// async function createServerWallet(label: string) {
-//     const serverWallet = await Engine.createServerWallet({
-//         client,
-//         label,
-//     });
-//     return serverWallet;
-
-// }
-
-
+getUserEmail

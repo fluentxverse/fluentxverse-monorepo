@@ -1,6 +1,6 @@
 import { thirdwebClient } from "../utils.services/utils";
 import { defineChain, Engine, getContract } from "thirdweb";
-import { mintTo, mintAdditionalSupplyTo, getNFTs, totalSupply } from "thirdweb/extensions/erc1155";
+import { mintTo, mintAdditionalSupplyTo, getNFTs, totalSupply, safeTransferFrom, updateMetadata, uri } from "thirdweb/extensions/erc1155";
 import { upload } from "thirdweb/storage";
 import * as fs from "fs";
 import * as path from "path";
@@ -519,6 +519,129 @@ export class TicketService {
       console.error(`Error fetching transaction status for ${transactionId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Process a ticket purchase - transfers NFT to buyer and updates metadata with purchase date
+   * This is for DEV MODE simulation - in production, this would be called after payment verification
+   */
+  async processPurchase(params: {
+    buyerWallet: string;
+    tier: TicketTier;
+    quantity: number;
+    mockTransactionHash?: string; // Optional mock transaction hash from dev mode
+  }): Promise<{
+    success: boolean;
+    transactionId: string;
+    tokenId: string;
+    tier: TicketTier;
+    quantity: number;
+    purchaseDate: string;
+    error?: string;
+  }> {
+    const { buyerWallet, tier, quantity, mockTransactionHash } = params;
+    const purchaseDate = new Date().toISOString();
+
+    console.log(`Processing ticket purchase: ${quantity} ${tier} tickets for ${buyerWallet}`);
+
+    // Get the token ID for this tier
+    const tickets = await this.getTickets();
+    const ticket = tickets.find(t => t.tier === tier);
+
+    if (!ticket) {
+      throw new Error(`${tier.charAt(0).toUpperCase() + tier.slice(1)} tickets not found. Please contact support.`);
+    }
+
+    const tokenId = BigInt(ticket.tokenId);
+
+    // Check if we have enough supply
+    if (ticket.supply < quantity) {
+      throw new Error(`Insufficient ${tier} tickets. Available: ${ticket.supply}, Requested: ${quantity}`);
+    }
+
+    try {
+      // Step 1: Transfer the NFT tickets from server wallet to buyer
+      console.log(`Transferring ${quantity} ${tier} ticket(s) to ${buyerWallet}...`);
+      
+      const transferTransaction = safeTransferFrom({
+        contract,
+        from: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
+        to: buyerWallet as `0x${string}`,
+        tokenId,
+        value: BigInt(quantity),
+        data: "0x",
+      });
+
+      const { transactionId: transferTxId } = await serverWallet.enqueueTransaction({
+        transaction: transferTransaction,
+        simulate: false,
+      });
+
+      console.log(`Transfer transaction ID: ${transferTxId}`);
+
+      // Send notification about the purchase
+      const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
+      await this.sendAdminNotification(
+        'minting_success', // Re-using this type for now
+        `${tierName} Ticket Purchased`,
+        `${quantity} ${tierName} ticket(s) transferred to ${buyerWallet.slice(0, 6)}...${buyerWallet.slice(-4)}`,
+        {
+          transactionId: transferTxId,
+          tier,
+          quantity,
+          buyerWallet,
+          purchaseDate,
+          mockTransactionHash,
+          action: 'purchase',
+        }
+      );
+
+      return {
+        success: true,
+        transactionId: transferTxId,
+        tokenId: ticket.tokenId,
+        tier,
+        quantity,
+        purchaseDate,
+      };
+    } catch (error) {
+      console.error('Error processing ticket purchase:', error);
+      
+      // Send failure notification
+      const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
+      await this.sendAdminNotification(
+        'minting_failed',
+        `${tierName} Ticket Purchase Failed`,
+        `Failed to transfer ${quantity} ${tierName} ticket(s) to ${buyerWallet.slice(0, 6)}...${buyerWallet.slice(-4)}`,
+        {
+          tier,
+          quantity,
+          buyerWallet,
+          purchaseDate,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          action: 'purchase',
+        }
+      );
+
+      return {
+        success: false,
+        transactionId: '',
+        tokenId: ticket.tokenId,
+        tier,
+        quantity,
+        purchaseDate,
+        error: error instanceof Error ? error.message : 'Failed to process purchase',
+      };
+    }
+  }
+
+  /**
+   * Get ticket token ID for a specific tier
+   */
+  async getTicketTokenId(tier: TicketTier): Promise<string | null> {
+    const tickets = await this.getTickets();
+    const ticket = tickets.find(t => t.tier === tier);
+    return ticket?.tokenId || null;
   }
 }
 

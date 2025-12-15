@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "preact/hooks";
 import { LocationProvider, Router, Route, hydrate, prerender as ssr } from 'preact-iso';
-import { createThirdwebClient } from "thirdweb";
-import { ThirdwebProvider } from "thirdweb/react";
+import { ThirdwebProvider, useAutoConnect } from "thirdweb/react";
 
 import Home from './pages/Home';
 import HomeProtected from './pages/HomeProtected';
@@ -19,9 +18,11 @@ import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import ContactPage from "./pages/ContactPage";
 
-export const thirdwebClient = createThirdwebClient({
-	clientId: import.meta.env.VITE_THIRDWEB_CLIENT_ID || "your-client-id"
-});
+// Import shared wallet config (prevents circular imports)
+import { thirdwebClient, appWallet } from './config/wallet';
+
+// Re-export for other components that import from index
+export { thirdwebClient, appWallet };
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -39,8 +40,16 @@ import "./assets/css/force-light-mode.css";
 export function AppInner() {
 	const [menuActive, setMenuActive] = useState(false);
 	const { isAuthenticated } = useAuthContext();
-	// Auth state for session modal
-	// We'll read isAuthenticated via context inside the tree
+	
+	// Auto-connect wallet if user has previously connected
+	// This restores the wallet session on page reload
+	useAutoConnect({
+		client: thirdwebClient,
+		wallets: [appWallet],
+		onConnect: (wallet) => {
+			console.log('✅ Wallet auto-connected:', wallet.getAccount()?.address);
+		},
+	});
 
 	const handleClick = useCallback((e: MouseEvent) => {
 		const target = e.target as HTMLElement;

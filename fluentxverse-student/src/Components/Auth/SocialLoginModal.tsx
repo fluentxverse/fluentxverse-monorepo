@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'preact/hooks';
 import { useConnect } from "thirdweb/react";
-import { inAppWallet } from "thirdweb/wallets";
-import { thirdwebClient } from '../../index';
+import { thirdwebClient, appWallet } from '../../config/wallet';
 import { useAuthContext } from '../../context/AuthContext';
 import { requestWalletNonce } from '../../api/auth.api';
 import './SocialLoginModal.css';
-import { arbitrumSepolia, baseSepolia } from 'thirdweb/chains';
+import { arbitrumSepolia } from 'thirdweb/chains';
 
 interface SocialLoginModalProps {
   isOpen: boolean;
@@ -15,15 +14,8 @@ interface SocialLoginModalProps {
   onIncompleteProfile?: (walletAddress: string, missingFields: string[]) => void;
 }
 
-const wallet = inAppWallet({
-  auth: {
-    options: ["google", "apple", "line", "tiktok", "telegram"],
-  },
-  executionMode: {
-    mode: "EIP7702",
-    sponsorGas: true,
-  },
-});
+// Use the shared appWallet for consistent connection state
+const wallet = appWallet;
 
 export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistration,onIncompleteProfile }: SocialLoginModalProps) {
   const { connect, isConnecting, error } = useConnect();

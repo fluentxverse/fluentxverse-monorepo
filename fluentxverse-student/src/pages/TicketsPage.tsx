@@ -398,30 +398,67 @@ export default function TicketsPage() {
   const handleCheckoutSuccess = async (transactionData: CheckoutSuccessData) => {
     console.log('=== Payment Success ===');
     console.log('Transaction Data:', transactionData);
+    console.log('Active Account:', activeAccount?.address);
+    console.log('Selected Package:', selectedPackage);
     console.log('=======================');
     
-    // TODO: Send transaction hash to backend for verification
-    // Example:
-    // const response = await fetch(`${API_URL}/api/verify-payment`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     transactionData,
-    //     packageId: selectedPackage?.id,
-    //     studentWallet: activeAccount?.address,
-    //   }),
-    // });
-    // 
-    // Backend will:
-    // 1. Query blockchain for the transaction hash
-    // 2. Verify recipient === SELLER_ADDRESS (from env)
-    // 3. Verify amount matches package price
-    // 4. Credit tickets to user if valid
+    if (!selectedPackage) {
+      console.error('Missing selectedPackage');
+      setShowCheckout(false);
+      setSelectedPackage(null);
+      setAdjustedAmount(null);
+      return;
+    }
+
+    // For DEV MODE: Use a test wallet if no wallet is connected
+    const buyerWallet = activeAccount?.address || '0xa2a3D233b95fCB94409555B12444399d4b72E239';
     
-    if (selectedPackage) {
-      // For now, still updating locally - replace with backend response
+    if (!activeAccount?.address) {
+      console.warn('⚠️ No wallet connected - using test wallet for DEV MODE:', buyerWallet);
+    }
+
+    try {
+      console.log('📤 Calling /tickets/purchase API...');
+      console.log('Request body:', {
+        buyerWallet,
+        tier: selectedPackage.tier,
+        quantity: selectedPackage.tickets,
+      });
+
+      // Call backend to process the purchase and transfer NFT tickets
+      const response = await fetch(`${API_BASE_URL}/tickets/purchase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerWallet,
+          tier: selectedPackage.tier,
+          quantity: selectedPackage.tickets,
+          // Include mock transaction hash for reference (DEV MODE)
+          mockTransactionHash: (transactionData.statuses?.[0] as any)?.originTxHash || `mock_${Date.now()}`,
+        }),
+      });
+
+      const result = await response.json();
+      console.log('=== Purchase API Response ===');
+      console.log(result);
+      console.log('==============================');
+
+      if (result.success) {
+        // Update local ticket count
+        setUserTickets(prev => prev + selectedPackage.tickets);
+        console.log(`✅ Successfully purchased ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s)!`);
+        console.log(`Transfer Transaction ID: ${result.data.transactionId}`);
+      } else {
+        console.error('❌ Purchase failed:', result.error);
+        // Still update locally for now (dev mode) but log the error
+        setUserTickets(prev => prev + selectedPackage.tickets);
+      }
+    } catch (error) {
+      console.error('Error calling purchase API:', error);
+      // Still update locally for now (dev mode)
       setUserTickets(prev => prev + selectedPackage.tickets);
     }
+    
     setShowCheckout(false);
     setSelectedPackage(null);
     setAdjustedAmount(null);
@@ -472,6 +509,29 @@ export default function TicketsPage() {
                   <i className="fas fa-calendar-plus"></i>
                   Book a Lesson
                 </a>
+              </div>
+              
+              {/* Wallet Status Indicator */}
+              <div className="wallet-status-card">
+                <div className="wallet-status-icon">
+                  <i className={`fas ${activeAccount ? 'fa-link' : 'fa-unlink'}`}></i>
+                </div>
+                <div className="wallet-status-info">
+                  <span className="wallet-status-label">
+                    {activeAccount ? 'Wallet Connected' : 'Wallet Not Connected'}
+                  </span>
+                  <span className="wallet-status-address">
+                    {activeAccount 
+                      ? `${activeAccount.address.slice(0, 6)}...${activeAccount.address.slice(-4)}`
+                      : 'Tickets will be sent to test wallet in DEV MODE'
+                    }
+                  </span>
+                </div>
+                {activeAccount && (
+                  <div className="wallet-status-badge connected">
+                    <i className="fas fa-check-circle"></i>
+                  </div>
+                )}
               </div>
             </div>
 
