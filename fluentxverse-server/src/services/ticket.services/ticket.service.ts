@@ -6,6 +6,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { getIO } from "../../socket/socket.server";
 import { NotificationService } from "../notification.services/notification.service";
+import { getDriver } from "../../db/memgraph";
+import { v4 as uuidv4 } from "uuid";
 
 // Contract configuration
 const TICKET_CONTRACT_ADDRESS = process.env.TICKET_CONTRACT_ADDRESS || "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db";
@@ -68,6 +70,22 @@ export interface CreateTicketRequest {
 export interface MintAdditionalRequest {
   tokenId: string;
   quantity: number;
+}
+
+// Ticket purchase record (stored in Memgraph)
+export interface TicketPurchase {
+  id: string;
+  buyerWallet: string;
+  userId?: string; // Optional: link to User node if available
+  tokenId: string;
+  tier: TicketTier;
+  quantity: number;
+  pricePerTicket: number;
+  totalPrice: number;
+  transferTxId: string;
+  paymentTxHash?: string; // From checkout widget
+  purchaseDate: string;
+  status: 'pending' | 'completed' | 'failed';
 }
 
 export class TicketService {
@@ -600,14 +618,26 @@ export class TicketService {
         }
       );
 
-      // TODO: Store purchase record in database with:
-      // - buyerWallet
-      // - tokenId
-      // - tier
-      // - quantity
-      // - purchaseDate
-      // - transferTxId
-      // This allows tracking individual purchases and calculating expiry dates
+      // Save purchase record to Memgraph
+      const pricePerTicket = tier === 'basic' ? 6 : 9;
+      try {
+        await this.saveTicketPurchase({
+          buyerWallet,
+          tokenId: ticket.tokenId,
+          tier,
+          quantity,
+          pricePerTicket,
+          totalPrice: pricePerTicket * quantity,
+          transferTxId,
+          paymentTxHash: mockTransactionHash,
+          purchaseDate,
+          status: 'completed',
+        });
+        console.log(`✅ Purchase record saved to Memgraph`);
+      } catch (dbError) {
+        // Log but don't fail the purchase - blockchain transfer already succeeded
+        console.error('⚠️ Failed to save purchase to Memgraph:', dbError);
+      }
 
       return {
         success: true,
@@ -703,6 +733,258 @@ export class TicketService {
       basicTokenId: basicTicket?.tokenId || null,
       premiumTokenId: premiumTicket?.tokenId || null,
     };
+  }
+
+  /**
+   * Save a ticket purchase record to Memgraph
+   */
+  async saveTicketPurchase(purchase: Omit<TicketPurchase, 'id'>): Promise<TicketPurchase> {
+    const driver = getDriver();
+    const session = driver.session();
+    const purchaseId = uuidv4();
+
+    try {
+      // Create the TicketPurchase node
+      await session.run(`
+        CREATE (p:TicketPurchase {
+          id: $id,
+          buyerWallet: $buyerWallet,
+          userId: $userId,
+          tokenId: $tokenId,
+          tier: $tier,
+          quantity: $quantity,
+          pricePerTicket: $pricePerTicket,
+          totalPrice: $totalPrice,
+          transferTxId: $transferTxId,
+          paymentTxHash: $paymentTxHash,
+          purchaseDate: $purchaseDate,
+          status: $status
+        })
+      `, {
+        id: purchaseId,
+        buyerWallet: purchase.buyerWallet,
+        userId: purchase.userId || null,
+        tokenId: purchase.tokenId,
+        tier: purchase.tier,
+        quantity: purchase.quantity,
+        pricePerTicket: purchase.pricePerTicket,
+        totalPrice: purchase.totalPrice,
+        transferTxId: purchase.transferTxId,
+        paymentTxHash: purchase.paymentTxHash || null,
+        purchaseDate: purchase.purchaseDate,
+        status: purchase.status,
+      });
+
+      // If userId is provided, create relationship to User
+      if (purchase.userId) {
+        await session.run(`
+          MATCH (p:TicketPurchase {id: $purchaseId})
+          MATCH (u:User {id: $userId})
+          MERGE (u)-[:PURCHASED]->(p)
+        `, {
+          purchaseId,
+          userId: purchase.userId,
+        });
+      }
+
+      console.log(`✅ Saved ticket purchase to Memgraph: ${purchaseId}`);
+
+      return {
+        id: purchaseId,
+        ...purchase,
+      };
+    } catch (error) {
+      console.error('Error saving ticket purchase to Memgraph:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get purchase history for a wallet address
+   */
+  async getPurchaseHistoryByWallet(walletAddress: string): Promise<TicketPurchase[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (p:TicketPurchase {buyerWallet: $walletAddress})
+        RETURN p
+        ORDER BY p.purchaseDate DESC
+      `, { walletAddress });
+
+      return result.records.map(record => {
+        const p = record.get('p').properties;
+        return {
+          id: p.id,
+          buyerWallet: p.buyerWallet,
+          userId: p.userId,
+          tokenId: p.tokenId,
+          tier: p.tier as TicketTier,
+          quantity: typeof p.quantity === 'object' ? p.quantity.toNumber() : p.quantity,
+          pricePerTicket: typeof p.pricePerTicket === 'object' ? p.pricePerTicket.toNumber() : p.pricePerTicket,
+          totalPrice: typeof p.totalPrice === 'object' ? p.totalPrice.toNumber() : p.totalPrice,
+          transferTxId: p.transferTxId,
+          paymentTxHash: p.paymentTxHash,
+          purchaseDate: p.purchaseDate,
+          status: p.status as TicketPurchase['status'],
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching purchase history from Memgraph:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get purchase history for a user ID
+   */
+  async getPurchaseHistoryByUserId(userId: string): Promise<TicketPurchase[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (u:User {id: $userId})-[:PURCHASED]->(p:TicketPurchase)
+        RETURN p
+        ORDER BY p.purchaseDate DESC
+      `, { userId });
+
+      return result.records.map(record => {
+        const p = record.get('p').properties;
+        return {
+          id: p.id,
+          buyerWallet: p.buyerWallet,
+          userId: p.userId,
+          tokenId: p.tokenId,
+          tier: p.tier as TicketTier,
+          quantity: typeof p.quantity === 'object' ? p.quantity.toNumber() : p.quantity,
+          pricePerTicket: typeof p.pricePerTicket === 'object' ? p.pricePerTicket.toNumber() : p.pricePerTicket,
+          totalPrice: typeof p.totalPrice === 'object' ? p.totalPrice.toNumber() : p.totalPrice,
+          transferTxId: p.transferTxId,
+          paymentTxHash: p.paymentTxHash,
+          purchaseDate: p.purchaseDate,
+          status: p.status as TicketPurchase['status'],
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching purchase history from Memgraph:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get all purchases (admin view) with optional filters
+   */
+  async getAllPurchases(options?: {
+    tier?: TicketTier;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ purchases: TicketPurchase[]; total: number }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      let whereClause = '';
+      const params: Record<string, any> = {};
+
+      if (options?.tier) {
+        whereClause = 'WHERE p.tier = $tier';
+        params.tier = options.tier;
+      }
+
+      // Get total count
+      const countResult = await session.run(`
+        MATCH (p:TicketPurchase)
+        ${whereClause}
+        RETURN count(p) as total
+      `, params);
+      const total = countResult.records[0]?.get('total')?.toNumber() || 0;
+
+      // Get purchases with pagination
+      const limit = options?.limit || 50;
+      const offset = options?.offset || 0;
+      
+      const result = await session.run(`
+        MATCH (p:TicketPurchase)
+        ${whereClause}
+        RETURN p
+        ORDER BY p.purchaseDate DESC
+        SKIP $offset
+        LIMIT $limit
+      `, { ...params, offset, limit });
+
+      const purchases = result.records.map(record => {
+        const p = record.get('p').properties;
+        return {
+          id: p.id,
+          buyerWallet: p.buyerWallet,
+          userId: p.userId,
+          tokenId: p.tokenId,
+          tier: p.tier as TicketTier,
+          quantity: typeof p.quantity === 'object' ? p.quantity.toNumber() : p.quantity,
+          pricePerTicket: typeof p.pricePerTicket === 'object' ? p.pricePerTicket.toNumber() : p.pricePerTicket,
+          totalPrice: typeof p.totalPrice === 'object' ? p.totalPrice.toNumber() : p.totalPrice,
+          transferTxId: p.transferTxId,
+          paymentTxHash: p.paymentTxHash,
+          purchaseDate: p.purchaseDate,
+          status: p.status as TicketPurchase['status'],
+        };
+      });
+
+      return { purchases, total };
+    } catch (error) {
+      console.error('Error fetching all purchases from Memgraph:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get purchase statistics
+   */
+  async getPurchaseStats(): Promise<{
+    totalPurchases: number;
+    totalRevenue: number;
+    basicSold: number;
+    premiumSold: number;
+    uniqueBuyers: number;
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (p:TicketPurchase {status: 'completed'})
+        RETURN 
+          count(p) as totalPurchases,
+          sum(p.totalPrice) as totalRevenue,
+          sum(CASE WHEN p.tier = 'basic' THEN p.quantity ELSE 0 END) as basicSold,
+          sum(CASE WHEN p.tier = 'premium' THEN p.quantity ELSE 0 END) as premiumSold,
+          count(DISTINCT p.buyerWallet) as uniqueBuyers
+      `);
+
+      const record = result.records[0];
+      return {
+        totalPurchases: record?.get('totalPurchases')?.toNumber() || 0,
+        totalRevenue: record?.get('totalRevenue')?.toNumber() || 0,
+        basicSold: record?.get('basicSold')?.toNumber() || 0,
+        premiumSold: record?.get('premiumSold')?.toNumber() || 0,
+        uniqueBuyers: record?.get('uniqueBuyers')?.toNumber() || 0,
+      };
+    } catch (error) {
+      console.error('Error fetching purchase stats from Memgraph:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
   }
 }
 

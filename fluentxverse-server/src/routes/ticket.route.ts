@@ -273,6 +273,83 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         error: error instanceof Error ? error.message : 'Failed to get ticket balance'
       };
     }
+  })
+
+  /**
+   * Get purchase history for a wallet address
+   * GET /tickets/purchases/:walletAddress
+   */
+  .get('/purchases/:walletAddress', async ({ params }) => {
+    try {
+      const { walletAddress } = params;
+
+      if (!walletAddress || !walletAddress.startsWith('0x')) {
+        return {
+          success: false,
+          error: 'Invalid wallet address'
+        };
+      }
+
+      const purchases = await ticketService.getPurchaseHistoryByWallet(walletAddress);
+
+      return {
+        success: true,
+        data: purchases
+      };
+    } catch (error) {
+      console.error('Error in GET /tickets/purchases/:walletAddress:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get purchase history'
+      };
+    }
+  })
+
+  /**
+   * Get all purchases (admin view) with optional filters
+   * GET /tickets/purchases
+   */
+  .get('/purchases', async ({ query }) => {
+    try {
+      const tier = query.tier as 'basic' | 'premium' | undefined;
+      const limit = query.limit ? parseInt(query.limit as string) : undefined;
+      const offset = query.offset ? parseInt(query.offset as string) : undefined;
+
+      const result = await ticketService.getAllPurchases({ tier, limit, offset });
+
+      return {
+        success: true,
+        data: result.purchases,
+        total: result.total
+      };
+    } catch (error) {
+      console.error('Error in GET /tickets/purchases:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get purchases'
+      };
+    }
+  })
+
+  /**
+   * Get purchase statistics (admin view)
+   * GET /tickets/purchases/stats
+   */
+  .get('/purchases/stats', async () => {
+    try {
+      const stats = await ticketService.getPurchaseStats();
+
+      return {
+        success: true,
+        data: stats
+      };
+    } catch (error) {
+      console.error('Error in GET /tickets/purchases/stats:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get purchase stats'
+      };
+    }
   });
 
 export default Ticket;
