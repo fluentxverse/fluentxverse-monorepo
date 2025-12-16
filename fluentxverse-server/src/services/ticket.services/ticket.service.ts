@@ -8,10 +8,12 @@ import { getIO } from "../../socket/socket.server";
 import { NotificationService } from "../notification.services/notification.service";
 import { getDriver } from "../../db/memgraph";
 import { v4 as uuidv4 } from "uuid";
+import { TICKETS_PER_LESSON, REFUND_POLICY } from "../../config/constant";
 
 // Contract configuration
 const TICKET_CONTRACT_ADDRESS = process.env.TICKET_CONTRACT_ADDRESS || "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db";
 const CHAIN_ID = Number(process.env.TICKET_CHAIN_ID) || 421614; // Arbitrum Sepolia testnet
+const VAULT_WALLET_ADDRESS = process.env.THIRDWEB_VAULT_WALLET_ADDRESS!;
 
 // Get contract instance
 const contract = getContract({
@@ -23,7 +25,7 @@ const contract = getContract({
 // Server wallet for minting
 const serverWallet = Engine.serverWallet({
   client: thirdwebClient,
-  address: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
+  address: VAULT_WALLET_ADDRESS,
   vaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN!,
 });
 
@@ -87,6 +89,59 @@ export interface TicketPurchase {
   purchaseDate: string;
   status: 'pending' | 'completed' | 'failed';
 }
+
+// Ticket transaction types for lesson bookings
+export type TicketTransactionType = 'booking' | 'cancellation' | 'refund' | 'purchase' | 'admin_adjustment';
+
+// Ticket transaction record for booking/refund tracking (stored in Memgraph)
+export interface TicketTransaction {
+  id: string;
+  studentId: string;
+  studentWallet: string;
+  tutorId?: string;
+  bookingId?: string;
+  slotId?: string;
+  tokenId: string;
+  tier: TicketTier;
+  quantity: number;
+  type: TicketTransactionType;
+  status: 'pending' | 'completed' | 'failed';
+  transferTxId?: string;
+  reason?: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+// Input for deducting ticket when booking
+export interface DeductTicketInput {
+  studentId: string;
+  studentWallet: string;
+  tutorId: string;
+  bookingId: string;
+  slotId: string;
+  tier?: TicketTier; // Optional, defaults to 'basic'
+}
+
+// Input for recording ticket deduction (when transfer is done on frontend)
+export interface RecordTicketDeductionInput {
+  studentId: string;
+  studentWallet: string;
+  tutorId: string;
+  bookingId: string;
+  slotId: string;
+  tier?: TicketTier;
+  transferTxHash?: string; // Transaction hash from frontend transfer
+}
+
+// Input for refunding ticket on cancellation
+export interface RefundTicketInput {
+  studentId: string;
+  studentWallet: string;
+  bookingId: string;
+  transactionId: string; // Original deduction transaction ID
+  reason?: string;
+}
+
 
 export class TicketService {
   private assetsPath: string;
@@ -981,6 +1036,490 @@ export class TicketService {
       };
     } catch (error) {
       console.error('Error fetching purchase stats from Memgraph:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  // ==========================================
+  // TICKET USAGE FOR LESSON BOOKINGS
+  // ==========================================
+
+  /**
+   * Create a server wallet instance for a user (student) to execute transactions
+   * Uses Thirdweb Engine server wallet with the user's wallet address
+   */
+  private getStudentServerWallet(studentWalletAddress: string) {
+    return Engine.serverWallet({
+      client: thirdwebClient,
+      address: studentWalletAddress as `0x${string}`,
+      vaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN!,
+    });
+  }
+
+  /**
+   * Deduct a ticket from student when booking a lesson
+   * Transfers the NFT ticket from student wallet to vault wallet ON-CHAIN
+   */
+  async deductTicketForBooking(input: DeductTicketInput): Promise<TicketTransaction> {
+    const { studentId, studentWallet, tutorId, bookingId, slotId, tier = 'basic' } = input;
+    const transactionId = uuidv4();
+    const createdAt = new Date().toISOString();
+
+    console.log(`[TicketService] Deducting ${TICKETS_PER_LESSON} ${tier} ticket(s) for booking ${bookingId}`);
+    console.log(`[TicketService] Student wallet: ${studentWallet}`);
+
+    // Get the token ID for this tier
+    const tickets = await this.getTickets();
+    const ticket = tickets.find(t => t.tier === tier);
+
+    if (!ticket) {
+      throw new Error(`${tier.charAt(0).toUpperCase() + tier.slice(1)} tickets not found. Please contact support.`);
+    }
+
+    // Check student's ticket balance
+    const balance = await this.getWalletTicketBalance(studentWallet);
+    const studentBalance = tier === 'basic' ? balance.basic : balance.premium;
+
+    if (studentBalance < TICKETS_PER_LESSON) {
+      throw new Error(`Insufficient ${tier} tickets. You have ${studentBalance} but need ${TICKETS_PER_LESSON} to book a lesson.`);
+    }
+
+    // Create pending transaction record in Memgraph first
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      await session.run(`
+        CREATE (t:TicketTransaction {
+          id: $id,
+          studentId: $studentId,
+          studentWallet: $studentWallet,
+          tutorId: $tutorId,
+          bookingId: $bookingId,
+          slotId: $slotId,
+          tokenId: $tokenId,
+          tier: $tier,
+          quantity: $quantity,
+          type: 'booking',
+          status: 'pending',
+          reason: 'Lesson booking',
+          createdAt: $createdAt
+        })
+      `, {
+        id: transactionId,
+        studentId,
+        studentWallet,
+        tutorId,
+        bookingId,
+        slotId,
+        tokenId: ticket.tokenId,
+        tier,
+        quantity: TICKETS_PER_LESSON,
+        createdAt,
+      });
+
+      // Link to Student and Booking nodes (booking may not exist yet, so use OPTIONAL)
+      await session.run(`
+        MATCH (t:TicketTransaction {id: $transactionId})
+        MATCH (s:Student {id: $studentId})
+        MERGE (s)-[:MADE_TRANSACTION]->(t)
+      `, { transactionId, studentId });
+
+      console.log(`[TicketService] Created pending transaction: ${transactionId}`);
+
+      // Execute on-chain transfer from student wallet to vault wallet
+      console.log(`[TicketService] Executing on-chain transfer...`);
+      
+      // Get the student's server wallet to execute the transfer
+      const studentServerWallet = this.getStudentServerWallet(studentWallet);
+      
+      // Create the transfer transaction
+      const transferTransaction = safeTransferFrom({
+        contract,
+        from: studentWallet as `0x${string}`,
+        to: VAULT_WALLET_ADDRESS as `0x${string}`,
+        tokenId: BigInt(ticket.tokenId),
+        value: BigInt(TICKETS_PER_LESSON),
+        data: "0x",
+      });
+
+      // Enqueue and execute the transaction
+      const { transactionId: transferTxId } = await studentServerWallet.enqueueTransaction({
+        transaction: transferTransaction,
+        simulate: false,
+      });
+
+      console.log(`[TicketService] Transfer transaction enqueued: ${transferTxId}`);
+
+      // Update transaction to completed with the real transfer tx ID
+      await session.run(`
+        MATCH (t:TicketTransaction {id: $transactionId})
+        SET t.status = 'completed',
+            t.transferTxId = $transferTxId,
+            t.completedAt = $completedAt
+      `, {
+        transactionId,
+        transferTxId,
+        completedAt: new Date().toISOString(),
+      });
+
+      console.log(`[TicketService] ✅ Ticket deducted successfully for booking ${bookingId}`);
+      console.log(`[TicketService] On-chain transfer TX: ${transferTxId}`);
+
+      return {
+        id: transactionId,
+        studentId,
+        studentWallet,
+        tutorId,
+        bookingId,
+        slotId,
+        tokenId: ticket.tokenId,
+        tier,
+        quantity: TICKETS_PER_LESSON,
+        type: 'booking',
+        status: 'completed',
+        transferTxId,
+        reason: 'Lesson booking',
+        createdAt,
+        completedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('[TicketService] Error deducting ticket:', error);
+      
+      // Mark transaction as failed if it was created
+      await session.run(`
+        MATCH (t:TicketTransaction {id: $transactionId})
+        SET t.status = 'failed', t.reason = $reason
+      `, {
+        transactionId,
+        reason: error instanceof Error ? error.message : 'Unknown error',
+      }).catch(() => {}); // Ignore error if transaction doesn't exist
+
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Refund a ticket to student when cancelling a booking
+   * Only refunds if cancellation is more than 1 hour before scheduled time
+   */
+  async refundTicketForCancellation(input: RefundTicketInput & { scheduledTime: Date }): Promise<TicketTransaction | null> {
+    const { studentId, studentWallet, bookingId, transactionId: originalTxId, reason, scheduledTime } = input;
+    const refundTxId = uuidv4();
+    const now = new Date();
+    const createdAt = now.toISOString();
+
+    console.log(`[TicketService] Processing refund for booking ${bookingId}`);
+    console.log(`[TicketService] Scheduled time: ${scheduledTime.toISOString()}`);
+    console.log(`[TicketService] Current time: ${now.toISOString()}`);
+
+    // Check if refund is allowed (more than 1 hour before scheduled time)
+    const hoursUntilLesson = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursUntilLesson < REFUND_POLICY.NO_REFUND_HOURS) {
+      console.log(`[TicketService] ❌ No refund - only ${hoursUntilLesson.toFixed(2)} hours until lesson (minimum: ${REFUND_POLICY.NO_REFUND_HOURS})`);
+      return null; // No refund allowed
+    }
+
+    console.log(`[TicketService] ✓ Refund allowed - ${hoursUntilLesson.toFixed(2)} hours until lesson`);
+
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Get original transaction details
+      const originalTxResult = await session.run(`
+        MATCH (t:TicketTransaction {id: $originalTxId, type: 'booking', status: 'completed'})
+        RETURN t
+      `, { originalTxId });
+
+      if (originalTxResult.records.length === 0) {
+        throw new Error(`Original booking transaction not found: ${originalTxId}`);
+      }
+
+      const originalTx = originalTxResult.records[0]?.get('t').properties;
+      const quantity = typeof originalTx.quantity === 'object' ? originalTx.quantity.toNumber() : originalTx.quantity;
+
+      // Create refund transaction record
+      await session.run(`
+        CREATE (t:TicketTransaction {
+          id: $id,
+          studentId: $studentId,
+          studentWallet: $studentWallet,
+          bookingId: $bookingId,
+          tokenId: $tokenId,
+          tier: $tier,
+          quantity: $quantity,
+          type: 'cancellation',
+          status: 'pending',
+          reason: $reason,
+          originalTransactionId: $originalTxId,
+          createdAt: $createdAt
+        })
+      `, {
+        id: refundTxId,
+        studentId,
+        studentWallet,
+        bookingId,
+        tokenId: originalTx.tokenId,
+        tier: originalTx.tier,
+        quantity,
+        reason: reason || 'Booking cancellation - refund',
+        originalTxId,
+        createdAt,
+      });
+
+      // Link refund transaction to original and student
+      await session.run(`
+        MATCH (refund:TicketTransaction {id: $refundTxId})
+        MATCH (original:TicketTransaction {id: $originalTxId})
+        MATCH (s:Student {id: $studentId})
+        MERGE (refund)-[:REFUNDS]->(original)
+        MERGE (s)-[:MADE_TRANSACTION]->(refund)
+      `, { refundTxId, originalTxId, studentId });
+
+      console.log(`[TicketService] Executing on-chain refund transfer...`);
+
+      // Execute on-chain transfer from vault wallet back to student
+      const transferTransaction = safeTransferFrom({
+        contract,
+        from: VAULT_WALLET_ADDRESS as `0x${string}`,
+        to: studentWallet as `0x${string}`,
+        tokenId: BigInt(originalTx.tokenId),
+        value: BigInt(quantity),
+        data: "0x",
+      });
+
+      // Use the vault server wallet to execute the refund
+      const { transactionId: transferTxId } = await serverWallet.enqueueTransaction({
+        transaction: transferTransaction,
+        simulate: false,
+      });
+
+      console.log(`[TicketService] Refund transfer transaction enqueued: ${transferTxId}`);
+
+      // Mark refund as completed with real tx ID
+      await session.run(`
+        MATCH (t:TicketTransaction {id: $refundTxId})
+        SET t.status = 'completed',
+            t.transferTxId = $transferTxId,
+            t.completedAt = $completedAt
+      `, {
+        refundTxId,
+        transferTxId,
+        completedAt: new Date().toISOString(),
+      });
+
+      console.log(`[TicketService] ✅ Ticket refunded successfully for booking ${bookingId}`);
+      console.log(`[TicketService] On-chain refund TX: ${transferTxId}`);
+
+      return {
+        id: refundTxId,
+        studentId,
+        studentWallet,
+        bookingId,
+        tokenId: originalTx.tokenId,
+        tier: originalTx.tier as TicketTier,
+        quantity,
+        type: 'cancellation',
+        status: 'completed',
+        transferTxId,
+        reason: reason || 'Booking cancellation - refund',
+        createdAt,
+        completedAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('[TicketService] Error refunding ticket:', error);
+      
+      // Mark transaction as failed if it was created
+      await session.run(`
+        MATCH (t:TicketTransaction {id: $refundTxId})
+        SET t.status = 'failed', t.reason = $reason
+      `, {
+        refundTxId,
+        reason: error instanceof Error ? error.message : 'Unknown error',
+      }).catch(() => {});
+
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get ticket transaction history for a student
+   */
+  async getStudentTransactionHistory(studentId: string): Promise<TicketTransaction[]> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (s:Student {id: $studentId})-[:MADE_TRANSACTION]->(t:TicketTransaction)
+        RETURN t
+        ORDER BY t.createdAt DESC
+      `, { studentId });
+
+      return result.records.map(record => {
+        const t = record.get('t').properties;
+        return {
+          id: t.id,
+          studentId: t.studentId,
+          studentWallet: t.studentWallet,
+          tutorId: t.tutorId,
+          bookingId: t.bookingId,
+          slotId: t.slotId,
+          tokenId: t.tokenId,
+          tier: t.tier as TicketTier,
+          quantity: typeof t.quantity === 'object' ? t.quantity.toNumber() : t.quantity,
+          type: t.type as TicketTransactionType,
+          status: t.status as TicketTransaction['status'],
+          transferTxId: t.transferTxId,
+          reason: t.reason,
+          createdAt: t.createdAt,
+          completedAt: t.completedAt,
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching student transaction history:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get the original booking transaction for a booking ID
+   */
+  async getBookingTransaction(bookingId: string): Promise<TicketTransaction | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (t:TicketTransaction {bookingId: $bookingId, type: 'booking'})
+        RETURN t
+        LIMIT 1
+      `, { bookingId });
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const t = result.records[0]?.get('t').properties;
+      return {
+        id: t.id,
+        studentId: t.studentId,
+        studentWallet: t.studentWallet,
+        tutorId: t.tutorId,
+        bookingId: t.bookingId,
+        slotId: t.slotId,
+        tokenId: t.tokenId,
+        tier: t.tier as TicketTier,
+        quantity: typeof t.quantity === 'object' ? t.quantity.toNumber() : t.quantity,
+        type: t.type as TicketTransactionType,
+        status: t.status as TicketTransaction['status'],
+        transferTxId: t.transferTxId,
+        reason: t.reason,
+        createdAt: t.createdAt,
+        completedAt: t.completedAt,
+      };
+    } catch (error) {
+      console.error('Error fetching booking transaction:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Record a ticket deduction that was done on the frontend
+   * This is called after the frontend successfully transfers the ticket to the vault
+   * It only records the transaction in the database - no blockchain interaction
+   */
+  async recordTicketDeduction(input: RecordTicketDeductionInput): Promise<TicketTransaction> {
+    const { studentId, studentWallet, tutorId, bookingId, slotId, tier = 'basic', transferTxHash } = input;
+    const transactionId = uuidv4();
+    const createdAt = new Date().toISOString();
+
+    console.log(`[TicketService] Recording ticket deduction for booking ${bookingId}`);
+    console.log(`[TicketService] Frontend TX hash: ${transferTxHash || 'not provided'}`);
+
+    // Get the token ID for this tier (for record keeping)
+    const tickets = await this.getTickets();
+    const ticket = tickets.find(t => t.tier === tier);
+    const tokenId = ticket?.tokenId || 'unknown';
+
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Create completed transaction record in Memgraph
+      await session.run(`
+        CREATE (t:TicketTransaction {
+          id: $id,
+          studentId: $studentId,
+          studentWallet: $studentWallet,
+          tutorId: $tutorId,
+          bookingId: $bookingId,
+          slotId: $slotId,
+          tokenId: $tokenId,
+          tier: $tier,
+          quantity: $quantity,
+          type: 'booking',
+          status: 'completed',
+          transferTxId: $transferTxId,
+          reason: 'Lesson booking (frontend transfer)',
+          createdAt: $createdAt,
+          completedAt: $completedAt
+        })
+      `, {
+        id: transactionId,
+        studentId,
+        studentWallet,
+        tutorId,
+        bookingId,
+        slotId,
+        tokenId,
+        tier,
+        quantity: TICKETS_PER_LESSON,
+        transferTxId: transferTxHash || `frontend_${transactionId}`,
+        createdAt,
+        completedAt: createdAt,
+      });
+
+      // Link to Student node
+      await session.run(`
+        MATCH (t:TicketTransaction {id: $transactionId})
+        MATCH (s:Student {id: $studentId})
+        MERGE (s)-[:MADE_TRANSACTION]->(t)
+      `, { transactionId, studentId });
+
+      console.log(`[TicketService] ✅ Ticket deduction recorded: ${transactionId}`);
+
+      return {
+        id: transactionId,
+        studentId,
+        studentWallet,
+        tutorId,
+        bookingId,
+        slotId,
+        tokenId,
+        tier,
+        quantity: TICKETS_PER_LESSON,
+        type: 'booking',
+        status: 'completed',
+        transferTxId: transferTxHash || `frontend_${transactionId}`,
+        reason: 'Lesson booking (frontend transfer)',
+        createdAt,
+        completedAt: createdAt,
+      };
+    } catch (error) {
+      console.error('[TicketService] Error recording ticket deduction:', error);
       throw error;
     } finally {
       await session.close();

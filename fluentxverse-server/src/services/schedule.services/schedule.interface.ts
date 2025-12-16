@@ -118,6 +118,7 @@ export interface AvailableSlot {
 export interface BookSlotInput {
   studentId: string;
   slotId: string;
+  ticketTransferTxHash?: string; // Transaction hash from frontend ticket transfer
 }
 
 export interface CancelBookingInput {

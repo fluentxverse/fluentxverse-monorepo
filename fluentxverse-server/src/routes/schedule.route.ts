@@ -382,9 +382,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       console.log('Cookie refreshed');
 
       console.log('Calling scheduleService.bookSlot...');
+      console.log('Ticket transfer tx hash:', body.ticketTransferTxHash || 'Not provided');
+      
       const booking = await scheduleService.bookSlot({
         studentId,
-        slotId: body.slotId
+        slotId: body.slotId,
+        ticketTransferTxHash: body.ticketTransferTxHash
       });
       
       console.log('Booking successful:', JSON.stringify(booking, null, 2));
@@ -411,7 +414,59 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, {
     body: t.Object({
-      slotId: t.String()
+      slotId: t.String(),
+      ticketTransferTxHash: t.Optional(t.String())
+    })
+  })
+
+  /**
+   * Cancel a booking (student action)
+   * POST /schedule/cancel
+   * Refunds ticket if cancellation is more than 1 hour before scheduled time
+   */
+  .post('/cancel', async ({ body, cookie, set }) => {
+    try {
+      console.log('=== CANCEL BOOKING REQUEST ===');
+      
+      const raw = cookie.studentAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'studentAuth');
+
+      console.log('Cancelling booking:', body.bookingId, 'for student:', studentId);
+
+      const result = await scheduleService.cancelBooking({
+        bookingId: body.bookingId,
+        cancelledBy: studentId,
+        reason: body.reason
+      });
+
+      console.log('Cancellation result:', result);
+
+      return {
+        success: result.success,
+        refunded: result.refunded,
+        message: result.message
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/cancel:', error);
+      set.status = 400;
+      return {
+        success: false,
+        error: error.message || 'Failed to cancel booking'
+      };
+    }
+  }, {
+    body: t.Object({
+      bookingId: t.String(),
+      reason: t.Optional(t.String())
     })
   });
 

@@ -22,6 +22,8 @@ import { determinePenaltyCode, PENALTY_RULES, PENALTY_CODE_DETAILS } from '../..
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
 import { emitSlotBooked } from '../../socket/handlers/schedule.handler';
+import { ticketService } from '../ticket.services/ticket.service';
+import { REFUND_POLICY } from '../../config/constant';
 
 const notificationService = new NotificationService();
 
@@ -430,10 +432,11 @@ export class ScheduleService {
       const bookingId = nanoid(16);
       console.log('Generated bookingId:', bookingId);
       
-      // Check if student exists
+      // Check if student exists and get wallet address
       console.log('Checking if student exists...');
       const studentCheck = await session.run(
-        `MATCH (student:Student {id: $studentId}) RETURN student`,
+        `MATCH (student:Student {id: $studentId}) 
+         RETURN student, student.externalWalletAddress as walletAddress, student.smartWalletAddress as smartWallet`,
         { studentId: input.studentId }
       );
       
@@ -441,6 +444,43 @@ export class ScheduleService {
         console.log('ERROR: Student not found with ID:', input.studentId);
         console.log('This user might be logged in as a tutor (User node) instead of a student (Student node)');
         throw new Error('Student account not found. Please make sure you are logged in as a student.');
+      }
+      
+      // Get student's wallet address for ticket tracking
+      const studentWallet = studentCheck.records[0]?.get('walletAddress') || studentCheck.records[0]?.get('smartWallet');
+      
+      if (!studentWallet) {
+        console.log('ERROR: Student does not have a linked wallet');
+        throw new Error('You need a connected wallet to book lessons. Please connect your wallet first.');
+      }
+      
+      console.log('Student found with wallet:', studentWallet);
+      
+      // Verify ticket transfer was done from frontend (tx hash should be provided)
+      if (!input.ticketTransferTxHash) {
+        console.log('WARNING: No ticket transfer transaction hash provided');
+        // For now, we'll allow booking without tx hash for backward compatibility
+        // In production, you may want to require this
+      } else {
+        console.log('Ticket transfer TX hash:', input.ticketTransferTxHash);
+      }
+      
+      // Record the ticket transaction in database (transfer already happened on frontend)
+      console.log('Recording ticket transaction for booking...');
+      try {
+        await ticketService.recordTicketDeduction({
+          studentId: input.studentId,
+          studentWallet,
+          tutorId: slot.tutorId,
+          bookingId,
+          slotId: input.slotId,
+          tier: 'basic',
+          transferTxHash: input.ticketTransferTxHash,
+        });
+        console.log('✅ Ticket transaction recorded successfully');
+      } catch (ticketError: any) {
+        console.error('WARNING: Failed to record ticket transaction:', ticketError.message);
+        // Don't fail the booking if recording fails - the transfer already happened on-chain
       }
       
       console.log('Student found, proceeding with booking...');
@@ -549,6 +589,195 @@ export class ScheduleService {
         durationMinutes: slot.durationMinutes,
         status: 'confirmed',
         bookedAt: now
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Cancel a booking (student action)
+   * Refunds the ticket if cancellation is more than 1 hour before scheduled time
+   */
+  async cancelBooking(input: CancelBookingInput): Promise<{
+    success: boolean;
+    refunded: boolean;
+    message: string;
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      console.log('=== SERVICE: cancelBooking START ===');
+      console.log('Input:', JSON.stringify(input, null, 2));
+      
+      // Get booking details
+      const bookingResult = await session.run(
+        `
+        MATCH (b:Booking {bookingId: $bookingId})
+        RETURN b
+        `,
+        { bookingId: input.bookingId }
+      );
+      
+      if (bookingResult.records.length === 0) {
+        throw new Error('Booking not found');
+      }
+      
+      const booking = bookingResult.records[0]?.get('b').properties;
+      
+      // Check if booking is already cancelled
+      if (booking.status === 'cancelled') {
+        throw new Error('Booking is already cancelled');
+      }
+      
+      // Check if booking is completed
+      if (booking.status === 'completed') {
+        throw new Error('Cannot cancel a completed booking');
+      }
+      
+      // Verify the user cancelling is the student who made the booking
+      if (booking.studentId !== input.cancelledBy) {
+        throw new Error('You can only cancel your own bookings');
+      }
+      
+      // Get the student's wallet address for refund
+      const studentResult = await session.run(
+        `MATCH (s:Student {id: $studentId})
+         RETURN s.externalWalletAddress as walletAddress, s.smartWalletAddress as smartWallet`,
+        { studentId: booking.studentId }
+      );
+      
+      const studentWallet = studentResult.records[0]?.get('walletAddress') || studentResult.records[0]?.get('smartWallet');
+      
+      // Parse the scheduled time from booking
+      let scheduledTime: Date;
+      if (booking.slotDateTime) {
+        // Handle Neo4j datetime object
+        if (typeof booking.slotDateTime === 'object' && booking.slotDateTime.toStandardDate) {
+          scheduledTime = booking.slotDateTime.toStandardDate();
+        } else {
+          scheduledTime = new Date(booking.slotDateTime);
+        }
+      } else {
+        throw new Error('Booking does not have scheduled time');
+      }
+      
+      console.log('Scheduled time:', scheduledTime.toISOString());
+      console.log('Current time:', new Date().toISOString());
+      
+      // Get the original ticket transaction for this booking
+      const ticketTransaction = await ticketService.getBookingTransaction(input.bookingId);
+      
+      let refunded = false;
+      let refundMessage = '';
+      
+      // Process refund if student has a wallet and there was a ticket transaction
+      if (studentWallet && ticketTransaction) {
+        try {
+          const refundResult = await ticketService.refundTicketForCancellation({
+            studentId: booking.studentId,
+            studentWallet,
+            bookingId: input.bookingId,
+            transactionId: ticketTransaction.id,
+            scheduledTime,
+            reason: input.reason || 'Student cancelled booking',
+          });
+          
+          if (refundResult) {
+            refunded = true;
+            refundMessage = 'Your ticket has been refunded.';
+            console.log('✅ Ticket refunded for cancelled booking');
+          } else {
+            refundMessage = `No refund - cancellation was less than ${REFUND_POLICY.NO_REFUND_HOURS} hour before scheduled lesson.`;
+            console.log('❌ No refund - too close to lesson time');
+          }
+        } catch (refundError: any) {
+          console.error('Failed to process refund:', refundError.message);
+          refundMessage = 'Refund processing failed. Please contact support.';
+        }
+      } else if (!ticketTransaction) {
+        refundMessage = 'No ticket transaction found for this booking.';
+      }
+      
+      // Update booking status to cancelled
+      await session.run(
+        `
+        MATCH (b:Booking {bookingId: $bookingId})
+        SET b.status = 'cancelled',
+            b.cancelledAt = datetime(),
+            b.cancelledBy = $cancelledBy,
+            b.cancellationReason = $reason,
+            b.refunded = $refunded,
+            b.updatedAt = datetime()
+        `,
+        {
+          bookingId: input.bookingId,
+          cancelledBy: input.cancelledBy,
+          reason: input.reason || 'Student cancelled',
+          refunded,
+        }
+      );
+      
+      // Update slot status back to 'open'
+      await session.run(
+        `
+        MATCH (b:Booking {bookingId: $bookingId})-[:BOOKS]->(s:TimeSlot)
+        SET s.status = 'open',
+            s.studentId = null,
+            s.updatedAt = datetime()
+        `,
+        { bookingId: input.bookingId }
+      );
+      
+      // Send notification to tutor about cancellation
+      try {
+        const studentNameResult = await session.run(
+          `MATCH (s:Student {id: $studentId}) RETURN s.firstName as firstName, s.lastName as lastName`,
+          { studentId: booking.studentId }
+        );
+        
+        const studentFirstName = studentNameResult.records[0]?.get('firstName') || '';
+        const studentLastName = studentNameResult.records[0]?.get('lastName') || '';
+        const studentName = `${studentFirstName} ${studentLastName}`.trim() || 'A student';
+        
+        await notificationService.createNotification({
+          userId: booking.tutorId,
+          userType: 'tutor',
+          type: 'booking_cancelled',
+          title: 'Booking Cancelled',
+          message: `${studentName} has cancelled their lesson scheduled for ${scheduledTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${scheduledTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`,
+          data: {
+            bookingId: input.bookingId,
+            studentId: booking.studentId,
+            studentName,
+            reason: input.reason,
+          },
+        });
+        
+        // Emit real-time notification
+        const io = getIO();
+        if (io) {
+          io.to(`notifications:${booking.tutorId}`).emit('notification:new', {
+            type: 'booking_cancelled',
+            title: 'Booking Cancelled',
+            message: `${studentName} has cancelled their lesson.`,
+          });
+        }
+        
+        console.log('📢 Cancellation notification sent to tutor');
+      } catch (notifError) {
+        console.error('Failed to send cancellation notification:', notifError);
+      }
+      
+      console.log('=== SERVICE: cancelBooking END ===');
+      
+      return {
+        success: true,
+        refunded,
+        message: refunded 
+          ? `Booking cancelled successfully. ${refundMessage}`
+          : `Booking cancelled. ${refundMessage}`,
       };
     } finally {
       await session.close();

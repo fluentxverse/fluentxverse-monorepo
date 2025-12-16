@@ -1,6 +1,8 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi, AvailableSlot } from '../../api/schedule.api';
+import { transferTicketForBooking, getTicketBalance, type TicketBalance } from '../../services/ticket.service';
+import { useActiveAccount } from 'thirdweb/react';
 import './BookingModal.css';
 
 interface BookingModalProps {
@@ -30,6 +32,26 @@ export const BookingModal = ({
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [ticketBalance, setTicketBalance] = useState<TicketBalance | null>(null);
+  const [transferringTicket, setTransferringTicket] = useState(false);
+
+  // Get the connected account for ticket transfer
+  const activeAccount = useActiveAccount();
+
+  // Fetch ticket balance when modal opens
+  useEffect(() => {
+    if (isOpen && activeAccount?.address) {
+      console.log('[BookingModal] Fetching ticket balance for:', activeAccount.address);
+      getTicketBalance(activeAccount.address)
+        .then((balance) => {
+          console.log('[BookingModal] Got ticket balance:', balance);
+          setTicketBalance(balance);
+        })
+        .catch((err) => {
+          console.error('[BookingModal] Error fetching ticket balance:', err);
+        });
+    }
+  }, [isOpen, activeAccount?.address]);
 
   // Helper function to convert PHT 12h to KST 24h format
   // IMPORTANT: Keep the original date, only convert time (11 PM PHT Dec 5 -> 00:00 KST Dec 5)
@@ -114,11 +136,52 @@ export const BookingModal = ({
   const handleBookSlot = async () => {
     if (!selectedSlot) return;
     
+    // Check if user has connected wallet
+    if (!activeAccount) {
+      setError('Please connect your wallet to book a lesson');
+      return;
+    }
+
+    // Check ticket balance
+    console.log('[BookingModal] Checking ticket balance:', ticketBalance);
+    const hasBasicTickets = ticketBalance && ticketBalance.basic >= 1;
+    const hasPremiumTickets = ticketBalance && ticketBalance.premium >= 1;
+    
+    if (!hasBasicTickets && !hasPremiumTickets) {
+      setError('You need at least 1 ticket to book a lesson. Please purchase tickets first.');
+      return;
+    }
+    
+    // Use basic tickets first, fallback to premium
+    const ticketTier = hasBasicTickets ? 'basic' : 'premium';
+    console.log('[BookingModal] Will use ticket tier:', ticketTier);
+    
     setBooking(true);
+    setTransferringTicket(true);
     setError(null);
+    
     try {
-      await scheduleApi.bookSlot(selectedSlot.slotId);
+      // Step 1: Transfer ticket to vault wallet (on-chain)
+      console.log('🎟️ Step 1: Transferring ticket to vault...');
+      const transferResult = await transferTicketForBooking(activeAccount, ticketTier as 'basic' | 'premium', 1);
+      
+      if (!transferResult.success) {
+        throw new Error(transferResult.error || 'Failed to transfer ticket');
+      }
+      
+      console.log('🎟️ Ticket transferred! TX:', transferResult.transactionHash);
+      setTransferringTicket(false);
+      
+      // Step 2: Create booking on backend (pass transaction hash for verification)
+      console.log('📅 Step 2: Creating booking on server...');
+      await scheduleApi.bookSlot(selectedSlot.slotId, transferResult.transactionHash);
+      
       setBookingSuccess(true);
+      
+      // Refresh ticket balance
+      if (activeAccount?.address) {
+        getTicketBalance(activeAccount.address).then(setTicketBalance).catch(console.error);
+      }
       
       // Close modal after 2 seconds and redirect to schedule page
       setTimeout(() => {
@@ -127,9 +190,11 @@ export const BookingModal = ({
         window.location.href = '/schedule';
       }, 2000);
     } catch (err: any) {
-      setError(err || 'Failed to book slot');
+      console.error('❌ Booking failed:', err);
+      setError(err.message || err || 'Failed to book slot');
     } finally {
       setBooking(false);
+      setTransferringTicket(false);
     }
   };
 

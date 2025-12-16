@@ -113,10 +113,15 @@ export const scheduleApi = {
 
   /**
    * Book a time slot
+   * @param slotId - The ID of the slot to book
+   * @param ticketTransferTxHash - Optional transaction hash of the ticket transfer (for on-chain verification)
    */
-  bookSlot: async (slotId: string): Promise<any> => {
+  bookSlot: async (slotId: string, ticketTransferTxHash?: string): Promise<any> => {
     try {
-      const response = await api.post('/schedule/book', { slotId });
+      const response = await api.post('/schedule/book', { 
+        slotId,
+        ticketTransferTxHash, // Pass the tx hash for backend to verify/record
+      });
       
       if (!response.data.success) {
         throw new Error(response.data.error || 'Failed to book slot');
