@@ -498,7 +498,126 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to delete message');
     }
+  },
+
+  // ============ SESSIONS / LESSONS ============
+
+  /**
+   * Get all sessions with filters and pagination
+   */
+  async getSessions(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<SessionsResponse> {
+    const response = await api.get<ApiResponse<SessionsResponse>>('/admin/sessions', { params });
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get sessions');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Get session statistics
+   */
+  async getSessionStats(): Promise<SessionStats> {
+    const response = await api.get<ApiResponse<SessionStats>>('/admin/sessions/stats');
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get session stats');
+    }
+    return response.data.data!;
+  },
+
+  /**
+   * Get session details by ID
+   */
+  async getSessionDetails(sessionId: string): Promise<SessionDetails> {
+    const response = await api.get<ApiResponse<SessionDetails>>(`/admin/sessions/${sessionId}`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get session details');
+    }
+    return response.data.data!;
   }
 };
+
+// Session types
+export interface SessionListItem {
+  id: string;
+  tutorId: string;
+  tutorName: string;
+  tutorEmail: string;
+  tutorAvatar?: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentAvatar?: string;
+  slotDate: string;
+  slotTime: string;
+  durationMinutes: number;
+  status: string;
+  attendanceTutor: string | null;
+  attendanceStudent: string | null;
+  bookedAt: string;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+}
+
+export interface SessionsResponse {
+  sessions: SessionListItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface SessionStats {
+  totalBookings: number;
+  completedSessions: number;
+  cancelledSessions: number;
+  upcomingSessions: number;
+  todaySessions: number;
+  thisWeekSessions: number;
+  thisMonthSessions: number;
+  noShowSessions: number;
+  completionRate: number;
+  totalHours: number;
+}
+
+export interface SessionDetails {
+  id: string;
+  tutor: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  student: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  schedule: {
+    date: string;
+    time: string;
+    durationMinutes: number;
+    timezone: string;
+  };
+  status: string;
+  attendance: {
+    tutor: string | null;
+    student: string | null;
+  };
+  timestamps: {
+    bookedAt: string;
+    completedAt: string | null;
+    cancelledAt: string | null;
+  };
+  cancelReason: string | null;
+  ticketUsed: string | null;
+}
 
 export default adminApi;

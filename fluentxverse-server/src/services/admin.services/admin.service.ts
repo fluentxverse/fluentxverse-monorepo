@@ -41,6 +41,40 @@ function examPassed(resultJson: string | null): boolean {
   }
 }
 
+// Helper to convert Neo4j DateTime to ISO string
+function convertNeo4jDateTimeToISO(dateTime: any): string | null {
+  if (!dateTime) return null;
+  
+  // If it's already a string, return it
+  if (typeof dateTime === 'string') return dateTime;
+  
+  // If it's a Neo4j DateTime object
+  if (dateTime.year && dateTime.month && dateTime.day) {
+    try {
+      const year = dateTime.year.toInt ? dateTime.year.toInt() : dateTime.year;
+      const month = (dateTime.month.toInt ? dateTime.month.toInt() : dateTime.month) - 1;
+      const day = dateTime.day.toInt ? dateTime.day.toInt() : dateTime.day;
+      const hour = dateTime.hour?.toInt ? dateTime.hour.toInt() : (dateTime.hour || 0);
+      const minute = dateTime.minute?.toInt ? dateTime.minute.toInt() : (dateTime.minute || 0);
+      const second = dateTime.second?.toInt ? dateTime.second.toInt() : (dateTime.second || 0);
+      
+      // Neo4j datetime() stores in UTC, so use Date.UTC to preserve the UTC time
+      const date = new Date(Date.UTC(year, month, day, hour, minute, second));
+      return date.toISOString();
+    } catch (e) {
+      console.error('Error converting Neo4j DateTime:', e);
+      return null;
+    }
+  }
+  
+  // If it's a timestamp number
+  if (typeof dateTime === 'number') {
+    return new Date(dateTime).toISOString();
+  }
+  
+  return null;
+}
+
 export class AdminService {
   /**
    * Get dashboard overview statistics
@@ -1665,6 +1699,366 @@ export class AdminService {
       await session.close();
     }
   }
+
+  /**
+   * Get all sessions/bookings with filters for admin dashboard
+   */
+  async getAllSessions(params: {
+    page: number;
+    limit: number;
+    status?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{
+    sessions: SessionListItem[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+    const { page, limit, status, search, startDate, endDate } = params;
+    const skip = (page - 1) * limit;
+
+    try {
+      // Build WHERE conditions
+      let whereConditions: string[] = [];
+      let queryParams: any = { skip: neo4j.int(skip), limit: neo4j.int(limit) };
+
+      if (status && status !== 'all') {
+        whereConditions.push('b.status = $status');
+        queryParams.status = status;
+      }
+
+      if (startDate) {
+        whereConditions.push('slot.slotDate >= $startDate');
+        queryParams.startDate = startDate;
+      }
+
+      if (endDate) {
+        whereConditions.push('slot.slotDate <= $endDate');
+        queryParams.endDate = endDate;
+      }
+
+      if (search) {
+        whereConditions.push('(toLower(tutor.givenName + " " + tutor.familyName) CONTAINS toLower($search) OR toLower(student.givenName + " " + student.familyName) CONTAINS toLower($search) OR toLower(tutor.email) CONTAINS toLower($search) OR toLower(student.email) CONTAINS toLower($search))');
+        queryParams.search = search;
+      }
+
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+      // Get sessions with pagination
+      const result = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(student:Student)
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        ${whereClause}
+        RETURN b, slot, tutor, student
+        ORDER BY slot.slotDate DESC, slot.slotTime DESC
+        SKIP $skip
+        LIMIT $limit
+        `,
+        queryParams
+      );
+
+      // Get total count
+      const countResult = await session.run(
+        `
+        MATCH (b:Booking)-[:BOOKED_BY]->(student:Student)
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        ${whereClause}
+        RETURN count(b) as total
+        `,
+        queryParams
+      );
+
+      const total = toNumber(countResult.records[0]?.get('total')) || 0;
+
+      const sessions: SessionListItem[] = result.records.map(record => {
+        const booking = record.get('b').properties;
+        const slot = record.get('slot').properties;
+        const tutor = record.get('tutor').properties;
+        const student = record.get('student').properties;
+
+        return {
+          id: booking.bookingId,
+          tutorId: tutor.id,
+          tutorName: `${tutor.givenName || ''} ${tutor.familyName || ''}`.trim() || tutor.email,
+          tutorEmail: tutor.email,
+          tutorAvatar: tutor.profilePicture,
+          studentId: student.id,
+          studentName: `${student.givenName || ''} ${student.familyName || ''}`.trim() || student.email,
+          studentEmail: student.email,
+          studentAvatar: student.profilePicture,
+          slotDate: slot.slotDate,
+          slotTime: slot.slotTime,
+          durationMinutes: parseInt(slot.durationMinutes) || 25,
+          status: booking.status,
+          attendanceTutor: booking.attendanceTutor || null,
+          attendanceStudent: booking.attendanceStudent || null,
+          bookedAt: booking.bookedAt,
+          completedAt: booking.completedAt || null,
+          cancelledAt: booking.cancelledAt || null,
+          cancelReason: booking.cancelReason || null
+        };
+      });
+
+      return {
+        sessions,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get session statistics for dashboard
+   */
+  async getSessionStats(): Promise<SessionStats> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const weekAgoStr = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const monthAgoStr = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+      // Get total bookings count
+      const totalResult = await session.run(`
+        MATCH (b:Booking)
+        RETURN count(b) as total
+      `);
+      const totalBookings = toNumber(totalResult.records[0]?.get('total')) || 0;
+
+      // Get completed sessions
+      const completedResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.status = 'completed'
+        RETURN count(b) as completed
+      `);
+      const completedSessions = toNumber(completedResult.records[0]?.get('completed')) || 0;
+
+      // Get cancelled sessions
+      const cancelledResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.status = 'cancelled'
+        RETURN count(b) as cancelled
+      `);
+      const cancelledSessions = toNumber(cancelledResult.records[0]?.get('cancelled')) || 0;
+
+      // Get upcoming (confirmed) sessions
+      const upcomingResult = await session.run(`
+        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
+        WHERE b.status = 'confirmed' AND slot.slotDate >= $today
+        RETURN count(b) as upcoming
+      `, { today: todayStr });
+      const upcomingSessions = toNumber(upcomingResult.records[0]?.get('upcoming')) || 0;
+
+      // Get today's sessions
+      const todayResult = await session.run(`
+        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
+        WHERE slot.slotDate = $today
+        RETURN count(b) as todayCount
+      `, { today: todayStr });
+      const todaySessions = toNumber(todayResult.records[0]?.get('todayCount')) || 0;
+
+      // Get this week's sessions
+      const weekResult = await session.run(`
+        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
+        WHERE slot.slotDate >= $weekAgo AND slot.slotDate <= $today
+        RETURN count(b) as weekCount
+      `, { weekAgo: weekAgoStr, today: todayStr });
+      const thisWeekSessions = toNumber(weekResult.records[0]?.get('weekCount')) || 0;
+
+      // Get this month's sessions
+      const monthResult = await session.run(`
+        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
+        WHERE slot.slotDate >= $monthAgo AND slot.slotDate <= $today
+        RETURN count(b) as monthCount
+      `, { monthAgo: monthAgoStr, today: todayStr });
+      const thisMonthSessions = toNumber(monthResult.records[0]?.get('monthCount')) || 0;
+
+      // Get no-show count (tutor or student absent)
+      const noShowResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.attendanceTutor = 'absent' OR b.attendanceStudent = 'absent'
+        RETURN count(b) as noShowCount
+      `);
+      const noShowSessions = toNumber(noShowResult.records[0]?.get('noShowCount')) || 0;
+
+      // Calculate completion rate
+      const completionRate = totalBookings > 0 
+        ? Math.round((completedSessions / totalBookings) * 100) 
+        : 0;
+
+      // Calculate total teaching hours (completed sessions * avg duration)
+      const hoursResult = await session.run(`
+        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
+        WHERE b.status = 'completed'
+        RETURN sum(toInteger(coalesce(slot.durationMinutes, 25))) as totalMinutes
+      `);
+      const totalMinutes = toNumber(hoursResult.records[0]?.get('totalMinutes')) || 0;
+      const totalHours = Math.round(totalMinutes / 60);
+
+      return {
+        totalBookings,
+        completedSessions,
+        cancelledSessions,
+        upcomingSessions,
+        todaySessions,
+        thisWeekSessions,
+        thisMonthSessions,
+        noShowSessions,
+        completionRate,
+        totalHours
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get detailed session information by ID
+   */
+  async getSessionDetails(sessionId: string): Promise<SessionDetails | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (b:Booking {bookingId: $sessionId})-[:BOOKED_BY]->(student:Student)
+        MATCH (b)-[:BOOKS]->(slot:TimeSlot)
+        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        RETURN b, slot, tutor, student
+        `,
+        { sessionId }
+      );
+
+      if (result.records.length === 0) {
+        return null;
+      }
+
+      const record = result.records[0];
+      const booking = record.get('b').properties;
+      const slot = record.get('slot').properties;
+      const tutor = record.get('tutor').properties;
+      const student = record.get('student').properties;
+
+      return {
+        id: booking.bookingId,
+        tutor: {
+          id: tutor.id,
+          name: `${tutor.givenName || ''} ${tutor.familyName || ''}`.trim() || tutor.email,
+          email: tutor.email,
+          avatar: tutor.profilePicture
+        },
+        student: {
+          id: student.id,
+          name: `${student.givenName || ''} ${student.familyName || ''}`.trim() || student.email,
+          email: student.email,
+          avatar: student.profilePicture
+        },
+        schedule: {
+          date: slot.slotDate,
+          time: slot.slotTime,
+          durationMinutes: parseInt(slot.durationMinutes) || 25,
+          timezone: 'KST'
+        },
+        status: booking.status,
+        attendance: {
+          tutor: booking.attendanceTutor || null,
+          student: booking.attendanceStudent || null
+        },
+        timestamps: {
+          bookedAt: convertNeo4jDateTimeToISO(booking.bookedAt),
+          completedAt: booking.completedAt ? convertNeo4jDateTimeToISO(booking.completedAt) : null,
+          cancelledAt: booking.cancelledAt ? convertNeo4jDateTimeToISO(booking.cancelledAt) : null
+        },
+        cancelReason: booking.cancelReason || null,
+        ticketUsed: booking.ticketId || null
+      };
+    } finally {
+      await session.close();
+    }
+  }
+}
+
+// Session types
+interface SessionListItem {
+  id: string;
+  tutorId: string;
+  tutorName: string;
+  tutorEmail: string;
+  tutorAvatar?: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentAvatar?: string;
+  slotDate: string;
+  slotTime: string;
+  durationMinutes: number;
+  status: string;
+  attendanceTutor: string | null;
+  attendanceStudent: string | null;
+  bookedAt: string;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+}
+
+interface SessionStats {
+  totalBookings: number;
+  completedSessions: number;
+  cancelledSessions: number;
+  upcomingSessions: number;
+  todaySessions: number;
+  thisWeekSessions: number;
+  thisMonthSessions: number;
+  noShowSessions: number;
+  completionRate: number;
+  totalHours: number;
+}
+
+interface SessionDetails {
+  id: string;
+  tutor: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  student: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  };
+  schedule: {
+    date: string;
+    time: string;
+    durationMinutes: number;
+    timezone: string;
+  };
+  status: string;
+  attendance: {
+    tutor: string | null;
+    student: string | null;
+  };
+  timestamps: {
+    bookedAt: string;
+    completedAt: string | null;
+    cancelledAt: string | null;
+  };
+  cancelReason: string | null;
+  ticketUsed: string | null;
 }
 
 interface AnalyticsData {

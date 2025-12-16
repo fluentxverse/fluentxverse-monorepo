@@ -15,6 +15,7 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import InboxPage from './pages/InboxPage';
 import LoginPage from './pages/LoginPage';
 import TicketsPage from './pages/TicketsPage';
+import SessionsPage from './pages/SessionsPage';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -79,6 +80,7 @@ const AppContent = () => {
         <Route path="/applications" component={ApplicationsPage} />
         <Route path="/tutors" component={TutorsPage} />
         <Route path="/students" component={StudentsPage} />
+        <Route path="/sessions" component={SessionsPage} />
         <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/inbox" component={InboxPage} />
         <Route path="/tickets" component={TicketsPage} />

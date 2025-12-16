@@ -188,7 +188,7 @@
 .home-tutor-avatar {
   width: 80px;
   height: 80px;
-  border-radius: 16px;
+  border-radius: 50%;
   background-size: cover;
   background-position: center;
   box-shadow: 0 4px 12px rgba(2, 69, 174, 0.2);

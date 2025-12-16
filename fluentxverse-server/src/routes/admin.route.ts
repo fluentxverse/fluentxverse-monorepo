@@ -903,6 +903,74 @@ const Admin = new Elysia({ prefix: '/admin' })
         error: 'Failed to get suspension analytics'
       };
     }
+  })
+
+  /**
+   * Get all sessions/bookings with filters
+   * GET /admin/sessions
+   */
+  .get('/sessions', async ({ query }) => {
+    try {
+      const page = query.page ? Number(query.page) : 1;
+      const limit = query.limit ? Number(query.limit) : 20;
+      const status = query.status as string | undefined;
+      const search = query.search as string | undefined;
+      const startDate = query.startDate as string | undefined;
+      const endDate = query.endDate as string | undefined;
+      
+      const sessions = await adminService.getAllSessions({ page, limit, status, search, startDate, endDate });
+      return {
+        success: true,
+        data: sessions
+      };
+    } catch (error) {
+      console.error('Error in /admin/sessions:', error);
+      return {
+        success: false,
+        error: 'Failed to get sessions'
+      };
+    }
+  })
+
+  /**
+   * Get session statistics
+   * GET /admin/sessions/stats
+   */
+  .get('/sessions/stats', async () => {
+    try {
+      const stats = await adminService.getSessionStats();
+      return {
+        success: true,
+        data: stats
+      };
+    } catch (error) {
+      console.error('Error in /admin/sessions/stats:', error);
+      return {
+        success: false,
+        error: 'Failed to get session stats'
+      };
+    }
+  })
+
+  /**
+   * Get session details by ID
+   * GET /admin/sessions/:sessionId
+   */
+  .get('/sessions/:sessionId', async ({ params }) => {
+    try {
+      const { sessionId } = params;
+      const sessionDetails = await adminService.getSessionDetails(sessionId);
+      return {
+        success: true,
+        data: sessionDetails
+      };
+    } catch (error) {
+      console.error('Error in /admin/sessions/:sessionId:', error);
+      return {
+        success: false,
+        error: 'Failed to get session details'
+      };
+    }
   });
 
 export default Admin;
