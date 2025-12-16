@@ -1,5 +1,6 @@
 import { thirdwebClient } from "../utils.services/utils";
-import { defineChain, Engine, getContract } from "thirdweb";
+import { defineChain, Engine, getContract, getRpcClient } from "thirdweb";
+import { eth_getTransactionReceipt } from "thirdweb/rpc";
 import { mintTo, mintAdditionalSupplyTo, getNFTs, getNFT, totalSupply, safeTransferFrom, balanceOf } from "thirdweb/extensions/erc1155";
 import { upload } from "thirdweb/storage";
 import * as fs from "fs";
@@ -1437,9 +1438,78 @@ export class TicketService {
   }
 
   /**
+   * Verify a ticket transfer transaction on-chain
+   * Checks that the transaction:
+   * 1. Exists and was successful
+   * 2. Was sent to the vault wallet
+   * 3. Interacted with our ticket contract
+   */
+  async verifyTicketTransfer(txHash: string, expectedFromWallet: string): Promise<{
+    valid: boolean;
+    error?: string;
+  }> {
+    try {
+      console.log(`[TicketService] Verifying transaction: ${txHash}`);
+      
+      const chain = defineChain(CHAIN_ID);
+      const rpcRequest = getRpcClient({ client: thirdwebClient, chain });
+      
+      const receipt = await eth_getTransactionReceipt(rpcRequest, {
+        hash: txHash as `0x${string}`,
+      });
+
+      if (!receipt) {
+        return { valid: false, error: 'Transaction not found on blockchain' };
+      }
+
+      // Check transaction was successful (status 1)
+      if (receipt.status !== 'success') {
+        return { valid: false, error: 'Transaction failed on blockchain' };
+      }
+
+      // Check the transaction was to our ticket contract
+      if (receipt.to?.toLowerCase() !== TICKET_CONTRACT_ADDRESS.toLowerCase()) {
+        return { valid: false, error: 'Transaction was not to the ticket contract' };
+      }
+
+      // Check the sender matches expected wallet
+      if (receipt.from.toLowerCase() !== expectedFromWallet.toLowerCase()) {
+        return { valid: false, error: 'Transaction sender does not match student wallet' };
+      }
+
+      // Check logs for a transfer event to vault wallet
+      // ERC1155 TransferSingle event topic
+      const TRANSFER_SINGLE_TOPIC = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62';
+      
+      const hasTransferToVault = receipt.logs.some(log => {
+        // Check for TransferSingle event
+        if (log.topics[0] === TRANSFER_SINGLE_TOPIC) {
+          // The 'to' address is the 3rd topic (index 2), padded to 32 bytes
+          const toAddressTopic = log.topics[3];
+          if (toAddressTopic) {
+            const toAddress = '0x' + toAddressTopic.slice(-40);
+            return toAddress.toLowerCase() === VAULT_WALLET_ADDRESS.toLowerCase();
+          }
+        }
+        return false;
+      });
+
+      if (!hasTransferToVault) {
+        return { valid: false, error: 'No transfer to vault wallet found in transaction' };
+      }
+
+      console.log(`[TicketService] ✅ Transaction verified successfully`);
+      return { valid: true };
+    } catch (error: any) {
+      console.error('[TicketService] Error verifying transaction:', error);
+      return { valid: false, error: `Verification failed: ${error.message}` };
+    }
+  }
+
+  /**
    * Record a ticket deduction that was done on the frontend
    * This is called after the frontend successfully transfers the ticket to the vault
-   * It only records the transaction in the database - no blockchain interaction
+   * It verifies the transaction on-chain and records it in the database
    */
   async recordTicketDeduction(input: RecordTicketDeductionInput): Promise<TicketTransaction> {
     const { studentId, studentWallet, tutorId, bookingId, slotId, tier = 'basic', transferTxHash } = input;
@@ -1448,6 +1518,18 @@ export class TicketService {
 
     console.log(`[TicketService] Recording ticket deduction for booking ${bookingId}`);
     console.log(`[TicketService] Frontend TX hash: ${transferTxHash || 'not provided'}`);
+
+    // Verify the transaction on-chain if hash is provided
+    if (transferTxHash) {
+      const verification = await this.verifyTicketTransfer(transferTxHash, studentWallet);
+      if (!verification.valid) {
+        console.error(`[TicketService] ❌ Transaction verification failed: ${verification.error}`);
+        throw new Error(`Invalid ticket transfer: ${verification.error}`);
+      }
+      console.log(`[TicketService] ✅ Transaction verified on-chain`);
+    } else {
+      console.warn(`[TicketService] ⚠️ No transaction hash provided - cannot verify`);
+    }
 
     // Get the token ID for this tier (for record keeping)
     const tickets = await this.getTickets();

@@ -181,5 +181,32 @@ export const scheduleApi = {
       console.error('Error response:', error.response?.data);
       throw error.response?.data?.error || error.message || 'Failed to load lesson';
     }
+  },
+
+  /**
+   * Cancel a booking
+   * @param bookingId - The ID of the booking to cancel
+   * @param reason - Optional reason for cancellation
+   * @returns Object with refundEligible flag indicating if ticket was refunded
+   */
+  cancelBooking: async (bookingId: string, reason?: string): Promise<{ refundEligible: boolean; message: string }> => {
+    try {
+      const response = await api.post('/schedule/cancel', { 
+        bookingId,
+        reason,
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to cancel booking');
+      }
+      
+      return {
+        refundEligible: response.data.refunded,
+        message: response.data.message
+      };
+    } catch (error: any) {
+      console.error('Failed to cancel booking:', error);
+      throw error.response?.data?.error || error.message || 'Failed to cancel booking';
+    }
   }
 };

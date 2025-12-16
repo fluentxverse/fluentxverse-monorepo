@@ -456,14 +456,13 @@ export class ScheduleService {
       
       console.log('Student found with wallet:', studentWallet);
       
-      // Verify ticket transfer was done from frontend (tx hash should be provided)
+      // Verify ticket transfer was done from frontend (tx hash is required)
       if (!input.ticketTransferTxHash) {
-        console.log('WARNING: No ticket transfer transaction hash provided');
-        // For now, we'll allow booking without tx hash for backward compatibility
-        // In production, you may want to require this
-      } else {
-        console.log('Ticket transfer TX hash:', input.ticketTransferTxHash);
+        console.log('ERROR: No ticket transfer transaction hash provided');
+        throw new Error('Ticket transfer is required to book a lesson. Please try again.');
       }
+      
+      console.log('Ticket transfer TX hash:', input.ticketTransferTxHash);
       
       // Record the ticket transaction in database (transfer already happened on frontend)
       console.log('Recording ticket transaction for booking...');

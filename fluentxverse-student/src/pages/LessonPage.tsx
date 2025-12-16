@@ -3,7 +3,6 @@ import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi } from '../api/schedule.api';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
-import Footer from '../Components/Footer/Footer';
 import './LessonPage.css';
 
 interface LessonDetails {
@@ -33,6 +32,11 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [canJoin, setCanJoin] = useState(false);
+  
+  // Cancel modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState<{ message: string; refunded: boolean } | null>(null);
 
   useEffect(() => {
     document.title = 'Lesson Details | FluentXVerse';
@@ -167,22 +171,65 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
     }
   };
 
+  // Check if cancellation is eligible for refund (more than 1 hour before lesson)
+  const isRefundEligible = (): boolean => {
+    if (!lesson) return false;
+    const lessonDateTime = parseDateTime(lesson.slotDate, lesson.slotTime);
+    const now = new Date();
+    const oneHourBefore = new Date(lessonDateTime.getTime() - 60 * 60 * 1000);
+    return now < oneHourBefore;
+  };
+
+  // Handle cancel confirmation
+  const handleConfirmCancel = async () => {
+    if (!lesson) return;
+    
+    setCancelling(true);
+    try {
+      const result = await scheduleApi.cancelBooking(lesson.bookingId);
+      
+      // Show success message
+      setCancelSuccess({
+        message: result.message || 'Lesson cancelled successfully',
+        refunded: result.refundEligible
+      });
+      
+      // Close modal and redirect after delay
+      setCancelModalOpen(false);
+      setTimeout(() => {
+        window.location.href = '/schedule';
+      }, 2000);
+    } catch (err: any) {
+      console.error('Failed to cancel booking:', err);
+      setError(typeof err === 'string' ? err : err.message || 'Failed to cancel booking');
+      setCancelModalOpen(false);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // Handle modal close
+  const handleCancelModalClose = () => {
+    if (!cancelling) {
+      setCancelModalOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <>
-        <Header />
-        <div className="lesson-page">
-          <SideBar />
-          <div className="lesson-main-content">
-            <div className="lesson-container">
+        <SideBar />
+        <div className="main-content">
+          <Header />
+          <main className="lesson-page">
+            <div className="container">
               <div className="lesson-loading">
-                <i className="fas fa-spinner fa-spin"></i>
+                <div className="lesson-spinner"></div>
                 <p>Loading lesson details...</p>
               </div>
             </div>
-          </div>
+          </main>
         </div>
-        <Footer />
       </>
     );
   }
@@ -190,249 +237,323 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   if (error || !lesson) {
     return (
       <>
-        <Header />
-        <div className="lesson-page">
-          <SideBar />
-          <div className="lesson-main-content">
-            <div className="lesson-container">
+        <SideBar />
+        <div className="main-content">
+          <Header />
+          <main className="lesson-page">
+            <div className="container">
               <div className="lesson-error">
                 <i className="fas fa-exclamation-circle"></i>
                 <h2>Unable to Load Lesson</h2>
                 <p>{error || 'Lesson not found'}</p>
                 <button onClick={() => window.location.href = '/schedule'} className="btn-back">
+                  <i className="fas fa-arrow-left"></i>
                   Back to Schedule
                 </button>
               </div>
             </div>
-          </div>
+          </main>
         </div>
-        <Footer />
       </>
     );
   }
 
   return (
     <>
-      <Header />
-      <div className="lesson-page">
-        <SideBar />
-        <div className="lesson-main-content">
-          <div className="lesson-container">
-          {/* Back Button */}
-          <button onClick={() => window.history.back()} className="lesson-back-btn">
-            <i className="fas fa-arrow-left"></i>
-            <span>Back</span>
-          </button>
-
-          {/* Lesson Header */}
-          <div className="lesson-header">
-            <div className="lesson-status-badge" data-status={lesson.status}>
-              {lesson.status === 'confirmed' && <i className="fas fa-check-circle"></i>}
-              {lesson.status === 'completed' && <i className="fas fa-check-double"></i>}
-              {lesson.status === 'cancelled' && <i className="fas fa-times-circle"></i>}
-              <span>{lesson.status.charAt(0).toUpperCase() + lesson.status.slice(1)}</span>
-            </div>
-            <h1 className="lesson-title">Lesson Details</h1>
-            {lesson.status === 'confirmed' && (
-              <div className="lesson-countdown">
-                <i className="fas fa-clock"></i>
-                <span>{getTimeUntil()}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Main Content */}
-          <div className="lesson-content">
-            {/* Tutor Card */}
-            <div className="lesson-card lesson-tutor-card">
-              <h2 className="lesson-card-title">
-                <i className="fas fa-user-graduate"></i>
-                Your Tutor
-              </h2>
-              <div className="lesson-tutor-info">
-                <div 
-                  className={lesson.tutorAvatar ? "lesson-tutor-avatar" : "lesson-tutor-avatar placeholder"}
-                  style={lesson.tutorAvatar ? { backgroundImage: `url(${lesson.tutorAvatar})` } : undefined}
-                >
-                  {!lesson.tutorAvatar && <i className="fas fa-user"></i>}
+      <SideBar />
+      <div className="main-content">
+        <Header />
+        <main className="lesson-page">
+          <div className="container">
+            {/* Page Header */}
+            <div className="lesson-page-header">
+              <div className="lesson-page-header-left">
+                <button onClick={() => window.history.back()} className="lesson-back-btn">
+                  <i className="fas fa-arrow-left"></i>
+                </button>
+                <div className="lesson-page-icon">
+                  <i className="fas fa-chalkboard-teacher"></i>
                 </div>
-                <div className="lesson-tutor-details">
-                  <h3 className="lesson-tutor-name">{lesson.tutorName}</h3>
-                  {lesson.tutorBio && (
-                    <p className="lesson-tutor-bio">{lesson.tutorBio}</p>
-                  )}
-                  {lesson.hourlyRate && (
-                    <div className="lesson-tutor-rate">
-                      <i className="fas fa-tag"></i>
-                      <span>₱{lesson.hourlyRate}/hour</span>
-                    </div>
-                  )}
-                  <button onClick={handleViewTutorProfile} className="btn-view-profile">
-                    <i className="fas fa-id-card"></i>
-                    <span>View Profile</span>
-                  </button>
+                <div>
+                  <h1 className="lesson-page-title">Lesson Details</h1>
+                  <p className="lesson-page-subtitle">
+                    <span className={`status-dot ${lesson.status}`}></span>
+                    {lesson.status.charAt(0).toUpperCase() + lesson.status.slice(1)}
+                    {lesson.status === 'confirmed' && ` • ${getTimeUntil()}`}
+                  </p>
                 </div>
               </div>
-            </div>
-
-            {/* Schedule Card */}
-            <div className="lesson-card lesson-schedule-card">
-              <h2 className="lesson-card-title">
-                <i className="fas fa-calendar-alt"></i>
-                Schedule
-              </h2>
-              <div className="lesson-schedule-details">
-                <div className="lesson-detail-row">
-                  <div className="lesson-detail-label">
-                    <i className="fas fa-calendar"></i>
-                    <span>Date</span>
-                  </div>
-                  <div className="lesson-detail-value">
-                    {formatDate(lesson.slotDate)}
-                  </div>
-                </div>
-                <div className="lesson-detail-row">
-                  <div className="lesson-detail-label">
-                    <i className="fas fa-clock"></i>
-                    <span>Time</span>
-                  </div>
-                  <div className="lesson-detail-value">
-                    {formatTime(lesson.slotTime)}
-                  </div>
-                </div>
-                <div className="lesson-detail-row">
-                  <div className="lesson-detail-label">
-                    <i className="fas fa-hourglass-half"></i>
-                    <span>Duration</span>
-                  </div>
-                  <div className="lesson-detail-value">
-                    {lesson.durationMinutes} minutes
-                  </div>
-                </div>
-                <div className="lesson-detail-row">
-                  <div className="lesson-detail-label">
-                    <i className="fas fa-check"></i>
-                    <span>Booked</span>
-                  </div>
-                  <div className="lesson-detail-value">
-                    {new Date(lesson.bookedAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Card */}
-            <div className="lesson-card lesson-action-card">
-              <h2 className="lesson-card-title">
-                <i className="fas fa-video"></i>
-                Join Classroom
-              </h2>
               
-              {lesson.status === 'confirmed' ? (
-                <>
-                  {canJoin ? (
-                    <div className="lesson-join-ready">
-                      <div className="lesson-join-icon">
-                        <i className="fas fa-check-circle"></i>
-                      </div>
-                      <p className="lesson-join-message">
-                        Your classroom is ready! Click the button below to join your lesson.
-                      </p>
-                      <button onClick={handleJoinClassroom} className="btn-join-classroom">
-                        <i className="fas fa-video"></i>
-                        <span>Enter Classroom</span>
-                      </button>
-                      <p className="lesson-join-note">
-                        <i className="fas fa-info-circle"></i>
-                        Make sure your camera and microphone are ready
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="lesson-join-pending">
-                      <div className="lesson-join-icon pending">
-                        <i className="fas fa-clock"></i>
-                      </div>
-                      <p className="lesson-join-message">
-                        The classroom will be available 15 minutes before your scheduled lesson time.
-                      </p>
-                      <p className="lesson-join-countdown">
-                        {getTimeUntil()}
-                      </p>
-                      {/* Test button to enter classroom anytime */}
-                      <button onClick={handleJoinClassroom} className="btn-join-classroom" style={{ marginTop: '1rem', opacity: '0.7' }}>
-                        <i className="fas fa-video"></i>
-                        <span>Test Enter Classroom (Debug)</span>
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : lesson.status === 'completed' ? (
-                <div className="lesson-join-completed">
-                  <div className="lesson-join-icon completed">
-                    <i className="fas fa-check-double"></i>
-                  </div>
-                  <p className="lesson-join-message">
-                    This lesson has been completed.
-                  </p>
-                  <button onClick={() => window.location.href = '/browse-tutors'} className="btn-book-another">
-                    <i className="fas fa-calendar-plus"></i>
-                    <span>Book Another Lesson</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="lesson-join-unavailable">
-                  <div className="lesson-join-icon unavailable">
-                    <i className="fas fa-times-circle"></i>
-                  </div>
-                  <p className="lesson-join-message">
-                    This lesson is not available.
-                  </p>
-                </div>
+              {lesson.status === 'confirmed' && (
+                <button 
+                  className="lesson-cancel-btn"
+                  onClick={() => setCancelModalOpen(true)}
+                >
+                  <i className="fas fa-times-circle"></i>
+                  Cancel Lesson
+                </button>
               )}
             </div>
-          </div>
 
-          {/* Tips Section */}
-          <div className="lesson-tips">
-            <h3 className="lesson-tips-title">
-              <i className="fas fa-lightbulb"></i>
-              Tips for a Great Lesson
-            </h3>
-            <div className="lesson-tips-grid">
-              <div className="lesson-tip">
-                <i className="fas fa-wifi"></i>
-                <p>Ensure stable internet connection</p>
+            {/* Success Notification */}
+            {cancelSuccess && (
+              <div className={`lesson-notification ${cancelSuccess.refunded ? 'refunded' : ''}`}>
+                <i className={`fas ${cancelSuccess.refunded ? 'fa-check-circle' : 'fa-info-circle'}`}></i>
+                <span>{cancelSuccess.message}</span>
+                {cancelSuccess.refunded && (
+                  <span className="refund-badge">Ticket Refunded</span>
+                )}
               </div>
-              <div className="lesson-tip">
-                <i className="fas fa-microphone"></i>
-                <p>Test your microphone beforehand</p>
+            )}
+
+            {/* Main Content Grid */}
+            <div className="lesson-grid">
+              {/* Left Column - Tutor & Schedule */}
+              <div className="lesson-left-column">
+                {/* Tutor Card */}
+                <div className="lesson-card tutor-card">
+                  <div className="lesson-card-header">
+                    <i className="fas fa-user-graduate"></i>
+                    <h2>Your Tutor</h2>
+                  </div>
+                  <div className="tutor-profile">
+                    <div 
+                      className={lesson.tutorAvatar ? "tutor-avatar" : "tutor-avatar placeholder"}
+                      style={lesson.tutorAvatar ? { backgroundImage: `url(${lesson.tutorAvatar})` } : undefined}
+                    >
+                      {!lesson.tutorAvatar && <i className="fas fa-user"></i>}
+                    </div>
+                    <div className="tutor-info">
+                      <h3 className="tutor-name">{lesson.tutorName}</h3>
+                      {lesson.tutorBio && (
+                        <p className="tutor-bio">{lesson.tutorBio}</p>
+                      )}
+                      <button onClick={handleViewTutorProfile} className="btn-view-tutor">
+                        <i className="fas fa-id-card"></i>
+                        View Profile
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Schedule Card */}
+                <div className="lesson-card schedule-card">
+                  <div className="lesson-card-header">
+                    <i className="fas fa-calendar-alt"></i>
+                    <h2>Schedule</h2>
+                  </div>
+                  <div className="schedule-details">
+                    <div className="schedule-row">
+                      <span className="schedule-label">
+                        <i className="fas fa-calendar-day"></i>
+                        <span>Date</span>
+                      </span>
+                      <span className="schedule-value">{formatDate(lesson.slotDate)}</span>
+                    </div>
+                    <div className="schedule-row">
+                      <span className="schedule-label">
+                        <i className="fas fa-clock"></i>
+                        <span>Time</span>
+                      </span>
+                      <span className="schedule-value">{formatTime(lesson.slotTime)}</span>
+                    </div>
+                    <div className="schedule-row">
+                      <span className="schedule-label">
+                        <i className="fas fa-hourglass-half"></i>
+                        <span>Duration</span>
+                      </span>
+                      <span className="schedule-value">{lesson.durationMinutes} min</span>
+                    </div>
+                    <div className="schedule-row">
+                      <span className="schedule-label">
+                        <i className="fas fa-bookmark"></i>
+                        <span>Booked</span>
+                      </span>
+                      <span className="schedule-value">
+                        {new Date(lesson.bookedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="lesson-tip">
-                <i className="fas fa-video"></i>
-                <p>Check your camera is working</p>
-              </div>
-              <div className="lesson-tip">
-                <i className="fas fa-headphones"></i>
-                <p>Use headphones for better audio</p>
-              </div>
-              <div className="lesson-tip">
-                <i className="fas fa-book"></i>
-                <p>Have materials ready</p>
-              </div>
-              <div className="lesson-tip">
-                <i className="fas fa-smile"></i>
-                <p>Be on time and ready to learn</p>
+
+              {/* Right Column - Join Classroom */}
+              <div className="lesson-right-column">
+                <div className="lesson-card classroom-card">
+                  <div className="lesson-card-header">
+                    <i className="fas fa-video"></i>
+                    <h2>Classroom</h2>
+                  </div>
+                  
+                  {lesson.status === 'confirmed' ? (
+                    <div className="classroom-content">
+                      {canJoin ? (
+                        <>
+                          <div className="classroom-icon ready">
+                            <i className="fas fa-check-circle"></i>
+                          </div>
+                          <h3 className="classroom-status">Ready to Join!</h3>
+                          <p className="classroom-message">
+                            Your classroom is ready. Click below to start your lesson.
+                          </p>
+                          <button onClick={handleJoinClassroom} className="btn-join-classroom">
+                            <i className="fas fa-video"></i>
+                            Enter Classroom
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="classroom-icon pending">
+                            <i className="fas fa-clock"></i>
+                          </div>
+                          <h3 className="classroom-status">Not Yet Available</h3>
+                          <p className="classroom-message">
+                            The classroom will be available 15 minutes before your scheduled lesson time.
+                          </p>
+                          <div className="classroom-countdown">
+                            <span className="countdown-label">Starts</span>
+                            <span className="countdown-value">{getTimeUntil()}</span>
+                          </div>
+                          <button onClick={handleJoinClassroom} className="btn-join-classroom debug">
+                            <i className="fas fa-bug"></i>
+                            Test Enter (Debug)
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : lesson.status === 'completed' ? (
+                    <div className="classroom-content">
+                      <div className="classroom-icon completed">
+                        <i className="fas fa-check-double"></i>
+                      </div>
+                      <h3 className="classroom-status">Lesson Completed</h3>
+                      <p className="classroom-message">
+                        Great job! You've completed this lesson.
+                      </p>
+                      <button onClick={() => window.location.href = '/browse-tutors'} className="btn-book-again">
+                        <i className="fas fa-calendar-plus"></i>
+                        Book Another Lesson
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="classroom-content">
+                      <div className="classroom-icon cancelled">
+                        <i className="fas fa-times-circle"></i>
+                      </div>
+                      <h3 className="classroom-status">Lesson Cancelled</h3>
+                      <p className="classroom-message">
+                        This lesson has been cancelled.
+                      </p>
+                      <button onClick={() => window.location.href = '/schedule'} className="btn-back-schedule">
+                        <i className="fas fa-calendar"></i>
+                        Back to Schedule
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        </div>
+        </main>
       </div>
-      <Footer />
+
+      {/* Cancel Confirmation Modal */}
+      {cancelModalOpen && lesson && (
+        <div className="cancel-modal-overlay" onClick={handleCancelModalClose}>
+          <div className="cancel-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cancel-modal-header">
+              <h3>Cancel Lesson</h3>
+              <button 
+                className="modal-close-btn" 
+                onClick={handleCancelModalClose}
+                disabled={cancelling}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="cancel-modal-body">
+              <div className="cancel-lesson-info">
+                <div className="cancel-tutor-avatar">
+                  {lesson.tutorAvatar ? (
+                    <img src={lesson.tutorAvatar} alt={lesson.tutorName} />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      <i className="fas fa-user"></i>
+                    </div>
+                  )}
+                </div>
+                <div className="cancel-lesson-details">
+                  <h4>{lesson.tutorName}</h4>
+                  <p>
+                    <i className="fas fa-calendar"></i>
+                    {formatDate(lesson.slotDate)} at {formatTime(lesson.slotTime)}
+                  </p>
+                  <p>
+                    <i className="fas fa-clock"></i>
+                    {lesson.durationMinutes} minutes
+                  </p>
+                </div>
+              </div>
+
+              <div className={`refund-notice ${isRefundEligible() ? 'eligible' : 'not-eligible'}`}>
+                {isRefundEligible() ? (
+                  <>
+                    <i className="fas fa-check-circle"></i>
+                    <div>
+                      <strong>Refund Eligible</strong>
+                      <p>Your ticket will be refunded since you're cancelling more than 1 hour before the lesson.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <div>
+                      <strong>No Refund</strong>
+                      <p>Cancellations less than 1 hour before the lesson are not eligible for a refund.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <p className="cancel-warning">
+                Are you sure you want to cancel this lesson? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="cancel-modal-footer">
+              <button 
+                className="cancel-modal-btn secondary" 
+                onClick={handleCancelModalClose}
+                disabled={cancelling}
+              >
+                Keep Lesson
+              </button>
+              <button 
+                className="cancel-modal-btn danger" 
+                onClick={handleConfirmCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-times-circle"></i>
+                    Cancel Lesson
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

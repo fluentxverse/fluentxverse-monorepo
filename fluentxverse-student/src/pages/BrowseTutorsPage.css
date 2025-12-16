@@ -1608,3 +1608,250 @@
     justify-content: center;
   }
 }
+
+/* ================================
+   With Sidebar Layout (Logged In)
+   ================================ */
+.browse-page--with-sidebar {
+  margin-left: 80px;
+}
+
+@media (max-width: 768px) {
+  .browse-page--with-sidebar {
+    margin-left: 0;
+  }
+}
+
+/* ================================
+   Balance Section (Logged In Users)
+   ================================ */
+.browse-balance-section {
+  padding: 140px 24px 24px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 50%, #4a9eff 100%);
+}
+
+.browse-balance-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--browse-card);
+  border-radius: var(--browse-radius-lg);
+  padding: 24px;
+  box-shadow: var(--browse-shadow-xl);
+}
+
+.browse-balance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.browse-balance-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--browse-text);
+  margin: 0;
+}
+
+.browse-balance-title i {
+  color: var(--browse-primary);
+  font-size: 1.5rem;
+}
+
+.browse-balance-buy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--browse-primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: var(--browse-transition);
+}
+
+.browse-balance-buy-btn:hover {
+  background: var(--browse-primary-dark);
+  transform: translateY(-1px);
+}
+
+.browse-balance-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--browse-text-secondary);
+}
+
+.browse-balance-loading i {
+  font-size: 1.25rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.browse-balance-tickets {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.browse-balance-ticket {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  padding: 16px;
+  background: var(--browse-bg);
+  border-radius: var(--browse-radius);
+  border: 1px solid var(--browse-border);
+}
+
+.browse-balance-ticket-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.browse-balance-ticket-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.browse-balance-ticket-count {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--browse-primary);
+  line-height: 1;
+}
+
+.browse-balance-ticket-count.premium {
+  color: #d97706;
+}
+
+.browse-balance-ticket-label {
+  font-size: 0.875rem;
+  color: var(--browse-text-secondary);
+  margin-top: 2px;
+}
+
+/* Balance Search */
+.browse-balance-search {
+  display: flex;
+  gap: 12px;
+}
+
+.browse-balance-search-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--browse-bg);
+  border: 1px solid var(--browse-border);
+  border-radius: var(--browse-radius);
+  transition: var(--browse-transition);
+}
+
+.browse-balance-search-wrapper:focus-within {
+  border-color: var(--browse-primary);
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.browse-balance-search-wrapper i {
+  color: var(--browse-text-secondary);
+  font-size: 1.125rem;
+}
+
+.browse-balance-search-wrapper input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--browse-text);
+  outline: none;
+}
+
+.browse-balance-search-wrapper input::placeholder {
+  color: var(--browse-text-secondary);
+}
+
+.browse-balance-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: var(--browse-border);
+  border: none;
+  border-radius: 50%;
+  color: var(--browse-text-secondary);
+  cursor: pointer;
+  transition: var(--browse-transition);
+}
+
+.browse-balance-search-clear:hover {
+  background: var(--browse-text-secondary);
+  color: white;
+}
+
+.browse-balance-search-btn {
+  padding: 12px 24px;
+  background: var(--browse-primary);
+  color: white;
+  border: none;
+  border-radius: var(--browse-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--browse-transition);
+}
+
+.browse-balance-search-btn:hover {
+  background: var(--browse-primary-dark);
+}
+
+/* Responsive for balance section */
+@media (max-width: 640px) {
+  .browse-balance-section {
+    padding: 90px 16px 20px;
+  }
+  
+  .browse-balance-card {
+    padding: 16px;
+  }
+  
+  .browse-balance-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .browse-balance-buy-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .browse-balance-tickets {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .browse-balance-search {
+    flex-direction: column;
+  }
+  
+  .browse-balance-search-btn {
+    width: 100%;
+  }
+}

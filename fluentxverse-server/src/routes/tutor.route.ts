@@ -16,6 +16,7 @@ const Tutor = new Elysia({ prefix: '/tutor' })
 
   
       const params = {
+        query: query.q || undefined, // Search by name
         page: query.page ? Number(query.page) : 1,
         limit: query.limit ? Number(query.limit) : 12,
         dateFilter: query.dateFilter || undefined,

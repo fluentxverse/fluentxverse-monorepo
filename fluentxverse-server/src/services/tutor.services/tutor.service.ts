@@ -33,6 +33,7 @@ export class TutorService {
 
     try {
       const {
+        query: searchQuery,
         page = 1,
         limit = 12,
         dateFilter,
@@ -44,6 +45,9 @@ export class TutorService {
       const pageNum = Math.max(1, Math.floor(Number(page)));
       const limitNum = Math.max(1, Math.min(100, Math.floor(Number(limit)))); // Cap at 100
       const skip = (pageNum - 1) * limitNum;
+      
+      // Name search - use toLower() for case-insensitive matching (Memgraph doesn't support (?i) regex)
+      const nameSearchLower = searchQuery ? searchQuery.toLowerCase() : null;
 
       // Helper function to convert 24h time to minutes since midnight for comparison
       const timeToMinutes = (time24: string): number => {
@@ -84,16 +88,31 @@ export class TutorService {
       const TEST_ACCOUNT_IDS = ['paulanthonyarriola@gmail.com']; // Test tutor emails
       const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR u.email IN ['paulanthonyarriola@gmail.com']`;
       
+      // Name search condition (case-insensitive using toLower and CONTAINS)
+      const nameSearchCondition = nameSearchLower 
+        ? `(toLower(u.firstName) CONTAINS $nameSearch OR toLower(u.lastName) CONTAINS $nameSearch OR toLower(u.displayName) CONTAINS $nameSearch OR toLower(u.firstName + ' ' + u.lastName) CONTAINS $nameSearch)`
+        : '';
+      
+      if (nameSearchLower) {
+        queryParams.nameSearch = nameSearchLower;
+        console.log('🔎 Name search term:', nameSearchLower);
+      }
+      
       // Get today's date for "all dates" filter
       const today = new Date().toISOString().split('T')[0];
       queryParams.today = today;
       
-      console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime);
+      console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime, 'searchQuery:', searchQuery);
       
       if (dateFilter) {
         // Only show tutors who have open slots on the specified date AND are certified
         matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)`;
         whereClause = `WHERE s.slotDate = $dateFilter AND s.status = 'open' AND ${certificationCheck}`;
+        
+        // Add name search if provided
+        if (nameSearchCondition) {
+          whereClause += ` AND ${nameSearchCondition}`;
+        }
         
         // Add time range filtering if provided - we'll filter in post-processing
         // because string comparison of 12-hour times doesn't work correctly
@@ -114,8 +133,15 @@ export class TutorService {
       } else {
         // "All Dates" - show tutors who have ANY open slots from today onwards AND are certified
         // Also apply time range filtering if provided
+        let whereConditions = `s.slotDate >= $today AND s.status = 'open' AND ${certificationCheck}`;
+        
+        // Add name search if provided
+        if (nameSearchCondition) {
+          whereConditions += ` AND ${nameSearchCondition}`;
+        }
+        
         matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
-          WHERE s.slotDate >= $today AND s.status = 'open' AND ${certificationCheck}`;
+          WHERE ${whereConditions}`;
         whereClause = '';
         
         // Store time filters for post-processing

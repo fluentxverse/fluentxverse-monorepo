@@ -19,6 +19,70 @@ interface Booking {
   originalStatus: string;
 }
 
+// Cancel confirmation modal component
+interface CancelModalProps {
+  isOpen: boolean;
+  booking: Booking | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isLoading: boolean;
+  willGetRefund: boolean;
+}
+
+const CancelModal = ({ isOpen, booking, onConfirm, onCancel, isLoading, willGetRefund }: CancelModalProps) => {
+  if (!isOpen || !booking) return null;
+
+  return (
+    <div className="cancel-modal-overlay" onClick={onCancel}>
+      <div className="cancel-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="cancel-modal-header">
+          <i className="fas fa-exclamation-triangle"></i>
+          <h3>Cancel Lesson</h3>
+        </div>
+        <div className="cancel-modal-body">
+          <p>Are you sure you want to cancel your lesson with <strong>{booking.tutorName}</strong>?</p>
+          <div className="cancel-lesson-info">
+            <div className="cancel-info-row">
+              <i className="fas fa-calendar"></i>
+              <span>{booking.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+            </div>
+            <div className="cancel-info-row">
+              <i className="fas fa-clock"></i>
+              <span>{booking.timeDisplay} KST</span>
+            </div>
+          </div>
+          <div className={`refund-notice ${willGetRefund ? 'refund-yes' : 'refund-no'}`}>
+            <i className={willGetRefund ? 'fas fa-ticket-alt' : 'fas fa-info-circle'}></i>
+            {willGetRefund ? (
+              <span>You will receive a ticket refund for this cancellation.</span>
+            ) : (
+              <span>Cancellations less than 1 hour before the lesson are not eligible for refund.</span>
+            )}
+          </div>
+        </div>
+        <div className="cancel-modal-actions">
+          <button className="cancel-modal-btn cancel-btn" onClick={onCancel} disabled={isLoading}>
+            Keep Lesson
+          </button>
+          <button className="cancel-modal-btn confirm-btn" onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <i className="fas fa-spinner fa-spin"></i>
+                Cancelling...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-times"></i>
+                Cancel Lesson
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SchedulePage = () => {
   useEffect(() => {
     document.title = 'My Schedule | FluentXVerse';
@@ -29,6 +93,64 @@ const SchedulePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  
+  // Cancel modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState<{ message: string; refunded: boolean } | null>(null);
+
+  // Check if cancellation is eligible for refund (more than 1 hour before lesson)
+  const isRefundEligible = (lessonDate: Date): boolean => {
+    const now = new Date();
+    const oneHourBefore = new Date(lessonDate.getTime() - 60 * 60 * 1000);
+    return now < oneHourBefore;
+  };
+
+  // Handle cancel button click
+  const handleCancelClick = (booking: Booking) => {
+    setBookingToCancel(booking);
+    setCancelModalOpen(true);
+  };
+
+  // Handle cancel confirmation
+  const handleConfirmCancel = async () => {
+    if (!bookingToCancel) return;
+    
+    setCancelling(true);
+    try {
+      const result = await scheduleApi.cancelBooking(bookingToCancel.id);
+      
+      // Remove the cancelled booking from the list
+      setBookings(prev => prev.filter(b => b.id !== bookingToCancel.id));
+      
+      // Show success message
+      setCancelSuccess({
+        message: result.message || 'Lesson cancelled successfully',
+        refunded: result.refundEligible
+      });
+      
+      // Close modal
+      setCancelModalOpen(false);
+      setBookingToCancel(null);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setCancelSuccess(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to cancel booking:', err);
+      setError(typeof err === 'string' ? err : err.message || 'Failed to cancel booking');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // Handle modal close
+  const handleCancelModalClose = () => {
+    if (!cancelling) {
+      setCancelModalOpen(false);
+      setBookingToCancel(null);
+    }
+  };
 
   // Convert 12-hour PHT time to 24-hour KST time
   const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string; dateObj: Date } => {
@@ -316,6 +438,13 @@ const SchedulePage = () => {
                             <i className="fas fa-user"></i>
                             View Tutor
                           </a>
+                          <button 
+                            className="action-btn cancel"
+                            onClick={() => handleCancelClick(lesson)}
+                          >
+                            <i className="fas fa-times-circle"></i>
+                            Cancel
+                          </button>
                         </>
                       ) : (
                         <>
@@ -351,9 +480,117 @@ const SchedulePage = () => {
                 )}
               </div>
             )}
+
+            {/* Cancel Success Notification */}
+            {cancelSuccess && (
+              <div className={`cancel-notification ${cancelSuccess.refunded ? 'refunded' : ''}`}>
+                <i className={`fas ${cancelSuccess.refunded ? 'fa-check-circle' : 'fa-info-circle'}`}></i>
+                <span>{cancelSuccess.message}</span>
+                {cancelSuccess.refunded && (
+                  <span className="refund-badge">Ticket Refunded</span>
+                )}
+                <button className="notification-close" onClick={() => setCancelSuccess(null)}>
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            )}
           </div>
         </main>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {cancelModalOpen && bookingToCancel && (
+        <div className="cancel-modal-overlay" onClick={handleCancelModalClose}>
+          <div className="cancel-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cancel-modal-header">
+              <h3>Cancel Lesson</h3>
+              <button 
+                className="modal-close-btn" 
+                onClick={handleCancelModalClose}
+                disabled={cancelling}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="cancel-modal-body">
+              <div className="cancel-lesson-info">
+                <div className="cancel-tutor-avatar">
+                  {bookingToCancel.tutorAvatar ? (
+                    <img src={bookingToCancel.tutorAvatar} alt={bookingToCancel.tutorName} />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      <i className="fas fa-user"></i>
+                    </div>
+                  )}
+                </div>
+                <div className="cancel-lesson-details">
+                  <h4>{bookingToCancel.tutorName}</h4>
+                  <p>
+                    <i className="fas fa-calendar"></i>
+                    {formatLessonDate(bookingToCancel.date)} at {bookingToCancel.timeDisplay} KST
+                  </p>
+                  <p>
+                    <i className="fas fa-clock"></i>
+                    {bookingToCancel.duration} minutes
+                  </p>
+                </div>
+              </div>
+
+              <div className={`refund-notice ${isRefundEligible(bookingToCancel.date) ? 'eligible' : 'not-eligible'}`}>
+                {isRefundEligible(bookingToCancel.date) ? (
+                  <>
+                    <i className="fas fa-check-circle"></i>
+                    <div>
+                      <strong>Refund Eligible</strong>
+                      <p>Your ticket will be refunded since you're cancelling more than 1 hour before the lesson.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <div>
+                      <strong>No Refund</strong>
+                      <p>Cancellations less than 1 hour before the lesson are not eligible for a refund.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <p className="cancel-warning">
+                Are you sure you want to cancel this lesson? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="cancel-modal-footer">
+              <button 
+                className="cancel-modal-btn secondary" 
+                onClick={handleCancelModalClose}
+                disabled={cancelling}
+              >
+                Keep Lesson
+              </button>
+              <button 
+                className="cancel-modal-btn danger" 
+                onClick={handleConfirmCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-times-circle"></i>
+                    Cancel Lesson
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

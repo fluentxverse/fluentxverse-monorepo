@@ -64,11 +64,7 @@ export const getTicketBalance = async (walletAddress: string): Promise<TicketBal
  * @param quantity - Number of tickets to transfer (default 1)
  * @returns TransferResult with transaction hash on success
  */
-export const transferTicketForBooking = async (
-  account: Account,
-  tier: TicketTier = 'basic',
-  quantity: number = 1
-): Promise<TransferResult> => {
+export const transferTicketForBooking = async (account: Account, tier: TicketTier = 'basic', quantity: number = 1): Promise<TransferResult> => {
   if (!VAULT_WALLET_ADDRESS) {
     return {
       success: false,
