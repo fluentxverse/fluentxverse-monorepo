@@ -10,8 +10,8 @@
 
 import { thirdwebClient } from "@/services/utils.services/utils";
 import { defineChain, Engine, getContract } from "thirdweb";
-import { safeTransferFrom, getNFTs, totalSupply } from "thirdweb/extensions/erc1155";
-import { getUserEmail } from "thirdweb/wallets";
+import { safeTransferFrom, getNFTs, totalSupply, getOwnedNFTs, getOwnedTokenIds, balanceOf } from "thirdweb/extensions/erc1155";
+import { getUserEmail, getWalletBalance } from "thirdweb/wallets";
 
 
 const client = thirdwebClient;
@@ -104,7 +104,8 @@ const listNFTs = async () => {
 // Run tests
 await listNFTs();
 // Uncomment to test purchase:
-// await testPurchase();
+// await testPurchase()
 
 
+balanceOf
 getUserEmail

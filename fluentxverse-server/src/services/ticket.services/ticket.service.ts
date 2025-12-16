@@ -1,6 +1,6 @@
 import { thirdwebClient } from "../utils.services/utils";
 import { defineChain, Engine, getContract } from "thirdweb";
-import { mintTo, mintAdditionalSupplyTo, getNFTs, getNFT, totalSupply, safeTransferFrom } from "thirdweb/extensions/erc1155";
+import { mintTo, mintAdditionalSupplyTo, getNFTs, getNFT, totalSupply, safeTransferFrom, balanceOf } from "thirdweb/extensions/erc1155";
 import { upload } from "thirdweb/storage";
 import * as fs from "fs";
 import * as path from "path";
@@ -645,6 +645,64 @@ export class TicketService {
         error: error instanceof Error ? error.message : 'Failed to process purchase',
       };
     }
+  }
+
+  /**
+   * Get a user's ticket balance for both Basic and Premium tickets
+   * Uses balanceOf from ERC1155 to check on-chain balance
+   */
+  async getWalletTicketBalance(walletAddress: string): Promise<{
+    basic: number;
+    premium: number;
+    basicTokenId: string | null;
+    premiumTokenId: string | null;
+  }> {
+    console.log(`Getting ticket balance for wallet: ${walletAddress}`);
+
+    // Get all tickets to find token IDs for basic and premium
+    const tickets = await this.getTickets();
+    const basicTicket = tickets.find(t => t.tier === 'basic');
+    const premiumTicket = tickets.find(t => t.tier === 'premium');
+
+    let basicBalance = 0;
+    let premiumBalance = 0;
+
+    // Get basic ticket balance
+    if (basicTicket) {
+      try {
+        const balance = await balanceOf({
+          contract,
+          owner: walletAddress as `0x${string}`,
+          tokenId: BigInt(basicTicket.tokenId),
+        });
+        basicBalance = Number(balance);
+        console.log(`Basic ticket balance for ${walletAddress}: ${basicBalance}`);
+      } catch (error) {
+        console.error('Error getting basic ticket balance:', error);
+      }
+    }
+
+    // Get premium ticket balance
+    if (premiumTicket) {
+      try {
+        const balance = await balanceOf({
+          contract,
+          owner: walletAddress as `0x${string}`,
+          tokenId: BigInt(premiumTicket.tokenId),
+        });
+        premiumBalance = Number(balance);
+        console.log(`Premium ticket balance for ${walletAddress}: ${premiumBalance}`);
+      } catch (error) {
+        console.error('Error getting premium ticket balance:', error);
+      }
+    }
+
+    return {
+      basic: basicBalance,
+      premium: premiumBalance,
+      basicTokenId: basicTicket?.tokenId || null,
+      premiumTokenId: premiumTicket?.tokenId || null,
+    };
   }
 }
 

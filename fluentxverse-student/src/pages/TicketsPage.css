@@ -74,7 +74,7 @@
 
 .balance-card {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 20px;
   background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
   border-radius: 16px;
@@ -83,44 +83,61 @@
   box-shadow: 0 10px 40px rgba(2, 69, 174, 0.3);
 }
 
-.balance-icon {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
+.balance-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.balance-icon i {
-  font-size: 28px;
-  color: white;
-}
-
-.balance-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
 }
 
 .balance-label {
-  font-size: 14px;
-  opacity: 0.9;
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.95;
 }
 
-.balance-value {
+.balance-loading {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 28px;
-  font-weight: 800;
+  gap: 12px;
+  font-size: 16px;
+  opacity: 0.8;
+  padding: 20px 0;
 }
 
-.balance-value i {
-  font-size: 24px;
-  opacity: 0.9;
+.balance-loading i {
+  font-size: 20px;
+}
+
+.balance-tickets-row {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.balance-ticket-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.balance-ticket-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px;
+}
+
+.balance-ticket-count {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.balance-ticket-count.premium {
+  color: #ffd700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .use-tickets-btn {
@@ -746,13 +763,28 @@
   }
   
   .balance-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 24px 20px;
+    padding: 20px;
   }
   
-  .balance-info {
-    align-items: center;
+  .balance-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  
+  .balance-tickets-row {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  
+  .balance-ticket-img {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .balance-ticket-count {
+    font-size: 36px;
   }
   
   .tier-comparison {

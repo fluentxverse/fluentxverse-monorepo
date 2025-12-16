@@ -243,6 +243,36 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       quantity: t.Number(),
       mockTransactionHash: t.Optional(t.String()),
     })
+  })
+
+  /**
+   * Get wallet's ticket balance (Basic and Premium)
+   * GET /tickets/balance/:walletAddress
+   */
+  .get('/balance/:walletAddress', async ({ params }) => {
+    try {
+      const { walletAddress } = params;
+
+      if (!walletAddress || !walletAddress.startsWith('0x')) {
+        return {
+          success: false,
+          error: 'Invalid wallet address'
+        };
+      }
+
+      const balance = await ticketService.getWalletTicketBalance(walletAddress);
+
+      return {
+        success: true,
+        data: balance
+      };
+    } catch (error) {
+      console.error('Error in GET /tickets/balance/:walletAddress:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get ticket balance'
+      };
+    }
   });
 
 export default Ticket;

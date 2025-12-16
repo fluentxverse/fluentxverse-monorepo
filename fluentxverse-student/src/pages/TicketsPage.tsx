@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { BridgePrepareResult, CheckoutWidget, CompletedStatusResult, lightTheme, useActiveAccount } from "thirdweb/react";
+import { BridgePrepareResult, CheckoutWidget, CompletedStatusResult, lightTheme, useActiveAccount, useAutoConnect } from "thirdweb/react";
 import { defineChain } from "thirdweb";
 import { Bridge } from "thirdweb";
 
@@ -11,7 +11,7 @@ type CheckoutSuccessData = {
   quote: BridgePrepareResult;
   statuses: Array<CompletedStatusResult>;
 };
-import { thirdwebClient } from '../index';
+import { thirdwebClient, appWallet } from '../config/wallet';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import './TicketsPage.css';
@@ -316,19 +316,61 @@ function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckout
   );
 }
 
+// Ticket balance type
+interface TicketBalance {
+  basic: number;
+  premium: number;
+  basicTokenId: string | null;
+  premiumTokenId: string | null;
+}
+
 export default function TicketsPage() {
   const [selectedPackage, setSelectedPackage] = useState<TicketPackage | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [userTickets, setUserTickets] = useState(3); // Mock current tickets
+  const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, basicTokenId: null, premiumTokenId: null });
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   const [selectedTier, setSelectedTier] = useState<'all' | 'basic' | 'premium'>('all');
   const [adjustedAmount, setAdjustedAmount] = useState<string | null>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
   
   const activeAccount = useActiveAccount();
+  
+  // Check if wallet is still auto-connecting (loading state)
+  const { isLoading: isWalletConnecting } = useAutoConnect({
+    client: thirdwebClient,
+    wallets: [appWallet],
+  });
 
   useEffect(() => {
     document.title = 'Buy Tickets | FluentXVerse';
   }, []);
+
+  // Fetch user's ticket balance from blockchain
+  const fetchTicketBalance = async (walletAddress: string) => {
+    setIsLoadingBalance(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/tickets/balance/${walletAddress}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setTicketBalance(result.data);
+        console.log('Ticket balance:', result.data);
+      } else {
+        console.error('Failed to fetch ticket balance:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching ticket balance:', error);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  };
+
+  // Fetch balance when wallet connects
+  useEffect(() => {
+    if (activeAccount?.address) {
+      fetchTicketBalance(activeAccount.address);
+    }
+  }, [activeAccount?.address]);
 
   const filteredPackages = selectedTier === 'all' 
     ? ticketPackages 
@@ -444,19 +486,25 @@ export default function TicketsPage() {
       console.log('==============================');
 
       if (result.success) {
-        // Update local ticket count
-        setUserTickets(prev => prev + selectedPackage.tickets);
         console.log(`✅ Successfully purchased ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s)!`);
         console.log(`Transfer Transaction ID: ${result.data.transactionId}`);
+        // Refresh on-chain balance after successful purchase
+        if (activeAccount?.address) {
+          fetchTicketBalance(activeAccount.address);
+        }
       } else {
         console.error('❌ Purchase failed:', result.error);
-        // Still update locally for now (dev mode) but log the error
-        setUserTickets(prev => prev + selectedPackage.tickets);
+        // Still refresh balance to show actual on-chain state
+        if (activeAccount?.address) {
+          fetchTicketBalance(activeAccount.address);
+        }
       }
     } catch (error) {
       console.error('Error calling purchase API:', error);
-      // Still update locally for now (dev mode)
-      setUserTickets(prev => prev + selectedPackage.tickets);
+      // Still refresh balance to show actual on-chain state
+      if (activeAccount?.address) {
+        fetchTicketBalance(activeAccount.address);
+      }
     }
     
     setShowCheckout(false);
@@ -495,20 +543,38 @@ export default function TicketsPage() {
             {/* Current Balance */}
             <div className="tickets-balance">
               <div className="balance-card">
-                <div className="balance-icon">
-                  <i className="fas fa-wallet"></i>
+                <div className="balance-header">
+                  <span className="balance-label">Your Ticket Balance</span>
+                  <a href="/schedule" className="use-tickets-btn">
+                    <i className="fas fa-calendar-plus"></i>
+                    Book a Lesson
+                  </a>
                 </div>
-                <div className="balance-info">
-                  <span className="balance-label">Your Current Balance</span>
-                  <span className="balance-value">
-                    <i className="fas fa-ticket-alt"></i>
-                    {userTickets} Ticket{userTickets !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <a href="/schedule" className="use-tickets-btn">
-                  <i className="fas fa-calendar-plus"></i>
-                  Book a Lesson
-                </a>
+                {isLoadingBalance || isWalletConnecting ? (
+                  <div className="balance-loading">
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <span>{isWalletConnecting ? 'Connecting wallet...' : 'Loading balance...'}</span>
+                  </div>
+                ) : (
+                  <div className="balance-tickets-row">
+                    <div className="balance-ticket-item">
+                      <img 
+                        src={getTicketImageUrl('basic')} 
+                        alt="Basic Ticket" 
+                        className="balance-ticket-img"
+                      />
+                      <span className="balance-ticket-count">{ticketBalance?.basic || 0}</span>
+                    </div>
+                    <div className="balance-ticket-item">
+                      <img 
+                        src={getTicketImageUrl('premium')} 
+                        alt="Premium Ticket" 
+                        className="balance-ticket-img"
+                      />
+                      <span className="balance-ticket-count premium">{ticketBalance?.premium || 0}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
