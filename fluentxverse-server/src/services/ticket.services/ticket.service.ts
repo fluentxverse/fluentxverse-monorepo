@@ -1631,6 +1631,77 @@ export class TicketService {
       await session.close();
     }
   }
+
+  /**
+   * Transfer a trial ticket to a newly registered user
+   * This is called automatically after successful registration
+   */
+  async transferTrialTicketToNewUser(userWallet: string): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+    try {
+      console.log(`[TicketService] Attempting to transfer trial ticket to new user: ${userWallet}`);
+      
+      // Get all tickets to find the trial ticket
+      const tickets = await this.getTickets();
+      const trialTicket = tickets.find(t => t.tier === 'trial');
+      
+      if (!trialTicket) {
+        console.log('[TicketService] No trial tickets available in the system');
+        return { success: false, error: 'No trial tickets available' };
+      }
+      
+      const tokenId = BigInt(trialTicket.tokenId);
+      
+      // Check vault balance for trial tickets
+      const vaultBalance = await balanceOf({
+        contract,
+        owner: VAULT_WALLET_ADDRESS,
+        tokenId,
+      });
+      
+      if (vaultBalance < 1n) {
+        console.log('[TicketService] No trial tickets available in vault');
+        return { success: false, error: 'No trial tickets available in vault' };
+      }
+      
+      // Transfer 1 trial ticket from vault to user
+      console.log(`[TicketService] Transferring 1 trial ticket to ${userWallet}...`);
+      
+      const transferTransaction = safeTransferFrom({
+        contract,
+        from: VAULT_WALLET_ADDRESS,
+        to: userWallet as `0x${string}`,
+        tokenId,
+        value: 1n,
+        data: "0x",
+      });
+      
+      const { transactionId } = await serverWallet.enqueueTransaction({
+        transaction: transferTransaction,
+        simulate: false,
+      });
+      
+      console.log(`[TicketService] ✅ Trial ticket transfer initiated. Transaction ID: ${transactionId}`);
+      
+      // Send notification about the welcome gift
+      await this.sendAdminNotification(
+        'minting_success',
+        'Welcome Trial Ticket Sent',
+        `1 Trial ticket sent to new user ${userWallet.slice(0, 6)}...${userWallet.slice(-4)}`,
+        {
+          transactionId,
+          tier: 'trial',
+          quantity: 1,
+          buyerWallet: userWallet,
+          action: 'welcome_gift',
+        }
+      );
+      
+      return { success: true, transactionId };
+    } catch (error: any) {
+      console.error('[TicketService] Error transferring trial ticket:', error);
+      return { success: false, error: error.message || 'Failed to transfer trial ticket' };
+    }
+  }
 }
 
 export const ticketService = new TicketService();

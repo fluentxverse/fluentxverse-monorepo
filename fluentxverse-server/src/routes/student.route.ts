@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { verifyMessage } from "viem";
 import { getUser } from "thirdweb/wallets";
 import { thirdwebClient } from "../services/utils.services/utils";
+import { ticketService } from "../services/ticket.services/ticket.service";
 
 // In-memory nonce store (use Redis in production for multi-instance deployments)
 const nonceStore = new Map<string, { nonce: string; expires: number }>();
@@ -637,6 +638,19 @@ const Student = new Elysia({ name: "student" })
       
       const studentService = new StudentService();
       const result = await studentService.registerByWallet({ walletAddress, email, givenName, familyName, birthDate, mobileNumber });
+
+      // Send a free trial ticket to the newly registered user
+      try {
+        const trialResult = await ticketService.transferTrialTicketToNewUser(walletAddress);
+        if (trialResult.success) {
+          console.log(`✅ Trial ticket sent to new user: ${walletAddress}`);
+        } else {
+          console.log(`⚠️ Could not send trial ticket: ${trialResult.error}`);
+        }
+      } catch (trialError) {
+        // Don't fail registration if trial ticket transfer fails
+        console.error('Failed to send trial ticket to new user:', trialError);
+      }
 
       const userData = result.user;
       const normalizedUser = {
