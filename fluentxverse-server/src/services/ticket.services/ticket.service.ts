@@ -46,8 +46,8 @@ export interface MintingResult {
   error?: string;
 }
 
-// Ticket tier types - only Basic and Premium
-export type TicketTier = 'basic' | 'premium';
+// Ticket tier types - Basic, Premium, and Trial
+export type TicketTier = 'basic' | 'premium' | 'trial';
 
 // Simplified ticket interface (stored on-chain)
 export interface Ticket {
@@ -436,14 +436,14 @@ export class TicketService {
         // Extract tier attribute - this is required for valid tickets
         const tierAttr = attributes.find(a => a.trait_type === 'Tier');
         
-        // Skip NFTs that don't have a valid Tier attribute (Basic or Premium)
+        // Skip NFTs that don't have a valid Tier attribute (Basic, Premium, or Trial)
         if (!tierAttr?.value) {
           console.log(`Skipping token ${nft.id}: No Tier attribute found`);
           return null;
         }
         
         const tierValue = tierAttr.value.toLowerCase();
-        if (tierValue !== 'basic' && tierValue !== 'premium') {
+        if (tierValue !== 'basic' && tierValue !== 'premium' && tierValue !== 'trial') {
           console.log(`Skipping token ${nft.id}: Invalid Tier value "${tierAttr.value}"`);
           return null;
         }
@@ -463,8 +463,8 @@ export class TicketService {
         const createdAttr = attributes.find(a => a.trait_type === 'Created');
         
         const tier = tierValue as TicketTier;
-        const priceString = priceAttr?.value || (tier === 'basic' ? '$6' : '$9');
-        const price = parseFloat(priceString.replace('$', '')) || (tier === 'basic' ? 6 : 9);
+        const priceString = priceAttr?.value || (tier === 'basic' ? '$6' : tier === 'premium' ? '$9' : '$0');
+        const price = parseFloat(priceString.replace('$', '')) || (tier === 'basic' ? 6 : tier === 'premium' ? 9 : 0);
         const createdAt = createdAttr?.value || new Date().toISOString();
 
         return {
@@ -557,11 +557,13 @@ export class TicketService {
     totalSupply: number;
     basicTicket: Ticket | null;
     premiumTicket: Ticket | null;
+    trialTicket: Ticket | null;
   }> {
     const tickets = await this.getTickets();
     
     const basicTicket = tickets.find(t => t.tier === 'basic') || null;
     const premiumTicket = tickets.find(t => t.tier === 'premium') || null;
+    const trialTicket = tickets.find(t => t.tier === 'trial') || null;
     const totalSupply = tickets.reduce((sum, t) => sum + t.supply, 0);
 
     return {
@@ -569,6 +571,7 @@ export class TicketService {
       totalSupply,
       basicTicket,
       premiumTicket,
+      trialTicket,
     };
   }
 
@@ -734,24 +737,28 @@ export class TicketService {
   }
 
   /**
-   * Get a user's ticket balance for both Basic and Premium tickets
+   * Get a user's ticket balance for Basic, Premium, and Trial tickets
    * Uses balanceOf from ERC1155 to check on-chain balance
    */
   async getWalletTicketBalance(walletAddress: string): Promise<{
     basic: number;
     premium: number;
+    trial: number;
     basicTokenId: string | null;
     premiumTokenId: string | null;
+    trialTokenId: string | null;
   }> {
     console.log(`Getting ticket balance for wallet: ${walletAddress}`);
 
-    // Get all tickets to find token IDs for basic and premium
+    // Get all tickets to find token IDs for basic, premium, and trial
     const tickets = await this.getTickets();
     const basicTicket = tickets.find(t => t.tier === 'basic');
     const premiumTicket = tickets.find(t => t.tier === 'premium');
+    const trialTicket = tickets.find(t => t.tier === 'trial');
 
     let basicBalance = 0;
     let premiumBalance = 0;
+    let trialBalance = 0;
 
     // Get basic ticket balance
     if (basicTicket) {
@@ -783,11 +790,28 @@ export class TicketService {
       }
     }
 
+    // Get trial ticket balance
+    if (trialTicket) {
+      try {
+        const balance = await balanceOf({
+          contract,
+          owner: walletAddress as `0x${string}`,
+          tokenId: BigInt(trialTicket.tokenId),
+        });
+        trialBalance = Number(balance);
+        console.log(`Trial ticket balance for ${walletAddress}: ${trialBalance}`);
+      } catch (error) {
+        console.error('Error getting trial ticket balance:', error);
+      }
+    }
+
     return {
       basic: basicBalance,
       premium: premiumBalance,
+      trial: trialBalance,
       basicTokenId: basicTicket?.tokenId || null,
       premiumTokenId: premiumTicket?.tokenId || null,
+      trialTokenId: trialTicket?.tokenId || null,
     };
   }
 

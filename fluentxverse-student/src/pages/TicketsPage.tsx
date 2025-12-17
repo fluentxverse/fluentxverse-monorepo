@@ -16,11 +16,14 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import './TicketsPage.css';
 
+// API base URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+
 // Get ticket image URL from local assets
-const getTicketImageUrl = (tier: 'basic' | 'premium'): string => {
-  return tier === 'basic' 
-    ? '/assets/img/icons/basic_ticket2.png' 
-    : '/assets/img/icons/premium_ticket2.png';
+const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
+  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.png';
+  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.png';
+  return '/assets/img/icons/trial_ticket.png';
 };
 
 // Arbitrum chain
@@ -87,7 +90,7 @@ interface TicketPackage {
   description: string;
   features: string[];
   icon: string;
-  tier: 'basic' | 'premium';
+  tier: 'basic' | 'premium' | 'trial';
 }
 
 const ticketPackages: TicketPackage[] = [
@@ -321,16 +324,18 @@ function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckout
 interface TicketBalance {
   basic: number;
   premium: number;
+  trial: number;
   basicTokenId: string | null;
   premiumTokenId: string | null;
+  trialTokenId: string | null;
 }
 
 export default function TicketsPage() {
   const [selectedPackage, setSelectedPackage] = useState<TicketPackage | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, basicTokenId: null, premiumTokenId: null });
+  const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, trial: 0, basicTokenId: null, premiumTokenId: null, trialTokenId: null });
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<'all' | 'basic' | 'premium'>('all');
+  const [selectedTier, setSelectedTier] = useState<'all' | 'basic' | 'premium' | 'trial'>('all');
   const [adjustedAmount, setAdjustedAmount] = useState<string | null>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
   

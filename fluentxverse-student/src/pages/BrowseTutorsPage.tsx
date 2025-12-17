@@ -13,7 +13,7 @@ import './BrowseTutorsPage.css';
 
 // API URL for ticket images
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
-const getTicketImageUrl = (tier: 'basic' | 'premium'): string => {
+const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
   return `${API_BASE_URL}/tickets/image/${tier}`;
 };
 
@@ -21,8 +21,10 @@ const getTicketImageUrl = (tier: 'basic' | 'premium'): string => {
 interface TicketBalance {
   basic: number;
   premium: number;
+  trial: number;
   basicTokenId: string | null;
   premiumTokenId: string | null;
+  trialTokenId: string | null;
 }
 
 // Type assertion helper to fix Preact/React compatibility

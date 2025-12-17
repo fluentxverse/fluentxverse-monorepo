@@ -11,7 +11,7 @@ const api = axios.create({
 });
 
 // Types
-export type TicketTier = 'basic' | 'premium';
+export type TicketTier = 'basic' | 'premium' | 'trial';
 
 // Simplified Ticket interface - stored on-chain
 export interface Ticket {
@@ -31,6 +31,7 @@ export interface TicketStats {
   totalSupply: number;
   basicTicket: Ticket | null;
   premiumTicket: Ticket | null;
+  trialTicket: Ticket | null;
 }
 
 export interface CreateTicketRequest {

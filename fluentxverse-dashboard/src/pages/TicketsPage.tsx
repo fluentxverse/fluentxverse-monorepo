@@ -167,7 +167,8 @@ const TicketsPage = () => {
   // Check which tiers already exist
   const basicExists = tickets.some(t => t.tier === 'basic');
   const premiumExists = tickets.some(t => t.tier === 'premium');
-  const canCreateMore = !basicExists || !premiumExists;
+  const trialExists = tickets.some(t => t.tier === 'trial');
+  const canCreateMore = !basicExists || !premiumExists || !trialExists;
 
   const handleCreateTicket = async () => {
     setCreating(true);
@@ -228,10 +229,11 @@ const TicketsPage = () => {
 
   const openCreateModal = () => {
     // Set default tier to one that doesn't exist yet
-    const defaultTier: TicketTier = !basicExists ? 'basic' : 'premium';
+    const defaultTier: TicketTier = !basicExists ? 'basic' : !premiumExists ? 'premium' : 'trial';
+    const defaultPrice = defaultTier === 'basic' ? 6 : defaultTier === 'premium' ? 9 : 0;
     setNewTicket({
       tier: defaultTier,
-      price: defaultTier === 'basic' ? 6 : 9,
+      price: defaultPrice,
       supply: 100,
     });
     setShowCreateModal(true);
@@ -245,7 +247,7 @@ const TicketsPage = () => {
             <i className="ri-ticket-2-line"></i>
             Lesson Tickets
           </h1>
-          <p>Manage Basic and Premium lesson ticket NFTs</p>
+          <p>Manage Basic, Premium, and Trial lesson ticket NFTs</p>
         </div>
         <div className="header-actions">
           <button className="btn-secondary" onClick={fetchData} disabled={loading}>
@@ -281,7 +283,7 @@ const TicketsPage = () => {
                 <i className="ri-ticket-2-line"></i>
               </div>
               <div className="stat-content">
-                <span className="stat-value">{stats?.totalTicketTypes || 0}/2</span>
+                <span className="stat-value">{stats?.totalTicketTypes || 0}/3</span>
                 <span className="stat-label">Ticket Types</span>
               </div>
             </div>
@@ -295,7 +297,7 @@ const TicketsPage = () => {
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon green">
+              <div className="stat-icon blue">
                 <i className="ri-check-double-line"></i>
               </div>
               <div className="stat-content">
@@ -312,10 +314,19 @@ const TicketsPage = () => {
                 <span className="stat-label">Premium Supply</span>
               </div>
             </div>
+            <div className="stat-card">
+              <div className="stat-icon green">
+                <i className="ri-gift-line"></i>
+              </div>
+              <div className="stat-content">
+                <span className="stat-value">{stats?.trialTicket?.supply?.toLocaleString() || 0}</span>
+                <span className="stat-label">Trial Supply</span>
+              </div>
+            </div>
           </div>
 
           {/* Ticket Cards */}
-          <div className="tickets-grid two-column">
+          <div className="tickets-grid three-column">
             {/* Basic Ticket Card */}
             <div className={`ticket-type-card basic ${!basicExists ? 'empty' : ''}`}>
               {stats?.basicTicket ? (
@@ -356,7 +367,9 @@ const TicketsPage = () => {
                 </>
               ) : (
                 <div className="empty-ticket-slot">
-                  <div className="empty-icon">🎫</div>
+                  <div className="empty-ticket-image">
+                    <img src={getTicketImageUrl('basic')} alt="Basic Ticket" />
+                  </div>
                   <h3>Basic Ticket</h3>
                   <p>No Basic ticket created yet</p>
                   <button className="btn-create" onClick={() => {
@@ -409,7 +422,9 @@ const TicketsPage = () => {
                 </>
               ) : (
                 <div className="empty-ticket-slot">
-                  <div className="empty-icon">🎫✨</div>
+                  <div className="empty-ticket-image">
+                    <img src={getTicketImageUrl('premium')} alt="Premium Ticket" />
+                  </div>
                   <h3>Premium Ticket</h3>
                   <p>No Premium ticket created yet</p>
                   <button className="btn-create" onClick={() => {
@@ -417,6 +432,61 @@ const TicketsPage = () => {
                     setShowCreateModal(true);
                   }}>
                     <i className="ri-add-line"></i> Create Premium Ticket
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Trial Ticket Card */}
+            <div className={`ticket-type-card trial ${!trialExists ? 'empty' : ''}`}>
+              {stats?.trialTicket ? (
+                <>
+                  <div className="ticket-header">
+                    <span className="tier-badge trial">Trial</span>
+                    <span className="token-id">Token #{stats.trialTicket.tokenId}</span>
+                  </div>
+                  <div className="ticket-image">
+                    <img 
+                      src={getTicketImageUrl('trial')}
+                      alt="Trial Lesson Ticket"
+                    />
+                  </div>
+                  <h3 className="ticket-name">{stats.trialTicket.name}</h3>
+                  <p className="ticket-description">{stats.trialTicket.description}</p>
+                  <div className="ticket-price">
+                    <span className="price-value">FREE</span>
+                    <span className="price-label">trial ticket</span>
+                  </div>
+                  <div className="ticket-info">
+                    <div className="info-item">
+                      <i className="ri-stack-line"></i>
+                      <span>{stats.trialTicket.supply.toLocaleString()} supply</span>
+                    </div>
+                    <div className="info-item">
+                      <i className="ri-infinity-line"></i>
+                      <span>Never expires</span>
+                    </div>
+                    <div className="info-item">
+                      <i className="ri-time-line"></i>
+                      <span>Created: {new Date(stats.trialTicket.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <button className="btn-mint" onClick={() => handleMintMore(stats.trialTicket!)}>
+                    <i className="ri-add-circle-line"></i> Mint More
+                  </button>
+                </>
+              ) : (
+                <div className="empty-ticket-slot">
+                  <div className="empty-ticket-image">
+                    <img src={getTicketImageUrl('trial')} alt="Trial Ticket" />
+                  </div>
+                  <h3>Trial Ticket</h3>
+                  <p>No Trial ticket created yet</p>
+                  <button className="btn-create" onClick={() => {
+                    setNewTicket({ tier: 'trial', price: 0, supply: 100 });
+                    setShowCreateModal(true);
+                  }}>
+                    <i className="ri-add-line"></i> Create Trial Ticket
                   </button>
                 </div>
               )}
@@ -429,6 +499,7 @@ const TicketsPage = () => {
             <ul>
               <li><strong>Basic Tickets:</strong> Standard 25-minute lesson sessions at $6 per ticket</li>
               <li><strong>Premium Tickets:</strong> 25-minute sessions for premium courses or premium learning materials with priority booking at $9 per ticket</li>
+              <li><strong>Trial Tickets:</strong> Free trial lesson sessions for new students to experience the platform</li>
               <li><strong>Never Expires:</strong> All tickets are valid forever once purchased</li>
               <li><strong>On-Chain:</strong> Tickets are ERC-1155 NFTs stored on Arbitrum</li>
             </ul>
@@ -470,6 +541,15 @@ const TicketsPage = () => {
                     >
                       <span className="tier-badge premium">Premium</span>
                       <span className="tier-price">$9/ticket</span>
+                    </button>
+                  )}
+                  {!trialExists && (
+                    <button 
+                      className={`tier-option ${newTicket.tier === 'trial' ? 'selected' : ''}`}
+                      onClick={() => setNewTicket(prev => ({ ...prev, tier: 'trial', price: 0 }))}
+                    >
+                      <span className="tier-badge trial">Trial</span>
+                      <span className="tier-price">Free</span>
                     </button>
                   )}
                 </div>

@@ -54,10 +54,10 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       const { tier, price, supply } = body;
 
       // Validate tier
-      if (tier !== 'basic' && tier !== 'premium') {
+      if (tier !== 'basic' && tier !== 'premium' && tier !== 'trial') {
         return {
           success: false,
-          error: 'Invalid tier. Must be "basic" or "premium"'
+          error: 'Invalid tier. Must be "basic", "premium", or "trial"'
         };
       }
 
@@ -84,7 +84,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
     }
   }, {
     body: t.Object({
-      tier: t.Union([t.Literal('basic'), t.Literal('premium')]),
+      tier: t.Union([t.Literal('basic'), t.Literal('premium'), t.Literal('trial')]),
       price: t.Number(),
       supply: t.Number(),
     })
@@ -139,7 +139,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
     try {
       const tier = params.tier as TicketTier;
       
-      if (tier !== 'basic' && tier !== 'premium') {
+      if (tier !== 'basic' && tier !== 'premium' && tier !== 'trial') {
         set.status = 400;
         return { error: 'Invalid tier' };
       }
@@ -183,11 +183,11 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         };
       }
 
-      if (tier !== 'basic' && tier !== 'premium') {
+      if (tier !== 'basic' && tier !== 'premium' && tier !== 'trial') {
         console.log('❌ Invalid tier:', tier);
         return {
           success: false,
-          error: 'Invalid tier. Must be "basic" or "premium"'
+          error: 'Invalid tier. Must be "basic", "premium", or "trial"'
         };
       }
 
@@ -239,7 +239,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
   }, {
     body: t.Object({
       buyerWallet: t.String(),
-      tier: t.Union([t.Literal('basic'), t.Literal('premium')]),
+      tier: t.Union([t.Literal('basic'), t.Literal('premium'), t.Literal('trial')]),
       quantity: t.Number(),
       mockTransactionHash: t.Optional(t.String()),
     })

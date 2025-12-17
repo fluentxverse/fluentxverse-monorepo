@@ -18,13 +18,15 @@ const getTicketContract = () => {
   });
 };
 
-export type TicketTier = 'basic' | 'premium';
+export type TicketTier = 'basic' | 'premium' | 'trial';
 
 export interface TicketBalance {
   basic: number;
   premium: number;
+  trial: number;
   basicTokenId: string | null;
   premiumTokenId: string | null;
+  trialTokenId: string | null;
 }
 
 export interface TransferResult {
@@ -34,7 +36,7 @@ export interface TransferResult {
 }
 
 /**
- * Get the user's ticket balance for both Basic and Premium tickets
+ * Get the user's ticket balance for Basic, Premium, and Trial tickets
  * Fetches from server API which knows the correct token IDs
  */
 export const getTicketBalance = async (walletAddress: string): Promise<TicketBalance> => {
@@ -47,11 +49,11 @@ export const getTicketBalance = async (walletAddress: string): Promise<TicketBal
       return result.data;
     } else {
       console.error('[TicketService] Server error:', result.error);
-      return { basic: 0, premium: 0, basicTokenId: null, premiumTokenId: null };
+      return { basic: 0, premium: 0, trial: 0, basicTokenId: null, premiumTokenId: null, trialTokenId: null };
     }
   } catch (error) {
     console.error('[TicketService] Error fetching ticket balance:', error);
-    return { basic: 0, premium: 0, basicTokenId: null, premiumTokenId: null };
+    return { basic: 0, premium: 0, trial: 0, basicTokenId: null, premiumTokenId: null, trialTokenId: null };
   }
 };
 
@@ -60,7 +62,7 @@ export const getTicketBalance = async (walletAddress: string): Promise<TicketBal
  * This must be called BEFORE booking the slot on the backend
  * 
  * @param account - The connected user's account from useActiveAccount()
- * @param tier - The ticket tier to use ('basic' or 'premium')
+ * @param tier - The ticket tier to use ('basic', 'premium', or 'trial')
  * @param quantity - Number of tickets to transfer (default 1)
  * @returns TransferResult with transaction hash on success
  */
@@ -75,8 +77,8 @@ export const transferTicketForBooking = async (account: Account, tier: TicketTie
   try {
     // First, get the balance which includes the correct tokenId from the server
     const balance = await getTicketBalance(account.address);
-    const tokenIdStr = tier === 'basic' ? balance.basicTokenId : balance.premiumTokenId;
-    const availableBalance = tier === 'basic' ? balance.basic : balance.premium;
+    const tokenIdStr = tier === 'basic' ? balance.basicTokenId : tier === 'premium' ? balance.premiumTokenId : balance.trialTokenId;
+    const availableBalance = tier === 'basic' ? balance.basic : tier === 'premium' ? balance.premium : balance.trial;
     
     if (!tokenIdStr) {
       return {
