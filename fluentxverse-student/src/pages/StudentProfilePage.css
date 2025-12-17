@@ -13,7 +13,20 @@
 
 .student-profile-main {
   padding: 165px 0px 0px 295px;
+  padding-bottom: 96px;
   max-width: 1530px;
+  animation: pageLoad 0.5s ease-out;
+}
+
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Page Header Section - matching schedule page design */
@@ -1798,7 +1811,7 @@
   }
   
   .student-profile-main {
-    padding: 24px 16px;
+    padding: 24px 16px 56px;
   }
   
   .overview-grid {
