@@ -3,11 +3,8 @@ import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { getStudentProfile, updateLessonPreferences, updateAboutMe, type StudentProfile, type LessonPreferences, type AboutMe } from '../api/student.api';
 import './StudentProfilePage.css';
-
-interface StudentProfilePageProps {
-  studentId?: string;
-}
 
 interface LessonNote {
   date: string;
@@ -25,9 +22,9 @@ interface Session {
   rating?: number;
 }
 
-const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
+const StudentProfilePage = () => {
   useEffect(() => {
-    document.title = 'Profile | FluentXVerse';
+    document.title = 'My Profile | FluentXVerse';
   }, []);
 
   const { user } = useAuthContext();
@@ -45,6 +42,232 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Profile data state
+  const [profileData, setProfileData] = useState<StudentProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Lesson preferences state
+  const [preferences, setPreferences] = useState<LessonPreferences>({
+    preferCameraOn: true,
+    errorCorrection: 'tutor_choice',
+    otherRequests: ''
+  });
+  const [initialPreferences, setInitialPreferences] = useState<LessonPreferences>({
+    preferCameraOn: true,
+    errorCorrection: 'tutor_choice',
+    otherRequests: ''
+  });
+  const [savingPreferences, setSavingPreferences] = useState(false);
+  const [preferencesMessage, setPreferencesMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Check if preferences have changed
+  const hasPreferencesChanged = () => {
+    return preferences.preferCameraOn !== initialPreferences.preferCameraOn ||
+           preferences.errorCorrection !== initialPreferences.errorCorrection ||
+           preferences.otherRequests !== initialPreferences.otherRequests;
+  };
+
+  // About Me state
+  const [aboutMe, setAboutMe] = useState<AboutMe>({
+    purpose: '',
+    occupation: '',
+    hobbies: [],
+    bio: ''
+  });
+  const [editAboutMe, setEditAboutMe] = useState<AboutMe>({
+    purpose: '',
+    occupation: '',
+    hobbies: [],
+    bio: ''
+  });
+  const [showAboutMeModal, setShowAboutMeModal] = useState(false);
+  const [savingAboutMe, setSavingAboutMe] = useState(false);
+  const [aboutMeMessage, setAboutMeMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // About Me choices
+  const purposeChoices = [
+    'Career Advancement',
+    'Business Communication',
+    'Travel',
+    'Academic Studies',
+    'Immigration',
+    'Personal Interest',
+    'Social Communication',
+    'Other'
+  ];
+
+  const occupationChoices = [
+    'Manufacturing',
+    'Research',
+    'Healthcare',
+    'Education',
+    'IT / Technology',
+    'Finance / Banking',
+    'Sales / Marketing',
+    'Engineering',
+    'Hospitality / Tourism',
+    'Government',
+    'Student',
+    'Other'
+  ];
+
+  const hobbyChoices = [
+    'Sports',
+    'Internet / Gaming',
+    'Reading',
+    'Music',
+    'Movies / TV Shows',
+    'Cooking',
+    'Travel',
+    'Photography',
+    'Art / Design',
+    'Fitness',
+    'Nature / Outdoors',
+    'Technology'
+  ];
+
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        const result = await getStudentProfile();
+        
+        if (result.success && result.data) {
+          setProfileData(result.data);
+          // Load saved preferences if available
+          if (result.data.lessonPreferences) {
+            setPreferences(result.data.lessonPreferences);
+            setInitialPreferences(result.data.lessonPreferences);
+          }
+          // Load saved About Me data if available
+          if (result.data.purpose || result.data.occupation || result.data.hobbies || result.data.bio) {
+            const aboutMeData = {
+              purpose: result.data.purpose || '',
+              occupation: result.data.occupation || '',
+              hobbies: result.data.hobbies || [],
+              bio: result.data.bio || ''
+            };
+            setAboutMe(aboutMeData);
+          }
+        } else {
+          setError(result.error || 'Failed to load profile');
+        }
+      } catch (err: any) {
+        console.error('[StudentProfile] Error fetching profile:', err);
+        setError(err.message || 'Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Save preferences handler
+  const handleSavePreferences = async () => {
+    setSavingPreferences(true);
+    setPreferencesMessage(null);
+    
+    try {
+      const result = await updateLessonPreferences(preferences);
+      if (result.success) {
+        setPreferencesMessage({ type: 'success', text: 'Preferences saved!' });
+        setInitialPreferences({ ...preferences });
+        setTimeout(() => setPreferencesMessage(null), 3000);
+      } else {
+        setPreferencesMessage({ type: 'error', text: result.error || 'Failed to save preferences' });
+      }
+    } catch (err: any) {
+      setPreferencesMessage({ type: 'error', text: err.message || 'Failed to save preferences' });
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
+
+  // Save About Me handler
+  const handleSaveAboutMe = async () => {
+    setSavingAboutMe(true);
+    setAboutMeMessage(null);
+    
+    try {
+      const result = await updateAboutMe(editAboutMe);
+      if (result.success) {
+        setAboutMeMessage({ type: 'success', text: 'About Me saved successfully!' });
+        // Update the main aboutMe state with saved values
+        setAboutMe(editAboutMe);
+        setTimeout(() => {
+          setAboutMeMessage(null);
+          setShowAboutMeModal(false);
+        }, 1500);
+      } else {
+        setAboutMeMessage({ type: 'error', text: result.error || 'Failed to save' });
+      }
+    } catch (err: any) {
+      setAboutMeMessage({ type: 'error', text: err.message || 'Failed to save' });
+    } finally {
+      setSavingAboutMe(false);
+    }
+  };
+
+  // Open About Me modal
+  const openAboutMeModal = () => {
+    setEditAboutMe({ ...aboutMe });
+    setAboutMeMessage(null);
+    setShowAboutMeModal(true);
+  };
+
+  // Close About Me modal
+  const closeAboutMeModal = () => {
+    setShowAboutMeModal(false);
+    setAboutMeMessage(null);
+  };
+
+  // Toggle hobby selection in edit modal
+  const toggleHobby = (hobby: string) => {
+    setEditAboutMe(prev => ({
+      ...prev,
+      hobbies: prev.hobbies.includes(hobby)
+        ? prev.hobbies.filter(h => h !== hobby)
+        : [...prev.hobbies, hobby]
+    }));
+  };
+
+  // Format join date helper
+  const formatJoinDate = (date: string | number | undefined) => {
+    if (!date) return 'N/A';
+    try {
+      const parsed = typeof date === 'number' ? new Date(date) : new Date(date);
+      if (isNaN(parsed.getTime())) return 'N/A';
+      return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  // Display data with safe fallbacks
+  const displayData = profileData ? {
+    id: profileData.id || 'N/A',
+    name: profileData.fullName || `${profileData.givenName || ''} ${profileData.familyName || ''}`.trim() || 'Unknown',
+    email: profileData.email || 'Not provided',
+    initials: profileData.initials || (profileData.givenName?.[0] || 'S') + (profileData.familyName?.[0] || 'T'),
+    level: profileData.currentProficiency || 'Beginner',
+    nationality: profileData.country || 'Not specified',
+    joinDate: formatJoinDate(profileData.joinDate),
+    totalLessons: profileData.totalLessons || 0,
+    upcomingLessons: profileData.upcomingLessons || 0,
+    attendance: profileData.attendance || 0,
+    goals: Array.isArray(profileData.learningGoals) && profileData.learningGoals.length > 0 
+      ? profileData.learningGoals.join(', ') 
+      : 'Set your learning goals in Settings',
+    interests: profileData.interests || 'Not specified',
+    timezone: profileData.timezone || 'GMT+8 (Philippine Time)',
+    preferredTopics: Array.isArray(profileData.preferredTopics) && profileData.preferredTopics.length > 0
+      ? profileData.preferredTopics 
+      : ['Business English', 'Conversation', 'Pronunciation']
+  } : null;
 
   const openHeadsetModal = async () => {
     setShowHeadsetModal(true);
@@ -158,57 +381,65 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
       }
     };
   }, []);
-  
-  // Mock student data - replace with API call
-  const studentData = {
-    id: studentId || 'STD001',
-    name: 'Maria Santos',
-    email: 'maria.santos@email.com',
-    initials: 'MS',
-    level: 'Intermediate',
-    nationality: 'Philippines',
-    joinDate: 'Jan 15, 2025',
-    totalLessons: 48,
-    attendance: 96,
-    averageRating: 4.8,
-    goals: 'Improve business English communication and presentation skills',
-    interests: 'Technology, Travel, Business',
-    timezone: 'GMT+8 (Philippine Time)',
-    preferredTopics: ['Business English', 'Conversation', 'Pronunciation']
-  };
 
-  const upcomingSessions: Session[] = [
-    { id: '1', date: 'Nov 26, 2025', time: '7:00 PM', status: 'upcoming', topic: 'Business Presentations' },
-    { id: '2', date: 'Nov 27, 2025', time: '8:00 PM', status: 'upcoming', topic: 'Email Writing' },
-    { id: '3', date: 'Nov 28, 2025', time: '7:30 PM', status: 'upcoming', topic: 'Conversation Practice' }
-  ];
-
+  // Mock session data (TODO: fetch from API)
   const pastSessions: Session[] = [
-    { id: '4', date: 'Nov 24, 2025', time: '7:00 PM', status: 'completed', topic: 'Job Interviews', rating: 5 },
-    { id: '5', date: 'Nov 23, 2025', time: '8:00 PM', status: 'completed', topic: 'Business Vocabulary', rating: 5 },
-    { id: '6', date: 'Nov 22, 2025', time: '7:30 PM', status: 'completed', topic: 'Presentation Skills', rating: 4 }
+    { id: '4', date: 'Dec 15, 2025', time: '7:00 PM', status: 'completed', topic: 'Job Interviews', rating: 5 },
+    { id: '5', date: 'Dec 14, 2025', time: '8:00 PM', status: 'completed', topic: 'Business Vocabulary', rating: 5 },
+    { id: '6', date: 'Dec 13, 2025', time: '7:30 PM', status: 'completed', topic: 'Presentation Skills', rating: 4 }
   ];
 
   const lessonNotes: LessonNote[] = [
     {
-      date: 'Nov 24, 2025',
+      date: 'Dec 15, 2025',
       time: '7:00 PM',
-      note: 'Excellent progress with interview vocabulary. Student showed confidence in role-play exercises. Focus on reducing filler words ("um", "like") in next session.',
+      note: 'Excellent progress with interview vocabulary. Focus on reducing filler words in next session.',
       rating: 5
     },
     {
-      date: 'Nov 23, 2025',
+      date: 'Dec 14, 2025',
       time: '8:00 PM',
-      note: 'Good understanding of business terminology. Practiced negotiation phrases. Recommend more practice with formal email writing.',
+      note: 'Good understanding of business terminology. Recommend more practice with formal email writing.',
       rating: 5
-    },
-    {
-      date: 'Nov 22, 2025',
-      time: '7:30 PM',
-      note: 'Strong presentation delivery. Voice projection improved. Continue working on transition phrases between slides.',
-      rating: 4
     }
   ];
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="student-profile-page">
+        <SideBar />
+        <div className="student-profile-content">
+          <Header />
+          <div className="student-profile-main">
+            <div className="loading-container">
+              <i className="fi fi-sr-spinner loading-spinner"></i>
+              <p>Loading your profile...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !displayData) {
+    return (
+      <div className="student-profile-page">
+        <SideBar />
+        <div className="student-profile-content">
+          <Header />
+          <div className="student-profile-main">
+            <div className="error-container">
+              <i className="fi fi-sr-exclamation"></i>
+              <p>{error || 'Failed to load profile'}</p>
+              <button onClick={() => window.location.reload()}>Try Again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="student-profile-page">
@@ -218,11 +449,18 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
         <Header />
         
         <div className="student-profile-main">
-          {/* Back Button */}
-          <button className="back-button" onClick={() => route('/schedule')}>
-            <i className="fi fi-sr-arrow-left"></i>
-            Back to Schedule
-          </button>
+          {/* Page Header */}
+          <div className="profile-page-header">
+            <div className="profile-header-left">
+              <div className="profile-page-icon">
+                <i className="fi fi-sr-user"></i>
+              </div>
+              <div>
+                <h1 className="profile-page-title">My Profile</h1>
+                <p className="profile-page-subtitle">View and manage your profile</p>
+              </div>
+            </div>
+          </div>
 
           {/* Profile Header Card */}
           <div className="profile-header-card">
@@ -230,67 +468,27 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
               {/* Profile Photo */}
               <div className="profile-photo-container">
                 <div className="profile-avatar">
-                  {studentData.initials}
+                  {displayData.initials}
                 </div>
-                <div className="profile-level-badge">
-                  {studentData.level}
-                </div>
+                <span className="profile-level-badge">
+                  {displayData.level}
+                </span>
               </div>
 
               {/* Profile Info */}
               <div className="profile-info">
-                <h1 className="profile-name">{studentData.name}</h1>
-
-                {/* Star Rating */}
-                <div className="profile-rating-row">
-                  <div className="star-rating">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <i 
-                        key={star} 
-                        className={`fi-sr-star ${star <= Math.round(studentData.averageRating) ? 'filled' : 'empty'}`}
-                      ></i>
-                    ))}
-                  </div>
-                  <span className="rating-score">{studentData.averageRating.toFixed(1)}</span>
-                  <span className="rating-count">({studentData.totalLessons} lessons)</span>
-                  <span className="profile-id-badge">{studentData.id}</span>
+                <div className="profile-name-row">
+                  <h1 className="profile-name">{displayData.name}</h1>
                 </div>
 
                 <div className="contact-info-grid">
                   <div className="contact-info-item">
-                    <i className="fi fi-sr-envelope"></i>
-                    <span>{studentData.email}</span>
-                  </div>
-                  <div className="contact-info-item">
-                    <i className="fi fi-sr-globe"></i>
-                    <span>{studentData.nationality}</span>
-                  </div>
-                  <div className="contact-info-item">
                     <i className="fi fi-sr-calendar"></i>
-                    <span>Joined {studentData.joinDate}</span>
+                    <span>Joined {displayData.joinDate}</span>
                   </div>
-                  <div className="contact-info-item">
-                    <i className="fi fi-sr-clock"></i>
-                    <span>{studentData.timezone}</span>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="stats-container">
-                  <div className="stat-card blue">
-                    <div className="stat-value">{studentData.totalLessons}</div>
-                    <div className="stat-label">Total Lessons</div>
-                  </div>
-                  <div className="stat-card green">
-                    <div className="stat-value">{studentData.attendance}%</div>
-                    <div className="stat-label">Attendance</div>
-                  </div>
-                  <div className="stat-card orange">
-                    <div className="stat-value with-icon">
-                      {studentData.averageRating}
-                      <i className="fi fi-sr-star"></i>
-                    </div>
-                    <div className="stat-label">Avg Rating</div>
+                  <div className="contact-info-item lessons-stat">
+                    <span className="lessons-count">{displayData.totalLessons}</span>
+                    <span>lessons completed</span>
                   </div>
                 </div>
               </div>
@@ -300,10 +498,10 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
                 <button 
                   className="enter-classroom-btn" 
                   onClick={() => route('/schedule')}
-                  title="View your schedule to enter a classroom session"
+                  title="View your schedule to book lessons"
                 >
                   <i className="fi fi-sr-calendar"></i>
-                  <span>View Sessions</span>
+                  <span>Book a Lesson</span>
                 </button>
                 <button className="test-headset-btn" onClick={openHeadsetModal}>
                   <i className="fi fi-sr-headset"></i>
@@ -329,46 +527,160 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="overview-grid">
-              {/* Learning Goals */}
-              <div className="content-card">
-                <h3 className="card-title">
-                  <i className="fi fi-sr-target"></i>
-                  Learning Goals
-                </h3>
-                <p className="card-text">{studentData.goals}</p>
+              {/* About Me - Display Only */}
+              <div className="content-card about-me-card">
+                <div className="card-title-row">
+                  <h3 className="card-title">
+                    <i className="fi fi-sr-user"></i>
+                    About Me
+                  </h3>
+                  <button className="edit-about-me-btn" onClick={openAboutMeModal}>
+                    <i className="fi fi-sr-pencil"></i>
+                  </button>
+                </div>
 
-                <h4 className="section-subtitle">Interests</h4>
-                <p className="card-text">{studentData.interests}</p>
+                {/* Bio Display */}
+                {aboutMe.bio && (
+                  <div className="bio-display">
+                    <p>{aboutMe.bio}</p>
+                  </div>
+                )}
 
-                <h4 className="section-subtitle">Preferred Topics</h4>
-                <div className="topic-tags">
-                  {studentData.preferredTopics.map((topic, idx) => (
-                    <span key={idx} className="topic-tag">{topic}</span>
-                  ))}
+                {/* Purpose Display */}
+                <div className="about-me-display-field">
+                  <span className="display-label">Purpose</span>
+                  <span className="display-value">{aboutMe.purpose || 'Not set'}</span>
+                </div>
+
+                {/* Occupation Display */}
+                <div className="about-me-display-field">
+                  <span className="display-label">Occupation</span>
+                  <span className="display-value">{aboutMe.occupation || 'Not set'}</span>
+                </div>
+
+                {/* Hobbies Display */}
+                <div className="about-me-display-field">
+                  <span className="display-label">Hobbies</span>
+                  {aboutMe.hobbies.length > 0 ? (
+                    <div className="hobbies-display">
+                      {aboutMe.hobbies.map((hobby, idx) => (
+                        <span key={idx} className="hobby-tag">{hobby}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="display-value">Not set</span>
+                  )}
                 </div>
               </div>
 
-              {/* Upcoming Sessions */}
-              <div className="content-card">
+              {/* Lesson Preferences Card */}
+              <div className="content-card preferences-card">
                 <h3 className="card-title">
-                  <i className="fi fi-sr-calendar-lines"></i>
-                  Upcoming
+                  <i className="fi fi-sr-settings-sliders"></i>
+                  Lesson Preferences
                 </h3>
-                <div className="sessions-list">
-                  {upcomingSessions.map((session) => (
-                    <div key={session.id} className="session-card">
-                      <div className="session-topic">{session.topic}</div>
-                      <div className="session-meta">
-                        <i className="fi fi-sr-calendar"></i>
-                        {session.date}
-                      </div>
-                      <div className="session-meta" style={{ marginTop: '4px' }}>
-                        <i className="fi fi-sr-clock"></i>
-                        {session.time}
-                      </div>
-                    </div>
-                  ))}
+                
+                {/* Camera Preference */}
+                <div className="preference-item">
+                  <div className="preference-label">
+                    <i className="fi fi-sr-camera"></i>
+                    <span>Prefer Camera On</span>
+                  </div>
+                  <div className="toggle-buttons">
+                    <button 
+                      className={`toggle-btn ${preferences.preferCameraOn ? 'active' : ''}`}
+                      onClick={() => setPreferences(p => ({ ...p, preferCameraOn: true }))}
+                    >
+                      Yes
+                    </button>
+                    <button 
+                      className={`toggle-btn ${!preferences.preferCameraOn ? 'active' : ''}`}
+                      onClick={() => setPreferences(p => ({ ...p, preferCameraOn: false }))}
+                    >
+                      No
+                    </button>
+                  </div>
                 </div>
+
+                {/* Error Correction Preference */}
+                <div className="preference-item">
+                  <div className="preference-label">
+                    <i className="fi fi-sr-comment-check"></i>
+                    <span>Error Correction</span>
+                  </div>
+                  <div className="radio-options">
+                    <label className={`radio-option ${preferences.errorCorrection === 'during_feedback' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="errorCorrection"
+                        checked={preferences.errorCorrection === 'during_feedback'}
+                        onChange={() => setPreferences(p => ({ ...p, errorCorrection: 'during_feedback' }))}
+                      />
+                      <span className="radio-text">Correct me during feedback</span>
+                    </label>
+                    <label className={`radio-option ${preferences.errorCorrection === 'proactively' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="errorCorrection"
+                        checked={preferences.errorCorrection === 'proactively'}
+                        onChange={() => setPreferences(p => ({ ...p, errorCorrection: 'proactively' }))}
+                      />
+                      <span className="radio-text">Correct me proactively</span>
+                    </label>
+                    <label className={`radio-option ${preferences.errorCorrection === 'tutor_choice' ? 'selected' : ''}`}>
+                      <input
+                        type="radio"
+                        name="errorCorrection"
+                        checked={preferences.errorCorrection === 'tutor_choice'}
+                        onChange={() => setPreferences(p => ({ ...p, errorCorrection: 'tutor_choice' }))}
+                      />
+                      <span className="radio-text">Tutor's choice</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Other Requests */}
+                <div className="preference-item">
+                  <div className="preference-label">
+                    <i className="fi fi-sr-document"></i>
+                    <span>Other Requests</span>
+                  </div>
+                  <textarea
+                    className="preference-textarea"
+                    placeholder="Any other requests or notes for your tutor..."
+                    value={preferences.otherRequests}
+                    onChange={(e) => setPreferences(p => ({ ...p, otherRequests: (e.target as HTMLTextAreaElement).value }))}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Save Button - Only show when changes made */}
+                {(hasPreferencesChanged() || preferencesMessage) && (
+                  <div className="preference-actions">
+                    <button 
+                      className="save-preferences-btn"
+                      onClick={handleSavePreferences}
+                      disabled={savingPreferences || !hasPreferencesChanged()}
+                    >
+                      {savingPreferences ? (
+                        <>
+                          <i className="fi fi-sr-spinner loading-spinner"></i>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fi fi-sr-check"></i>
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                    {preferencesMessage && (
+                      <span className={`preference-message ${preferencesMessage.type}`}>
+                        {preferencesMessage.text}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -589,6 +901,128 @@ const StudentProfilePage = ({ studentId }: StudentProfilePageProps) => {
               <button className="done-btn" onClick={closeHeadsetModal}>
                 Done
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* About Me Edit Modal */}
+      {showAboutMeModal && (
+        <div className="about-me-modal-overlay" onClick={closeAboutMeModal}>
+          <div className="about-me-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="about-me-modal-header">
+              <div className="modal-header-icon">
+                <i className="fi fi-sr-user"></i>
+              </div>
+              <div className="modal-header-text">
+                <h2>Edit About Me</h2>
+                <p>Tell us more about yourself</p>
+              </div>
+              <button className="close-modal-btn" onClick={closeAboutMeModal}>
+                <i className="fi fi-sr-cross-small"></i>
+              </button>
+            </div>
+
+            <div className="about-me-modal-body">
+              {/* Bio */}
+              <div className="about-me-field">
+                <label className="field-label">
+                  <i className="fi fi-sr-edit"></i>
+                  Bio
+                </label>
+                <textarea
+                  className="about-me-textarea"
+                  placeholder="Write a short bio about yourself..."
+                  value={editAboutMe.bio}
+                  onChange={(e) => setEditAboutMe(prev => ({ ...prev, bio: (e.target as HTMLTextAreaElement).value }))}
+                  rows={3}
+                  maxLength={300}
+                />
+                <span className="char-count">{editAboutMe.bio.length}/300</span>
+              </div>
+
+              {/* Purpose */}
+              <div className="about-me-field">
+                <label className="field-label">
+                  <i className="fi fi-sr-bullseye-arrow"></i>
+                  Purpose for Learning English
+                </label>
+                <select
+                  className="about-me-select"
+                  value={editAboutMe.purpose}
+                  onChange={(e) => setEditAboutMe(prev => ({ ...prev, purpose: (e.target as HTMLSelectElement).value }))}
+                >
+                  <option value="">Select your purpose...</option>
+                  {purposeChoices.map((purpose) => (
+                    <option key={purpose} value={purpose}>{purpose}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Occupation */}
+              <div className="about-me-field">
+                <label className="field-label">
+                  <i className="fi fi-sr-briefcase"></i>
+                  Occupation
+                </label>
+                <select
+                  className="about-me-select"
+                  value={editAboutMe.occupation}
+                  onChange={(e) => setEditAboutMe(prev => ({ ...prev, occupation: (e.target as HTMLSelectElement).value }))}
+                >
+                  <option value="">Select your occupation...</option>
+                  {occupationChoices.map((occupation) => (
+                    <option key={occupation} value={occupation}>{occupation}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Hobbies - Multi-select with checkboxes */}
+              <div className="about-me-field">
+                <label className="field-label">
+                  <i className="fi fi-sr-heart"></i>
+                  Hobbies & Interests
+                </label>
+                <div className="hobbies-grid">
+                  {hobbyChoices.map((hobby) => (
+                    <label key={hobby} className={`hobby-checkbox ${editAboutMe.hobbies.includes(hobby) ? 'checked' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={editAboutMe.hobbies.includes(hobby)}
+                        onChange={() => toggleHobby(hobby)}
+                      />
+                      <span className="checkbox-mark">
+                        <i className="fi fi-sr-check"></i>
+                      </span>
+                      <span className="hobby-label">{hobby}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="about-me-modal-footer">
+              {aboutMeMessage && (
+                <span className={`about-me-message ${aboutMeMessage.type}`}>
+                  {aboutMeMessage.text}
+                </span>
+              )}
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={closeAboutMeModal}>
+                  Cancel
+                </button>
+                <button 
+                  className="save-btn"
+                  onClick={handleSaveAboutMe}
+                  disabled={savingAboutMe}
+                >
+                  {savingAboutMe ? (
+                    <><i className="fas fa-spinner fa-spin"></i> Saving...</>
+                  ) : (
+                    'Save'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

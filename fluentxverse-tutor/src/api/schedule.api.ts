@@ -98,9 +98,34 @@ export const scheduleApi = {
       bookingId,
       status
     });
-    
+
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to mark attendance');
     }
+  },
+
+  /**
+   * Get lesson details for tutor
+   */
+  getTutorLessonDetails: async (bookingId: string): Promise<{
+    bookingId: string;
+    studentId: string;
+    studentName: string;
+    studentAvatar?: string;
+    studentEmail?: string;
+    slotDate: string;
+    slotTime: string;
+    durationMinutes: number;
+    status: string;
+    bookedAt: Date;
+    sessionId?: string;
+  }> => {
+    const response = await api.get(`/schedule/tutor-lesson/${bookingId}`);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to get lesson details');
+    }
+    
+    return response.data.data;
   }
 };

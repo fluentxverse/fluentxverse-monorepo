@@ -16,10 +16,11 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import './TicketsPage.css';
 
-// Get ticket image URL from server
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+// Get ticket image URL from local assets
 const getTicketImageUrl = (tier: 'basic' | 'premium'): string => {
-  return `${API_BASE_URL}/tickets/image/${tier}`;
+  return tier === 'basic' 
+    ? '/assets/img/icons/basic_ticket2.png' 
+    : '/assets/img/icons/premium_ticket2.png';
 };
 
 // Arbitrum chain
@@ -527,16 +528,14 @@ export default function TicketsPage() {
           <div className="tickets-container">
             {/* Header */}
             <div className="tickets-header">
-              <a href="/home" className="back-link">
-                <i className="fas fa-arrow-left"></i>
-                Back to Dashboard
-              </a>
-              <div className="tickets-header-content">
-                <h1>
+              <div className="tickets-header-left">
+                <div className="tickets-page-icon">
                   <i className="fas fa-ticket-alt"></i>
-                  Buy Lesson Tickets
-                </h1>
-                <p>Purchase tickets to book lessons with our expert tutors</p>
+                </div>
+                <div>
+                  <h1 className="tickets-page-title">Buy Lesson Tickets</h1>
+                  <p className="tickets-page-subtitle">Purchase tickets to book lessons with our expert tutors</p>
+                </div>
               </div>
             </div>
 
@@ -545,10 +544,6 @@ export default function TicketsPage() {
               <div className="balance-card">
                 <div className="balance-header">
                   <span className="balance-label">Your Ticket Balance</span>
-                  <a href="/schedule" className="use-tickets-btn">
-                    <i className="fas fa-calendar-plus"></i>
-                    Book a Lesson
-                  </a>
                 </div>
                 {isLoadingBalance || isWalletConnecting ? (
                   <div className="balance-loading">
@@ -724,20 +719,6 @@ export default function TicketsPage() {
                     </button>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            {/* Trust Badges */}
-            <div className="trust-section">
-              <div className="trust-badges">
-                <div className="trust-badge">
-                  <i className="fas fa-shield-alt"></i>
-                  <span>Secure Payment</span>
-                </div>
-                <div className="trust-badge">
-                  <i className="fas fa-infinity"></i>
-                  <span>Never Expires</span>
-                </div>
               </div>
             </div>
           </div>

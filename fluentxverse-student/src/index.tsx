@@ -104,6 +104,7 @@ export function AppInner() {
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
 						<Route path="/tickets" component={withProtected(TicketsPage)} />
 						<Route path="/inbox" component={withProtected(InboxPage)} />
+						<Route path="/profile" component={withProtected(StudentProfilePage)} />
 						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
 						<Route path="/lesson/:bookingId" component={withProtected(LessonPage)} />
 							<Route path="/classroom/:sessionId" component={withProtected(ClassroomPage)} />

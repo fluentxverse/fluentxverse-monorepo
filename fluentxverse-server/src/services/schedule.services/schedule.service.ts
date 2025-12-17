@@ -1699,4 +1699,100 @@ export class ScheduleService {
       await session.close();
     }
   }
+
+  /**
+   * Get detailed lesson information by booking ID (Tutor perspective)
+   */
+  async getTutorLessonDetails(bookingId: string, tutorId: string) {
+    const session = getDriver().session();
+    try {
+      // Query to get booking details with student information
+      const query = `
+        MATCH (booking:Booking {bookingId: $bookingId})
+        WHERE booking.tutorId = $tutorId
+        MATCH (booking)-[:BOOKED_BY]->(student)
+        RETURN 
+          booking.bookingId AS bookingId,
+          booking.status AS status,
+          booking.bookedAt AS bookedAt,
+          booking.slotDateTime AS slotDateTime,
+          booking.durationMinutes AS durationMinutes,
+          student.id AS studentId,
+          COALESCE(student.firstName, student.givenName, '') AS sFirst,
+          COALESCE(student.lastName, student.familyName, '') AS sLast,
+          student.profilePicture AS studentAvatar
+      `;
+
+      const result = await session.run(query, { bookingId, tutorId });
+
+      if (result.records.length === 0) {
+        throw new Error('Booking not found or you do not have access to this lesson');
+      }
+
+      const record = result.records[0];
+      
+      // Extract slotDateTime (stored as Neo4j DateTime)
+      const slotDateTime = record.get('slotDateTime');
+      if (!slotDateTime) {
+        throw new Error('Booking missing schedule information');
+      }
+
+      // Extract date/time components - stored in Philippine time
+      const year = slotDateTime.year.toInt();
+      const month = String(slotDateTime.month.toInt()).padStart(2, '0');
+      const day = String(slotDateTime.day.toInt()).padStart(2, '0');
+      const hour = slotDateTime.hour.toInt();
+      const minute = String(slotDateTime.minute.toInt()).padStart(2, '0');
+      
+      const slotDate = `${year}-${month}-${day}`;
+      
+      // Format as 12-hour time string (H:MM AM/PM) in Philippine time
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      const slotTime = `${hour12}:${minute} ${period}`;
+      
+      const first = record.get('sFirst');
+      const last = record.get('sLast');
+      const studentName = `${(first || '').trim()} ${(last || '').trim()}`.trim() || 'Student';
+
+      // Convert bookedAt DateTime to ISO string
+      const bookedAtDateTime = record.get('bookedAt');
+      let bookedAtISO = new Date().toISOString();
+      if (bookedAtDateTime) {
+        try {
+          const bookedAtDate = new Date(
+            bookedAtDateTime.year.toInt(),
+            bookedAtDateTime.month.toInt() - 1,
+            bookedAtDateTime.day.toInt(),
+            bookedAtDateTime.hour.toInt(),
+            bookedAtDateTime.minute.toInt(),
+            bookedAtDateTime.second.toInt()
+          );
+          bookedAtISO = bookedAtDate.toISOString();
+        } catch (e) {
+          console.error('Error converting bookedAt:', e);
+        }
+      }
+
+      const lessonDetails = {
+        bookingId: record.get('bookingId'),
+        studentId: record.get('studentId'),
+        studentName,
+        studentAvatar: record.get('studentAvatar'),
+        slotDate,
+        slotTime,
+        durationMinutes: record.get('durationMinutes')?.toNumber?.() || record.get('durationMinutes'),
+        status: record.get('status'),
+        bookedAt: bookedAtISO,
+        sessionId: bookingId // Use bookingId as sessionId for classroom
+      };
+
+      return lessonDetails;
+    } catch (error) {
+      console.error('Error getting tutor lesson details:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
 }

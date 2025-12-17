@@ -85,7 +85,7 @@ export function AppInner() {
 					<Route path="/register" component={RegisterPage} />
 
 					<Route path="/schedule" component={withCertified(SchedulePage)} />
-						<Route path="/student/:studentId" component={withCertified(StudentProfilePage)} />
+						<Route path="/lesson/:bookingId" component={withCertified(StudentProfilePage)} />
 							<Route path="/classroom/:sessionId" component={withCertified(ClassroomPage)} />
 							<Route path="/exam/written" component={withProtected(ExamPage)} />
 							<Route path="/exam/speaking" component={withProtected(SpeakingExamPage)} />

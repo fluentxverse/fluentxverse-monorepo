@@ -5,10 +5,14 @@
 }
 
 .schedule-page {
-  padding-top: 120px;
-  padding-bottom: 40px;
+  padding: 120px 20px 60px;
   background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: 100vh;
+}
+
+.schedule-page .container {
+  padding: 28px 120px 48px 28px;
+  max-width: 1400px;
 }
 
 /* Header Section */

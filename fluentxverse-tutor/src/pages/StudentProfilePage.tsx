@@ -7,6 +7,7 @@ import './StudentProfilePage.css';
 
 interface StudentProfilePageProps {
   studentId?: string;
+  bookingId?: string;
 }
 
 interface LessonNote {
@@ -25,14 +26,15 @@ interface Session {
   rating?: number;
 }
 
-const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProps) => {
+const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp }: StudentProfilePageProps) => {
   const { user } = useAuthContext();
   const { route } = useLocation();
   
-  // Extract studentId from URL path
+  // Extract bookingId or studentId from URL path
+  const bookingId = bookingIdProp || window.location.pathname.split('/lesson/')[1]?.split('?')[0];
   const studentId = studentIdProp || window.location.pathname.split('/student/')[1]?.split('?')[0];
   
-  console.log('[StudentProfile] Pathname:', window.location.pathname, 'StudentId prop:', studentIdProp, 'Extracted studentId:', studentId);
+  console.log('[StudentProfile] Pathname:', window.location.pathname, 'BookingId:', bookingId, 'StudentId:', studentId);
   
   useEffect(() => {
     document.title = 'Student Profile | FluentXVerse';
@@ -54,14 +56,66 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
 
   // Student data state
   const [studentData, setStudentData] = useState<any>(null);
+  const [lessonData, setLessonData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch student data
+  // Fetch student data (either from bookingId or studentId)
   useEffect(() => {
-    const fetchStudentData = async () => {
+    const fetchData = async () => {
+      const apiHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      
+      // If we have a bookingId, first fetch lesson details to get student info
+      if (bookingId) {
+        console.log('[StudentProfile] Fetching lesson data for bookingId:', bookingId);
+        
+        try {
+          setLoading(true);
+          const lessonUrl = `http://${apiHost}:8765/schedule/tutor-lesson/${bookingId}`;
+          console.log('[StudentProfile] Requesting lesson:', lessonUrl);
+          
+          const lessonResponse = await fetch(lessonUrl, {
+            credentials: 'include'
+          });
+          
+          const lessonResult = await lessonResponse.json();
+          console.log('[StudentProfile] Lesson response:', lessonResult);
+          
+          if (lessonResult.success && lessonResult.data) {
+            setLessonData(lessonResult.data);
+            
+            // Now fetch full student profile using the studentId from lesson
+            const studentUrl = `http://${apiHost}:8765/tutor/student/${lessonResult.data.studentId}`;
+            console.log('[StudentProfile] Requesting student:', studentUrl);
+            
+            const studentResponse = await fetch(studentUrl, {
+              credentials: 'include'
+            });
+            
+            const studentResult = await studentResponse.json();
+            console.log('[StudentProfile] Student response:', studentResult);
+            
+            if (studentResult.success && studentResult.data) {
+              setStudentData(studentResult.data);
+            } else {
+              setError(studentResult.error || 'Failed to load student data');
+            }
+          } else {
+            setError(lessonResult.error || 'Failed to load lesson details');
+          }
+        } catch (err) {
+          console.error('[StudentProfile] Error fetching data:', err);
+          setError('Failed to load lesson data');
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+      
+      // Fallback: fetch by studentId if no bookingId
       if (!studentId) {
-        console.log('[StudentProfile] No studentId provided');
+        console.log('[StudentProfile] No bookingId or studentId provided');
+        setLoading(false);
         return;
       }
       
@@ -69,7 +123,6 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
       
       try {
         setLoading(true);
-        const apiHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
         const url = `http://${apiHost}:8765/tutor/student/${studentId}`;
         console.log('[StudentProfile] Requesting:', url);
         
@@ -99,8 +152,8 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
       }
     };
 
-    fetchStudentData();
-  }, [studentId]);
+    fetchData();
+  }, [bookingId, studentId]);
 
   const openHeadsetModal = async () => {
     setShowHeadsetModal(true);
@@ -325,14 +378,25 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
   }
   
   // Use real student data from API
+  const formatJoinDate = (date: string | undefined) => {
+    if (!date) return 'N/A';
+    try {
+      const parsed = new Date(date);
+      if (isNaN(parsed.getTime())) return 'N/A';
+      return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return 'N/A';
+    }
+  };
+
   const displayData = {
-    id: studentData.id,
-    name: studentData.fullName || `${studentData.givenName} ${studentData.familyName}`,
-    email: studentData.email,
-    initials: studentData.initials,
+    id: studentData.id || 'N/A',
+    name: studentData.fullName || `${studentData.givenName || ''} ${studentData.familyName || ''}`.trim() || 'Unknown Student',
+    email: studentData.email || 'Not provided',
+    initials: studentData.initials || (studentData.givenName?.[0] || 'S') + (studentData.familyName?.[0] || 'T'),
     level: studentData.currentProficiency || 'Intermediate',
-    nationality: studentData.country || 'Philippines',
-    joinDate: new Date(studentData.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) || 'N/A',
+    nationality: studentData.country || 'Not specified',
+    joinDate: formatJoinDate(studentData.joinDate),
     totalLessons: studentData.totalLessons || 0,
     attendance: studentData.attendance || 0,
     averageRating: 4.8, // TODO: Add rating system
@@ -389,6 +453,30 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
             Back to Schedule
           </button>
 
+          {/* Lesson Info Card - Only shown when accessed via /lesson/:bookingId */}
+          {lessonData && (
+            <div className="lesson-info-card">
+              <div className="lesson-info-header">
+                <i className="fi fi-sr-chalkboard-user"></i>
+                <h2>Scheduled Lesson</h2>
+              </div>
+              <div className="lesson-info-details">
+                <div className="lesson-info-item">
+                  <i className="fi fi-sr-calendar"></i>
+                  <span>{new Date(lessonData.slotDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+                <div className="lesson-info-item">
+                  <i className="fi fi-sr-clock"></i>
+                  <span>{lessonData.slotTime} PHT</span>
+                </div>
+                <div className="lesson-info-item">
+                  <i className="fi fi-sr-hourglass-end"></i>
+                  <span>{lessonData.durationMinutes} minutes</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Profile Header Card */}
           <div className="profile-header-card">
             <div className="profile-header-content">
@@ -405,62 +493,61 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
               {/* Profile Info */}
               <div className="profile-info">
                 <div className="profile-name-row">
-                  <h1 className="profile-name">{studentData.name}</h1>
-                  <span className="profile-id-badge">{studentData.id}</span>
+                  <h1 className="profile-name">{displayData.name}</h1>
+                  <span className="profile-id-badge">{displayData.id}</span>
                 </div>
 
                 <div className="contact-info-grid">
                   <div className="contact-info-item">
-                    <i className="fi fi-sr-envelope"></i>
-                    <span>{studentData.email}</span>
-                  </div>
-                  <div className="contact-info-item">
                     <i className="fi fi-sr-globe"></i>
-                    <span>{studentData.nationality}</span>
+                    <span>{displayData.nationality}</span>
                   </div>
                   <div className="contact-info-item">
                     <i className="fi fi-sr-calendar"></i>
-                    <span>Joined {studentData.joinDate}</span>
+                    <span>Joined {displayData.joinDate}</span>
                   </div>
                   <div className="contact-info-item">
                     <i className="fi fi-sr-clock"></i>
-                    <span>{studentData.timezone}</span>
+                    <span>{displayData.timezone}</span>
                   </div>
                 </div>
 
                 {/* Stats */}
                 <div className="stats-container">
                   <div className="stat-card blue">
-                    <div className="stat-value">{studentData.totalLessons}</div>
+                    <div className="stat-value">{displayData.totalLessons}</div>
                     <div className="stat-label">Total Lessons</div>
-                  </div>
-                  <div className="stat-card green">
-                    <div className="stat-value">{studentData.attendance}%</div>
-                    <div className="stat-label">Attendance</div>
-                  </div>
-                  <div className="stat-card orange">
-                    <div className="stat-value with-icon">
-                      {studentData.averageRating}
-                      <i className="fi fi-sr-star"></i>
-                    </div>
-                    <div className="stat-label">Avg Rating</div>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons - Right side */}
               <div className="profile-action-buttons">
-                <button 
-                  className="enter-classroom-btn" 
-                  onClick={() => {
-                    // Navigate to schedule to see booked sessions with this student
-                    window.location.href = '/schedule';
-                  }}
-                  title="View your schedule to enter a classroom session"
-                >
-                  <i className="fi fi-sr-calendar"></i>
-                  <span>View Sessions</span>
-                </button>
+                {lessonData ? (
+                  <button 
+                    className="enter-classroom-btn" 
+                    onClick={() => {
+                      // Navigate to classroom using bookingId as sessionId
+                      window.location.href = `/classroom/${lessonData.sessionId || bookingId}`;
+                    }}
+                    title="Enter the classroom for this lesson"
+                  >
+                    <i className="fi fi-sr-video-camera-alt"></i>
+                    <span>Enter Classroom</span>
+                  </button>
+                ) : (
+                  <button 
+                    className="enter-classroom-btn" 
+                    onClick={() => {
+                      // Navigate to schedule to see booked sessions with this student
+                      window.location.href = '/schedule';
+                    }}
+                    title="View your schedule to enter a classroom session"
+                  >
+                    <i className="fi fi-sr-calendar"></i>
+                    <span>View Sessions</span>
+                  </button>
+                )}
                 <button className="test-headset-btn" onClick={openHeadsetModal}>
                   <i className="fi fi-sr-headset"></i>
                   <span>Test Headset</span>
@@ -507,7 +594,7 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
               {/* Upcoming Sessions */}
               <div className="content-card">
                 <h3 className="card-title">
-                  <i className="fi fi-sr-calendar-lines"></i>
+                  <i className="fi fi-sr-calendar"></i>
                   Upcoming
                 </h3>
                 <div className="sessions-list">
@@ -633,7 +720,7 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
                   <div className="mic-status denied">
                     <i className="fi fi-sr-exclamation"></i>
                     <div className="denied-reason">
-                      {micDeniedReason || 'Microphone access denied. Please allow access in your browser settings.'}
+                      {micError || 'Microphone access denied. Please allow access in your browser settings.'}
                       {!window.isSecureContext && (
                         <div className="https-hint">
                           <strong>Tip:</strong> On mobile Chrome, go to:<br/>
@@ -686,7 +773,7 @@ const StudentProfilePage = ({ studentId: studentIdProp }: StudentProfilePageProp
                   <div className="cam-status denied">
                     <i className="fi fi-sr-exclamation"></i>
                     <div className="denied-reason">
-                      {camDeniedReason || 'Camera access denied. Please allow access in your browser settings.'}
+                      {camError || 'Camera access denied. Please allow access in your browser settings.'}
                       {!window.isSecureContext && (
                         <div className="https-hint">
                           <strong>Tip:</strong> On mobile Chrome, go to:<br/>

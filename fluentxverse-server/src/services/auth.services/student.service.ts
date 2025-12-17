@@ -585,6 +585,179 @@ class StudentService {
       throw error;
     }
   }
+
+  /**
+   * Get student's own profile data
+   */
+  public async getOwnProfile(studentId: string) {
+    console.log('[StudentService] getOwnProfile called with:', { studentId });
+    
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (s:Student {id: $studentId})
+        OPTIONAL MATCH (s)<-[:BOOKED_BY]-(b:Booking)
+        WITH s, 
+             COUNT(DISTINCT CASE WHEN b.status = 'confirmed' OR b.status = 'completed' THEN b END) as totalLessons,
+             COUNT(DISTINCT CASE WHEN b.status = 'completed' AND b.attendanceStatus = 'present' THEN b END) as attendedLessons,
+             COUNT(DISTINCT CASE WHEN b.status = 'confirmed' THEN b END) as upcomingLessons
+        RETURN s {
+          .*,
+          totalLessons: totalLessons,
+          attendedLessons: attendedLessons,
+          upcomingLessons: upcomingLessons,
+          attendanceRate: CASE WHEN totalLessons > 0 THEN (attendedLessons * 100.0 / totalLessons) ELSE 0 END
+        } as student
+        `,
+        { studentId }
+      );
+
+      if (result.records.length === 0) {
+        console.error('[StudentService] Student not found with ID:', studentId);
+        throw new Error('Student not found');
+      }
+
+      const studentData = result.records[0]?.get('student');
+      
+      const profileData = {
+        id: studentData.id,
+        email: studentData.email,
+        givenName: studentData.givenName,
+        familyName: studentData.familyName,
+        fullName: `${studentData.givenName || ''} ${studentData.familyName || ''}`.trim(),
+        initials: `${studentData.givenName?.[0] || ''}${studentData.familyName?.[0] || ''}`.toUpperCase(),
+        mobileNumber: studentData.mobileNumber,
+        birthDate: studentData.birthDate,
+        joinDate: studentData.signUpdate || null,
+        totalLessons: typeof studentData.totalLessons === 'object' ? studentData.totalLessons.toInt() : (studentData.totalLessons || 0),
+        upcomingLessons: typeof studentData.upcomingLessons === 'object' ? studentData.upcomingLessons.toInt() : (studentData.upcomingLessons || 0),
+        attendance: Math.round(studentData.attendanceRate || 0),
+        smartWalletAddress: studentData.smartWalletAddress,
+        // Personal info fields
+        currentProficiency: studentData.currentProficiency || 'Beginner',
+        learningGoals: studentData.learningGoals ? (typeof studentData.learningGoals === 'string' ? JSON.parse(studentData.learningGoals) : studentData.learningGoals) : [],
+        preferredLearningStyle: studentData.preferredLearningStyle,
+        availability: studentData.availability ? (typeof studentData.availability === 'string' ? JSON.parse(studentData.availability) : studentData.availability) : [],
+        country: studentData.country,
+        timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
+        interests: studentData.interests,
+        preferredTopics: studentData.preferredTopics ? (typeof studentData.preferredTopics === 'string' ? JSON.parse(studentData.preferredTopics) : studentData.preferredTopics) : [],
+        // Lesson preferences
+        lessonPreferences: studentData.lessonPreferences ? (typeof studentData.lessonPreferences === 'string' ? JSON.parse(studentData.lessonPreferences) : studentData.lessonPreferences) : {
+          preferCameraOn: true,
+          errorCorrection: 'tutor_choice',
+          otherRequests: ''
+        },
+        // About Me fields
+        purpose: studentData.purpose || '',
+        occupation: studentData.occupation || '',
+        hobbies: studentData.hobbies ? (Array.isArray(studentData.hobbies) ? studentData.hobbies : []) : [],
+        bio: studentData.bio || ''
+      };
+      
+      console.log('[StudentService] Returning own profile data:', {
+        id: profileData.id,
+        email: profileData.email,
+        totalLessons: profileData.totalLessons
+      });
+      
+      return profileData;
+    } catch (error) {
+      console.error('[StudentService] Error getting own profile:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Update student's lesson preferences
+   */
+  public async updateLessonPreferences(studentId: string, preferences: {
+    preferCameraOn: boolean;
+    errorCorrection: 'during_feedback' | 'proactively' | 'tutor_choice';
+    otherRequests: string;
+  }) {
+    console.log('[StudentService] updateLessonPreferences called with:', { studentId, preferences });
+    
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const preferencesJson = JSON.stringify(preferences);
+      
+      const result = await session.run(
+        `
+        MATCH (s:Student {id: $studentId})
+        SET s.lessonPreferences = $preferences
+        RETURN s.id as id
+        `,
+        { studentId, preferences: preferencesJson }
+      );
+
+      if (result.records.length === 0) {
+        throw new Error('Student not found');
+      }
+
+      console.log('[StudentService] Lesson preferences updated successfully');
+      return { success: true, message: 'Preferences updated successfully' };
+    } catch (error) {
+      console.error('[StudentService] Error updating lesson preferences:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Update student's About Me info (purpose, occupation, hobbies)
+   */
+  public async updateAboutMe(studentId: string, aboutMe: {
+    purpose: string;
+    occupation: string;
+    hobbies: string[];
+    bio: string;
+  }) {
+    console.log('[StudentService] updateAboutMe called with:', { studentId, aboutMe });
+    
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (s:Student {id: $studentId})
+        SET s.purpose = $purpose,
+            s.occupation = $occupation,
+            s.hobbies = $hobbies,
+            s.bio = $bio
+        RETURN s.id as id
+        `,
+        { 
+          studentId, 
+          purpose: aboutMe.purpose,
+          occupation: aboutMe.occupation,
+          hobbies: aboutMe.hobbies,
+          bio: aboutMe.bio
+        }
+      );
+
+      if (result.records.length === 0) {
+        throw new Error('Student not found');
+      }
+
+      console.log('[StudentService] About Me updated successfully');
+      return { success: true, message: 'About Me updated successfully' };
+    } catch (error) {
+      console.error('[StudentService] Error updating About Me:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
 }
 
 export default StudentService;

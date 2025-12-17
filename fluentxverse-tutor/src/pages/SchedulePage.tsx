@@ -311,8 +311,8 @@ const SchedulePage = () => {
     const bookingInfo = bookedSlots.get(key);
     
     if (bookingInfo) {
-      // Open classroom with bookingId (sessionId)
-      window.open(`/classroom/${bookingInfo.bookingId}`, '_blank');
+      // Navigate to lesson details page in new tab
+      window.open(`/lesson/${bookingInfo.bookingId}`, '_blank');
     }
   };
 

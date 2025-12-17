@@ -468,6 +468,40 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       bookingId: t.String(),
       reason: t.Optional(t.String())
     })
+  })
+
+  /**
+   * Get lesson details by booking ID (Tutor view)
+   * GET /schedule/tutor-lesson/:bookingId
+   */
+  .get('/tutor-lesson/:bookingId', async ({ cookie, params, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const tutorId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'tutorAuth');
+
+      const { bookingId } = params;
+
+      const lessonDetails = await scheduleService.getTutorLessonDetails(bookingId, tutorId);
+      return {
+        success: true,
+        data: lessonDetails
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/tutor-lesson:', error.message);
+      return {
+        success: false,
+        error: error.message || 'Failed to get lesson details'
+      };
+    }
   });
 
 export default Schedule;

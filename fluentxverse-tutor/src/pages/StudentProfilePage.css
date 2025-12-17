@@ -8,7 +8,7 @@
 
 .student-profile-content {
   flex: 1;
-  margin-left: 80px;
+  margin-left: 116px;
 }
 
 .student-profile-main {
@@ -44,6 +44,77 @@
 
 .back-button i {
   font-size: 18px;
+}
+
+/* Lesson Info Card */
+.lesson-info-card {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border-radius: 20px;
+  padding: 24px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(2, 69, 174, 0.25);
+}
+
+.lesson-info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.lesson-info-header i {
+  font-size: 24px;
+  color: #fff;
+}
+
+.lesson-info-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  flex: 1;
+}
+
+.lesson-status-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.lesson-status-badge.confirmed {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.lesson-status-badge.completed {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.lesson-status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.lesson-info-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.lesson-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lesson-info-item i {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Profile Header Card */
@@ -205,14 +276,23 @@
   border-radius: 16px;
   text-align: center;
   min-width: 130px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.8);
   border: 2px solid transparent;
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.stat-card.blue { border-color: #0245ae; }
-.stat-card.green { border-color: #10b981; }
-.stat-card.orange { border-color: #f59e0b; }
+.stat-card.blue { 
+  border-color: #0245ae;
+  background: rgba(2, 69, 174, 0.08);
+}
+.stat-card.green { 
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+.stat-card.orange { 
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
 
 .stat-value {
   font-size: 36px;
@@ -237,13 +317,17 @@
 }
 
 .stat-label {
-  font-size: 11px;
-  color: #475569;
-  margin-top: 8px;
+  font-size: 12px;
+  color: #1e293b;
+  margin-top: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+.stat-card.blue .stat-label { color: #0245ae; }
+.stat-card.green .stat-label { color: #059669; }
+.stat-card.orange .stat-label { color: #b45309; }
 
 /* Tabs */
 .tabs-container {

@@ -17,137 +17,138 @@
 }
 
 .tickets-container {
-  max-width: 1200px;
+  padding: 28px 120px 48px 28px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-/* Header */
+/* Header - matching schedule page design */
 .tickets-header {
-  margin-bottom: 32px;
-}
-
-.tickets-header .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  margin-bottom: 16px;
-  transition: color 0.2s;
-}
-
-.tickets-header .back-link:hover {
-  color: #0245ae;
-}
-
-.tickets-header .back-link i {
-  font-size: 14px;
-}
-
-.tickets-header-content h1 {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-top: 16px;
+}
+
+.tickets-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tickets-page-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.tickets-page-icon i {
+  color: #fff;
+  font-size: 22px;
+}
+
+.tickets-page-title {
+  margin: 0;
   font-size: 28px;
   font-weight: 800;
-  color: #1e293b;
-  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.tickets-header-content h1 i {
-  color: #0245ae;
-  font-size: 28px;
-}
-
-.tickets-header-content p {
+.tickets-page-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 14px;
   color: #64748b;
-  font-size: 16px;
-  margin: 0;
+  font-weight: 500;
 }
 
 /* Current Balance Card */
 .tickets-balance {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .balance-card {
   display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(2, 69, 174, 0.15);
   border-radius: 16px;
-  padding: 24px 32px;
-  color: white;
-  box-shadow: 0 10px 40px rgba(2, 69, 174, 0.3);
+  padding: 16px 24px;
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.08);
 }
 
 .balance-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 24px;
 }
 
 .balance-label {
-  font-size: 18px;
-  font-weight: 600;
-  opacity: 0.95;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .balance-loading {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 16px;
-  opacity: 0.8;
-  padding: 20px 0;
+  gap: 10px;
+  font-size: 14px;
+  color: #64748b;
 }
 
 .balance-loading i {
-  font-size: 20px;
+  font-size: 16px;
+  color: #0245ae;
 }
 
 .balance-tickets-row {
   display: flex;
-  gap: 32px;
+  gap: 24px;
   align-items: center;
 }
 
 .balance-ticket-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .balance-ticket-img {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px;
 }
 
 .balance-ticket-count {
-  font-size: 48px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0245ae;
   line-height: 1;
 }
 
 .balance-ticket-count.premium {
-  color: #ffd700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #d97706;
 }
 
 .use-tickets-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: white;
-  color: #0245ae;
-  padding: 12px 24px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   text-decoration: none;

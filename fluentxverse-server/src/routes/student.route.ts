@@ -679,6 +679,127 @@ const Student = new Elysia({ name: "student" })
         user: t.Any()
       })
     }
+  })
+
+  /**
+   * Get student's own profile
+   * GET /student/profile
+   */
+  .get('/student/profile', async ({ cookie, set }) => {
+    console.log('[StudentRoute] GET /student/profile - Request received');
+    
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        console.error('[StudentRoute] No studentAuth cookie');
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        console.error('[StudentRoute] No userId in cookie');
+        set.status = 401;
+        return { success: false, error: 'Invalid session' };
+      }
+
+      console.log('[StudentRoute] Fetching profile for student:', studentId);
+      const studentService = new StudentService();
+      const profileData = await studentService.getOwnProfile(studentId);
+
+      return { success: true, data: profileData };
+    } catch (error: any) {
+      console.error('[StudentRoute] Profile error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to get profile' };
+    }
+  })
+
+  /**
+   * Update student's lesson preferences
+   * PUT /student/preferences
+   */
+  .put('/student/preferences', async ({ body, cookie, set }) => {
+    console.log('[StudentRoute] PUT /student/preferences - Request received');
+    
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        console.error('[StudentRoute] No studentAuth cookie');
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        console.error('[StudentRoute] No userId in cookie');
+        set.status = 401;
+        return { success: false, error: 'Invalid session' };
+      }
+
+      const preferences = body as {
+        preferCameraOn: boolean;
+        errorCorrection: 'during_feedback' | 'proactively' | 'tutor_choice';
+        otherRequests: string;
+      };
+
+      console.log('[StudentRoute] Updating preferences for student:', studentId, preferences);
+      const studentService = new StudentService();
+      const result = await studentService.updateLessonPreferences(studentId, preferences);
+
+      return result;
+    } catch (error: any) {
+      console.error('[StudentRoute] Preferences update error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to update preferences' };
+    }
+  })
+
+  /**
+   * Update student's About Me info (purpose, occupation, hobbies)
+   * PUT /student/about-me
+   */
+  .put('/student/about-me', async ({ body, cookie, set }) => {
+    console.log('[StudentRoute] PUT /student/about-me - Request received');
+    
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        console.error('[StudentRoute] No studentAuth cookie');
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        console.error('[StudentRoute] No userId in cookie');
+        set.status = 401;
+        return { success: false, error: 'Invalid session' };
+      }
+
+      const aboutMe = body as {
+        purpose: string;
+        occupation: string;
+        hobbies: string[];
+        bio: string;
+      };
+
+      console.log('[StudentRoute] Updating about me for student:', studentId, aboutMe);
+      const studentService = new StudentService();
+      const result = await studentService.updateAboutMe(studentId, aboutMe);
+
+      return result;
+    } catch (error: any) {
+      console.error('[StudentRoute] About Me update error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to update about me' };
+    }
   });
 
 export default Student;

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
-import Footer from '../Components/Footer/Footer';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi, StudentStats, RecentActivity } from '../api/schedule.api';
 import './HomePage.css';
@@ -507,7 +506,6 @@ const HomePage = () => {
             )}
           </div>
         </main>
-        <Footer />
       </div>
     </>
   );

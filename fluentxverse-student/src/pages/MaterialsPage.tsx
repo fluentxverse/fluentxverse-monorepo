@@ -118,16 +118,14 @@ export default function MaterialsPage() {
           <div className="materials-container">
             {/* Header */}
             <div className="materials-header">
-              <a href="/home" className="back-link">
-                <i className="fas fa-arrow-left"></i>
-                Back to Dashboard
-              </a>
-              <div className="materials-header-content">
-                <h1>
+              <div className="materials-header-left">
+                <div className="materials-page-icon">
                   <i className="fas fa-book-open"></i>
-                  Learning Materials
-                </h1>
-                <p>Explore our comprehensive collection of {courses.length} English learning courses</p>
+                </div>
+                <div>
+                  <h1 className="materials-page-title">Learning Materials</h1>
+                  <p className="materials-page-subtitle">Explore our comprehensive collection of {courses.length} English learning courses</p>
+                </div>
               </div>
             </div>
 

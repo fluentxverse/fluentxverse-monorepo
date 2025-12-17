@@ -13,8 +13,28 @@ const NotFound = () => {
   }, [setLocation]);
 
   const handleGoBack = useCallback(() => {
-    window.history.back();
-  }, []);
+    const currentHref = window.location.href;
+
+    const tryBack = (attempt: number) => {
+      if (window.history.length <= 1) {
+        setLocation('/home');
+        return;
+      }
+
+      window.history.go(-1);
+
+      window.setTimeout(() => {
+        if (window.location.href !== currentHref) return;
+        if (attempt >= 2) {
+          setLocation('/home');
+          return;
+        }
+        tryBack(attempt + 1);
+      }, 80);
+    };
+
+    tryBack(0);
+  }, [setLocation]);
 
   return (
     <div style={{

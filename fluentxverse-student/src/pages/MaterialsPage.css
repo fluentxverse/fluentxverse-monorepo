@@ -17,54 +17,57 @@
 }
 
 .materials-container {
-  max-width: 1200px;
+  padding: 28px 120px 48px 28px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-/* Header */
+/* Header - matching tickets/schedule page design */
 .materials-header {
-  margin-bottom: 24px;
-}
-
-.materials-header .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #64748b;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  margin-bottom: 16px;
-  transition: color 0.2s;
-}
-
-.materials-header .back-link:hover {
-  color: #0245ae;
-}
-
-.materials-header .back-link i {
-  font-size: 14px;
-}
-
-.materials-header-content h1 {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-top: 16px;
+}
+
+.materials-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.materials-page-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.materials-page-icon i {
+  color: #fff;
+  font-size: 22px;
+}
+
+.materials-page-title {
+  margin: 0;
   font-size: 28px;
   font-weight: 800;
-  color: #1e293b;
-  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.materials-header-content h1 i {
-  color: #0245ae;
-  font-size: 28px;
-}
-
-.materials-header-content p {
+.materials-page-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 14px;
   color: #64748b;
-  font-size: 16px;
-  margin: 0;
+  font-weight: 500;
 }
 
 /* Search */
