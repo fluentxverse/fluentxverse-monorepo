@@ -847,15 +847,15 @@ const Student = new Elysia({ name: "student" })
   })
 
   /**
-   * Get student's favorite tutors
-   * GET /student/favorites
+   * Get student's favorite tutors with pagination
+   * GET /student/favorites?page=1&limit=10
    */
-  .get('/student/favorites', async ({ cookie, set }) => {
+  .get('/student/favorites', async ({ cookie, set, query }) => {
     try {
       const authCookie = cookie.studentAuth?.value;
       if (!authCookie) {
         set.status = 401;
-        return { success: false, error: 'Not authenticated', data: [] };
+        return { success: false, error: 'Not authenticated', data: { favorites: [], total: 0, page: 1, limit: 10, totalPages: 0 } };
       }
 
       const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
@@ -863,15 +863,19 @@ const Student = new Elysia({ name: "student" })
 
       if (!studentId) {
         set.status = 401;
-        return { success: false, error: 'Invalid session', data: [] };
+        return { success: false, error: 'Invalid session', data: { favorites: [], total: 0, page: 1, limit: 10, totalPages: 0 } };
       }
 
-      const favorites = await favoritesService.getFavorites(studentId);
-      return { success: true, data: favorites };
+      // Parse pagination params with defaults
+      const page = Math.max(1, parseInt(query.page as string) || 1);
+      const limit = Math.min(50, Math.max(1, parseInt(query.limit as string) || 10));
+
+      const result = await favoritesService.getFavorites(studentId, page, limit);
+      return { success: true, data: result };
     } catch (error: any) {
       console.error('[StudentRoute] Get favorites error:', error);
       set.status = 500;
-      return { success: false, error: error.message || 'Failed to get favorites', data: [] };
+      return { success: false, error: error.message || 'Failed to get favorites', data: { favorites: [], total: 0, page: 1, limit: 10, totalPages: 0 } };
     }
   })
 

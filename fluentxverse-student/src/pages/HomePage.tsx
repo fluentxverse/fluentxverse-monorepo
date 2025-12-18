@@ -109,8 +109,9 @@ const HomePage = () => {
       
       try {
         setFavoritesLoading(true);
-        const favorites = await favoritesApi.getFavorites();
-        setFavoriteTutors(favorites);
+        // Fetch first page of favorites (limit 4 for homepage display)
+        const result = await favoritesApi.getFavorites(1, 4);
+        setFavoriteTutors(result.favorites);
       } catch (err: any) {
         console.error('Failed to fetch favorite tutors:', err);
         setFavoriteTutors([]);

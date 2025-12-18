@@ -97,13 +97,36 @@ export class FavoritesService {
   }
 
   /**
-   * Get all favorite tutors for a student
+   * Get favorite tutors for a student with pagination
+   * @param studentId - The student's ID
+   * @param page - Page number (1-indexed)
+   * @param limit - Number of items per page
    */
-  async getFavorites(studentId: string): Promise<FavoriteTutor[]> {
+  async getFavorites(studentId: string, page: number = 1, limit: number = 10): Promise<{
+    favorites: FavoriteTutor[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     const driver = getDriver();
     const session = driver.session();
 
     try {
+      // Get total count first
+      const countResult = await session.run(`
+        MATCH (s:Student {id: $studentId})-[f:FAVORITES]->(t:User)
+        RETURN count(f) AS total
+      `, { studentId });
+      
+      const total = countResult.records[0]?.get('total')?.toNumber?.() || 
+                    countResult.records[0]?.get('total') || 0;
+      
+      // Calculate offset - use neo4j.int for Memgraph compatibility
+      const offset = (page - 1) * limit;
+      
+      // Get paginated results
+      // Use toInteger() in Cypher to ensure proper integer type for Memgraph
       const result = await session.run(`
         MATCH (s:Student {id: $studentId})-[f:FAVORITES]->(t:User)
         RETURN 
@@ -114,9 +137,11 @@ export class FavoritesService {
           t.profilePicture AS profilePicture,
           f.createdAt AS addedAt
         ORDER BY f.createdAt DESC
-      `, { studentId });
+        SKIP toInteger($offset)
+        LIMIT toInteger($limit)
+      `, { studentId, offset, limit });
 
-      return result.records.map((record: any) => {
+      const favorites = result.records.map((record: any) => {
         const firstName = record.get('firstName') || '';
         const lastName = record.get('lastName') || '';
         
@@ -128,9 +153,17 @@ export class FavoritesService {
           addedAt: record.get('addedAt')?.toString() || new Date().toISOString()
         };
       });
+      
+      return {
+        favorites,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (error) {
       console.error('Error getting favorites:', error);
-      return [];
+      return { favorites: [], total: 0, page, limit, totalPages: 0 };
     } finally {
       await session.close();
     }

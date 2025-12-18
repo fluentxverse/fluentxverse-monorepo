@@ -3,6 +3,7 @@ import { TutorService } from '../services/tutor.services/tutor.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
 import { refreshAuthCookie } from '../utils/refreshCookie';
+import { cacheGetOrSet, invalidateCache } from '../db/redis';
 
 const tutorService = new TutorService();
 
@@ -303,6 +304,10 @@ const Tutor = new Elysia({ prefix: '/tutor' })
 
       const result = await tutorService.updateProfile(userId, filteredData);
 
+      // Invalidate tutor profile cache after update
+      await invalidateCache(`tutor:profile:${userId}`);
+      console.log('🗑️ Invalidated tutor profile cache after update');
+
       return { 
         success: true, 
         data: filteredData,
@@ -366,6 +371,7 @@ const Tutor = new Elysia({ prefix: '/tutor' })
   /**
    * Get tutor profile by ID
    * GET /tutor/:tutorId
+   * Cached for 5 minutes to reduce DB calls for popular tutors
    * IMPORTANT: This must be last because it's a catch-all route
    */
   .get('/:tutorId', async ({ params }) => {
@@ -379,7 +385,11 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         };
       }
 
-      const tutor = await tutorService.getTutorProfile(tutorId);
+      // Cache tutor profile for 5 minutes (300 seconds)
+      const cacheKey = `tutor:profile:${tutorId}`;
+      const tutor = await cacheGetOrSet(cacheKey, 300, () => 
+        tutorService.getTutorProfile(tutorId)
+      );
 
       if (!tutor) {
         return {

@@ -314,6 +314,7 @@ export class ScheduleService {
 
   /**
    * Book a time slot (student action)
+   * Uses atomic update to prevent duplicate bookings
    */
   async bookSlot(input: BookSlotInput): Promise<Booking> {
     const driver = getDriver();
@@ -323,25 +324,37 @@ export class ScheduleService {
       console.log('=== SERVICE: bookSlot START ===');
       console.log('Input:', JSON.stringify(input, null, 2));
       
-      // Check slot availability
-      console.log('Checking slot availability for slotId:', input.slotId);
+      // ATOMIC: Check slot availability AND lock it in a single transaction
+      // This prevents race conditions where two users try to book the same slot
+      console.log('Checking slot availability and locking for slotId:', input.slotId);
       const slotResult = await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId, status: 'open'})
+        SET s.status = 'pending', s.pendingBy = $studentId, s.pendingAt = datetime()
         RETURN s
         `,
-        { slotId: input.slotId }
+        { slotId: input.slotId, studentId: input.studentId }
       );
       
       console.log('Slot query returned', slotResult.records.length, 'records');
       
       if (slotResult.records.length === 0) {
-        console.log('ERROR: Slot not available - either not found or status is not "open"');
+        // Check if slot exists but is already taken
+        const existingSlot = await session.run(
+          `MATCH (s:TimeSlot {slotId: $slotId}) RETURN s.status as status`,
+          { slotId: input.slotId }
+        );
+        if (existingSlot.records.length > 0) {
+          const status = existingSlot.records[0]?.get('status');
+          console.log('ERROR: Slot exists but status is:', status);
+          throw new Error('This slot has already been booked by another student. Please choose a different time.');
+        }
+        console.log('ERROR: Slot not found');
         throw new Error('Slot not available for booking');
       }
       
       const slot = slotResult.records[0]?.get('s').properties;
-      console.log('Slot found:', JSON.stringify(slot, null, 2));
+      console.log('Slot found and locked:', JSON.stringify(slot, null, 2));
       
       // Check if tutor is certified (passed both exams AND profile approved)
       // OR is a test account (bypass for development)
@@ -464,6 +477,25 @@ export class ScheduleService {
       }
       
       console.log('Ticket transfer TX hash:', input.ticketTransferTxHash);
+      
+      // === TRANSACTION REPLAY PROTECTION ===
+      // Check if this transaction hash has already been used for a booking
+      console.log('🔐 Checking for transaction replay...');
+      const existingTxResult = await session.run(
+        `
+        MATCH (t:TicketTransaction {transferTxHash: $txHash})
+        RETURN t.id as id, t.bookingId as bookingId
+        `,
+        { txHash: input.ticketTransferTxHash }
+      );
+      
+      if (existingTxResult.records.length > 0) {
+        const existingBookingId = existingTxResult.records[0]?.get('bookingId');
+        console.log('ERROR: Transaction hash already used for booking:', existingBookingId);
+        throw new Error('This transaction has already been used for a booking. Please make a new ticket transfer.');
+      }
+      console.log('✅ Transaction hash is unique');
+      // === END TRANSACTION REPLAY PROTECTION ===
       
       // === SERVER-SIDE TICKET VERIFICATION ===
       // Verify the transaction on the blockchain before accepting the booking
@@ -613,6 +645,23 @@ export class ScheduleService {
         status: 'confirmed',
         bookedAt: now
       };
+    } catch (error: any) {
+      // Release the slot lock if booking fails (only if we locked it)
+      console.log('=== BOOKING FAILED, RELEASING SLOT LOCK ===');
+      try {
+        await session.run(
+          `
+          MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId})
+          SET s.status = 'open', s.pendingBy = null, s.pendingAt = null
+          RETURN s
+          `,
+          { slotId: input.slotId, studentId: input.studentId }
+        );
+        console.log('✅ Slot lock released');
+      } catch (releaseError) {
+        console.error('Failed to release slot lock:', releaseError);
+      }
+      throw error;
     } finally {
       await session.close();
     }

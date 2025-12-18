@@ -8,18 +8,36 @@ export interface FavoriteTutor {
   addedAt: string;
 }
 
+export interface PaginatedFavorites {
+  favorites: FavoriteTutor[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const favoritesApi = {
   /**
-   * Get all favorite tutors for the logged-in student
+   * Get favorite tutors for the logged-in student with pagination
+   * @param page - Page number (default 1)
+   * @param limit - Items per page (default 10, max 50)
    */
-  getFavorites: async (): Promise<FavoriteTutor[]> => {
-    const response = await api.get<{ success: boolean; data: FavoriteTutor[] }>('/student/favorites');
+  getFavorites: async (page: number = 1, limit: number = 10): Promise<PaginatedFavorites> => {
+    const response = await api.get<{ success: boolean; data: PaginatedFavorites }>(`/student/favorites?page=${page}&limit=${limit}`);
     
     if (!response.data.success) {
       throw new Error('Failed to get favorites');
     }
     
     return response.data.data;
+  },
+
+  /**
+   * Get all favorites (for backward compatibility - fetches first 100)
+   */
+  getAllFavorites: async (): Promise<FavoriteTutor[]> => {
+    const result = await favoritesApi.getFavorites(1, 100);
+    return result.favorites;
   },
 
   /**
