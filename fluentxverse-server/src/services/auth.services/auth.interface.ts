@@ -110,3 +110,35 @@ export interface UpdatePasswordParams {
     currentPassword: string;
     newPassword: string;
 }
+
+// Student user data returned from database
+export interface StudentUserData {
+    id: string;
+    email: string | null;
+    role: string;
+    familyName: string | null;
+    givenName: string | null;
+    birthDate: string | null;
+    mobileNumber: string | null;
+    signUpdate: number;
+    tier: number;
+    verifiedEmail: boolean;
+    verifiedMobile: boolean;
+    externalWalletAddress?: string | null;
+    smartWalletAddress?: string | { address: string } | null;
+    suspendedUntil?: Date | null;
+    suspendedReason?: string;
+}
+
+// Normalized user for frontend response
+export interface NormalizedStudentUser {
+    id: string;
+    userId: string;
+    email: string | null;
+    givenName: string | null;
+    familyName: string | null;
+    mobileNumber: string | null;
+    tier: number;
+    role: string;
+    walletAddress: string | null;
+}

@@ -6,6 +6,7 @@ import { verifyMessage } from "viem";
 import { getUser } from "thirdweb/wallets";
 import { thirdwebClient } from "../services/utils.services/utils";
 import { ticketService } from "../services/ticket.services/ticket.service";
+import type { StudentUserData, NormalizedStudentUser } from "../services/auth.services/auth.interface";
 
 // In-memory nonce store (use Redis in production for multi-instance deployments)
 const nonceStore = new Map<string, { nonce: string; expires: number }>();
@@ -25,19 +26,19 @@ const Student = new Elysia({ name: "student" })
     try {
       const studentService = new StudentService();
       const result = await studentService.register(body);
-      const userData = await studentService.login({ email: body.email, password: body.password });
+      const userData: StudentUserData = await studentService.login({ email: body.email, password: body.password });
 
       // Normalize user object for frontend consistency
-      const normalizedUser = {
-        id: userData.id || userData.userId || userData.uid,
-        userId: userData.id || userData.userId || userData.uid,
+      const normalizedUser: NormalizedStudentUser = {
+        id: userData.id,
+        userId: userData.id,
         email: userData.email,
-        givenName: userData.givenName || userData.firstName || userData.given_name || null,
-        familyName: userData.familyName || userData.lastName || userData.family_name || null,
-        mobileNumber: userData.mobileNumber || userData.phone || null,
+        givenName: userData.givenName || null,
+        familyName: userData.familyName || null,
+        mobileNumber: userData.mobileNumber || null,
         tier: userData.tier ?? 0,
         role: userData.role || 'student',
-        walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : (userData.smartWalletAddress?.address || null)
+        walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : ((userData.smartWalletAddress as { address: string } | null)?.address || null)
       };
 
       cookie.studentAuth?.set({
@@ -94,18 +95,18 @@ const Student = new Elysia({ name: "student" })
   .post("/student/login", async ({ body, cookie }) => {
     try {
       const studentService = new StudentService();
-      const userData = await studentService.login(body);
+      const userData: StudentUserData = await studentService.login(body);
 
-      const normalizedUser = {
-        id: userData.id || userData.userId || userData.uid,
-        userId: userData.id || userData.userId || userData.uid,
+      const normalizedUser: NormalizedStudentUser = {
+        id: userData.id,
+        userId: userData.id,
         email: userData.email,
-        givenName: userData.givenName || userData.firstName || userData.given_name || null,
-        familyName: userData.familyName || userData.lastName || userData.family_name || null,
-        mobileNumber: userData.mobileNumber || userData.phone || null,
+        givenName: userData.givenName || null,
+        familyName: userData.familyName || null,
+        mobileNumber: userData.mobileNumber || null,
         tier: userData.tier ?? 0,
         role: userData.role || 'student',
-        walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : (userData.smartWalletAddress?.address || null)
+        walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : ((userData.smartWalletAddress as { address: string } | null)?.address || null)
       };
 
       cookie.studentAuth?.set({
@@ -509,17 +510,17 @@ const Student = new Elysia({ name: "student" })
       // Full authentication - delete nonce and set cookie
       nonceStore.delete(normalizedAddress);
       
-      const userData = result.user;
-      const normalizedUser = {
-        id: userData.id || userData.userId || userData.uid,
-        userId: userData.id || userData.userId || userData.uid,
+      const userData: StudentUserData = result.user;
+      const normalizedUser: NormalizedStudentUser = {
+        id: userData.id,
+        userId: userData.id,
         email: userData.email,
-        givenName: userData.givenName || userData.firstName || userData.given_name || null,
-        familyName: userData.familyName || userData.lastName || userData.family_name || null,
-        mobileNumber: userData.mobileNumber || userData.phone || null,
+        givenName: userData.givenName || null,
+        familyName: userData.familyName || null,
+        mobileNumber: userData.mobileNumber || null,
         tier: userData.tier ?? 0,
         role: userData.role || 'student',
-        walletAddress: userData.externalWalletAddress || userData.smartWalletAddress || null
+        walletAddress: userData.externalWalletAddress || (typeof userData.smartWalletAddress === 'string' ? userData.smartWalletAddress : null) || null
       };
 
       cookie.studentAuth?.set({
@@ -652,8 +653,8 @@ const Student = new Elysia({ name: "student" })
         console.error('Failed to send trial ticket to new user:', trialError);
       }
 
-      const userData = result.user;
-      const normalizedUser = {
+      const userData: StudentUserData = result.user;
+      const normalizedUser: NormalizedStudentUser = {
         id: userData.id,
         userId: userData.id,
         email: userData.email,
