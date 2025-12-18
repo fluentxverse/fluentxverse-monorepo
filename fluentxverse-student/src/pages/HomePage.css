@@ -321,13 +321,19 @@
 }
 
 .home-empty-text {
-  margin: 0 0 16px 0;
+  margin: 0 0 8px 0;
   color: #64748b;
   font-size: 14px;
 }
 
+.home-empty-subtext {
+  margin: 0 0 16px 0;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
 .home-btn-book {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #fff;
   border: none;
   padding: 10px 20px;
@@ -336,10 +342,12 @@
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
 }
 
 .home-btn-book:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.4);
 }
 
 /* Quick Actions */
@@ -401,6 +409,77 @@
 
 .home-action-btn i {
   font-size: 18px;
+}
+
+/* My Tutors Section */
+.home-tutors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-tutor-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.home-tutor-item:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  transform: translateX(4px);
+}
+
+.home-tutor-avatar.small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.home-tutor-avatar.small.placeholder {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-tutor-avatar.small.placeholder i {
+  color: white;
+  font-size: 16px;
+}
+
+.home-tutor-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+}
+
+.home-tutors-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  color: #0245ae;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.home-tutors-more:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  gap: 12px;
 }
 
 /* Recent Activity */
@@ -685,4 +764,157 @@
   color: #64748b;
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* Ticket Balance Section */
+.home-tickets-section {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.home-tickets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.home-tickets-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-tickets-title i {
+  color: #0245ae;
+}
+
+.home-tickets-link {
+  color: #0245ae;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.home-tickets-link:hover {
+  color: #023a8f;
+  gap: 10px;
+}
+
+.home-tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.home-tickets-grid.has-trial {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.home-ticket-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.home-ticket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.home-ticket-card.basic {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: #93c5fd;
+}
+
+.home-ticket-card.premium {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fcd34d;
+}
+
+.home-ticket-card.trial {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+}
+
+.home-ticket-icon {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.home-ticket-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.home-ticket-info {
+  flex: 1;
+}
+
+.home-ticket-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.home-ticket-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.home-ticket-card.basic .home-ticket-label {
+  color: #2563eb;
+}
+
+.home-ticket-card.premium .home-ticket-label {
+  color: #d97706;
+}
+
+.home-ticket-card.trial .home-ticket-label {
+  color: #16a34a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .home-tickets-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .home-ticket-card {
+    padding: 16px;
+  }
+  
+  .home-ticket-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .home-ticket-count {
+    font-size: 24px;
+  }
 }

@@ -24,6 +24,7 @@ import { getIO } from '../../socket/socket.server';
 import { emitSlotBooked } from '../../socket/handlers/schedule.handler';
 import { ticketService } from '../ticket.services/ticket.service';
 import { REFUND_POLICY } from '../../config/constant';
+import { invalidateCache } from '../../db/redis';
 
 const notificationService = new NotificationService();
 
@@ -464,6 +465,22 @@ export class ScheduleService {
       
       console.log('Ticket transfer TX hash:', input.ticketTransferTxHash);
       
+      // === SERVER-SIDE TICKET VERIFICATION ===
+      // Verify the transaction on the blockchain before accepting the booking
+      console.log('🔐 Verifying ticket transfer on blockchain...');
+      const verificationResult = await ticketService.verifyTicketTransfer(
+        input.ticketTransferTxHash,
+        studentWallet
+      );
+      
+      if (!verificationResult.valid) {
+        console.log('ERROR: Ticket transfer verification failed:', verificationResult.error);
+        throw new Error(`Ticket verification failed: ${verificationResult.error}`);
+      }
+      
+      console.log('✅ Ticket transfer verified on blockchain');
+      // === END SERVER-SIDE TICKET VERIFICATION ===
+      
       // Record the ticket transaction in database (transfer already happened on frontend)
       console.log('Recording ticket transaction for booking...');
       try {
@@ -575,6 +592,13 @@ export class ScheduleService {
       } catch (notifError) {
         console.error('Failed to send booking notification:', notifError);
         // Don't fail the booking if notification fails
+      }
+      
+      // Invalidate ticket balance cache for the student
+      if (studentWallet) {
+        const cacheKey = `ticket:balance:${studentWallet.toLowerCase()}`;
+        await invalidateCache(cacheKey);
+        console.log('🗑️ Invalidated ticket balance cache for student after booking');
       }
       
       console.log('=== SERVICE: bookSlot END ===');

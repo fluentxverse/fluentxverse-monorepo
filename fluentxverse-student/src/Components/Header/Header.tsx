@@ -127,6 +127,14 @@ const Header = () => {
                     <ul className="navigation">
                       <li><a href={isAuthenticated ? "/home" : "/"}>Home</a></li>
                       <li><a href="/browse-tutors">Browse Tutors</a></li>
+                      {isAuthenticated && (
+                        <>
+                          <li><a href="/schedule">Schedule</a></li>
+                          <li><a href="/tickets">Tickets</a></li>
+                          <li><a href="/materials">Materials</a></li>
+                          <li><a href="/profile">Profile</a></li>
+                        </>
+                      )}
                       {/* <li><a href="/farms">Farms</a></li>
                       <li><a href="/tree-nfts">Trees</a></li>
                       <li><a href="/assets/whitepaper/whitepaper.pdf" target="_blank" rel="noopener noreferrer">Whitepaper</a></li>
@@ -183,41 +191,39 @@ const Header = () => {
                           </a>
                         </li>
                         <li>
-                          <a href="/farms" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-seedling" />
-                            <span>Farms</span>
+                          <a href="/browse-tutors" onClick={closeMobileMenu} className="nav-link">
+                            <i className="fas fa-chalkboard-teacher" />
+                            <span>Browse Tutors</span>
                           </a>
                         </li>
-                        <li>
-                          <a href="/tree-nfts" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-tree" />
-                            <span>Trees</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a 
-                            href="https://decentragri.gitbook.io/decentragri.com/" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={closeMobileMenu}
-                            className="nav-link"
-                          >
-                            <i className="fas fa-file-alt" />
-                            <span>Whitepaper</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/about" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-info-circle" />
-                            <span>About</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/contact" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-envelope" />
-                            <span>Contact</span>
-                          </a>
-                        </li>
+                        {isAuthenticated && (
+                          <>
+                            <li>
+                              <a href="/schedule" onClick={closeMobileMenu} className="nav-link">
+                                <i className="fas fa-calendar-alt" />
+                                <span>Schedule</span>
+                              </a>
+                            </li>
+                            <li>
+                              <a href="/tickets" onClick={closeMobileMenu} className="nav-link">
+                                <i className="fas fa-ticket-alt" />
+                                <span>Tickets</span>
+                              </a>
+                            </li>
+                            <li>
+                              <a href="/materials" onClick={closeMobileMenu} className="nav-link">
+                                <i className="fas fa-book" />
+                                <span>Materials</span>
+                              </a>
+                            </li>
+                            <li>
+                              <a href="/profile" onClick={closeMobileMenu} className="nav-link">
+                                <i className="fas fa-user" />
+                                <span>Profile</span>
+                              </a>
+                            </li>
+                          </>
+                        )}
                       </ul>
                     </nav>
                     

@@ -2,16 +2,20 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { tutorApi } from '../api/tutor.api';
+import { favoritesApi } from '../api/favorites.api';
 import type { TutorProfile } from '../types/tutor.types';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
 import { useAuthContext } from '../context/AuthContext';
 import VideoPlayer from '../Components/Common/VideoPlayer';
+import { Toast, useToast } from '../Components/Common/Toast';
+import { getTicketBalance } from '../services/ticket.service';
 import './TutorProfilePage.css';
 
 export const TutorProfilePage = () => {
   const { user } = useAuthContext();
+  const { toasts, removeToast, showSuccess, showError } = useToast();
   
   useEffect(() => {
     document.title = 'Tutor Profile | FluentXVerse';
@@ -26,6 +30,10 @@ export const TutorProfilePage = () => {
   const [activeTab, setActiveTab] = useState<'about' | 'schedule' | 'reviews'>('about');
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [hasTrialTickets, setHasTrialTickets] = useState(false);
+  const [hasAnyTickets, setHasAnyTickets] = useState(false);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
   const [availability, setAvailability] = useState<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('morning');
   const [preSelectedSlot, setPreSelectedSlot] = useState<{ date: string; time: string } | null>(null);
@@ -117,6 +125,64 @@ export const TutorProfilePage = () => {
     loadAvailability();
   }, [tutorId]);
 
+  // Check if user has tickets
+  useEffect(() => {
+    const checkTickets = async () => {
+      if (user?.walletAddress) {
+        setTicketsLoading(true);
+        try {
+          const balance = await getTicketBalance(user.walletAddress);
+          setHasTrialTickets(balance.trial > 0);
+          setHasAnyTickets(balance.basic > 0 || balance.premium > 0 || balance.trial > 0);
+        } catch (err) {
+          console.error('Failed to check tickets', err);
+        } finally {
+          setTicketsLoading(false);
+        }
+      } else {
+        setTicketsLoading(false);
+      }
+    };
+    checkTickets();
+  }, [user?.walletAddress]);
+
+  // Check if tutor is in favorites
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (user && tutorId) {
+        try {
+          const isFav = await favoritesApi.checkFavorite(tutorId);
+          setIsFavorite(isFav);
+        } catch (err) {
+          console.error('Failed to check favorite status', err);
+        }
+      }
+    };
+    checkFavoriteStatus();
+  }, [user, tutorId]);
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      showError('Please log in to add favorites');
+      return;
+    }
+    
+    try {
+      const result = await favoritesApi.toggleFavorite(tutorId, isFavorite);
+      if (result.success) {
+        setIsFavorite(result.isFavorite);
+        if (result.isFavorite) {
+          showSuccess('Added to favorites!');
+        } else {
+          showSuccess('Removed from favorites');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to toggle favorite', err);
+      showError('Failed to update favorites');
+    }
+  };
+
   const handleBookTrial = () => {
     setPreSelectedSlot(null);
     setBookingModalOpen(true);
@@ -204,7 +270,18 @@ export const TutorProfilePage = () => {
 
                 {/* Right: Details */}
                 <div className="profile-header-right">
-                  <h1 className="profile-name">{displayName}</h1>
+                  <div className="profile-name-row">
+                    <h1 className="profile-name">{displayName}</h1>
+                    {user && (
+                      <button 
+                        onClick={handleToggleFavorite} 
+                        className={`btn-favorite-star ${isFavorite ? 'favorited' : ''}`}
+                        title={isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                      >
+                        <i className={isFavorite ? "fas fa-star" : "far fa-star"}></i>
+                      </button>
+                    )}
+                  </div>
 
                   {/* Star Rating */}
                   <div className="profile-rating-row">
@@ -493,35 +570,108 @@ export const TutorProfilePage = () => {
             {/* Sidebar: Booking Card (Desktop) */}
             <div className="profile-sidebar">
               <div className="profile-booking-card">
-                <div className="booking-card-price">
-                  <span className="price-label">Trial Lesson</span>
-                  <div className="price-value">{hourlyRate}<span className="price-unit">/25min</span></div>
-                </div>
-                
-                <button onClick={handleBookTrial} className="btn-book-trial">
-                  <i className="fi-sr-calendar"></i>
-                  Book Trial Lesson
-                </button>
+                {ticketsLoading ? (
+                  <div className="booking-card-loading">
+                    <div className="loading-spinner"></div>
+                    <span>Loading...</span>
+                  </div>
+                ) : hasTrialTickets ? (
+                  <>
+                    <div className="booking-card-price">
+                      <span className="price-label">Trial Lesson</span>
+                      <div className="price-value">{hourlyRate}<span className="price-unit">/25min</span></div>
+                    </div>
+                    
+                    <button onClick={handleBookTrial} className="btn-book-trial">
+                      <i className="fi-sr-calendar"></i>
+                      Book Trial Lesson
+                    </button>
 
-                <div className="booking-features">
-                  <div className="feature-item">
-                    <i className="fi-sr-checkbox"></i>
-                    <span>Cancel anytime</span>
-                  </div>
-                  <div className="feature-item">
-                    <i className="fi-sr-checkbox"></i>
-                    <span>25-minute session</span>
-                  </div>
-                  <div className="feature-item">
-                    <i className="fi-sr-checkbox"></i>
-                    <span>Instant confirmation</span>
-                  </div>
-                </div>
+                    <div className="booking-features">
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>Cancel anytime</span>
+                      </div>
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>25-minute session</span>
+                      </div>
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>Instant confirmation</span>
+                      </div>
+                    </div>
 
-                <div className="booking-note">
-                  <i className="fi-sr-info"></i>
-                  <span>Get to know this tutor with a trial lesson</span>
-                </div>
+                    <div className="booking-note">
+                      <i className="fi-sr-info"></i>
+                      <span>Get to know this tutor with a trial lesson</span>
+                    </div>
+                  </>
+                ) : hasAnyTickets ? (
+                  <>
+                    <div className="booking-card-header">
+                      <span className="booking-card-title">Book a Lesson</span>
+                      <span className="booking-card-subtitle">1 Ticket per session</span>
+                    </div>
+                    
+                    <button onClick={handleBookTrial} className="btn-book-trial">
+                      <i className="fi-sr-calendar"></i>
+                      Book Now
+                    </button>
+
+                    <div className="booking-features">
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>Flexible scheduling</span>
+                      </div>
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>1-on-1 session</span>
+                      </div>
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>Personalized learning</span>
+                      </div>
+                    </div>
+
+                    <div className="booking-note">
+                      <i className="fi-sr-info"></i>
+                      <span>Use your tickets to book a lesson</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="booking-card-header">
+                      <span className="booking-card-title">Get Started</span>
+                      <span className="booking-card-subtitle">Purchase tickets to book lessons</span>
+                    </div>
+                    
+                    <a href="/tickets" className="btn-book-trial btn-buy-tickets">
+                      <i className="fi-sr-ticket"></i>
+                      Buy Tickets
+                    </a>
+
+                    <div className="booking-features">
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>Affordable packages</span>
+                      </div>
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>Flexible options</span>
+                      </div>
+                      <div className="feature-item">
+                        <i className="fi-sr-checkbox"></i>
+                        <span>No expiration</span>
+                      </div>
+                    </div>
+
+                    <div className="booking-note">
+                      <i className="fi-sr-info"></i>
+                      <span>Tickets let you book lessons with any tutor</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -544,6 +694,9 @@ export const TutorProfilePage = () => {
           preSelectedTime={preSelectedSlot?.time}
         />
       )}
+
+      {/* Toast Notifications */}
+      <Toast toasts={toasts} onRemove={removeToast} />
     </>
   );
 };

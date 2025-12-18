@@ -123,5 +123,7 @@ COMMENT ON TABLE session_participants IS 'Tracks users who join tutoring session
 COMMENT ON TABLE system_messages IS 'Stores system-wide announcements and messages from FluentXVerse admin';
 COMMENT ON TABLE system_message_recipients IS 'Tracks which users have read/pinned system messages';
 
--- NOTE: Ticket Types are stored in Memgraph (graph database) instead of PostgreSQL
+-- NOTE: Ticket Types and Student Favorites are stored in Memgraph (graph database) instead of PostgreSQL
+-- Student Favorites use a FAVORITES relationship: (Student)-[:FAVORITES]->(Tutor)
 -- See fluentxverse-server/src/services/ticket.services/ticket.service.ts
+-- See fluentxverse-server/src/services/favorites.services/favorites.service.ts

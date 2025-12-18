@@ -1,5 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { ticketService, type TicketTier } from '@/services/ticket.services/ticket.service';
+import { cacheGetOrSet, invalidateCache } from '@/db/redis';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -218,6 +219,11 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         };
       }
 
+      // Invalidate ticket balance cache after successful purchase
+      const cacheKey = `ticket:balance:${buyerWallet.toLowerCase()}`;
+      await invalidateCache(cacheKey);
+      console.log('🗑️ Invalidated ticket balance cache after purchase');
+
       return {
         success: true,
         data: {
@@ -248,6 +254,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
   /**
    * Get wallet's ticket balance (Basic and Premium)
    * GET /tickets/balance/:walletAddress
+   * Cached for 30 seconds to reduce blockchain RPC calls
    */
   .get('/balance/:walletAddress', async ({ params }) => {
     try {
@@ -260,7 +267,11 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         };
       }
 
-      const balance = await ticketService.getWalletTicketBalance(walletAddress);
+      // Cache ticket balance for 30 seconds
+      const cacheKey = `ticket:balance:${walletAddress.toLowerCase()}`;
+      const balance = await cacheGetOrSet(cacheKey, 30, () => 
+        ticketService.getWalletTicketBalance(walletAddress)
+      );
 
       return {
         success: true,
@@ -272,6 +283,30 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         success: false,
         error: error instanceof Error ? error.message : 'Failed to get ticket balance'
       };
+    }
+  })
+
+  /**
+   * Invalidate ticket balance cache for a wallet
+   * POST /tickets/invalidate-cache/:walletAddress
+   * Called after booking or purchasing tickets
+   */
+  .post('/invalidate-cache/:walletAddress', async ({ params }) => {
+    try {
+      const { walletAddress } = params;
+      
+      if (!walletAddress || !walletAddress.startsWith('0x')) {
+        return { success: false, error: 'Invalid wallet address' };
+      }
+
+      const cacheKey = `ticket:balance:${walletAddress.toLowerCase()}`;
+      await invalidateCache(cacheKey);
+      
+      console.log(`🗑️ Invalidated ticket balance cache for ${walletAddress}`);
+      return { success: true, message: 'Cache invalidated' };
+    } catch (error) {
+      console.error('Error invalidating cache:', error);
+      return { success: false, error: 'Failed to invalidate cache' };
     }
   })
 

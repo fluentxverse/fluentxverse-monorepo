@@ -3,7 +3,11 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi, StudentStats, RecentActivity } from '../api/schedule.api';
+import { getTicketBalance, TicketBalance } from '../services/ticket.service';
+import { favoritesApi, FavoriteTutor } from '../api/favorites.api';
 import './HomePage.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
 
 const HomePage = () => {
   useEffect(() => {
@@ -17,6 +21,10 @@ const HomePage = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
   const [activityPage, setActivityPage] = useState(1);
+  const [ticketBalance, setTicketBalance] = useState<TicketBalance | null>(null);
+  const [ticketLoading, setTicketLoading] = useState(false);
+  const [favoriteTutors, setFavoriteTutors] = useState<FavoriteTutor[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
   const ACTIVITY_PER_PAGE = 5;
 
   // Fetch student stats
@@ -66,6 +74,52 @@ const HomePage = () => {
     };
 
     fetchActivity();
+  }, [user]);
+
+  // Fetch ticket balance
+  useEffect(() => {
+    const fetchTickets = async () => {
+      if (!user?.walletAddress) {
+        setTicketLoading(false);
+        return;
+      }
+      
+      try {
+        setTicketLoading(true);
+        const balance = await getTicketBalance(user.walletAddress);
+        setTicketBalance(balance);
+      } catch (err: any) {
+        console.error('Failed to fetch ticket balance:', err);
+        setTicketBalance(null);
+      } finally {
+        setTicketLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, [user?.walletAddress]);
+
+  // Fetch favorite tutors
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!user) {
+        setFavoritesLoading(false);
+        return;
+      }
+      
+      try {
+        setFavoritesLoading(true);
+        const favorites = await favoritesApi.getFavorites();
+        setFavoriteTutors(favorites);
+      } catch (err: any) {
+        console.error('Failed to fetch favorite tutors:', err);
+        setFavoriteTutors([]);
+      } finally {
+        setFavoritesLoading(false);
+      }
+    };
+
+    fetchFavorites();
   }, [user]);
 
   // Parse slot time (12-hour format) and create Date in Philippine time, then convert to Korean time (+1 hour)
@@ -222,17 +276,55 @@ const HomePage = () => {
                     </div>
                     <div className="home-stat-label">Total Hours</div>
                   </div>
-                  
-                  <div className="home-stat-card purple">
-                    <div className="home-stat-card-content">
-                      <div className="home-stat-icon purple">
-                        <i className="fas fa-coins"></i>
+                </div>
+
+                {/* Ticket Balance Section */}
+                <div className="home-tickets-section">
+                  <div className="home-tickets-header">
+                    <h3 className="home-tickets-title">
+                      <i className="fas fa-ticket-alt"></i>
+                      My Tickets
+                    </h3>
+                    <a href="/tickets" className="home-tickets-link">
+                      Buy More <i className="fas fa-arrow-right"></i>
+                    </a>
+                  </div>
+                  <div className={`home-tickets-grid ${ticketBalance?.trial ? 'has-trial' : ''}`}>
+                    <div className="home-ticket-card basic">
+                      <div className="home-ticket-icon">
+                        <img src="/assets/img/icons/basic_ticket2.png" alt="Basic Ticket" />
                       </div>
-                      <div className="home-stat-value">
-                        {loading ? '...' : 0}
+                      <div className="home-ticket-info">
+                        <div className="home-ticket-count">
+                          {ticketLoading ? '...' : (ticketBalance?.basic || 0)}
+                        </div>
+                        <div className="home-ticket-label">Basic</div>
                       </div>
                     </div>
-                    <div className="home-stat-label">Credits Available</div>
+                    <div className="home-ticket-card premium">
+                      <div className="home-ticket-icon">
+                        <img src="/assets/img/icons/premium_ticket2.png" alt="Premium Ticket" />
+                      </div>
+                      <div className="home-ticket-info">
+                        <div className="home-ticket-count">
+                          {ticketLoading ? '...' : (ticketBalance?.premium || 0)}
+                        </div>
+                        <div className="home-ticket-label">Premium</div>
+                      </div>
+                    </div>
+                    {ticketBalance?.trial ? (
+                      <div className="home-ticket-card trial">
+                        <div className="home-ticket-icon">
+                          <img src="/assets/img/icons/trial_ticket.png" alt="Trial Ticket" />
+                        </div>
+                        <div className="home-ticket-info">
+                          <div className="home-ticket-count">
+                            {ticketLoading ? '...' : (ticketBalance?.trial || 0)}
+                          </div>
+                          <div className="home-ticket-label">Trial</div>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
@@ -328,44 +420,59 @@ const HomePage = () => {
                     )}
                   </div>
 
-                  {/* Quick Actions */}
+                  {/* My Favorite Tutors */}
                   <div className="home-card">
                     <h3 className="home-card-title">
-                      Quick Actions
+                      <i className="fas fa-star"></i>
+                      My Favorite Tutors
                     </h3>
-                    <div className="home-actions-list">
-                      <button
-                        onClick={() => window.location.href = '/browse-tutors'}
-                        className="home-action-btn primary"
-                      >
-                        <i className="fas fa-search"></i>
-                        <span>Browse Tutors</span>
-                      </button>
-
-                      <button
-                        onClick={() => window.location.href = '/schedule'}
-                        className="home-action-btn secondary"
-                      >
-                        <i className="fas fa-calendar-check"></i>
-                        <span>My Schedule</span>
-                      </button>
-
-                      <button
-                        onClick={() => window.location.href = '/dashboard'}
-                        className="home-action-btn secondary"
-                      >
-                        <i className="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
-                      </button>
-
-                      <button
-                        onClick={() => window.location.href = '/settings'}
-                        className="home-action-btn tertiary"
-                      >
-                        <i className="fas fa-cog"></i>
-                        <span>Settings</span>
-                      </button>
-                    </div>
+                    {favoritesLoading ? (
+                      <div className="home-loading-state">
+                        <i className="fas fa-spinner fa-spin"></i>
+                        <p>Loading favorites...</p>
+                      </div>
+                    ) : favoriteTutors.length === 0 ? (
+                      <div className="home-empty-state">
+                        <div className="home-empty-icon">
+                          <i className="fas fa-star"></i>
+                        </div>
+                        <p className="home-empty-text">
+                          No favorite tutors yet
+                        </p>
+                        <p className="home-empty-subtext">
+                          Browse tutors and add them to your favorites
+                        </p>
+                        <button
+                          onClick={() => window.location.href = '/browse-tutors'}
+                          className="home-btn-book"
+                        >
+                          Find a Tutor
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="home-tutors-list">
+                        {favoriteTutors.slice(0, 4).map((tutor) => (
+                          <a 
+                            key={tutor.id} 
+                            href={`/tutor/${tutor.tutorId}`}
+                            className="home-tutor-item"
+                          >
+                            <div 
+                              className={tutor.tutorAvatar ? "home-tutor-avatar small" : "home-tutor-avatar small placeholder"}
+                              style={tutor.tutorAvatar ? { backgroundImage: `url(${tutor.tutorAvatar})` } : undefined}
+                            >
+                              {!tutor.tutorAvatar && <i className="fas fa-user"></i>}
+                            </div>
+                            <div className="home-tutor-name">{tutor.tutorName}</div>
+                          </a>
+                        ))}
+                        {favoriteTutors.length > 4 && (
+                          <a href="/browse-tutors" className="home-tutors-more">
+                            +{favoriteTutors.length - 4} more
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -573,6 +573,16 @@ export default function TicketsPage() {
                       />
                       <span className="balance-ticket-count premium">{ticketBalance?.premium || 0}</span>
                     </div>
+                    {ticketBalance?.trial > 0 && (
+                      <div className="balance-ticket-item">
+                        <img 
+                          src={getTicketImageUrl('trial')} 
+                          alt="Trial Ticket" 
+                          className="balance-ticket-img"
+                        />
+                        <span className="balance-ticket-count trial">{ticketBalance?.trial || 0}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

@@ -16,8 +16,7 @@ const menuItems: MenuItem[] = [
   { href: "/schedule", icon: "fi-sr-calendar" },
   { href: "/tickets", icon: "fi-sr-ticket" },
   { href: "/materials", icon: "fi-sr-book-alt" },
-  { href: "/profile", icon: "fi-sr-user" },
-  { href: "/metrics", icon: "fi-sr-chart-histogram" }
+  { href: "/profile", icon: "fi-sr-user" }
 ];
 
 const SideBar = (): JSX.Element | null => {

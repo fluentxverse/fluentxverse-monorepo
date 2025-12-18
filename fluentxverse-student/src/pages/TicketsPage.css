@@ -141,6 +141,10 @@
   color: #d97706;
 }
 
+.balance-ticket-count.trial {
+  color: #059669;
+}
+
 .use-tickets-btn {
   display: flex;
   align-items: center;

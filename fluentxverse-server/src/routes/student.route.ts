@@ -6,6 +6,7 @@ import { verifyMessage } from "viem";
 import { getUser } from "thirdweb/wallets";
 import { thirdwebClient } from "../services/utils.services/utils";
 import { ticketService } from "../services/ticket.services/ticket.service";
+import { favoritesService } from "../services/favorites.services/favorites.service";
 import type { StudentUserData, NormalizedStudentUser } from "../services/auth.services/auth.interface";
 
 // In-memory nonce store (use Redis in production for multi-instance deployments)
@@ -842,6 +843,125 @@ const Student = new Elysia({ name: "student" })
       console.error('[StudentRoute] About Me update error:', error);
       set.status = 500;
       return { success: false, error: error.message || 'Failed to update about me' };
+    }
+  })
+
+  /**
+   * Get student's favorite tutors
+   * GET /student/favorites
+   */
+  .get('/student/favorites', async ({ cookie, set }) => {
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated', data: [] };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        set.status = 401;
+        return { success: false, error: 'Invalid session', data: [] };
+      }
+
+      const favorites = await favoritesService.getFavorites(studentId);
+      return { success: true, data: favorites };
+    } catch (error: any) {
+      console.error('[StudentRoute] Get favorites error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to get favorites', data: [] };
+    }
+  })
+
+  /**
+   * Add a tutor to favorites
+   * POST /student/favorites/:tutorId
+   */
+  .post('/student/favorites/:tutorId', async ({ params, cookie, set }) => {
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        set.status = 401;
+        return { success: false, error: 'Invalid session' };
+      }
+
+      const { tutorId } = params;
+      const result = await favoritesService.addFavorite(studentId, tutorId);
+      return result;
+    } catch (error: any) {
+      console.error('[StudentRoute] Add favorite error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to add favorite' };
+    }
+  })
+
+  /**
+   * Remove a tutor from favorites
+   * DELETE /student/favorites/:tutorId
+   */
+  .delete('/student/favorites/:tutorId', async ({ params, cookie, set }) => {
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        set.status = 401;
+        return { success: false, error: 'Invalid session' };
+      }
+
+      const { tutorId } = params;
+      const result = await favoritesService.removeFavorite(studentId, tutorId);
+      return result;
+    } catch (error: any) {
+      console.error('[StudentRoute] Remove favorite error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to remove favorite' };
+    }
+  })
+
+  /**
+   * Check if a tutor is in favorites
+   * GET /student/favorites/:tutorId/check
+   */
+  .get('/student/favorites/:tutorId/check', async ({ params, cookie, set }) => {
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        set.status = 401;
+        return { success: false, isFavorite: false };
+      }
+
+      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
+      const studentId = auth.userId;
+
+      if (!studentId) {
+        set.status = 401;
+        return { success: false, isFavorite: false };
+      }
+
+      const { tutorId } = params;
+      const isFavorite = await favoritesService.isFavorite(studentId, tutorId);
+      return { success: true, isFavorite };
+    } catch (error: any) {
+      console.error('[StudentRoute] Check favorite error:', error);
+      set.status = 500;
+      return { success: false, isFavorite: false };
     }
   });
 

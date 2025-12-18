@@ -1474,6 +1474,9 @@ export class TicketService {
   }> {
     try {
       console.log(`[TicketService] Verifying transaction: ${txHash}`);
+      console.log(`[TicketService] Expected from wallet: ${expectedFromWallet}`);
+      console.log(`[TicketService] Expected to vault: ${VAULT_WALLET_ADDRESS}`);
+      console.log(`[TicketService] Ticket contract: ${TICKET_CONTRACT_ADDRESS}`);
       
       const chain = defineChain(CHAIN_ID);
       const rpcRequest = getRpcClient({ client: thirdwebClient, chain });
@@ -1486,40 +1489,68 @@ export class TicketService {
         return { valid: false, error: 'Transaction not found on blockchain' };
       }
 
+      console.log(`[TicketService] Transaction status: ${receipt.status}`);
+      console.log(`[TicketService] Transaction to: ${receipt.to}`);
+      console.log(`[TicketService] Transaction from: ${receipt.from}`);
+      console.log(`[TicketService] Number of logs: ${receipt.logs.length}`);
+
       // Check transaction was successful (status 1)
       if (receipt.status !== 'success') {
         return { valid: false, error: 'Transaction failed on blockchain' };
       }
 
-      // Check the transaction was to our ticket contract
-      if (receipt.to?.toLowerCase() !== TICKET_CONTRACT_ADDRESS.toLowerCase()) {
-        return { valid: false, error: 'Transaction was not to the ticket contract' };
-      }
-
-      // Check the sender matches expected wallet
-      if (receipt.from.toLowerCase() !== expectedFromWallet.toLowerCase()) {
-        return { valid: false, error: 'Transaction sender does not match student wallet' };
-      }
-
-      // Check logs for a transfer event to vault wallet
-      // ERC1155 TransferSingle event topic
+      // Check logs for a transfer event from the ticket contract to vault wallet
+      // ERC1155 TransferSingle event topic: TransferSingle(address operator, address from, address to, uint256 id, uint256 value)
       const TRANSFER_SINGLE_TOPIC = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62';
       
-      const hasTransferToVault = receipt.logs.some(log => {
-        // Check for TransferSingle event
-        if (log.topics[0] === TRANSFER_SINGLE_TOPIC) {
-          // The 'to' address is the 3rd topic (index 2), padded to 32 bytes
-          const toAddressTopic = log.topics[3];
-          if (toAddressTopic) {
-            const toAddress = '0x' + toAddressTopic.slice(-40);
-            return toAddress.toLowerCase() === VAULT_WALLET_ADDRESS.toLowerCase();
-          }
+      let foundValidTransfer = false;
+      
+      for (const log of receipt.logs) {
+        console.log(`[TicketService] Log address: ${log.address}, topics[0]: ${log.topics[0]}`);
+        
+        // Check this log is from the ticket contract
+        if (log.address.toLowerCase() !== TICKET_CONTRACT_ADDRESS.toLowerCase()) {
+          continue;
         }
-        return false;
-      });
+        
+        // Check for TransferSingle event
+        if (log.topics[0] !== TRANSFER_SINGLE_TOPIC) {
+          continue;
+        }
+        
+        // TransferSingle event topics:
+        // topics[0] = event signature
+        // topics[1] = operator (address, padded to 32 bytes)
+        // topics[2] = from (address, padded to 32 bytes)
+        // topics[3] = to (address, padded to 32 bytes)
+        // data = id (uint256) + value (uint256)
+        
+        const fromTopic = log.topics[2];
+        const toTopic = log.topics[3];
+        
+        if (!fromTopic || !toTopic) {
+          continue;
+        }
+        
+        // Extract addresses from padded topics (last 40 hex chars = 20 bytes = address)
+        const fromAddress = '0x' + fromTopic.slice(-40);
+        const toAddress = '0x' + toTopic.slice(-40);
+        
+        console.log(`[TicketService] Transfer event - from: ${fromAddress}, to: ${toAddress}`);
+        
+        // Verify the transfer is from the student's wallet to the vault
+        const isFromStudent = fromAddress.toLowerCase() === expectedFromWallet.toLowerCase();
+        const isToVault = toAddress.toLowerCase() === VAULT_WALLET_ADDRESS.toLowerCase();
+        
+        if (isFromStudent && isToVault) {
+          foundValidTransfer = true;
+          console.log(`[TicketService] ✅ Found valid transfer from student to vault`);
+          break;
+        }
+      }
 
-      if (!hasTransferToVault) {
-        return { valid: false, error: 'No transfer to vault wallet found in transaction' };
+      if (!foundValidTransfer) {
+        return { valid: false, error: 'No valid ticket transfer from student to vault found in transaction' };
       }
 
       console.log(`[TicketService] ✅ Transaction verified successfully`);

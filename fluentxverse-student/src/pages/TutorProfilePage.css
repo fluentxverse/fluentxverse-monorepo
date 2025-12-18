@@ -10,7 +10,7 @@
 .tutor-profile-page {
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
   min-height: 100vh;
-  padding-top: 100px;
+  padding-top: 130px;
   padding-bottom: 60px;
   animation: pageLoad 0.5s ease-out;
 }
@@ -209,16 +209,62 @@
   flex: 1;
 }
 
+.profile-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
 .profile-name {
   font-size: 32px;
   font-weight: 800;
   color: #0f172a;
-  margin: 0 0 8px 0;
+  margin: 0;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Favorite Star Button */
+.btn-favorite-star {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.btn-favorite-star i {
+  font-size: 18px;
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.btn-favorite-star:hover {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.btn-favorite-star:hover i {
+  color: #f59e0b;
+}
+
+.btn-favorite-star.favorited {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.btn-favorite-star.favorited i {
+  color: #f59e0b;
 }
 
 /* Star Rating Row */
@@ -535,6 +581,33 @@
     0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
+.booking-card-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 16px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.booking-card-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(2, 69, 174, 0.1);
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .booking-card-price {
   text-align: center;
   margin-bottom: 24px;
@@ -544,6 +617,32 @@
   margin: -28px -28px 24px -28px;
   padding: 28px 28px 24px 28px;
   border-radius: 20px 20px 0 0;
+}
+
+.booking-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid rgba(2, 69, 174, 0.08);
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.03) 0%, rgba(74, 158, 255, 0.03) 100%);
+  margin: -28px -28px 24px -28px;
+  padding: 28px 28px 24px 28px;
+  border-radius: 20px 20px 0 0;
+}
+
+.booking-card-title {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.booking-card-subtitle {
+  display: block;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .price-label {
@@ -598,6 +697,56 @@
 
 .btn-book-trial i {
   font-size: 20px;
+}
+
+/* Buy Tickets Button (when no tickets) */
+.btn-buy-tickets {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+  text-decoration: none;
+}
+
+.btn-buy-tickets:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+}
+
+.btn-add-favorite {
+  width: 100%;
+  padding: 14px 24px;
+  background: transparent;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 16px;
+}
+
+.btn-add-favorite:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.btn-add-favorite.favorited {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.btn-add-favorite.favorited:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.btn-add-favorite i {
+  font-size: 18px;
 }
 
 .booking-features {
