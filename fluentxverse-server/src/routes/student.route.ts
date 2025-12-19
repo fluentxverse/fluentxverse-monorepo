@@ -7,6 +7,7 @@ import { getUser } from "thirdweb/wallets";
 import { thirdwebClient } from "../services/utils.services/utils";
 import { ticketService } from "../services/ticket.services/ticket.service";
 import { favoritesService } from "../services/favorites.services/favorites.service";
+import { rateLimitMiddleware } from "../utils/rateLimiter";
 import type { StudentUserData, NormalizedStudentUser } from "../services/auth.services/auth.interface";
 
 // In-memory nonce store (use Redis in production for multi-instance deployments)
@@ -882,6 +883,7 @@ const Student = new Elysia({ name: "student" })
   /**
    * Add a tutor to favorites
    * POST /student/favorites/:tutorId
+   * Rate limited: 30 actions per minute
    */
   .post('/student/favorites/:tutorId', async ({ params, cookie, set }) => {
     try {
@@ -898,6 +900,10 @@ const Student = new Elysia({ name: "student" })
         set.status = 401;
         return { success: false, error: 'Invalid session' };
       }
+
+      // Rate limiting check
+      const rateLimitError = await rateLimitMiddleware(studentId, 'favorites', set as any);
+      if (rateLimitError) return rateLimitError;
 
       const { tutorId } = params;
       const result = await favoritesService.addFavorite(studentId, tutorId);

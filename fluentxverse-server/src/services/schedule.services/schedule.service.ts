@@ -633,6 +633,15 @@ export class ScheduleService {
         console.log('🗑️ Invalidated ticket balance cache for student after booking');
       }
       
+      // Invalidate student stats and bookings cache
+      await Promise.all([
+        invalidateCache(`student:stats:${input.studentId}`),
+        invalidateCache(`student:bookings:${input.studentId}`),
+        invalidateCache(`student:activity:${input.studentId}:10`),
+        invalidateCache(`student:activity:${input.studentId}:50`)
+      ]);
+      console.log('🗑️ Invalidated student schedule caches after booking');
+      
       console.log('=== SERVICE: bookSlot END ===');
       
       return {
@@ -841,6 +850,15 @@ export class ScheduleService {
       } catch (notifError) {
         console.error('Failed to send cancellation notification:', notifError);
       }
+      
+      // Invalidate student caches after cancellation
+      await Promise.all([
+        invalidateCache(`student:stats:${booking.studentId}`),
+        invalidateCache(`student:bookings:${booking.studentId}`),
+        invalidateCache(`student:activity:${booking.studentId}:10`),
+        invalidateCache(`student:activity:${booking.studentId}:50`)
+      ]);
+      console.log('🗑️ Invalidated student schedule caches after cancellation');
       
       console.log('=== SERVICE: cancelBooking END ===');
       

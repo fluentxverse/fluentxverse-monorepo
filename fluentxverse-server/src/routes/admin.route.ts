@@ -971,6 +971,95 @@ const Admin = new Elysia({ prefix: '/admin' })
         error: 'Failed to get session details'
       };
     }
+  })
+
+  /**
+   * Get ticket statistics and transactions
+   * GET /admin/tickets/stats
+   */
+  .get('/tickets/stats', async () => {
+    try {
+      const stats = await adminService.getTicketStats();
+      return {
+        success: true,
+        data: stats
+      };
+    } catch (error) {
+      console.error('Error in /admin/tickets/stats:', error);
+      return {
+        success: false,
+        error: 'Failed to get ticket stats'
+      };
+    }
+  })
+
+  /**
+   * Get ticket transactions with filters
+   * GET /admin/tickets/transactions
+   */
+  .get('/tickets/transactions', async ({ query }) => {
+    try {
+      const page = query.page ? Number(query.page) : 1;
+      const limit = query.limit ? Number(query.limit) : 20;
+      const type = query.type as string | undefined; // 'booking', 'purchase', 'refund'
+      const studentId = query.studentId as string | undefined;
+      
+      const transactions = await adminService.getTicketTransactions({ page, limit, type, studentId });
+      return {
+        success: true,
+        data: transactions
+      };
+    } catch (error) {
+      console.error('Error in /admin/tickets/transactions:', error);
+      return {
+        success: false,
+        error: 'Failed to get ticket transactions'
+      };
+    }
+  })
+
+  /**
+   * Get fraud alerts and suspicious activity
+   * GET /admin/fraud/alerts
+   */
+  .get('/fraud/alerts', async ({ query }) => {
+    try {
+      const page = query.page ? Number(query.page) : 1;
+      const limit = query.limit ? Number(query.limit) : 20;
+      const severity = query.severity as string | undefined; // 'high', 'medium', 'low'
+      
+      const alerts = await adminService.getFraudAlerts({ page, limit, severity });
+      return {
+        success: true,
+        data: alerts
+      };
+    } catch (error) {
+      console.error('Error in /admin/fraud/alerts:', error);
+      return {
+        success: false,
+        error: 'Failed to get fraud alerts'
+      };
+    }
+  })
+
+  /**
+   * Get real-time system monitoring data
+   * GET /admin/monitor/realtime
+   */
+  .get('/monitor/realtime', async () => {
+    try {
+      const data = await adminService.getRealtimeMonitoring();
+      return {
+        success: true,
+        data
+      };
+    } catch (error) {
+      console.error('Error in /admin/monitor/realtime:', error);
+      return {
+        success: false,
+        error: 'Failed to get monitoring data'
+      };
+    }
   });
 
 export default Admin;

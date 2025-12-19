@@ -11,11 +11,10 @@ const Tutor = new Elysia({ prefix: '/tutor' })
   /**
    * Search and filter tutors
    * GET /tutor/search
+   * Cached for 2 minutes to reduce database load for common searches
    */
   .get('/search', async ({ query }) => {
     try {
-
-  
       const params = {
         query: query.q || undefined, // Search by name
         page: query.page ? Number(query.page) : 1,
@@ -25,9 +24,13 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         endTime: query.endTime || undefined
       };
 
-
-      const result = await tutorService.searchTutors(params);
-
+      // Create cache key from search params
+      const cacheKey = `tutor:search:${JSON.stringify(params)}`;
+      
+      // Cache search results for 2 minutes (120 seconds)
+      const result = await cacheGetOrSet(cacheKey, 120, () => 
+        tutorService.searchTutors(params)
+      );
 
       return {
         success: true,

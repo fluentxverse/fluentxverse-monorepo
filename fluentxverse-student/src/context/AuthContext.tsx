@@ -6,6 +6,7 @@ import { loginUser, logoutUser, getMe, loginWithWallet, registerWithWallet, type
 import { PROTECTED_PATHS } from '../config/protectedPaths';
 import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
 import { appWallet } from '../config/wallet';
+import { scheduleApi } from '../api/schedule.api';
 
 interface AuthUser {
   userId: string;
@@ -70,6 +71,17 @@ export const AuthProvider = ({ children }: { children: any }) => {
     };
     checkAuth();
   }, []);
+
+  // Preload dashboard data when user is authenticated
+  useEffect(() => {
+    if (user && !initialLoading) {
+      // Warm the cache for upcoming lesson data in the background
+      // Don't await - let it run in background without blocking UI
+      scheduleApi.preloadDashboardData()
+        .then(() => console.log('✅ Dashboard data preloaded'))
+        .catch((err) => console.warn('Failed to preload dashboard data:', err));
+    }
+  }, [user, initialLoading]);
 
   // Redirect away from protected routes if session expired
   useEffect(() => {

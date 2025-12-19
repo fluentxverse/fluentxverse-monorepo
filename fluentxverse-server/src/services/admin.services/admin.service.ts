@@ -1989,6 +1989,327 @@ export class AdminService {
       await session.close();
     }
   }
+
+  /**
+   * Get ticket statistics
+   */
+  async getTicketStats(): Promise<{
+    totalPurchases: number;
+    totalUsed: number;
+    totalRefunded: number;
+    revenueBasic: number;
+    revenuePremium: number;
+    revenueTrial: number;
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (t:TicketTransaction)
+        RETURN 
+          count(CASE WHEN t.type = 'purchase' THEN 1 END) as totalPurchases,
+          count(CASE WHEN t.type = 'booking' THEN 1 END) as totalUsed,
+          count(CASE WHEN t.type = 'refund' THEN 1 END) as totalRefunded,
+          sum(CASE WHEN t.type = 'purchase' AND t.tier = 'basic' THEN toInteger(t.quantity) ELSE 0 END) as basicPurchased,
+          sum(CASE WHEN t.type = 'purchase' AND t.tier = 'premium' THEN toInteger(t.quantity) ELSE 0 END) as premiumPurchased,
+          sum(CASE WHEN t.type = 'purchase' AND t.tier = 'trial' THEN toInteger(t.quantity) ELSE 0 END) as trialPurchased
+      `);
+
+      const record = result.records[0];
+      return {
+        totalPurchases: toNumber(record?.get('totalPurchases')),
+        totalUsed: toNumber(record?.get('totalUsed')),
+        totalRefunded: toNumber(record?.get('totalRefunded')),
+        revenueBasic: toNumber(record?.get('basicPurchased')),
+        revenuePremium: toNumber(record?.get('premiumPurchased')),
+        revenueTrial: toNumber(record?.get('trialPurchased'))
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get ticket transactions with pagination
+   */
+  async getTicketTransactions(params: {
+    page: number;
+    limit: number;
+    type?: string;
+    studentId?: string;
+  }): Promise<{
+    transactions: any[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const offset = (params.page - 1) * params.limit;
+      
+      // Build where clause
+      let whereClause = '';
+      const queryParams: any = { offset, limit: params.limit };
+      
+      if (params.type) {
+        whereClause = 'WHERE t.type = $type';
+        queryParams.type = params.type;
+      }
+      if (params.studentId) {
+        whereClause = whereClause ? `${whereClause} AND t.studentId = $studentId` : 'WHERE t.studentId = $studentId';
+        queryParams.studentId = params.studentId;
+      }
+
+      // Get total count
+      const countResult = await session.run(`
+        MATCH (t:TicketTransaction)
+        ${whereClause}
+        RETURN count(t) as total
+      `, queryParams);
+      const total = toNumber(countResult.records[0]?.get('total'));
+
+      // Get transactions
+      const result = await session.run(`
+        MATCH (t:TicketTransaction)
+        ${whereClause}
+        RETURN t
+        ORDER BY t.createdAt DESC
+        SKIP toInteger($offset)
+        LIMIT toInteger($limit)
+      `, queryParams);
+
+      const transactions = result.records.map((r: any) => {
+        const tx = r.get('t').properties;
+        return {
+          id: tx.id,
+          type: tx.type,
+          studentId: tx.studentId,
+          tutorId: tx.tutorId,
+          bookingId: tx.bookingId,
+          tier: tx.tier,
+          quantity: toNumber(tx.quantity) || 1,
+          txHash: tx.transferTxHash,
+          createdAt: convertNeo4jDateTimeToISO(tx.createdAt)
+        };
+      });
+
+      return {
+        transactions,
+        total,
+        page: params.page,
+        totalPages: Math.ceil(total / params.limit)
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get fraud alerts - suspicious booking patterns
+   */
+  async getFraudAlerts(params: {
+    page: number;
+    limit: number;
+    severity?: string;
+  }): Promise<{
+    alerts: any[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const alerts: any[] = [];
+      
+      // Check for rapid booking attempts (more than 10 in 5 minutes)
+      const rapidBookingResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.bookedAt > datetime() - duration('PT5M')
+        WITH b.studentId as studentId, count(b) as bookingCount
+        WHERE bookingCount > 10
+        RETURN studentId, bookingCount, 'rapid_booking' as alertType
+      `);
+      
+      for (const record of rapidBookingResult.records) {
+        alerts.push({
+          id: `rapid_${record.get('studentId')}`,
+          type: 'rapid_booking',
+          severity: 'high',
+          studentId: record.get('studentId'),
+          details: `${toNumber(record.get('bookingCount'))} bookings in 5 minutes`,
+          detectedAt: new Date().toISOString()
+        });
+      }
+
+      // Check for repeated cancellations (more than 5 cancellations today)
+      const cancelResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.status = 'cancelled' 
+        AND b.cancelledAt > datetime() - duration('P1D')
+        WITH b.studentId as studentId, count(b) as cancelCount
+        WHERE cancelCount > 5
+        RETURN studentId, cancelCount, 'excessive_cancellation' as alertType
+      `);
+      
+      for (const record of cancelResult.records) {
+        alerts.push({
+          id: `cancel_${record.get('studentId')}`,
+          type: 'excessive_cancellation',
+          severity: 'medium',
+          studentId: record.get('studentId'),
+          details: `${toNumber(record.get('cancelCount'))} cancellations in 24 hours`,
+          detectedAt: new Date().toISOString()
+        });
+      }
+
+      // Check for reused transaction hashes
+      const txReuseResult = await session.run(`
+        MATCH (t:TicketTransaction)
+        WITH t.transferTxHash as txHash, count(t) as useCount
+        WHERE useCount > 1 AND txHash IS NOT NULL
+        RETURN txHash, useCount
+      `);
+      
+      for (const record of txReuseResult.records) {
+        alerts.push({
+          id: `txreuse_${record.get('txHash')}`,
+          type: 'transaction_reuse_attempt',
+          severity: 'high',
+          details: `TX hash used ${toNumber(record.get('useCount'))} times: ${record.get('txHash')}`,
+          detectedAt: new Date().toISOString()
+        });
+      }
+
+      // Filter by severity if provided
+      let filteredAlerts = alerts;
+      if (params.severity) {
+        filteredAlerts = alerts.filter(a => a.severity === params.severity);
+      }
+
+      // Sort by severity (high first) then by date
+      filteredAlerts.sort((a, b) => {
+        const severityOrder = { high: 0, medium: 1, low: 2 };
+        return (severityOrder[a.severity as keyof typeof severityOrder] || 2) - 
+               (severityOrder[b.severity as keyof typeof severityOrder] || 2);
+      });
+
+      // Paginate
+      const total = filteredAlerts.length;
+      const offset = (params.page - 1) * params.limit;
+      const paginatedAlerts = filteredAlerts.slice(offset, offset + params.limit);
+
+      return {
+        alerts: paginatedAlerts,
+        total,
+        page: params.page,
+        totalPages: Math.ceil(total / params.limit)
+      };
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get real-time monitoring data
+   */
+  async getRealtimeMonitoring(): Promise<{
+    activeUsers: number;
+    bookingsToday: number;
+    bookingsThisHour: number;
+    cancellationsToday: number;
+    ticketsPurchasedToday: number;
+    ticketsUsedToday: number;
+    pendingSlots: number;
+    systemHealth: 'healthy' | 'degraded' | 'critical';
+  }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      // Active sessions (students with recent activity)
+      const activeResult = await session.run(`
+        MATCH (s:Student)
+        WHERE s.lastActivityAt > datetime() - duration('PT15M')
+        RETURN count(s) as activeUsers
+      `);
+      const activeUsers = toNumber(activeResult.records[0]?.get('activeUsers'));
+
+      // Today's bookings
+      const todayBookingsResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.bookedAt > datetime() - duration('P1D')
+        RETURN count(b) as count
+      `);
+      const bookingsToday = toNumber(todayBookingsResult.records[0]?.get('count'));
+
+      // This hour's bookings
+      const hourBookingsResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.bookedAt > datetime() - duration('PT1H')
+        RETURN count(b) as count
+      `);
+      const bookingsThisHour = toNumber(hourBookingsResult.records[0]?.get('count'));
+
+      // Today's cancellations
+      const cancelResult = await session.run(`
+        MATCH (b:Booking)
+        WHERE b.status = 'cancelled' AND b.cancelledAt > datetime() - duration('P1D')
+        RETURN count(b) as count
+      `);
+      const cancellationsToday = toNumber(cancelResult.records[0]?.get('count'));
+
+      // Tickets purchased today
+      const purchaseResult = await session.run(`
+        MATCH (t:TicketTransaction)
+        WHERE t.type = 'purchase' AND t.createdAt > datetime() - duration('P1D')
+        RETURN count(t) as count
+      `);
+      const ticketsPurchasedToday = toNumber(purchaseResult.records[0]?.get('count'));
+
+      // Tickets used today
+      const usedResult = await session.run(`
+        MATCH (t:TicketTransaction)
+        WHERE t.type = 'booking' AND t.createdAt > datetime() - duration('P1D')
+        RETURN count(t) as count
+      `);
+      const ticketsUsedToday = toNumber(usedResult.records[0]?.get('count'));
+
+      // Pending slots (locked but not confirmed)
+      const pendingResult = await session.run(`
+        MATCH (s:TimeSlot)
+        WHERE s.status = 'pending'
+        RETURN count(s) as count
+      `);
+      const pendingSlots = toNumber(pendingResult.records[0]?.get('count'));
+
+      // Determine system health based on metrics
+      let systemHealth: 'healthy' | 'degraded' | 'critical' = 'healthy';
+      if (pendingSlots > 50 || cancellationsToday > bookingsToday * 0.5) {
+        systemHealth = 'degraded';
+      }
+      if (pendingSlots > 100) {
+        systemHealth = 'critical';
+      }
+
+      return {
+        activeUsers,
+        bookingsToday,
+        bookingsThisHour,
+        cancellationsToday,
+        ticketsPurchasedToday,
+        ticketsUsedToday,
+        pendingSlots,
+        systemHealth
+      };
+    } finally {
+      await session.close();
+    }
+  }
 }
 
 // Session types

@@ -2,8 +2,15 @@ import Elysia, { t } from 'elysia';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { refreshAuthCookie } from '../utils/refreshCookie';
+import { rateLimitMiddleware } from '../utils/rateLimiter';
+import { cacheGetOrSet, invalidateCache, getRedis } from '../db/redis';
 
 const scheduleService = new ScheduleService();
+
+// Cache TTLs in seconds
+const STUDENT_STATS_CACHE_TTL = 60; // 1 minute - stats change on booking/completion
+const STUDENT_BOOKINGS_CACHE_TTL = 120; // 2 minutes - bookings list
+const STUDENT_ACTIVITY_CACHE_TTL = 300; // 5 minutes - activity changes less frequently
 
 const Schedule = new Elysia({ prefix: '/schedule' })
   /**
@@ -195,7 +202,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       // Refresh cookie on every request
       refreshAuthCookie(cookie, authData, 'studentAuth');
 
-      const bookings = await scheduleService.getStudentBookings(studentId);
+      const cacheKey = `student:bookings:${studentId}`;
+      const bookings = await cacheGetOrSet(
+        cacheKey, 
+        STUDENT_BOOKINGS_CACHE_TTL, 
+        async () => scheduleService.getStudentBookings(studentId)
+      );
 
       return {
         success: true,
@@ -229,8 +241,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       // Refresh cookie on every request
       refreshAuthCookie(cookie, authData, 'studentAuth');
 
-      const stats = await scheduleService.getStudentStats(studentId);
-
+      const cacheKey = `student:stats:${studentId}`;
+      const stats = await cacheGetOrSet(
+        cacheKey, 
+        STUDENT_STATS_CACHE_TTL, 
+        async () => scheduleService.getStudentStats(studentId)
+      );
 
       return {
         success: true,
@@ -266,7 +282,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       const limit = query.limit ? parseInt(query.limit as string) : 10;
 
-      const activity = await scheduleService.getStudentRecentActivity(studentId, limit);
+      const cacheKey = `student:activity:${studentId}:${limit}`;
+      const activity = await cacheGetOrSet(
+        cacheKey,
+        STUDENT_ACTIVITY_CACHE_TTL,
+        async () => scheduleService.getStudentRecentActivity(studentId, limit)
+      );
 
       return {
         success: true,
@@ -355,6 +376,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
   /**
    * Book a time slot
    * POST /schedule/book
+   * Rate limited: 5 bookings per minute per user
    */
   .post('/book', async ({ body, cookie, set }) => {
     try {
@@ -375,6 +397,14 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       
       const studentId = authData.userId;
       console.log('Student ID:', studentId);
+      
+      // Rate limiting check
+      const rateLimitError = await rateLimitMiddleware(studentId, 'booking', set as any);
+      if (rateLimitError) {
+        console.log('ERROR: Rate limit exceeded for student:', studentId);
+        return rateLimitError;
+      }
+      
       console.log('Slot ID from body:', body.slotId);
 
       // Refresh cookie on every request
@@ -500,6 +530,100 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       return {
         success: false,
         error: error.message || 'Failed to get lesson details'
+      };
+    }
+  })
+
+  /**
+   * Preload/warm cache for student's upcoming lesson data
+   * POST /schedule/preload
+   * This endpoint fetches and caches all relevant data for a student's dashboard
+   */
+  .post('/preload', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+
+      // Refresh cookie on every request
+      refreshAuthCookie(cookie, authData, 'studentAuth');
+
+      // Warm all student-related caches in parallel
+      const [stats, bookings, activity] = await Promise.all([
+        cacheGetOrSet(
+          `student:stats:${studentId}`,
+          STUDENT_STATS_CACHE_TTL,
+          async () => scheduleService.getStudentStats(studentId)
+        ),
+        cacheGetOrSet(
+          `student:bookings:${studentId}`,
+          STUDENT_BOOKINGS_CACHE_TTL,
+          async () => scheduleService.getStudentBookings(studentId)
+        ),
+        cacheGetOrSet(
+          `student:activity:${studentId}:50`, // Default activity limit
+          STUDENT_ACTIVITY_CACHE_TTL,
+          async () => scheduleService.getStudentRecentActivity(studentId, 50)
+        )
+      ]);
+
+      return {
+        success: true,
+        message: 'Data preloaded successfully',
+        data: {
+          stats,
+          bookingsCount: bookings.length,
+          activityCount: activity.length
+        }
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/preload:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to preload data'
+      };
+    }
+  })
+
+  /**
+   * Invalidate student's cache (called after booking/cancellation)
+   * POST /schedule/invalidate-cache
+   */
+  .post('/invalidate-cache', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const studentId = authData.userId;
+
+      // Invalidate all student-related caches
+      await Promise.all([
+        invalidateCache(`student:stats:${studentId}`),
+        invalidateCache(`student:bookings:${studentId}`),
+        invalidateCache(`student:activity:${studentId}:10`),
+        invalidateCache(`student:activity:${studentId}:50`)
+      ]);
+
+      return {
+        success: true,
+        message: 'Cache invalidated successfully'
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/invalidate-cache:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to invalidate cache'
       };
     }
   });

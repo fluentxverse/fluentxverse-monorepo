@@ -208,5 +208,36 @@ export const scheduleApi = {
       console.error('Failed to cancel booking:', error);
       throw error.response?.data?.error || error.message || 'Failed to cancel booking';
     }
+  },
+
+  /**
+   * Preload/warm cache for student dashboard data
+   * Call this on login or app initialization to pre-fetch data
+   */
+  preloadDashboardData: async (): Promise<{ stats: StudentStats; bookingsCount: number; activityCount: number }> => {
+    try {
+      const response = await api.post('/schedule/preload');
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to preload data');
+      }
+      
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Failed to preload dashboard data:', error);
+      throw error.response?.data?.error || error.message || 'Failed to preload data';
+    }
+  },
+
+  /**
+   * Invalidate student cache (call after booking/cancellation)
+   */
+  invalidateCache: async (): Promise<void> => {
+    try {
+      await api.post('/schedule/invalidate-cache');
+    } catch (error: any) {
+      console.error('Failed to invalidate cache:', error);
+      // Don't throw - cache invalidation failure shouldn't break the app
+    }
   }
 };
