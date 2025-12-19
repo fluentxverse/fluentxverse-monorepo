@@ -539,6 +539,19 @@
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
 }
 
+/* Ticket purchase icons - tier specific colors */
+.home-activity-icon.purchase-basic {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%); /* Blue for basic */
+}
+
+.home-activity-icon.purchase-premium {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); /* Gold for premium */
+}
+
+.home-activity-icon.purchase-trial {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green for trial */
+}
+
 .home-activity-icon i {
   font-size: 16px;
 }

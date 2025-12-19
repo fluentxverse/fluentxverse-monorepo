@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useCallback } from 'preact/hooks';
 import { BridgePrepareResult, CheckoutWidget, CompletedStatusResult, lightTheme, useActiveAccount, useAutoConnect } from "thirdweb/react";
 import { defineChain } from "thirdweb";
 import { Bridge } from "thirdweb";
+import { useAuthContext } from '../context/AuthContext';
+import { useTicketNotifications } from '../hooks/useTicketNotifications';
+import { useToastContext } from '../context/ToastContext';
 
 // Development mode flag - set to true to use mock checkout
 const DEV_MODE = true;
@@ -331,6 +334,8 @@ interface TicketBalance {
 }
 
 export default function TicketsPage() {
+  const { user } = useAuthContext();
+  const { showSuccess, showInfo, showError } = useToastContext();
   const [selectedPackage, setSelectedPackage] = useState<TicketPackage | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, trial: 0, basicTokenId: null, premiumTokenId: null, trialTokenId: null });
@@ -338,6 +343,9 @@ export default function TicketsPage() {
   const [selectedTier, setSelectedTier] = useState<'all' | 'basic' | 'premium' | 'trial'>('all');
   const [adjustedAmount, setAdjustedAmount] = useState<string | null>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [showQuantitySelector, setShowQuantitySelector] = useState(false);
+  const [packageForQuantity, setPackageForQuantity] = useState<TicketPackage | null>(null);
   
   const activeAccount = useActiveAccount();
   
@@ -347,36 +355,59 @@ export default function TicketsPage() {
     wallets: [appWallet],
   });
 
+  // Get wallet address from connected wallet or from user's profile
+  const walletAddress = activeAccount?.address || user?.walletAddress || user?.smartWalletAddress;
+
+  // Handle balance update from socket notification
+  const handleBalanceUpdate = useCallback((balance: { basic: number; premium: number; trial: number; total: number }) => {
+    setTicketBalance(prev => ({
+      ...prev,
+      basic: balance.basic,
+      premium: balance.premium,
+      trial: balance.trial,
+    }));
+    showSuccess('Your ticket balance has been updated!', 3000);
+  }, [showSuccess]);
+
+  // Subscribe to real-time ticket notifications
+  useTicketNotifications(user?.userId, handleBalanceUpdate);
+
   useEffect(() => {
     document.title = 'Buy Tickets | FluentXVerse';
   }, []);
 
   // Fetch user's ticket balance from blockchain
-  const fetchTicketBalance = async (walletAddress: string) => {
+  const fetchTicketBalance = async (walletAddr: string) => {
+    console.log('🎫 Fetching ticket balance for:', walletAddr);
     setIsLoadingBalance(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/tickets/balance/${walletAddress}`);
+      const response = await fetch(`${API_BASE_URL}/tickets/balance/${walletAddr}`);
       const result = await response.json();
+      console.log('🎫 Ticket balance response:', result);
       
       if (result.success) {
         setTicketBalance(result.data);
-        console.log('Ticket balance:', result.data);
+        console.log('🎫 Ticket balance set:', result.data);
+        return result.data; // Return balance for polling use
       } else {
         console.error('Failed to fetch ticket balance:', result.error);
+        return null;
       }
     } catch (error) {
       console.error('Error fetching ticket balance:', error);
+      return null;
     } finally {
       setIsLoadingBalance(false);
     }
   };
 
-  // Fetch balance when wallet connects
+  // Fetch balance when wallet connects or user is authenticated with wallet address
   useEffect(() => {
-    if (activeAccount?.address) {
-      fetchTicketBalance(activeAccount.address);
+    console.log('🎫 Wallet effect - activeAccount:', activeAccount?.address, 'userWallet:', user?.walletAddress, 'isWalletConnecting:', isWalletConnecting);
+    if (walletAddress) {
+      fetchTicketBalance(walletAddress);
     }
-  }, [activeAccount?.address]);
+  }, [walletAddress]);
 
   const filteredPackages = selectedTier === 'all' 
     ? ticketPackages 
@@ -440,13 +471,41 @@ export default function TicketsPage() {
   };
 
   const handlePurchase = (pkg: TicketPackage) => {
-    fetchQuoteAndAdjust(pkg);
+    setPackageForQuantity(pkg);
+    setQuantity(1);
+    setShowQuantitySelector(true);
+  };
+
+  const handleConfirmQuantity = () => {
+    if (!packageForQuantity) return;
+    
+    // Create a modified package with multiplied quantity and price
+    const multipliedPackage: TicketPackage = {
+      ...packageForQuantity,
+      tickets: packageForQuantity.tickets * quantity,
+      price: packageForQuantity.price * quantity,
+      originalPrice: packageForQuantity.originalPrice ? packageForQuantity.originalPrice * quantity : undefined,
+    };
+    
+    setShowQuantitySelector(false);
+    fetchQuoteAndAdjust(multipliedPackage);
+  };
+
+  const getTotalTickets = () => {
+    if (!packageForQuantity) return 0;
+    return packageForQuantity.tickets * quantity;
+  };
+
+  const getTotalPrice = () => {
+    if (!packageForQuantity) return 0;
+    return packageForQuantity.price * quantity;
   };
 
   const handleCheckoutSuccess = async (transactionData: CheckoutSuccessData) => {
     console.log('=== Payment Success ===');
     console.log('Transaction Data:', transactionData);
     console.log('Active Account:', activeAccount?.address);
+    console.log('User Wallet:', user?.walletAddress);
     console.log('Selected Package:', selectedPackage);
     console.log('=======================');
     
@@ -458,12 +517,30 @@ export default function TicketsPage() {
       return;
     }
 
-    // For DEV MODE: Use a test wallet if no wallet is connected
-    const buyerWallet = activeAccount?.address || '0xa2a3D233b95fCB94409555B12444399d4b72E239';
+    // CRITICAL: Get the buyer's wallet address - use connected wallet first, then user profile wallet
+    // NEVER fall back to a hardcoded address in production!
+    const buyerWallet = activeAccount?.address || user?.walletAddress || user?.smartWalletAddress;
     
-    if (!activeAccount?.address) {
-      console.warn('⚠️ No wallet connected - using test wallet for DEV MODE:', buyerWallet);
+    if (!buyerWallet) {
+      console.error('❌ CRITICAL: No wallet address available for purchase!');
+      alert('Error: No wallet address found. Please make sure you are logged in and have a wallet connected.');
+      setShowCheckout(false);
+      setSelectedPackage(null);
+      setAdjustedAmount(null);
+      return;
     }
+    
+    // Validate wallet address format
+    if (!buyerWallet.startsWith('0x') || buyerWallet.length !== 42) {
+      console.error('❌ CRITICAL: Invalid wallet address format:', buyerWallet);
+      alert('Error: Invalid wallet address. Please contact support.');
+      setShowCheckout(false);
+      setSelectedPackage(null);
+      setAdjustedAmount(null);
+      return;
+    }
+    
+    console.log('✅ Using buyer wallet:', buyerWallet);
 
     try {
       console.log('📤 Calling /tickets/purchase API...');
@@ -471,6 +548,7 @@ export default function TicketsPage() {
         buyerWallet,
         tier: selectedPackage.tier,
         quantity: selectedPackage.tickets,
+        userId: user?.userId,
       });
 
       // Call backend to process the purchase and transfer NFT tickets
@@ -483,6 +561,8 @@ export default function TicketsPage() {
           quantity: selectedPackage.tickets,
           // Include mock transaction hash for reference (DEV MODE)
           mockTransactionHash: (transactionData.statuses?.[0] as any)?.originTxHash || `mock_${Date.now()}`,
+          // Include userId for activity tracking
+          userId: user?.userId,
         }),
       });
 
@@ -494,22 +574,82 @@ export default function TicketsPage() {
       if (result.success) {
         console.log(`✅ Successfully purchased ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s)!`);
         console.log(`Transfer Transaction ID: ${result.data.transactionId}`);
-        // Refresh on-chain balance after successful purchase
-        if (activeAccount?.address) {
-          fetchTicketBalance(activeAccount.address);
+        
+        // The blockchain transaction is queued but not yet confirmed
+        // We need to wait for it to be mined before the balance updates
+        if (walletAddress) {
+          // Store initial balance for comparison
+          const initialBalance = {
+            basic: ticketBalance.basic,
+            premium: ticketBalance.premium,
+            trial: ticketBalance.trial,
+          };
+          const expectedIncrease = selectedPackage.tickets;
+          const expectedTier = selectedPackage.tier;
+          
+          // Function to invalidate cache and fetch balance, returning the fresh balance
+          const invalidateAndFetch = async (): Promise<typeof initialBalance | null> => {
+            try {
+              // First invalidate the cache on backend
+              await fetch(`${API_BASE_URL}/tickets/invalidate-cache/${walletAddress}`, {
+                method: 'POST',
+              });
+              console.log('🗑️ Cache invalidated');
+            } catch (e) {
+              console.warn('Cache invalidation failed, continuing anyway:', e);
+            }
+            return await fetchTicketBalance(walletAddress);
+          };
+          
+          // Polling function to check for balance update
+          const pollForBalanceUpdate = async () => {
+            const maxAttempts = 10;
+            const delays = [2000, 3000, 3000, 4000, 4000, 5000, 5000, 5000, 5000, 5000]; // ~40s total
+            
+            for (let i = 0; i < maxAttempts; i++) {
+              await new Promise(resolve => setTimeout(resolve, delays[i]));
+              console.log(`🔄 Checking balance (attempt ${i + 1}/${maxAttempts})...`);
+              
+              const newBalance = await invalidateAndFetch();
+              
+              if (newBalance) {
+                // Check if balance increased for the expected tier
+                const currentBalance = newBalance[expectedTier];
+                const expectedBalance = initialBalance[expectedTier] + expectedIncrease;
+                
+                console.log(`📊 Balance check: initial=${initialBalance[expectedTier]}, current=${currentBalance}, expected=${expectedBalance}`);
+                
+                if (currentBalance >= expectedBalance) {
+                  console.log('✅ Balance updated successfully!');
+                  return; // Balance updated, stop polling
+                }
+              }
+            }
+            
+            console.log('⚠️ Balance polling complete - balance may take longer to update');
+          };
+          
+          // Start polling in the background
+          pollForBalanceUpdate();
+          
+          // Show success message using toast
+          showSuccess(`🎉 Purchase successful! Your ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s) are being transferred.`, 6000);
+          showInfo('Your balance will update shortly once the blockchain confirms the transfer.', 5000);
         }
       } else {
         console.error('❌ Purchase failed:', result.error);
+        showError(`Purchase failed: ${result.error}`, 5000);
         // Still refresh balance to show actual on-chain state
-        if (activeAccount?.address) {
-          fetchTicketBalance(activeAccount.address);
+        if (walletAddress) {
+          fetchTicketBalance(walletAddress);
         }
       }
     } catch (error) {
       console.error('Error calling purchase API:', error);
+      showError('Purchase failed. Please try again.', 5000);
       // Still refresh balance to show actual on-chain state
-      if (activeAccount?.address) {
-        fetchTicketBalance(activeAccount.address);
+      if (walletAddress) {
+        fetchTicketBalance(walletAddress);
       }
     }
     
@@ -542,6 +682,13 @@ export default function TicketsPage() {
                   <p className="tickets-page-subtitle">Purchase tickets to book lessons with our expert tutors</p>
                 </div>
               </div>
+              <a 
+                href="/purchase-history"
+                className="tickets-history-btn"
+              >
+                <i className="fas fa-receipt"></i>
+                Purchase History
+              </a>
             </div>
 
             {/* Current Balance */}
@@ -740,6 +887,109 @@ export default function TicketsPage() {
         </div>
       </div>
 
+      {/* Quantity Selector Modal */}
+      {showQuantitySelector && packageForQuantity && (
+        <div className="checkout-modal-overlay" onClick={() => setShowQuantitySelector(false)}>
+          <div className={`quantity-selector-modal ${packageForQuantity.tier === 'premium' ? 'premium' : ''}`} onClick={(e) => e.stopPropagation()}>
+            <button className="checkout-close-btn" onClick={() => setShowQuantitySelector(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            
+            <div className={`quantity-header ${packageForQuantity.tier === 'premium' ? 'premium-header' : ''}`}>
+              <div className="quantity-header-icon">
+                <img src={getTicketImageUrl(packageForQuantity.tier)} alt={`${packageForQuantity.tier} ticket`} />
+              </div>
+              <h2>Select Quantity</h2>
+              <p>How many <strong>{packageForQuantity.name}</strong> do you want?</p>
+            </div>
+
+            <div className="quantity-body">
+              <div className="quantity-package-info">
+                <div className="quantity-package-details">
+                  <span className={`tier-badge ${packageForQuantity.tier}`}>
+                    {packageForQuantity.tier === 'basic' ? 'Basic' : 'Premium'}
+                  </span>
+                  <span className="package-tickets-info">
+                    {packageForQuantity.tickets} ticket{packageForQuantity.tickets > 1 ? 's' : ''} per pack
+                  </span>
+                  <span className="package-price-info">
+                    ${packageForQuantity.price} per pack
+                  </span>
+                </div>
+              </div>
+
+              <div className="quantity-controls">
+                <button 
+                  className="quantity-btn minus"
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <i className="fas fa-minus"></i>
+                </button>
+                <input
+                  type="number"
+                  className="quantity-input"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 1;
+                    setQuantity(Math.max(1, Math.min(100, val)));
+                  }}
+                  min="1"
+                  max="100"
+                />
+                <button 
+                  className="quantity-btn plus"
+                  onClick={() => setQuantity(q => Math.min(100, q + 1))}
+                  disabled={quantity >= 100}
+                >
+                  <i className="fas fa-plus"></i>
+                </button>
+              </div>
+
+              <div className="quantity-summary">
+                <div className="summary-row">
+                  <span className="summary-label">Tickets per pack</span>
+                  <span className="summary-value">{packageForQuantity.tickets}</span>
+                </div>
+                <div className="summary-row">
+                  <span className="summary-label">Quantity</span>
+                  <span className="summary-value">×{quantity}</span>
+                </div>
+                <div className="summary-divider"></div>
+                <div className="summary-row total-tickets">
+                  <span className="summary-label">
+                    <i className="fas fa-ticket-alt"></i>
+                    Total Tickets
+                  </span>
+                  <span className="summary-value highlight">{getTotalTickets()}</span>
+                </div>
+                <div className="summary-row total-price">
+                  <span className="summary-label">
+                    <i className="fas fa-dollar-sign"></i>
+                    Total Price
+                  </span>
+                  <span className="summary-value highlight">${getTotalPrice().toFixed(2)}</span>
+                </div>
+                {quantity > 1 && (
+                  <div className="summary-savings">
+                    <i className="fas fa-info-circle"></i>
+                    Buying {quantity} packs of {packageForQuantity.tickets} tickets each
+                  </div>
+                )}
+              </div>
+
+              <button 
+                className={`quantity-confirm-btn ${packageForQuantity.tier === 'premium' ? 'premium' : ''}`}
+                onClick={handleConfirmQuantity}
+              >
+                <i className="fas fa-shopping-cart"></i>
+                Continue to Checkout - ${getTotalPrice().toFixed(2)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Checkout Modal */}
       {showCheckout && selectedPackage && (
         <div className="checkout-modal-overlay" onClick={handleCheckoutCancel}>
@@ -752,7 +1002,7 @@ export default function TicketsPage() {
                 <img src={getTicketImageUrl(selectedPackage.tier)} alt={`${selectedPackage.tier} ticket`} />
               </div>
               <h2>Complete Your Purchase</h2>
-              <p>You're buying: <strong>{selectedPackage.name}</strong></p>
+              <p>You're buying: <strong>{packageForQuantity?.name}{quantity > 1 ? ` ×${quantity}` : ''}</strong></p>
             </div>
             <div className="checkout-body">
               {DEV_MODE ? (

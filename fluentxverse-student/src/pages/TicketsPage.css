@@ -70,6 +70,32 @@
   font-weight: 500;
 }
 
+/* Purchase History Button */
+.tickets-history-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(2, 69, 174, 0.08);
+  color: #0245ae;
+  border: 1px solid rgba(2, 69, 174, 0.15);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tickets-history-btn:hover {
+  background: rgba(2, 69, 174, 0.12);
+  border-color: rgba(2, 69, 174, 0.25);
+  transform: translateY(-1px);
+}
+
+.tickets-history-btn i {
+  font-size: 14px;
+}
+
 /* Current Balance Card */
 .tickets-balance {
   margin-bottom: 32px;
@@ -1698,4 +1724,372 @@
 .dark-mode .mock-dev-badge {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
+}
+
+/* ===== Quantity Selector Modal ===== */
+.quantity-selector-modal {
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 24px;
+  padding: 0;
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.25),
+    0 10px 30px rgba(2, 69, 174, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.quantity-selector-modal.premium {
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.25),
+    0 10px 30px rgba(245, 158, 11, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.quantity-header {
+  text-align: center;
+  padding: 28px 28px 20px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 50%, #0284c7 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.quantity-header.premium-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+}
+
+.quantity-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.quantity-header-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.quantity-header-icon img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.quantity-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  position: relative;
+}
+
+.quantity-header p {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+}
+
+.quantity-header p strong {
+  color: #fff;
+}
+
+.quantity-body {
+  padding: 24px;
+}
+
+.quantity-package-info {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(2, 69, 174, 0.1);
+}
+
+.quantity-package-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quantity-package-details .tier-badge {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.package-tickets-info,
+.package-price-info {
+  font-size: 14px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.package-price-info {
+  color: #0245ae;
+}
+
+.quantity-selector-modal.premium .package-price-info {
+  color: #d97706;
+}
+
+/* Quantity Controls */
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.quantity-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.quantity-btn:hover:not(:disabled) {
+  border-color: #0245ae;
+  color: #0245ae;
+  background: #f0f9ff;
+}
+
+.quantity-selector-modal.premium .quantity-btn:hover:not(:disabled) {
+  border-color: #f59e0b;
+  color: #d97706;
+  background: #fffbeb;
+}
+
+.quantity-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.quantity-input {
+  width: 100px;
+  height: 56px;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.quantity-input:focus {
+  border-color: #0245ae;
+  box-shadow: 0 0 0 4px rgba(2, 69, 174, 0.1);
+}
+
+.quantity-selector-modal.premium .quantity-input:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+/* Hide spinner buttons on number input */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Quantity Summary */
+.quantity-summary {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.summary-label {
+  font-size: 14px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-label i {
+  color: #94a3b8;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.summary-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  margin: 12px 0;
+}
+
+.summary-row.total-tickets .summary-label,
+.summary-row.total-price .summary-label {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.summary-row.total-tickets .summary-label i {
+  color: #0245ae;
+}
+
+.summary-row.total-price .summary-label i {
+  color: #10b981;
+}
+
+.quantity-selector-modal.premium .summary-row.total-tickets .summary-label i {
+  color: #f59e0b;
+}
+
+.summary-value.highlight {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.quantity-selector-modal.premium .summary-value.highlight {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.summary-savings {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(2, 69, 174, 0.08);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #0245ae;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-selector-modal.premium .summary-savings {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+/* Confirm Button */
+.quantity-confirm-btn {
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #0245ae 0%, #0369a1 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.3);
+}
+
+.quantity-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(2, 69, 174, 0.4);
+}
+
+.quantity-confirm-btn.premium {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+.quantity-confirm-btn.premium:hover {
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);
+}
+
+/* Dark mode for quantity selector */
+.dark-mode .quantity-selector-modal {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-color: #334155;
+}
+
+.dark-mode .quantity-package-info {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-color: #334155;
+}
+
+.dark-mode .quantity-input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .quantity-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.dark-mode .quantity-summary {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.dark-mode .summary-label {
+  color: #94a3b8;
+}
+
+.dark-mode .summary-value {
+  color: #f1f5f9;
+}
+
+.dark-mode .package-tickets-info,
+.dark-mode .package-price-info {
+  color: #cbd5e1;
 }

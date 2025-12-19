@@ -1,6 +1,8 @@
 import Elysia, { t } from 'elysia';
 import { ticketService, type TicketTier } from '@/services/ticket.services/ticket.service';
 import { cacheGetOrSet, invalidateCache } from '@/db/redis';
+import { getIO } from '@/socket/socket.server';
+import { notifyTicketReceived } from '@/socket/handlers/ticket.handler';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -173,11 +175,43 @@ const Ticket = new Elysia({ prefix: '/tickets' })
     console.log('Request body:', body);
     
     try {
-      const { buyerWallet, tier, quantity, mockTransactionHash } = body;
+      const { buyerWallet, tier, quantity, mockTransactionHash, userId } = body;
 
-      // Validate input
+      // CRITICAL VALIDATION: Ensure buyer wallet is valid
       if (!buyerWallet || !buyerWallet.startsWith('0x')) {
-        console.log('❌ Invalid buyer wallet address');
+        console.log('❌ CRITICAL: Invalid buyer wallet address');
+        return {
+          success: false,
+          error: 'Invalid buyer wallet address'
+        };
+      }
+      
+      // CRITICAL: Validate wallet address length (standard Ethereum address)
+      if (buyerWallet.length !== 42) {
+        console.log('❌ CRITICAL: Buyer wallet address has invalid length:', buyerWallet.length);
+        return {
+          success: false,
+          error: 'Invalid buyer wallet address format'
+        };
+      }
+      
+      // CRITICAL: Prevent sending to vault/server wallet (would be sending to ourselves!)
+      const vaultWallet = process.env.THIRDWEB_VAULT_WALLET_ADDRESS?.toLowerCase();
+      if (vaultWallet && buyerWallet.toLowerCase() === vaultWallet) {
+        console.log('❌ CRITICAL: Buyer wallet matches vault wallet - this would send tickets to ourselves!');
+        return {
+          success: false,
+          error: 'Invalid buyer wallet - cannot send to system wallet'
+        };
+      }
+      
+      // Additional safety check: Prevent common invalid/placeholder addresses
+      const invalidAddresses = [
+        '0x0000000000000000000000000000000000000000', // Zero address
+        '0xdead000000000000000000000000000000000000', // Dead address
+      ];
+      if (invalidAddresses.includes(buyerWallet.toLowerCase())) {
+        console.log('❌ CRITICAL: Buyer wallet is a known invalid address');
         return {
           success: false,
           error: 'Invalid buyer wallet address'
@@ -200,7 +234,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         };
       }
 
-      console.log(`✅ Validation passed. Processing purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
+      console.log(`✅ All validations passed. Processing purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
 
       // Process the purchase - transfer NFT to buyer
       const result = await ticketService.processPurchase({
@@ -208,6 +242,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         tier,
         quantity: Number(quantity),
         mockTransactionHash,
+        userId,
       });
 
       console.log('Purchase result:', result);
@@ -223,6 +258,26 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       const cacheKey = `ticket:balance:${buyerWallet.toLowerCase()}`;
       await invalidateCache(cacheKey);
       console.log('🗑️ Invalidated ticket balance cache after purchase');
+      
+      // Invalidate student activity cache if userId provided
+      if (userId) {
+        await Promise.all([
+          invalidateCache(`student:activity:${userId}:10`),
+          invalidateCache(`student:activity:${userId}:50`),
+        ]);
+        console.log('🗑️ Invalidated student activity cache after purchase');
+        
+        // Send real-time notification via WebSocket
+        const io = getIO();
+        if (io) {
+          notifyTicketReceived(io, userId, {
+            tier: result.tier as 'basic' | 'premium' | 'trial',
+            quantity: result.quantity,
+            transactionId: result.transactionId,
+          });
+          console.log('📢 Sent ticket:received notification via WebSocket');
+        }
+      }
 
       return {
         success: true,
@@ -248,6 +303,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       tier: t.Union([t.Literal('basic'), t.Literal('premium'), t.Literal('trial')]),
       quantity: t.Number(),
       mockTransactionHash: t.Optional(t.String()),
+      userId: t.Optional(t.String()),
     })
   })
 
@@ -267,9 +323,9 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         };
       }
 
-      // Cache ticket balance for 30 seconds
+      // Cache ticket balance for 15 seconds (shorter TTL for more responsive updates)
       const cacheKey = `ticket:balance:${walletAddress.toLowerCase()}`;
-      const balance = await cacheGetOrSet(cacheKey, 30, () => 
+      const balance = await cacheGetOrSet(cacheKey, 15, () => 
         ticketService.getWalletTicketBalance(walletAddress)
       );
 
@@ -307,6 +363,64 @@ const Ticket = new Elysia({ prefix: '/tickets' })
     } catch (error) {
       console.error('Error invalidating cache:', error);
       return { success: false, error: 'Failed to invalidate cache' };
+    }
+  })
+
+  /**
+   * Get my purchase history (authenticated user)
+   * GET /tickets/my-purchases
+   * Uses the auth cookie to get the user's purchases
+   */
+  .get('/my-purchases', async ({ cookie, set }) => {
+    try {
+      // Get user ID from studentAuth cookie
+      const raw = cookie.studentAuth?.value;
+      console.log('🔐 my-purchases: raw studentAuth cookie:', raw ? 'exists' : 'missing');
+      
+      if (!raw) {
+        set.status = 401;
+        return {
+          success: false,
+          error: 'Authentication required'
+        };
+      }
+
+      let userId: string | undefined;
+      try {
+        // Cookie value might be a string or already parsed object
+        const authData = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        userId = authData.userId;
+        console.log('🔐 my-purchases: parsed userId:', userId);
+      } catch (e) {
+        console.error('🔐 my-purchases: failed to parse auth cookie:', e);
+        set.status = 401;
+        return {
+          success: false,
+          error: 'Invalid authentication'
+        };
+      }
+
+      if (!userId) {
+        set.status = 401;
+        return {
+          success: false,
+          error: 'User ID not found in authentication'
+        };
+      }
+
+      const purchases = await ticketService.getPurchaseHistoryByUserId(userId);
+      console.log(`🔐 my-purchases: found ${purchases.length} purchases for user ${userId}`);
+
+      return {
+        success: true,
+        data: purchases
+      };
+    } catch (error) {
+      console.error('Error in GET /tickets/my-purchases:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get purchase history'
+      };
     }
   })
 

@@ -12,6 +12,7 @@ import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
 import { TutorProfilePage } from './pages/TutorProfilePage';
 import MaterialsPage from './pages/MaterialsPage';
 import TicketsPage from './pages/TicketsPage';
+import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 import InboxPage from './pages/InboxPage';
 import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -29,6 +30,7 @@ import TermsOfService from "./pages/TermsOfService";
 import NotFoundPage from "./pages/NotFoundPage";
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import { useAuthContext } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 
 
 import "./assets/css/privacy-policy.css";
@@ -103,6 +105,7 @@ export function AppInner() {
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
 						<Route path="/tickets" component={withProtected(TicketsPage)} />
+						<Route path="/purchase-history" component={withProtected(PurchaseHistoryPage)} />
 						<Route path="/inbox" component={withProtected(InboxPage)} />
 						<Route path="/profile" component={withProtected(StudentProfilePage)} />
 						<Route path="/student/:studentId" component={withProtected(StudentProfilePage)} />
@@ -128,7 +131,9 @@ export function App() {
 		<ThirdwebProvider>
 			{/* @ts-expect-error Preact/React type mismatch with thirdweb */}
 			<AuthProvider>
-				<AppInner />
+				<ToastProvider>
+					<AppInner />
+				</ToastProvider>
 			</AuthProvider>
 		</ThirdwebProvider>
 	);

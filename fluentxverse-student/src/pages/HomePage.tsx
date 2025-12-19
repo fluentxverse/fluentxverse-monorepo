@@ -508,27 +508,47 @@ const HomePage = () => {
                       <div className="home-activity-list">
                         {recentActivity
                           .slice((activityPage - 1) * ACTIVITY_PER_PAGE, activityPage * ACTIVITY_PER_PAGE)
-                          .map((activity, idx) => (
-                          <div
-                            key={idx}
-                            className="home-activity-item"
-                          >
-                            <div className={`home-activity-icon ${activity.type === 'lesson_completed' ? 'lesson' : 'booking'}`}>
-                              <i className={`fas fa-${activity.type === 'lesson_completed' ? 'check-circle' : 'calendar-plus'}`}></i>
-                            </div>
-                            <div className="home-activity-content">
-                              <div className="home-activity-action">
-                                {activity.action}
+                          .map((activity, idx) => {
+                            // Determine icon class based on activity type and ticket tier
+                            const getIconClass = () => {
+                              if (activity.type === 'lesson_completed') return 'lesson';
+                              if (activity.type === 'lesson_booked') return 'booking';
+                              if (activity.type === 'ticket_purchased') {
+                                // Use tier-specific colors for purchases
+                                if (activity.ticketTier === 'premium') return 'purchase-premium';
+                                if (activity.ticketTier === 'trial') return 'purchase-trial';
+                                return 'purchase-basic'; // default blue for basic
+                              }
+                              return 'booking';
+                            };
+                            
+                            return (
+                              <div
+                                key={idx}
+                                className="home-activity-item"
+                              >
+                                <div className={`home-activity-icon ${getIconClass()}`}>
+                                  <i className={`fas fa-${
+                                    activity.type === 'lesson_completed' ? 'check-circle' : 
+                                    activity.type === 'ticket_purchased' ? 'ticket-alt' : 'calendar-plus'
+                                  }`}></i>
+                                </div>
+                                <div className="home-activity-content">
+                                  <div className="home-activity-action">
+                                    {activity.action}
+                                  </div>
+                                  {activity.tutorName && (
+                                    <div className="home-activity-tutor">
+                                      with {activity.tutorName}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="home-activity-date">
+                                  {activity.date}
+                                </div>
                               </div>
-                              <div className="home-activity-tutor">
-                                with {activity.tutorName}
-                              </div>
-                            </div>
-                            <div className="home-activity-date">
-                              {activity.date}
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          })}
                       </div>
                       {/* Pagination */}
                       {recentActivity.length > ACTIVITY_PER_PAGE && (

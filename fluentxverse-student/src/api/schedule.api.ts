@@ -42,13 +42,16 @@ export interface StudentStats {
 }
 
 export interface RecentActivity {
-  type: 'lesson_completed' | 'lesson_booked';
-  tutorName: string;
+  type: 'lesson_completed' | 'lesson_booked' | 'ticket_purchased';
+  tutorName?: string;
   tutorAvatar?: string;
   date: string;
   action: string;
   bookingId?: string;
   slotDate?: string;
+  purchaseId?: string;
+  quantity?: number;
+  ticketTier?: 'basic' | 'premium' | 'trial';
   timestamp: Date;
 }
 

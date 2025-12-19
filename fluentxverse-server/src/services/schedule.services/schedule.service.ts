@@ -1483,15 +1483,19 @@ export class ScheduleService {
 
   /**
    * Get recent activity for student dashboard
+   * Includes lesson bookings, completions, and ticket purchases
    */
   async getStudentRecentActivity(studentId: string, limit: number = 10): Promise<Array<{
-    type: 'lesson_completed' | 'lesson_booked';
-    tutorName: string;
+    type: 'lesson_completed' | 'lesson_booked' | 'ticket_purchased';
+    tutorName?: string;
     tutorAvatar?: string;
     date: string;
     action: string;
     bookingId?: string;
     slotDate?: string;
+    purchaseId?: string;
+    quantity?: number;
+    ticketTier?: 'basic' | 'premium' | 'trial';
     timestamp: Date;
   }>> {
     const driver = getDriver();
@@ -1501,8 +1505,10 @@ export class ScheduleService {
       // Ensure limit is an integer
       const limitInt = Math.floor(Number(limit)) || 10;
       
+      console.log(`📊 Getting recent activity for student: ${studentId}, limit: ${limitInt}`);
+      
       // Get completed lessons and bookings
-      const result = await session.run(
+      const bookingsResult = await session.run(
         `
         MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
         MATCH (b)-[:BOOKS]->(slot:TimeSlot)
@@ -1520,7 +1526,49 @@ export class ScheduleService {
         { studentId }
       );
       
-      return result.records.map(record => {
+      // Get ticket purchases - try multiple ways to find purchases for this student:
+      // 1. By userId property directly on the purchase
+      // 2. By PURCHASED relationship from User node
+      // 3. By PURCHASED relationship from Student node
+      // 4. By buyerWallet matching student's wallet
+      const purchasesResult = await session.run(
+        `
+        MATCH (p:TicketPurchase)
+        WHERE p.status = 'completed' AND p.userId = $studentId
+        RETURN p
+        UNION
+        MATCH (u:User {id: $studentId})-[:PURCHASED]->(p:TicketPurchase)
+        WHERE p.status = 'completed'
+        RETURN p
+        UNION
+        MATCH (s:Student {id: $studentId})-[:PURCHASED]->(p:TicketPurchase)
+        WHERE p.status = 'completed'
+        RETURN p
+        UNION
+        MATCH (s:Student {id: $studentId})
+        MATCH (p:TicketPurchase)
+        WHERE p.status = 'completed' AND toLower(p.buyerWallet) = toLower(s.walletAddress)
+        RETURN p
+        `,
+        { studentId }
+      );
+      
+      // Deduplicate and sort purchases (UNION may return duplicates in some cases)
+      const purchaseMap = new Map();
+      purchasesResult.records.forEach(record => {
+        const p = record.get('p').properties;
+        if (!purchaseMap.has(p.id)) {
+          purchaseMap.set(p.id, p);
+        }
+      });
+      const uniquePurchases = Array.from(purchaseMap.values())
+        .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime())
+        .slice(0, limitInt);
+      
+      console.log(`📊 Found ${bookingsResult.records.length} bookings, ${uniquePurchases.length} purchases`);
+      
+      // Map bookings to activities
+      const bookingActivities = bookingsResult.records.map(record => {
         const booking = record.get('b').properties;
         const slot = record.get('slot').properties;
         const tutor = record.get('tutor').properties;
@@ -1559,7 +1607,7 @@ export class ScheduleService {
         }
         
         return {
-          type: isCompleted ? 'lesson_completed' : 'lesson_booked',
+          type: (isCompleted ? 'lesson_completed' : 'lesson_booked') as 'lesson_completed' | 'lesson_booked' | 'ticket_purchased',
           tutorName,
           tutorAvatar: tutor.profilePicture,
           date: this.formatActivityDate(activityDate),
@@ -1571,6 +1619,47 @@ export class ScheduleService {
           timestamp: activityDate
         };
       });
+      
+      // Map purchases to activities
+      const purchaseActivities = uniquePurchases.map(purchase => {
+        // Parse purchase date
+        let purchaseDate: Date;
+        if (purchase.purchaseDate) {
+          purchaseDate = new Date(purchase.purchaseDate);
+        } else {
+          purchaseDate = new Date();
+        }
+        
+        // Validate date
+        if (isNaN(purchaseDate.getTime())) {
+          console.error('Invalid date for purchase:', { purchaseDate: purchase.purchaseDate });
+          purchaseDate = new Date();
+        }
+        
+        const quantity = typeof purchase.quantity === 'object' && purchase.quantity.toInt 
+          ? purchase.quantity.toInt() 
+          : (parseInt(purchase.quantity) || 1);
+        
+        const tier = purchase.tier as 'basic' | 'premium' | 'trial' || 'basic';
+        const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
+        
+        return {
+          type: 'ticket_purchased' as 'lesson_completed' | 'lesson_booked' | 'ticket_purchased',
+          date: this.formatActivityDate(purchaseDate),
+          action: `Purchased ${quantity} ${tierLabel} ticket${quantity > 1 ? 's' : ''}`,
+          purchaseId: purchase.id,
+          quantity,
+          ticketTier: tier,
+          timestamp: purchaseDate
+        };
+      });
+      
+      // Combine and sort all activities by timestamp (most recent first)
+      const allActivities = [...bookingActivities, ...purchaseActivities]
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .slice(0, limitInt);
+      
+      return allActivities;
     } finally {
       await session.close();
     }

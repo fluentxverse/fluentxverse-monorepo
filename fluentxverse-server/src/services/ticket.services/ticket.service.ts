@@ -602,6 +602,7 @@ export class TicketService {
     tier: TicketTier;
     quantity: number;
     mockTransactionHash?: string;
+    userId?: string;
   }): Promise<{
     success: boolean;
     transactionId: string;
@@ -611,8 +612,18 @@ export class TicketService {
     purchaseDate: string;
     error?: string;
   }> {
-    const { buyerWallet, tier, quantity, mockTransactionHash } = params;
+    const { buyerWallet, tier, quantity, mockTransactionHash, userId } = params;
     const purchaseDate = new Date().toISOString();
+
+    // CRITICAL VALIDATION at service layer (defense in depth)
+    if (!buyerWallet || !buyerWallet.startsWith('0x') || buyerWallet.length !== 42) {
+      throw new Error('CRITICAL: Invalid buyer wallet address');
+    }
+    
+    const vaultWallet = process.env.THIRDWEB_VAULT_WALLET_ADDRESS;
+    if (vaultWallet && buyerWallet.toLowerCase() === vaultWallet.toLowerCase()) {
+      throw new Error('CRITICAL: Cannot transfer tickets to vault wallet');
+    }
 
     console.log(`Processing ticket purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
 
@@ -682,6 +693,7 @@ export class TicketService {
       try {
         await this.saveTicketPurchase({
           buyerWallet,
+          userId,
           tokenId: ticket.tokenId,
           tier,
           quantity,
@@ -692,7 +704,7 @@ export class TicketService {
           purchaseDate,
           status: 'completed',
         });
-        console.log(`✅ Purchase record saved to Memgraph`);
+        console.log(`✅ Purchase record saved to Memgraph with userId: ${userId || 'none'}`);
       } catch (dbError) {
         // Log but don't fail the purchase - blockchain transfer already succeeded
         console.error('⚠️ Failed to save purchase to Memgraph:', dbError);
@@ -855,12 +867,16 @@ export class TicketService {
         status: purchase.status,
       });
 
-      // If userId is provided, create relationship to User
+      // If userId is provided, create relationship to User or Student
       if (purchase.userId) {
+        // Try to link to Student first, then User
         await session.run(`
           MATCH (p:TicketPurchase {id: $purchaseId})
-          MATCH (u:User {id: $userId})
-          MERGE (u)-[:PURCHASED]->(p)
+          OPTIONAL MATCH (s:Student {id: $userId})
+          OPTIONAL MATCH (u:User {id: $userId})
+          WITH p, COALESCE(s, u) AS user
+          WHERE user IS NOT NULL
+          MERGE (user)-[:PURCHASED]->(p)
         `, {
           purchaseId,
           userId: purchase.userId,
@@ -928,29 +944,57 @@ export class TicketService {
     const session = driver.session();
 
     try {
+      console.log(`📊 Getting purchase history for userId: ${userId}`);
+      
+      // Use comprehensive query like recent activity - check multiple ways to find purchases:
+      // 1. By userId property directly on the purchase
+      // 2. By PURCHASED relationship from User node
+      // 3. By PURCHASED relationship from Student node
+      // 4. By buyerWallet matching student's wallet
       const result = await session.run(`
+        MATCH (p:TicketPurchase)
+        WHERE p.userId = $userId
+        RETURN p
+        UNION
         MATCH (u:User {id: $userId})-[:PURCHASED]->(p:TicketPurchase)
         RETURN p
-        ORDER BY p.purchaseDate DESC
+        UNION
+        MATCH (s:Student {id: $userId})-[:PURCHASED]->(p:TicketPurchase)
+        RETURN p
+        UNION
+        MATCH (s:Student {id: $userId})
+        MATCH (p:TicketPurchase)
+        WHERE toLower(p.buyerWallet) = toLower(s.walletAddress)
+        RETURN p
       `, { userId });
 
-      return result.records.map(record => {
+      // Deduplicate purchases (UNION may return duplicates)
+      const purchaseMap = new Map();
+      result.records.forEach(record => {
         const p = record.get('p').properties;
-        return {
-          id: p.id,
-          buyerWallet: p.buyerWallet,
-          userId: p.userId,
-          tokenId: p.tokenId,
-          tier: p.tier as TicketTier,
-          quantity: typeof p.quantity === 'object' ? p.quantity.toNumber() : p.quantity,
-          pricePerTicket: typeof p.pricePerTicket === 'object' ? p.pricePerTicket.toNumber() : p.pricePerTicket,
-          totalPrice: typeof p.totalPrice === 'object' ? p.totalPrice.toNumber() : p.totalPrice,
-          transferTxId: p.transferTxId,
-          paymentTxHash: p.paymentTxHash,
-          purchaseDate: p.purchaseDate,
-          status: p.status as TicketPurchase['status'],
-        };
+        if (!purchaseMap.has(p.id)) {
+          purchaseMap.set(p.id, {
+            id: p.id,
+            buyerWallet: p.buyerWallet,
+            userId: p.userId,
+            tokenId: p.tokenId,
+            tier: p.tier as TicketTier,
+            quantity: typeof p.quantity === 'object' ? p.quantity.toNumber() : p.quantity,
+            pricePerTicket: typeof p.pricePerTicket === 'object' ? p.pricePerTicket.toNumber() : p.pricePerTicket,
+            totalPrice: typeof p.totalPrice === 'object' ? p.totalPrice.toNumber() : p.totalPrice,
+            transferTxId: p.transferTxId,
+            paymentTxHash: p.paymentTxHash,
+            purchaseDate: p.purchaseDate,
+            status: p.status as TicketPurchase['status'],
+          });
+        }
       });
+
+      const purchases = Array.from(purchaseMap.values())
+        .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+
+      console.log(`📊 Found ${purchases.length} purchases for user ${userId}`);
+      return purchases;
     } catch (error) {
       console.error('Error fetching purchase history from Memgraph:', error);
       throw error;
