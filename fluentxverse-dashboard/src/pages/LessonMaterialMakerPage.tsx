@@ -35,9 +35,30 @@ type ExerciseItem = {
   correctAnswer: string;
 };
 
+type LessonGoalStep = {
+  id: string;
+  instruction: string;
+  scriptLine?: string; // Green italic text like "Today, let's talk about services."
+};
+
+type SectionContent = {
+  id: string;
+  sectionNumber: number;
+  sectionTitle: string;
+  explanationEn: string;
+  explanationJp: string;
+  sectionImage: string;
+  importantNote: string;
+  copyTemplate: string;
+  lessonGoalTitle: string;
+  lessonGoalSteps: LessonGoalStep[];
+  questionBox: string;
+};
+
 type LessonMaterialDraft = {
   version: 2;
   header: HeaderConfig;
+  sections: SectionContent[];
   vocabulary: VocabularyItem[];
   grammar: GrammarPoint[];
   exercises: ExerciseItem[];
@@ -67,6 +88,27 @@ const createBlankDraft = (): LessonMaterialDraft => ({
     goalText: 'I can say basic greetings.',
     goalSubtext: '基本的な挨拶ができるようになる。',
   },
+  sections: [
+    {
+      id: 'section-1',
+      sectionNumber: 1,
+      sectionTitle: 'INTRODUCE',
+      explanationEn: 'A list of services has a lot of important information. It shows how much and how long each service is.',
+      explanationJp: 'サービスのリストにはたくさんの重要な情報が載っています。サービスの値段や時間などです。',
+      sectionImage: '',
+      importantNote: 'Effective feedback is specific to the student\'s actual performance.',
+      copyTemplate: 'Copy the easy-to-use template on a NOTEPAD. Use this template to take note of the student\'s performance all throughout the lesson.',
+      lessonGoalTitle: 'LESSON GOAL (1 minute)',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Introduce the lesson topic.', scriptLine: '"Today, let\'s talk about services."' },
+        { id: 'step-2', instruction: 'Read the lesson goal and ask if it\'s clear.' },
+        { id: 'step-3', instruction: 'Read the Introduce explanation.' },
+        { id: 'step-4', instruction: 'Ask the question below.' },
+        { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Good! Let\'s go to the next part!"' },
+      ],
+      questionBox: 'Do you get manicures?',
+    },
+  ],
   vocabulary: [],
   grammar: [],
   exercises: [],
@@ -85,6 +127,7 @@ export default function LessonMaterialMakerPage() {
         ...blank,
         ...parsed,
         header: { ...blank.header, ...parsed.header },
+        sections: Array.isArray(parsed.sections) ? parsed.sections : blank.sections,
         vocabulary: Array.isArray(parsed.vocabulary) ? parsed.vocabulary : [],
         grammar: Array.isArray(parsed.grammar) ? parsed.grammar : [],
         exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
@@ -541,358 +584,243 @@ export default function LessonMaterialMakerPage() {
           )}
         </div>
 
-        {/* Page body - placeholder for future sections */}
+        {/* Page body - sections */}
         <div className="lm-body">
-          {/* VOCABULARY SECTION */}
-          <section className="lm-section">
-            <div className="lm-section-header">
-              <h2>
-                <i className="ri-book-2-line" />
-                Vocabulary
-              </h2>
-              <button
-                type="button"
-                className="lm-add-btn"
-                onClick={() => {
-                  const newItem: VocabularyItem = {
-                    id: `vocab_${Date.now()}`,
-                    word: '新しい単語',
-                    reading: 'あたらしいたんご',
-                    english: 'new word',
-                  };
-                  setDraft(prev => ({
-                    ...prev,
-                    vocabulary: [...prev.vocabulary, newItem],
-                  }));
-                }}
-              >
-                <i className="ri-add-line" />
-                Add Word
-              </button>
-            </div>
-
-            <div className="lm-vocab-list">
-              {draft.vocabulary.length === 0 && (
-                <div className="lm-empty-state">
-                  <i className="ri-inbox-line" />
-                  <span>No vocabulary items yet. Click "Add Word" to start.</span>
-                </div>
-              )}
-              {draft.vocabulary.map((item, idx) => (
-                <div key={item.id} className="lm-vocab-card">
-                  <div className="lm-vocab-row">
-                    <input
-                      type="text"
-                      className="lm-input lm-vocab-word"
-                      value={item.word}
-                      placeholder="Japanese word"
-                      onInput={(e) => {
-                        const val = (e.target as HTMLInputElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.vocabulary];
-                          updated[idx] = { ...updated[idx], word: val };
-                          return { ...prev, vocabulary: updated };
-                        });
-                      }}
-                    />
-                    <input
-                      type="text"
-                      className="lm-input lm-vocab-reading"
-                      value={item.reading}
-                      placeholder="ひらがな"
-                      onInput={(e) => {
-                        const val = (e.target as HTMLInputElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.vocabulary];
-                          updated[idx] = { ...updated[idx], reading: val };
-                          return { ...prev, vocabulary: updated };
-                        });
-                      }}
-                    />
-                  </div>
-                  <div className="lm-vocab-row">
-                    <input
-                      type="text"
-                      className="lm-input lm-vocab-english"
-                      value={item.english}
-                      placeholder="English meaning"
-                      onInput={(e) => {
-                        const val = (e.target as HTMLInputElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.vocabulary];
-                          updated[idx] = { ...updated[idx], english: val };
-                          return { ...prev, vocabulary: updated };
-                        });
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="lm-delete-btn"
-                      onClick={() => {
-                        setDraft(prev => ({
-                          ...prev,
-                          vocabulary: prev.vocabulary.filter((_, i) => i !== idx),
-                        }));
+          {draft.sections.map((section, sectionIndex) => (
+            <div key={section.id} className="lm-section">
+              {/* Two-column layout */}
+              <div className="lm-section-layout">
+                {/* Left Column - Main Content (60%) */}
+                <div className="lm-section-main">
+                  {/* Section Title */}
+                  <div className="lm-section-title-row">
+                    <span className="lm-section-number">{section.sectionNumber}</span>
+                    <span
+                      className="lm-section-title"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        const newSections = [...draft.sections];
+                        newSections[sectionIndex] = {
+                          ...section,
+                          sectionTitle: (e.target as HTMLElement).textContent || ''
+                        };
+                        setDraft(prev => ({ ...prev, sections: newSections }));
                       }}
                     >
-                      <i className="ri-delete-bin-line" />
-                    </button>
+                      {section.sectionTitle}
+                    </span>
+                  </div>
+
+                  {/* Explanation - English */}
+                  <p
+                    className="lm-section-explanation"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const newSections = [...draft.sections];
+                      newSections[sectionIndex] = {
+                        ...section,
+                        explanationEn: (e.target as HTMLElement).textContent || ''
+                      };
+                      setDraft(prev => ({ ...prev, sections: newSections }));
+                    }}
+                  >
+                    {section.explanationEn}
+                  </p>
+
+                  {/* Explanation - Japanese */}
+                  <p
+                    className="lm-section-explanation-jp"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      const newSections = [...draft.sections];
+                      newSections[sectionIndex] = {
+                        ...section,
+                        explanationJp: (e.target as HTMLElement).textContent || ''
+                      };
+                      setDraft(prev => ({ ...prev, sections: newSections }));
+                    }}
+                  >
+                    {section.explanationJp}
+                  </p>
+
+                  {/* Section Image */}
+                  <div className="lm-section-image-container">
+                    {section.sectionImage ? (
+                      <div className="lm-section-image-wrapper">
+                        <img src={section.sectionImage} alt="Section visual" className="lm-section-image" />
+                        <button
+                          type="button"
+                          className="lm-section-image-remove"
+                          onClick={() => {
+                            const newSections = [...draft.sections];
+                            newSections[sectionIndex] = { ...section, sectionImage: '' };
+                            setDraft(prev => ({ ...prev, sections: newSections }));
+                          }}
+                        >
+                          <i className="ri-delete-bin-line" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="lm-section-image-upload">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="lm-hidden-input"
+                          onChange={(e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const result = ev.target?.result as string;
+                              const newSections = [...draft.sections];
+                              newSections[sectionIndex] = { ...section, sectionImage: result };
+                              setDraft(prev => ({ ...prev, sections: newSections }));
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        <i className="ri-image-add-line" />
+                        <span>Click to add section image</span>
+                      </label>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
 
-          {/* GRAMMAR SECTION */}
-          <section className="lm-section">
-            <div className="lm-section-header">
-              <h2>
-                <i className="ri-function-line" />
-                Grammar Points
-              </h2>
-              <button
-                type="button"
-                className="lm-add-btn"
-                onClick={() => {
-                  const newItem: GrammarPoint = {
-                    id: `grammar_${Date.now()}`,
-                    structure: '〜です',
-                    meaning: 'It is ~',
-                    example: '私は学生です。',
-                    translation: 'I am a student.',
-                  };
-                  setDraft(prev => ({
-                    ...prev,
-                    grammar: [...prev.grammar, newItem],
-                  }));
-                }}
-              >
-                <i className="ri-add-line" />
-                Add Grammar
-              </button>
-            </div>
-
-            <div className="lm-grammar-list">
-              {draft.grammar.length === 0 && (
-                <div className="lm-empty-state">
-                  <i className="ri-inbox-line" />
-                  <span>No grammar points yet. Click "Add Grammar" to start.</span>
-                </div>
-              )}
-              {draft.grammar.map((item, idx) => (
-                <div key={item.id} className="lm-grammar-card">
-                  <div className="lm-grammar-header">
-                    <input
-                      type="text"
-                      className="lm-input lm-grammar-structure"
-                      value={item.structure}
-                      placeholder="Grammar structure"
-                      onInput={(e) => {
-                        const val = (e.target as HTMLInputElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.grammar];
-                          updated[idx] = { ...updated[idx], structure: val };
-                          return { ...prev, grammar: updated };
-                        });
-                      }}
-                    />
-                    <input
-                      type="text"
-                      className="lm-input lm-grammar-meaning"
-                      value={item.meaning}
-                      placeholder="English meaning"
-                      onInput={(e) => {
-                        const val = (e.target as HTMLInputElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.grammar];
-                          updated[idx] = { ...updated[idx], meaning: val };
-                          return { ...prev, grammar: updated };
-                        });
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="lm-delete-btn"
-                      onClick={() => {
-                        setDraft(prev => ({
-                          ...prev,
-                          grammar: prev.grammar.filter((_, i) => i !== idx),
-                        }));
+                {/* Right Column - Sidebar (40%) */}
+                <div className="lm-section-sidebar">
+                  {/* Important Note Box */}
+                  <div className="lm-important-box">
+                    <div className="lm-important-header">
+                      <span className="lm-important-label">IMPORTANT:</span>
+                      <span
+                        className="lm-important-text"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            importantNote: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.importantNote}
+                      </span>
+                    </div>
+                    <p
+                      className="lm-important-description"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        const newSections = [...draft.sections];
+                        newSections[sectionIndex] = {
+                          ...section,
+                          copyTemplate: (e.target as HTMLElement).textContent || ''
+                        };
+                        setDraft(prev => ({ ...prev, sections: newSections }));
                       }}
                     >
-                      <i className="ri-delete-bin-line" />
+                      {section.copyTemplate}
+                    </p>
+                    <button type="button" className="lm-copy-btn">
+                      Click to Copy
                     </button>
                   </div>
-                  <div className="lm-grammar-example">
-                    <textarea
-                      className="lm-textarea lm-example-jp"
-                      value={item.example}
-                      placeholder="Example sentence in Japanese"
-                      rows={2}
-                      onInput={(e) => {
-                        const val = (e.target as HTMLTextAreaElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.grammar];
-                          updated[idx] = { ...updated[idx], example: val };
-                          return { ...prev, grammar: updated };
-                        });
+
+                  {/* Lesson Goal Box */}
+                  <div className="lm-goal-box">
+                    <div
+                      className="lm-goal-box-header"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        const newSections = [...draft.sections];
+                        newSections[sectionIndex] = {
+                          ...section,
+                          lessonGoalTitle: (e.target as HTMLElement).textContent || ''
+                        };
+                        setDraft(prev => ({ ...prev, sections: newSections }));
                       }}
-                    />
-                    <textarea
-                      className="lm-textarea lm-example-en"
-                      value={item.translation}
-                      placeholder="English translation"
-                      rows={2}
-                      onInput={(e) => {
-                        const val = (e.target as HTMLTextAreaElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.grammar];
-                          updated[idx] = { ...updated[idx], translation: val };
-                          return { ...prev, grammar: updated };
-                        });
-                      }}
-                    />
+                    >
+                      {section.lessonGoalTitle}
+                    </div>
+                    <div className="lm-goal-steps">
+                      {section.lessonGoalSteps.map((step, stepIndex) => (
+                        <div key={step.id} className="lm-goal-step">
+                          <span className="lm-step-number">{stepIndex + 1}</span>
+                          <div className="lm-step-content">
+                            <span
+                              className="lm-step-instruction"
+                              contentEditable
+                              suppressContentEditableWarning
+                              onBlur={(e) => {
+                                const newSections = [...draft.sections];
+                                const newSteps = [...section.lessonGoalSteps];
+                                newSteps[stepIndex] = {
+                                  ...step,
+                                  instruction: (e.target as HTMLElement).textContent || ''
+                                };
+                                newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                setDraft(prev => ({ ...prev, sections: newSections }));
+                              }}
+                            >
+                              {step.instruction}
+                            </span>
+                            {step.scriptLine && (
+                              <div className="lm-step-script">
+                                <span className="lm-script-bullet">●</span>
+                                <span
+                                  className="lm-script-text"
+                                  contentEditable
+                                  suppressContentEditableWarning
+                                  onBlur={(e) => {
+                                    const newSections = [...draft.sections];
+                                    const newSteps = [...section.lessonGoalSteps];
+                                    newSteps[stepIndex] = {
+                                      ...step,
+                                      scriptLine: (e.target as HTMLElement).textContent || ''
+                                    };
+                                    newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                    setDraft(prev => ({ ...prev, sections: newSections }));
+                                  }}
+                                >
+                                  {step.scriptLine}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Question Box */}
+                    <div className="lm-question-box">
+                      <div className="lm-question-bullet" />
+                      <span
+                        className="lm-question-text"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            questionBox: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.questionBox}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* EXERCISES SECTION */}
-          <section className="lm-section">
-            <div className="lm-section-header">
-              <h2>
-                <i className="ri-questionnaire-line" />
-                Exercises
-              </h2>
-              <div className="lm-add-group">
-                <button
-                  type="button"
-                  className="lm-add-btn"
-                  onClick={() => {
-                    const newItem: ExerciseItem = {
-                      id: `ex_${Date.now()}`,
-                      type: 'fill-blank',
-                      question: '___は学生です。',
-                      correctAnswer: '私',
-                    };
-                    setDraft(prev => ({
-                      ...prev,
-                      exercises: [...prev.exercises, newItem],
-                    }));
-                  }}
-                >
-                  <i className="ri-add-line" />
-                  Fill-in-the-Blank
-                </button>
-                <button
-                  type="button"
-                  className="lm-add-btn"
-                  onClick={() => {
-                    const newItem: ExerciseItem = {
-                      id: `ex_${Date.now()}`,
-                      type: 'multiple-choice',
-                      question: 'What does こんにちは mean?',
-                      options: ['Hello', 'Goodbye', 'Thank you', 'Sorry'],
-                      correctAnswer: 'Hello',
-                    };
-                    setDraft(prev => ({
-                      ...prev,
-                      exercises: [...prev.exercises, newItem],
-                    }));
-                  }}
-                >
-                  <i className="ri-add-line" />
-                  Multiple Choice
-                </button>
               </div>
             </div>
-
-            <div className="lm-exercises-list">
-              {draft.exercises.length === 0 && (
-                <div className="lm-empty-state">
-                  <i className="ri-inbox-line" />
-                  <span>No exercises yet. Click buttons above to add exercises.</span>
-                </div>
-              )}
-              {draft.exercises.map((item, idx) => (
-                <div key={item.id} className="lm-exercise-card">
-                  <div className="lm-exercise-header">
-                    <span className="lm-exercise-type">
-                      {item.type === 'fill-blank' && <><i className="ri-text-spacing" /> Fill-in-the-Blank</>}
-                      {item.type === 'multiple-choice' && <><i className="ri-list-check" /> Multiple Choice</>}
-                    </span>
-                    <button
-                      type="button"
-                      className="lm-delete-btn"
-                      onClick={() => {
-                        setDraft(prev => ({
-                          ...prev,
-                          exercises: prev.exercises.filter((_, i) => i !== idx),
-                        }));
-                      }}
-                    >
-                      <i className="ri-delete-bin-line" />
-                    </button>
-                  </div>
-
-                  <textarea
-                    className="lm-textarea lm-exercise-question"
-                    value={item.question}
-                    placeholder="Exercise question"
-                    rows={2}
-                    onInput={(e) => {
-                      const val = (e.target as HTMLTextAreaElement).value;
-                      setDraft(prev => {
-                        const updated = [...prev.exercises];
-                        updated[idx] = { ...updated[idx], question: val };
-                        return { ...prev, exercises: updated };
-                      });
-                    }}
-                  />
-
-                  {item.type === 'multiple-choice' && (
-                    <div className="lm-mc-options">
-                      <label className="lm-label">Options (one per line)</label>
-                      <textarea
-                        className="lm-textarea"
-                        value={(item.options || []).join('\n')}
-                        placeholder="Option 1&#10;Option 2&#10;Option 3&#10;Option 4"
-                        rows={4}
-                        onInput={(e) => {
-                          const val = (e.target as HTMLTextAreaElement).value;
-                          const options = val.split('\n').filter(opt => opt.trim());
-                          setDraft(prev => {
-                            const updated = [...prev.exercises];
-                            updated[idx] = { ...updated[idx], options };
-                            return { ...prev, exercises: updated };
-                          });
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div className="lm-exercise-answer">
-                    <label className="lm-label">Correct Answer</label>
-                    <input
-                      type="text"
-                      className="lm-input"
-                      value={item.correctAnswer}
-                      placeholder="Answer"
-                      onInput={(e) => {
-                        const val = (e.target as HTMLInputElement).value;
-                        setDraft(prev => {
-                          const updated = [...prev.exercises];
-                          updated[idx] = { ...updated[idx], correctAnswer: val };
-                          return { ...prev, exercises: updated };
-                        });
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          ))}
         </div>
       </div>
 
