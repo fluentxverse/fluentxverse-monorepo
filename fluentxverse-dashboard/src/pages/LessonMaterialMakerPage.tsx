@@ -41,15 +41,32 @@ type LessonGoalStep = {
   scriptLine?: string; // Green italic text like "Today, let's talk about services."
 };
 
+type VocabCard = {
+  id: string;
+  image: string;
+  wordEn: string;
+  wordJp: string;
+};
+
 type SectionContent = {
   id: string;
   sectionNumber: number;
   sectionTitle: string;
+  // For INTRODUCE type sections
   explanationEn: string;
   explanationJp: string;
   sectionImage: string;
   importantNote: string;
   copyTemplate: string;
+  // For PRESENT/vocabulary type sections
+  sectionType: 'introduce' | 'vocabulary' | 'practice' | 'produce';
+  stepTitle?: string; // e.g., "STEP A VOCABULARY"
+  instructionEn?: string; // e.g., "I. Listen and repeat."
+  instructionJp?: string; // e.g., "聴いて、リピートしましょう。"
+  vocabCards?: VocabCard[];
+  // Sidebar content
+  sidebarTitle?: string; // e.g., "PRESENT"
+  sidebarSubtitle?: string; // e.g., "STEP A I (2 minutes)"
   lessonGoalTitle: string;
   lessonGoalSteps: LessonGoalStep[];
   questionBox: string;
@@ -93,6 +110,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
       id: 'section-1',
       sectionNumber: 1,
       sectionTitle: 'INTRODUCE',
+      sectionType: 'introduce',
       explanationEn: 'A list of services has a lot of important information. It shows how much and how long each service is.',
       explanationJp: 'サービスのリストにはたくさんの重要な情報が載っています。サービスの値段や時間などです。',
       sectionImage: '',
@@ -107,6 +125,41 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Good! Let\'s go to the next part!"' },
       ],
       questionBox: 'Do you get manicures?',
+    },
+    {
+      id: 'section-2',
+      sectionNumber: 2,
+      sectionTitle: 'PRESENT',
+      sectionType: 'vocabulary',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'STEP A VOCABULARY',
+      instructionEn: 'I. Listen and repeat.',
+      instructionJp: '聴いて、リピートしましょう。',
+      vocabCards: [
+        { id: 'vocab-1', image: '', wordEn: 'relax', wordJp: 'くつろぐ' },
+        { id: 'vocab-2', image: '', wordEn: 'exercise', wordJp: '運動をする' },
+        { id: 'vocab-3', image: '', wordEn: 'stay at home', wordJp: '家で過ごす' },
+        { id: 'vocab-4', image: '', wordEn: 'go out', wordJp: '出かける' },
+        { id: 'vocab-5', image: '', wordEn: 'read a book', wordJp: '本を読む' },
+        { id: 'vocab-6', image: '', wordEn: 'watch TV', wordJp: 'テレビを見る' },
+        { id: 'vocab-7', image: '', wordEn: 'cook', wordJp: '料理をする' },
+        { id: 'vocab-8', image: '', wordEn: 'take a nap', wordJp: '昼寝をする' },
+      ],
+      sidebarTitle: 'PRESENT',
+      sidebarSubtitle: 'STEP A I (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Introduce Present.', scriptLine: '"Now, let\'s try Present."' },
+        { id: 'step-2', instruction: 'Read the instructions.' },
+        { id: 'step-3', instruction: 'Read the first vocabulary and ask the student to repeat. Correct their pronunciation if necessary.' },
+        { id: 'step-4', instruction: 'Repeat Step 3 with the remaining vocabulary.' },
+        { id: 'step-5', instruction: 'Transition to the next part.', scriptLine: '"Great! Let\'s go to the next part!"' },
+      ],
+      questionBox: '',
     },
   ],
   vocabulary: [],
@@ -123,11 +176,43 @@ export default function LessonMaterialMakerPage() {
       if (!parsed || parsed.version !== 2) return createBlankDraft();
       // Merge with defaults to ensure all fields exist (handles old drafts)
       const blank = createBlankDraft();
+      
+      // Get existing sections or use blank
+      let sections = Array.isArray(parsed.sections) ? parsed.sections : blank.sections;
+      
+      // Migration: Add sectionType to existing sections if missing
+      sections = sections.map((section: SectionContent, index: number) => ({
+        ...section,
+        sectionType: section.sectionType || 'introduce',
+      }));
+      
+      // Migration: Add Section 2 (vocabulary) if only 1 section exists
+      if (sections.length === 1 && !sections.find((s: SectionContent) => s.sectionType === 'vocabulary')) {
+        sections.push(blank.sections[1]); // Add the vocabulary section from blank template
+      }
+      
+      // Migration: Add missing vocab cards to vocabulary section (expand from 4 to 8)
+      sections = sections.map((section: SectionContent) => {
+        if (section.sectionType === 'vocabulary' && section.vocabCards && section.vocabCards.length === 4) {
+          const blankVocabSection = blank.sections.find((s: SectionContent) => s.sectionType === 'vocabulary');
+          if (blankVocabSection?.vocabCards && blankVocabSection.vocabCards.length > 4) {
+            return {
+              ...section,
+              vocabCards: [
+                ...section.vocabCards,
+                ...blankVocabSection.vocabCards.slice(4) // Add vocab cards 5-8
+              ]
+            };
+          }
+        }
+        return section;
+      });
+      
       return {
         ...blank,
         ...parsed,
         header: { ...blank.header, ...parsed.header },
-        sections: Array.isArray(parsed.sections) ? parsed.sections : blank.sections,
+        sections,
         vocabulary: Array.isArray(parsed.vocabulary) ? parsed.vocabulary : [],
         grammar: Array.isArray(parsed.grammar) ? parsed.grammar : [],
         exercises: Array.isArray(parsed.exercises) ? parsed.exercises : [],
@@ -590,7 +675,7 @@ export default function LessonMaterialMakerPage() {
             <div key={section.id} className="lm-section">
               {/* Two-column layout */}
               <div className="lm-section-layout">
-                {/* Left Column - Main Content (60%) */}
+                {/* Left Column - Main Content */}
                 <div className="lm-section-main">
                   {/* Section Title */}
                   <div className="lm-section-title-row">
@@ -612,169 +697,294 @@ export default function LessonMaterialMakerPage() {
                     </span>
                   </div>
 
-                  {/* Explanation - English */}
-                  <p
-                    className="lm-section-explanation"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      const newSections = [...draft.sections];
-                      newSections[sectionIndex] = {
-                        ...section,
-                        explanationEn: (e.target as HTMLElement).textContent || ''
-                      };
-                      setDraft(prev => ({ ...prev, sections: newSections }));
-                    }}
-                  >
-                    {section.explanationEn}
-                  </p>
-
-                  {/* Explanation - Japanese */}
-                  <p
-                    className="lm-section-explanation-jp"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      const newSections = [...draft.sections];
-                      newSections[sectionIndex] = {
-                        ...section,
-                        explanationJp: (e.target as HTMLElement).textContent || ''
-                      };
-                      setDraft(prev => ({ ...prev, sections: newSections }));
-                    }}
-                  >
-                    {section.explanationJp}
-                  </p>
-
-                  {/* Section Image */}
-                  <div className="lm-section-image-container">
-                    {section.sectionImage ? (
-                      <div className="lm-section-image-wrapper">
-                        <img src={section.sectionImage} alt="Section visual" className="lm-section-image" />
-                        <button
-                          type="button"
-                          className="lm-section-image-remove"
-                          onClick={() => {
-                            const newSections = [...draft.sections];
-                            newSections[sectionIndex] = { ...section, sectionImage: '' };
-                            setDraft(prev => ({ ...prev, sections: newSections }));
-                          }}
-                        >
-                          <i className="ri-delete-bin-line" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="lm-section-image-upload">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="lm-hidden-input"
-                          onChange={(e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0];
-                            if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              const result = ev.target?.result as string;
-                              const newSections = [...draft.sections];
-                              newSections[sectionIndex] = { ...section, sectionImage: result };
-                              setDraft(prev => ({ ...prev, sections: newSections }));
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                        <i className="ri-image-add-line" />
-                        <span>Click to add section image</span>
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right Column - Sidebar (40%) */}
-                <div className="lm-section-sidebar">
-                  {/* Important Note Box */}
-                  <div className="lm-important-box">
-                    <div className="lm-important-header">
-                      <span className="lm-important-label">IMPORTANT:</span>
-                      <span
-                        className="lm-important-text"
+                  {/* INTRODUCE type content */}
+                  {(section.sectionType === 'introduce' || !section.sectionType) && (
+                    <>
+                      {/* Explanation - English */}
+                      <p
+                        className="lm-section-explanation"
                         contentEditable
                         suppressContentEditableWarning
                         onBlur={(e) => {
                           const newSections = [...draft.sections];
                           newSections[sectionIndex] = {
                             ...section,
-                            importantNote: (e.target as HTMLElement).textContent || ''
+                            explanationEn: (e.target as HTMLElement).textContent || ''
                           };
                           setDraft(prev => ({ ...prev, sections: newSections }));
                         }}
                       >
-                        {section.importantNote}
-                      </span>
-                    </div>
-                    <p
-                      className="lm-important-description"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => {
-                        const newSections = [...draft.sections];
-                        newSections[sectionIndex] = {
-                          ...section,
-                          copyTemplate: (e.target as HTMLElement).textContent || ''
-                        };
-                        setDraft(prev => ({ ...prev, sections: newSections }));
-                      }}
-                    >
-                      {section.copyTemplate}
-                    </p>
-                    <button type="button" className="lm-copy-btn">
-                      Click to Copy
-                    </button>
-                  </div>
+                        {section.explanationEn}
+                      </p>
 
-                  {/* Lesson Goal Box */}
-                  <div className="lm-goal-box">
-                    <div
-                      className="lm-goal-box-header"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => {
-                        const newSections = [...draft.sections];
-                        newSections[sectionIndex] = {
-                          ...section,
-                          lessonGoalTitle: (e.target as HTMLElement).textContent || ''
-                        };
-                        setDraft(prev => ({ ...prev, sections: newSections }));
-                      }}
-                    >
-                      {section.lessonGoalTitle}
-                    </div>
-                    <div className="lm-goal-steps">
-                      {section.lessonGoalSteps.map((step, stepIndex) => (
-                        <div key={step.id} className="lm-goal-step">
-                          <span className="lm-step-number">{stepIndex + 1}</span>
-                          <div className="lm-step-content">
-                            <span
-                              className="lm-step-instruction"
-                              contentEditable
-                              suppressContentEditableWarning
-                              onBlur={(e) => {
+                      {/* Explanation - Japanese */}
+                      <p
+                        className="lm-section-explanation-jp"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            explanationJp: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.explanationJp}
+                      </p>
+
+                      {/* Section Image */}
+                      <div className="lm-section-image-container">
+                        {section.sectionImage ? (
+                          <div className="lm-section-image-wrapper">
+                            <img src={section.sectionImage} alt="Section visual" className="lm-section-image" />
+                            <button
+                              type="button"
+                              className="lm-section-image-remove"
+                              onClick={() => {
                                 const newSections = [...draft.sections];
-                                const newSteps = [...section.lessonGoalSteps];
-                                newSteps[stepIndex] = {
-                                  ...step,
-                                  instruction: (e.target as HTMLElement).textContent || ''
-                                };
-                                newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                newSections[sectionIndex] = { ...section, sectionImage: '' };
                                 setDraft(prev => ({ ...prev, sections: newSections }));
                               }}
                             >
-                              {step.instruction}
-                            </span>
-                            {step.scriptLine && (
-                              <div className="lm-step-script">
-                                <span className="lm-script-bullet">●</span>
+                              <i className="ri-delete-bin-line" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="lm-section-image-upload">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="lm-hidden-input"
+                              onChange={(e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const result = ev.target?.result as string;
+                                  const newSections = [...draft.sections];
+                                  newSections[sectionIndex] = { ...section, sectionImage: result };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                            <i className="ri-image-add-line" />
+                            <span>Click to add section image</span>
+                          </label>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* VOCABULARY type content */}
+                  {section.sectionType === 'vocabulary' && (
+                    <>
+                      {/* Step Title */}
+                      <h3
+                        className="lm-step-title"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            stepTitle: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.stepTitle}
+                      </h3>
+
+                      {/* Instructions */}
+                      <p
+                        className="lm-vocab-instruction"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            instructionEn: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.instructionEn}
+                      </p>
+                      <p
+                        className="lm-vocab-instruction-jp"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            instructionJp: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.instructionJp}
+                      </p>
+
+                      {/* Vocabulary Grid */}
+                      <div className="lm-vocab-grid">
+                        {section.vocabCards?.map((card, cardIndex) => (
+                          <div key={card.id} className="lm-vocab-card">
+                            {/* Card Image */}
+                            <div className="lm-vocab-card-image">
+                              {card.image ? (
+                                <div className="lm-vocab-image-wrapper">
+                                  <img src={card.image} alt={card.wordEn} />
+                                  <button
+                                    type="button"
+                                    className="lm-vocab-image-remove"
+                                    onClick={() => {
+                                      const newSections = [...draft.sections];
+                                      const newCards = [...(section.vocabCards || [])];
+                                      newCards[cardIndex] = { ...card, image: '' };
+                                      newSections[sectionIndex] = { ...section, vocabCards: newCards };
+                                      setDraft(prev => ({ ...prev, sections: newSections }));
+                                    }}
+                                  >
+                                    <i className="ri-delete-bin-line" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="lm-vocab-image-upload">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="lm-hidden-input"
+                                    onChange={(e) => {
+                                      const file = (e.target as HTMLInputElement).files?.[0];
+                                      if (!file) return;
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const result = ev.target?.result as string;
+                                        const newSections = [...draft.sections];
+                                        const newCards = [...(section.vocabCards || [])];
+                                        newCards[cardIndex] = { ...card, image: result };
+                                        newSections[sectionIndex] = { ...section, vocabCards: newCards };
+                                        setDraft(prev => ({ ...prev, sections: newSections }));
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }}
+                                  />
+                                  <i className="ri-image-add-line" />
+                                </label>
+                              )}
+                            </div>
+                            {/* Card Text */}
+                            <div className="lm-vocab-card-text">
+                              <span
+                                className="lm-vocab-word-en"
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const newSections = [...draft.sections];
+                                  const newCards = [...(section.vocabCards || [])];
+                                  newCards[cardIndex] = { ...card, wordEn: (e.target as HTMLElement).textContent || '' };
+                                  newSections[sectionIndex] = { ...section, vocabCards: newCards };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                }}
+                              >
+                                {card.wordEn}
+                              </span>
+                              <span
+                                className="lm-vocab-word-jp"
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const newSections = [...draft.sections];
+                                  const newCards = [...(section.vocabCards || [])];
+                                  newCards[cardIndex] = { ...card, wordJp: (e.target as HTMLElement).textContent || '' };
+                                  newSections[sectionIndex] = { ...section, vocabCards: newCards };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                }}
+                              >
+                                {card.wordJp}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Right Column - Sidebar */}
+                <div className="lm-section-sidebar">
+                  {/* INTRODUCE type sidebar */}
+                  {(section.sectionType === 'introduce' || !section.sectionType) && (
+                    <>
+                      {/* Important Note Box */}
+                      <div className="lm-important-box">
+                        <div className="lm-important-header">
+                          <span className="lm-important-label">IMPORTANT:</span>
+                          <span
+                            className="lm-important-text"
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                              const newSections = [...draft.sections];
+                              newSections[sectionIndex] = {
+                                ...section,
+                                importantNote: (e.target as HTMLElement).textContent || ''
+                              };
+                              setDraft(prev => ({ ...prev, sections: newSections }));
+                            }}
+                          >
+                            {section.importantNote}
+                          </span>
+                        </div>
+                        <p
+                          className="lm-important-description"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => {
+                            const newSections = [...draft.sections];
+                            newSections[sectionIndex] = {
+                              ...section,
+                              copyTemplate: (e.target as HTMLElement).textContent || ''
+                            };
+                            setDraft(prev => ({ ...prev, sections: newSections }));
+                          }}
+                        >
+                          {section.copyTemplate}
+                        </p>
+                        <button type="button" className="lm-copy-btn">
+                          Click to Copy
+                        </button>
+                      </div>
+
+                      {/* Lesson Goal Box */}
+                      <div className="lm-goal-box">
+                        <div
+                          className="lm-goal-box-header"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => {
+                            const newSections = [...draft.sections];
+                            newSections[sectionIndex] = {
+                              ...section,
+                              lessonGoalTitle: (e.target as HTMLElement).textContent || ''
+                            };
+                            setDraft(prev => ({ ...prev, sections: newSections }));
+                          }}
+                        >
+                          {section.lessonGoalTitle}
+                        </div>
+                        <div className="lm-goal-steps">
+                          {section.lessonGoalSteps.map((step, stepIndex) => (
+                            <div key={step.id} className="lm-goal-step">
+                              <span className="lm-step-number">{stepIndex + 1}</span>
+                              <div className="lm-step-content">
                                 <span
-                                  className="lm-script-text"
+                                  className="lm-step-instruction"
                                   contentEditable
                                   suppressContentEditableWarning
                                   onBlur={(e) => {
@@ -782,41 +992,152 @@ export default function LessonMaterialMakerPage() {
                                     const newSteps = [...section.lessonGoalSteps];
                                     newSteps[stepIndex] = {
                                       ...step,
-                                      scriptLine: (e.target as HTMLElement).textContent || ''
+                                      instruction: (e.target as HTMLElement).textContent || ''
                                     };
                                     newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
                                     setDraft(prev => ({ ...prev, sections: newSections }));
                                   }}
                                 >
-                                  {step.scriptLine}
+                                  {step.instruction}
                                 </span>
+                                {step.scriptLine && (
+                                  <div className="lm-step-script">
+                                    <span className="lm-script-bullet">●</span>
+                                    <span
+                                      className="lm-script-text"
+                                      contentEditable
+                                      suppressContentEditableWarning
+                                      onBlur={(e) => {
+                                        const newSections = [...draft.sections];
+                                        const newSteps = [...section.lessonGoalSteps];
+                                        newSteps[stepIndex] = {
+                                          ...step,
+                                          scriptLine: (e.target as HTMLElement).textContent || ''
+                                        };
+                                        newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                        setDraft(prev => ({ ...prev, sections: newSections }));
+                                      }}
+                                    >
+                                      {step.scriptLine}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
 
-                    {/* Question Box */}
-                    <div className="lm-question-box">
-                      <div className="lm-question-bullet" />
-                      <span
-                        className="lm-question-text"
+                        {/* Question Box */}
+                        {section.questionBox && (
+                          <div className="lm-question-box">
+                            <div className="lm-question-bullet" />
+                            <span
+                              className="lm-question-text"
+                              contentEditable
+                              suppressContentEditableWarning
+                              onBlur={(e) => {
+                                const newSections = [...draft.sections];
+                                newSections[sectionIndex] = {
+                                  ...section,
+                                  questionBox: (e.target as HTMLElement).textContent || ''
+                                };
+                                setDraft(prev => ({ ...prev, sections: newSections }));
+                              }}
+                            >
+                              {section.questionBox}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* VOCABULARY type sidebar */}
+                  {section.sectionType === 'vocabulary' && (
+                    <div className="lm-vocab-sidebar">
+                      {/* Sidebar Header */}
+                      <div
+                        className="lm-vocab-sidebar-header"
                         contentEditable
                         suppressContentEditableWarning
                         onBlur={(e) => {
                           const newSections = [...draft.sections];
                           newSections[sectionIndex] = {
                             ...section,
-                            questionBox: (e.target as HTMLElement).textContent || ''
+                            sidebarTitle: (e.target as HTMLElement).textContent || ''
                           };
                           setDraft(prev => ({ ...prev, sections: newSections }));
                         }}
                       >
-                        {section.questionBox}
-                      </span>
+                        {section.sidebarTitle}
+                      </div>
+                      {/* Sidebar Subheader */}
+                      <div
+                        className="lm-vocab-sidebar-subheader"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            sidebarSubtitle: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.sidebarSubtitle}
+                      </div>
+                      {/* Steps */}
+                      <div className="lm-goal-steps">
+                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                          <div key={step.id} className="lm-goal-step">
+                            <span className="lm-step-number">{stepIndex + 1}</span>
+                            <div className="lm-step-content">
+                              <span
+                                className="lm-step-instruction"
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const newSections = [...draft.sections];
+                                  const newSteps = [...section.lessonGoalSteps];
+                                  newSteps[stepIndex] = {
+                                    ...step,
+                                    instruction: (e.target as HTMLElement).textContent || ''
+                                  };
+                                  newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                }}
+                              >
+                                {step.instruction}
+                              </span>
+                              {step.scriptLine && (
+                                <div className="lm-step-script">
+                                  <span className="lm-script-bullet">●</span>
+                                  <span
+                                    className="lm-script-text"
+                                    contentEditable
+                                    suppressContentEditableWarning
+                                    onBlur={(e) => {
+                                      const newSections = [...draft.sections];
+                                      const newSteps = [...section.lessonGoalSteps];
+                                      newSteps[stepIndex] = {
+                                        ...step,
+                                        scriptLine: (e.target as HTMLElement).textContent || ''
+                                      };
+                                      newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                      setDraft(prev => ({ ...prev, sections: newSections }));
+                                    }}
+                                  >
+                                    {step.scriptLine}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>

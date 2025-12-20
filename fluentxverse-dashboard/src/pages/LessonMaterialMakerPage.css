@@ -1058,6 +1058,215 @@ body.lm-fullscreen-mode .main-content {
   margin: -2px -6px;
 }
 
+/* =====================================================
+   VOCABULARY SECTION STYLES
+   ===================================================== */
+
+/* Step Title (e.g., "STEP A VOCABULARY") */
+.lm-step-title {
+  font-size: 24px;
+  font-weight: 400;
+  color: #94a3b8;
+  margin: 0 0 20px 0;
+  outline: none;
+  letter-spacing: 0.5px;
+}
+
+.lm-step-title:focus {
+  background: rgba(2, 69, 174, 0.04);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: -4px -8px 16px -8px;
+}
+
+/* Instructions */
+.lm-vocab-instruction {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+  outline: none;
+}
+
+.lm-vocab-instruction:focus {
+  background: rgba(2, 69, 174, 0.04);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: -4px -8px 2px -8px;
+}
+
+.lm-vocab-instruction-jp {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  outline: none;
+}
+
+.lm-vocab-instruction-jp:focus {
+  background: rgba(2, 69, 174, 0.04);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: -4px -8px 20px -8px;
+}
+
+/* Vocabulary Grid - 2x2 layout */
+.lm-vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Vocabulary Card */
+.lm-vocab-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.lm-vocab-card:hover {
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.1);
+  border-color: var(--primary-light, #4a9eff);
+}
+
+/* Card Image */
+.lm-vocab-card-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #f8fafc;
+  position: relative;
+}
+
+.lm-vocab-image-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.lm-vocab-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lm-vocab-image-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(239, 68, 68, 0.9);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 14px;
+}
+
+.lm-vocab-image-wrapper:hover .lm-vocab-image-remove {
+  opacity: 1;
+}
+
+.lm-vocab-image-upload {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #cbd5e1;
+  transition: all 0.2s;
+}
+
+.lm-vocab-image-upload:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: var(--primary, #0245ae);
+}
+
+.lm-vocab-image-upload i {
+  font-size: 28px;
+}
+
+/* Card Text */
+.lm-vocab-card-text {
+  padding: 14px 16px;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.lm-vocab-word-en {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+  outline: none;
+}
+
+.lm-vocab-word-en:focus {
+  background: rgba(2, 69, 174, 0.05);
+  border-radius: 4px;
+}
+
+.lm-vocab-word-jp {
+  display: block;
+  font-size: 14px;
+  color: #64748b;
+  outline: none;
+}
+
+.lm-vocab-word-jp:focus {
+  background: rgba(2, 69, 174, 0.05);
+  border-radius: 4px;
+}
+
+/* Vocabulary Sidebar */
+.lm-vocab-sidebar {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(2, 69, 174, 0.08);
+}
+
+.lm-vocab-sidebar-header {
+  background: linear-gradient(135deg, var(--primary, #0245ae) 0%, var(--primary-dark, #01337d) 100%);
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  outline: none;
+  letter-spacing: 0.3px;
+}
+
+.lm-vocab-sidebar-header:focus {
+  background: linear-gradient(135deg, var(--primary-light, #4a9eff) 0%, var(--primary, #0245ae) 100%);
+}
+
+.lm-vocab-sidebar-subheader {
+  background: #fef08a;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  outline: none;
+}
+
+.lm-vocab-sidebar-subheader:focus {
+  background: #fde047;
+}
+
+.lm-vocab-sidebar .lm-goal-steps {
+  padding: 20px;
+}
+
 /* Old section styles - keeping for backwards compatibility */
 .lm-section-header {
   display: flex;
