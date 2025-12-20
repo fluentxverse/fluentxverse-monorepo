@@ -16,6 +16,8 @@ import InboxPage from './pages/InboxPage';
 import LoginPage from './pages/LoginPage';
 import TicketsPage from './pages/TicketsPage';
 import SessionsPage from './pages/SessionsPage';
+import LessonMaterialMakerPage from './pages/LessonMaterialMakerPage';
+import LessonMaterialViewPage from './pages/LessonMaterialViewPage';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -84,6 +86,8 @@ const AppContent = () => {
         <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/inbox" component={InboxPage} />
         <Route path="/tickets" component={TicketsPage} />
+        <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
+        <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />
       </Router>

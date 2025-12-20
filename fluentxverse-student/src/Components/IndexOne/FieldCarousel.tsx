@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'preact/hooks';
-import { Link } from 'wouter';
 import { FaMapMarkerAlt, FaLeaf, FaUsers, FaChartLine } from 'react-icons/fa';
 import './FieldCarousel.css';
 
@@ -161,13 +160,13 @@ const FieldCarousel = () => {
             <h3>Explore Our Farm Network</h3>
             <p>Join our growing community of tech-enabled farmers and discover how IoT sensors and AI are transforming agriculture.</p>
             <div className="field-cta-buttons">
-              <Link href="/contact" className="field-primary-btn">
+              <a href="/contact" className="field-primary-btn">
                 <span>Join Our Network</span>
                 <div className="field-btn-glow"></div>
-              </Link>
-              <Link href="/tree-nfts" className="field-secondary-btn">
+              </a>
+              <a href="/tree-nfts" className="field-secondary-btn">
                 <span>View Tree NFTs</span>
-              </Link>
+              </a>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import Interview from './routes/interview.route';
 import Notification from './routes/notification.route';
 import Inbox from './routes/inbox.route';
 import Ticket from './routes/ticket.route';
+import Lesson from './routes/lesson.route';
 import { initDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -66,6 +67,7 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Notification)
   .use(Inbox)
   .use(Ticket)
+  .use(Lesson)
 
 
 

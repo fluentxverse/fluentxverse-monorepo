@@ -1,23 +1,22 @@
 import { useCallback } from 'preact/hooks';
-import { useLocation } from 'wouter';
+import { useLocation } from 'preact-iso';
 import { useThemeStore } from '../../context/ThemeContext';
 
 const NotFound = () => {
-  const [_, setLocation] = useLocation();
+  const { route } = useLocation();
   const { isDarkMode } = useThemeStore();
 
   const handleGoHome = useCallback((e: Event) => {
     e.preventDefault();
-    setLocation('/');
-    window.location.reload();
-  }, [setLocation]);
+    route('/');
+  }, [route]);
 
   const handleGoBack = useCallback(() => {
     const currentHref = window.location.href;
 
     const tryBack = (attempt: number) => {
       if (window.history.length <= 1) {
-        setLocation('/home');
+        route('/home');
         return;
       }
 
@@ -26,7 +25,7 @@ const NotFound = () => {
       window.setTimeout(() => {
         if (window.location.href !== currentHref) return;
         if (attempt >= 2) {
-          setLocation('/home');
+          route('/home');
           return;
         }
         tryBack(attempt + 1);
@@ -34,7 +33,7 @@ const NotFound = () => {
     };
 
     tryBack(0);
-  }, [setLocation]);
+  }, [route]);
 
   return (
     <div style={{

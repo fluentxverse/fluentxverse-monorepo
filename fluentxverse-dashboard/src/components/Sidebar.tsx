@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
   { path: '/students', icon: 'ri-graduation-cap-line', label: 'Students' },
   { path: '/inbox', icon: 'ri-mail-send-line', label: 'Inbox Messages' },
   { path: '/tickets', icon: 'ri-ticket-2-line', label: 'Ticket NFTs' },
+  { path: '/lesson-material-maker', icon: 'ri-draft-line', label: 'Lesson Maker' },
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
   { path: '/analytics', icon: 'ri-bar-chart-box-line', label: 'Analytics' },
   { path: '/payments', icon: 'ri-money-dollar-circle-line', label: 'Payments' },

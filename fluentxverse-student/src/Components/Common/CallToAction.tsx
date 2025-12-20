@@ -1,6 +1,4 @@
 import React from 'react';
-
-import { Link } from 'wouter';
 import './CallToAction.css';
 
 interface CallToActionProps {
@@ -28,13 +26,13 @@ const CallToAction: React.FC<CallToActionProps> = ({
         <h2>{title}</h2>
         {subtitle && <p>{subtitle}</p>}
         <div className="cta-buttons">
-          <Link to={primaryButtonLink} className="btn btn-primary">
+          <a href={primaryButtonLink} className="btn btn-primary">
             {primaryButtonText}
-          </Link>
+          </a>
           {secondaryButtonText && secondaryButtonLink && (
-            <Link to={secondaryButtonLink} className="btn btn-outline">
+            <a href={secondaryButtonLink} className="btn btn-outline">
               {secondaryButtonText}
-            </Link>
+            </a>
           )}
         </div>
       </div>

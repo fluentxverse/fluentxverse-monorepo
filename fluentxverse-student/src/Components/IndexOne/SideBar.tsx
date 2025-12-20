@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useLocation } from 'preact-iso';
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { JSX } from "preact";
 import { useThemeStore } from '../../context/ThemeContext';
@@ -20,7 +20,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const SideBar = (): JSX.Element | null => {
-  const [location, setLocation] = useLocation();
+  const { path, route } = useLocation();
   const { isDarkMode, toggleTheme } = useThemeStore();
   const { user } = useAuthContext();
   const [showSettings, setShowSettings] = useState(false);
@@ -33,9 +33,9 @@ const SideBar = (): JSX.Element | null => {
   const handleClick = useCallback(
     (e: JSX.TargetedMouseEvent<HTMLAnchorElement>, href: string) => {
       e.preventDefault();
-      setLocation(href);
+      route(href);
     },
-    [setLocation]
+    [route]
   );
 
   // Menu items for the static site
@@ -52,7 +52,13 @@ const SideBar = (): JSX.Element | null => {
   return (
     <div className="sidebar hidden-on-mobile">
       <div className="sidebar-logo mb-25">
-        <a href="/home">
+        <a
+          href="/home"
+          onClick={(e) => {
+            e.preventDefault();
+            route('/home');
+          }}
+        >
           <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse Logo" />
         </a>
       </div>
@@ -61,7 +67,7 @@ const SideBar = (): JSX.Element | null => {
           {menuItems.map((item) => (
             <li
               key={item.href}
-              className={location === item.href ? "active" : ""}
+              className={path === item.href ? "active" : ""}
             >
               <a
                 href={item.href}

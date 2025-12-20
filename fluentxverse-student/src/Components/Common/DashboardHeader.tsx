@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Link } from 'wouter';
+import { useLocation } from 'preact-iso';
 import { inboxApi } from '../../api/inbox.api';
 import './DashboardHeader.css';
 
@@ -13,6 +13,7 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
+  const { route } = useLocation();
   const [philippineTime, setPhilippineTime] = useState<string>('');
   const [philippineDate, setPhilippineDate] = useState<string>('');
   const [inboxUnreadCount, setInboxUnreadCount] = useState<number>(0);
@@ -80,19 +81,35 @@ const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
 
       <div className="dashboard-header-actions">
         {/* Inbox Button */}
-        <Link href="/inbox" className="inbox-btn" aria-label="Inbox">
+        <a
+          href="/inbox"
+          className="inbox-btn"
+          aria-label="Inbox"
+          onClick={(e) => {
+            e.preventDefault();
+            route('/inbox');
+          }}
+        >
           <i className="fas fa-envelope"></i>
           {inboxUnreadCount > 0 && (
             <span className="inbox-badge">
               {inboxUnreadCount > 9 ? '9+' : inboxUnreadCount}
             </span>
           )}
-        </Link>
+        </a>
 
         {/* Notifications Button */}
-        <Link href="/notifications" className="notification-btn" aria-label="Notifications">
+        <a
+          href="/notifications"
+          className="notification-btn"
+          aria-label="Notifications"
+          onClick={(e) => {
+            e.preventDefault();
+            route('/notifications');
+          }}
+        >
           <i className="fas fa-bell"></i>
-        </Link>
+        </a>
       </div>
     </div>
   );

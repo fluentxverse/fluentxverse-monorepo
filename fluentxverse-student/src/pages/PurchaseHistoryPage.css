@@ -322,15 +322,15 @@
 
 /* Tier-specific card styling */
 .purchase-card.basic {
-  border-left: 4px solid #3b82f6;
+  border-left: none;
 }
 
 .purchase-card.premium {
-  border-left: 4px solid #f59e0b;
+  border-left: none;
 }
 
 .purchase-card.trial {
-  border-left: 4px solid #10b981;
+  border-left: none;
 }
 
 .purchase-card-icon {
