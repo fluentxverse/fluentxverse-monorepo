@@ -3,7 +3,7 @@
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'your-secret-here';
 const DEPLOY_SCRIPT = './scripts/deploy.sh';
-//test
+
 const server = Bun.serve({
   port: 9000,
   async fetch(req) {
