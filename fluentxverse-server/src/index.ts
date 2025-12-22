@@ -35,22 +35,33 @@ initRedis().catch(err => console.warn('Redis initialization skipped:', err));
 
 // Bun SQL is auto-initialized on import (no need to call getPool)
 
+// Build allowed origins from environment or use defaults for development
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'http://localhost:5178',
+  'http://192.168.0.102:5173',
+  'http://192.168.0.102:5174',
+  'http://192.168.0.102:5175',
+  'http://192.168.0.102:5176',
+  'http://192.168.0.102:5178',
+];
+
+const envOrigins = (process.env.FRONTEND_URLS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(o => o.length > 0);
+
+const allowedOrigins = envOrigins.length > 0 ? [...envOrigins, ...defaultOrigins] : defaultOrigins;
+
+console.log('🌐 CORS allowed origins:', allowedOrigins);
+
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
   .use(cors({
-    // Allow common localhost variants for Vite dev servers + LAN access
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5175',
-      'http://localhost:5176',
-      'http://localhost:5178',
-      'http://192.168.0.102:5173',
-      'http://192.168.0.102:5174',
-      'http://192.168.0.102:5175',
-      'http://192.168.0.102:5176',
-      'http://192.168.0.102:5178',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
