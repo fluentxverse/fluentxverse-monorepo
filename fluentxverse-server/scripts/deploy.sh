@@ -6,8 +6,8 @@
 
 set -e
 
-REPO_DIR="/home/YOUR_USER/fluentxverse"
-LOG_FILE="/var/log/fluentxverse-deploy.log"
+REPO_DIR="/home/maryann/fluentxverse-monorepo"
+LOG_FILE="/home/maryann/fluentxverse-deploy.log"
 BRANCH="main"
 
 log() {
