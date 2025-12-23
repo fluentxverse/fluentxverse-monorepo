@@ -902,11 +902,11 @@ body.lm-fullscreen-mode .main-content {
   padding: 0 !important;
 }
 
-/* Floating Toolbar - positioned on the right side */
+/* Floating Toolbar - positioned on the left side */
 .lm-toolbar {
   position: fixed;
   top: 50%;
-  right: 16px;
+  left: 16px;
   transform: translateY(-50%);
   z-index: 100;
   display: flex;
