@@ -31,6 +31,17 @@ services:
       - FRONTEND_URLS=${FRONTEND_URLS:-http://localhost:5173,http://localhost:5174,http://localhost:5175}
       # Notifications
       - NOTIFICATION_RETENTION_DAYS=${NOTIFICATION_RETENTION_DAYS:-30}
+      # Thirdweb
+      - THIRDWEB_SECRET_KEY=${THIRDWEB_SECRET_KEY}
+      - THIRDWEB_CLIENT_ID=${THIRDWEB_CLIENT_ID}
+      - THIRDWEB_VAULT_WALLET_ADDRESS=${THIRDWEB_VAULT_WALLET_ADDRESS}
+      - THIRDWEB_VAULT_ACCESS_TOKEN=${THIRDWEB_VAULT_ACCESS_TOKEN}
+      - THIRDWEB_VAULT_ADMIN_KEY=${THIRDWEB_VAULT_ADMIN_KEY}
+      # OpenAI
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Ticket Contract (optional)
+      - TICKET_CONTRACT_ADDRESS=${TICKET_CONTRACT_ADDRESS:-0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db}
+      - TICKET_CHAIN_ID=${TICKET_CHAIN_ID:-421614}
     depends_on:
       - fluentxverse-postgres
       - fluentxverse-memgraph
