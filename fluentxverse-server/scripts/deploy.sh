@@ -70,6 +70,16 @@ fi
 log "🧹 Cleaning up old Podman images..."
 podman image prune -f
 
+# ==========================================
+# RESTART WEBHOOK SERVER (so it picks up any changes)
+# ==========================================
+log "🎣 Restarting webhook server..."
+pkill -f "bun.*webhook-server.ts" || true
+sleep 2
+cd "$REPO_DIR/fluentxverse-server"
+nohup bun run scripts/webhook-server.ts > /home/paulanthonyarriola/webhook.log 2>&1 &
+log "✅ Webhook server restarted"
+
 log "✅ Deployment complete!"
 log "📊 Container status:"
-docker compose ps
+podman-compose ps
