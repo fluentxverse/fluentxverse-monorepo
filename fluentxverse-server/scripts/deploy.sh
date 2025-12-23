@@ -2,7 +2,7 @@
 # ===========================================
 # Auto-deploy script for FluentXverse Server
 # Triggered by GitHub webhook
-# Uses Podman instead of Docker
+# Uses Docker
 # ===========================================
 
 set -euo pipefail
@@ -29,29 +29,24 @@ git fetch origin
 git reset --hard origin/$BRANCH
 
 # ==========================================
-# PODMAN SERVICES (includes Bun server now)
+# DOCKER SERVICES (Server + Frontends)
 # ==========================================
-log "🦭 Rebuilding Podman containers..."
+log "🐳 Rebuilding Docker containers..."
 cd "$SERVER_DIR"
 
 # Pull latest base images
-podman-compose pull
+docker compose pull
 
-# Rebuild (if supported) and restart containers
-podman-compose down || true
-if podman-compose up -h 2>&1 | grep -q -- "--build"; then
-    podman-compose up -d --build
-else
-    podman-compose build
-    podman-compose up -d
-fi
+# Rebuild and restart containers
+docker compose down || true
+docker compose up -d --build
 
 # Wait for containers to be healthy
 log "⏳ Waiting for containers to be ready..."
-sleep 15
+sleep 20
 
 # Check container status
-podman-compose ps
+docker compose ps
 
 # Check if the server is healthy
 log "🏥 Checking server health..."
@@ -59,14 +54,14 @@ if command -v curl >/dev/null 2>&1 && curl -fsS http://localhost:8765/health > /
     log "✅ Server is healthy!"
 else
     log "⚠️ Server health check failed, checking logs..."
-    podman-compose logs --tail=20 fluentxverse-server
+    docker compose logs --tail=20 fluentxverse-server
 fi
 
 # ==========================================
 # CLEANUP
 # ==========================================
-log "🧹 Cleaning up old Podman images..."
-podman image prune -f
+log "🧹 Cleaning up old Docker images..."
+docker image prune -f
 
 # ==========================================
 # RESTART WEBHOOK SERVER (so it picks up any changes)

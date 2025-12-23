@@ -147,6 +147,48 @@ services:
     networks:
       - fluentxverse-network
 
+  # ===========================================
+  # FRONTEND APPS
+  # ===========================================
+  fluentxverse-student:
+    build:
+      context: ../fluentxverse-student
+      dockerfile: Dockerfile
+    container_name: fluentxverse-student
+    restart: unless-stopped
+    ports:
+      - "${STUDENT_PORT:-5173}:80"
+    depends_on:
+      - fluentxverse-server
+    networks:
+      - fluentxverse-network
+
+  fluentxverse-tutor:
+    build:
+      context: ../fluentxverse-tutor
+      dockerfile: Dockerfile
+    container_name: fluentxverse-tutor
+    restart: unless-stopped
+    ports:
+      - "${TUTOR_PORT:-5174}:80"
+    depends_on:
+      - fluentxverse-server
+    networks:
+      - fluentxverse-network
+
+  fluentxverse-dashboard:
+    build:
+      context: ../fluentxverse-dashboard
+      dockerfile: Dockerfile
+    container_name: fluentxverse-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-5175}:80"
+    depends_on:
+      - fluentxverse-server
+    networks:
+      - fluentxverse-network
+
 volumes:
   postgres-data:
   redis-data:
