@@ -2,12 +2,13 @@
 # ===========================================
 # Auto-deploy script for FluentXverse Server
 # Triggered by GitHub webhook
+# Uses Podman instead of Docker
 # ===========================================
 
 set -e
 
-REPO_DIR="/home/maryann/fluentxverse-monorepo"
-LOG_FILE="/home/maryann/fluentxverse-deploy.log"
+REPO_DIR="/home/paulanthonyarriola/Desktop/fluentxverse"
+LOG_FILE="/home/paulanthonyarriola/fluentxverse-deploy.log"
 BRANCH="main"
 
 log() {
@@ -23,17 +24,52 @@ log "📥 Pulling from GitHub..."
 git fetch origin
 git reset --hard origin/$BRANCH
 
-# Install dependencies
-log "📦 Installing server dependencies..."
+# ==========================================
+# PODMAN SERVICES
+# ==========================================
+log "🦭 Rebuilding Podman containers..."
 cd "$REPO_DIR/fluentxverse-server"
+
+# Pull latest images (postgres, redis, memgraph, seaweedfs)
+podman-compose pull
+
+# Rebuild and restart containers
+podman-compose down
+podman-compose up -d
+
+# Wait for containers to be healthy
+log "⏳ Waiting for containers to be ready..."
+sleep 10
+
+# Check container status
+podman-compose ps
+
+# ==========================================
+# BUN/NODE SERVER
+# ==========================================
+log "📦 Installing server dependencies..."
 bun install
 
-# Build if needed (TypeScript)
-# log "🔨 Building..."
-# bun run build
+# Restart the Bun server
+log "🔄 Restarting Bun server..."
+# Try systemd first, fall back to direct process
+if systemctl --user is-active --quiet fluentxverse-server 2>/dev/null; then
+    systemctl --user restart fluentxverse-server
+    log "✅ Restarted via systemd"
+else
+    # Kill existing process and start new one
+    pkill -f "bun.*src/index.ts" || true
+    cd "$REPO_DIR/fluentxverse-server"
+    nohup bun run src/index.ts > /home/paulanthonyarriola/fluentxverse-server.log 2>&1 &
+    log "✅ Started Bun server in background"
+fi
 
-# Restart the server
-log "🔄 Restarting server..."
-pm2 restart fluentxverse-server || pm2 start src/index.ts --name fluentxverse-server --interpreter bun
+# ==========================================
+# CLEANUP
+# ==========================================
+log "🧹 Cleaning up old Podman images..."
+podman image prune -f
 
 log "✅ Deployment complete!"
+log "📊 Container status:"
+docker compose ps
