@@ -902,16 +902,18 @@ body.lm-fullscreen-mode .main-content {
   padding: 0 !important;
 }
 
-/* Floating Toolbar */
+/* Floating Toolbar - positioned on the right side */
 .lm-toolbar {
   position: fixed;
-  top: 90px;
-  right: 48px;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
   z-index: 100;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 12px 10px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
@@ -930,14 +932,7 @@ body.lm-fullscreen-mode .main-content {
 }
 
 .lm-toolbar-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  padding-right: 12px;
-  border-right: 1px solid var(--border-color);
+  display: none; /* Hide title in vertical layout */
 }
 
 .lm-toolbar-title i {
@@ -947,17 +942,18 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-toolbar-template-view {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .lm-view-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
+  padding: 3px 6px;
   background: var(--warning-light);
   color: #b45309;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   border-radius: 4px;
   letter-spacing: 0.5px;
@@ -965,6 +961,7 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-toolbar-actions {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
 }
