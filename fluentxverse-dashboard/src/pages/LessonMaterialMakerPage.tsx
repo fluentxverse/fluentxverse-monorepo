@@ -2683,7 +2683,18 @@ export default function LessonMaterialMakerPage() {
           {currentEditingLesson && (
             <>
               {/* Autosave status */}
-              <div className="lm-autosave-status">
+              <div
+                className="lm-autosave-status"
+                title={
+                  isSaving
+                    ? 'Saving...'
+                    : saveError
+                      ? 'Save failed'
+                      : lastSaved
+                        ? `Saved ${formatTimeAgo(lastSaved)}`
+                        : 'Not saved yet'
+                }
+              >
             {isSaving ? (
               <>
                 <i className="ri-loader-4-line spinning" />

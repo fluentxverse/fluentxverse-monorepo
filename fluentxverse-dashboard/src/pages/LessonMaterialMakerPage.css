@@ -875,8 +875,10 @@
 }
 
 .lm-builder-fullscreen .lm-toolbar {
-  top: 20px;
-  right: 20px;
+  top: 12px;
+  left: 12px;
+  right: auto;
+  bottom: auto;
 }
 
 .lm-builder-fullscreen .lm-page {
@@ -902,21 +904,25 @@ body.lm-fullscreen-mode .main-content {
   padding: 0 !important;
 }
 
-/* Floating Toolbar - compact, bottom right */
+/* Floating Toolbar - compact, top left */
 .lm-toolbar {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: 12px;
+  left: 12px;
+  right: auto;
+  bottom: auto;
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: fit-content;
+  max-width: 100%;
 }
 
 .lm-toolbar-btn.active {
@@ -948,14 +954,17 @@ body.lm-fullscreen-mode .main-content {
 .lm-toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .lm-toolbar-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px;
+  min-width: 34px;
+  height: 34px;
+  justify-content: center;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   background: var(--bg-secondary);
@@ -964,6 +973,14 @@ body.lm-fullscreen-mode .main-content {
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.lm-toolbar-btn span {
+  display: none;
+}
+
+.lm-toolbar-btn i {
+  font-size: 16px;
 }
 
 .lm-toolbar-btn:hover {
@@ -990,13 +1007,18 @@ body.lm-fullscreen-mode .main-content {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 6px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   background: var(--bg-secondary);
   border-radius: 6px;
   border: 1px solid var(--border-color);
+  height: 34px;
+}
+
+.lm-autosave-status span {
+  display: none;
 }
 
 .lm-autosave-status i {
@@ -4741,11 +4763,10 @@ body.lm-fullscreen-mode .main-content {
 /* Responsive */
 @media (max-width: 768px) {
   .lm-toolbar {
-    top: auto;
-    bottom: 20px;
-    right: 20px;
-    left: 20px;
-    justify-content: space-between;
+    top: 12px;
+    left: 12px;
+    right: auto;
+    bottom: auto;
   }
 
   .lm-header-controls {
