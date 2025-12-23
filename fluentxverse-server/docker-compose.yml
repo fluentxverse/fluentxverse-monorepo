@@ -32,14 +32,10 @@ services:
       # Notifications
       - NOTIFICATION_RETENTION_DAYS=${NOTIFICATION_RETENTION_DAYS:-30}
     depends_on:
-      fluentxverse-postgres:
-        condition: service_healthy
-      fluentxverse-memgraph:
-        condition: service_started
-      fluentxverse-redis:
-        condition: service_started
-      fluentxverse-seaweed-filer:
-        condition: service_started
+      - fluentxverse-postgres
+      - fluentxverse-memgraph
+      - fluentxverse-redis
+      - fluentxverse-seaweed-filer
     networks:
       - fluentxverse-network
     healthcheck:
@@ -53,7 +49,7 @@ services:
   # DATABASES & SERVICES
   # ===========================================
   fluentxverse-postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: fluentxverse-postgres
     restart: unless-stopped
     environment:
@@ -74,7 +70,7 @@ services:
       - fluentxverse-network
 
   fluentxverse-memgraph:
-    image: memgraph/memgraph-mage:latest
+    image: docker.io/memgraph/memgraph-mage:latest
     container_name: fluentxverse-memgraph
     restart: unless-stopped
     ports:
@@ -87,7 +83,7 @@ services:
       - fluentxverse-network
 
   fluentxverse-redis:
-    image: redis:7-alpine
+    image: docker.io/library/redis:7-alpine
     container_name: fluentxverse-redis
     restart: unless-stopped
     ports:
@@ -99,7 +95,7 @@ services:
       - fluentxverse-network
 
   fluentxverse-seaweed-master:
-    image: chrislusf/seaweedfs:latest
+    image: docker.io/chrislusf/seaweedfs:latest
     container_name: fluentxverse-seaweed-master
     command: "master -ip=fluentxverse-seaweed-master -mdir=/data"
     restart: unless-stopped
@@ -111,7 +107,7 @@ services:
       - fluentxverse-network
 
   fluentxverse-seaweed-volume:
-    image: chrislusf/seaweedfs:latest
+    image: docker.io/chrislusf/seaweedfs:latest
     container_name: fluentxverse-seaweed-volume
     command: "volume -max=${SEAWEED_MAX_VOLUMES:-5} -mserver=fluentxverse-seaweed-master:${SEAWEED_MASTER_PORT:-9333} -ip=fluentxverse-seaweed-volume -dir=/data"
     restart: unless-stopped
@@ -126,7 +122,7 @@ services:
       - fluentxverse-network
 
   fluentxverse-seaweed-filer:
-    image: chrislusf/seaweedfs:latest
+    image: docker.io/chrislusf/seaweedfs:latest
     container_name: fluentxverse-seaweed-filer
     command: "filer -master=fluentxverse-seaweed-master:${SEAWEED_MASTER_PORT:-9333}"
     restart: unless-stopped

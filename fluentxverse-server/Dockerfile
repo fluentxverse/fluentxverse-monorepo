@@ -1,5 +1,5 @@
 # Use official Bun image
-FROM oven/bun:1-alpine
+FROM docker.io/oven/bun:1-alpine
 
 # Set working directory
 WORKDIR /app

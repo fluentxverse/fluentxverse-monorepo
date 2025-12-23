@@ -5,11 +5,15 @@
 # Uses Podman instead of Docker
 # ===========================================
 
-set -e
+set -euo pipefail
 
-REPO_DIR="/home/paulanthonyarriola/Desktop/fluentxverse"
-LOG_FILE="/home/paulanthonyarriola/fluentxverse-deploy.log"
-BRANCH="main"
+# Resolve repo root from this script location so it works on any machine/user
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SERVER_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_DIR="$(cd "$SERVER_DIR/.." && pwd)"
+
+LOG_FILE="${HOME}/fluentxverse-deploy.log"
+BRANCH="${BRANCH:-main}"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
@@ -28,14 +32,19 @@ git reset --hard origin/$BRANCH
 # PODMAN SERVICES (includes Bun server now)
 # ==========================================
 log "🦭 Rebuilding Podman containers..."
-cd "$REPO_DIR/fluentxverse-server"
+cd "$SERVER_DIR"
 
 # Pull latest base images
 podman-compose pull
 
-# Rebuild and restart containers (--build rebuilds the Bun server image)
-podman-compose down
-podman-compose up -d --build
+# Rebuild (if supported) and restart containers
+podman-compose down || true
+if podman-compose up -h 2>&1 | grep -q -- "--build"; then
+    podman-compose up -d --build
+else
+    podman-compose build
+    podman-compose up -d
+fi
 
 # Wait for containers to be healthy
 log "⏳ Waiting for containers to be ready..."
@@ -46,7 +55,7 @@ podman-compose ps
 
 # Check if the server is healthy
 log "🏥 Checking server health..."
-if curl -s http://localhost:8765/health > /dev/null; then
+if command -v curl >/dev/null 2>&1 && curl -fsS http://localhost:8765/health > /dev/null; then
     log "✅ Server is healthy!"
 else
     log "⚠️ Server health check failed, checking logs..."
@@ -65,8 +74,8 @@ podman image prune -f
 log "🎣 Restarting webhook server..."
 pkill -f "bun.*webhook-server.ts" || true
 sleep 2
-cd "$REPO_DIR/fluentxverse-server"
-nohup bun run scripts/webhook-server.ts > /home/paulanthonyarriola/webhook.log 2>&1 &
+cd "$SERVER_DIR"
+nohup bun run scripts/webhook-server.ts > "${HOME}/webhook.log" 2>&1 &
 log "✅ Webhook server restarted"
 
 log "✅ Deployment complete!"

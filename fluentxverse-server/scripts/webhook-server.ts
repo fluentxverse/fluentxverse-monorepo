@@ -2,7 +2,8 @@
 // Run with: bun run scripts/webhook-server.ts
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'your-secret-here';
-const DEPLOY_SCRIPT = './scripts/deploy.sh';
+// Use absolute path so this works no matter where it's started from.
+const DEPLOY_SCRIPT = `${import.meta.dir}/deploy.sh`;
 
 const server = Bun.serve({
   port: 9000,
