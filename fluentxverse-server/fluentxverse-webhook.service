@@ -1,0 +1,21 @@
+[Unit]
+Description=FluentXverse Webhook Server
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=maryann
+WorkingDirectory=/home/maryann/fluentxverse-monorepo/fluentxverse-server
+ExecStart=/home/maryann/.bun/bin/bun run scripts/webhook-server.ts
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/maryann/webhook.log
+StandardError=append:/home/maryann/webhook.log
+
+# Environment variables
+Environment=WEBHOOK_SECRET=CHANGE_THIS_TO_YOUR_GITHUB_SECRET
+Environment=PATH=/home/maryann/.bun/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

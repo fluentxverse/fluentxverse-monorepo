@@ -64,15 +64,11 @@ log "🧹 Cleaning up old Docker images..."
 docker image prune -f
 
 # ==========================================
-# RESTART WEBHOOK SERVER (so it picks up any changes)
+# WEBHOOK SERVER (managed by systemd, just restart it)
 # ==========================================
-log "🎣 Restarting webhook server..."
-pkill -f "bun.*webhook-server.ts" || true
-sleep 2
-cd "$SERVER_DIR"
-nohup bun run scripts/webhook-server.ts > "${HOME}/webhook.log" 2>&1 &
-log "✅ Webhook server restarted"
+log "🎣 Restarting webhook server via systemd..."
+sudo systemctl restart fluentxverse-webhook || log "⚠️ Webhook systemd service not found, skipping"
 
 log "✅ Deployment complete!"
 log "📊 Container status:"
-podman-compose ps
+docker compose ps
