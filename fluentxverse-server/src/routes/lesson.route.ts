@@ -165,8 +165,7 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
     body { font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
     .lesson-header {
       position: relative;
-      height: 12.5vh;
-      min-height: 80px;
+      min-height: 120px;
       display: flex;
       flex-direction: column;
       background-size: cover;
@@ -187,17 +186,17 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
       text-align: center;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      height: 100%;
-      padding: 6px 10px 8px 10px;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 16px;
     }
     .lesson-header-top { 
       display: flex; 
       align-items: center; 
-      justify-content: flex-start; 
+      justify-content: center; 
       gap: 6px; 
-      margin-bottom: 4px; 
-      font-size: 9px; 
+      margin-bottom: 6px; 
+      font-size: 10px; 
       font-weight: 600;
       opacity: 0.95; 
       text-transform: uppercase; 
@@ -205,15 +204,15 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
     }
     .level-badge { 
       background: rgba(255,255,255,0.2); 
-      padding: 2px 4px; 
+      padding: 2px 6px; 
       border-radius: 4px; 
       font-weight: 600; 
     }
     .header-divider { opacity: 0.6; }
     .lesson-label { 
-      font-size: 14px; 
+      font-size: 16px; 
       font-weight: 700; 
-      margin-bottom: 4px; 
+      margin-bottom: 6px; 
       color: #fbbf24; 
     }
     .goal-row { 
@@ -221,7 +220,7 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
       align-items: center; 
       justify-content: center; 
       gap: 8px; 
-      margin-bottom: 2px; 
+      margin-bottom: 4px; 
     }
     .goal-badge { 
       display: inline-block;
@@ -235,13 +234,14 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
       flex-shrink: 0;
     }
     .goal-text { 
-      font-size: 17px; 
+      font-size: 18px; 
       font-weight: 800; 
       text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
     }
     .goal-subtext { 
-      font-size: 12px; 
-      opacity: 0.9; 
+      font-size: 13px; 
+      opacity: 0.9;
+      margin-top: 2px;
     }
     .lesson-body { max-width: 100%; margin: 0; padding: 32px; background: #f1f5f9; min-height: calc(100vh - 12.5vh); }
     
