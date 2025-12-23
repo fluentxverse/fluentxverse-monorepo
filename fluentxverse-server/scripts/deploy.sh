@@ -25,43 +25,32 @@ git fetch origin
 git reset --hard origin/$BRANCH
 
 # ==========================================
-# PODMAN SERVICES
+# PODMAN SERVICES (includes Bun server now)
 # ==========================================
 log "🦭 Rebuilding Podman containers..."
 cd "$REPO_DIR/fluentxverse-server"
 
-# Pull latest images (postgres, redis, memgraph, seaweedfs)
+# Pull latest base images
 podman-compose pull
 
-# Rebuild and restart containers
+# Rebuild and restart containers (--build rebuilds the Bun server image)
 podman-compose down
-podman-compose up -d
+podman-compose up -d --build
 
 # Wait for containers to be healthy
 log "⏳ Waiting for containers to be ready..."
-sleep 10
+sleep 15
 
 # Check container status
 podman-compose ps
 
-# ==========================================
-# BUN/NODE SERVER
-# ==========================================
-log "📦 Installing server dependencies..."
-bun install
-
-# Restart the Bun server
-log "🔄 Restarting Bun server..."
-# Try systemd first, fall back to direct process
-if systemctl --user is-active --quiet fluentxverse-server 2>/dev/null; then
-    systemctl --user restart fluentxverse-server
-    log "✅ Restarted via systemd"
+# Check if the server is healthy
+log "🏥 Checking server health..."
+if curl -s http://localhost:8765/health > /dev/null; then
+    log "✅ Server is healthy!"
 else
-    # Kill existing process and start new one
-    pkill -f "bun.*src/index.ts" || true
-    cd "$REPO_DIR/fluentxverse-server"
-    nohup bun run src/index.ts > /home/paulanthonyarriola/fluentxverse-server.log 2>&1 &
-    log "✅ Started Bun server in background"
+    log "⚠️ Server health check failed, checking logs..."
+    podman-compose logs --tail=20 fluentxverse-server
 fi
 
 # ==========================================

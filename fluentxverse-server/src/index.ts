@@ -79,7 +79,8 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Inbox)
   .use(Ticket)
   .use(Lesson)
-
+  // Health check endpoint for Docker/Podman
+  .get('/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
 
 
 // Start HTTP server - listen on all interfaces for LAN access
