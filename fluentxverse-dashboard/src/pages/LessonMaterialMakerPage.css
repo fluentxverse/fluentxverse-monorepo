@@ -902,7 +902,7 @@ body.lm-fullscreen-mode .main-content {
   padding: 0 !important;
 }
 
-/* Floating Toolbar - positioned at bottom right */
+/* Floating Toolbar - compact, bottom right */
 .lm-toolbar {
   position: fixed;
   bottom: 24px;
@@ -910,12 +910,12 @@ body.lm-fullscreen-mode .main-content {
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
@@ -930,37 +930,19 @@ body.lm-fullscreen-mode .main-content {
 }
 
 .lm-toolbar-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-  padding-right: 12px;
-  border-right: 1px solid var(--border-color);
+  display: none;
 }
 
 .lm-toolbar-title i {
-  font-size: 16px;
-  color: var(--primary);
+  display: none;
 }
 
 .lm-toolbar-template-view {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: none;
 }
 
 .lm-view-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  background: var(--warning-light);
-  color: #b45309;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
+  display: none;
 }
 
 .lm-toolbar-actions {
