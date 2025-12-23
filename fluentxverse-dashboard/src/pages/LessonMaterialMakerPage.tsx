@@ -437,7 +437,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
     {
       id: 'section-1',
       sectionNumber: 1,
-      sectionTitle: 'INTRODUCE',
+      sectionTitle: 'WARM-UP',
       sectionType: 'introduce',
       explanationEn: 'A list of services has a lot of important information. It shows how much and how long each service is.',
       explanationJp: 'サービスのリストにはたくさんの重要な情報が載っています。サービスの値段や時間などです。',
@@ -457,7 +457,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
     {
       id: 'section-2',
       sectionNumber: 2,
-      sectionTitle: 'PRESENT',
+      sectionTitle: 'LEARN',
       sectionType: 'vocabulary',
       explanationEn: '',
       explanationJp: '',
@@ -477,7 +477,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'vocab-7', image: '', wordEn: 'cook', wordJp: '料理をする' },
         { id: 'vocab-8', image: '', wordEn: 'take a nap', wordJp: '昼寝をする' },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A I (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -492,7 +492,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
     {
       id: 'section-3',
       sectionNumber: 2,
-      sectionTitle: 'PRESENT',
+      sectionTitle: 'LEARN',
       sectionType: 'question',
       explanationEn: '',
       explanationJp: '',
@@ -506,7 +506,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'img-1', image: '', label: 'your parents' },
         { id: 'img-2', image: '', label: 'your best friend' },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A II (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -552,7 +552,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
           ],
         },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A III (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -600,7 +600,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
           ],
         },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP B (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -703,7 +703,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
     {
       id: 'section-8',
       sectionNumber: 4,
-      sectionTitle: 'PRACTICE',
+      sectionTitle: 'TRY IT',
       sectionType: 'practice',
       explanationEn: '',
       explanationJp: '',
@@ -724,7 +724,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
       ],
       practiceImage: '',
       answerItems: ['When do they', 'Where does she', 'Who do you', 'How does she', 'What do you'],
-      sidebarTitle: 'PRACTICE',
+      sidebarTitle: 'TRY IT',
       sidebarSubtitle: 'STEP A (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -767,7 +767,7 @@ const createBlankDraft = (): LessonMaterialDraft => ({
       ],
       practiceImage: '',
       answerItems: ['What', 'Who', 'Where', 'How'],
-      sidebarTitle: 'PRACTICE',
+      sidebarTitle: 'TRY IT',
       sidebarSubtitle: 'STEP B (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -964,7 +964,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
     {
       id: 'listening-section-1',
       sectionNumber: 1,
-      sectionTitle: 'INTRODUCE',
+      sectionTitle: 'WARM-UP',
       sectionType: 'introduce',
       explanationEn: 'Today we will practice listening to everyday conversations.',
       explanationJp: '今日は日常会話を聞く練習をします。',
@@ -983,7 +983,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
     {
       id: 'listening-section-2',
       sectionNumber: 2,
-      sectionTitle: 'PRESENT',
+      sectionTitle: 'LEARN',
       sectionType: 'vocabulary',
       explanationEn: '',
       explanationJp: '',
@@ -999,7 +999,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'vocab-3', image: '', wordEn: 'repeat', wordJp: '繰り返す' },
         { id: 'vocab-4', image: '', wordEn: 'answer', wordJp: '答える' },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A I (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1028,7 +1028,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'img-1', image: '', label: 'often hear' },
         { id: 'img-2', image: '', label: 'difficult to understand' },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A II (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1075,7 +1075,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
           ],
         },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A III (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1124,7 +1124,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
           ],
         },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP B (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1164,7 +1164,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
     {
       id: 'listening-section-4',
       sectionNumber: 4,
-      sectionTitle: 'PRACTICE',
+      sectionTitle: 'TRY IT',
       sectionType: 'practice',
       explanationEn: '',
       explanationJp: '',
@@ -1179,7 +1179,7 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'q-2', questionEn: 'What did they watch?', questionJp: '彼らは何を見ましたか？', answer: 'A game' },
         { id: 'q-3', questionEn: 'How did they feel about it?', questionJp: 'それについてどう感じましたか？', answer: 'Excited' },
       ],
-      sidebarTitle: 'PRACTICE',
+      sidebarTitle: 'TRY IT',
       sidebarSubtitle: 'COMPREHENSION (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1371,7 +1371,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
     {
       id: 'reading-section-1',
       sectionNumber: 1,
-      sectionTitle: 'INTRODUCE',
+      sectionTitle: 'WARM-UP',
       sectionType: 'introduce',
       explanationEn: 'Today we will practice reading text messages and short conversations.',
       explanationJp: '今日はテキストメッセージや短い会話を読む練習をします。',
@@ -1391,7 +1391,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
     {
       id: 'reading-section-2',
       sectionNumber: 2,
-      sectionTitle: 'PRESENT',
+      sectionTitle: 'LEARN',
       sectionType: 'vocabulary',
       explanationEn: '',
       explanationJp: '',
@@ -1407,7 +1407,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'vocab-3', image: '', wordEn: 'meet', wordJp: '会う' },
         { id: 'vocab-4', image: '', wordEn: 'time', wordJp: '時間' },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A I (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1436,7 +1436,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'img-1', image: '', label: 'often read' },
         { id: 'img-2', image: '', label: 'difficult to understand' },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A II (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1483,7 +1483,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
           ],
         },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP A III (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1532,7 +1532,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
           ],
         },
       ],
-      sidebarTitle: 'PRESENT',
+      sidebarTitle: 'LEARN',
       sidebarSubtitle: 'STEP B (1 minute)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
@@ -1591,7 +1591,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
     {
       id: 'reading-section-4',
       sectionNumber: 4,
-      sectionTitle: 'PRACTICE',
+      sectionTitle: 'TRY IT',
       sectionType: 'practice',
       explanationEn: '',
       explanationJp: '',
@@ -1606,7 +1606,7 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'q-2', questionEn: 'What is the name of the new restaurant?', questionJp: '新しいレストランの名前は何ですか？', answer: 'Kame Ramen' },
         { id: 'q-3', questionEn: 'What time will they meet?', questionJp: '彼らは何時に会いますか？', answer: '7 o\'clock' },
       ],
-      sidebarTitle: 'PRACTICE',
+      sidebarTitle: 'TRY IT',
       sidebarSubtitle: 'COMPREHENSION (2 minutes)',
       lessonGoalTitle: '',
       lessonGoalSteps: [
