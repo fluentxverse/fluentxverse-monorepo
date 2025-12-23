@@ -37,9 +37,15 @@ cd "$SERVER_DIR"
 # Pull latest base images
 docker compose pull
 
-# Rebuild and restart containers
-docker compose down || true
-docker compose up -d --build
+# Only rebuild and restart the app containers, NOT the databases
+# This preserves all database data (Postgres, Memgraph, Redis, SeaweedFS)
+APP_CONTAINERS="fluentxverse-server fluentxverse-student fluentxverse-tutor fluentxverse-dashboard"
+
+log "🔄 Rebuilding app containers only (preserving database data)..."
+docker compose build $APP_CONTAINERS
+
+log "🔄 Restarting app containers..."
+docker compose up -d --no-deps $APP_CONTAINERS
 
 # Wait for containers to be healthy
 log "⏳ Waiting for containers to be ready..."

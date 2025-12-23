@@ -90,6 +90,9 @@ services:
     environment:
       - MEMGRAPH_USER=${MEMGRAPH_USER}
       - MEMGRAPH_PASSWORD=${MEMGRAPH_PASSWORD}
+    volumes:
+      - memgraph-data:/var/lib/memgraph
+      - memgraph-log:/var/log/memgraph
     networks:
       - fluentxverse-network
 
@@ -192,6 +195,8 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  memgraph-data:
+  memgraph-log:
   seaweed-master-data:
   seaweed-volume-data:
   seaweed-filer-data:
