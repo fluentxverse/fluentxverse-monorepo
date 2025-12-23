@@ -5,10 +5,10 @@ FROM docker.io/oven/bun:1-alpine
 WORKDIR /app
 
 # Copy package files first (for better caching)
-COPY package.json bun.lock* ./
+COPY package.json ./
 
-# Install dependencies (skip frozen-lockfile for flexibility across environments)
-RUN bun install --production
+# Install dependencies (--no-save prevents lockfile changes error)
+RUN bun install --production --no-save
 
 # Copy source code
 COPY src ./src
