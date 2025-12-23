@@ -292,6 +292,7 @@ type NewLessonFormData = {
 };
 
 const SAVED_LESSONS_KEY = 'fxv_admin_saved_lessons';
+const EDITING_LESSON_KEY = 'fxv_admin_editing_lesson_id';
 
 // Course templates matching the tutor app's material courses
 const COURSE_TEMPLATES: TemplateInfo[] = [
@@ -1903,12 +1904,19 @@ export default function LessonMaterialMakerPage() {
   });
 
   const [showHeaderControls, setShowHeaderControls] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(() => {
+    // If we're restoring an editing session, start in fullscreen
+    try {
+      const editingId = localStorage.getItem(EDITING_LESSON_KEY);
+      return !!editingId;
+    } catch {
+      return false;
+    }
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedLessonUrl, setSavedLessonUrl] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'editor'>('list');
   const [activeTab, setActiveTab] = useState<'templates' | 'myLessons'>('templates');
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
   const [selectedTemplateForLesson, setSelectedTemplateForLesson] = useState<TemplateInfo | null>(null);
@@ -1926,7 +1934,27 @@ export default function LessonMaterialMakerPage() {
       return [];
     }
   });
-  const [currentEditingLesson, setCurrentEditingLesson] = useState<SavedLesson | null>(null);
+  // Restore currentEditingLesson from localStorage if it exists
+  const [currentEditingLesson, setCurrentEditingLesson] = useState<SavedLesson | null>(() => {
+    try {
+      const editingId = localStorage.getItem(EDITING_LESSON_KEY);
+      if (!editingId) return null;
+      const stored = localStorage.getItem(SAVED_LESSONS_KEY);
+      const lessons: SavedLesson[] = stored ? JSON.parse(stored) : [];
+      return lessons.find(l => l.id === editingId) || null;
+    } catch {
+      return null;
+    }
+  });
+  // viewMode should be 'editor' if there's a currentEditingLesson restored
+  const [viewMode, setViewMode] = useState<'list' | 'editor'>(() => {
+    try {
+      const editingId = localStorage.getItem(EDITING_LESSON_KEY);
+      return editingId ? 'editor' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
   const [expandedLevels, setExpandedLevels] = useState<number[]>([1]);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -2026,6 +2054,20 @@ export default function LessonMaterialMakerPage() {
       // ignore
     }
   }, [savedLessons]);
+
+  // Update savedLessons whenever draft changes (if editing a lesson)
+  // This ensures changes are persisted even if the user refreshes before going back to list
+  useEffect(() => {
+    if (!currentEditingLesson) return;
+    
+    setSavedLessons(prev =>
+      prev.map(l =>
+        l.id === currentEditingLesson.id
+          ? { ...l, draft, updatedAt: new Date().toISOString() }
+          : l
+      )
+    );
+  }, [draft, currentEditingLesson]);
 
   // Autosave function
   const saveToServer = useCallback(async (draftToSave: LessonMaterialDraft) => {
@@ -2174,6 +2216,8 @@ export default function LessonMaterialMakerPage() {
     setDraft(newLesson.draft);
     setViewMode('editor');
     setIsFullscreen(true);
+    // Persist editing lesson ID so it survives page refresh
+    localStorage.setItem(EDITING_LESSON_KEY, newLesson.id);
     // Push to browser history so back button works
     window.history.pushState(
       { viewMode: 'editor', lessonId: newLesson.id },
@@ -2188,6 +2232,8 @@ export default function LessonMaterialMakerPage() {
     setDraft(lesson.draft);
     setViewMode('editor');
     setIsFullscreen(true);
+    // Persist editing lesson ID so it survives page refresh
+    localStorage.setItem(EDITING_LESSON_KEY, lesson.id);
     // Push to browser history so back button works
     window.history.pushState(
       { viewMode: 'editor', lessonId: lesson.id },
@@ -2206,6 +2252,8 @@ export default function LessonMaterialMakerPage() {
   const handleViewTemplate = (template: TemplateInfo) => {
     setSelectedTemplate(template);
     setCurrentEditingLesson(null); // Not editing a lesson
+    // Clear the editing lesson ID since we're viewing a template, not editing a lesson
+    localStorage.removeItem(EDITING_LESSON_KEY);
     setDraft(getDraftForTemplate(template.id)); // Load template-specific draft
     setViewMode('editor');
     setIsFullscreen(true);
@@ -2232,6 +2280,8 @@ export default function LessonMaterialMakerPage() {
     setCurrentEditingLesson(null);
     setSelectedTemplate(null);
     setIsFullscreen(false);
+    // Clear the editing lesson ID from localStorage
+    localStorage.removeItem(EDITING_LESSON_KEY);
     // Update history to list view
     window.history.pushState(
       { viewMode: 'list' },
