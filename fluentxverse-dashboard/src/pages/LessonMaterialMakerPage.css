@@ -902,23 +902,21 @@ body.lm-fullscreen-mode .main-content {
   padding: 0 !important;
 }
 
-/* Floating Toolbar - positioned on the left side */
+/* Floating Toolbar - positioned at bottom right */
 .lm-toolbar {
   position: fixed;
-  top: 50%;
-  left: 16px;
-  transform: translateY(-50%);
+  bottom: 24px;
+  right: 24px;
   z-index: 100;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 12px 10px;
+  padding: 10px 14px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .lm-toolbar-btn.active {
@@ -932,7 +930,14 @@ body.lm-fullscreen-mode .main-content {
 }
 
 .lm-toolbar-title {
-  display: none; /* Hide title in vertical layout */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-right: 12px;
+  border-right: 1px solid var(--border-color);
 }
 
 .lm-toolbar-title i {
@@ -942,18 +947,17 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-toolbar-template-view {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .lm-view-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 6px;
+  padding: 3px 8px;
   background: var(--warning-light);
   color: #b45309;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   border-radius: 4px;
   letter-spacing: 0.5px;
@@ -961,7 +965,6 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-toolbar-actions {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 6px;
 }
