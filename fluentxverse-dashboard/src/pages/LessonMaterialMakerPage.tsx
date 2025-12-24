@@ -243,7 +243,6 @@ type SectionContent = {
   sidebarSubtitle?: string; // e.g., "STEP A I (2 minutes)"
   lessonGoalTitle: string;
   lessonGoalSteps: LessonGoalStep[];
-  questionBox: string;
 };
 
 type LessonMaterialDraft = {
@@ -453,7 +452,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Ask the question below.' },
         { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Good! Let\'s go to the next part!"' },
       ],
-      questionBox: 'Do you get manicures?',
     },
     {
       id: 'section-2',
@@ -488,7 +486,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Repeat Step 3 with the remaining vocabulary.' },
         { id: 'step-5', instruction: 'Transition to the next part.', scriptLine: '"Great! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     {
       id: 'section-3',
@@ -516,7 +513,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Have the student use some of the vocabulary to answer the question.', tipText: 'The student doesn\'t have to use complete sentences. We just want to test their understanding of the vocabulary.' },
         { id: 'step-4', instruction: 'Transition to the next part.', scriptLine: '"Good job! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     {
       id: 'section-4',
@@ -567,7 +563,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-8', instruction: 'Confirm the student\'s understanding.', scriptLine: '"Is the difference between the two sounds clear?"' },
         { id: 'step-9', instruction: 'Transition to the next step.', scriptLine: '"Fantastic! Let\'s go to the next step!"' },
       ],
-      questionBox: '',
     },
     {
       id: 'section-5',
@@ -611,7 +606,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Confirm the student\'s understanding.', scriptLine: '"Is it clear?"' },
         { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Very good! Let\'s go to the next section!"' },
       ],
-      questionBox: '',
     },
     {
       id: 'section-6',
@@ -650,7 +644,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-7', instruction: 'Ask the questions below.' },
         { id: 'step-8', instruction: 'Transition to the next part.', scriptLine: '"Great! Let\'s go to the next part!"' },
       ],
-      questionBox: 'How does Saori get home?\n(She takes the bus.)\n\nHow do you get home from work?\n(student\'s own answer)',
     },
     {
       id: 'section-7',
@@ -698,7 +691,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Ask the question below.' },
         { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Excellent! Let\'s go to the next section!"' },
       ],
-      questionBox: 'Do you often say no to invitations?\n(student\'s own answer)',
     },
     // Section 8 - PRACTICE (Exercise section)
     {
@@ -738,7 +730,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-7', instruction: 'Have the student read each question with the correct answer.' },
         { id: 'step-8', instruction: 'Transition to the next step.', scriptLine: '"Good! Let\'s go to the next step!"' },
       ],
-      questionBox: '',
     },
     // Section 9 - PRACTICE STEP B (Conversation exercise)
     {
@@ -781,7 +772,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-7', instruction: 'Read the conversation with the student.' },
         { id: 'step-8', instruction: 'Transition to the next section.', scriptLine: '"Great! Let\'s go to the next section!"' },
       ],
-      questionBox: '',
     },
     // Section 10 - CHALLENGE 1
     {
@@ -828,7 +818,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-12', instruction: '', tipText: 'Change your tone according to the character you are playing.' },
         { id: 'step-13', instruction: 'Transition to the next part.', scriptLine: '"Well done! Let\'s go to the last section!"' },
       ],
-      questionBox: '(Greet the student.)\n\n1. How\'s your work? Are you busy?\n\n2. By the way, do you want a drink?\n   • (If yes, ask, "What do you want to drink?")\n   • (If no, ask, "Are you hungry?")\n\n3. Do you usually eat out?\n   • (If yes, ask, "When do you usually eat out?")\n   • (If no, ask "What do you usually do after work?")\n\n4. What else do you do after work?\n   • (Ask specific questions.)\n   • Who do you [activity] with?\n   • Where do you usually go?\n\n5. Sounds interesting. I\'m usually really busy after work (too).\n\n6. This restaurant has great food. Let\'s order! What do you want to order?\n   • (Answer the student\'s questions about your after-work activities.)\n\n(Say that you will call the waiter.)',
     },
     // Section 11 - CHALLENGE 2 (If Time Allows)
     {
@@ -879,7 +868,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Ask the questions for that topic, adding follow-up questions and comments to make the conversation natural.', tipText: 'Continue as time allows. You do not have to ask all the questions.' },
         { id: 'step-5', instruction: 'Transition to the last section.', scriptLine: '"Well done! Let\'s go to the last section!"' },
       ],
-      questionBox: '',
     },
     // Section 12: FEEDBACK
     {
@@ -941,7 +929,6 @@ const createBlankDraft = (): LessonMaterialDraft => ({
         { id: 'step-5', instruction: 'Give feedback on the student\'s range, accuracy, and fluency using the template below.', tipText: 'Refer to the Personalized Feedback Guide for more information.' },
         { id: 'step-6', instruction: 'Wrap up the lesson.', scriptLine: '"You did a great job! Thank you very much for today."' },
       ],
-      questionBox: '',
     },
   ],
   vocabulary: [],
@@ -979,7 +966,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Read the Introduce explanation.' },
         { id: 'step-4', instruction: 'Transition to the next section.', scriptLine: '"Good! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     {
       id: 'listening-section-2',
@@ -1009,7 +995,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Read each vocabulary and ask the student to repeat.' },
         { id: 'step-4', instruction: 'Transition to the next part.', scriptLine: '"Great! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     // Section 2b - STEP B (Question/Image Cards)
     {
@@ -1038,7 +1023,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Have the student use some of the vocabulary to answer the question.', tipText: 'The student doesn\'t have to use complete sentences. We just want to test their understanding of the vocabulary.' },
         { id: 'step-4', instruction: 'Transition to the next part.', scriptLine: '"Good job! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     // Section 2c - STEP C (Pronunciation)
     {
@@ -1090,7 +1074,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-8', instruction: 'Confirm the student\'s understanding.', scriptLine: '"Is the difference between the two sounds clear?"' },
         { id: 'step-9', instruction: 'Transition to the next step.', scriptLine: '"Fantastic! Let\'s go to the next step!"' },
       ],
-      questionBox: '',
     },
     // Section 2d - STEP D (Grammar Tip)
     {
@@ -1135,7 +1118,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Confirm the student\'s understanding.', scriptLine: '"Is it clear?"' },
         { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Very good! Let\'s go to the next section!"' },
       ],
-      questionBox: '',
     },
     {
       id: 'listening-section-3',
@@ -1160,7 +1142,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Ask comprehension questions.', scriptLines: ['What were they talking about?', 'What was the score?'] },
         { id: 'step-4', instruction: 'Transition to the next part.', scriptLine: '"Great listening! Let\'s continue."' },
       ],
-      questionBox: 'What was the final score?\n(3-2)\n\nWhat do they want to do next?\n(Watch the next game together)',
     },
     {
       id: 'listening-section-4',
@@ -1188,7 +1169,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-2', instruction: 'Check their answers and provide feedback.' },
         { id: 'step-3', instruction: 'Transition to the next section.', scriptLine: '"Excellent! Let\'s move to the challenge!"' },
       ],
-      questionBox: '',
     },
     // Section 5 - CHALLENGE 1
     {
@@ -1234,7 +1214,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-12', instruction: '', tipText: 'Adjust your pace according to the student\'s level.' },
         { id: 'step-13', instruction: 'Transition to the next part.', scriptLine: '"Well done! Let\'s go to Challenge 2!"' },
       ],
-      questionBox: '(Introduce the listening task.)\n\n1. What platform is the train departing from?\n\n2. What time will the train arrive?\n   • (Ask if they need to hear it again.)\n\n3. Where is the train going?\n   • (If they\'re not sure, give hints.)\n   • (Repeat key parts if needed.)\n\n4. Is there any delay mentioned?\n   • (Ask specific questions.)\n   • How long is the delay?\n   • What is the reason?\n\n5. What should passengers do?\n\n(Praise their listening skills.)',
     },
     // Section 5b - CHALLENGE 2 (If Time Allows)
     {
@@ -1285,7 +1264,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Ask the questions for that topic, adding follow-up questions and comments to make the conversation natural.', tipText: 'Continue as time allows. You do not have to ask all the questions.' },
         { id: 'step-5', instruction: 'Transition to the last section.', scriptLine: '"Well done! Let\'s go to the last section!"' },
       ],
-      questionBox: '',
     },
     // Section 6: FEEDBACK
     {
@@ -1347,7 +1325,6 @@ const createListeningDraft = (): LessonMaterialDraft => ({
         { id: 'step-5', instruction: 'Give feedback on the student\'s comprehension, accuracy, and response using the template below.', tipText: 'Refer to the Personalized Feedback Guide for more information.' },
         { id: 'step-6', instruction: 'Wrap up the lesson.', scriptLine: '"You did a great job! Thank you very much for today."' },
       ],
-      questionBox: '',
     },
   ],
   vocabulary: [],
@@ -1386,7 +1363,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Read the Introduce explanation.' },
         { id: 'step-4', instruction: 'Transition to the next section.', scriptLine: '"Good! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     // Section 2a - PRESENT STEP A VOCABULARY
     {
@@ -1417,7 +1393,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Read each vocabulary and ask the student to repeat.' },
         { id: 'step-4', instruction: 'Transition to the next part.', scriptLine: '"Great! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     // Section 2b - STEP B (Question/Image Cards)
     {
@@ -1446,7 +1421,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-3', instruction: 'Have the student use some of the vocabulary to answer the question.', tipText: 'The student doesn\'t have to use complete sentences. We just want to test their understanding of the vocabulary.' },
         { id: 'step-4', instruction: 'Transition to the next part.', scriptLine: '"Good job! Let\'s go to the next part!"' },
       ],
-      questionBox: '',
     },
     // Section 2c - STEP C (Pronunciation)
     {
@@ -1498,7 +1472,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-8', instruction: 'Confirm the student\'s understanding.', scriptLine: '"Is the difference between the two sounds clear?"' },
         { id: 'step-9', instruction: 'Transition to the next step.', scriptLine: '"Fantastic! Let\'s go to the next step!"' },
       ],
-      questionBox: '',
     },
     // Section 2d - STEP D (Grammar Tip)
     {
@@ -1543,7 +1516,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Confirm the student\'s understanding.', scriptLine: '"Is it clear?"' },
         { id: 'step-5', instruction: 'Transition to the next section.', scriptLine: '"Very good! Let\'s go to the next section!"' },
       ],
-      questionBox: '',
     },
     // Section 3 - UNDERSTAND (READING)
     {
@@ -1586,7 +1558,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'rq-1', questionEn: 'What time does Kame Ramen open?', answer: '(It opens at 6 p.m.)' },
         { id: 'rq-2', questionEn: 'Do you like to try new restaurants?', answer: '(student\'s own answer)' },
       ],
-      questionBox: '',
     },
     // Section 4 - PRACTICE
     {
@@ -1615,7 +1586,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-2', instruction: 'Check their answers and provide feedback.' },
         { id: 'step-3', instruction: 'Transition to the next section.', scriptLine: '"Excellent! Let\'s move to the challenge!"' },
       ],
-      questionBox: '',
     },
     // Section 5 - CHALLENGE 1
     {
@@ -1660,7 +1630,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-12', instruction: '', tipText: 'Adjust the difficulty according to the student\'s level.' },
         { id: 'step-13', instruction: 'Transition to the next part.', scriptLine: '"Well done! Let\'s go to Challenge 2!"' },
       ],
-      questionBox: '(Introduce the reading task.)\n\n1. What does your friend want to do?\n\n2. When does your friend want to meet?\n   • (Ask if they understood the time.)\n\n3. Where does your friend suggest meeting?\n   • (If they\'re not sure, have them re-read.)\n   • (Point out key words if needed.)\n\n4. How will you respond to your friend?\n   • (Help them compose a reply.)\n   • What time works for you?\n   • Do you have any questions?\n\n(Praise their reading skills.)',
     },
     // Section 5b - CHALLENGE 2 (If Time Allows)
     {
@@ -1711,7 +1680,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-4', instruction: 'Ask the questions for that topic, adding follow-up questions and comments to make the conversation natural.', tipText: 'Continue as time allows. You do not have to ask all the questions.' },
         { id: 'step-5', instruction: 'Transition to the last section.', scriptLine: '"Well done! Let\'s go to the last section!"' },
       ],
-      questionBox: '',
     },
     // Section 6: FEEDBACK
     {
@@ -1773,7 +1741,6 @@ const createReadingDraft = (): LessonMaterialDraft => ({
         { id: 'step-5', instruction: 'Give feedback on the student\'s comprehension, pronunciation, and response using the template below.', tipText: 'Refer to the Personalized Feedback Guide for more information.' },
         { id: 'step-6', instruction: 'Wrap up the lesson.', scriptLine: '"You did a great job! Thank you very much for today."' },
       ],
-      questionBox: '',
     },
   ],
   vocabulary: [],
@@ -5822,28 +5789,6 @@ export default function LessonMaterialMakerPage() {
                             <i className="ri-add-circle-line" /> Add Step
                           </button>
                         </div>
-
-                        {/* Question Box */}
-                        {section.questionBox && (
-                          <div className="lm-question-box">
-                            <div className="lm-question-bullet" />
-                            <span
-                              className="lm-question-text"
-                              contentEditable
-                              suppressContentEditableWarning
-                              onBlur={(e) => {
-                                const newSections = [...draft.sections];
-                                newSections[sectionIndex] = {
-                                  ...section,
-                                  questionBox: (e.target as HTMLElement).textContent || ''
-                                };
-                                setDraft(prev => ({ ...prev, sections: newSections }));
-                              }}
-                            >
-                              {section.questionBox}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     </>
                   )}
@@ -6876,26 +6821,6 @@ export default function LessonMaterialMakerPage() {
                       >
                         <i className="ri-add-circle-line" /> Add Step
                       </button>
-                      {/* Question Box */}
-                      {section.questionBox && (
-                        <div className="lm-dialogue-question-box">
-                          <pre
-                            className="lm-dialogue-question-text"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={(e) => {
-                              const newSections = [...draft.sections];
-                              newSections[sectionIndex] = {
-                                ...section,
-                                questionBox: (e.target as HTMLElement).textContent || ''
-                              };
-                              setDraft(prev => ({ ...prev, sections: newSections }));
-                            }}
-                          >
-                            {section.questionBox}
-                          </pre>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -7102,26 +7027,6 @@ export default function LessonMaterialMakerPage() {
                       >
                         <i className="ri-add-circle-line" /> Add Step
                       </button>
-                      {/* Question Box with green border */}
-                      {section.questionBox && (
-                        <div className="lm-trivia-question-box">
-                          <pre
-                            className="lm-trivia-question-text"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={(e) => {
-                              const newSections = [...draft.sections];
-                              newSections[sectionIndex] = {
-                                ...section,
-                                questionBox: (e.target as HTMLElement).textContent || ''
-                              };
-                              setDraft(prev => ({ ...prev, sections: newSections }));
-                            }}
-                          >
-                            {section.questionBox}
-                          </pre>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -7559,26 +7464,6 @@ export default function LessonMaterialMakerPage() {
                       >
                         <i className="ri-add-circle-line" /> Add Step
                       </button>
-                      {/* Question Box with nested items */}
-                      {section.questionBox && (
-                        <div className="lm-challenge-question-box">
-                          <pre
-                            className="lm-challenge-question-text"
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={(e) => {
-                              const newSections = [...draft.sections];
-                              newSections[sectionIndex] = {
-                                ...section,
-                                questionBox: (e.target as HTMLElement).textContent || ''
-                              };
-                              setDraft(prev => ({ ...prev, sections: newSections }));
-                            }}
-                          >
-                            {section.questionBox}
-                          </pre>
-                        </div>
-                      )}
                     </div>
                   )}
 
