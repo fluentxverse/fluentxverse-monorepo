@@ -6964,3 +6964,347 @@ body.lm-fullscreen-mode .main-content {
   border-color: #15803d;
   color: #15803d;
 }
+
+/* ========================================
+   VERSION HISTORY PANEL STYLES
+   ======================================== */
+
+.lm-history-badge {
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+.lm-version-history-panel {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 380px;
+  max-height: calc(100vh - 120px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.lm-version-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+}
+
+.lm-version-history-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lm-version-history-title i {
+  font-size: 20px;
+  color: var(--primary);
+}
+
+.lm-version-history-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lm-version-history-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.lm-version-history-close:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.lm-version-history-close i {
+  font-size: 20px;
+}
+
+.lm-version-history-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.lm-version-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.lm-version-empty i {
+  font-size: 48px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.lm-version-empty p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.lm-version-empty span {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.lm-version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lm-version-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  transition: all 0.2s;
+}
+
+.lm-version-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.1);
+}
+
+.lm-version-item.selected {
+  border-color: var(--primary);
+  background: rgba(2, 69, 174, 0.04);
+}
+
+.lm-version-item.latest {
+  border-color: var(--success);
+  background: rgba(22, 163, 74, 0.04);
+}
+
+.lm-version-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.lm-version-number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lm-version-badge-number {
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.lm-version-latest-badge {
+  background: var(--success);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.lm-version-auto-badge {
+  background: var(--warning, #f59e0b);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.lm-version-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.lm-version-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.lm-version-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.lm-version-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lm-version-action-btn.preview {
+  background: #fff;
+  color: var(--text-secondary);
+}
+
+.lm-version-action-btn.preview:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+.lm-version-action-btn.rollback {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.lm-version-action-btn.rollback:hover {
+  background: var(--primary-dark, #013d8c);
+}
+
+.lm-version-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.lm-version-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lm-version-preview-header i {
+  color: var(--primary);
+  font-size: 16px;
+}
+
+.lm-version-preview-header span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lm-version-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lm-version-preview-item {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.lm-version-preview-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 70px;
+}
+
+.lm-version-preview-value {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.lm-version-history-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.lm-version-history-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lm-version-history-info i {
+  font-size: 14px;
+}
+
+.lm-version-clear-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--error, #ef4444);
+  color: var(--error, #ef4444);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lm-version-clear-btn:hover {
+  background: var(--error, #ef4444);
+  color: white;
+}
+
+/* Responsive adjustments for version history panel */
+@media (max-width: 768px) {
+  .lm-version-history-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}

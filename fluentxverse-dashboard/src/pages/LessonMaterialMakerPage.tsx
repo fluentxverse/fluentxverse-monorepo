@@ -290,8 +290,26 @@ type NewLessonFormData = {
   goalName: string;
 };
 
+// Version history types
+type VersionHistoryEntry = {
+  id: string;
+  lessonId: string;
+  version: number;
+  snapshot: LessonMaterialDraft;
+  timestamp: string;
+  changeDescription: string;
+  autoSave: boolean;
+};
+
+type LessonVersionHistory = {
+  lessonId: string;
+  versions: VersionHistoryEntry[];
+  maxVersions: number;
+};
+
 const SAVED_LESSONS_KEY = 'fxv_admin_saved_lessons';
 const EDITING_LESSON_KEY = 'fxv_admin_editing_lesson_id';
+const VERSION_HISTORY_KEY = 'fxv_admin_version_history';
 
 // Course templates matching the tutor app's material courses
 const COURSE_TEMPLATES: TemplateInfo[] = [
@@ -1927,9 +1945,23 @@ export default function LessonMaterialMakerPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCourses, setExpandedCourses] = useState<string[]>(['Conversational Skills']); // Default expanded
+  
+  // Version history state
+  const [versionHistory, setVersionHistory] = useState<Record<string, LessonVersionHistory>>(() => {
+    try {
+      const stored = localStorage.getItem(VERSION_HISTORY_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [selectedVersionToPreview, setSelectedVersionToPreview] = useState<VersionHistoryEntry | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
+  const previousDraftRef = useRef<LessonMaterialDraft | null>(null);
 
   useEffect(() => {
     document.title = 'Lesson Material Maker | FluentXVerse Admin';
@@ -2022,6 +2054,136 @@ export default function LessonMaterialMakerPage() {
       // ignore
     }
   }, [savedLessons]);
+
+  // Save version history to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(VERSION_HISTORY_KEY, JSON.stringify(versionHistory));
+    } catch {
+      // ignore
+    }
+  }, [versionHistory]);
+
+  // Detect changes and describe them for version history
+  const getChangeDescription = useCallback((oldDraft: LessonMaterialDraft | null, newDraft: LessonMaterialDraft): string => {
+    if (!oldDraft) return 'Initial version';
+    
+    const changes: string[] = [];
+    
+    // Check header changes
+    if (oldDraft.header.goalText !== newDraft.header.goalText) {
+      changes.push('Updated lesson goal');
+    }
+    if (oldDraft.header.lessonLabel !== newDraft.header.lessonLabel) {
+      changes.push('Changed lesson label');
+    }
+    if (oldDraft.header.chapterLabel !== newDraft.header.chapterLabel) {
+      changes.push('Changed chapter label');
+    }
+    if (oldDraft.header.backgroundImage !== newDraft.header.backgroundImage) {
+      changes.push('Updated header image');
+    }
+    
+    // Check section changes
+    const oldSectionCount = oldDraft.sections.length;
+    const newSectionCount = newDraft.sections.length;
+    if (newSectionCount > oldSectionCount) {
+      changes.push(`Added ${newSectionCount - oldSectionCount} section(s)`);
+    } else if (newSectionCount < oldSectionCount) {
+      changes.push(`Removed ${oldSectionCount - newSectionCount} section(s)`);
+    } else {
+      // Check if sections content changed
+      let sectionsModified = 0;
+      for (let i = 0; i < newDraft.sections.length; i++) {
+        if (JSON.stringify(oldDraft.sections[i]) !== JSON.stringify(newDraft.sections[i])) {
+          sectionsModified++;
+        }
+      }
+      if (sectionsModified > 0) {
+        changes.push(`Modified ${sectionsModified} section(s)`);
+      }
+    }
+    
+    // Check vocabulary changes
+    if (JSON.stringify(oldDraft.vocabulary) !== JSON.stringify(newDraft.vocabulary)) {
+      changes.push('Updated vocabulary');
+    }
+    
+    // Check grammar changes
+    if (JSON.stringify(oldDraft.grammar) !== JSON.stringify(newDraft.grammar)) {
+      changes.push('Updated grammar points');
+    }
+    
+    // Check exercises changes
+    if (JSON.stringify(oldDraft.exercises) !== JSON.stringify(newDraft.exercises)) {
+      changes.push('Updated exercises');
+    }
+    
+    return changes.length > 0 ? changes.join(', ') : 'Minor changes';
+  }, []);
+
+  // Save a version to history
+  const saveVersionToHistory = useCallback((lessonId: string, snapshot: LessonMaterialDraft, description: string, isAutoSave: boolean = false) => {
+    setVersionHistory(prev => {
+      const lessonHistory = prev[lessonId] || { lessonId, versions: [], maxVersions: 50 };
+      const nextVersion = lessonHistory.versions.length > 0 
+        ? Math.max(...lessonHistory.versions.map(v => v.version)) + 1 
+        : 1;
+      
+      const newEntry: VersionHistoryEntry = {
+        id: `v-${lessonId}-${Date.now()}`,
+        lessonId,
+        version: nextVersion,
+        snapshot: JSON.parse(JSON.stringify(snapshot)), // Deep clone
+        timestamp: new Date().toISOString(),
+        changeDescription: description,
+        autoSave: isAutoSave,
+      };
+      
+      // Keep only the last N versions
+      const updatedVersions = [...lessonHistory.versions, newEntry].slice(-lessonHistory.maxVersions);
+      
+      return {
+        ...prev,
+        [lessonId]: {
+          ...lessonHistory,
+          versions: updatedVersions,
+        },
+      };
+    });
+  }, []);
+
+  // Rollback to a specific version
+  const rollbackToVersion = useCallback((entry: VersionHistoryEntry) => {
+    if (!currentEditingLesson) return;
+    
+    // Save current state as a new version before rollback
+    saveVersionToHistory(
+      currentEditingLesson.id, 
+      draft, 
+      `State before rollback to v${entry.version}`,
+      false
+    );
+    
+    // Apply the rollback
+    setDraft(JSON.parse(JSON.stringify(entry.snapshot)));
+    setSelectedVersionToPreview(null);
+    setShowVersionHistory(false);
+  }, [currentEditingLesson, draft, saveVersionToHistory]);
+
+  // Manual save version (user-triggered)
+  const handleManualSaveVersion = useCallback((description?: string) => {
+    if (!currentEditingLesson) return;
+    
+    const changeDesc = description || getChangeDescription(previousDraftRef.current, draft);
+    saveVersionToHistory(currentEditingLesson.id, draft, changeDesc, false);
+    previousDraftRef.current = JSON.parse(JSON.stringify(draft));
+  }, [currentEditingLesson, draft, getChangeDescription, saveVersionToHistory]);
+
+  // Get version history for current lesson
+  const currentLessonHistory = currentEditingLesson 
+    ? versionHistory[currentEditingLesson.id]?.versions || []
+    : [];
 
   // Update savedLessons whenever draft changes (if editing a lesson)
   // This ensures changes are persisted even if the user refreshes before going back to list
@@ -2847,6 +3009,35 @@ export default function LessonMaterialMakerPage() {
             </button>
           )}
 
+          {/* Version History Button */}
+          {currentEditingLesson && (
+            <button
+              type="button"
+              className={`lm-toolbar-btn ${showVersionHistory ? 'active' : ''}`}
+              onClick={() => setShowVersionHistory(!showVersionHistory)}
+              title="Version History"
+            >
+              <i className="ri-history-line" />
+              <span>History</span>
+              {currentLessonHistory.length > 0 && (
+                <span className="lm-history-badge">{currentLessonHistory.length}</span>
+              )}
+            </button>
+          )}
+
+          {/* Save Version Button */}
+          {currentEditingLesson && (
+            <button
+              type="button"
+              className="lm-toolbar-btn"
+              onClick={() => handleManualSaveVersion()}
+              title="Save current version to history"
+            >
+              <i className="ri-git-commit-line" />
+              <span>Save Version</span>
+            </button>
+          )}
+
           <button
             className="lm-toolbar-btn"
             type="button"
@@ -2886,6 +3077,147 @@ export default function LessonMaterialMakerPage() {
           </button>
         </div>
       </div>
+
+      {/* Version History Panel */}
+      {showVersionHistory && currentEditingLesson && (
+        <div className="lm-version-history-panel">
+          <div className="lm-version-history-header">
+            <div className="lm-version-history-title">
+              <i className="ri-history-line" />
+              <h3>Version History</h3>
+            </div>
+            <button
+              type="button"
+              className="lm-version-history-close"
+              onClick={() => {
+                setShowVersionHistory(false);
+                setSelectedVersionToPreview(null);
+              }}
+            >
+              <i className="ri-close-line" />
+            </button>
+          </div>
+          
+          <div className="lm-version-history-content">
+            {currentLessonHistory.length === 0 ? (
+              <div className="lm-version-empty">
+                <i className="ri-file-history-line" />
+                <p>No versions saved yet</p>
+                <span>Click "Save Version" to create your first snapshot</span>
+              </div>
+            ) : (
+              <div className="lm-version-list">
+                {[...currentLessonHistory].reverse().map((entry, index) => (
+                  <div 
+                    key={entry.id} 
+                    className={`lm-version-item ${selectedVersionToPreview?.id === entry.id ? 'selected' : ''} ${index === 0 ? 'latest' : ''}`}
+                  >
+                    <div className="lm-version-item-header">
+                      <div className="lm-version-number">
+                        <span className="lm-version-badge-number">v{entry.version}</span>
+                        {index === 0 && <span className="lm-version-latest-badge">Latest</span>}
+                        {entry.autoSave && <span className="lm-version-auto-badge">Auto</span>}
+                      </div>
+                      <div className="lm-version-time">
+                        {new Date(entry.timestamp).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                    <div className="lm-version-description">
+                      {entry.changeDescription}
+                    </div>
+                    <div className="lm-version-actions">
+                      <button
+                        type="button"
+                        className="lm-version-action-btn preview"
+                        onClick={() => setSelectedVersionToPreview(
+                          selectedVersionToPreview?.id === entry.id ? null : entry
+                        )}
+                      >
+                        <i className={selectedVersionToPreview?.id === entry.id ? 'ri-eye-off-line' : 'ri-eye-line'} />
+                        {selectedVersionToPreview?.id === entry.id ? 'Hide Preview' : 'Preview'}
+                      </button>
+                      <button
+                        type="button"
+                        className="lm-version-action-btn rollback"
+                        onClick={() => {
+                          if (confirm(`Rollback to version ${entry.version}? Your current changes will be saved as a new version.`)) {
+                            rollbackToVersion(entry);
+                          }
+                        }}
+                      >
+                        <i className="ri-arrow-go-back-line" />
+                        Restore
+                      </button>
+                    </div>
+                    
+                    {/* Version Preview Diff */}
+                    {selectedVersionToPreview?.id === entry.id && (
+                      <div className="lm-version-preview">
+                        <div className="lm-version-preview-header">
+                          <i className="ri-file-text-line" />
+                          <span>Version {entry.version} Preview</span>
+                        </div>
+                        <div className="lm-version-preview-content">
+                          <div className="lm-version-preview-item">
+                            <span className="lm-version-preview-label">Goal:</span>
+                            <span className="lm-version-preview-value">{entry.snapshot.header.goalText}</span>
+                          </div>
+                          <div className="lm-version-preview-item">
+                            <span className="lm-version-preview-label">Lesson:</span>
+                            <span className="lm-version-preview-value">{entry.snapshot.header.lessonLabel}</span>
+                          </div>
+                          <div className="lm-version-preview-item">
+                            <span className="lm-version-preview-label">Sections:</span>
+                            <span className="lm-version-preview-value">{entry.snapshot.sections.length} sections</span>
+                          </div>
+                          <div className="lm-version-preview-item">
+                            <span className="lm-version-preview-label">Vocabulary:</span>
+                            <span className="lm-version-preview-value">{entry.snapshot.vocabulary.length} items</span>
+                          </div>
+                          <div className="lm-version-preview-item">
+                            <span className="lm-version-preview-label">Grammar:</span>
+                            <span className="lm-version-preview-value">{entry.snapshot.grammar.length} points</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="lm-version-history-footer">
+            <span className="lm-version-history-info">
+              <i className="ri-information-line" />
+              Up to 50 versions are stored
+            </span>
+            {currentLessonHistory.length > 0 && (
+              <button
+                type="button"
+                className="lm-version-clear-btn"
+                onClick={() => {
+                  if (confirm('Clear all version history for this lesson?')) {
+                    setVersionHistory(prev => {
+                      const updated = { ...prev };
+                      delete updated[currentEditingLesson.id];
+                      return updated;
+                    });
+                  }
+                }}
+              >
+                <i className="ri-delete-bin-line" />
+                Clear History
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* The actual lesson page preview/editor */}
       <div className="lm-page">
