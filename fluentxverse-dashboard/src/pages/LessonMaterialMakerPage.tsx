@@ -1917,6 +1917,7 @@ export default function LessonMaterialMakerPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedLessonUrl, setSavedLessonUrl] = useState<string | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false); // Read-only preview mode
   const [activeTab, setActiveTab] = useState<'templates' | 'myLessons'>('templates');
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
   const [selectedTemplateForLesson, setSelectedTemplateForLesson] = useState<TemplateInfo | null>(null);
@@ -2308,8 +2309,9 @@ export default function LessonMaterialMakerPage() {
     return acc;
   }, {} as Record<number, Record<number, Record<number, SavedLesson[]>>>);
 
-  // Template List View
-  if (viewMode === 'list') {
+  // Template List View - also show when editing but not in fullscreen
+  // This allows users to see the lesson list while having an edit session in progress
+  if (viewMode === 'list' || (viewMode === 'editor' && !isFullscreen)) {
     return (
       <div className="lm-template-list">
         {/* New Lesson Modal */}
@@ -2430,6 +2432,103 @@ export default function LessonMaterialMakerPage() {
             />
           </div>
         </div>
+
+        {/* Stats Cards */}
+        <div className="lm-stats-grid">
+          <div className="lm-stat-card">
+            <div className="lm-stat-icon blue">
+              <i className="ri-book-open-line" />
+            </div>
+            <div className="lm-stat-content">
+              <span className="lm-stat-value">{savedLessons.length}</span>
+              <span className="lm-stat-label">Total Lessons</span>
+            </div>
+          </div>
+          <div className="lm-stat-card">
+            <div className="lm-stat-icon green">
+              <i className="ri-check-double-line" />
+            </div>
+            <div className="lm-stat-content">
+              <span className="lm-stat-value">{savedLessons.filter(l => l.status === 'published').length}</span>
+              <span className="lm-stat-label">Published</span>
+            </div>
+          </div>
+          <div className="lm-stat-card">
+            <div className="lm-stat-icon orange">
+              <i className="ri-draft-line" />
+            </div>
+            <div className="lm-stat-content">
+              <span className="lm-stat-value">{savedLessons.filter(l => l.status === 'draft').length}</span>
+              <span className="lm-stat-label">Drafts</span>
+            </div>
+          </div>
+          <div className="lm-stat-card">
+            <div className="lm-stat-icon purple">
+              <i className="ri-stack-line" />
+            </div>
+            <div className="lm-stat-content">
+              <span className="lm-stat-value">{Object.keys(groupedLessons).length}</span>
+              <span className="lm-stat-label">Levels</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Editing in Progress Banner */}
+        {currentEditingLesson && (
+          <div className="lm-editing-banner">
+            <div className="lm-editing-banner-content">
+              <i className="ri-edit-circle-line" />
+              <div className="lm-editing-banner-info">
+                <span className="lm-editing-banner-label">Editing in progress</span>
+                <span className="lm-editing-banner-title">
+                  Level {currentEditingLesson.level} • Ch.{currentEditingLesson.chapter} • L{currentEditingLesson.lessonNumber}: {currentEditingLesson.goalName}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="lm-editing-banner-btn"
+              onClick={() => setIsFullscreen(true)}
+              title="Continue Editing"
+            >
+              <i className="ri-fullscreen-line" />
+              <span>Continue Editing</span>
+            </button>
+          </div>
+        )}
+
+        {/* Viewing Template Banner */}
+        {selectedTemplate && !currentEditingLesson && (
+          <div className="lm-editing-banner lm-viewing-banner">
+            <div className="lm-editing-banner-content">
+              <i className="ri-eye-line" />
+              <div className="lm-editing-banner-info">
+                <span className="lm-editing-banner-label">Viewing Template</span>
+                <span className="lm-editing-banner-title">{selectedTemplate.name}</span>
+              </div>
+            </div>
+            <div className="lm-viewing-banner-actions">
+              <button
+                type="button"
+                className="lm-editing-banner-btn secondary"
+                onClick={() => setIsFullscreen(true)}
+                title="View Fullscreen"
+              >
+                <i className="ri-fullscreen-line" />
+                <span>View</span>
+              </button>
+              <button
+                type="button"
+                className="lm-editing-banner-btn"
+                onClick={() => handleUseTemplate(selectedTemplate)}
+                title="Use this template"
+              >
+                <i className="ri-add-line" />
+                <span>Use Template</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="lm-tabs">
@@ -2671,7 +2770,7 @@ export default function LessonMaterialMakerPage() {
 
   // Editor View (existing code)
   return (
-    <div className={`lm-builder ${isFullscreen ? 'lm-builder-fullscreen' : ''}`}>
+    <div className={`lm-builder ${isFullscreen ? 'lm-builder-fullscreen' : ''} ${isPreviewMode ? 'lm-preview-mode' : ''}`}>
       {/* Hidden file input for header image */}
       <input
         ref={fileInputRef}
@@ -2768,18 +2867,17 @@ export default function LessonMaterialMakerPage() {
             )}
           </div>
 
-          {/* View saved lesson link */}
-          {savedLessonUrl && (
-            <a
-              href={savedLessonUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="lm-toolbar-btn"
-              title="View Saved Lesson"
+          {/* Toggle Preview Mode */}
+          {currentEditingLesson && (
+            <button
+              type="button"
+              className={`lm-toolbar-btn ${isPreviewMode ? 'active' : ''}`}
+              onClick={() => setIsPreviewMode(!isPreviewMode)}
+              title={isPreviewMode ? 'Exit Preview' : 'Preview Lesson'}
             >
-              <i className="ri-external-link-line" />
-              <span>View</span>
-            </a>
+              <i className={isPreviewMode ? 'ri-edit-line' : 'ri-eye-line'} />
+              <span>{isPreviewMode ? 'Edit' : 'Preview'}</span>
+            </button>
           )}
 
           <button

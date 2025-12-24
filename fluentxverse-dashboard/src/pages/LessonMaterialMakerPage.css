@@ -88,6 +88,194 @@
 }
 
 /* ========================================
+   STATS CARDS
+   ======================================== */
+
+.lm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.lm-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.lm-stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.lm-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 20px;
+}
+
+.lm-stat-icon.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.lm-stat-icon.green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.lm-stat-icon.orange {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.lm-stat-icon.purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.lm-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lm-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.lm-stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Responsive stats grid */
+@media (max-width: 640px) {
+  .lm-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ========================================
+   EDITING IN PROGRESS BANNER
+   ======================================== */
+
+.lm-editing-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.lm-editing-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lm-editing-banner-content > i {
+  font-size: 24px;
+  color: #2563eb;
+}
+
+.lm-editing-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lm-editing-banner-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #2563eb;
+}
+
+.lm-editing-banner-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.lm-editing-banner-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.lm-editing-banner-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.lm-editing-banner-btn i {
+  font-size: 16px;
+}
+
+/* Viewing Template Banner variant */
+.lm-viewing-banner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fbbf24;
+}
+
+.lm-viewing-banner .lm-editing-banner-content > i {
+  color: #d97706;
+}
+
+.lm-viewing-banner .lm-editing-banner-label {
+  color: #d97706;
+}
+
+.lm-viewing-banner .lm-editing-banner-title {
+  color: #92400e;
+}
+
+.lm-viewing-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lm-editing-banner-btn.secondary {
+  background: #fff;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+}
+
+.lm-editing-banner-btn.secondary:hover {
+  background: #eff6ff;
+}
+
+/* ========================================
    MODAL STYLES
    ======================================== */
 
@@ -885,6 +1073,69 @@
   max-width: 100%;
   border-radius: 0;
   min-height: 100vh;
+}
+
+/* Preview Mode - Hide all editing controls */
+.lm-preview-mode .lm-header-toolbar,
+.lm-preview-mode .lm-section-toolbar,
+.lm-preview-mode .lm-add-btn,
+.lm-preview-mode .lm-remove-btn,
+.lm-preview-mode .lm-move-btn,
+.lm-preview-mode .lm-edit-btn,
+.lm-preview-mode .lm-section-actions,
+.lm-preview-mode .lm-vocab-add,
+.lm-preview-mode .lm-step-add,
+.lm-preview-mode .lm-image-upload-btn,
+.lm-preview-mode [contenteditable] {
+  pointer-events: none;
+}
+
+.lm-preview-mode .lm-header-toolbar,
+.lm-preview-mode .lm-section-toolbar,
+.lm-preview-mode .lm-add-btn,
+.lm-preview-mode .lm-remove-btn,
+.lm-preview-mode .lm-move-btn,
+.lm-preview-mode .lm-edit-btn,
+.lm-preview-mode .lm-section-actions,
+.lm-preview-mode .lm-vocab-add,
+.lm-preview-mode .lm-step-add,
+.lm-preview-mode .lm-image-upload-btn {
+  display: none !important;
+}
+
+.lm-preview-mode [contenteditable] {
+  cursor: default;
+  outline: none !important;
+  border-color: transparent !important;
+}
+
+.lm-preview-mode [contenteditable]:hover,
+.lm-preview-mode [contenteditable]:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Preview mode indicator */
+.lm-preview-mode .lm-toolbar {
+  background: rgba(16, 185, 129, 0.95);
+  border-color: #059669;
+}
+
+.lm-preview-mode .lm-toolbar .lm-toolbar-title {
+  color: #fff;
+}
+
+.lm-preview-mode .lm-toolbar .lm-toolbar-title i {
+  color: #fff;
+}
+
+.lm-preview-mode .lm-toolbar .lm-back-btn {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lm-preview-mode .lm-toolbar .lm-back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Hide dashboard elements when fullscreen */
