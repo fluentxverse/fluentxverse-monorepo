@@ -12,8 +12,23 @@ RUN bun install
 # Copy source code (including .env.production for Vite)
 COPY . .
 
-# Build the app with production mode (Vite will auto-load .env.production)
-ENV NODE_ENV=production
+# Set build-time environment variables for Vite
+# These get baked into the JavaScript bundle at build time
+ARG VITE_API_URL=https://api.fluentxverse.xyz
+ARG VITE_SOCKET_URL=wss://ws.fluentxverse.xyz
+ARG VITE_THIRDWEB_CLIENT_ID=1cb406c4735e4b76f671f143794eab4c
+ARG VITE_TICKET_CONTRACT_ADDRESS=0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db
+ARG VITE_TICKET_CHAIN_ID=421614
+ARG VITE_VAULT_WALLET_ADDRESS=0xa2a3D233b95fCB94409555B12444399d4b72E239
+
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
+ENV VITE_THIRDWEB_CLIENT_ID=$VITE_THIRDWEB_CLIENT_ID
+ENV VITE_TICKET_CONTRACT_ADDRESS=$VITE_TICKET_CONTRACT_ADDRESS
+ENV VITE_TICKET_CHAIN_ID=$VITE_TICKET_CHAIN_ID
+ENV VITE_VAULT_WALLET_ADDRESS=$VITE_VAULT_WALLET_ADDRESS
+
+# Build the app - Vite will use the ENV variables above
 RUN bun run build
 
 # Production stage - use nginx to serve static files
