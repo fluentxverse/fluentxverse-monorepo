@@ -42,7 +42,7 @@ docker compose pull
 APP_CONTAINERS="fluentxverse-server fluentxverse-student fluentxverse-tutor fluentxverse-dashboard"
 
 log "🔄 Rebuilding app containers only (preserving database data)..."
-docker compose build $APP_CONTAINERS
+docker compose build --no-cache $APP_CONTAINERS
 
 log "🔄 Restarting app containers..."
 docker compose up -d --no-deps $APP_CONTAINERS
