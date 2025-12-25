@@ -24,13 +24,23 @@ export interface JwtAuthPayload {
   exp?: number;  // Expiration
 }
 
+// Get cookie domain for production (allows sharing across subdomains)
+const getCookieDomain = (): string | undefined => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (!isProduction) return undefined; // localhost doesn't need domain
+  
+  // Use environment variable if set, otherwise default to .fluentxverse.xyz
+  return process.env.COOKIE_DOMAIN || '.fluentxverse.xyz';
+};
+
 // Cookie configuration helper
 export const getCookieConfig = (isProduction: boolean) => ({
   httpOnly: true,
   secure: isProduction,
   sameSite: 'lax' as const,
   maxAge: 60 * 60, // 1 hour
-  path: '/'
+  path: '/',
+  domain: getCookieDomain()
 });
 
 // Get JWT secret from environment (with validation)
