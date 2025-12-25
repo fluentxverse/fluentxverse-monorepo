@@ -3,6 +3,7 @@ import { useLocation } from 'preact-iso';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api';
 import './StudentProfilePage.css';
 
 interface StudentProfilePageProps {
@@ -63,15 +64,13 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
   // Fetch student data (either from bookingId or studentId)
   useEffect(() => {
     const fetchData = async () => {
-      const apiHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-      
       // If we have a bookingId, first fetch lesson details to get student info
       if (bookingId) {
         console.log('[StudentProfile] Fetching lesson data for bookingId:', bookingId);
         
         try {
           setLoading(true);
-          const lessonUrl = `http://${apiHost}:8765/schedule/tutor-lesson/${bookingId}`;
+          const lessonUrl = `${API_BASE_URL}/schedule/tutor-lesson/${bookingId}`;
           console.log('[StudentProfile] Requesting lesson:', lessonUrl);
           
           const lessonResponse = await fetch(lessonUrl, {
@@ -85,7 +84,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
             setLessonData(lessonResult.data);
             
             // Now fetch full student profile using the studentId from lesson
-            const studentUrl = `http://${apiHost}:8765/tutor/student/${lessonResult.data.studentId}`;
+            const studentUrl = `${API_BASE_URL}/tutor/student/${lessonResult.data.studentId}`;
             console.log('[StudentProfile] Requesting student:', studentUrl);
             
             const studentResponse = await fetch(studentUrl, {
@@ -123,7 +122,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
       
       try {
         setLoading(true);
-        const url = `http://${apiHost}:8765/tutor/student/${studentId}`;
+        const url = `${API_BASE_URL}/tutor/student/${studentId}`;
         console.log('[StudentProfile] Requesting:', url);
         
         const response = await fetch(url, {
