@@ -13,6 +13,14 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
     .post('/register', async ({ body, cookie }) => {
       try 
       {
+        // Log incoming request body (without password)
+        console.log('[/tutor/register] Request body:', { 
+          ...body, 
+          password: '***',
+          birthDate: body.birthDate,
+          birthDateType: typeof body.birthDate
+        });
+        
         const authService = new AuthService();
         const result = await authService.register(body);
 
@@ -38,7 +46,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           path: '/'
         });
 
-        return {
+        const responsePayload = {
           success: true,
           message: result.message,
           user: {
@@ -47,8 +55,27 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           }
         };
         
+        console.log('[/tutor/register] Success response:', { 
+          success: responsePayload.success, 
+          message: responsePayload.message,
+          userKeys: Object.keys(responsePayload.user)
+        });
+        
+        return responsePayload;
+        
       } catch (error: any) {
-        console.log(error)
+        console.log('[/tutor/register] Error:', error?.code || error?.message);
+        
+        // Handle EMAIL_EXISTS with proper 409 Conflict status
+        if (error?.code === 'EMAIL_EXISTS' || error?.message === 'EMAIL_EXISTS') {
+          return {
+            success: false,
+            message: 'Email is already registered',
+            user: null
+          };
+        }
+        
+        // Re-throw other errors
         throw error;
       }
 

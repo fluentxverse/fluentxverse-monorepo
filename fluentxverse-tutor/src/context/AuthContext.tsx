@@ -30,6 +30,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   getUserId: () => string | undefined; // Helper to get userId consistently
+  setUserFromRegistration: (userData: AuthUser) => void; // Set user after successful registration
 }
 const allowedRole = 'tutor';
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -155,6 +156,20 @@ export const AuthProvider = ({ children }: { children: any }) => {
     return user?.userId;
   };
 
+  // Set user directly after successful registration (cookie already set by server)
+  const setUserFromRegistration = (userData: AuthUser) => {
+    setUser(userData);
+    // Persist to localStorage for session persistence
+    const first = userData.firstName || '';
+    const last = userData.lastName || '';
+    if (first || last) {
+      localStorage.setItem('fxv_user_fullname', `${first} ${last}`.trim());
+    }
+    if (userData.userId) {
+      localStorage.setItem('fxv_user_id', userData.userId);
+    }
+  };
+
   const logout = async () => {
     try {
       await logoutUser();
@@ -174,7 +189,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout, getUserId }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout, getUserId, setUserFromRegistration }}>
       {children}
     </AuthContext.Provider>
   );

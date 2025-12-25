@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'preact/compat';
+import { useState, useEffect, useRef } from 'preact/compat';
 import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import Footer from '../Components/Footer/Footer';
@@ -8,12 +8,15 @@ import { useAuthContext } from '../context/AuthContext';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
+  // Ref-based guard to prevent double-submit (survives re-renders)
+  const submitInProgressRef = useRef(false);
+  const { setUserFromRegistration } = useAuthContext();
+  
   useEffect(() => {
     document.title = 'Register | FluentXVerse';
   }, []);
 
   const { route } = useLocation();
-  const { user, login } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,39 +35,49 @@ const RegisterPage = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     
-    if (isSubmitting) return;
+    // Double-guard: both state and ref to prevent race conditions
+    if (isSubmitting || submitInProgressRef.current) return;
     
+    submitInProgressRef.current = true;
     setError(null);
     setIsSubmitting(true);
     
     try {
       // Map form data to match server schema
-      const result = await register({
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        middleName: formData.middleName || "",
-        lastName: formData.lastName,
-        suffix: formData.suffix || "",
-        birthDate: formData.dateOfBirth,
-        mobileNumber: formData.mobile,
-      });
-      // New Axios response shape: { success, message, user }
-      if (result?.success) {
+      // Ensure all values are strings to avoid schema validation errors
+      const payload = {
+        email: String(formData.email || '').trim(),
+        password: String(formData.password || ''),
+        firstName: String(formData.firstName || '').trim(),
+        middleName: String(formData.middleName || '').trim(),
+        lastName: String(formData.lastName || '').trim(),
+        suffix: String(formData.suffix || '').trim(),
+        birthDate: String(formData.dateOfBirth || ''),
+        mobileNumber: String(formData.mobile || '').trim(),
+      };
+      
+      console.log('[Register] Sending payload:', { ...payload, password: '***' });
+      
+      const result = await register(payload);
+      
+      // Server returns { success, message, user }
+      if (result?.success && result?.user) {
         setSuccess(true);
-        // Cookie already set server-side during register; user is logged in.
-        // Optionally refresh auth context if available.
-        try {
-          await login(formData.email, formData.password); // ensures context populated
-        } catch {
-          // If login fails (should rarely happen), we still proceed thanks to cookie.
-        }
-        window.location.href = '/home';
+        // Cookie is already set server-side during registration.
+        // Set the user in AuthContext so the app knows we're logged in
+        setUserFromRegistration(result.user);
+        // Use replace to prevent back-button returning to register form
+        window.location.replace('/home');
       } else {
-        setError('Registration failed. Please try again.');
+        // Server returned success: false with a message
+        setError(result?.message || 'Registration failed. Please try again.');
+        submitInProgressRef.current = false;
       }
     } catch (err: any) {
-      setError(err?.message || 'An unexpected error occurred. Please try again.');
+      // Extract error message from Axios error response or error object
+      const errorMsg = err?.response?.data?.message || err?.message || 'An unexpected error occurred. Please try again.';
+      setError(errorMsg);
+      submitInProgressRef.current = false;
     } finally {
       setIsSubmitting(false);
     }
