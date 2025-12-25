@@ -118,6 +118,50 @@ CREATE INDEX IF NOT EXISTS idx_system_messages_created_at ON system_messages(cre
 CREATE INDEX IF NOT EXISTS idx_system_message_recipients_user ON system_message_recipients(user_id, user_type);
 CREATE INDEX IF NOT EXISTS idx_system_message_recipients_read ON system_message_recipients(user_id, is_read);
 
+-- ===========================================
+-- MIGRATIONS: Fix existing deployments
+-- These are idempotent and safe to run multiple times
+-- ===========================================
+
+-- Fix: system_messages.created_by should be VARCHAR, not UUID (thirdweb user IDs are strings)
+-- Drop FK constraint if it exists (from older schema versions)
+ALTER TABLE system_messages DROP CONSTRAINT IF EXISTS system_messages_created_by_fkey;
+
+-- Fix column types if they were created as UUID (older schema)
+DO $$
+BEGIN
+  -- Fix created_by column type if needed
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'system_messages' 
+    AND column_name = 'created_by' 
+    AND data_type = 'uuid'
+  ) THEN
+    ALTER TABLE system_messages ALTER COLUMN created_by TYPE VARCHAR(255) USING created_by::text;
+  END IF;
+  
+  -- Fix user_id column type if needed
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'system_message_recipients' 
+    AND column_name = 'user_id' 
+    AND data_type = 'uuid'
+  ) THEN
+    -- Drop indexes first
+    DROP INDEX IF EXISTS idx_system_message_recipients_user;
+    DROP INDEX IF EXISTS idx_system_message_recipients_read;
+    -- Alter column
+    ALTER TABLE system_message_recipients ALTER COLUMN user_id TYPE VARCHAR(255) USING user_id::text;
+    -- Recreate indexes
+    CREATE INDEX idx_system_message_recipients_user ON system_message_recipients(user_id, user_type);
+    CREATE INDEX idx_system_message_recipients_read ON system_message_recipients(user_id, is_read);
+  END IF;
+END $$;
+
+-- ===========================================
+-- END MIGRATIONS
+-- ===========================================
+
 COMMENT ON TABLE chat_messages IS 'Stores chat messages exchanged during tutoring sessions';
 COMMENT ON TABLE session_participants IS 'Tracks users who join tutoring sessions via WebSocket';
 COMMENT ON TABLE system_messages IS 'Stores system-wide announcements and messages from FluentXVerse admin';
