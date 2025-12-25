@@ -1,8 +1,52 @@
 import Elysia, { t } from 'elysia';
 import { inboxService } from '../services/inbox.services/inbox.service';
+import { db } from '../db/postgres';
 import type { MessageCategory, TargetAudience, MessagePriority } from '../services/inbox.services/inbox.interface';
 
 const Inbox = new Elysia({ prefix: '/inbox' })
+
+  /**
+   * Health check for inbox - verifies database tables exist
+   * GET /inbox/health
+   */
+  .get('/health', async () => {
+    try {
+      // Check if tables exist
+      const tablesResult = await db`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name IN ('system_messages', 'system_message_recipients')
+      `;
+      
+      const tables = tablesResult.map((r: any) => r.table_name);
+      const messagesTableExists = tables.includes('system_messages');
+      const recipientsTableExists = tables.includes('system_message_recipients');
+      
+      // Get message count
+      let messageCount = 0;
+      if (messagesTableExists) {
+        const countResult = await db`SELECT COUNT(*) as count FROM system_messages`;
+        messageCount = parseInt(countResult[0]?.count || '0', 10);
+      }
+      
+      return {
+        success: true,
+        data: {
+          messagesTableExists,
+          recipientsTableExists,
+          messageCount,
+          tables
+        }
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: 'Database check failed',
+        details: error?.message
+      };
+    }
+  })
 
   /**
    * Get messages for a user (student or tutor)
@@ -34,11 +78,13 @@ const Inbox = new Elysia({ prefix: '/inbox' })
         success: true,
         data: result
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in /inbox/messages:', error);
       return {
         success: false,
-        error: 'Failed to get messages'
+        error: 'Failed to get messages',
+        // Include error details in development for debugging
+        ...(process.env.NODE_ENV !== 'production' && { details: error?.message })
       };
     }
   })
@@ -65,11 +111,13 @@ const Inbox = new Elysia({ prefix: '/inbox' })
         success: true,
         data: { unreadCount: count }
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in /inbox/unread-count:', error);
       return {
         success: false,
-        error: 'Failed to get unread count'
+        error: 'Failed to get unread count',
+        // Include error details in development for debugging
+        ...(process.env.NODE_ENV !== 'production' && { details: error?.message })
       };
     }
   })

@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS system_messages (
   category VARCHAR(50) NOT NULL DEFAULT 'announcement' CHECK (category IN ('announcement', 'update', 'alert', 'news', 'promotion')),
   target_audience VARCHAR(20) NOT NULL DEFAULT 'all' CHECK (target_audience IN ('all', 'students', 'tutors')),
   priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
-  created_by UUID REFERENCES users(id),
+  created_by VARCHAR(255),  -- User ID from thirdweb (not UUID)
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS system_messages (
 CREATE TABLE IF NOT EXISTS system_message_recipients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   message_id UUID REFERENCES system_messages(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL,
+  user_id VARCHAR(255) NOT NULL,  -- User ID from thirdweb (not UUID)
   user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('tutor', 'student')),
   is_read BOOLEAN DEFAULT false,
   is_pinned BOOLEAN DEFAULT false,

@@ -256,14 +256,14 @@ export class InboxService {
       ? ['all', 'students'] 
       : ['all', 'tutors'];
 
-    const result = await db.unsafe(`
+    const result = await db`
       SELECT COUNT(*) as unread
       FROM system_messages sm
       LEFT JOIN system_message_recipients smr 
-        ON sm.id = smr.message_id AND smr.user_id = '${userId}'
-      WHERE sm.target_audience IN ('${targetAudiences.join("','")}')
+        ON sm.id = smr.message_id AND smr.user_id = ${userId}
+      WHERE sm.target_audience = ANY(${targetAudiences})
         AND COALESCE(smr.is_read, false) = false
-    `);
+    `;
 
     return parseInt(result[0]?.unread || '0', 10);
   }
