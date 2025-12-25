@@ -1,6 +1,5 @@
 // Ticket API functions
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+import { API_BASE_URL } from '../config/api';
 
 export interface TicketPurchase {
   id: string;

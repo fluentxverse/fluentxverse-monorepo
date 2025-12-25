@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { API_BASE_URL } from '../config/api';
 
 let unauthorizedHandler: (() => void) | null = null;
 let isLoginInProgress = false;
@@ -22,7 +23,7 @@ export const forceAuthCleanup = () => {
 
 // Configure Axios client to send cookies with requests
 export const client = axios.create({
-  baseURL: 'http://localhost:8765',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Cache-Control': 'no-cache',

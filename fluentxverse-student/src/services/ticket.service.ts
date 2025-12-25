@@ -2,12 +2,12 @@ import { getContract, defineChain, sendAndConfirmTransaction } from "thirdweb";
 import { type Account } from "thirdweb/wallets";
 import { safeTransferFrom } from "thirdweb/extensions/erc1155";
 import { thirdwebClient } from "../config/wallet";
+import { API_BASE_URL } from "../config/api";
 
 // Contract configuration - should match server
 const TICKET_CONTRACT_ADDRESS = import.meta.env.VITE_TICKET_CONTRACT_ADDRESS || "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db";
 const CHAIN_ID = Number(import.meta.env.VITE_TICKET_CHAIN_ID) || 421614; // Arbitrum Sepolia testnet
 const VAULT_WALLET_ADDRESS = import.meta.env.VITE_VAULT_WALLET_ADDRESS || "";
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
 
 // Get contract instance
 const getTicketContract = () => {
