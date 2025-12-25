@@ -1,7 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { NotificationService } from '../services/notification.services/notification.service';
-import type { AuthData } from '@/services/auth.services/auth.interface';
-import { refreshAuthCookie } from '../utils/refreshCookie';
+import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { getIO } from '../socket/socket.server';
 
 const notificationService = new NotificationService();
@@ -23,12 +22,16 @@ const Notification = new Elysia({ prefix: '/notifications' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const userId = payload.userId;
 
-      // Refresh cookie on every request (adminAuth refresh not supported by helper)
+      // Refresh JWT cookie on every request (adminAuth refresh not supported)
       if (!isAdmin) {
-        refreshAuthCookie(cookie, authData, cookieName);
+        await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
       }
 
       const limit = query.limit ? parseInt(query.limit, 10) : 50;
@@ -92,11 +95,16 @@ const Notification = new Elysia({ prefix: '/notifications' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const userId = payload.userId;
 
+      // Refresh JWT cookie on every request (adminAuth refresh not supported)
       if (!isAdmin) {
-        refreshAuthCookie(cookie, authData, cookieName);
+        await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
       }
 
       const unreadCount = await notificationService.getUnreadCount(userId);
@@ -130,11 +138,16 @@ const Notification = new Elysia({ prefix: '/notifications' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const userId = payload.userId;
 
+      // Refresh JWT cookie on every request (adminAuth refresh not supported)
       if (!isAdmin) {
-        refreshAuthCookie(cookie, authData, cookieName);
+        await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
       }
 
       const success = await notificationService.markAsRead(params.id, userId);
@@ -179,11 +192,16 @@ const Notification = new Elysia({ prefix: '/notifications' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const userId = payload.userId;
 
+      // Refresh JWT cookie on every request (adminAuth refresh not supported)
       if (!isAdmin) {
-        refreshAuthCookie(cookie, authData, cookieName);
+        await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
       }
 
       const updated = await notificationService.markAllAsRead(userId);
@@ -225,11 +243,16 @@ const Notification = new Elysia({ prefix: '/notifications' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const userId = payload.userId;
 
+      // Refresh JWT cookie on every request (adminAuth refresh not supported)
       if (!isAdmin) {
-        refreshAuthCookie(cookie, authData, cookieName);
+        await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
       }
 
       const success = await notificationService.deleteNotification(params.id, userId);

@@ -2,30 +2,33 @@ import Elysia, { t } from 'elysia';
 import { InterviewService } from '../services/interview.services/interview.service';
 import { NotificationService } from '../services/notification.services/notification.service';
 import { getIO } from '../socket/socket.server';
-import type { AuthData } from '@/services/auth.services/auth.interface';
-import { refreshAuthCookie } from '../utils/refreshCookie';
+import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 
 const interviewService = new InterviewService();
 const notificationService = new NotificationService();
 
 const Interview = new Elysia({ prefix: '/interview' })
-  // Helper: verify admin authentication via adminAuth cookie
+  // Helper: verify admin authentication via adminAuth cookie (JWT)
   .derive(({ cookie, set }) => {
-    const requireAdmin = (): AuthData | null => {
+    const requireAdmin = async (): Promise<JwtAuthPayload | null> => {
       const raw = cookie.adminAuth?.value;
       if (!raw) {
         set.status = 401;
         return null;
       }
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return null;
+      }
       // Check for admin or superadmin role
-      const role = (authData as any).role;
+      const role = payload.role;
       if (role && role !== 'admin' && role !== 'superadmin') {
         set.status = 403;
         return null;
       }
-      // Note: adminAuth refresh not supported by refreshAuthCookie helper; skip refresh
-      return authData;
+      // Note: adminAuth refresh handled separately
+      return payload;
     };
     return { requireAdmin };
   })
@@ -35,7 +38,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .post('/slots', async ({ body, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -69,7 +72,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .delete('/slots', async ({ body, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -99,7 +102,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .get('/week', async ({ query, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -132,8 +135,13 @@ const Interview = new Elysia({ prefix: '/interview' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const weekOffset = query.weekOffset ? parseInt(query.weekOffset, 10) : 0;
       const slots = await interviewService.getAvailableSlots(weekOffset);
@@ -164,9 +172,14 @@ const Interview = new Elysia({ prefix: '/interview' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const booking = await interviewService.getTutorInterview(tutorId);
 
@@ -196,9 +209,14 @@ const Interview = new Elysia({ prefix: '/interview' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const booking = await interviewService.bookSlot(body.slotId, tutorId);
 
@@ -262,9 +280,14 @@ const Interview = new Elysia({ prefix: '/interview' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       // Get booking details before cancelling (for notification)
       const existingBooking = await interviewService.getTutorInterview(tutorId);
@@ -313,7 +336,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .post('/admin/cancel', async ({ body, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -343,7 +366,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .post('/complete', async ({ body, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -374,7 +397,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .post('/result', async ({ body, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -427,7 +450,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .get('/result/:tutorId', async ({ params, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -454,7 +477,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .get('/pending', async ({ query, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -481,7 +504,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .post('/recording', async ({ request, set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -547,7 +570,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .get('/stats', async ({ set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -574,7 +597,7 @@ const Interview = new Elysia({ prefix: '/interview' })
    */
   .get('/today', async ({ set, requireAdmin }) => {
     try {
-      const admin = requireAdmin();
+      const admin = await requireAdmin();
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }

@@ -5,8 +5,8 @@ import Elysia, { t } from "elysia";
 import AuthService from "../services/auth.services/tutor.service";
 import { TutorService } from "../services/tutor.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
-import type { AuthData, LoginReturnParams, MeResponse } from "@/services/auth.services/auth.interface";
-import { refreshAuthCookie } from "../utils/refreshCookie";
+import type { LoginReturnParams, MeResponse } from "@/services/auth.services/auth.interface";
+import { signAuthToken, verifyAuthToken, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
 
 // Define routes as an Elysia plugin instance to preserve route types
 const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
@@ -27,23 +27,23 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         // Immediately log the user in after successful registration
         const userData: LoginReturnParams = await authService.login({ email: body.email, password: body.password });
 
-        // Set httpOnly cookie with 1-hour expiration and basic profile
-        cookie.tutorAuth?.set({
-          value: JSON.stringify({
-            userId: userData.id,
-            email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            walletAddress: userData.walletAddress,
-            mobileNumber: userData.mobileNumber,
-            tier: userData.tier
+        // Create signed JWT token
+        const isProduction = process.env.NODE_ENV === 'production';
+        const token = await signAuthToken({
+          userId: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          walletAddress: userData.walletAddress,
+          mobileNumber: userData.mobileNumber,
+          tier: userData.tier,
+          role: 'tutor'
+        });
 
-          }),
-          httpOnly: true,
-          secure: false, // False for localhost HTTP dev
-          sameSite: 'lax', // Lax works for localhost same-site
-          maxAge: 60 * 60,
-          path: '/'
+        // Set httpOnly cookie with signed JWT
+        cookie.tutorAuth?.set({
+          value: token,
+          ...getCookieConfig(isProduction)
         });
 
         const responsePayload = {
@@ -86,9 +86,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       try {
         const authService = new AuthService();
         const userData = await authService.login(body);
-      
-        // Handle smartWalletAddress - it might be a string or object from DB
-
 
         // Normalize user object (same pattern as student app)
         const normalizedUser = {
@@ -103,27 +100,26 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           walletAddress: userData.walletAddress
         };
 
-        // Set cookie - don't specify domain for localhost to work correctly
+        // Create signed JWT token
+        const isProduction = process.env.NODE_ENV === 'production';
+        const token = await signAuthToken({
+          userId: normalizedUser.userId,
+          email: normalizedUser.email,
+          firstName: normalizedUser.firstName,
+          lastName: normalizedUser.lastName,
+          mobileNumber: normalizedUser.mobileNumber,
+          tier: normalizedUser.tier,
+          role: normalizedUser.role,
+          walletAddress: normalizedUser.walletAddress
+        });
+
+        // Set httpOnly cookie with signed JWT
         cookie.tutorAuth?.set({
-          value: JSON.stringify({
-            userId: normalizedUser.userId,
-            email: normalizedUser.email,
-            firstName: normalizedUser.firstName,
-            lastName: normalizedUser.lastName,
-            mobileNumber: normalizedUser.mobileNumber,
-            tier: normalizedUser.tier,
-            role: normalizedUser.role,
-            walletAddress: normalizedUser.walletAddress
-          }),
-          httpOnly: true,
-          secure: false, // False for localhost HTTP
-          sameSite: "lax", // Lax works for localhost
-          maxAge: 60 * 60, // 1 hour
-          path: "/",
-          // Don't set domain - let browser default to current host
+          value: token,
+          ...getCookieConfig(isProduction)
         });
         
-        return { success: true,user: normalizedUser };
+        return { success: true, user: normalizedUser };
       } catch (error: any) {
         console.log(error);
         throw error;
@@ -131,11 +127,14 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
     }, LoginSchema)
     
     .post('/logout', async ({ cookie, set }) => {
+      // Must match the same attributes used when setting the cookie
+      const isProduction = process.env.NODE_ENV === 'production';
+      
       // Aggressively clear the cookie with all possible methods
       cookie.tutorAuth?.set({
         value: '',
         httpOnly: true,
-        secure: false,
+        secure: isProduction, // Must match login cookie
         sameSite: 'lax',
         maxAge: 0, // Expire immediately
         expires: new Date(0), // Also set explicit past date
@@ -151,12 +150,31 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
     }, LogoutSchema)
     
     // Renew session cookie (extends maxAge) without re-authenticating
-    .post('/refresh', async ({ cookie, set, headers }) => {
+    .post('/refresh', async ({ cookie, set }) => {
       const raw = cookie.tutorAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      
+      // Verify the JWT token
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) throw new Error('Invalid or expired token');
 
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Issue a fresh JWT with extended expiry
+      const isProduction = process.env.NODE_ENV === 'production';
+      const newToken = await signAuthToken({
+        userId: payload.userId,
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        walletAddress: payload.walletAddress,
+        mobileNumber: payload.mobileNumber,
+        tier: payload.tier,
+        role: payload.role
+      });
+
+      cookie.tutorAuth?.set({
+        value: newToken,
+        ...getCookieConfig(isProduction)
+      });
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -165,12 +183,31 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
     })
 
     // Alias for /refresh at /tutor/refresh path
-    .post('/tutor/refresh', async ({ cookie, set, headers }) => {
+    .post('/tutor/refresh', async ({ cookie, set }) => {
       const raw = cookie.tutorAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      
+      // Verify the JWT token
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) throw new Error('Invalid or expired token');
 
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Issue a fresh JWT with extended expiry
+      const isProduction = process.env.NODE_ENV === 'production';
+      const newToken = await signAuthToken({
+        userId: payload.userId,
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        walletAddress: payload.walletAddress,
+        mobileNumber: payload.mobileNumber,
+        tier: payload.tier,
+        role: payload.role
+      });
+
+      cookie.tutorAuth?.set({
+        value: newToken,
+        ...getCookieConfig(isProduction)
+      });
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -184,26 +221,44 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         if (!raw) {
           throw new Error('Not authenticated');
         }
-        const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+        
+        // Verify the JWT token
+        const payload = await verifyAuthToken(String(raw));
+        if (!payload) throw new Error('Invalid or expired token');
 
-        // Refresh cookie on every /me call
-        refreshAuthCookie(cookie, authData, 'tutorAuth');
+        // Refresh cookie on every /me call - issue new JWT
+        const isProduction = process.env.NODE_ENV === 'production';
+        const newToken = await signAuthToken({
+          userId: payload.userId,
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          walletAddress: payload.walletAddress,
+          mobileNumber: payload.mobileNumber,
+          tier: payload.tier,
+          role: payload.role
+        });
+
+        cookie.tutorAuth?.set({
+          value: newToken,
+          ...getCookieConfig(isProduction)
+        });
 
         // Fetch profile picture from database
         const tutorService = new TutorService();
-        const profilePicture = await tutorService.getCurrentProfilePicture(authData.userId);
+        const profilePicture = await tutorService.getCurrentProfilePicture(payload.userId);
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
         set.headers['Vary'] = 'Cookie';
         return { user: {
-          userId: authData.userId,
-          email: authData.email,
-          firstName: authData.firstName ?? undefined,
-          lastName: authData.lastName ?? undefined,
-          walletAddress: authData.walletAddress ?? undefined,
-          mobileNumber: authData.mobileNumber ?? undefined,
-          tier: authData.tier,
+          userId: payload.userId,
+          email: payload.email,
+          firstName: payload.firstName ?? undefined,
+          lastName: payload.lastName ?? undefined,
+          walletAddress: payload.walletAddress ?? undefined,
+          mobileNumber: payload.mobileNumber ?? undefined,
+          tier: payload.tier ?? 1,
           profilePicture: profilePicture ?? undefined
         } };
       } catch (error: any) {
@@ -215,21 +270,34 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       try {
         const raw = cookie.tutorAuth?.value;
         if (!raw) throw new Error('Not authenticated');
-        const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+        
+        // Verify JWT token
+        const payload = await verifyAuthToken(String(raw));
+        if (!payload) throw new Error('Invalid or expired token');
 
         const authService = new AuthService();
         const result = await authService.updatePersonalInfo({
-          userId: authData.userId,
+          userId: payload.userId,
           ...body
         });
 
-        // Update mobileNumber in cookie if phoneNumber was updated
-        if (body.phoneNumber) {
-          authData.mobileNumber = body.phoneNumber;
-        }
+        // Update mobileNumber in token if phoneNumber was updated
+        const isProduction = process.env.NODE_ENV === 'production';
+        const newToken = await signAuthToken({
+          userId: payload.userId,
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          walletAddress: payload.walletAddress,
+          mobileNumber: body.phoneNumber || payload.mobileNumber,
+          tier: payload.tier,
+          role: payload.role
+        });
         
-        // Refresh cookie with 1-hour expiry
-        refreshAuthCookie(cookie, authData, 'tutorAuth');
+        cookie.tutorAuth?.set({
+          value: newToken,
+          ...getCookieConfig(isProduction)
+        });
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
@@ -245,10 +313,13 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       try {
         const raw = cookie.tutorAuth?.value;
         if (!raw) throw new Error('Not authenticated');
-        const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+        
+        // Verify JWT token
+        const payload = await verifyAuthToken(String(raw));
+        if (!payload) throw new Error('Invalid or expired token');
 
         const authService = new AuthService();
-        const result = await authService.getPersonalInfo(authData.userId);
+        const result = await authService.getPersonalInfo(payload.userId);
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
@@ -264,18 +335,35 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       try {
         const raw = cookie.tutorAuth?.value;
         if (!raw) throw new Error('Not authenticated');
-        const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+        
+        // Verify JWT token
+        const payload = await verifyAuthToken(String(raw));
+        if (!payload) throw new Error('Invalid or expired token');
 
         const authService = new AuthService();
         const result = await authService.updateEmail({
-          userId: authData.userId,
+          userId: payload.userId,
           newEmail: body.newEmail,
           currentPassword: body.currentPassword
         });
 
-        // Update email in cookie and refresh with 1-hour expiry
-        authData.email = body.newEmail.toLowerCase();
-        refreshAuthCookie(cookie, authData, 'tutorAuth');
+        // Update email in token and refresh
+        const isProduction = process.env.NODE_ENV === 'production';
+        const newToken = await signAuthToken({
+          userId: payload.userId,
+          email: body.newEmail.toLowerCase(),
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          walletAddress: payload.walletAddress,
+          mobileNumber: payload.mobileNumber,
+          tier: payload.tier,
+          role: payload.role
+        });
+        
+        cookie.tutorAuth?.set({
+          value: newToken,
+          ...getCookieConfig(isProduction)
+        });
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
@@ -291,17 +379,35 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       try {
         const raw = cookie.tutorAuth?.value;
         if (!raw) throw new Error('Not authenticated');
-        const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+        
+        // Verify JWT token
+        const payload = await verifyAuthToken(String(raw));
+        if (!payload) throw new Error('Invalid or expired token');
 
         const authService = new AuthService();
         const result = await authService.updatePassword({
-          userId: authData.userId,
+          userId: payload.userId,
           currentPassword: body.currentPassword,
           newPassword: body.newPassword
         });
 
-        // Refresh cookie with 1-hour expiry
-        refreshAuthCookie(cookie, authData, 'tutorAuth');
+        // Refresh token
+        const isProduction = process.env.NODE_ENV === 'production';
+        const newToken = await signAuthToken({
+          userId: payload.userId,
+          email: payload.email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          walletAddress: payload.walletAddress,
+          mobileNumber: payload.mobileNumber,
+          tier: payload.tier,
+          role: payload.role
+        });
+        
+        cookie.tutorAuth?.set({
+          value: newToken,
+          ...getCookieConfig(isProduction)
+        });
 
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';

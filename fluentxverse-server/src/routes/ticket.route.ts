@@ -3,6 +3,7 @@ import { ticketService, type TicketTier } from '@/services/ticket.services/ticke
 import { cacheGetOrSet, invalidateCache } from '@/db/redis';
 import { getIO } from '@/socket/socket.server';
 import { notifyTicketReceived } from '@/socket/handlers/ticket.handler';
+import { verifyAuthToken } from '@/utils/jwt';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -385,20 +386,19 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         };
       }
 
-      let userId: string | undefined;
-      try {
-        // Cookie value might be a string or already parsed object
-        const authData = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        userId = authData.userId;
-        console.log('🔐 my-purchases: parsed userId:', userId);
-      } catch (e) {
-        console.error('🔐 my-purchases: failed to parse auth cookie:', e);
+      // Verify JWT token
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        console.error('🔐 my-purchases: Invalid or expired JWT token');
         set.status = 401;
         return {
           success: false,
-          error: 'Invalid authentication'
+          error: 'Invalid or expired token'
         };
       }
+      
+      const userId = payload.userId;
+      console.log('🔐 my-purchases: verified userId from JWT:', userId);
 
       if (!userId) {
         set.status = 401;

@@ -1,6 +1,6 @@
 import Elysia, { t } from "elysia";
 import StudentService from "../services/auth.services/student.service";
-import { refreshAuthCookie } from "../utils/refreshCookie";
+import { verifyAuthToken, signAuthToken, refreshJwtCookie, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
 import { nanoid } from "nanoid";
 import { verifyMessage } from "viem";
 import { getUser } from "thirdweb/wallets";
@@ -43,23 +43,20 @@ const Student = new Elysia({ name: "student" })
         walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : ((userData.smartWalletAddress as { address: string } | null)?.address || null)
       };
 
+      const token = await signAuthToken({
+        userId: normalizedUser.userId,
+        email: normalizedUser.email || '',
+        familyName: normalizedUser.familyName || undefined,
+        givenName: normalizedUser.givenName || undefined,
+        mobileNumber: normalizedUser.mobileNumber || undefined,
+        tier: normalizedUser.tier,
+        role: normalizedUser.role,
+        walletAddress: normalizedUser.walletAddress || undefined
+      });
+      const isProduction = process.env.NODE_ENV === 'production';
       cookie.studentAuth?.set({
-        value: JSON.stringify({
-          userId: normalizedUser.userId,
-          email: normalizedUser.email,
-          familyName: normalizedUser.familyName,
-          givenName: normalizedUser.givenName,
-          mobileNumber: normalizedUser.mobileNumber,
-          tier: normalizedUser.tier,
-          role: normalizedUser.role,
-          walletAddress: normalizedUser.walletAddress
-        }),
-
-        httpOnly: true,
-        secure: true, // Always true for sameSite:none
-        sameSite: "none", // Required for cross-origin
-        maxAge: 60 * 60,
-        path: "/"
+        value: token,
+        ...getCookieConfig(isProduction)
       });
 
       return {
@@ -111,22 +108,20 @@ const Student = new Elysia({ name: "student" })
         walletAddress: (userData.smartWalletAddress && (typeof userData.smartWalletAddress === 'string')) ? userData.smartWalletAddress : ((userData.smartWalletAddress as { address: string } | null)?.address || null)
       };
 
+      const token = await signAuthToken({
+        userId: normalizedUser.userId,
+        email: normalizedUser.email || '',
+        familyName: normalizedUser.familyName || undefined,
+        givenName: normalizedUser.givenName || undefined,
+        mobileNumber: normalizedUser.mobileNumber || undefined,
+        tier: normalizedUser.tier,
+        role: normalizedUser.role,
+        walletAddress: normalizedUser.walletAddress || undefined
+      });
+      const isProduction = process.env.NODE_ENV === 'production';
       cookie.studentAuth?.set({
-        value: JSON.stringify({
-          userId: normalizedUser.userId,
-          email: normalizedUser.email,
-          familyName: normalizedUser.familyName,
-          givenName: normalizedUser.givenName,
-          mobileNumber: normalizedUser.mobileNumber,
-          tier: normalizedUser.tier,
-          role: normalizedUser.role,
-          walletAddress: normalizedUser.walletAddress
-        }),
-        httpOnly: true,
-        secure: false, // False for localhost HTTP
-        sameSite: "lax", // Lax works for localhost
-        maxAge: 60 * 60,
-        path: "/"
+        value: token,
+        ...getCookieConfig(isProduction)
       });
 
       return {
@@ -152,14 +147,12 @@ const Student = new Elysia({ name: "student" })
 
   .post('/student/logout', async ({ cookie, set }) => {
     // Aggressively clear the student cookie with all possible methods
+    const isProduction = process.env.NODE_ENV === 'production';
     cookie.studentAuth?.set({
       value: '',
-      httpOnly: true,
-      secure: false, // Match login settings
-      sameSite: 'lax', // Match login settings
+      ...getCookieConfig(isProduction),
       maxAge: 0, // Expire immediately
-      expires: new Date(0), // Also set explicit past date
-      path: '/'
+      expires: new Date(0) // Also set explicit past date
     });
     cookie.studentAuth?.remove();
     
@@ -182,9 +175,13 @@ const Student = new Elysia({ name: "student" })
     try {
       const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const payload = await verifyAuthToken(raw as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
 
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -206,27 +203,31 @@ const Student = new Elysia({ name: "student" })
     try {
       const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const payload = await verifyAuthToken(raw as string);
+      if (!payload) {
+        set.status = 401;
+        return { user: null, error: 'Invalid or expired token' };
+      }
 
       // Refresh cookie on every /me call
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
       set.headers['Vary'] = 'Cookie';
 
       const normalized = {
-        userId: authData.userId || authData.id || null,
-        id: authData.userId || authData.id || null,
-        email: authData.email,
-        givenName: authData.givenName ?? authData.firstName ?? undefined,
-        familyName: authData.familyName ?? authData.lastName ?? undefined,
-        firstName: authData.firstName ?? authData.givenName ?? undefined,
-        lastName: authData.lastName ?? authData.familyName ?? undefined,
-        walletAddress: authData.walletAddress ?? authData.smartWalletAddress ?? undefined,
-        mobileNumber: authData.mobileNumber ?? undefined,
-        tier: authData.tier ?? 0,
-        role: authData.role ?? 'student'
+        userId: payload.userId || null,
+        id: payload.userId || null,
+        email: payload.email,
+        givenName: payload.givenName ?? payload.firstName ?? undefined,
+        familyName: payload.familyName ?? payload.lastName ?? undefined,
+        firstName: payload.firstName ?? payload.givenName ?? undefined,
+        lastName: payload.lastName ?? payload.familyName ?? undefined,
+        walletAddress: payload.walletAddress ?? undefined,
+        mobileNumber: payload.mobileNumber ?? undefined,
+        tier: payload.tier ?? 0,
+        role: payload.role ?? 'student'
       };
 
       return { user: normalized };
@@ -244,26 +245,28 @@ const Student = new Elysia({ name: "student" })
     try {
       const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const payload = await verifyAuthToken(raw as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: 'Invalid or expired token' };
+      }
 
       const studentService = new StudentService();
       const result = await studentService.updatePersonalInfo({
-        userId: authData.userId,
+        userId: payload.userId,
         ...body
       });
 
       // Update mobileNumber in cookie if phoneNumber was updated
       if (body.phoneNumber) {
+        const token = await signAuthToken({
+          ...payload,
+          mobileNumber: body.phoneNumber
+        });
+        const isProduction = process.env.NODE_ENV === 'production';
         cookie.studentAuth?.set({
-          value: JSON.stringify({
-            ...authData,
-            mobileNumber: body.phoneNumber
-          }),
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 60,
-          path: '/'
+          value: token,
+          ...getCookieConfig(isProduction)
         });
       }
 
@@ -310,26 +313,28 @@ const Student = new Elysia({ name: "student" })
     try {
       const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const payload = await verifyAuthToken(raw as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: 'Invalid or expired token' };
+      }
 
       const studentService = new StudentService();
       const result = await studentService.updateEmail({
-        userId: authData.userId,
+        userId: payload.userId,
         newEmail: body.newEmail,
         currentPassword: body.currentPassword
       });
 
       // Update email in cookie
+      const token = await signAuthToken({
+        ...payload,
+        email: body.newEmail.toLowerCase()
+      });
+      const isProduction = process.env.NODE_ENV === 'production';
       cookie.studentAuth?.set({
-        value: JSON.stringify({
-          ...authData,
-          email: body.newEmail.toLowerCase()
-        }),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 30 * 60,
-        path: '/'
+        value: token,
+        ...getCookieConfig(isProduction)
       });
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
@@ -357,11 +362,15 @@ const Student = new Elysia({ name: "student" })
     try {
       const raw = cookie.studentAuth?.value;
       if (!raw) throw new Error('Not authenticated');
-      const authData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
+      const payload = await verifyAuthToken(raw as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: 'Invalid or expired token' };
+      }
 
       const studentService = new StudentService();
       const result = await studentService.updatePassword({
-        userId: authData.userId,
+        userId: payload.userId,
         currentPassword: body.currentPassword,
         newPassword: body.newPassword
       });
@@ -525,22 +534,20 @@ const Student = new Elysia({ name: "student" })
         walletAddress: userData.externalWalletAddress || (typeof userData.smartWalletAddress === 'string' ? userData.smartWalletAddress : null) || null
       };
 
+      const token = await signAuthToken({
+        userId: normalizedUser.userId,
+        email: normalizedUser.email || '',
+        familyName: normalizedUser.familyName || undefined,
+        givenName: normalizedUser.givenName || undefined,
+        mobileNumber: normalizedUser.mobileNumber || undefined,
+        tier: normalizedUser.tier,
+        role: normalizedUser.role,
+        walletAddress: normalizedUser.walletAddress || undefined
+      });
+      const isProduction = process.env.NODE_ENV === 'production';
       cookie.studentAuth?.set({
-        value: JSON.stringify({
-          userId: normalizedUser.userId,
-          email: normalizedUser.email,
-          familyName: normalizedUser.familyName,
-          givenName: normalizedUser.givenName,
-          mobileNumber: normalizedUser.mobileNumber,
-          tier: normalizedUser.tier,
-          role: normalizedUser.role,
-          walletAddress: normalizedUser.walletAddress
-        }),
-        httpOnly: true,
-        secure: false, // False for localhost HTTP
-        sameSite: "lax", // Lax works for localhost
-        maxAge: 60 * 60,
-        path: "/"
+        value: token,
+        ...getCookieConfig(isProduction)
       });
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
@@ -668,22 +675,20 @@ const Student = new Elysia({ name: "student" })
         walletAddress: userData.externalWalletAddress || null
       };
 
+      const token = await signAuthToken({
+        userId: normalizedUser.userId,
+        email: normalizedUser.email || '',
+        familyName: normalizedUser.familyName || undefined,
+        givenName: normalizedUser.givenName || undefined,
+        mobileNumber: normalizedUser.mobileNumber || undefined,
+        tier: normalizedUser.tier,
+        role: normalizedUser.role,
+        walletAddress: normalizedUser.walletAddress || undefined
+      });
+      const isProduction = process.env.NODE_ENV === 'production';
       cookie.studentAuth?.set({
-        value: JSON.stringify({
-          userId: normalizedUser.userId,
-          email: normalizedUser.email,
-          familyName: normalizedUser.familyName,
-          givenName: normalizedUser.givenName,
-          mobileNumber: normalizedUser.mobileNumber,
-          tier: normalizedUser.tier,
-          role: normalizedUser.role,
-          walletAddress: normalizedUser.walletAddress
-        }),
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 60 * 60,
-        path: "/"
+        value: token,
+        ...getCookieConfig(isProduction)
       });
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
@@ -741,14 +746,13 @@ const Student = new Elysia({ name: "student" })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
-        console.error('[StudentRoute] No userId in cookie');
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
+        console.error('[StudentRoute] Invalid or expired token');
         set.status = 401;
-        return { success: false, error: 'Invalid session' };
+        return { success: false, error: 'Invalid or expired token' };
       }
+      const studentId = payload.userId;
 
       console.log('[StudentRoute] Fetching profile for student:', studentId);
       const studentService = new StudentService();
@@ -777,14 +781,13 @@ const Student = new Elysia({ name: "student" })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
-        console.error('[StudentRoute] No userId in cookie');
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
+        console.error('[StudentRoute] Invalid or expired token');
         set.status = 401;
-        return { success: false, error: 'Invalid session' };
+        return { success: false, error: 'Invalid or expired token' };
       }
+      const studentId = payload.userId;
 
       const preferences = body as {
         preferCameraOn: boolean;
@@ -819,14 +822,13 @@ const Student = new Elysia({ name: "student" })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
-        console.error('[StudentRoute] No userId in cookie');
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
+        console.error('[StudentRoute] Invalid or expired token');
         set.status = 401;
-        return { success: false, error: 'Invalid session' };
+        return { success: false, error: 'Invalid or expired token' };
       }
+      const studentId = payload.userId;
 
       const aboutMe = body as {
         purpose: string;
@@ -859,13 +861,12 @@ const Student = new Elysia({ name: "student" })
         return { success: false, error: 'Not authenticated', data: { favorites: [], total: 0, page: 1, limit: 10, totalPages: 0 } };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
         set.status = 401;
-        return { success: false, error: 'Invalid session', data: { favorites: [], total: 0, page: 1, limit: 10, totalPages: 0 } };
+        return { success: false, error: 'Invalid or expired token', data: { favorites: [], total: 0, page: 1, limit: 10, totalPages: 0 } };
       }
+      const studentId = payload.userId;
 
       // Parse pagination params with defaults
       const page = Math.max(1, parseInt(query.page as string) || 1);
@@ -893,13 +894,12 @@ const Student = new Elysia({ name: "student" })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
         set.status = 401;
-        return { success: false, error: 'Invalid session' };
+        return { success: false, error: 'Invalid or expired token' };
       }
+      const studentId = payload.userId;
 
       // Rate limiting check
       const rateLimitError = await rateLimitMiddleware(studentId, 'favorites', set as any);
@@ -927,13 +927,12 @@ const Student = new Elysia({ name: "student" })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
         set.status = 401;
-        return { success: false, error: 'Invalid session' };
+        return { success: false, error: 'Invalid or expired token' };
       }
+      const studentId = payload.userId;
 
       const { tutorId } = params;
       const result = await favoritesService.removeFavorite(studentId, tutorId);
@@ -957,13 +956,12 @@ const Student = new Elysia({ name: "student" })
         return { success: false, isFavorite: false };
       }
 
-      const auth = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      const studentId = auth.userId;
-
-      if (!studentId) {
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
         set.status = 401;
         return { success: false, isFavorite: false };
       }
+      const studentId = payload.userId;
 
       const { tutorId } = params;
       const isFavorite = await favoritesService.isFavorite(studentId, tutorId);

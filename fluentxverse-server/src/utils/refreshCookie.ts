@@ -6,6 +6,8 @@ import type { AuthData } from '@/services/auth.services/auth.interface';
  * Call this on every authenticated request to keep the session alive
  */
 export function refreshAuthCookie(cookie: Record<string, Cookie<any>>, authData: AuthData, cookieName: 'tutorAuth' | 'studentAuth' = 'tutorAuth') {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   cookie[cookieName]?.set({
     value: JSON.stringify({
       userId: authData.userId,
@@ -20,8 +22,8 @@ export function refreshAuthCookie(cookie: Record<string, Cookie<any>>, authData:
       role: authData.role
     }),
     httpOnly: true,
-    secure: false, // False for localhost HTTP dev
-    sameSite: 'lax', // Lax works for localhost same-site
+    secure: isProduction, // true for HTTPS in production
+    sameSite: 'lax',
     maxAge: 60 * 60, // 1 hour in seconds
     path: '/'
   });

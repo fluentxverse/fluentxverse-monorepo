@@ -171,19 +171,30 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   const logout = async () => {
+    // IMPORTANT: Clear local state FIRST to prevent race conditions
+    // This ensures checkAuth won't find a session and auto-login won't trigger
+    setUser(null);
+    
+    // Clear localStorage BEFORE calling server - prevents checkAuth from running
+    try {
+      localStorage.removeItem('fxv_user_fullname');
+      localStorage.removeItem('fxv_user_id');
+    } catch (e) {}
+    
+    // Mark that we're intentionally logging out (prevents 401 handler from interfering)
+    loginInProgressRef.current = true;
+    
     try {
       await logoutUser();
     } catch (err) {
       console.error('Logout error:', err);
+      // Continue with logout even if server call fails
     } finally {
-      setUser(null);
-      // Clear any cached auth data
-      try {
-        localStorage.removeItem('fxv_user_fullname');
-        localStorage.removeItem('fxv_user_id');
-      } catch (e) {}
+      loginInProgressRef.current = false;
+      // Force a full page reload to clear all state and prevent any race conditions
       if (typeof window !== 'undefined') {
-        window.location.href = '/';
+        // Use replace to prevent back button from going to authenticated page
+        window.location.replace('/');
       }
     }
   };

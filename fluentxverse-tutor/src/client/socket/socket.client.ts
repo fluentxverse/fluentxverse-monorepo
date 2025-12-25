@@ -54,40 +54,34 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
     return socket;
   }
 
+  // Get tutorAuth cookie - now a JWT token (opaque to client)
+  // Server will verify the JWT via withCredentials
+  let authToken: string | null = null;
+  
   // Prefer explicit token passed in; fallback to tutorAuth cookie
-  let authData: any = null;
   if (token) {
-    try {
-      authData = JSON.parse(token);
-    } catch (e) {
-      console.warn('Failed to parse provided socket token');
-      authData = null;
-    }
-  }
-
-  if (!authData) {
+    authToken = token;
+  } else {
     const authCookie = document.cookie
       .split('; ')
       .find(row => row.startsWith('tutorAuth='))
       ?.split('=')[1];
 
     if (authCookie) {
-      try {
-        authData = JSON.parse(decodeURIComponent(authCookie));
-      } catch (e) {
-        console.warn('Failed to parse tutorAuth cookie');
-      }
+      authToken = decodeURIComponent(authCookie);
     }
   }
 
-  console.log('🔌 Socket auth data:', authData ? `userId: ${authData.userId}` : 'no auth data');
+  console.log('🔌 Socket auth:', authToken ? 'JWT token present' : 'no auth token');
 
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
     auth: {
-      // Pass auth data or indicate this is a tutor app
-      token: authData ? JSON.stringify(authData) : JSON.stringify({
+      // Pass raw JWT token - server will verify it
+      // For authenticated users, the cookie is sent via withCredentials
+      // For dev fallback without cookie, create a placeholder
+      token: authToken || JSON.stringify({
         userId: `tutor-${Date.now()}`,
         email: 'tutor@dev.local',
         tier: 2 // tier 2+ = tutor

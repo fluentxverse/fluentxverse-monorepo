@@ -2,7 +2,7 @@ import Elysia, { t } from 'elysia';
 import { TutorService } from '../services/tutor.services/tutor.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
-import { refreshAuthCookie } from '../utils/refreshCookie';
+import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { cacheGetOrSet, invalidateCache } from '../db/redis';
 
 const tutorService = new TutorService();
@@ -53,11 +53,12 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) return { success: false, error: 'Invalid or expired token' };
+      const userId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const form = await request.formData();
       const file = form.get('file');
@@ -136,10 +137,11 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) return { success: false, error: 'Invalid or expired token' };
+      const userId = payload.userId;
 
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       // Delete from storage
       const previousVideo = await tutorService.getVideoIntroUrl(userId);
@@ -169,11 +171,12 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) return { success: false, error: 'Invalid or expired token' };
+      const userId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const form = await request.formData();
       const file = form.get('file');
@@ -245,11 +248,12 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) return { success: false, error: 'Invalid or expired token' };
+      const userId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const tutor = await tutorService.getTutorProfile(userId);
       
@@ -272,11 +276,12 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) return { success: false, error: 'Invalid or expired token' };
+      const userId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const updateData = body as Record<string, any>;
       
@@ -334,11 +339,12 @@ const Tutor = new Elysia({ prefix: '/tutor' })
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const userId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) return { success: false, error: 'Invalid or expired token' };
+      const userId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       // Check profile completeness
       const profile = await tutorService.getTutorProfile(userId);
@@ -451,11 +457,16 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
-      console.log('[TutorRoute] TutorId from cookie:', tutorId);
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        console.error('[TutorRoute] Invalid or expired JWT token');
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
+      console.log('[TutorRoute] TutorId from JWT:', tutorId);
 
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const { studentId } = params;
       if (!studentId) {

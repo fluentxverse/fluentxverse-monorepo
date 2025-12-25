@@ -1,7 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
-import type { AuthData } from '@/services/auth.services/auth.interface';
-import { refreshAuthCookie } from '../utils/refreshCookie';
+import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
 import { cacheGetOrSet, invalidateCache, getRedis } from '../db/redis';
 
@@ -25,11 +24,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       await scheduleService.openSlots({
         tutorId,
@@ -69,11 +72,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       await scheduleService.closeSlots({
         tutorId,
@@ -110,11 +117,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const weekOffset = query.weekOffset ? parseInt(query.weekOffset, 10) : 0;
 
@@ -152,11 +163,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       await scheduleService.markAttendance({
         bookingId: body.bookingId,
@@ -196,11 +211,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       const cacheKey = `student:bookings:${studentId}`;
       const bookings = await cacheGetOrSet(
@@ -235,11 +254,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       const cacheKey = `student:stats:${studentId}`;
       const stats = await cacheGetOrSet(
@@ -274,11 +297,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       const limit = query.limit ? parseInt(query.limit as string) : 10;
 
@@ -315,11 +342,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       const { bookingId } = params;
 
@@ -392,10 +423,14 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      console.log('Auth data parsed:', JSON.stringify(authData, null, 2));
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      console.log('Auth payload verified:', JSON.stringify(payload, null, 2));
       
-      const studentId = authData.userId;
+      const studentId = payload.userId;
       console.log('Student ID:', studentId);
       
       // Rate limiting check
@@ -407,8 +442,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       
       console.log('Slot ID from body:', body.slotId);
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
       console.log('Cookie refreshed');
 
       console.log('Calling scheduleService.bookSlot...');
@@ -464,11 +499,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       console.log('Cancelling booking:', body.bookingId, 'for student:', studentId);
 
@@ -512,11 +551,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const tutorId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const tutorId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'tutorAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
       const { bookingId } = params;
 
@@ -547,11 +590,15 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
-      // Refresh cookie on every request
-      refreshAuthCookie(cookie, authData, 'studentAuth');
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
 
       // Warm all student-related caches in parallel
       const [stats, bookings, activity] = await Promise.all([
@@ -603,8 +650,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         return { success: false, error: 'Not authenticated' };
       }
 
-      const authData: AuthData = typeof raw === 'string' ? JSON.parse(raw) : (raw as any);
-      const studentId = authData.userId;
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
 
       // Invalidate all student-related caches
       await Promise.all([

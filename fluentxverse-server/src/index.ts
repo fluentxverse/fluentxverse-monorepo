@@ -42,11 +42,6 @@ const defaultOrigins = [
   'http://localhost:5175',
   'http://localhost:5176',
   'http://localhost:5178',
-  'http://192.168.0.102:5173',
-  'http://192.168.0.102:5174',
-  'http://192.168.0.102:5175',
-  'http://192.168.0.102:5176',
-  'http://192.168.0.102:5178',
 ];
 
 const envOrigins = (process.env.FRONTEND_URLS || '')

@@ -1,6 +1,7 @@
 import Elysia, { t } from 'elysia';
 import { AdminService } from '../services/admin.services/admin.service';
 import { suspensionJobService } from '../services/admin.services/suspension.job';
+import { signAuthToken, verifyAuthToken, getCookieConfig } from '../utils/jwt';
 
 const adminService = new AdminService();
 
@@ -443,20 +444,21 @@ const Admin = new Elysia({ prefix: '/admin' })
 
       const admin = await adminService.login({ username, password });
 
-      // Set httpOnly cookie
+      // Sign JWT token for admin
+      const isProduction = process.env.NODE_ENV === 'production';
+      const token = await signAuthToken({
+        userId: admin.id,
+        email: admin.username, // Use username as email for admin
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        role: admin.role
+      }, 60 * 60 * 8); // 8 hours expiry
+
+      // Set httpOnly cookie with JWT
       cookie.adminAuth?.set({
-        value: JSON.stringify({
-          userId: admin.id,
-          username: admin.username,
-          firstName: admin.firstName,
-          lastName: admin.lastName,
-          role: admin.role
-        }),
-        httpOnly: true,
-        secure: false, // Set to true in production
-        sameSite: 'lax',
+        value: token,
+        ...getCookieConfig(isProduction),
         maxAge: 60 * 60 * 8, // 8 hours
-        path: '/'
       });
 
       return {
@@ -491,13 +493,11 @@ const Admin = new Elysia({ prefix: '/admin' })
   .post('/logout', async ({ cookie }) => {
     try {
       // Clear the admin auth cookie
+      const isProduction = process.env.NODE_ENV === 'production';
       cookie.adminAuth?.set({
         value: '',
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        ...getCookieConfig(isProduction),
         maxAge: 0,
-        path: '/'
       });
 
       return {
@@ -528,16 +528,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         };
       }
 
-      let userData;
-      try {
-        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      } catch {
-        return {
-          success: false,
-          error: 'Invalid session'
-        };
-      }
-
+      const userData = await verifyAuthToken(typeof authCookie === 'string' ? authCookie : String(authCookie));
       if (!userData?.userId) {
         return {
           success: false,
@@ -547,15 +538,13 @@ const Admin = new Elysia({ prefix: '/admin' })
 
       // Optionally verify admin still exists in DB
       const admin = await adminService.getById(userData.userId);
+      const isProduction = process.env.NODE_ENV === 'production';
       if (!admin) {
         // Clear invalid cookie
         cookie.adminAuth?.set({
           value: '',
-          httpOnly: true,
-          secure: false,
-          sameSite: 'lax',
+          ...getCookieConfig(isProduction),
           maxAge: 0,
-          path: '/'
         });
         return {
           success: false,
@@ -647,13 +636,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         };
       }
 
-      let userData;
-      try {
-        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      } catch {
-        return { success: false, error: 'Invalid session' };
-      }
-
+      const userData = await verifyAuthToken(typeof authCookie === 'string' ? authCookie : String(authCookie));
       if (!userData?.userId) {
         return { success: false, error: 'Invalid session' };
       }
@@ -695,13 +678,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         };
       }
 
-      let userData;
-      try {
-        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      } catch {
-        return { success: false, error: 'Invalid session' };
-      }
-
+      const userData = await verifyAuthToken(typeof authCookie === 'string' ? authCookie : String(authCookie));
       if (!userData?.userId) {
         return { success: false, error: 'Invalid session' };
       }
@@ -751,13 +728,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         };
       }
 
-      let userData;
-      try {
-        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      } catch {
-        return { success: false, error: 'Invalid session' };
-      }
-
+      const userData = await verifyAuthToken(typeof authCookie === 'string' ? authCookie : String(authCookie));
       if (!userData?.userId) {
         return { success: false, error: 'Invalid session' };
       }
@@ -818,13 +789,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         };
       }
 
-      let userData;
-      try {
-        userData = typeof authCookie === 'string' ? JSON.parse(authCookie) : authCookie;
-      } catch {
-        return { success: false, error: 'Invalid session' };
-      }
-
+      const userData = await verifyAuthToken(typeof authCookie === 'string' ? authCookie : String(authCookie));
       if (!userData?.userId) {
         return { success: false, error: 'Invalid session' };
       }

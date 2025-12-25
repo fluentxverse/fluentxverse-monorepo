@@ -1,5 +1,5 @@
 import type { Socket } from 'socket.io';
-import type { AuthData } from '../../services/auth.services/auth.interface';
+import { verifyAuthToken, type JwtAuthPayload } from '../../utils/jwt';
 
 type AdminCookieAuth = {
   userId: string;
@@ -17,19 +17,19 @@ export const authMiddleware = async (
     // Prefer explicit token from handshake.auth; fallback to cookie in dev
     const tokenFromAuth = (socket.handshake.auth as any)?.token as string | undefined;
     const cookieString = socket.handshake.headers.cookie;
-    let authData: AuthData | null = null;
+    let authPayload: JwtAuthPayload | null = null;
 
+    // Try to verify JWT token from handshake.auth
     if (tokenFromAuth) {
-      try {
-        authData = JSON.parse(tokenFromAuth) as AuthData;
-      } catch {
-        // If token is not JSON, skip parsing – your real impl could verify JWT here
-        authData = null;
+      authPayload = await verifyAuthToken(tokenFromAuth);
+      if (authPayload) {
+        console.log('🔐 Auth verified from handshake token - userId:', authPayload.userId);
       }
     }
 
-    if (!authData && cookieString) {
-      console.log('🍪 Cookie string received:', cookieString);
+    // Try cookies if no valid token from handshake
+    if (!authPayload && cookieString) {
+      console.log('🍪 Cookie string received, attempting JWT verification');
 
       // Admin dashboard cookie
       const adminAuthCookie = cookieString
@@ -39,21 +39,17 @@ export const authMiddleware = async (
 
       if (adminAuthCookie) {
         const decodedCookie = decodeURIComponent(adminAuthCookie);
-        try {
-          const adminAuth = JSON.parse(decodedCookie) as AdminCookieAuth;
-          if (adminAuth?.userId) {
-            socket.data.userId = adminAuth.userId;
-            socket.data.userType = 'admin';
-            socket.data.email = undefined;
-            console.log(`✅ Socket authenticated: Admin ${adminAuth.userId}`);
-            return next();
-          }
-        } catch (e) {
-          console.log('🍪 Failed to parse adminAuth cookie:', e);
+        const adminPayload = await verifyAuthToken(decodedCookie);
+        if (adminPayload?.userId) {
+          socket.data.userId = adminPayload.userId;
+          socket.data.userType = 'admin';
+          socket.data.email = adminPayload.email;
+          console.log(`✅ Socket authenticated: Admin ${adminPayload.userId}`);
+          return next();
         }
       }
       
-      // Check for tutorAuth cookie first (tutor app), then fallback to auth cookie (student app)
+      // Check for tutorAuth cookie first (tutor app), then fallback to studentAuth cookie
       let authCookie = cookieString
         .split('; ')
         .find(row => row.startsWith('tutorAuth='))
@@ -64,31 +60,23 @@ export const authMiddleware = async (
       if (!authCookie) {
         authCookie = cookieString
           .split('; ')
-          .find(row => row.startsWith('auth='))
+          .find(row => row.startsWith('studentAuth='))
           ?.split('=')[1];
-        console.log('🍪 auth cookie found:', authCookie ? 'YES' : 'NO');
+        console.log('🍪 studentAuth cookie found:', authCookie ? 'YES' : 'NO');
       }
 
       if (authCookie) {
         const decodedCookie = decodeURIComponent(authCookie);
-        try {
-          authData = JSON.parse(decodedCookie) as AuthData;
-          console.log('🍪 Auth data from cookie - userId:', authData.userId, 'email:', authData.email);
-        } catch (e) {
-          console.log('🍪 Failed to parse cookie:', e);
-          authData = null;
+        authPayload = await verifyAuthToken(decodedCookie);
+        if (authPayload) {
+          console.log('🍪 JWT verified from cookie - userId:', authPayload.userId);
         }
       }
-    }
-    
-    console.log('🔐 Token from handshake.auth:', tokenFromAuth ? 'EXISTS' : 'NULL');
-    if (tokenFromAuth && authData) {
-      console.log('🔐 Auth data from token - userId:', authData.userId);
     }
 
     // In development, allow anonymous sockets but mark as unauthenticated
     const isDev = process.env.NODE_ENV !== 'production';
-    if (!authData && isDev) {
+    if (!authPayload && isDev) {
       // This shouldn't happen now since clients send their tier, but fallback just in case
       socket.data.userId = `anon-${socket.id}`;
       socket.data.userType = 'student';
@@ -97,20 +85,20 @@ export const authMiddleware = async (
       return next();
     }
 
-    if (!authData) {
-      return next(new Error('Authentication required: No valid auth token or cookie'));
+    if (!authPayload) {
+      return next(new Error('Authentication required: No valid JWT token or cookie'));
     }
 
-    if (!authData.userId || !authData.email) {
+    if (!authPayload.userId || !authPayload.email) {
       return next(new Error('Invalid authentication data'));
     }
 
     // Attach user data to socket
-    socket.data.userId = authData.userId;
-    socket.data.userType = (authData.tier && authData.tier >= 2) ? 'tutor' : 'student';
-    socket.data.email = authData.email;
+    socket.data.userId = authPayload.userId;
+    socket.data.userType = (authPayload.tier && authPayload.tier >= 2) ? 'tutor' : 'student';
+    socket.data.email = authPayload.email;
 
-    console.log(`✅ Socket authenticated: User ${authData.userId} (${socket.data.userType})`);
+    console.log(`✅ Socket authenticated: User ${authPayload.userId} (${socket.data.userType})`);
     next();
   } catch (error) {
     console.error('Socket authentication error:', error);

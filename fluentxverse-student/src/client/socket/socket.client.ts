@@ -54,27 +54,23 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
     return socket;
   }
 
-  // Get auth cookie for authentication
+  // Get auth cookie for authentication - now a JWT token
+  // The cookie is opaque (JWT), server will verify it via withCredentials
   const authCookie = document.cookie
     .split('; ')
     .find(row => row.startsWith('auth='))
     ?.split('=')[1];
   
-  let authData = null;
-  if (authCookie) {
-    try {
-      authData = JSON.parse(decodeURIComponent(authCookie));
-    } catch (e) {
-      console.warn('Failed to parse auth cookie');
-    }
-  }
-
+  // Pass the raw JWT token (or decoded for dev fallback)
+  // Server will verify the JWT token sent via cookies
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
     auth: {
-      // Pass auth data or indicate this is a student app
-      token: authData ? JSON.stringify(authData) : JSON.stringify({
+      // Pass raw JWT token - server will verify it
+      // For authenticated users, the cookie is sent via withCredentials
+      // For dev fallback without cookie, create a placeholder
+      token: authCookie ? decodeURIComponent(authCookie) : JSON.stringify({
         userId: `student-${Date.now()}`,
         email: 'student@dev.local',
         tier: 1 // tier 1 = student
