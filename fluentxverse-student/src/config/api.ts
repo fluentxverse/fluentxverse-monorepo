@@ -1,5 +1,51 @@
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+// IMPORTANT: Never default to an http:// API when the page is served over https://
+// (browsers will block it as Mixed Content).
+const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
+
+// Known production domains - if we detect these, use the production API
+const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'tutor.fluentxverse.xyz', 'student.fluentxverse.xyz'];
+const PRODUCTION_API_URL = 'https://api.fluentxverse.xyz';
+
+const getApiBaseUrl = () => {
+  // 1. First priority: explicit env var (set at build time)
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (envUrl) {
+    console.log('[API Config] Using VITE_API_URL:', envUrl);
+    return normalizeBaseUrl(envUrl);
+  }
+
+  // 2. Runtime detection
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    
+    // Check if we're on a known production domain
+    const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
+    
+    if (isProduction) {
+      console.log('[API Config] Detected production domain, using:', PRODUCTION_API_URL);
+      return PRODUCTION_API_URL;
+    }
+
+    // Local dev: backend runs on 8765 over http.
+    if (isLocalhost) {
+      console.log('[API Config] Localhost detected, using: http://localhost:8765');
+      return 'http://localhost:8765';
+    }
+
+    // Unknown environment: match the current protocol to avoid mixed content
+    // This handles LAN access (e.g., 192.168.x.x) during development
+    const fallbackUrl = `${protocol}//${hostname}:8765`;
+    console.log('[API Config] Unknown environment, using fallback:', fallbackUrl);
+    return fallbackUrl;
+  }
+
+  // SSR/Node.js environment fallback
+  return 'http://localhost:8765';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const API_CONFIG = {
   BASE_URL: 'https://consumer.decentragri.com',

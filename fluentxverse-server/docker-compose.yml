@@ -159,7 +159,8 @@ services:
       dockerfile: Dockerfile
       args:
         # Public HTTPS API origin (baked into the Vite build)
-        VITE_API_URL: ${VITE_API_URL:-https://api.fluentxverse.xyz}
+        # IMPORTANT: Hardcoded to ensure consistent builds via webhook
+        VITE_API_URL: https://api.fluentxverse.xyz
     container_name: fluentxverse-student
     restart: unless-stopped
     ports:
@@ -175,7 +176,8 @@ services:
       dockerfile: Dockerfile
       args:
         # Public HTTPS API origin (baked into the Vite build)
-        VITE_API_URL: ${VITE_API_URL:-https://api.fluentxverse.xyz}
+        # IMPORTANT: Hardcoded to ensure consistent builds via webhook
+        VITE_API_URL: https://api.fluentxverse.xyz
     container_name: fluentxverse-tutor
     restart: unless-stopped
     ports:

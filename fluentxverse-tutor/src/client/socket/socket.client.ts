@@ -4,14 +4,38 @@ import type {
   ClientToServerEvents 
 } from '../../types/socket.types';
 
-// Dynamic socket URL for LAN access - uses current hostname
+// Known production domains
+const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'tutor.fluentxverse.xyz', 'student.fluentxverse.xyz'];
+const PRODUCTION_SOCKET_URL = 'https://socket.fluentxverse.xyz';
+
+// Dynamic socket URL - handles both dev and production
 const getSocketUrl = () => {
+  // 1. Explicit env var takes priority
   if (import.meta.env.VITE_SOCKET_URL) {
     return import.meta.env.VITE_SOCKET_URL;
   }
-  // Use same hostname as current page for LAN access
-  const hostname = window.location.hostname;
-  return `http://${hostname}:8767`;
+  
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
+    
+    // Production: use dedicated socket URL
+    if (isProduction) {
+      console.log('[Socket] Production detected, using:', PRODUCTION_SOCKET_URL);
+      return PRODUCTION_SOCKET_URL;
+    }
+    
+    // Local dev
+    if (isLocalhost) {
+      return 'http://localhost:8767';
+    }
+    
+    // LAN access: use same protocol to avoid mixed content
+    return `${protocol}//${hostname}:8767`;
+  }
+  
+  return 'http://localhost:8767';
 };
 
 const SOCKET_URL = getSocketUrl();
