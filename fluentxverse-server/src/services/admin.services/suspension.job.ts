@@ -161,47 +161,18 @@ export interface SuspensionHistoryItem {
 const suspensionJobService = new SuspensionJobService();
 
 /**
- * Helper to delay execution
- */
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
  * Start the auto-unsuspend background job
  * Runs every hour to check for expired suspensions
  */
 export function startSuspensionJob(): void {
   const INTERVAL_MS = 60 * 60 * 1000; // 1 hour
-  const INITIAL_DELAY_MS = 30 * 1000; // Wait 30 seconds before first check (let Memgraph fully start)
-  const MAX_RETRIES = 3;
   
-  console.log('🔄 Starting auto-unsuspend background job (runs every hour)');
+  console.log('🔄 Auto-unsuspend background job scheduled (runs every hour)');
   
-  // Run after initial delay on startup (with retry logic)
-  (async () => {
-    // Wait for Memgraph to be fully ready
-    await delay(INITIAL_DELAY_MS);
-    
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const result = await suspensionJobService.processExpiredSuspensions();
-        if (result.tutors > 0 || result.students > 0) {
-          console.log(`🔓 Auto-unsuspended: ${result.tutors} tutors, ${result.students} students`);
-        } else {
-          console.log('✅ Initial suspension check complete (no expired suspensions)');
-        }
-        break; // Success, exit retry loop
-      } catch (err: any) {
-        if (attempt < MAX_RETRIES) {
-          console.warn(`⚠️ Suspension check attempt ${attempt}/${MAX_RETRIES} failed, retrying in 10s...`);
-          await delay(10000); // Wait 10 seconds before retry
-        } else {
-          console.error('❌ Initial suspension check failed after retries (will retry on next interval):', err?.message || err);
-        }
-      }
-    }
-  })();
+  // Skip initial run on startup - just schedule the hourly interval
+  // This avoids race conditions with database initialization
   
-  // Run periodically
+  // Run periodically (first run will be after 1 hour)
   setInterval(async () => {
     try {
       const result = await suspensionJobService.processExpiredSuspensions();
@@ -209,7 +180,8 @@ export function startSuspensionJob(): void {
         console.log(`🔓 Auto-unsuspended: ${result.tutors} tutors, ${result.students} students`);
       }
     } catch (err: any) {
-      console.error('Error running suspension job:', err?.message || err);
+      // Just log the error message, not the full stack trace
+      console.warn('⚠️ Suspension job skipped:', err?.message || 'Database unavailable');
     }
   }, INTERVAL_MS);
 }
