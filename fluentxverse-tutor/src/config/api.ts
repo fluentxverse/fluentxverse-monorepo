@@ -1,9 +1,10 @@
 // API Configuration
-// Dynamically determine API host - use same host as the page but on port 8765
+// Dynamically determine API host - use same host and protocol as the page but on port 8765
 const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol; // 'http:' or 'https:'
     const host = window.location.hostname;
-    return `http://${host}:8765`;
+    return `${protocol}//${host}:8765`;
   }
   return 'http://localhost:8765';
 };
