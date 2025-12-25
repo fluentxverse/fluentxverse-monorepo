@@ -5,18 +5,10 @@ import type {
   TutorSearchParams, 
   TutorSearchResponse 
 } from '../types/tutor.types';
-
-// Dynamically determine API host - use same host as the page but on port 8765
-const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    return `http://${host}:8765`;
-  }
-  return 'http://localhost:8765';
-};
+import { API_BASE_URL } from '../config/api';
 
 const api = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: API_BASE_URL,
   withCredentials: true
 });
 

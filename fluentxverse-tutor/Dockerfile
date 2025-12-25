@@ -3,26 +3,20 @@ FROM docker.io/oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
+# Build-time Vite env vars (baked into the bundle)
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Copy package files
 COPY package.json bun.lock* ./
 
 # Install ALL dependencies (including dev for vite)
 RUN bun install
 
-# Copy source code (including .env.production for Vite)
+# Copy source code
 COPY . .
 
-# Set build-time environment variables for Vite
-# These get baked into the JavaScript bundle at build time
-ARG VITE_API_URL=https://api.fluentxverse.xyz
-ARG VITE_SOCKET_URL=wss://ws.fluentxverse.xyz
-ARG VITE_THIRDWEB_CLIENT_ID=1cb406c4735e4b76f671f143794eab4c
-
-ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
-ENV VITE_THIRDWEB_CLIENT_ID=$VITE_THIRDWEB_CLIENT_ID
-
-# Build the app - Vite will use the ENV variables above
+# Build the app
 RUN bun run build
 
 # Production stage - use nginx to serve static files

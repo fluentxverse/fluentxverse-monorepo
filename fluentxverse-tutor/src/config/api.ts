@@ -1,15 +1,28 @@
 // API Configuration
-// Dynamically determine API host - use same host and protocol as the page but on port 8765
+// IMPORTANT: Never default to an http:// API when the page is served over https://
+// (browsers will block it as Mixed Content).
+const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
+
 const getApiBaseUrl = () => {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (envUrl) return normalizeBaseUrl(envUrl);
+
   if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol; // 'http:' or 'https:'
-    const host = window.location.hostname;
-    return `${protocol}//${host}:8765`;
+    const { protocol, hostname } = window.location;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+    // Local dev: backend runs on 8765 over http.
+    if (isLocalhost) return 'http://localhost:8765';
+
+    // Production fallback: same scheme + host (no explicit port).
+    // If your API is on a different domain (recommended), set VITE_API_URL.
+    return `${protocol}//${hostname}`;
   }
+
   return 'http://localhost:8765';
 };
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 export const API_CONFIG = {
   BASE_URL: 'https://consumer.decentragri.com',

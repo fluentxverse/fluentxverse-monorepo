@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { API_BASE_URL } from '../config/api';
 
 let unauthorizedHandler: (() => void) | null = null;
 let isLoginInProgress = false;
@@ -20,18 +21,9 @@ export const forceAuthCleanup = () => {
   } catch (e) {}
 };
 
-// Dynamically determine API host - use same host as the page but on port 8765
-const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    return `http://${host}:8765`;
-  }
-  return 'http://localhost:8765';
-};
-
 // Configure Axios client to send cookies with requests
 export const client = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 30000, // 30 seconds default
   headers: {
