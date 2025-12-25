@@ -23,12 +23,22 @@ import cookie from '@elysiajs/cookie';
 import Student from "./routes/student.route";
 import Debug from './routes/debug.route';
 
-// Initialize databases
-initDriver(
-  process.env.MEMGRAPH_URI || 'bolt://localhost:7687',
-  process.env.MEMGRAPH_USER || 'fluentxverse',
-  process.env.MEMGRAPH_PASSWORD || 'devpassword123!ChangeMe'
-);
+// Initialize databases (async)
+const initDatabases = async () => {
+  try {
+    await initDriver(
+      process.env.MEMGRAPH_URI || 'bolt://localhost:7687',
+      process.env.MEMGRAPH_USER || 'fluentxverse',
+      process.env.MEMGRAPH_PASSWORD || 'devpassword123!ChangeMe'
+    );
+  } catch (err) {
+    console.error('❌ Failed to connect to Memgraph:', err);
+    // Don't exit - some features can work without Memgraph
+  }
+};
+
+// Start database initialization (will complete before suspension job runs)
+const dbInitPromise = initDatabases();
 
 // Initialize Redis cache
 initRedis().catch(err => console.warn('Redis initialization skipped:', err));
@@ -92,13 +102,16 @@ const httpServer = createServer();
 const io = initSocketServer(httpServer);
 
 // Attach Socket.IO to run alongside Elysia - listen on all interfaces for LAN access
-httpServer.listen(8767, '0.0.0.0', () => {
+httpServer.listen(8767, '0.0.0.0', async () => {
   console.log(`✅ Socket.IO server is running on port 8767`);
+  
+  // Wait for database initialization to complete before starting background jobs
+  await dbInitPromise;
   
   // Start the session reminder service after socket is ready
   startReminderService();
   
-  // Start the auto-unsuspend background job
+  // Start the auto-unsuspend background job (now Memgraph is ready)
   startSuspensionJob();
 
   // Start daily notification retention cleanup (delete read > N days)
