@@ -9,10 +9,11 @@ COPY package.json bun.lock* ./
 # Install ALL dependencies (including dev for vite)
 RUN bun install
 
-# Copy source code
+# Copy source code (including .env.production for Vite)
 COPY . .
 
-# Build the app
+# Build the app with production mode (Vite will auto-load .env.production)
+ENV NODE_ENV=production
 RUN bun run build
 
 # Production stage - use nginx to serve static files
