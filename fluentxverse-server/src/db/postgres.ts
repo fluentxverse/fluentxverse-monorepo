@@ -43,3 +43,11 @@ export const getPool = () => {
   console.warn('getPool() is deprecated. Use db tagged template or query() instead.');
   return sql;
 };
+
+/**
+ * Pool-like interface for backwards compatibility
+ * Services can import { pool } and use pool.query()
+ */
+export const pool = {
+  query: query,
+};
