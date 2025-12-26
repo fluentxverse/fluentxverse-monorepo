@@ -46,7 +46,7 @@ export interface Lesson {
   id: string;
   title: string;
   slug: string;
-  status: 'draft' | 'published' | 'archived';
+  status: 'draft' | 'finished' | 'published' | 'archived';
   parentId: string | null;
   forkOf: string | null;
   isFork: boolean;
@@ -308,7 +308,7 @@ export class LessonService {
    * Get all lessons (with filters)
    */
   async getLessons(options: {
-    status?: 'draft' | 'published' | 'archived';
+    status?: 'draft' | 'finished' | 'published' | 'archived';
     createdBy?: string;
     includeForks?: boolean;
     limit?: number;
@@ -635,6 +635,63 @@ export class LessonService {
     
     return (await this.getLessonById(lessonId))!;
   }
+
+  /**
+   * Mark a lesson as finished (ready for review but not published)
+   */
+  async markAsFinished(lessonId: string, userId: string): Promise<Lesson> {
+    const lesson = await this.getLessonById(lessonId);
+    if (!lesson) {
+      throw new Error('Lesson not found');
+    }
+    
+    if (lesson.createdBy !== userId) {
+      throw new Error('Only the lesson creator can mark this lesson as finished');
+    }
+    
+    if (lesson.status !== 'draft') {
+      throw new Error('Only draft lessons can be marked as finished');
+    }
+    
+    const now = new Date().toISOString();
+    
+    await db`
+      UPDATE lessons 
+      SET status = 'finished', updated_at = ${now}
+      WHERE id = ${lessonId}
+    `;
+    
+    return (await this.getLessonById(lessonId))!;
+  }
+
+  /**
+   * Mark a lesson back to draft (for editing after being finished)
+   */
+  async markAsDraft(lessonId: string, userId: string): Promise<Lesson> {
+    const lesson = await this.getLessonById(lessonId);
+    if (!lesson) {
+      throw new Error('Lesson not found');
+    }
+    
+    if (lesson.createdBy !== userId) {
+      throw new Error('Only the lesson creator can mark this lesson as draft');
+    }
+    
+    // Can go back to draft from finished or published
+    if (lesson.status !== 'finished' && lesson.status !== 'published') {
+      throw new Error('Lesson must be finished or published to mark as draft');
+    }
+    
+    const now = new Date().toISOString();
+    
+    await db`
+      UPDATE lessons 
+      SET status = 'draft', published_at = NULL, updated_at = ${now}
+      WHERE id = ${lessonId}
+    `;
+    
+    return (await this.getLessonById(lessonId))!;
+  }
   
   /**
    * Archive a lesson
@@ -774,7 +831,7 @@ export class LessonService {
    */
   async searchLessons(options: {
     query?: string;
-    status?: 'draft' | 'published' | 'archived';
+    status?: 'draft' | 'finished' | 'published' | 'archived';
     createdBy?: string;
     includeForks?: boolean;
     hasForks?: boolean;

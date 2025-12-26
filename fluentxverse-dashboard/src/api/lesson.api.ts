@@ -53,7 +53,7 @@ export interface Lesson {
   id: string;
   title: string;
   slug: string;
-  status: 'draft' | 'published' | 'archived';
+  status: 'draft' | 'finished' | 'published' | 'archived';
   parentId: string | null;
   forkOf: string | null;
   isFork: boolean;
@@ -485,6 +485,22 @@ export const lessonApi = {
    */
   async archiveLesson(lessonId: string): Promise<{ success: boolean; lesson?: Lesson; message?: string; error?: string }> {
     const response = await api.post(`/lesson/archive/${lessonId}`);
+    return response.data;
+  },
+
+  /**
+   * Mark a lesson as finished
+   */
+  async markAsFinished(lessonId: string): Promise<{ success: boolean; lesson?: Lesson; message?: string; error?: string }> {
+    const response = await api.post(`/lesson/mark-finished/${lessonId}`);
+    return response.data;
+  },
+
+  /**
+   * Mark a lesson back to draft
+   */
+  async markAsDraft(lessonId: string): Promise<{ success: boolean; lesson?: Lesson; message?: string; error?: string }> {
+    const response = await api.post(`/lesson/mark-draft/${lessonId}`);
     return response.data;
   },
 

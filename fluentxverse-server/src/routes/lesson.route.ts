@@ -1071,7 +1071,7 @@ export default new Elysia({ prefix: '/lesson' })
    */
   .get('/list', async ({ query }) => {
     try {
-      const status = query.status as 'draft' | 'published' | 'archived' | undefined;
+      const status = query.status as 'draft' | 'finished' | 'published' | 'archived' | undefined;
       const createdBy = query.createdBy as string | undefined;
       const includeForks = query.includeForks !== 'false';
       const limit = parseInt(query.limit as string, 10) || 50;
@@ -1114,7 +1114,7 @@ export default new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const status = query.status as 'draft' | 'published' | 'archived' | undefined;
+      const status = query.status as 'draft' | 'finished' | 'published' | 'archived' | undefined;
       const includeForks = query.includeForks !== 'false';
       const limit = parseInt(query.limit as string, 10) || 50;
       const offset = parseInt(query.offset as string, 10) || 0;
@@ -1256,6 +1256,42 @@ export default new Elysia({ prefix: '/lesson' })
     } catch (error) {
       console.error('Error archiving lesson:', error);
       return { success: false, error: 'Failed to archive lesson' };
+    }
+  })
+
+  // Mark a lesson as finished
+  .post('/mark-finished/:lessonId', async ({ params, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { lessonId } = params;
+      const result = await lessonService.markAsFinished(lessonId, auth.sub);
+      
+      return { success: true, lesson: result };
+    } catch (error) {
+      console.error('Error marking lesson as finished:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to mark lesson as finished' };
+    }
+  })
+
+  // Mark a lesson back to draft
+  .post('/mark-draft/:lessonId', async ({ params, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { lessonId } = params;
+      const result = await lessonService.markAsDraft(lessonId, auth.sub);
+      
+      return { success: true, lesson: result };
+    } catch (error) {
+      console.error('Error marking lesson as draft:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to mark lesson as draft' };
     }
   })
   

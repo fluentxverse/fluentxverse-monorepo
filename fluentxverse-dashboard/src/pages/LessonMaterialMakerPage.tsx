@@ -267,7 +267,7 @@ type TemplateInfo = {
   description: string;
   sections: number;
   lastUpdated: string;
-  status: 'published' | 'draft';
+  status: 'draft' | 'finished' | 'published';
 };
 
 // Saved lesson type - instances created from templates
@@ -281,7 +281,7 @@ type SavedLesson = {
   goalName: string;
   createdAt: string;
   updatedAt: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'finished' | 'published';
   draft: LessonMaterialDraft;
   // Fork/merge fields from server
   isFork?: boolean;
@@ -1998,7 +1998,7 @@ export default function LessonMaterialMakerPage() {
   const [versionToRestore, setVersionToRestore] = useState<LessonVersion | null>(null);
   
   // Advanced search/filter
-  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'finished' | 'published' | 'archived'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'title' | 'status'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
@@ -2765,6 +2765,49 @@ export default function LessonMaterialMakerPage() {
       }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to archive lesson');
+    }
+  };
+
+  // Mark as finished - lesson is complete but not yet published
+  const handleMarkAsFinished = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) {
+      alert('This lesson needs to be saved to the server first.');
+      return;
+    }
+    
+    try {
+      const result = await lessonApi.markAsFinished(lesson.serverLesson.id);
+      if (result.success) {
+        alert('Lesson marked as finished!');
+        loadServerLessons();
+        setSavedLessons(prev => prev.map(l => 
+          l.id === lesson.id ? { ...l, status: 'finished' as const } : l
+        ));
+      } else {
+        alert(result.error || 'Failed to mark lesson as finished');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to mark lesson as finished');
+    }
+  };
+
+  // Mark as draft - revert from finished back to draft for editing
+  const handleMarkAsDraft = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) return;
+    
+    try {
+      const result = await lessonApi.markAsDraft(lesson.serverLesson.id);
+      if (result.success) {
+        alert('Lesson marked as draft - you can continue editing.');
+        loadServerLessons();
+        setSavedLessons(prev => prev.map(l => 
+          l.id === lesson.id ? { ...l, status: 'draft' as const } : l
+        ));
+      } else {
+        alert(result.error || 'Failed to mark lesson as draft');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to mark lesson as draft');
     }
   };
 
@@ -3608,6 +3651,7 @@ export default function LessonMaterialMakerPage() {
               >
                 <option value="all">All</option>
                 <option value="draft">Draft</option>
+                <option value="finished">Finished</option>
                 <option value="published">Published</option>
                 <option value="archived">Archived</option>
               </select>
@@ -4045,17 +4089,40 @@ export default function LessonMaterialMakerPage() {
                                                     <i className="ri-history-line" />
                                                   </button>
                                                 )}
-                                                {/* Publish/Unpublish buttons */}
+                                                {/* Status workflow buttons */}
+                                                {/* Draft -> Mark as Finished */}
                                                 {lesson.serverLesson && lesson.status === 'draft' && (
                                                   <button
                                                     type="button"
-                                                    className="lm-lesson-btn publish"
-                                                    onClick={() => handlePublishLesson(lesson)}
-                                                    title="Publish lesson"
+                                                    className="lm-lesson-btn finish"
+                                                    onClick={() => handleMarkAsFinished(lesson)}
+                                                    title="Mark as finished"
                                                   >
-                                                    <i className="ri-upload-cloud-line" />
+                                                    <i className="ri-check-double-line" />
                                                   </button>
                                                 )}
+                                                {/* Finished -> Publish or Back to Draft */}
+                                                {lesson.serverLesson && lesson.status === 'finished' && (
+                                                  <>
+                                                    <button
+                                                      type="button"
+                                                      className="lm-lesson-btn publish"
+                                                      onClick={() => handlePublishLesson(lesson)}
+                                                      title="Publish lesson"
+                                                    >
+                                                      <i className="ri-upload-cloud-line" />
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      className="lm-lesson-btn draft"
+                                                      onClick={() => handleMarkAsDraft(lesson)}
+                                                      title="Back to draft"
+                                                    >
+                                                      <i className="ri-edit-2-line" />
+                                                    </button>
+                                                  </>
+                                                )}
+                                                {/* Published -> Unpublish */}
                                                 {lesson.serverLesson && lesson.status === 'published' && (
                                                   <button
                                                     type="button"
@@ -4343,17 +4410,29 @@ export default function LessonMaterialMakerPage() {
             </button>
           )}
 
-          {/* Save Version Button */}
-          {currentEditingLesson && (
-            <button
-              type="button"
-              className="lm-toolbar-btn"
-              onClick={() => handleManualSaveVersion()}
-              title="Save current version to history"
-            >
-              <i className="ri-git-commit-line" />
-              <span>Save Version</span>
-            </button>
+          {/* Mark as Finished / Back to Draft Button */}
+          {currentEditingLesson && currentEditingLesson.serverLesson && (
+            currentEditingLesson.status === 'draft' ? (
+              <button
+                type="button"
+                className="lm-toolbar-btn success"
+                onClick={() => handleMarkAsFinished(currentEditingLesson)}
+                title="Mark this lesson as finished"
+              >
+                <i className="ri-check-double-line" />
+                <span>Mark Finished</span>
+              </button>
+            ) : currentEditingLesson.status === 'finished' ? (
+              <button
+                type="button"
+                className="lm-toolbar-btn warning"
+                onClick={() => handleMarkAsDraft(currentEditingLesson)}
+                title="Mark back as draft for editing"
+              >
+                <i className="ri-edit-2-line" />
+                <span>Back to Draft</span>
+              </button>
+            ) : null
           )}
 
           <button

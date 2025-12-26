@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS lessons (
   id VARCHAR(255) PRIMARY KEY,  -- slug-timestamp format
   title VARCHAR(255) NOT NULL,
   slug VARCHAR(255) NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  status VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'finished', 'published', 'archived')),
   
   -- Fork tracking
   parent_id VARCHAR(255) REFERENCES lessons(id) ON DELETE SET NULL,  -- NULL for original lessons
