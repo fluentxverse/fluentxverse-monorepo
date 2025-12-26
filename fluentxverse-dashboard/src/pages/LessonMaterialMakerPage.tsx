@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { lessonApi, type Lesson, type MergeRequest, type LessonVersion, type MergeRequestComment, type LessonMaterial } from '../api/lesson.api';
 import { DiffViewer } from '../Components/DiffViewer/DiffViewer';
 import { useLessonSocket, type ActiveEditor } from '../hooks/useLessonSocket';
+import { AnalyticsDashboard } from '../Components/AnalyticsDashboard/AnalyticsDashboard';
 import './LessonMaterialMakerPage.css';
 
 type HeaderConfig = {
@@ -1981,6 +1982,9 @@ export default function LessonMaterialMakerPage() {
   const [mergeRequestForm, setMergeRequestForm] = useState({ title: '', description: '' });
   const [lessonToFork, setLessonToFork] = useState<SavedLesson | null>(null);
   const [showForkConfirmModal, setShowForkConfirmModal] = useState(false);
+  
+  // Analytics panel state
+  const [showAnalytics, setShowAnalytics] = useState(false);
   
   // === IMPROVEMENT STATES ===
   // Diff viewer
@@ -4326,6 +4330,19 @@ export default function LessonMaterialMakerPage() {
             </button>
           )}
 
+          {/* Analytics Button */}
+          {currentEditingLesson && currentLessonId && (
+            <button
+              type="button"
+              className={`lm-toolbar-btn ${showAnalytics ? 'active' : ''}`}
+              onClick={() => setShowAnalytics(!showAnalytics)}
+              title="View Analytics"
+            >
+              <i className="ri-bar-chart-2-line" />
+              <span>Analytics</span>
+            </button>
+          )}
+
           {/* Save Version Button */}
           {currentEditingLesson && (
             <button
@@ -4516,6 +4533,28 @@ export default function LessonMaterialMakerPage() {
                 Clear History
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Panel */}
+      {showAnalytics && currentLessonId && (
+        <div className="lm-analytics-panel">
+          <div className="lm-analytics-header">
+            <div className="lm-analytics-title">
+              <i className="ri-bar-chart-2-line" />
+              <h3>Lesson Analytics</h3>
+            </div>
+            <button
+              type="button"
+              className="lm-analytics-close"
+              onClick={() => setShowAnalytics(false)}
+            >
+              <i className="ri-close-line" />
+            </button>
+          </div>
+          <div className="lm-analytics-content">
+            <AnalyticsDashboard lessonId={currentLessonId} />
           </div>
         </div>
       )}
