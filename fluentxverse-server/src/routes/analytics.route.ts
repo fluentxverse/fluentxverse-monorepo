@@ -55,7 +55,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
 
       const progress = await lessonAnalyticsService.getOrCreateProgress(
         params.lessonId,
-        auth.sub
+        auth.sub || ''
       );
 
       return { success: true, progress };
@@ -143,7 +143,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const progress = await lessonAnalyticsService.getUserProgress(auth.sub);
+      const progress = await lessonAnalyticsService.getUserProgress(auth.sub || '');
       return { success: true, progress };
     } catch (error) {
       console.error('Error getting user progress:', error);
@@ -159,7 +159,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const lessons = await lessonAnalyticsService.getLessonsDueForReview(auth.sub);
+      const lessons = await lessonAnalyticsService.getLessonsDueForReview(auth.sub || '');
       return { success: true, lessons };
     } catch (error) {
       console.error('Error getting due lessons:', error);
@@ -186,7 +186,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const result = await lessonAnalyticsService.bookmarkLesson(auth.sub, params.lessonId);
+      const result = await lessonAnalyticsService.bookmarkLesson(auth.sub || '', params.lessonId);
       return result;
     } catch (error) {
       console.error('Error bookmarking lesson:', error);
@@ -202,7 +202,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const result = await lessonAnalyticsService.removeBookmark(auth.sub, params.lessonId);
+      const result = await lessonAnalyticsService.removeBookmark(auth.sub || '', params.lessonId);
       return result;
     } catch (error) {
       console.error('Error removing bookmark:', error);
@@ -218,7 +218,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Unauthorized' };
       }
 
-      const bookmarks = await lessonAnalyticsService.getUserBookmarks(auth.sub);
+      const bookmarks = await lessonAnalyticsService.getUserBookmarks(auth.sub || '');
       return { success: true, bookmarks };
     } catch (error) {
       console.error('Error getting bookmarks:', error);
@@ -234,7 +234,7 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
         return { success: true, bookmarked: false };
       }
 
-      const bookmarked = await lessonAnalyticsService.isBookmarked(auth.sub, params.lessonId);
+      const bookmarked = await lessonAnalyticsService.isBookmarked(auth.sub || '', params.lessonId);
       return { success: true, bookmarked };
     } catch (error) {
       console.error('Error checking bookmark:', error);

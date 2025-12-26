@@ -4766,7 +4766,13 @@ export default function LessonMaterialMakerPage() {
 
         {/* Page body - sections */}
         <div className="lm-body">
-          {draft.sections.map((section, sectionIndex) => (
+          {draft.sections.map((section, sectionIndex) => {
+            // Hide feedback section in student view mode
+            if (materialViewMode === 'student' && section.sectionType === 'feedback') {
+              return null;
+            }
+            
+            return (
             <div key={section.id} className="lm-section">
               {/* Two-column layout */}
               <div className={`lm-section-layout ${materialViewMode === 'student' ? 'student-view' : ''}`}>
@@ -9939,7 +9945,8 @@ export default function LessonMaterialMakerPage() {
                 )}
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
 
