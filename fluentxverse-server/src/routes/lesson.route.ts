@@ -352,13 +352,22 @@ async function processUploadedImages(
 ): Promise<{ lessonData: any; uploadedCount: number }> {
   let uploadedCount = 0;
   
+  // Log all form keys for debugging
+  const formKeys: string[] = [];
+  for (const [key] of form.entries()) {
+    formKeys.push(key);
+  }
+  console.log('📦 FormData keys:', formKeys);
+  
   // Recursively process an object/array to find and replace upload placeholders
   const processValue = async (obj: any, key: string, parentPath: string): Promise<void> => {
     const value = obj[key];
     
     if (typeof value === 'string' && value.startsWith('__UPLOAD__:')) {
       const imageKey = value.replace('__UPLOAD__:', '');
+      console.log(`🔍 Found placeholder: ${imageKey}, looking in FormData...`);
       const file = form.get(imageKey);
+      console.log(`📁 File found: ${file instanceof File ? `Yes (${file.size} bytes, ${file.type})` : 'No'}`);
       
       if (file instanceof File && file.size > 0) {
         // Validate it's an image
@@ -388,8 +397,10 @@ async function processUploadedImages(
           obj[key] = '';
         }
       } else {
-        // No file found for placeholder, clear it
-        obj[key] = '';
+        // No file found for placeholder - log warning but clear placeholder
+        console.warn(`⚠️ No file found in FormData for placeholder: ${imageKey}`);
+        console.warn(`   Available keys: ${formKeys.join(', ')}`);
+        obj[key] = ''; // Clear placeholder so it doesn't persist
       }
     } else if (Array.isArray(value)) {
       // Process array items
@@ -491,10 +502,16 @@ export default new Elysia({ prefix: '/lesson' })
       const sizeReduction = getMaterialSizeReduction(lessonData, studentData);
       console.log(`📚 Lesson ${lesson.id}: Student material is ${sizeReduction}% smaller than tutor material`);
 
+      // Return the version with the PROCESSED lessonData (image URLs, not placeholders)
+      const processedVersion = {
+        ...version,
+        lessonData: lessonData // Use the processed data with actual URLs
+      };
+
       return {
         success: true,
         lesson,
-        version,
+        version: processedVersion,
         url: lessonUrl,
         headerImageUrl,
         studentDataUrl: `${API_BASE}/lesson/files${studentJsonPath}`,
@@ -583,10 +600,16 @@ export default new Elysia({ prefix: '/lesson' })
       const studentJsonPath = `${basePath}/student-data.json`;
       await uploadToSeaweed(studentJsonPath, JSON.stringify(studentData, null, 2), 'application/json');
 
+      // Return the version with the PROCESSED lessonData (image URLs, not placeholders)
+      const processedVersion = {
+        ...version,
+        lessonData: lessonData // Use the processed data with actual URLs
+      };
+
       return {
         success: true,
         lesson,
-        version,
+        version: processedVersion,
         url: lessonUrl,
         message: 'Lesson updated successfully'
       };
