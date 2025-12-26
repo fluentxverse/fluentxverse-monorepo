@@ -221,33 +221,86 @@ function dataUrlToBlob(dataUrl: string): Blob | null {
   }
 }
 
+/**
+ * Check if a string is a base64 data URL
+ */
+function isBase64Image(str: string | undefined): boolean {
+  return !!str && str.startsWith('data:image');
+}
+
+/**
+ * Extract all base64 images from lesson data and add them to FormData
+ * Returns the lesson data with base64 images replaced with placeholder keys
+ */
+function extractAndPrepareImages(lesson: any, formData: FormData): any {
+  const lessonCopy = JSON.parse(JSON.stringify(lesson));
+  let imageIndex = 0;
+  
+  // Helper to process an image field
+  const processImage = (obj: any, key: string, prefix: string) => {
+    if (obj && isBase64Image(obj[key])) {
+      const blob = dataUrlToBlob(obj[key]);
+      if (blob) {
+        const imageKey = `${prefix}_${imageIndex++}`;
+        const ext = blob.type.split('/')[1] || 'jpg';
+        formData.append(imageKey, blob, `${imageKey}.${ext}`);
+        obj[key] = `__UPLOAD__:${imageKey}`; // Placeholder to be replaced by server
+      }
+    }
+  };
+  
+  // Process header image
+  processImage(lessonCopy.header, 'backgroundImage', 'header');
+  
+  // Process sections if present
+  if (Array.isArray(lessonCopy.sections)) {
+    lessonCopy.sections.forEach((section: any, sIdx: number) => {
+      // Section-level images
+      processImage(section, 'sectionImage', `section_${sIdx}`);
+      processImage(section, 'dialogueImage', `section_${sIdx}_dialogue`);
+      processImage(section, 'triviaImage', `section_${sIdx}_trivia`);
+      processImage(section, 'practiceImage', `section_${sIdx}_practice`);
+      processImage(section, 'readingImage', `section_${sIdx}_reading`);
+      
+      // Vocab cards
+      if (Array.isArray(section.vocabCards)) {
+        section.vocabCards.forEach((card: any, cIdx: number) => {
+          processImage(card, 'image', `section_${sIdx}_vocab_${cIdx}`);
+        });
+      }
+      
+      // Image cards
+      if (Array.isArray(section.imageCards)) {
+        section.imageCards.forEach((card: any, cIdx: number) => {
+          processImage(card, 'image', `section_${sIdx}_imgcard_${cIdx}`);
+        });
+      }
+      
+      // Trivia examples
+      if (Array.isArray(section.triviaExamples)) {
+        section.triviaExamples.forEach((ex: any, eIdx: number) => {
+          processImage(ex, 'image', `section_${sIdx}_triviaex_${eIdx}`);
+        });
+      }
+    });
+  }
+  
+  return lessonCopy;
+}
+
 export const lessonApi = {
   /**
    * Create a new lesson (database-backed)
+   * Extracts all base64 images and uploads them separately for better performance
    */
   async createLesson(lesson: LessonMaterial): Promise<CreateLessonResponse> {
     const formData = new FormData();
     
-    // Prepare lesson data - only clear base64 images (upload separately), keep URLs
-    const isBase64Image = lesson.header.backgroundImage && lesson.header.backgroundImage.startsWith('data:');
-    const lessonToSave: LessonMaterial = {
-      ...lesson,
-      header: {
-        ...lesson.header,
-        backgroundImage: isBase64Image ? '' : lesson.header.backgroundImage
-      }
-    };
+    // Extract all base64 images and add them to formData
+    // This replaces base64 strings with placeholders like "__UPLOAD__:key"
+    const lessonToSave = extractAndPrepareImages(lesson, formData);
     
     formData.append('lessonData', JSON.stringify(lessonToSave));
-    
-    // If there's a base64 header image, convert to blob and add
-    if (isBase64Image) {
-      const imageBlob = dataUrlToBlob(lesson.header.backgroundImage);
-      if (imageBlob) {
-        const ext = imageBlob.type.split('/')[1] || 'jpg';
-        formData.append('headerImage', imageBlob, `header.${ext}`);
-      }
-    }
     
     const response = await api.post<CreateLessonResponse>('/lesson/create', formData, {
       headers: {
@@ -260,33 +313,17 @@ export const lessonApi = {
 
   /**
    * Update a lesson (creates new version)
+   * Extracts all base64 images and uploads them separately for better performance
    */
   async updateLesson(lessonId: string, lesson: LessonMaterial, changeSummary?: string): Promise<UpdateLessonResponse> {
     const formData = new FormData();
     
-    // Preserve existing server URL for header image, only clear if it's a base64 we're uploading
-    const isBase64Image = lesson.header.backgroundImage && lesson.header.backgroundImage.startsWith('data:');
-    const lessonToSave: LessonMaterial = {
-      ...lesson,
-      header: {
-        ...lesson.header,
-        // Keep existing URL if not uploading new base64 image
-        backgroundImage: isBase64Image ? '' : lesson.header.backgroundImage
-      }
-    };
+    // Extract all base64 images and add them to formData
+    const lessonToSave = extractAndPrepareImages(lesson, formData);
     
     formData.append('lessonData', JSON.stringify(lessonToSave));
     if (changeSummary) {
       formData.append('changeSummary', changeSummary);
-    }
-    
-    // Only upload if it's a new base64 image
-    if (isBase64Image) {
-      const imageBlob = dataUrlToBlob(lesson.header.backgroundImage);
-      if (imageBlob) {
-        const ext = imageBlob.type.split('/')[1] || 'jpg';
-        formData.append('headerImage', imageBlob, `header.${ext}`);
-      }
     }
     
     const response = await api.put<UpdateLessonResponse>(`/lesson/update/${lessonId}`, formData, {

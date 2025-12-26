@@ -340,6 +340,82 @@ function getDisplayName(auth: JwtAuthPayload): string | undefined {
   return auth.firstName || auth.givenName || auth.email?.split('@')[0];
 }
 
+/**
+ * Process all uploaded images from form data and replace placeholders in lesson data
+ * Placeholders look like: "__UPLOAD__:keyName"
+ * Images are uploaded to SeaweedFS and URLs are inserted back into the data
+ */
+async function processUploadedImages(
+  form: FormData, 
+  lessonData: any, 
+  basePath: string
+): Promise<{ lessonData: any; uploadedCount: number }> {
+  let uploadedCount = 0;
+  
+  // Recursively process an object/array to find and replace upload placeholders
+  const processValue = async (obj: any, key: string, parentPath: string): Promise<void> => {
+    const value = obj[key];
+    
+    if (typeof value === 'string' && value.startsWith('__UPLOAD__:')) {
+      const imageKey = value.replace('__UPLOAD__:', '');
+      const file = form.get(imageKey);
+      
+      if (file instanceof File && file.size > 0) {
+        // Validate it's an image
+        if (!file.type.startsWith('image/')) {
+          console.warn(`Skipping non-image file: ${imageKey}`);
+          obj[key] = '';
+          return;
+        }
+        
+        // Limit file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          console.warn(`Skipping oversized image: ${imageKey}`);
+          obj[key] = '';
+          return;
+        }
+        
+        // Upload to SeaweedFS
+        const ext = file.name?.split('.').pop() || 'jpg';
+        const imagePath = `${basePath}/images/${imageKey}.${ext}`;
+        
+        try {
+          const url = await uploadToSeaweed(imagePath, file, file.type);
+          obj[key] = url;
+          uploadedCount++;
+        } catch (err) {
+          console.error(`Failed to upload image ${imageKey}:`, err);
+          obj[key] = '';
+        }
+      } else {
+        // No file found for placeholder, clear it
+        obj[key] = '';
+      }
+    } else if (Array.isArray(value)) {
+      // Process array items
+      for (let i = 0; i < value.length; i++) {
+        if (typeof value[i] === 'object' && value[i] !== null) {
+          await processObject(value[i], `${parentPath}[${i}]`);
+        }
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      // Process nested object
+      await processObject(value, `${parentPath}.${key}`);
+    }
+  };
+  
+  const processObject = async (obj: any, path: string): Promise<void> => {
+    for (const key of Object.keys(obj)) {
+      await processValue(obj, key, path);
+    }
+  };
+  
+  // Process the entire lesson data
+  await processObject(lessonData, 'root');
+  
+  return { lessonData, uploadedCount };
+}
+
 export default new Elysia({ prefix: '/lesson' })
   /**
    * Create a new lesson (with database tracking)
@@ -369,7 +445,7 @@ export default new Elysia({ prefix: '/lesson' })
         return { success: false, error: 'Invalid lesson data JSON' };
       }
 
-      // Create lesson in database
+      // Create lesson in database (initial save without images)
       const { lesson, version } = await lessonService.createLesson(
         lessonData,
         auth.userId,
@@ -378,35 +454,28 @@ export default new Elysia({ prefix: '/lesson' })
 
       const basePath = lesson.storagePath;
 
-      // Handle header image upload if present
-      let headerImageUrl: string | undefined;
-      const headerImage = form.get('headerImage');
+      // Process ALL uploaded images (header, section images, vocab images, etc.)
+      // This replaces __UPLOAD__:key placeholders with actual URLs
+      const { lessonData: processedData, uploadedCount } = await processUploadedImages(
+        form,
+        lessonData,
+        basePath
+      );
+      lessonData = processedData;
       
-      if (headerImage instanceof File && headerImage.size > 0) {
-        if (!headerImage.type.startsWith('image/')) {
-          return { success: false, error: 'Header image must be an image file' };
-        }
-        
-        if (headerImage.size > 10 * 1024 * 1024) {
-          return { success: false, error: 'Header image too large. Max 10MB' };
-        }
-
-        const ext = headerImage.name?.split('.').pop() || 'jpg';
-        const imagePath = `${basePath}/header.${ext}`;
-        
-        headerImageUrl = await uploadToSeaweed(imagePath, headerImage, headerImage.type);
-        // Update lessonData with the header image URL
-        lessonData.header.backgroundImage = headerImageUrl;
-        // Update the version in database with the final lessonData
+      if (uploadedCount > 0) {
+        console.log(`📸 Uploaded ${uploadedCount} images for lesson ${lesson.id}`);
+        // Update the version in database with the final lessonData (including image URLs)
         await lessonService.updateVersionData(lesson.id, version.versionNumber, lessonData);
       }
 
       // Generate and upload HTML
+      const headerImageUrl = lessonData.header?.backgroundImage || undefined;
       const html = generateLessonHtml(lessonData, headerImageUrl);
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
 
-      // Save tutor JSON data (full version with hints) - now includes header image URL
+      // Save tutor JSON data (full version with hints) - now includes all image URLs
       const tutorJsonPath = `${basePath}/tutor-data.json`;
       await uploadToSeaweed(tutorJsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
       
@@ -479,38 +548,29 @@ export default new Elysia({ prefix: '/lesson' })
 
       const basePath = lesson.storagePath;
 
-      // Handle header image upload if present
-      let headerImageUrl: string | undefined;
-      const headerImage = form.get('headerImage');
+      // Process ALL uploaded images (header, section images, vocab images, etc.)
+      // This replaces __UPLOAD__:key placeholders with actual URLs
+      const { lessonData: processedData, uploadedCount } = await processUploadedImages(
+        form,
+        lessonData,
+        basePath
+      );
+      lessonData = processedData;
       
-      if (headerImage instanceof File && headerImage.size > 0) {
-        if (!headerImage.type.startsWith('image/')) {
-          return { success: false, error: 'Header image must be an image file' };
-        }
-        
-        if (headerImage.size > 10 * 1024 * 1024) {
-          return { success: false, error: 'Header image too large. Max 10MB' };
-        }
-
-        const ext = headerImage.name?.split('.').pop() || 'jpg';
-        const imagePath = `${basePath}/header.${ext}`;
-        
-        headerImageUrl = await uploadToSeaweed(imagePath, headerImage, headerImage.type);
-        // Update lessonData with the new header image URL
-        lessonData.header.backgroundImage = headerImageUrl;
+      if (uploadedCount > 0) {
+        console.log(`📸 Uploaded ${uploadedCount} images for lesson ${lesson.id}`);
       }
-
-      // Update the version in database with the final lessonData (including header image URL)
-      if (headerImageUrl) {
-        await lessonService.updateVersionData(lesson.id, version.versionNumber, lessonData);
-      }
+      
+      // Always update the version in database with the final lessonData
+      await lessonService.updateVersionData(lesson.id, version.versionNumber, lessonData);
 
       // Update HTML file
+      const headerImageUrl = lessonData.header?.backgroundImage || undefined;
       const html = generateLessonHtml(lessonData, headerImageUrl);
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
 
-      // Save tutor JSON data (full version with hints)
+      // Save tutor JSON data (full version with hints) - includes all image URLs
       const tutorJsonPath = `${basePath}/tutor-data.json`;
       await uploadToSeaweed(tutorJsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
       
