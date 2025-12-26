@@ -55,6 +55,10 @@ const defaultOrigins = [
   'http://localhost:5175',
   'http://localhost:5176',
   'http://localhost:5178',
+  // Production domains
+  'https://student.fluentxverse.xyz',
+  'https://tutor.fluentxverse.xyz',
+  'https://dashboard.fluentxverse.xyz',
 ];
 
 const envOrigins = (process.env.FRONTEND_URLS || '')
@@ -62,14 +66,20 @@ const envOrigins = (process.env.FRONTEND_URLS || '')
   .map(o => o.trim())
   .filter(o => o.length > 0);
 
-const allowedOrigins = envOrigins.length > 0 ? [...envOrigins, ...defaultOrigins] : defaultOrigins;
+const allowedOrigins = envOrigins.length > 0 ? [...new Set([...envOrigins, ...defaultOrigins])] : defaultOrigins;
 
 console.log('🌐 CORS allowed origins:', allowedOrigins);
 
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
   .use(cors({
-    origin: allowedOrigins,
+    origin: (request) => {
+      const origin = request.headers.get('origin');
+      if (!origin) return true; // Allow requests with no origin (like curl)
+      if (allowedOrigins.includes(origin)) return true;
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      return false;
+    },
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
