@@ -1,14 +1,18 @@
 import { createContext } from 'preact';
-import { useContext, useState, useEffect } from 'preact/hooks';
+import { useContext, useState, useEffect, useCallback } from 'preact/hooks';
 import { authApi, type AdminUser } from '../api/auth.api';
+import { SESSION_EXPIRED_EVENT } from '../api/apiClient';
 
 interface AuthContextValue {
   user: AdminUser | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  sessionExpired: boolean;
+  sessionExpiredMessage: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  clearSessionExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -17,6 +21,30 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
+
+  // Handle session expired event from API interceptor
+  useEffect(() => {
+    const handleSessionExpired = (event: CustomEvent) => {
+      console.log('[Auth] Session expired event received');
+      setUser(null);
+      setSessionExpired(true);
+      setSessionExpiredMessage(event.detail?.message || 'Your session has expired. Please log in again.');
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired as EventListener);
+    
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired as EventListener);
+    };
+  }, []);
+
+  // Clear session expired state (used after user acknowledges)
+  const clearSessionExpired = useCallback(() => {
+    setSessionExpired(false);
+    setSessionExpiredMessage(null);
+  }, []);
 
   // Check authentication on mount
   useEffect(() => {
@@ -73,8 +101,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
         isAuthenticated: !!user,
         loading,
         error,
+        sessionExpired,
+        sessionExpiredMessage,
         login,
         logout,
+        clearSessionExpired,
       }}
     >
       {children}
