@@ -2362,6 +2362,7 @@ export default function LessonMaterialMakerPage() {
   }, [draft, currentEditingLesson]);
 
   // Autosave function - uses proper API endpoints with version history
+  // Falls back to legacy save if unauthorized
   const saveToServer = useCallback(async (draftToSave: LessonMaterialDraft) => {
     if (!currentEditingLesson) {
       console.log('[Autosave] No current editing lesson, skipping save');
@@ -2400,6 +2401,16 @@ export default function LessonMaterialMakerPage() {
               )
             );
           }
+        } else if (result.error === 'Unauthorized') {
+          // Fall back to legacy save without version history
+          console.log('[Autosave] Unauthorized, falling back to legacy save...');
+          const legacyResult = await lessonApi.saveLesson(draftToSave);
+          if (legacyResult.success && legacyResult.url) {
+            setLastSaved(new Date());
+            setSavedLessonUrl(legacyResult.url);
+          } else {
+            setSaveError(legacyResult.error || 'Failed to save');
+          }
         } else {
           console.error('[Autosave] Update failed:', result.error);
           setSaveError(result.error || 'Failed to save');
@@ -2427,12 +2438,23 @@ export default function LessonMaterialMakerPage() {
               )
             );
           }
+        } else if (result.error === 'Unauthorized') {
+          // Fall back to legacy save without version history
+          console.log('[Autosave] Unauthorized, falling back to legacy save...');
+          const legacyResult = await lessonApi.saveLesson(draftToSave);
+          if (legacyResult.success && legacyResult.url) {
+            setLastSaved(new Date());
+            setSavedLessonUrl(legacyResult.url);
+          } else {
+            setSaveError(legacyResult.error || 'Failed to save');
+          }
         } else {
           console.error('[Autosave] Create failed:', result.error);
           setSaveError(result.error || 'Failed to save');
         }
       }
     } catch (err) {
+      console.error('[Autosave] Exception:', err);
       setSaveError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setIsSaving(false);

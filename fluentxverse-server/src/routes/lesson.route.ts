@@ -300,18 +300,33 @@ function generateSlug(title: string): string {
     .replace(/(^-|-$)/g, '') || 'lesson';
 }
 
-// Auth middleware helper
+// Auth middleware helper - checks multiple auth cookie types
 async function getAuthFromCookie(request: Request): Promise<JwtAuthPayload | null> {
   const cookies = request.headers.get('cookie') || '';
-  const tokenMatch = cookies.match(/auth_token=([^;]+)/);
-  if (!tokenMatch || !tokenMatch[1]) return null;
   
-  try {
-    const payload = await verifyAuthToken(tokenMatch[1]);
-    return payload;
-  } catch {
-    return null;
+  // Try different cookie formats: adminAuth, tutorAuth, studentAuth, auth_token
+  const cookiePatterns = [
+    /adminAuth=([^;]+)/,
+    /tutorAuth=([^;]+)/,
+    /studentAuth=([^;]+)/,
+    /auth_token=([^;]+)/
+  ];
+  
+  for (const pattern of cookiePatterns) {
+    const match = cookies.match(pattern);
+    if (match && match[1]) {
+      try {
+        const decoded = decodeURIComponent(match[1]);
+        const payload = await verifyAuthToken(decoded);
+        return payload;
+      } catch {
+        // Try next cookie type
+        continue;
+      }
+    }
   }
+  
+  return null;
 }
 
 // Get display name from auth payload
