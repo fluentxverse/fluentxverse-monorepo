@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { lessonService, type LessonMaterial } from '../services/lesson.services/lesson.service';
 import { verifyAuthToken, type JwtAuthPayload } from '../utils/jwt';
+import { generateStudentMaterial, getMaterialSizeReduction } from '../utils/studentMaterial';
 
 const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
 
@@ -26,6 +27,20 @@ async function uploadToSeaweed(path: string, content: Blob | string, contentType
   }
   
   return uploadUrl;
+}
+
+/**
+ * Fetch a file from SeaweedFS Filer
+ */
+async function fetchFromSeaweed(path: string): Promise<any | null> {
+  try {
+    const url = `${FILER_BASE}${path}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -366,9 +381,21 @@ export default new Elysia({ prefix: '/lesson' })
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
 
-      // Save JSON data
+      // Save tutor JSON data (full version with hints)
+      const tutorJsonPath = `${basePath}/tutor-data.json`;
+      await uploadToSeaweed(tutorJsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
+      
+      // Also save as data.json for backwards compatibility
       const jsonPath = `${basePath}/data.json`;
       await uploadToSeaweed(jsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
+
+      // Generate and save student version (stripped of tutor hints)
+      const studentData = generateStudentMaterial(lessonData as any);
+      const studentJsonPath = `${basePath}/student-data.json`;
+      await uploadToSeaweed(studentJsonPath, JSON.stringify(studentData, null, 2), 'application/json');
+      
+      const sizeReduction = getMaterialSizeReduction(lessonData, studentData);
+      console.log(`📚 Lesson ${lesson.id}: Student material is ${sizeReduction}% smaller than tutor material`);
 
       return {
         success: true,
@@ -376,6 +403,8 @@ export default new Elysia({ prefix: '/lesson' })
         version,
         url: lessonUrl,
         headerImageUrl,
+        studentDataUrl: `${FILER_BASE}${studentJsonPath}`,
+        tutorDataUrl: `${FILER_BASE}${tutorJsonPath}`,
         message: 'Lesson created successfully'
       };
     } catch (error) {
@@ -449,9 +478,18 @@ export default new Elysia({ prefix: '/lesson' })
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
 
-      // Update JSON data
+      // Save tutor JSON data (full version with hints)
+      const tutorJsonPath = `${basePath}/tutor-data.json`;
+      await uploadToSeaweed(tutorJsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
+      
+      // Also save as data.json for backwards compatibility
       const jsonPath = `${basePath}/data.json`;
       await uploadToSeaweed(jsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
+
+      // Generate and save student version (stripped of tutor hints)
+      const studentData = generateStudentMaterial(lessonData as any);
+      const studentJsonPath = `${basePath}/student-data.json`;
+      await uploadToSeaweed(studentJsonPath, JSON.stringify(studentData, null, 2), 'application/json');
 
       return {
         success: true,
@@ -817,6 +855,168 @@ export default new Elysia({ prefix: '/lesson' })
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to save lesson' 
       };
+    }
+  })
+
+  /**
+   * Get student material for a lesson (stripped of tutor hints)
+   * This endpoint is for student apps - returns material without tutor content
+   */
+  .get('/:lessonId/student', async ({ params }) => {
+    try {
+      const { lessonId } = params;
+      
+      // First try to get from database
+      const dbLesson = await lessonService.getLessonById(lessonId);
+      
+      if (dbLesson) {
+        // Try to get pre-generated student data from SeaweedFS
+        const studentData = await fetchFromSeaweed(`${dbLesson.storagePath}/student-data.json`);
+        
+        if (studentData) {
+          return {
+            success: true,
+            lesson: {
+              id: dbLesson.id,
+              title: dbLesson.title,
+              status: dbLesson.status,
+            },
+            lessonData: studentData,
+            materialType: 'student'
+          };
+        }
+        
+        // Fallback: Generate student material on-the-fly from tutor data
+        const latestVersion = await lessonService.getLatestVersion(lessonId);
+        if (latestVersion?.lessonData) {
+          const generatedStudentData = generateStudentMaterial(latestVersion.lessonData as any);
+          return {
+            success: true,
+            lesson: {
+              id: dbLesson.id,
+              title: dbLesson.title,
+              status: dbLesson.status,
+            },
+            lessonData: generatedStudentData,
+            materialType: 'student',
+            generatedOnFly: true
+          };
+        }
+      }
+      
+      // Fallback to SeaweedFS only (for legacy lessons)
+      const studentJsonUrl = `${FILER_BASE}/lessons/${lessonId}/student-data.json`;
+      const res = await fetch(studentJsonUrl);
+      
+      if (res.ok) {
+        const studentData = await res.json();
+        return {
+          success: true,
+          lesson: null,
+          lessonData: studentData,
+          materialType: 'student'
+        };
+      }
+      
+      // Last fallback: Get tutor data and strip it
+      const tutorJsonUrl = `${FILER_BASE}/lessons/${lessonId}/data.json`;
+      const tutorRes = await fetch(tutorJsonUrl);
+      
+      if (tutorRes.ok) {
+        const tutorData = await tutorRes.json() as any;
+        const generatedStudentData = generateStudentMaterial(tutorData);
+        return {
+          success: true,
+          lesson: null,
+          lessonData: generatedStudentData,
+          materialType: 'student',
+          generatedOnFly: true
+        };
+      }
+      
+      return { success: false, error: 'Lesson not found' };
+    } catch (error) {
+      console.error('Error fetching student material:', error);
+      return { success: false, error: 'Failed to fetch student material' };
+    }
+  })
+
+  /**
+   * Get tutor material for a lesson (full version with hints)
+   * This endpoint is for tutor/dashboard apps - returns full material
+   */
+  .get('/:lessonId/tutor', async ({ params, request }) => {
+    try {
+      const { lessonId } = params;
+      
+      // Verify auth - only tutors/admins should access tutor material
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized - tutor material requires authentication' };
+      }
+      
+      // First try to get from database
+      const dbLesson = await lessonService.getLessonById(lessonId);
+      
+      if (dbLesson) {
+        // Try to get tutor data from SeaweedFS
+        const tutorData = await fetchFromSeaweed(`${dbLesson.storagePath}/tutor-data.json`);
+        
+        if (tutorData) {
+          return {
+            success: true,
+            lesson: dbLesson,
+            lessonData: tutorData,
+            materialType: 'tutor'
+          };
+        }
+        
+        // Fallback to data.json (backwards compatibility)
+        const legacyData = await fetchFromSeaweed(`${dbLesson.storagePath}/data.json`);
+        if (legacyData) {
+          return {
+            success: true,
+            lesson: dbLesson,
+            lessonData: legacyData,
+            materialType: 'tutor'
+          };
+        }
+        
+        // Fallback to database version data
+        const latestVersion = await lessonService.getLatestVersion(lessonId);
+        if (latestVersion?.lessonData) {
+          return {
+            success: true,
+            lesson: dbLesson,
+            lessonData: latestVersion.lessonData,
+            materialType: 'tutor'
+          };
+        }
+      }
+      
+      // Fallback to SeaweedFS only (for legacy lessons)
+      const tutorJsonUrl = `${FILER_BASE}/lessons/${lessonId}/tutor-data.json`;
+      let res = await fetch(tutorJsonUrl);
+      
+      if (!res.ok) {
+        // Try legacy data.json
+        res = await fetch(`${FILER_BASE}/lessons/${lessonId}/data.json`);
+      }
+      
+      if (!res.ok) {
+        return { success: false, error: 'Lesson not found' };
+      }
+      
+      const tutorData = await res.json();
+      return {
+        success: true,
+        lesson: null,
+        lessonData: tutorData,
+        materialType: 'tutor'
+      };
+    } catch (error) {
+      console.error('Error fetching tutor material:', error);
+      return { success: false, error: 'Failed to fetch tutor material' };
     }
   })
 
