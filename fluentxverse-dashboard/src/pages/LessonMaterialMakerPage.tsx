@@ -2369,18 +2369,108 @@ export default function LessonMaterialMakerPage() {
     }
   }, [showVersionHistory, currentEditingLesson?.serverLesson?.id]);
 
+  // Generate change description by comparing with previous version
+  const generateVersionChangeDescription = (
+    current: any, 
+    previous: any | null, 
+    changeSummary: string | null
+  ): string => {
+    // If there's an explicit summary, use it (unless it's just "Auto-save")
+    if (changeSummary && changeSummary !== 'Auto-save') {
+      return changeSummary;
+    }
+    
+    if (!previous) {
+      return 'Initial version';
+    }
+    
+    const changes: string[] = [];
+    
+    // Compare sections
+    const currentSections = current.sections || [];
+    const prevSections = previous.sections || [];
+    
+    if (currentSections.length > prevSections.length) {
+      changes.push(`Added ${currentSections.length - prevSections.length} section(s)`);
+    } else if (currentSections.length < prevSections.length) {
+      changes.push(`Removed ${prevSections.length - currentSections.length} section(s)`);
+    }
+    
+    // Check for image changes
+    let imagesAdded = 0;
+    currentSections.forEach((section: any, idx: number) => {
+      const prevSection = prevSections[idx];
+      if (!prevSection) return;
+      
+      // Check section images
+      if (section.sectionImage && !prevSection.sectionImage) imagesAdded++;
+      
+      // Check vocab card images
+      const currentVocab = section.vocabCards || [];
+      const prevVocab = prevSection.vocabCards || [];
+      currentVocab.forEach((card: any, cIdx: number) => {
+        const prevCard = prevVocab[cIdx];
+        if (card.image && (!prevCard || !prevCard.image)) imagesAdded++;
+      });
+    });
+    
+    if (imagesAdded > 0) {
+      changes.push(`Added ${imagesAdded} image(s)`);
+    }
+    
+    // Check header changes
+    if (current.header?.goalText !== previous.header?.goalText) {
+      changes.push('Updated lesson goal');
+    }
+    if (current.header?.lessonLabel !== previous.header?.lessonLabel) {
+      changes.push('Changed lesson title');
+    }
+    if (current.header?.backgroundImage !== previous.header?.backgroundImage) {
+      changes.push('Updated header image');
+    }
+    
+    // Check vocabulary count
+    const currentVocabCount = (current.vocabulary || []).length;
+    const prevVocabCount = (previous.vocabulary || []).length;
+    if (currentVocabCount !== prevVocabCount) {
+      changes.push(`Vocabulary: ${prevVocabCount} → ${currentVocabCount}`);
+    }
+    
+    // Check grammar count  
+    const currentGrammarCount = (current.grammar || []).length;
+    const prevGrammarCount = (previous.grammar || []).length;
+    if (currentGrammarCount !== prevGrammarCount) {
+      changes.push(`Grammar: ${prevGrammarCount} → ${currentGrammarCount}`);
+    }
+    
+    if (changes.length === 0) {
+      return 'Content updated';
+    }
+    
+    return changes.slice(0, 3).join(', ');
+  };
+
   // Get version history for current lesson - prefer server versions
+  // Server returns newest first (ORDER BY version_number DESC)
   const currentLessonHistory = serverVersions.length > 0
-    ? serverVersions.map(v => ({
-        id: v.id,
-        lessonId: v.lessonId,
-        version: v.versionNumber,
-        snapshot: v.lessonData as any,
-        timestamp: v.createdAt,
-        changeDescription: v.changeSummary || 'Auto-save',
-        autoSave: true,
-        changedByName: v.changedByName,
-      }))
+    ? serverVersions.map((v, idx, arr) => {
+        // Previous version is the next item in array (since newest is first)
+        const previousVersion = arr[idx + 1];
+        return {
+          id: v.id,
+          lessonId: v.lessonId,
+          version: v.versionNumber,
+          snapshot: v.lessonData as any,
+          timestamp: v.createdAt,
+          changeDescription: generateVersionChangeDescription(
+            v.lessonData, 
+            previousVersion?.lessonData || null,
+            v.changeSummary
+          ),
+          autoSave: !v.changeSummary || v.changeSummary === 'Auto-save',
+          changedByName: v.changedByName,
+        };
+      })
     : (currentEditingLesson ? versionHistory[currentEditingLesson.id]?.versions || [] : []);
 
   // Update savedLessons whenever draft changes (if editing a lesson)
@@ -4716,7 +4806,7 @@ export default function LessonMaterialMakerPage() {
               </div>
             ) : (
               <div className="lm-version-list">
-                {[...currentLessonHistory].reverse().map((entry, index) => (
+                {currentLessonHistory.map((entry, index) => (
                   <div 
                     key={entry.id} 
                     className={`lm-version-item ${selectedVersionToPreview?.id === entry.id ? 'selected' : ''} ${index === 0 ? 'latest' : ''}`}
