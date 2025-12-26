@@ -7241,6 +7241,15 @@ body.lm-fullscreen-mode .main-content {
   text-transform: uppercase;
 }
 
+.lm-version-author {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 2px 6px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
 .lm-version-time {
   font-size: 12px;
   color: var(--text-muted);

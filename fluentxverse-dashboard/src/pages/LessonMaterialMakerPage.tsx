@@ -2309,10 +2309,43 @@ export default function LessonMaterialMakerPage() {
     previousDraftRef.current = JSON.parse(JSON.stringify(draft));
   }, [currentEditingLesson, draft, getChangeDescription, saveVersionToHistory]);
 
-  // Get version history for current lesson
-  const currentLessonHistory = currentEditingLesson 
-    ? versionHistory[currentEditingLesson.id]?.versions || []
-    : [];
+  // Server version history state
+  const [serverVersions, setServerVersions] = useState<LessonVersion[]>([]);
+  const [isLoadingVersions, setIsLoadingVersions] = useState(false);
+
+  // Load version history from server when panel opens
+  useEffect(() => {
+    if (showVersionHistory && currentEditingLesson?.serverLesson?.id) {
+      const loadVersions = async () => {
+        setIsLoadingVersions(true);
+        try {
+          const result = await lessonApi.getVersionHistory(currentEditingLesson.serverLesson!.id);
+          if (result.success && result.versions) {
+            setServerVersions(result.versions);
+          }
+        } catch (err) {
+          console.error('Failed to load version history:', err);
+        } finally {
+          setIsLoadingVersions(false);
+        }
+      };
+      loadVersions();
+    }
+  }, [showVersionHistory, currentEditingLesson?.serverLesson?.id]);
+
+  // Get version history for current lesson - prefer server versions
+  const currentLessonHistory = serverVersions.length > 0
+    ? serverVersions.map(v => ({
+        id: v.id,
+        lessonId: v.lessonId,
+        version: v.versionNumber,
+        snapshot: v.lessonData as any,
+        timestamp: v.createdAt,
+        changeDescription: v.changeSummary || 'Auto-save',
+        autoSave: true,
+        changedByName: v.changedByName,
+      }))
+    : (currentEditingLesson ? versionHistory[currentEditingLesson.id]?.versions || [] : []);
 
   // Update savedLessons whenever draft changes (if editing a lesson)
   // This ensures changes are persisted even if the user refreshes before going back to list
@@ -2328,24 +2361,68 @@ export default function LessonMaterialMakerPage() {
     );
   }, [draft, currentEditingLesson]);
 
-  // Autosave function
+  // Autosave function - uses proper API endpoints with version history
   const saveToServer = useCallback(async (draftToSave: LessonMaterialDraft) => {
+    if (!currentEditingLesson) return;
+    
     setIsSaving(true);
     setSaveError(null);
     try {
-      const result = await lessonApi.saveLesson(draftToSave);
-      if (result.success && result.url) {
-        setLastSaved(new Date());
-        setSavedLessonUrl(result.url);
+      // Check if lesson already has a server ID (was created before)
+      if (currentEditingLesson.serverLesson?.id) {
+        // Update existing lesson (creates new version in database)
+        const result = await lessonApi.updateLesson(
+          currentEditingLesson.serverLesson.id,
+          draftToSave,
+          'Auto-save'
+        );
+        if (result.success && result.url) {
+          setLastSaved(new Date());
+          setSavedLessonUrl(result.url);
+          // Update the serverLesson with new version info
+          if (result.lesson) {
+            setSavedLessons(prev =>
+              prev.map(l =>
+                l.id === currentEditingLesson.id
+                  ? { ...l, serverLesson: result.lesson, currentVersion: result.version?.versionNumber }
+                  : l
+              )
+            );
+          }
+        } else {
+          setSaveError(result.error || 'Failed to save');
+        }
       } else {
-        setSaveError(result.error || 'Failed to save');
+        // Create new lesson (first save)
+        const result = await lessonApi.createLesson(draftToSave);
+        if (result.success && result.url) {
+          setLastSaved(new Date());
+          setSavedLessonUrl(result.url);
+          // Update the saved lesson with server info
+          if (result.lesson) {
+            setSavedLessons(prev =>
+              prev.map(l =>
+                l.id === currentEditingLesson.id
+                  ? { 
+                      ...l, 
+                      serverLesson: result.lesson, 
+                      currentVersion: result.version?.versionNumber,
+                      status: result.lesson.status as 'draft' | 'finished' | 'published'
+                    }
+                  : l
+              )
+            );
+          }
+        } else {
+          setSaveError(result.error || 'Failed to save');
+        }
       }
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save');
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [currentEditingLesson]);
 
   // Debounced autosave - triggers 2 seconds after last change
   useEffect(() => {
@@ -4496,11 +4573,16 @@ export default function LessonMaterialMakerPage() {
           </div>
           
           <div className="lm-version-history-content">
-            {currentLessonHistory.length === 0 ? (
+            {isLoadingVersions ? (
+              <div className="lm-version-empty">
+                <i className="ri-loader-4-line spinning" />
+                <p>Loading versions...</p>
+              </div>
+            ) : currentLessonHistory.length === 0 ? (
               <div className="lm-version-empty">
                 <i className="ri-file-history-line" />
                 <p>No versions saved yet</p>
-                <span>Click "Save Version" to create your first snapshot</span>
+                <span>Versions are automatically saved when you make changes</span>
               </div>
             ) : (
               <div className="lm-version-list">
@@ -4514,6 +4596,7 @@ export default function LessonMaterialMakerPage() {
                         <span className="lm-version-badge-number">v{entry.version}</span>
                         {index === 0 && <span className="lm-version-latest-badge">Latest</span>}
                         {entry.autoSave && <span className="lm-version-auto-badge">Auto</span>}
+                        {entry.changedByName && <span className="lm-version-author">{entry.changedByName}</span>}
                       </div>
                       <div className="lm-version-time">
                         {new Date(entry.timestamp).toLocaleString('en-US', {
