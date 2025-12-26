@@ -2176,6 +2176,40 @@ export default function LessonMaterialMakerPage() {
     }
   }, [draft]);
 
+  // On initial load, if editing a lesson with serverLesson, fetch latest from server
+  useEffect(() => {
+    const fetchServerContent = async () => {
+      if (currentEditingLesson?.serverLesson?.id && viewMode === 'editor') {
+        console.log('[Init] Fetching lesson content from server:', currentEditingLesson.serverLesson.id);
+        try {
+          const response = await lessonApi.getLesson(currentEditingLesson.serverLesson.id);
+          if (response.success && response.lessonData) {
+            console.log('[Init] Loaded server content successfully');
+            const serverDraft: LessonMaterialDraft = {
+              version: 2,
+              header: response.lessonData.header,
+              sections: currentEditingLesson.draft.sections,
+              vocabulary: response.lessonData.vocabulary || [],
+              grammar: response.lessonData.grammar || [],
+              exercises: response.lessonData.exercises || []
+            };
+            setDraft(serverDraft);
+            lastSavedContentRef.current = JSON.stringify(serverDraft);
+            // Update savedLessons cache
+            setSavedLessons(prev =>
+              prev.map(l =>
+                l.id === currentEditingLesson.id ? { ...l, draft: serverDraft } : l
+              )
+            );
+          }
+        } catch (err) {
+          console.error('[Init] Error fetching server content:', err);
+        }
+      }
+    };
+    fetchServerContent();
+  }, []); // Only run once on mount
+
   // Save lessons to localStorage
   useEffect(() => {
     try {
@@ -2620,9 +2654,9 @@ export default function LessonMaterialMakerPage() {
   };
 
   // Edit an existing saved lesson
-  const handleEditLesson = (lesson: SavedLesson) => {
+  // If lesson has serverLesson, fetch latest content from server
+  const handleEditLesson = async (lesson: SavedLesson) => {
     setCurrentEditingLesson(lesson);
-    setDraft(lesson.draft);
     setViewMode('editor');
     setIsFullscreen(true);
     // Persist editing lesson ID so it survives page refresh
@@ -2633,6 +2667,44 @@ export default function LessonMaterialMakerPage() {
       '',
       `${window.location.pathname}?lesson=${lesson.id}`
     );
+    
+    // If lesson has been saved to server, fetch the latest content from server
+    if (lesson.serverLesson?.id) {
+      console.log('[Edit] Loading lesson from server:', lesson.serverLesson.id);
+      try {
+        const response = await lessonApi.getLesson(lesson.serverLesson.id);
+        if (response.success && response.lessonData) {
+          console.log('[Edit] Loaded server content successfully');
+          // Convert LessonMaterial to LessonMaterialDraft
+          const serverDraft: LessonMaterialDraft = {
+            version: 2,
+            header: response.lessonData.header,
+            sections: lesson.draft.sections, // Keep local sections structure for now
+            vocabulary: response.lessonData.vocabulary || [],
+            grammar: response.lessonData.grammar || [],
+            exercises: response.lessonData.exercises || []
+          };
+          setDraft(serverDraft);
+          // Update lastSavedContent to prevent immediate re-save
+          lastSavedContentRef.current = JSON.stringify(serverDraft);
+          // Also update the local savedLessons cache
+          setSavedLessons(prev =>
+            prev.map(l =>
+              l.id === lesson.id ? { ...l, draft: serverDraft } : l
+            )
+          );
+        } else {
+          console.log('[Edit] Server fetch failed, using local draft');
+          setDraft(lesson.draft);
+        }
+      } catch (err) {
+        console.error('[Edit] Error loading from server:', err);
+        setDraft(lesson.draft);
+      }
+    } else {
+      // No server lesson, use local draft
+      setDraft(lesson.draft);
+    }
   };
 
   // Delete a saved lesson

@@ -228,19 +228,20 @@ export const lessonApi = {
   async createLesson(lesson: LessonMaterial): Promise<CreateLessonResponse> {
     const formData = new FormData();
     
-    // Prepare lesson data - remove the base64 image from JSON
+    // Prepare lesson data - only clear base64 images (upload separately), keep URLs
+    const isBase64Image = lesson.header.backgroundImage && lesson.header.backgroundImage.startsWith('data:');
     const lessonToSave: LessonMaterial = {
       ...lesson,
       header: {
         ...lesson.header,
-        backgroundImage: '' // Will be handled separately
+        backgroundImage: isBase64Image ? '' : lesson.header.backgroundImage
       }
     };
     
     formData.append('lessonData', JSON.stringify(lessonToSave));
     
     // If there's a base64 header image, convert to blob and add
-    if (lesson.header.backgroundImage && lesson.header.backgroundImage.startsWith('data:')) {
+    if (isBase64Image) {
       const imageBlob = dataUrlToBlob(lesson.header.backgroundImage);
       if (imageBlob) {
         const ext = imageBlob.type.split('/')[1] || 'jpg';
@@ -263,11 +264,14 @@ export const lessonApi = {
   async updateLesson(lessonId: string, lesson: LessonMaterial, changeSummary?: string): Promise<UpdateLessonResponse> {
     const formData = new FormData();
     
+    // Preserve existing server URL for header image, only clear if it's a base64 we're uploading
+    const isBase64Image = lesson.header.backgroundImage && lesson.header.backgroundImage.startsWith('data:');
     const lessonToSave: LessonMaterial = {
       ...lesson,
       header: {
         ...lesson.header,
-        backgroundImage: ''
+        // Keep existing URL if not uploading new base64 image
+        backgroundImage: isBase64Image ? '' : lesson.header.backgroundImage
       }
     };
     
@@ -276,7 +280,8 @@ export const lessonApi = {
       formData.append('changeSummary', changeSummary);
     }
     
-    if (lesson.header.backgroundImage && lesson.header.backgroundImage.startsWith('data:')) {
+    // Only upload if it's a new base64 image
+    if (isBase64Image) {
       const imageBlob = dataUrlToBlob(lesson.header.backgroundImage);
       if (imageBlob) {
         const ext = imageBlob.type.split('/')[1] || 'jpg';

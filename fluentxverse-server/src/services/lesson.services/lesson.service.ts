@@ -410,6 +410,17 @@ export class LessonService {
     
     return result.map((row: any) => this.mapVersionRow(row));
   }
+
+  /**
+   * Update version data (e.g., to add header image URL after upload)
+   */
+  async updateVersionData(lessonId: string, versionNumber: number, lessonData: LessonMaterial): Promise<void> {
+    await db`
+      UPDATE lesson_versions 
+      SET lesson_data = ${JSON.stringify(lessonData)}
+      WHERE lesson_id = ${lessonId} AND version_number = ${versionNumber}
+    `;
+  }
   
   // ============ MERGE REQUESTS ============
   

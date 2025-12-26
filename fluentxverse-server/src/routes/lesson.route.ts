@@ -395,6 +395,10 @@ export default new Elysia({ prefix: '/lesson' })
         const imagePath = `${basePath}/header.${ext}`;
         
         headerImageUrl = await uploadToSeaweed(imagePath, headerImage, headerImage.type);
+        // Update lessonData with the header image URL
+        lessonData.header.backgroundImage = headerImageUrl;
+        // Update the version in database with the final lessonData
+        await lessonService.updateVersionData(lesson.id, version.versionNumber, lessonData);
       }
 
       // Generate and upload HTML
@@ -402,7 +406,7 @@ export default new Elysia({ prefix: '/lesson' })
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
 
-      // Save tutor JSON data (full version with hints)
+      // Save tutor JSON data (full version with hints) - now includes header image URL
       const tutorJsonPath = `${basePath}/tutor-data.json`;
       await uploadToSeaweed(tutorJsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
       
@@ -424,8 +428,8 @@ export default new Elysia({ prefix: '/lesson' })
         version,
         url: lessonUrl,
         headerImageUrl,
-        studentDataUrl: `${FILER_BASE}${studentJsonPath}`,
-        tutorDataUrl: `${FILER_BASE}${tutorJsonPath}`,
+        studentDataUrl: `${API_BASE}/lesson/files${studentJsonPath}`,
+        tutorDataUrl: `${API_BASE}/lesson/files${tutorJsonPath}`,
         message: 'Lesson created successfully'
       };
     } catch (error) {
@@ -492,6 +496,13 @@ export default new Elysia({ prefix: '/lesson' })
         const imagePath = `${basePath}/header.${ext}`;
         
         headerImageUrl = await uploadToSeaweed(imagePath, headerImage, headerImage.type);
+        // Update lessonData with the new header image URL
+        lessonData.header.backgroundImage = headerImageUrl;
+      }
+
+      // Update the version in database with the final lessonData (including header image URL)
+      if (headerImageUrl) {
+        await lessonService.updateVersionData(lesson.id, version.versionNumber, lessonData);
       }
 
       // Update HTML file
@@ -1054,7 +1065,8 @@ export default new Elysia({ prefix: '/lesson' })
       if (dbLesson) {
         // Get the latest version data
         const latestVersion = await lessonService.getLatestVersion(lessonId);
-        const htmlUrl = `${FILER_BASE}${dbLesson.storagePath}/index.html`;
+        // Return proxy URL, not internal SeaweedFS URL
+        const htmlUrl = `${API_BASE}/lesson/files${dbLesson.storagePath}/index.html`;
         
         return {
           success: true,
@@ -1073,7 +1085,8 @@ export default new Elysia({ prefix: '/lesson' })
       }
       
       const lessonData = await res.json();
-      const htmlUrl = `${FILER_BASE}/lessons/${lessonId}/index.html`;
+      // Return proxy URL for legacy lessons too
+      const htmlUrl = `${API_BASE}/lesson/files/lessons/${lessonId}/index.html`;
       
       return {
         success: true,
@@ -1106,10 +1119,10 @@ export default new Elysia({ prefix: '/lesson' })
         offset
       });
       
-      // Enrich with URLs
+      // Enrich with URLs (using API proxy, not internal SeaweedFS)
       const enrichedLessons = lessons.map(lesson => ({
         ...lesson,
-        url: `${FILER_BASE}${lesson.storagePath}/index.html`
+        url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html`
       }));
       
       return { 
@@ -1148,10 +1161,10 @@ export default new Elysia({ prefix: '/lesson' })
         offset
       });
       
-      // Enrich with URLs
+      // Enrich with URLs (using API proxy, not internal SeaweedFS)
       const enrichedLessons = lessons.map(lesson => ({
         ...lesson,
-        url: `${FILER_BASE}${lesson.storagePath}/index.html`
+        url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html`
       }));
       
       return { 

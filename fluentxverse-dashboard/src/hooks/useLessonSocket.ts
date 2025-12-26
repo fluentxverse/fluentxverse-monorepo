@@ -49,6 +49,26 @@ export function useLessonSocket({
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
+  
+  // Store callbacks in refs to avoid re-triggering effects when they change
+  const callbacksRef = useRef({
+    onEditorsChange,
+    onEditorJoined,
+    onEditorLeft,
+    onActivity,
+    onLessonUpdated
+  });
+  
+  // Keep refs up to date
+  useEffect(() => {
+    callbacksRef.current = {
+      onEditorsChange,
+      onEditorJoined,
+      onEditorLeft,
+      onActivity,
+      onLessonUpdated
+    };
+  }, [onEditorsChange, onEditorJoined, onEditorLeft, onActivity, onLessonUpdated]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -81,6 +101,7 @@ export function useLessonSocket({
   }, []);
 
   // Join/leave lesson room when lessonId changes
+  // Using refs for callbacks to prevent unnecessary join/leave cycles
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket || !lessonId) return;
@@ -92,37 +113,37 @@ export function useLessonSocket({
     socket.on('lesson:editors', (data: { lessonId: string; editors: ActiveEditor[] }) => {
       if (data.lessonId === lessonId) {
         setActiveEditors(data.editors);
-        onEditorsChange?.(data.editors);
+        callbacksRef.current.onEditorsChange?.(data.editors);
       }
     });
 
     socket.on('lesson:editor-joined', (data: { lessonId: string; odI: string; userName: string; startedAt: Date }) => {
       if (data.lessonId === lessonId) {
         setActiveEditors(prev => [...prev, { odI: data.odI, socketId: '', userName: data.userName, startedAt: new Date(data.startedAt) }]);
-        onEditorJoined?.(data);
+        callbacksRef.current.onEditorJoined?.(data);
       }
     });
 
     socket.on('lesson:editor-left', (data: { lessonId: string; odI: string; userName: string }) => {
       if (data.lessonId === lessonId) {
         setActiveEditors(prev => prev.filter(e => e.odI !== data.odI));
-        onEditorLeft?.(data);
+        callbacksRef.current.onEditorLeft?.(data);
       }
     });
 
     socket.on('lesson:activity', (data: EditingActivity) => {
       if (data.lessonId === lessonId) {
-        onActivity?.(data);
+        callbacksRef.current.onActivity?.(data);
       }
     });
 
     socket.on('lesson:updated', (data: LessonUpdate) => {
       if (data.lessonId === lessonId) {
-        onLessonUpdated?.(data);
+        callbacksRef.current.onLessonUpdated?.(data);
       }
     });
 
-    // Cleanup on lessonId change
+    // Cleanup on lessonId change only
     return () => {
       socket.emit('lesson:leave', lessonId);
       socket.off('lesson:editors');
@@ -131,7 +152,7 @@ export function useLessonSocket({
       socket.off('lesson:activity');
       socket.off('lesson:updated');
     };
-  }, [lessonId, onEditorsChange, onEditorJoined, onEditorLeft, onActivity, onLessonUpdated]);
+  }, [lessonId]); // Only re-run when lessonId changes, not callbacks
 
   // Start editing notification
   const startEditing = useCallback(() => {
