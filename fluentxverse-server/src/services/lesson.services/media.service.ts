@@ -251,3 +251,5 @@ class LessonMediaService {
     };
   }
 }
+
+export const lessonMediaService = new LessonMediaService();
