@@ -1,45 +1,6 @@
 import { Elysia } from 'elysia';
-
-// Types for lesson material
-interface LessonHeader {
-  levelBadge: string;
-  chapterLabel: string;
-  lessonLabel: string;
-  goalText: string;
-  goalSubtext: string;
-  backgroundImage: string;
-  overlayColor: string;
-}
-
-interface VocabularyItem {
-  id: string;
-  word: string;
-  reading: string;
-  english: string;
-}
-
-interface GrammarPoint {
-  id: string;
-  structure: string;
-  meaning: string;
-  example: string;
-  translation: string;
-}
-
-interface Exercise {
-  id: string;
-  type: 'fill-blank' | 'multiple-choice' | 'matching';
-  question: string;
-  correctAnswer: string;
-  options?: string[];
-}
-
-interface LessonMaterial {
-  header: LessonHeader;
-  vocabulary: VocabularyItem[];
-  grammar: GrammarPoint[];
-  exercises: Exercise[];
-}
+import { lessonService, type LessonMaterial } from '../services/lesson.services/lesson.service';
+import { verifyAuthToken, type JwtAuthPayload } from '../utils/jwt';
 
 const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
 
@@ -324,9 +285,461 @@ function generateSlug(title: string): string {
     .replace(/(^-|-$)/g, '') || 'lesson';
 }
 
+// Auth middleware helper
+async function getAuthFromCookie(request: Request): Promise<JwtAuthPayload | null> {
+  const cookies = request.headers.get('cookie') || '';
+  const tokenMatch = cookies.match(/auth_token=([^;]+)/);
+  if (!tokenMatch || !tokenMatch[1]) return null;
+  
+  try {
+    const payload = await verifyAuthToken(tokenMatch[1]);
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// Get display name from auth payload
+function getDisplayName(auth: JwtAuthPayload): string | undefined {
+  return auth.firstName || auth.givenName || auth.email?.split('@')[0];
+}
+
 export default new Elysia({ prefix: '/lesson' })
   /**
-   * Save lesson material to SeaweedFS
+   * Create a new lesson (with database tracking)
+   * Expects multipart form data with:
+   * - lessonData: JSON string of LessonMaterial
+   * - headerImage: (optional) image file for header background
+   */
+  .post('/create', async ({ request }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const form = await request.formData();
+      
+      // Get lesson data
+      const lessonDataStr = form.get('lessonData');
+      if (!lessonDataStr || typeof lessonDataStr !== 'string') {
+        return { success: false, error: 'Missing lesson data' };
+      }
+      
+      let lessonData: LessonMaterial;
+      try {
+        lessonData = JSON.parse(lessonDataStr);
+      } catch {
+        return { success: false, error: 'Invalid lesson data JSON' };
+      }
+
+      // Create lesson in database
+      const { lesson, version } = await lessonService.createLesson(
+        lessonData,
+        auth.userId,
+        getDisplayName(auth)
+      );
+
+      const basePath = lesson.storagePath;
+
+      // Handle header image upload if present
+      let headerImageUrl: string | undefined;
+      const headerImage = form.get('headerImage');
+      
+      if (headerImage instanceof File && headerImage.size > 0) {
+        if (!headerImage.type.startsWith('image/')) {
+          return { success: false, error: 'Header image must be an image file' };
+        }
+        
+        if (headerImage.size > 10 * 1024 * 1024) {
+          return { success: false, error: 'Header image too large. Max 10MB' };
+        }
+
+        const ext = headerImage.name?.split('.').pop() || 'jpg';
+        const imagePath = `${basePath}/header.${ext}`;
+        
+        headerImageUrl = await uploadToSeaweed(imagePath, headerImage, headerImage.type);
+      }
+
+      // Generate and upload HTML
+      const html = generateLessonHtml(lessonData, headerImageUrl);
+      const htmlPath = `${basePath}/index.html`;
+      const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
+
+      // Save JSON data
+      const jsonPath = `${basePath}/data.json`;
+      await uploadToSeaweed(jsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
+
+      return {
+        success: true,
+        lesson,
+        version,
+        url: lessonUrl,
+        headerImageUrl,
+        message: 'Lesson created successfully'
+      };
+    } catch (error) {
+      console.error('Error creating lesson:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to create lesson' 
+      };
+    }
+  })
+
+  /**
+   * Update a lesson (creates new version)
+   */
+  .put('/update/:lessonId', async ({ request, params }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const { lessonId } = params;
+      const form = await request.formData();
+      
+      const lessonDataStr = form.get('lessonData');
+      if (!lessonDataStr || typeof lessonDataStr !== 'string') {
+        return { success: false, error: 'Missing lesson data' };
+      }
+      
+      let lessonData: LessonMaterial;
+      try {
+        lessonData = JSON.parse(lessonDataStr);
+      } catch {
+        return { success: false, error: 'Invalid lesson data JSON' };
+      }
+
+      const changeSummary = form.get('changeSummary')?.toString() || undefined;
+
+      // Update lesson in database (creates new version)
+      const { lesson, version } = await lessonService.updateLesson(
+        lessonId,
+        lessonData,
+        auth.userId,
+        getDisplayName(auth),
+        changeSummary
+      );
+
+      const basePath = lesson.storagePath;
+
+      // Handle header image upload if present
+      let headerImageUrl: string | undefined;
+      const headerImage = form.get('headerImage');
+      
+      if (headerImage instanceof File && headerImage.size > 0) {
+        if (!headerImage.type.startsWith('image/')) {
+          return { success: false, error: 'Header image must be an image file' };
+        }
+        
+        if (headerImage.size > 10 * 1024 * 1024) {
+          return { success: false, error: 'Header image too large. Max 10MB' };
+        }
+
+        const ext = headerImage.name?.split('.').pop() || 'jpg';
+        const imagePath = `${basePath}/header.${ext}`;
+        
+        headerImageUrl = await uploadToSeaweed(imagePath, headerImage, headerImage.type);
+      }
+
+      // Update HTML file
+      const html = generateLessonHtml(lessonData, headerImageUrl);
+      const htmlPath = `${basePath}/index.html`;
+      const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
+
+      // Update JSON data
+      const jsonPath = `${basePath}/data.json`;
+      await uploadToSeaweed(jsonPath, JSON.stringify(lessonData, null, 2), 'application/json');
+
+      return {
+        success: true,
+        lesson,
+        version,
+        url: lessonUrl,
+        message: 'Lesson updated successfully'
+      };
+    } catch (error) {
+      console.error('Error updating lesson:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to update lesson' 
+      };
+    }
+  })
+
+  /**
+   * Fork a lesson (admin forks a draft to work on their own version)
+   */
+  .post('/fork/:lessonId', async ({ request, params }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const { lessonId } = params;
+
+      // Fork the lesson
+      const { lesson, version } = await lessonService.forkLesson(
+        lessonId,
+        auth.userId,
+        getDisplayName(auth)
+      );
+
+      // Get the original lesson's data to copy to new storage
+      const originalJsonUrl = `${FILER_BASE}/lessons/${lessonId}/data.json`;
+      const originalRes = await fetch(originalJsonUrl);
+      
+      if (originalRes.ok) {
+        const originalData = await originalRes.json() as LessonMaterial;
+        
+        // Create storage for the fork
+        const basePath = lesson.storagePath;
+        
+        // Generate and upload HTML for the fork
+        const html = generateLessonHtml(originalData);
+        const htmlPath = `${basePath}/index.html`;
+        await uploadToSeaweed(htmlPath, html, 'text/html');
+
+        // Save JSON data for the fork
+        const jsonPath = `${basePath}/data.json`;
+        await uploadToSeaweed(jsonPath, JSON.stringify(originalData, null, 2), 'application/json');
+      }
+
+      return {
+        success: true,
+        lesson,
+        version,
+        message: `Forked lesson successfully. You can now edit your fork.`
+      };
+    } catch (error) {
+      console.error('Error forking lesson:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to fork lesson' 
+      };
+    }
+  })
+
+  /**
+   * Get forks of a lesson
+   */
+  .get('/forks/:lessonId', async ({ params }) => {
+    try {
+      const { lessonId } = params;
+      const forks = await lessonService.getLessonForks(lessonId);
+      
+      return { success: true, forks };
+    } catch (error) {
+      console.error('Error fetching forks:', error);
+      return { success: false, error: 'Failed to fetch forks' };
+    }
+  })
+
+  /**
+   * Create a merge request (fork author submits to original)
+   */
+  .post('/merge-request', async ({ request }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const body = await request.json() as {
+        sourceLessonId: string;
+        title: string;
+        description?: string;
+      };
+
+      const mergeRequest = await lessonService.createMergeRequest(
+        body.sourceLessonId,
+        body.title,
+        body.description || null,
+        auth.userId,
+        getDisplayName(auth)
+      );
+
+      return {
+        success: true,
+        mergeRequest,
+        message: 'Merge request created successfully'
+      };
+    } catch (error) {
+      console.error('Error creating merge request:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to create merge request' 
+      };
+    }
+  })
+
+  /**
+   * Get merge requests for a lesson (original author views incoming requests)
+   */
+  .get('/merge-requests/:lessonId', async ({ params, query }) => {
+    try {
+      const { lessonId } = params;
+      const status = query.status as string | undefined;
+      
+      const mergeRequests = await lessonService.getMergeRequestsForLesson(lessonId, status);
+      
+      return { success: true, mergeRequests };
+    } catch (error) {
+      console.error('Error fetching merge requests:', error);
+      return { success: false, error: 'Failed to fetch merge requests' };
+    }
+  })
+
+  /**
+   * Get a specific merge request with details
+   */
+  .get('/merge-request/:mrId', async ({ params }) => {
+    try {
+      const { mrId } = params;
+      const mergeRequest = await lessonService.getMergeRequestById(mrId);
+      
+      if (!mergeRequest) {
+        return { success: false, error: 'Merge request not found' };
+      }
+      
+      return { success: true, mergeRequest };
+    } catch (error) {
+      console.error('Error fetching merge request:', error);
+      return { success: false, error: 'Failed to fetch merge request' };
+    }
+  })
+
+  /**
+   * Review a merge request (approve, reject, or merge)
+   */
+  .post('/merge-request/:mrId/review', async ({ request, params }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const { mrId } = params;
+      const body = await request.json() as {
+        action: 'approve' | 'reject' | 'merge';
+        comment?: string;
+      };
+
+      if (!['approve', 'reject', 'merge'].includes(body.action)) {
+        return { success: false, error: 'Invalid action. Must be approve, reject, or merge' };
+      }
+
+      const mergeRequest = await lessonService.reviewMergeRequest(
+        mrId,
+        body.action,
+        auth.userId,
+        getDisplayName(auth),
+        body.comment
+      );
+
+      // If merged, update the target lesson's storage files
+      if (body.action === 'merge' && mergeRequest.sourceLesson && mergeRequest.targetLesson) {
+        const sourceVersion = await lessonService.getVersion(
+          mergeRequest.sourceLessonId, 
+          mergeRequest.sourceVersion
+        );
+        
+        if (sourceVersion) {
+          const basePath = mergeRequest.targetLesson.storagePath;
+          
+          // Update HTML
+          const html = generateLessonHtml(sourceVersion.lessonData);
+          await uploadToSeaweed(`${basePath}/index.html`, html, 'text/html');
+          
+          // Update JSON
+          await uploadToSeaweed(
+            `${basePath}/data.json`, 
+            JSON.stringify(sourceVersion.lessonData, null, 2), 
+            'application/json'
+          );
+        }
+      }
+
+      return {
+        success: true,
+        mergeRequest,
+        message: `Merge request ${body.action}${body.action === 'merge' ? 'd' : 'ed'} successfully`
+      };
+    } catch (error) {
+      console.error('Error reviewing merge request:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to review merge request' 
+      };
+    }
+  })
+
+  /**
+   * Publish a lesson
+   */
+  .post('/publish/:lessonId', async ({ request, params }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const { lessonId } = params;
+      const lesson = await lessonService.publishLesson(lessonId, auth.userId);
+
+      return {
+        success: true,
+        lesson,
+        message: 'Lesson published successfully'
+      };
+    } catch (error) {
+      console.error('Error publishing lesson:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to publish lesson' 
+      };
+    }
+  })
+
+  /**
+   * Get version history for a lesson
+   */
+  .get('/versions/:lessonId', async ({ params }) => {
+    try {
+      const { lessonId } = params;
+      const versions = await lessonService.getVersionHistory(lessonId);
+      
+      return { success: true, versions };
+    } catch (error) {
+      console.error('Error fetching versions:', error);
+      return { success: false, error: 'Failed to fetch version history' };
+    }
+  })
+
+  /**
+   * Get a specific version
+   */
+  .get('/version/:lessonId/:versionNumber', async ({ params }) => {
+    try {
+      const { lessonId, versionNumber } = params;
+      const version = await lessonService.getVersion(lessonId, parseInt(versionNumber, 10));
+      
+      if (!version) {
+        return { success: false, error: 'Version not found' };
+      }
+      
+      return { success: true, version };
+    } catch (error) {
+      console.error('Error fetching version:', error);
+      return { success: false, error: 'Failed to fetch version' };
+    }
+  })
+
+  /**
+   * Legacy save endpoint (backwards compatible, creates new lesson)
    * Expects multipart form data with:
    * - lessonData: JSON string of LessonMaterial
    * - headerImage: (optional) image file for header background
@@ -408,11 +821,29 @@ export default new Elysia({ prefix: '/lesson' })
   })
 
   /**
-   * Get lesson by ID
+   * Get lesson by ID (enhanced - with database info)
    */
   .get('/:lessonId', async ({ params }) => {
     try {
       const { lessonId } = params;
+      
+      // First try to get from database
+      const dbLesson = await lessonService.getLessonById(lessonId);
+      
+      if (dbLesson) {
+        // Get the latest version data
+        const latestVersion = await lessonService.getLatestVersion(lessonId);
+        const htmlUrl = `${FILER_BASE}${dbLesson.storagePath}/index.html`;
+        
+        return {
+          success: true,
+          lesson: dbLesson,
+          lessonData: latestVersion?.lessonData,
+          url: htmlUrl
+        };
+      }
+      
+      // Fallback to SeaweedFS only (for legacy lessons)
       const jsonUrl = `${FILER_BASE}/lessons/${lessonId}/data.json`;
       
       const res = await fetch(jsonUrl);
@@ -425,7 +856,8 @@ export default new Elysia({ prefix: '/lesson' })
       
       return {
         success: true,
-        lesson: lessonData,
+        lesson: null, // No database record for legacy lessons
+        lessonData,
         url: htmlUrl
       };
     } catch (error) {
@@ -435,32 +867,112 @@ export default new Elysia({ prefix: '/lesson' })
   })
 
   /**
-   * List all lessons (basic listing)
+   * List all lessons (enhanced - with database info and filters)
    */
-  .get('/list', async () => {
+  .get('/list', async ({ query }) => {
     try {
-      // SeaweedFS Filer supports directory listing
-      const listUrl = `${FILER_BASE}/lessons/?pretty=y`;
-      const res = await fetch(listUrl);
+      const status = query.status as 'draft' | 'published' | 'archived' | undefined;
+      const createdBy = query.createdBy as string | undefined;
+      const includeForks = query.includeForks !== 'false';
+      const limit = parseInt(query.limit as string, 10) || 50;
+      const offset = parseInt(query.offset as string, 10) || 0;
       
-      if (!res.ok) {
-        // No lessons yet
-        return { success: true, lessons: [] };
-      }
+      const { lessons, total } = await lessonService.getLessons({
+        status,
+        createdBy,
+        includeForks,
+        limit,
+        offset
+      });
       
-      const data = await res.json() as { Entries?: Array<{ FullPath: string; Crtime: string }> };
-      const lessons = (data.Entries || [])
-        .filter((entry: any) => entry.FullPath && entry.FullPath !== '/lessons/')
-        .map((entry: any) => ({
-          id: entry.FullPath.replace('/lessons/', ''),
-          createdAt: entry.Crtime,
-          url: `${FILER_BASE}${entry.FullPath}/index.html`
-        }));
+      // Enrich with URLs
+      const enrichedLessons = lessons.map(lesson => ({
+        ...lesson,
+        url: `${FILER_BASE}${lesson.storagePath}/index.html`
+      }));
       
-      return { success: true, lessons };
+      return { 
+        success: true, 
+        lessons: enrichedLessons,
+        total,
+        limit,
+        offset 
+      };
     } catch (error) {
       console.error('Error listing lessons:', error);
-      return { success: true, lessons: [] };
+      return { success: true, lessons: [], total: 0 };
+    }
+  })
+
+  /**
+   * Get my lessons (lessons created by authenticated user)
+   */
+  .get('/my-lessons', async ({ request, query }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const status = query.status as 'draft' | 'published' | 'archived' | undefined;
+      const includeForks = query.includeForks !== 'false';
+      const limit = parseInt(query.limit as string, 10) || 50;
+      const offset = parseInt(query.offset as string, 10) || 0;
+      
+      const { lessons, total } = await lessonService.getLessons({
+        status,
+        createdBy: auth.userId,
+        includeForks,
+        limit,
+        offset
+      });
+      
+      // Enrich with URLs
+      const enrichedLessons = lessons.map(lesson => ({
+        ...lesson,
+        url: `${FILER_BASE}${lesson.storagePath}/index.html`
+      }));
+      
+      return { 
+        success: true, 
+        lessons: enrichedLessons,
+        total,
+        limit,
+        offset 
+      };
+    } catch (error) {
+      console.error('Error fetching my lessons:', error);
+      return { success: false, error: 'Failed to fetch lessons' };
+    }
+  })
+
+  /**
+   * Get pending merge requests for my lessons
+   */
+  .get('/my-merge-requests', async ({ request }) => {
+    try {
+      const auth = await getAuthFromCookie(request);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      // Get all lessons created by user
+      const { lessons } = await lessonService.getLessons({
+        createdBy: auth.userId,
+        includeForks: false
+      });
+      
+      // Get pending merge requests for each lesson
+      const allMergeRequests = [];
+      for (const lesson of lessons) {
+        const mrs = await lessonService.getMergeRequestsForLesson(lesson.id, 'pending');
+        allMergeRequests.push(...mrs);
+      }
+      
+      return { success: true, mergeRequests: allMergeRequests };
+    } catch (error) {
+      console.error('Error fetching merge requests:', error);
+      return { success: false, error: 'Failed to fetch merge requests' };
     }
   })
 
@@ -484,5 +996,272 @@ export default new Elysia({ prefix: '/lesson' })
     } catch (error) {
       console.error('Error deleting lesson:', error);
       return { success: false, error: 'Failed to delete lesson' };
+    }
+  })
+  
+  // ============= IMPROVEMENT ENDPOINTS =============
+  
+  // Restore a specific version
+  .post('/restore/:lessonId/:versionNumber', async ({ params, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { lessonId, versionNumber } = params;
+      const result = await lessonService.restoreVersion(
+        lessonId, 
+        parseInt(versionNumber), 
+        auth.sub
+      );
+      
+      return result;
+    } catch (error) {
+      console.error('Error restoring version:', error);
+      return { success: false, error: 'Failed to restore version' };
+    }
+  })
+  
+  // Unpublish a lesson (set back to draft)
+  .post('/unpublish/:lessonId', async ({ params, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { lessonId } = params;
+      const result = await lessonService.unpublishLesson(lessonId, auth.sub);
+      
+      return result;
+    } catch (error) {
+      console.error('Error unpublishing lesson:', error);
+      return { success: false, error: 'Failed to unpublish lesson' };
+    }
+  })
+  
+  // Archive a lesson
+  .post('/archive/:lessonId', async ({ params, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { lessonId } = params;
+      const result = await lessonService.archiveLesson(lessonId, auth.sub);
+      
+      return result;
+    } catch (error) {
+      console.error('Error archiving lesson:', error);
+      return { success: false, error: 'Failed to archive lesson' };
+    }
+  })
+  
+  // Save lesson as template
+  .post('/save-as-template/:lessonId', async ({ params, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { lessonId } = params;
+      const result = await lessonService.saveAsTemplate(lessonId);
+      
+      return result;
+    } catch (error) {
+      console.error('Error saving as template:', error);
+      return { success: false, error: 'Failed to save as template' };
+    }
+  })
+  
+  // Get merge request comments
+  .get('/merge-request/:mrId/comments', async ({ params }) => {
+    try {
+      const { mrId } = params;
+      const result = await lessonService.getMergeRequestComments(mrId);
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      return { success: false, error: 'Failed to fetch comments' };
+    }
+  })
+  
+  // Add comment to merge request
+  .post('/merge-request/:mrId/comments', async ({ params, body, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { mrId } = params;
+      const { content } = body as { content: string };
+      
+      if (!content || !content.trim()) {
+        return { success: false, error: 'Comment content is required' };
+      }
+      
+      // Get author name from token or use username
+      const authorName = auth.name || auth.sub;
+      
+      const result = await lessonService.addMergeRequestComment(
+        mrId,
+        auth.sub,
+        authorName,
+        content.trim()
+      );
+      
+      return result;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      return { success: false, error: 'Failed to add comment' };
+    }
+  })
+  
+  // Update merge request status
+  .patch('/merge-request/:mrId/status', async ({ params, body, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { mrId } = params;
+      const { status } = body as { status: 'pending' | 'approved' | 'rejected' | 'merged' };
+      
+      if (!status || !['pending', 'approved', 'rejected', 'merged'].includes(status)) {
+        return { success: false, error: 'Invalid status' };
+      }
+      
+      const result = await lessonService.updateMergeRequestStatus(mrId, status, auth.sub);
+      
+      return result;
+    } catch (error) {
+      console.error('Error updating merge request status:', error);
+      return { success: false, error: 'Failed to update status' };
+    }
+  })
+  
+  // Get forks of a lesson
+  .get('/forks/:lessonId', async ({ params }) => {
+    try {
+      const { lessonId } = params;
+      const result = await lessonService.getLessonForks(lessonId);
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching forks:', error);
+      return { success: false, error: 'Failed to fetch forks' };
+    }
+  })
+  
+  // Search lessons with filters
+  .get('/search', async ({ query }) => {
+    try {
+      const {
+        q,
+        status,
+        authorId,
+        language,
+        level,
+        isTemplate,
+        isFork,
+        sortBy,
+        sortOrder,
+        limit,
+        offset
+      } = query as {
+        q?: string;
+        status?: string;
+        authorId?: string;
+        language?: string;
+        level?: string;
+        isTemplate?: string;
+        isFork?: string;
+        sortBy?: string;
+        sortOrder?: string;
+        limit?: string;
+        offset?: string;
+      };
+      
+      const result = await lessonService.searchLessons({
+        query: q,
+        status,
+        authorId,
+        language,
+        level,
+        isTemplate: isTemplate === 'true',
+        isFork: isFork === 'true',
+        sortBy: sortBy || 'created_at',
+        sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
+        limit: limit ? parseInt(limit) : 20,
+        offset: offset ? parseInt(offset) : 0
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('Error searching lessons:', error);
+      return { success: false, error: 'Failed to search lessons' };
+    }
+  })
+  
+  // Bulk actions
+  .post('/bulk-action', async ({ body, cookie }) => {
+    try {
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      const { action, lessonIds } = body as { 
+        action: 'publish' | 'unpublish' | 'archive' | 'delete';
+        lessonIds: string[];
+      };
+      
+      if (!action || !lessonIds || !Array.isArray(lessonIds) || lessonIds.length === 0) {
+        return { success: false, error: 'Invalid request: action and lessonIds required' };
+      }
+      
+      const results: { lessonId: string; success: boolean; error?: string }[] = [];
+      
+      for (const lessonId of lessonIds) {
+        try {
+          let result;
+          switch (action) {
+            case 'publish':
+              result = await lessonService.publishLesson(lessonId, auth.sub);
+              break;
+            case 'unpublish':
+              result = await lessonService.unpublishLesson(lessonId, auth.sub);
+              break;
+            case 'archive':
+              result = await lessonService.archiveLesson(lessonId, auth.sub);
+              break;
+            case 'delete':
+              result = await lessonService.deleteLesson(lessonId);
+              break;
+            default:
+              result = { success: false, error: 'Unknown action' };
+          }
+          results.push({ lessonId, success: result.success, error: result.error });
+        } catch (err) {
+          results.push({ lessonId, success: false, error: 'Operation failed' });
+        }
+      }
+      
+      const successCount = results.filter(r => r.success).length;
+      
+      return {
+        success: true,
+        message: `Completed ${successCount}/${lessonIds.length} operations`,
+        results
+      };
+    } catch (error) {
+      console.error('Error performing bulk action:', error);
+      return { success: false, error: 'Failed to perform bulk action' };
     }
   });

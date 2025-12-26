@@ -11,6 +11,9 @@ import Notification from './routes/notification.route';
 import Inbox from './routes/inbox.route';
 import Ticket from './routes/ticket.route';
 import Lesson from './routes/lesson.route';
+import { categoryRoute } from './routes/category.route';
+import { mediaRoute } from './routes/media.route';
+import { analyticsRoute } from './routes/analytics.route';
 import { initDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
@@ -84,6 +87,9 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(Inbox)
   .use(Ticket)
   .use(Lesson)
+  .use(categoryRoute)
+  .use(mediaRoute)
+  .use(analyticsRoute)
   // Health check endpoint for Docker/Podman
   .get('/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
 

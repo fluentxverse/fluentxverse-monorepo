@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { lessonApi } from '../api/lesson.api';
+import { lessonApi, type Lesson, type MergeRequest, type LessonVersion, type MergeRequestComment, type LessonMaterial } from '../api/lesson.api';
+import { DiffViewer } from '../Components/DiffViewer/DiffViewer';
+import { useLessonSocket, type ActiveEditor } from '../hooks/useLessonSocket';
 import './LessonMaterialMakerPage.css';
 
 type HeaderConfig = {
@@ -280,6 +282,16 @@ type SavedLesson = {
   updatedAt: string;
   status: 'draft' | 'published';
   draft: LessonMaterialDraft;
+  // Fork/merge fields from server
+  isFork?: boolean;
+  forkOf?: string | null;
+  parentId?: string | null;
+  createdBy?: string;
+  createdByName?: string | null;
+  currentVersion?: number;
+  forkCount?: number;
+  hasPendingMergeRequest?: boolean;
+  serverLesson?: Lesson; // Full server lesson data if available
 };
 
 // Form data for creating a new lesson
@@ -1958,6 +1970,108 @@ export default function LessonMaterialMakerPage() {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [selectedVersionToPreview, setSelectedVersionToPreview] = useState<VersionHistoryEntry | null>(null);
   
+  // Server-side lessons state (fork/merge system)
+  const [serverLessons, setServerLessons] = useState<Lesson[]>([]);
+  const [pendingMergeRequests, setPendingMergeRequests] = useState<MergeRequest[]>([]);
+  const [isLoadingServerLessons, setIsLoadingServerLessons] = useState(false);
+  const [showMergeRequestModal, setShowMergeRequestModal] = useState(false);
+  const [showMergeReviewModal, setShowMergeReviewModal] = useState(false);
+  const [selectedMergeRequest, setSelectedMergeRequest] = useState<MergeRequest | null>(null);
+  const [mergeRequestForm, setMergeRequestForm] = useState({ title: '', description: '' });
+  const [lessonToFork, setLessonToFork] = useState<SavedLesson | null>(null);
+  const [showForkConfirmModal, setShowForkConfirmModal] = useState(false);
+  
+  // === IMPROVEMENT STATES ===
+  // Diff viewer
+  const [showDiffViewer, setShowDiffViewer] = useState(false);
+  const [diffSource, setDiffSource] = useState<LessonMaterial | null>(null);
+  const [diffTarget, setDiffTarget] = useState<LessonMaterial | null>(null);
+  
+  // Version restore
+  const [showVersionRestoreModal, setShowVersionRestoreModal] = useState(false);
+  const [lessonVersions, setLessonVersions] = useState<LessonVersion[]>([]);
+  const [versionToRestore, setVersionToRestore] = useState<LessonVersion | null>(null);
+  
+  // Advanced search/filter
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'status'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  
+  // Bulk actions
+  const [selectedLessonIds, setSelectedLessonIds] = useState<Set<string>>(new Set());
+  const [showBulkActionsBar, setShowBulkActionsBar] = useState(false);
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+  
+  // Merge request comments
+  const [mergeRequestComments, setMergeRequestComments] = useState<MergeRequestComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  
+  // Fork management
+  const [showForksPanel, setShowForksPanel] = useState(false);
+  const [lessonForks, setLessonForks] = useState<Lesson[]>([]);
+  const [selectedLessonForForks, setSelectedLessonForForks] = useState<string | null>(null);
+  
+  // Collaborative editing state
+  const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
+  const [recentActivity, setRecentActivity] = useState<{ user: string; section: string; action: string; time: Date }[]>([]);
+  const [showCollaboratorsBadge, setShowCollaboratorsBadge] = useState(true);
+  
+  // Get current editing lesson ID for socket
+  const currentLessonId = currentEditingLesson?.serverLesson?.id || null;
+  
+  // Socket hook for collaborative editing
+  const {
+    isConnected: isSocketConnected,
+    activeEditors: socketEditors,
+    startEditing,
+    stopEditing,
+    sendActivity,
+    notifySaved
+  } = useLessonSocket({
+    lessonId: currentLessonId,
+    onEditorsChange: (editors) => {
+      setActiveEditors(editors);
+    },
+    onEditorJoined: (editor) => {
+      setRecentActivity(prev => [{
+        user: editor.userName,
+        section: 'lesson',
+        action: 'joined',
+        time: new Date()
+      }, ...prev.slice(0, 9)]);
+    },
+    onEditorLeft: (editor) => {
+      setRecentActivity(prev => [{
+        user: editor.userName,
+        section: 'lesson',
+        action: 'left',
+        time: new Date()
+      }, ...prev.slice(0, 9)]);
+    },
+    onActivity: (activity) => {
+      setRecentActivity(prev => [{
+        user: activity.userName,
+        section: activity.section,
+        action: activity.action,
+        time: new Date(activity.timestamp)
+      }, ...prev.slice(0, 9)]);
+    },
+    onLessonUpdated: (update) => {
+      setRecentActivity(prev => [{
+        user: update.savedByName,
+        section: 'lesson',
+        action: 'saved',
+        time: new Date(update.timestamp)
+      }, ...prev.slice(0, 9)]);
+      // Reload the lesson if someone else saved
+      if (update.savedBy !== 'current-user') { // TODO: get current user ID
+        loadServerLessons();
+      }
+    }
+  });
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
@@ -2036,6 +2150,16 @@ export default function LessonMaterialMakerPage() {
       header?.classList.remove('lm-hidden');
     };
   }, [isFullscreen]);
+
+  // Handle collaborative editing - notify when entering/leaving editor
+  useEffect(() => {
+    if (viewMode === 'editor' && currentLessonId) {
+      startEditing();
+      return () => {
+        stopEditing();
+      };
+    }
+  }, [viewMode, currentLessonId, startEditing, stopEditing]);
 
   // Save to localStorage
   useEffect(() => {
@@ -2378,6 +2502,468 @@ export default function LessonMaterialMakerPage() {
     setSavedLessons(prev => prev.filter(l => l.id !== lessonId));
   };
 
+  // ============ FORK/MERGE FUNCTIONS ============
+  
+  // Load server lessons
+  const loadServerLessons = useCallback(async () => {
+    setIsLoadingServerLessons(true);
+    try {
+      const [lessonsRes, mrRes] = await Promise.all([
+        lessonApi.getMyLessons(),
+        lessonApi.getMyMergeRequests()
+      ]);
+      
+      if (lessonsRes.success) {
+        setServerLessons(lessonsRes.lessons);
+      }
+      if (mrRes.success) {
+        setPendingMergeRequests(mrRes.mergeRequests);
+      }
+    } catch (err) {
+      console.error('Failed to load server lessons:', err);
+    } finally {
+      setIsLoadingServerLessons(false);
+    }
+  }, []);
+
+  // Load server lessons on mount and when tab changes to myLessons
+  useEffect(() => {
+    if (activeTab === 'myLessons') {
+      loadServerLessons();
+    }
+  }, [activeTab, loadServerLessons]);
+
+  // Fork a lesson
+  const handleForkLesson = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) {
+      alert('This lesson is not synced with the server yet. Save it first.');
+      return;
+    }
+    
+    setLessonToFork(lesson);
+    setShowForkConfirmModal(true);
+  };
+
+  const confirmForkLesson = async () => {
+    if (!lessonToFork?.serverLesson) return;
+    
+    try {
+      const result = await lessonApi.forkLesson(lessonToFork.serverLesson.id);
+      if (result.success && result.lesson) {
+        // Add the forked lesson to local state
+        const forkedLesson: SavedLesson = {
+          id: result.lesson.id,
+          templateId: lessonToFork.templateId,
+          templateName: lessonToFork.templateName + ' (Fork)',
+          level: lessonToFork.level,
+          chapter: lessonToFork.chapter,
+          lessonNumber: lessonToFork.lessonNumber,
+          goalName: lessonToFork.goalName,
+          createdAt: result.lesson.createdAt,
+          updatedAt: result.lesson.updatedAt,
+          status: 'draft',
+          draft: lessonToFork.draft,
+          isFork: true,
+          forkOf: lessonToFork.serverLesson.id,
+          serverLesson: result.lesson
+        };
+        setSavedLessons(prev => [...prev, forkedLesson]);
+        setShowForkConfirmModal(false);
+        setLessonToFork(null);
+        alert('Lesson forked successfully! You can now edit your fork.');
+      } else {
+        alert(result.error || 'Failed to fork lesson');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to fork lesson');
+    }
+  };
+
+  // Create merge request
+  const handleCreateMergeRequest = (lesson: SavedLesson) => {
+    if (!lesson.isFork || !lesson.forkOf) {
+      alert('Only forked lessons can create merge requests');
+      return;
+    }
+    setLessonToFork(lesson);
+    setMergeRequestForm({ title: '', description: '' });
+    setShowMergeRequestModal(true);
+  };
+
+  const submitMergeRequest = async () => {
+    if (!lessonToFork?.serverLesson) return;
+    
+    const title = mergeRequestForm.title.trim() || `Update from ${lessonToFork.goalName}`;
+    
+    try {
+      const result = await lessonApi.createMergeRequest(
+        lessonToFork.serverLesson.id,
+        title,
+        mergeRequestForm.description || undefined
+      );
+      
+      if (result.success) {
+        // Update local state to reflect pending merge request
+        setSavedLessons(prev => prev.map(l => 
+          l.id === lessonToFork.id 
+            ? { ...l, hasPendingMergeRequest: true }
+            : l
+        ));
+        setShowMergeRequestModal(false);
+        setLessonToFork(null);
+        alert('Merge request submitted! The original author will review it.');
+      } else {
+        alert(result.error || 'Failed to create merge request');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to create merge request');
+    }
+  };
+
+  // Review merge request
+  const handleReviewMergeRequest = (mr: MergeRequest) => {
+    setSelectedMergeRequest(mr);
+    setShowMergeReviewModal(true);
+  };
+
+  const submitMergeReview = async (action: 'approve' | 'reject' | 'merge', comment?: string) => {
+    if (!selectedMergeRequest) return;
+    
+    try {
+      const result = await lessonApi.reviewMergeRequest(selectedMergeRequest.id, action, comment);
+      
+      if (result.success) {
+        // Remove from pending list
+        setPendingMergeRequests(prev => prev.filter(mr => mr.id !== selectedMergeRequest.id));
+        setShowMergeReviewModal(false);
+        setSelectedMergeRequest(null);
+        
+        if (action === 'merge') {
+          alert('Changes merged successfully!');
+          // Reload lessons to reflect the merge
+          loadServerLessons();
+        } else {
+          alert(`Merge request ${action}ed.`);
+        }
+      } else {
+        alert(result.error || `Failed to ${action} merge request`);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Failed to ${action} merge request`);
+    }
+  };
+
+  // ============ END FORK/MERGE FUNCTIONS ============
+
+  // ============ IMPROVEMENT HANDLERS ============
+
+  // Version Restore
+  const handleShowVersions = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) {
+      alert('This lesson is not synced with the server yet.');
+      return;
+    }
+    
+    try {
+      const result = await lessonApi.getVersionHistory(lesson.serverLesson.id);
+      if (result.success && result.versions) {
+        setLessonVersions(result.versions);
+        setLessonToFork(lesson);
+        setShowVersionRestoreModal(true);
+      } else {
+        alert(result.error || 'Failed to load version history');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to load version history');
+    }
+  };
+
+  const handleRestoreVersion = async (version: LessonVersion) => {
+    if (!lessonToFork?.serverLesson) return;
+    
+    if (!confirm(`Restore to version ${version.versionNumber}? This will create a new version with the old content.`)) {
+      return;
+    }
+    
+    try {
+      const result = await lessonApi.restoreVersion(lessonToFork.serverLesson.id, version.versionNumber);
+      if (result.success) {
+        alert('Version restored successfully!');
+        setShowVersionRestoreModal(false);
+        loadServerLessons();
+      } else {
+        alert(result.error || 'Failed to restore version');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to restore version');
+    }
+  };
+
+  // Publish/Unpublish workflow
+  const handlePublishLesson = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) {
+      alert('This lesson needs to be saved to the server first.');
+      return;
+    }
+    
+    try {
+      const result = await lessonApi.publishLesson(lesson.serverLesson.id);
+      if (result.success) {
+        alert('Lesson published!');
+        loadServerLessons();
+        // Update local state
+        setSavedLessons(prev => prev.map(l => 
+          l.id === lesson.id ? { ...l, status: 'published' as const } : l
+        ));
+      } else {
+        alert(result.error || 'Failed to publish lesson');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to publish lesson');
+    }
+  };
+
+  const handleUnpublishLesson = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) return;
+    
+    try {
+      const result = await lessonApi.unpublishLesson(lesson.serverLesson.id);
+      if (result.success) {
+        alert('Lesson unpublished (now draft)');
+        loadServerLessons();
+        setSavedLessons(prev => prev.map(l => 
+          l.id === lesson.id ? { ...l, status: 'draft' as const } : l
+        ));
+      } else {
+        alert(result.error || 'Failed to unpublish lesson');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to unpublish lesson');
+    }
+  };
+
+  const handleArchiveLesson = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) return;
+    
+    if (!confirm('Archive this lesson? It will be hidden from most views.')) return;
+    
+    try {
+      const result = await lessonApi.archiveLesson(lesson.serverLesson.id);
+      if (result.success) {
+        alert('Lesson archived');
+        loadServerLessons();
+        setSavedLessons(prev => prev.map(l => 
+          l.id === lesson.id ? { ...l, status: 'archived' as const } : l
+        ));
+      } else {
+        alert(result.error || 'Failed to archive lesson');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to archive lesson');
+    }
+  };
+
+  // Save as template
+  const handleSaveAsTemplate = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) {
+      alert('Save the lesson to server first before creating a template.');
+      return;
+    }
+    
+    try {
+      const result = await lessonApi.saveAsTemplate(lesson.serverLesson.id);
+      if (result.success) {
+        alert('Lesson saved as template!');
+      } else {
+        alert(result.error || 'Failed to save as template');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save as template');
+    }
+  };
+
+  // Merge request comments
+  const handleLoadComments = async (mrId: string) => {
+    setIsLoadingComments(true);
+    try {
+      const result = await lessonApi.getMergeRequestComments(mrId);
+      if (result.success && result.comments) {
+        setMergeRequestComments(result.comments);
+      }
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!selectedMergeRequest || !newComment.trim()) return;
+    
+    try {
+      const result = await lessonApi.addMergeRequestComment(selectedMergeRequest.id, newComment.trim());
+      if (result.success && result.comment) {
+        setMergeRequestComments(prev => [...prev, result.comment!]);
+        setNewComment('');
+      } else {
+        alert(result.error || 'Failed to add comment');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to add comment');
+    }
+  };
+
+  // Load comments when opening merge review modal
+  useEffect(() => {
+    if (showMergeReviewModal && selectedMergeRequest) {
+      handleLoadComments(selectedMergeRequest.id);
+    } else {
+      setMergeRequestComments([]);
+      setNewComment('');
+    }
+  }, [showMergeReviewModal, selectedMergeRequest]);
+
+  // View forks of a lesson
+  const handleViewForks = async (lesson: SavedLesson) => {
+    if (!lesson.serverLesson) {
+      alert('This lesson is not synced with the server.');
+      return;
+    }
+    
+    try {
+      const result = await lessonApi.getLessonForks(lesson.serverLesson.id);
+      if (result.success && result.forks) {
+        setLessonForks(result.forks);
+        setSelectedLessonForForks(lesson.id);
+        setShowForksPanel(true);
+      } else {
+        alert(result.error || 'Failed to load forks');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to load forks');
+    }
+  };
+
+  // Bulk actions
+  const toggleLessonSelection = (lessonId: string) => {
+    setSelectedLessonIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(lessonId)) {
+        newSet.delete(lessonId);
+      } else {
+        newSet.add(lessonId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllLessons = (lessons: SavedLesson[]) => {
+    const allIds = lessons.filter(l => l.serverLesson).map(l => l.serverLesson!.id);
+    setSelectedLessonIds(new Set(allIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedLessonIds(new Set());
+  };
+
+  useEffect(() => {
+    setShowBulkActionsBar(selectedLessonIds.size > 0);
+  }, [selectedLessonIds.size]);
+
+  const handleBulkAction = async (action: 'publish' | 'unpublish' | 'archive' | 'delete') => {
+    if (selectedLessonIds.size === 0) return;
+    
+    const actionLabel = {
+      publish: 'publish',
+      unpublish: 'unpublish',
+      archive: 'archive',
+      delete: 'delete'
+    }[action];
+    
+    if (!confirm(`${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${selectedLessonIds.size} lesson(s)?`)) {
+      return;
+    }
+    
+    setIsBulkActionLoading(true);
+    try {
+      const result = await lessonApi.bulkAction(action, Array.from(selectedLessonIds));
+      if (result.success) {
+        alert(result.message || `Bulk ${actionLabel} completed`);
+        clearSelection();
+        loadServerLessons();
+      } else {
+        alert(result.error || `Bulk ${actionLabel} failed`);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : `Bulk ${actionLabel} failed`);
+    } finally {
+      setIsBulkActionLoading(false);
+    }
+  };
+
+  // Diff viewer - compare two lesson versions
+  const handleShowDiff = async (lesson: SavedLesson, versionA: number, versionB: number) => {
+    if (!lesson.serverLesson) return;
+    
+    try {
+      const [resA, resB] = await Promise.all([
+        lessonApi.getVersion(lesson.serverLesson.id, versionA),
+        lessonApi.getVersion(lesson.serverLesson.id, versionB)
+      ]);
+      
+      if (resA.success && resB.success && resA.version && resB.version) {
+        setDiffSource(resA.version.lessonData);
+        setDiffTarget(resB.version.lessonData);
+        setShowDiffViewer(true);
+      } else {
+        alert('Failed to load versions for comparison');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to load versions');
+    }
+  };
+
+  // Filter lessons based on advanced filters
+  const applyFilters = useCallback((lessons: SavedLesson[]) => {
+    let filtered = [...lessons];
+    
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(l => l.status === statusFilter);
+    }
+    
+    // Search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(l => 
+        l.goalName?.toLowerCase().includes(query) ||
+        l.templateName?.toLowerCase().includes(query) ||
+        l.chapter?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'title':
+          comparison = (a.goalName || '').localeCompare(b.goalName || '');
+          break;
+        case 'status':
+          comparison = (a.status || '').localeCompare(b.status || '');
+          break;
+        case 'date':
+        default:
+          comparison = new Date(a.updatedAt || a.createdAt).getTime() - new Date(b.updatedAt || b.createdAt).getTime();
+      }
+      return sortOrder === 'desc' ? -comparison : comparison;
+    });
+    
+    return filtered;
+  }, [statusFilter, searchQuery, sortBy, sortOrder]);
+
+  // ============ END IMPROVEMENT HANDLERS ============
+
   // View template in read-only mode
   const handleViewTemplate = (template: TemplateInfo) => {
     setSelectedTemplate(template);
@@ -2535,6 +3121,426 @@ export default function LessonMaterialMakerPage() {
           </div>
         )}
 
+        {/* Fork Confirmation Modal */}
+        {showForkConfirmModal && lessonToFork && (
+          <div className="lm-modal-overlay" onClick={() => setShowForkConfirmModal(false)}>
+            <div className="lm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="lm-modal-header">
+                <h2>
+                  <i className="ri-git-branch-line" />
+                  Fork Lesson
+                </h2>
+                <button
+                  type="button"
+                  className="lm-modal-close"
+                  onClick={() => setShowForkConfirmModal(false)}
+                >
+                  <i className="ri-close-line" />
+                </button>
+              </div>
+              <div className="lm-modal-body">
+                <p>
+                  Create a personal copy of <strong>"{lessonToFork.goalName}"</strong> that you can edit independently.
+                </p>
+                <div className="lm-fork-info">
+                  <div className="lm-fork-info-item">
+                    <i className="ri-edit-line" />
+                    <span>You can make any changes to your fork</span>
+                  </div>
+                  <div className="lm-fork-info-item">
+                    <i className="ri-git-merge-line" />
+                    <span>Submit changes back via merge request</span>
+                  </div>
+                  <div className="lm-fork-info-item">
+                    <i className="ri-shield-check-line" />
+                    <span>Original author reviews and approves changes</span>
+                  </div>
+                </div>
+              </div>
+              <div className="lm-modal-footer">
+                <button
+                  type="button"
+                  className="lm-modal-btn secondary"
+                  onClick={() => setShowForkConfirmModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="lm-modal-btn primary"
+                  onClick={confirmForkLesson}
+                >
+                  <i className="ri-git-branch-line" />
+                  Fork Lesson
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Merge Request Modal */}
+        {showMergeRequestModal && lessonToFork && (
+          <div className="lm-modal-overlay" onClick={() => setShowMergeRequestModal(false)}>
+            <div className="lm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="lm-modal-header">
+                <h2>
+                  <i className="ri-git-merge-line" />
+                  Submit Merge Request
+                </h2>
+                <button
+                  type="button"
+                  className="lm-modal-close"
+                  onClick={() => setShowMergeRequestModal(false)}
+                >
+                  <i className="ri-close-line" />
+                </button>
+              </div>
+              <div className="lm-modal-body">
+                <p>
+                  Submit your changes from <strong>"{lessonToFork.goalName}"</strong> to the original lesson for review.
+                </p>
+                <div className="lm-form-group">
+                  <label>Title</label>
+                  <input
+                    type="text"
+                    placeholder="Brief description of your changes"
+                    value={mergeRequestForm.title}
+                    onInput={(e) => setMergeRequestForm(prev => ({
+                      ...prev,
+                      title: (e.target as HTMLInputElement).value
+                    }))}
+                  />
+                </div>
+                <div className="lm-form-group">
+                  <label>Description (optional)</label>
+                  <textarea
+                    placeholder="Detailed explanation of the changes you made..."
+                    value={mergeRequestForm.description}
+                    rows={4}
+                    onInput={(e) => setMergeRequestForm(prev => ({
+                      ...prev,
+                      description: (e.target as HTMLTextAreaElement).value
+                    }))}
+                  />
+                </div>
+              </div>
+              <div className="lm-modal-footer">
+                <button
+                  type="button"
+                  className="lm-modal-btn secondary"
+                  onClick={() => setShowMergeRequestModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="lm-modal-btn primary"
+                  onClick={submitMergeRequest}
+                >
+                  <i className="ri-send-plane-line" />
+                  Submit Request
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Merge Review Modal - with comments */}
+        {showMergeReviewModal && selectedMergeRequest && (
+          <div className="lm-modal-overlay" onClick={() => setShowMergeReviewModal(false)}>
+            <div className="lm-modal lm-modal-wide" onClick={(e) => e.stopPropagation()}>
+              <div className="lm-modal-header">
+                <h2>
+                  <i className="ri-git-merge-line" />
+                  Review Merge Request
+                </h2>
+                <button
+                  type="button"
+                  className="lm-modal-close"
+                  onClick={() => setShowMergeReviewModal(false)}
+                >
+                  <i className="ri-close-line" />
+                </button>
+              </div>
+              <div className="lm-modal-body">
+                <div className="lm-mr-details">
+                  <h3>{selectedMergeRequest.title}</h3>
+                  {selectedMergeRequest.description && (
+                    <p className="lm-mr-description">{selectedMergeRequest.description}</p>
+                  )}
+                  <div className="lm-mr-meta">
+                    <span>
+                      <i className="ri-user-line" />
+                      Submitted by: {selectedMergeRequest.requestedByName || selectedMergeRequest.requestedBy}
+                    </span>
+                    <span>
+                      <i className="ri-time-line" />
+                      {new Date(selectedMergeRequest.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Visual Diff Viewer */}
+                {selectedMergeRequest.sourceLesson?.content && selectedMergeRequest.targetLesson?.content && (
+                  <div className="lm-diff-section">
+                    <h4>
+                      <i className="ri-file-copy-2-line" />
+                      Changes
+                    </h4>
+                    <DiffViewer
+                      source={selectedMergeRequest.sourceLesson.content as LessonMaterial}
+                      target={selectedMergeRequest.targetLesson.content as LessonMaterial}
+                      sourceName={selectedMergeRequest.sourceLesson.title || 'Fork'}
+                      targetName={selectedMergeRequest.targetLesson.title || 'Original'}
+                      onClose={() => {}}
+                      embedded={true}
+                    />
+                  </div>
+                )}
+                
+                {/* Comments Section */}
+                <div className="lm-mr-comments">
+                  <h4>
+                    <i className="ri-chat-3-line" />
+                    Discussion ({mergeRequestComments.length})
+                  </h4>
+                  {isLoadingComments ? (
+                    <p className="lm-loading">Loading comments...</p>
+                  ) : mergeRequestComments.length === 0 ? (
+                    <p className="lm-no-comments">No comments yet.</p>
+                  ) : (
+                    <div className="lm-comments-list">
+                      {mergeRequestComments.map(comment => (
+                        <div key={comment.id} className="lm-comment">
+                          <div className="lm-comment-header">
+                            <span className="lm-comment-author">{comment.authorName}</span>
+                            <span className="lm-comment-date">
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="lm-comment-content">{comment.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="lm-add-comment">
+                    <textarea
+                      placeholder="Add a comment..."
+                      value={newComment}
+                      onInput={(e) => setNewComment((e.target as HTMLTextAreaElement).value)}
+                      rows={2}
+                    />
+                    <button
+                      type="button"
+                      className="lm-add-comment-btn"
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                    >
+                      <i className="ri-send-plane-fill" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="lm-modal-footer lm-mr-actions">
+                <button
+                  type="button"
+                  className="lm-modal-btn secondary"
+                  onClick={() => setShowMergeReviewModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="lm-modal-btn danger"
+                  onClick={() => submitMergeReview('reject')}
+                >
+                  <i className="ri-close-circle-line" />
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  className="lm-modal-btn success"
+                  onClick={() => submitMergeReview('merge')}
+                >
+                  <i className="ri-git-merge-line" />
+                  Merge Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Version Restore Modal */}
+        {showVersionRestoreModal && lessonToFork && (
+          <div className="lm-modal-overlay" onClick={() => setShowVersionRestoreModal(false)}>
+            <div className="lm-modal lm-modal-wide" onClick={(e) => e.stopPropagation()}>
+              <div className="lm-modal-header">
+                <h2>
+                  <i className="ri-history-line" />
+                  Version History
+                </h2>
+                <button
+                  type="button"
+                  className="lm-modal-close"
+                  onClick={() => setShowVersionRestoreModal(false)}
+                >
+                  <i className="ri-close-line" />
+                </button>
+              </div>
+              <div className="lm-modal-body">
+                <p className="lm-version-info">
+                  <strong>{lessonToFork.goalName}</strong> - Select a version to restore
+                </p>
+                <div className="lm-versions-list">
+                  {lessonVersions.length === 0 ? (
+                    <p className="lm-no-versions">No version history available.</p>
+                  ) : (
+                    lessonVersions.map(version => (
+                      <div key={version.id} className="lm-version-item">
+                        <div className="lm-version-info-row">
+                          <span className="lm-version-number">v{version.versionNumber}</span>
+                          <span className="lm-version-date">
+                            {new Date(version.createdAt).toLocaleString()}
+                          </span>
+                          <span className="lm-version-author">
+                            by {version.changedByName || version.changedBy}
+                          </span>
+                        </div>
+                        {version.changeSummary && (
+                          <p className="lm-version-summary">{version.changeSummary}</p>
+                        )}
+                        <div className="lm-version-actions">
+                          <button
+                            type="button"
+                            className="lm-version-btn restore"
+                            onClick={() => handleRestoreVersion(version)}
+                          >
+                            <i className="ri-arrow-go-back-line" /> Restore
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="lm-modal-footer">
+                <button
+                  type="button"
+                  className="lm-modal-btn secondary"
+                  onClick={() => setShowVersionRestoreModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Forks Panel */}
+        {showForksPanel && (
+          <div className="lm-modal-overlay" onClick={() => setShowForksPanel(false)}>
+            <div className="lm-modal lm-modal-wide" onClick={(e) => e.stopPropagation()}>
+              <div className="lm-modal-header">
+                <h2>
+                  <i className="ri-git-repository-line" />
+                  Lesson Forks
+                </h2>
+                <button
+                  type="button"
+                  className="lm-modal-close"
+                  onClick={() => setShowForksPanel(false)}
+                >
+                  <i className="ri-close-line" />
+                </button>
+              </div>
+              <div className="lm-modal-body">
+                {lessonForks.length === 0 ? (
+                  <p className="lm-no-forks">No forks have been created for this lesson.</p>
+                ) : (
+                  <div className="lm-forks-list">
+                    {lessonForks.map(fork => (
+                      <div key={fork.id} className="lm-fork-item">
+                        <div className="lm-fork-info">
+                          <span className="lm-fork-title">{fork.title}</span>
+                          <span className="lm-fork-author">
+                            by {fork.createdByName || fork.createdBy}
+                          </span>
+                          <span className="lm-fork-date">
+                            {new Date(fork.createdAt).toLocaleDateString()}
+                          </span>
+                          <span className={`lm-fork-status ${fork.status}`}>
+                            {fork.status}
+                          </span>
+                        </div>
+                        {fork.hasPendingMergeRequest && (
+                          <span className="lm-fork-mr-badge">
+                            <i className="ri-git-merge-line" /> Pending MR
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="lm-modal-footer">
+                <button
+                  type="button"
+                  className="lm-modal-btn secondary"
+                  onClick={() => setShowForksPanel(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Diff Viewer Modal */}
+        {showDiffViewer && diffSource && diffTarget && (
+          <div className="lm-modal-overlay" onClick={() => setShowDiffViewer(false)}>
+            <div className="lm-modal lm-modal-fullscreen" onClick={(e) => e.stopPropagation()}>
+              <div className="lm-modal-header">
+                <h2>
+                  <i className="ri-file-diff-line" />
+                  Version Comparison
+                </h2>
+                <button
+                  type="button"
+                  className="lm-modal-close"
+                  onClick={() => setShowDiffViewer(false)}
+                >
+                  <i className="ri-close-line" />
+                </button>
+              </div>
+              <div className="lm-modal-body lm-diff-body">
+                <div className="lm-diff-container">
+                  <div className="lm-diff-panel">
+                    <h4>Source Version</h4>
+                    <pre className="lm-diff-content">
+                      {JSON.stringify(diffSource, null, 2)}
+                    </pre>
+                  </div>
+                  <div className="lm-diff-panel">
+                    <h4>Target Version</h4>
+                    <pre className="lm-diff-content">
+                      {JSON.stringify(diffTarget, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+              <div className="lm-modal-footer">
+                <button
+                  type="button"
+                  className="lm-modal-btn secondary"
+                  onClick={() => setShowDiffViewer(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Page Header */}
         <div className="lm-template-header">
           <div className="lm-template-title-row">
@@ -2551,16 +3557,120 @@ export default function LessonMaterialMakerPage() {
               </p>
             </div>
           </div>
-          <div className="lm-template-search">
-            <i className="ri-search-line" />
-            <input
-              type="text"
-              placeholder={activeTab === 'templates' ? 'Search templates...' : 'Search lessons...'}
-              value={searchQuery}
-              onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-            />
+          <div className="lm-search-filter-row">
+            <div className="lm-template-search">
+              <i className="ri-search-line" />
+              <input
+                type="text"
+                placeholder={activeTab === 'templates' ? 'Search templates...' : 'Search lessons...'}
+                value={searchQuery}
+                onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+              />
+            </div>
+            {activeTab === 'myLessons' && (
+              <>
+                <button
+                  type="button"
+                  className={`lm-filter-toggle ${showFiltersPanel ? 'active' : ''}`}
+                  onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+                  title="Toggle filters"
+                >
+                  <i className="ri-filter-3-line" />
+                  Filters
+                </button>
+                {selectedLessonIds.size > 0 && (
+                  <button
+                    type="button"
+                    className="lm-clear-selection"
+                    onClick={clearSelection}
+                  >
+                    Clear selection ({selectedLessonIds.size})
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
+
+        {/* Advanced Filters Panel */}
+        {showFiltersPanel && activeTab === 'myLessons' && (
+          <div className="lm-filters-panel">
+            <div className="lm-filter-group">
+              <label>Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter((e.target as HTMLSelectElement).value as typeof statusFilter)}
+              >
+                <option value="all">All</option>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+            <div className="lm-filter-group">
+              <label>Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as typeof sortBy)}
+              >
+                <option value="date">Date</option>
+                <option value="title">Title</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
+            <div className="lm-filter-group">
+              <label>Order</label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder((e.target as HTMLSelectElement).value as typeof sortOrder)}
+              >
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Actions Bar */}
+        {showBulkActionsBar && (
+          <div className="lm-bulk-actions-bar">
+            <span className="lm-bulk-count">{selectedLessonIds.size} selected</span>
+            <div className="lm-bulk-buttons">
+              <button
+                type="button"
+                className="lm-bulk-btn publish"
+                onClick={() => handleBulkAction('publish')}
+                disabled={isBulkActionLoading}
+              >
+                <i className="ri-upload-cloud-line" /> Publish
+              </button>
+              <button
+                type="button"
+                className="lm-bulk-btn unpublish"
+                onClick={() => handleBulkAction('unpublish')}
+                disabled={isBulkActionLoading}
+              >
+                <i className="ri-download-cloud-line" /> Unpublish
+              </button>
+              <button
+                type="button"
+                className="lm-bulk-btn archive"
+                onClick={() => handleBulkAction('archive')}
+                disabled={isBulkActionLoading}
+              >
+                <i className="ri-archive-line" /> Archive
+              </button>
+              <button
+                type="button"
+                className="lm-bulk-btn delete"
+                onClick={() => handleBulkAction('delete')}
+                disabled={isBulkActionLoading}
+              >
+                <i className="ri-delete-bin-line" /> Delete
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="lm-stats-grid">
@@ -2593,13 +3703,32 @@ export default function LessonMaterialMakerPage() {
           </div>
           <div className="lm-stat-card">
             <div className="lm-stat-icon purple">
-              <i className="ri-stack-line" />
+              <i className="ri-git-branch-line" />
             </div>
             <div className="lm-stat-content">
-              <span className="lm-stat-value">{Object.keys(groupedLessons).length}</span>
-              <span className="lm-stat-label">Levels</span>
+              <span className="lm-stat-value">{savedLessons.filter(l => l.isFork).length}</span>
+              <span className="lm-stat-label">Forks</span>
             </div>
           </div>
+          {pendingMergeRequests.length > 0 && (
+            <div 
+              className="lm-stat-card lm-stat-clickable"
+              onClick={() => {
+                // Show first pending merge request
+                if (pendingMergeRequests.length > 0) {
+                  handleReviewMergeRequest(pendingMergeRequests[0]);
+                }
+              }}
+            >
+              <div className="lm-stat-icon red">
+                <i className="ri-git-merge-line" />
+              </div>
+              <div className="lm-stat-content">
+                <span className="lm-stat-value">{pendingMergeRequests.length}</span>
+                <span className="lm-stat-label">Pending Merge Requests</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Editing in Progress Banner */}
@@ -2846,9 +3975,16 @@ export default function LessonMaterialMakerPage() {
                                         <h5 className="lm-lesson-title">Lesson {lessonNum}</h5>
                                         <div className="lm-lesson-cards">
                                           {lessonList.map(lesson => (
-                                            <div key={lesson.id} className="lm-lesson-card">
+                                            <div key={lesson.id} className={`lm-lesson-card ${lesson.isFork ? 'is-fork' : ''}`}>
                                               <div className="lm-lesson-card-main">
-                                                <div className="lm-lesson-goal">{lesson.goalName}</div>
+                                                <div className="lm-lesson-goal">
+                                                  {lesson.goalName}
+                                                  {lesson.isFork && (
+                                                    <span className="lm-fork-badge" title="This is a fork">
+                                                      <i className="ri-git-branch-line" /> Fork
+                                                    </span>
+                                                  )}
+                                                </div>
                                                 <div className="lm-lesson-meta">
                                                   <span className="lm-lesson-template">
                                                     <i className="ri-file-copy-line" />
@@ -2857,9 +3993,34 @@ export default function LessonMaterialMakerPage() {
                                                   <span className={`lm-lesson-status ${lesson.status}`}>
                                                     {lesson.status}
                                                   </span>
+                                                  {lesson.currentVersion && (
+                                                    <span className="lm-lesson-version" title="Current version">
+                                                      v{lesson.currentVersion}
+                                                    </span>
+                                                  )}
+                                                  {lesson.forkCount && lesson.forkCount > 0 && (
+                                                    <span className="lm-fork-count" title={`${lesson.forkCount} fork(s)`}>
+                                                      <i className="ri-git-branch-line" /> {lesson.forkCount}
+                                                    </span>
+                                                  )}
+                                                  {lesson.hasPendingMergeRequest && (
+                                                    <span className="lm-mr-badge" title="Has pending merge request">
+                                                      <i className="ri-git-merge-line" /> MR
+                                                    </span>
+                                                  )}
                                                 </div>
                                               </div>
                                               <div className="lm-lesson-card-actions">
+                                                {/* Bulk select checkbox */}
+                                                {lesson.serverLesson && (
+                                                  <label className="lm-bulk-checkbox" title="Select for bulk action">
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={selectedLessonIds.has(lesson.serverLesson.id)}
+                                                      onChange={() => toggleLessonSelection(lesson.serverLesson!.id)}
+                                                    />
+                                                  </label>
+                                                )}
                                                 <button
                                                   type="button"
                                                   className="lm-lesson-btn edit"
@@ -2868,6 +4029,95 @@ export default function LessonMaterialMakerPage() {
                                                 >
                                                   <i className="ri-edit-line" />
                                                 </button>
+                                                {/* Version history button */}
+                                                {lesson.serverLesson && (
+                                                  <button
+                                                    type="button"
+                                                    className="lm-lesson-btn versions"
+                                                    onClick={() => handleShowVersions(lesson)}
+                                                    title="View version history"
+                                                  >
+                                                    <i className="ri-history-line" />
+                                                  </button>
+                                                )}
+                                                {/* Publish/Unpublish buttons */}
+                                                {lesson.serverLesson && lesson.status === 'draft' && (
+                                                  <button
+                                                    type="button"
+                                                    className="lm-lesson-btn publish"
+                                                    onClick={() => handlePublishLesson(lesson)}
+                                                    title="Publish lesson"
+                                                  >
+                                                    <i className="ri-upload-cloud-line" />
+                                                  </button>
+                                                )}
+                                                {lesson.serverLesson && lesson.status === 'published' && (
+                                                  <button
+                                                    type="button"
+                                                    className="lm-lesson-btn unpublish"
+                                                    onClick={() => handleUnpublishLesson(lesson)}
+                                                    title="Unpublish (back to draft)"
+                                                  >
+                                                    <i className="ri-download-cloud-line" />
+                                                  </button>
+                                                )}
+                                                {/* Fork button - only for non-fork lessons */}
+                                                {!lesson.isFork && lesson.serverLesson && (
+                                                  <>
+                                                    <button
+                                                      type="button"
+                                                      className="lm-lesson-btn fork"
+                                                      onClick={() => handleForkLesson(lesson)}
+                                                      title="Fork this lesson to create your own version"
+                                                    >
+                                                      <i className="ri-git-branch-line" />
+                                                    </button>
+                                                    {/* View forks */}
+                                                    {lesson.forkCount && lesson.forkCount > 0 && (
+                                                      <button
+                                                        type="button"
+                                                        className="lm-lesson-btn view-forks"
+                                                        onClick={() => handleViewForks(lesson)}
+                                                        title={`View ${lesson.forkCount} fork(s)`}
+                                                      >
+                                                        <i className="ri-git-repository-line" />
+                                                      </button>
+                                                    )}
+                                                  </>
+                                                )}
+                                                {/* Merge request button - only for fork lessons */}
+                                                {lesson.isFork && lesson.forkOf && !lesson.hasPendingMergeRequest && (
+                                                  <button
+                                                    type="button"
+                                                    className="lm-lesson-btn merge"
+                                                    onClick={() => handleCreateMergeRequest(lesson)}
+                                                    title="Submit changes to original"
+                                                  >
+                                                    <i className="ri-git-merge-line" />
+                                                  </button>
+                                                )}
+                                                {/* Save as template */}
+                                                {lesson.serverLesson && !lesson.isFork && (
+                                                  <button
+                                                    type="button"
+                                                    className="lm-lesson-btn template"
+                                                    onClick={() => handleSaveAsTemplate(lesson)}
+                                                    title="Save as template"
+                                                  >
+                                                    <i className="ri-file-copy-2-line" />
+                                                  </button>
+                                                )}
+                                                {/* Archive button */}
+                                                {lesson.serverLesson && lesson.status !== 'archived' && (
+                                                  <button
+                                                    type="button"
+                                                    className="lm-lesson-btn archive"
+                                                    onClick={() => handleArchiveLesson(lesson)}
+                                                    title="Archive lesson"
+                                                  >
+                                                    <i className="ri-archive-line" />
+                                                  </button>
+                                                )}
                                                 <button
                                                   type="button"
                                                   className="lm-lesson-btn delete"
@@ -2995,6 +4245,32 @@ export default function LessonMaterialMakerPage() {
               </>
             )}
           </div>
+
+          {/* Collaborative Editing Indicator */}
+          {currentEditingLesson?.serverLesson && socketEditors.length > 0 && (
+            <div className="lm-collaborators-badge" title={`${socketEditors.length} editor${socketEditors.length !== 1 ? 's' : ''} online`}>
+              <i className="ri-team-line" />
+              <span className="count">{socketEditors.length}</span>
+              <div className="lm-editor-avatars">
+                {socketEditors.slice(0, 3).map((editor, i) => (
+                  <div key={editor.odI || i} className="lm-editor-avatar">
+                    {editor.userName?.charAt(0)?.toUpperCase() || '?'}
+                    <span className="lm-editor-tooltip">{editor.userName}</span>
+                  </div>
+                ))}
+                {socketEditors.length > 3 && (
+                  <div className="lm-editor-avatar">+{socketEditors.length - 3}</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Connection Status */}
+          {currentEditingLesson?.serverLesson && (
+            <div className={`lm-collab-status ${isSocketConnected ? 'connected' : 'disconnected'}`} title={isSocketConnected ? 'Connected to collaboration server' : 'Disconnected from collaboration server'}>
+              <span className="status-dot" />
+            </div>
+          )}
 
           {/* Toggle Preview Mode */}
           {currentEditingLesson && (

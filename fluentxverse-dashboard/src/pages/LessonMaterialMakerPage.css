@@ -7308,3 +7308,1093 @@ body.lm-fullscreen-mode .main-content {
     border-radius: 0;
   }
 }
+}
+
+/* ========================================
+   FORK/MERGE SYSTEM STYLES
+   ======================================== */
+
+/* Fork badge on lesson cards */
+.lm-lesson-card.is-fork {
+  border-left: 3px solid var(--primary);
+}
+
+.lm-fork-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(2, 69, 174, 0.1);
+  color: var(--primary);
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.lm-lesson-version {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 4px;
+}
+
+.lm-fork-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(139, 92, 246, 0.1);
+  color: rgb(139, 92, 246);
+  border-radius: 4px;
+}
+
+.lm-mr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error, #ef4444);
+  border-radius: 4px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Fork/Merge action buttons */
+.lm-lesson-btn.fork {
+  background: rgba(139, 92, 246, 0.1);
+  color: rgb(139, 92, 246);
+}
+
+.lm-lesson-btn.fork:hover {
+  background: rgb(139, 92, 246);
+  color: white;
+}
+
+.lm-lesson-btn.merge {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.lm-lesson-btn.merge:hover {
+  background: rgb(34, 197, 94);
+  color: white;
+}
+
+/* Stat card - clickable variant */
+.lm-stat-card.lm-stat-clickable {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.lm-stat-card.lm-stat-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.lm-stat-icon.red {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error, #ef4444);
+}
+
+/* Fork info box in modal */
+.lm-fork-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.lm-fork-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.lm-fork-info-item i {
+  font-size: 18px;
+  color: var(--primary);
+}
+
+/* Merge request details in modal */
+.lm-mr-details {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.lm-mr-details h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.lm-mr-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+}
+
+.lm-mr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.lm-mr-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lm-mr-meta i {
+  font-size: 14px;
+}
+
+/* Modal button variants */
+.lm-modal-btn.danger {
+  background: transparent;
+  border: 1px solid var(--error, #ef4444);
+  color: var(--error, #ef4444);
+}
+
+.lm-modal-btn.danger:hover {
+  background: var(--error, #ef4444);
+  color: white;
+}
+
+.lm-modal-btn.success {
+  background: rgb(34, 197, 94);
+  border: 1px solid rgb(34, 197, 94);
+  color: white;
+}
+
+.lm-modal-btn.success:hover {
+  background: rgb(22, 163, 74);
+  border-color: rgb(22, 163, 74);
+}
+
+/* Wide modal variant */
+.lm-modal.lm-modal-wide {
+  max-width: 600px;
+}
+
+/* Merge request actions footer */
+.lm-modal-footer.lm-mr-actions {
+  gap: 8px;
+}
+
+.lm-modal-footer.lm-mr-actions .lm-modal-btn.secondary {
+  margin-right: auto;
+}
+
+/* Loading state for server lessons */
+.lm-loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.lm-loading-indicator i {
+  font-size: 18px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Textarea for merge request description */
+.lm-form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary);
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lm-form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+/* ========================================
+   IMPROVEMENT STYLES
+   ======================================== */
+
+/* Search/Filter Row */
+.lm-search-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lm-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lm-filter-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lm-filter-toggle.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.lm-clear-selection {
+  padding: 8px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--error, #ef4444);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lm-clear-selection:hover {
+  background: var(--error, #ef4444);
+  color: white;
+}
+
+/* Advanced Filters Panel */
+.lm-filters-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.lm-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lm-filter-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lm-filter-group select {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+}
+
+.lm-filter-group select:focus {
+  border-color: var(--primary);
+}
+
+/* Bulk Actions Bar */
+.lm-bulk-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lm-bulk-count {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.lm-bulk-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.lm-bulk-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lm-bulk-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.lm-bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lm-bulk-btn.delete:hover:not(:disabled) {
+  background: var(--error, #ef4444);
+  border-color: var(--error, #ef4444);
+}
+
+/* Bulk select checkbox */
+.lm-bulk-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.lm-bulk-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+/* Additional action buttons */
+.lm-lesson-btn.versions {
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+.lm-lesson-btn.versions:hover {
+  background: rgb(59, 130, 246);
+  color: white;
+}
+
+.lm-lesson-btn.publish {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.lm-lesson-btn.publish:hover {
+  background: rgb(34, 197, 94);
+  color: white;
+}
+
+.lm-lesson-btn.unpublish {
+  background: rgba(251, 191, 36, 0.1);
+  color: rgb(217, 119, 6);
+}
+
+.lm-lesson-btn.unpublish:hover {
+  background: rgb(217, 119, 6);
+  color: white;
+}
+
+.lm-lesson-btn.template {
+  background: rgba(139, 92, 246, 0.1);
+  color: rgb(139, 92, 246);
+}
+
+.lm-lesson-btn.template:hover {
+  background: rgb(139, 92, 246);
+  color: white;
+}
+
+.lm-lesson-btn.archive {
+  background: rgba(107, 114, 128, 0.1);
+  color: rgb(107, 114, 128);
+}
+
+.lm-lesson-btn.archive:hover {
+  background: rgb(107, 114, 128);
+  color: white;
+}
+
+.lm-lesson-btn.view-forks {
+  background: rgba(236, 72, 153, 0.1);
+  color: rgb(236, 72, 153);
+}
+
+.lm-lesson-btn.view-forks:hover {
+  background: rgb(236, 72, 153);
+  color: white;
+}
+
+/* Comments Section in Merge Review Modal */
+.lm-mr-comments {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.lm-mr-comments h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.lm-mr-comments h4 i {
+  color: var(--primary);
+}
+
+.lm-loading {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 12px;
+  text-align: center;
+}
+
+.lm-no-comments {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 12px;
+  text-align: center;
+  font-style: italic;
+}
+
+.lm-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.lm-comment {
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.lm-comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.lm-comment-author {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lm-comment-date {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.lm-comment-content {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.lm-add-comment {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.lm-add-comment textarea {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #fff;
+  resize: none;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.lm-add-comment textarea:focus {
+  border-color: var(--primary);
+}
+
+.lm-add-comment-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-end;
+}
+
+.lm-add-comment-btn:hover:not(:disabled) {
+  background: var(--primary-dark, #023a8a);
+}
+
+.lm-add-comment-btn:disabled {
+  background: var(--border-color);
+  cursor: not-allowed;
+}
+
+/* Version Restore Modal */
+.lm-version-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.lm-versions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.lm-no-versions {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 24px;
+  text-align: center;
+  font-style: italic;
+}
+
+.lm-version-item {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  transition: border-color 0.2s;
+}
+
+.lm-version-item:hover {
+  border-color: var(--primary);
+}
+
+.lm-version-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lm-version-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(2, 69, 174, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.lm-version-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.lm-version-author {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.lm-version-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 8px 0 0 0;
+  font-style: italic;
+}
+
+.lm-version-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.lm-version-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lm-version-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lm-version-btn.restore:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Forks Panel */
+.lm-no-forks {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 24px;
+  text-align: center;
+  font-style: italic;
+}
+
+.lm-forks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.lm-fork-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.lm-fork-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lm-fork-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.lm-fork-author {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.lm-fork-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.lm-fork-status {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.lm-fork-status.draft {
+  background: rgba(251, 191, 36, 0.1);
+  color: rgb(217, 119, 6);
+}
+
+.lm-fork-status.published {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(22, 163, 74);
+}
+
+.lm-fork-status.archived {
+  background: rgba(107, 114, 128, 0.1);
+  color: rgb(107, 114, 128);
+}
+
+.lm-fork-mr-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error, #ef4444);
+  border-radius: 4px;
+}
+
+/* Diff Viewer Modal */
+.lm-modal.lm-modal-fullscreen {
+  max-width: 95vw;
+  max-height: 90vh;
+  width: 95vw;
+}
+
+.lm-modal-body.lm-diff-body {
+  padding: 0;
+  overflow: hidden;
+}
+
+.lm-diff-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 60vh;
+  min-height: 400px;
+}
+
+.lm-diff-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.lm-diff-panel:last-child {
+  border-right: none;
+}
+
+.lm-diff-panel h4 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  margin: 0;
+}
+
+.lm-diff-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  margin: 0;
+  font-size: 11px;
+  font-family: 'Fira Code', 'Monaco', monospace;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lm-search-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .lm-filters-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .lm-filter-group {
+    justify-content: space-between;
+  }
+  
+  .lm-bulk-actions-bar {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .lm-bulk-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .lm-diff-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  
+  .lm-diff-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .lm-diff-panel:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Diff Section in Merge Review Modal */
+.lm-diff-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.lm-diff-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.lm-diff-section h4 i {
+  color: var(--primary);
+}
+
+/* Collaborative Editing Indicators */
+.lm-collab-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: rgba(37, 99, 235, 0.05);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+  font-size: 13px;
+}
+
+.lm-collab-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lm-collab-status.connected {
+  color: #16a34a;
+}
+
+.lm-collab-status.disconnected {
+  color: #dc2626;
+}
+
+.lm-collab-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.lm-collab-editors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lm-collab-editors span {
+  color: var(--text-secondary);
+}
+
+.lm-editor-avatars {
+  display: flex;
+  gap: -8px;
+}
+
+.lm-editor-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  border: 2px solid white;
+  margin-left: -8px;
+  position: relative;
+}
+
+.lm-editor-avatar:first-child {
+  margin-left: 0;
+}
+
+.lm-editor-avatar:hover .lm-editor-tooltip {
+  display: block;
+}
+
+.lm-editor-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-bottom: 4px;
+  z-index: 10;
+}
+
+.lm-collab-activity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.lm-activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 60px;
+  overflow: hidden;
+}
+
+.lm-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lm-activity-item .activity-user {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lm-activity-item .activity-action {
+  color: var(--text-muted);
+}
+
+.lm-activity-item .activity-time {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* Collaborator badge in editor header */
+.lm-collaborators-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lm-collaborators-badge:hover {
+  background: rgba(37, 99, 235, 0.2);
+}
+
+.lm-collaborators-badge i {
+  font-size: 14px;
+}
+
+.lm-collaborators-badge .count {
+  font-weight: 600;
+}
+
+/* Editing indicator on sections */
+.lm-section-editing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(251, 191, 36, 0.15);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #b45309;
+  margin-left: auto;
+}
+
+.lm-section-editing-indicator i {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
