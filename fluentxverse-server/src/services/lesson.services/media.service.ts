@@ -14,9 +14,13 @@ export interface LessonMedia {
   vocabularyItemId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  url?: string; // Proxy URL through API server
 }
 
+// Internal URL for server-to-server communication inside Docker
 const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
+// API base URL for constructing proxy URLs (browser accesses files via API)
+const API_BASE = process.env.API_PUBLIC_URL || 'http://localhost:8765';
 
 class LessonMediaService {
   /**
@@ -227,12 +231,13 @@ class LessonMediaService {
   }
 
   private mapMediaRow(row: Record<string, unknown>): LessonMedia {
+    const storagePath = row.storage_path as string;
     return {
       id: row.id as string,
       lessonId: row.lesson_id as string,
       type: row.type as LessonMedia['type'],
       filename: row.filename as string,
-      storagePath: row.storage_path as string,
+      storagePath: storagePath,
       mimeType: row.mime_type as string | null,
       fileSize: row.file_size as number | null,
       title: row.title as string | null,
@@ -240,9 +245,9 @@ class LessonMediaService {
       duration: row.duration as number | null,
       vocabularyItemId: row.vocabulary_item_id as string | null,
       createdAt: new Date(row.created_at as string),
-      updatedAt: new Date(row.updated_at as string)
+      updatedAt: new Date(row.updated_at as string),
+      // Proxy URL through API server (keeps SeaweedFS internal)
+      url: `${API_BASE}/lesson/files${storagePath}`
     };
   }
 }
-
-export const lessonMediaService = new LessonMediaService();

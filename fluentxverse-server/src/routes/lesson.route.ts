@@ -3,10 +3,14 @@ import { lessonService, type LessonMaterial } from '../services/lesson.services/
 import { verifyAuthToken, type JwtAuthPayload } from '../utils/jwt';
 import { generateStudentMaterial, getMaterialSizeReduction } from '../utils/studentMaterial';
 
+// Internal URL for server-to-server communication inside Docker
 const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
+// API base URL for constructing proxy URLs (browser accesses files via API)
+const API_BASE = process.env.API_PUBLIC_URL || 'http://localhost:8765';
 
 /**
  * Upload a file to SeaweedFS Filer
+ * Returns a proxy URL through the API server (not direct SeaweedFS URL)
  */
 async function uploadToSeaweed(path: string, content: Blob | string, contentType: string): Promise<string> {
   const uploadUrl = `${FILER_BASE}${path}`;
@@ -26,7 +30,9 @@ async function uploadToSeaweed(path: string, content: Blob | string, contentType
     throw new Error(`Upload failed: ${res.status} ${text}`);
   }
   
-  return uploadUrl;
+  // Return proxy URL through API server, not direct SeaweedFS URL
+  // This keeps SeaweedFS internal and secure
+  return `${API_BASE}/lesson/files${path}`;
 }
 
 /**
@@ -1514,5 +1520,50 @@ export default new Elysia({ prefix: '/lesson' })
     } catch (error) {
       console.error('Error performing bulk action:', error);
       return { success: false, error: 'Failed to perform bulk action' };
+    }
+  })
+  
+  /**
+   * Proxy endpoint to serve lesson files from SeaweedFS
+   * This keeps SeaweedFS internal and secure
+   * Path: /lesson/files/lessons/{lessonId}/{filename}
+   */
+  .get('/files/*', async ({ params, set }) => {
+    try {
+      // Get the file path from wildcard parameter
+      const filePath = '/' + (params['*'] || '');
+      
+      if (!filePath || filePath === '/') {
+        set.status = 400;
+        return { error: 'File path required' };
+      }
+      
+      // Fetch from internal SeaweedFS
+      const seaweedUrl = `${FILER_BASE}${filePath}`;
+      const res = await fetch(seaweedUrl);
+      
+      if (!res.ok) {
+        set.status = res.status;
+        return { error: 'File not found' };
+      }
+      
+      // Get content type from SeaweedFS response
+      const contentType = res.headers.get('content-type') || 'application/octet-stream';
+      
+      // Set appropriate headers
+      set.headers['content-type'] = contentType;
+      set.headers['cache-control'] = 'public, max-age=31536000'; // Cache for 1 year (immutable content)
+      
+      // Stream the response body
+      return new Response(res.body, {
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000'
+        }
+      });
+    } catch (error) {
+      console.error('Error proxying file:', error);
+      set.status = 500;
+      return { error: 'Failed to retrieve file' };
     }
   });

@@ -19,9 +19,11 @@ services:
       - MEMGRAPH_USER=${MEMGRAPH_USER:-fluentxverse}
       - MEMGRAPH_PASSWORD=${MEMGRAPH_PASSWORD:-devpassword123}
       - REDIS_URL=redis://fluentxverse-redis:6379
-      # SeaweedFS
+      # SeaweedFS (internal only - not exposed publicly)
       - SEAWEED_MASTER_URL=http://fluentxverse-seaweed-master:9333
       - SEAWEED_FILER_URL=http://fluentxverse-seaweed-filer:8888
+      # API Public URL (for generating proxy URLs to lesson files)
+      - API_PUBLIC_URL=${API_PUBLIC_URL:-http://localhost:8765}
       # Auth
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change-me-refresh-secret}

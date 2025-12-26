@@ -2081,6 +2081,7 @@ export default function LessonMaterialMakerPage() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
   const previousDraftRef = useRef<LessonMaterialDraft | null>(null);
+  const lastSavedContentRef = useRef<string>(''); // Track last saved content to prevent duplicate saves
 
   useEffect(() => {
     document.title = 'Lesson Material Maker | FluentXVerse Admin';
@@ -2391,13 +2392,15 @@ export default function LessonMaterialMakerPage() {
         if (result.success && result.url) {
           setLastSaved(new Date());
           setSavedLessonUrl(result.url);
+          // Update last saved content to prevent duplicate saves
+          lastSavedContentRef.current = JSON.stringify(draftToSave);
           // Update the serverLesson with new version info
           if (result.lesson) {
+            const updatedLesson = { ...currentEditingLesson, serverLesson: result.lesson, currentVersion: result.version?.versionNumber };
+            setCurrentEditingLesson(updatedLesson);
             setSavedLessons(prev =>
               prev.map(l =>
-                l.id === currentEditingLesson.id
-                  ? { ...l, serverLesson: result.lesson, currentVersion: result.version?.versionNumber }
-                  : l
+                l.id === currentEditingLesson.id ? updatedLesson : l
               )
             );
           }
@@ -2423,20 +2426,24 @@ export default function LessonMaterialMakerPage() {
         if (result.success && result.url) {
           setLastSaved(new Date());
           setSavedLessonUrl(result.url);
+          // Update last saved content to prevent duplicate saves
+          lastSavedContentRef.current = JSON.stringify(draftToSave);
           // Update the saved lesson with server info
           if (result.lesson) {
+            const updatedLesson = { 
+              ...currentEditingLesson, 
+              serverLesson: result.lesson, 
+              currentVersion: result.version?.versionNumber,
+              status: result.lesson.status as 'draft' | 'finished' | 'published'
+            };
+            // IMPORTANT: Update currentEditingLesson so next save becomes an UPDATE, not CREATE
+            setCurrentEditingLesson(updatedLesson);
             setSavedLessons(prev =>
               prev.map(l =>
-                l.id === currentEditingLesson.id
-                  ? { 
-                      ...l, 
-                      serverLesson: result.lesson, 
-                      currentVersion: result.version?.versionNumber,
-                      status: result.lesson.status as 'draft' | 'finished' | 'published'
-                    }
-                  : l
+                l.id === currentEditingLesson.id ? updatedLesson : l
               )
             );
+            console.log('[Autosave] Updated currentEditingLesson with serverLesson:', result.lesson.id);
           }
         } else if (result.error === 'Unauthorized') {
           // Fall back to legacy save without version history
@@ -2472,6 +2479,13 @@ export default function LessonMaterialMakerPage() {
 
     // Skip if already saving to prevent overlapping requests
     if (isSaving) {
+      return;
+    }
+
+    // Skip if content hasn't changed since last save
+    const currentContent = JSON.stringify(draft);
+    if (currentContent === lastSavedContentRef.current) {
+      console.log('[Autosave] Content unchanged, skipping save');
       return;
     }
 
