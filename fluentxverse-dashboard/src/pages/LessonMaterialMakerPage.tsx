@@ -2363,19 +2363,30 @@ export default function LessonMaterialMakerPage() {
 
   // Autosave function - uses proper API endpoints with version history
   const saveToServer = useCallback(async (draftToSave: LessonMaterialDraft) => {
-    if (!currentEditingLesson) return;
+    if (!currentEditingLesson) {
+      console.log('[Autosave] No current editing lesson, skipping save');
+      return;
+    }
+    
+    console.log('[Autosave] Starting save...', { 
+      lessonId: currentEditingLesson.id,
+      hasServerLesson: !!currentEditingLesson.serverLesson,
+      serverLessonId: currentEditingLesson.serverLesson?.id
+    });
     
     setIsSaving(true);
     setSaveError(null);
     try {
       // Check if lesson already has a server ID (was created before)
       if (currentEditingLesson.serverLesson?.id) {
+        console.log('[Autosave] Updating existing lesson:', currentEditingLesson.serverLesson.id);
         // Update existing lesson (creates new version in database)
         const result = await lessonApi.updateLesson(
           currentEditingLesson.serverLesson.id,
           draftToSave,
           'Auto-save'
         );
+        console.log('[Autosave] Update result:', result);
         if (result.success && result.url) {
           setLastSaved(new Date());
           setSavedLessonUrl(result.url);
@@ -2390,11 +2401,14 @@ export default function LessonMaterialMakerPage() {
             );
           }
         } else {
+          console.error('[Autosave] Update failed:', result.error);
           setSaveError(result.error || 'Failed to save');
         }
       } else {
         // Create new lesson (first save)
+        console.log('[Autosave] Creating new lesson...');
         const result = await lessonApi.createLesson(draftToSave);
+        console.log('[Autosave] Create result:', result);
         if (result.success && result.url) {
           setLastSaved(new Date());
           setSavedLessonUrl(result.url);
@@ -2414,6 +2428,7 @@ export default function LessonMaterialMakerPage() {
             );
           }
         } else {
+          console.error('[Autosave] Create failed:', result.error);
           setSaveError(result.error || 'Failed to save');
         }
       }
