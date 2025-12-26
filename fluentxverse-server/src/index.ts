@@ -54,11 +54,7 @@ const defaultOrigins = [
   'http://localhost:5174',
   'http://localhost:5175',
   'http://localhost:5176',
-  'http://localhost:5178',
   // Production domains
-  'https://student.fluentxverse.xyz',
-  'https://tutor.fluentxverse.xyz',
-  'https://dashboard.fluentxverse.xyz',
 ];
 
 const envOrigins = (process.env.FRONTEND_URLS || '')

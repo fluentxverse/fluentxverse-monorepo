@@ -1871,14 +1871,15 @@ body.lm-fullscreen-mode .main-content {
   gap: 40px;
 }
 
-/* Student View - Hides sidebar, expands main content */
+/* Student View - Hides sidebar, centers main content at same size */
 .lm-section-layout.student-view {
   gap: 0;
+  justify-content: center;
 }
 
 .lm-section-layout.student-view .lm-section-main {
-  flex: 1 1 100%;
-  max-width: 100%;
+  flex: 0 0 56%;
+  max-width: 56%;
 }
 
 /* Left Column - Main Content (60%) */
