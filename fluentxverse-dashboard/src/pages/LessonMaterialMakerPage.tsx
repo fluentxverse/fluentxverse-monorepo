@@ -2185,10 +2185,11 @@ export default function LessonMaterialMakerPage() {
           const response = await lessonApi.getLesson(currentEditingLesson.serverLesson.id);
           if (response.success && response.lessonData) {
             console.log('[Init] Loaded server content successfully');
+            // Use ALL data from server, including sections with image URLs
             const serverDraft: LessonMaterialDraft = {
               version: 2,
               header: response.lessonData.header,
-              sections: currentEditingLesson.draft.sections,
+              sections: (response.lessonData as any).sections || currentEditingLesson.draft.sections,
               vocabulary: response.lessonData.vocabulary || [],
               grammar: response.lessonData.grammar || [],
               exercises: response.lessonData.exercises || []
@@ -2675,11 +2676,11 @@ export default function LessonMaterialMakerPage() {
         const response = await lessonApi.getLesson(lesson.serverLesson.id);
         if (response.success && response.lessonData) {
           console.log('[Edit] Loaded server content successfully');
-          // Convert LessonMaterial to LessonMaterialDraft
+          // Convert LessonMaterial to LessonMaterialDraft - use ALL server data including sections
           const serverDraft: LessonMaterialDraft = {
             version: 2,
             header: response.lessonData.header,
-            sections: lesson.draft.sections, // Keep local sections structure for now
+            sections: (response.lessonData as any).sections || lesson.draft.sections,
             vocabulary: response.lessonData.vocabulary || [],
             grammar: response.lessonData.grammar || [],
             exercises: response.lessonData.exercises || []
