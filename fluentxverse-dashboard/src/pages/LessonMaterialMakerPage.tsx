@@ -2424,11 +2424,17 @@ export default function LessonMaterialMakerPage() {
     }
   }, [currentEditingLesson]);
 
-  // Debounced autosave - triggers 2 seconds after last change
+  // Debounced autosave - triggers 5 seconds after last change
+  // Longer debounce to prevent rapid API calls that can cause connection issues
   useEffect(() => {
     // Skip autosave on first render (initial load)
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      return;
+    }
+
+    // Skip if already saving to prevent overlapping requests
+    if (isSaving) {
       return;
     }
 
@@ -2437,10 +2443,10 @@ export default function LessonMaterialMakerPage() {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Set new timeout for autosave (2 second debounce)
+    // Set new timeout for autosave (5 second debounce)
     saveTimeoutRef.current = setTimeout(() => {
       saveToServer(draft);
-    }, 2000);
+    }, 5000);
 
     // Cleanup
     return () => {
@@ -2448,7 +2454,7 @@ export default function LessonMaterialMakerPage() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [draft, saveToServer]);
+  }, [draft, saveToServer, isSaving]);
 
   const handleImageUpload = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
