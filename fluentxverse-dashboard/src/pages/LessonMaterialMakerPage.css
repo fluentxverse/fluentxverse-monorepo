@@ -1253,6 +1253,66 @@ body.lm-fullscreen-mode .main-content {
   cursor: not-allowed;
 }
 
+/* Material View Mode Toggle (Tutor/Student) */
+.lm-view-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-secondary, #f1f5f9);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.lm-view-mode-toggle .lm-view-btn {
+  border-radius: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #64748b);
+  transition: all 0.2s ease;
+  gap: 6px;
+}
+
+.lm-view-mode-toggle .lm-view-btn:hover {
+  color: var(--text-primary, #1e293b);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.lm-view-mode-toggle .lm-view-btn.active {
+  background: #fff;
+  color: var(--primary, #0245ae);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.lm-view-mode-toggle .lm-view-btn.active i {
+  color: var(--primary, #0245ae);
+}
+
+.lm-view-mode-toggle .lm-view-btn i {
+  font-size: 14px;
+}
+
+/* Student View indicator in the page */
+.lm-student-view-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-left: 12px;
+}
+
+.lm-student-view-badge i {
+  font-size: 12px;
+}
+
 /* Autosave status indicator */
 .lm-autosave-status {
   display: flex;
@@ -1809,6 +1869,16 @@ body.lm-fullscreen-mode .main-content {
 .lm-section-layout {
   display: flex;
   gap: 40px;
+}
+
+/* Student View - Hides sidebar, expands main content */
+.lm-section-layout.student-view {
+  gap: 0;
+}
+
+.lm-section-layout.student-view .lm-section-main {
+  flex: 1 1 100%;
+  max-width: 100%;
 }
 
 /* Left Column - Main Content (60%) */

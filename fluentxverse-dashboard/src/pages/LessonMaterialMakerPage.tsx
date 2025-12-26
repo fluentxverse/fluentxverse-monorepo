@@ -1915,6 +1915,7 @@ export default function LessonMaterialMakerPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedLessonUrl, setSavedLessonUrl] = useState<string | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false); // Read-only preview mode
+  const [materialViewMode, setMaterialViewMode] = useState<'tutor' | 'student'>('tutor'); // Tutor view (with hints) or Student view (without hints)
   const [activeTab, setActiveTab] = useState<'templates' | 'myLessons'>('templates');
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
   const [selectedTemplateForLesson, setSelectedTemplateForLesson] = useState<TemplateInfo | null>(null);
@@ -4285,6 +4286,30 @@ export default function LessonMaterialMakerPage() {
             </button>
           )}
 
+          {/* Toggle Material View Mode (Tutor/Student) */}
+          {currentEditingLesson && (
+            <div className="lm-view-mode-toggle">
+              <button
+                type="button"
+                className={`lm-toolbar-btn lm-view-btn ${materialViewMode === 'tutor' ? 'active' : ''}`}
+                onClick={() => setMaterialViewMode('tutor')}
+                title="Tutor View - Shows tutor hints and instructions"
+              >
+                <i className="ri-user-settings-line" />
+                <span>Tutor</span>
+              </button>
+              <button
+                type="button"
+                className={`lm-toolbar-btn lm-view-btn ${materialViewMode === 'student' ? 'active' : ''}`}
+                onClick={() => setMaterialViewMode('student')}
+                title="Student View - Material without tutor hints"
+              >
+                <i className="ri-user-3-line" />
+                <span>Student</span>
+              </button>
+            </div>
+          )}
+
           {/* Version History Button */}
           {currentEditingLesson && (
             <button
@@ -4744,7 +4769,7 @@ export default function LessonMaterialMakerPage() {
           {draft.sections.map((section, sectionIndex) => (
             <div key={section.id} className="lm-section">
               {/* Two-column layout */}
-              <div className="lm-section-layout">
+              <div className={`lm-section-layout ${materialViewMode === 'student' ? 'student-view' : ''}`}>
                 {/* Left Column - Main Content */}
                 <div className="lm-section-main">
                   {/* Section Title - hide for question, trivia types, challenge2, pronunciation, grammar, and practice sections with empty title */}
@@ -7207,7 +7232,8 @@ export default function LessonMaterialMakerPage() {
                   )}
                 </div>
 
-                {/* Right Column - Sidebar */}
+                {/* Right Column - Sidebar (Tutor View Only) */}
+                {materialViewMode === 'tutor' && (
                 <div className="lm-section-sidebar">
                   {/* INTRODUCE type sidebar */}
                   {(section.sectionType === 'introduce' || !section.sectionType) && (
@@ -9910,6 +9936,7 @@ export default function LessonMaterialMakerPage() {
                     </div>
                   )}
                 </div>
+                )}
               </div>
             </div>
           ))}
