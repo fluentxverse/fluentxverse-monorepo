@@ -262,4 +262,14 @@ export const toast = {
   },
 };
 
+// Async confirm dialog - replacement for window.confirm
+export const toastConfirm = async (
+  message: string,
+  title?: string,
+  options?: { confirmLabel?: string; cancelLabel?: string }
+): Promise<boolean> => {
+  // For now, fallback to native confirm - can be enhanced with modal later
+  return window.confirm(title ? `${title}\n\n${message}` : message);
+};
+
 export default Toast;

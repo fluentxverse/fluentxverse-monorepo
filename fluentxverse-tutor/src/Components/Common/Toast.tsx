@@ -160,6 +160,11 @@ export const ToastProvider = ({ children }: { children: any }) => {
     setConfirmState(prev => ({ ...prev, isOpen: false, resolve: null }));
   }, [confirmState.resolve]);
 
+  // Register global context for use outside React
+  useEffect(() => {
+    setGlobalToastContext({ success, error, warning, info, confirm });
+  }, [success, error, warning, info, confirm]);
+
   return (
     <ToastContext.Provider value={{ success, error, warning, info, confirm }}>
       {children}
@@ -194,6 +199,58 @@ export const ToastProvider = ({ children }: { children: any }) => {
       )}
     </ToastContext.Provider>
   );
+};
+
+// Global toast instance for use outside of React components
+let globalToastContext: ToastContextValue | null = null;
+
+export const setGlobalToastContext = (context: ToastContextValue) => {
+  globalToastContext = context;
+};
+
+// Global toast functions - can be called from anywhere
+export const toast = {
+  success: (message: string, title?: string) => {
+    if (globalToastContext) {
+      return globalToastContext.success(message, title);
+    }
+    console.warn('Toast not initialized. Make sure ToastProvider is mounted.');
+    return '';
+  },
+  error: (message: string, title?: string) => {
+    if (globalToastContext) {
+      return globalToastContext.error(message, title);
+    }
+    console.warn('Toast not initialized. Make sure ToastProvider is mounted.');
+    return '';
+  },
+  warning: (message: string, title?: string) => {
+    if (globalToastContext) {
+      return globalToastContext.warning(message, title);
+    }
+    console.warn('Toast not initialized. Make sure ToastProvider is mounted.');
+    return '';
+  },
+  info: (message: string, title?: string) => {
+    if (globalToastContext) {
+      return globalToastContext.info(message, title);
+    }
+    console.warn('Toast not initialized. Make sure ToastProvider is mounted.');
+    return '';
+  },
+};
+
+// Async confirm dialog - replacement for window.confirm
+export const toastConfirm = async (
+  message: string,
+  title?: string,
+  options?: { confirmLabel?: string; cancelLabel?: string }
+): Promise<boolean> => {
+  if (globalToastContext) {
+    return globalToastContext.confirm(message, { title, ...options });
+  }
+  console.warn('Toast not initialized. Falling back to native confirm.');
+  return window.confirm(message);
 };
 
 export default ToastProvider;
