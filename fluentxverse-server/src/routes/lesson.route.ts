@@ -52,103 +52,35 @@ async function fetchFromSeaweed(path: string): Promise<any | null> {
 
 /**
  * Generate HTML from lesson material data
+ * Supports both old format (vocabulary/grammar/exercises) and new format (sections)
  */
 function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
-  const { header, vocabulary, grammar, exercises } = lesson;
+  const { header } = lesson;
+  const sections = (lesson as any).sections || [];
   
-  // Generate vocabulary HTML
-  const vocabHtml = `
-    <section class="section">
-      <h2 class="section-title"><span class="section-icon">📖</span> Vocabulary</h2>
-      ${vocabulary.length > 0 ? `
-        <div class="vocab-grid">
-          ${vocabulary.map(v => `
-            <div class="vocab-item">
-              <div class="vocab-word">${escapeHtml(v.word)}</div>
-              <div class="vocab-reading">${escapeHtml(v.reading)}</div>
-              <div class="vocab-english">${escapeHtml(v.english)}</div>
-            </div>
-          `).join('')}
-        </div>
-      ` : `
-        <div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <p>No vocabulary items.</p>
-        </div>
-      `}
-    </section>
-  `;
-
-  // Generate grammar HTML
-  const grammarHtml = `
-    <section class="section">
-      <h2 class="section-title"><span class="section-icon">📝</span> Grammar Points</h2>
-      ${grammar.length > 0 ? `
-        ${grammar.map(g => `
-          <div class="grammar-item">
-            <div class="grammar-header">
-              <span class="grammar-structure">${escapeHtml(g.structure)}</span>
-              <span class="grammar-meaning">${escapeHtml(g.meaning)}</span>
-            </div>
-            <div class="grammar-example">
-              <p class="example-jp">${escapeHtml(g.example)}</p>
-              <p class="example-en">${escapeHtml(g.translation)}</p>
-            </div>
-          </div>
-        `).join('')}
-      ` : `
-        <div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <p>No grammar points.</p>
-        </div>
-      `}
-    </section>
-  `;
-
-  // Generate exercises HTML
-  const exercisesHtml = `
-    <section class="section">
-      <h2 class="section-title"><span class="section-icon">✏️</span> Exercises</h2>
-      ${exercises.length > 0 ? `
-        ${exercises.map((ex, idx) => `
-          <div class="exercise-item">
-            <div class="exercise-number">Exercise ${idx + 1}</div>
-            <p class="exercise-question">${escapeHtml(ex.question)}</p>
-            ${ex.type === 'multiple-choice' && ex.options ? `
-              <div class="exercise-options">
-                ${ex.options.map(opt => `<div class="option">• ${escapeHtml(opt)}</div>`).join('')}
-              </div>
-            ` : ''}
-            <div class="exercise-answer">Answer: ${escapeHtml(ex.correctAnswer)}</div>
-          </div>
-        `).join('')}
-      ` : `
-        <div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <p>No exercises.</p>
-        </div>
-      `}
-    </section>
-  `;
-
   // Use the uploaded image URL or fallback to gradient
-  const backgroundStyle = imageUrl 
-    ? `background-image: url(${imageUrl});`
+  const backgroundStyle = imageUrl || header?.backgroundImage
+    ? `background-image: url(${imageUrl || header?.backgroundImage});`
     : 'background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);';
+
+  // Generate sections HTML
+  const sectionsHtml = sections.map((section: any) => generateSectionHtml(section)).join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(header.lessonLabel) || 'Lesson Material'}</title>
+  <title>${escapeHtml(header?.lessonLabel) || 'Lesson Material'}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #fff; color: #1e293b; }
+    body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #1e293b; line-height: 1.6; }
+    
+    /* Header Styles */
     .lesson-header {
       position: relative;
-      min-height: 120px;
+      min-height: 140px;
       display: flex;
       flex-direction: column;
       background-size: cover;
@@ -160,7 +92,7 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
     .lesson-header-overlay {
       position: absolute;
       inset: 0;
-      background-color: ${header.overlayColor || 'rgba(0,0,0,0.4)'};
+      background-color: ${header?.overlayColor || 'rgba(0,0,0,0.45)'};
     }
     .lesson-header-content { 
       position: relative; 
@@ -171,15 +103,15 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 12px 16px;
+      padding: 20px 16px;
     }
     .lesson-header-top { 
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      gap: 6px; 
-      margin-bottom: 6px; 
-      font-size: 10px; 
+      gap: 8px; 
+      margin-bottom: 8px; 
+      font-size: 11px; 
       font-weight: 600;
       opacity: 0.95; 
       text-transform: uppercase; 
@@ -187,81 +119,563 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
     }
     .level-badge { 
       background: rgba(255,255,255,0.2); 
-      padding: 2px 6px; 
+      padding: 3px 8px; 
       border-radius: 4px; 
       font-weight: 600; 
     }
     .header-divider { opacity: 0.6; }
     .lesson-label { 
-      font-size: 16px; 
+      font-size: 20px; 
       font-weight: 700; 
-      margin-bottom: 6px; 
+      margin-bottom: 8px; 
       color: #fbbf24; 
     }
     .goal-row { 
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      gap: 8px; 
-      margin-bottom: 4px; 
+      gap: 10px; 
+      margin-bottom: 6px; 
     }
     .goal-badge { 
       display: inline-block;
       background: #22c55e; 
       color: #fff; 
-      padding: 3px 8px; 
+      padding: 4px 10px; 
       border-radius: 4px; 
       font-weight: 800; 
-      font-size: 10px; 
+      font-size: 11px; 
       letter-spacing: 0.8px;
       flex-shrink: 0;
     }
     .goal-text { 
-      font-size: 18px; 
+      font-size: 22px; 
       font-weight: 800; 
       text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
     }
     .goal-subtext { 
-      font-size: 13px; 
+      font-size: 14px; 
       opacity: 0.9;
-      margin-top: 2px;
+      margin-top: 4px;
     }
-    .lesson-body { max-width: 100%; margin: 0; padding: 32px; background: #f1f5f9; min-height: calc(100vh - 12.5vh); }
     
-    /* Section Styles */
-    .section { background: #fff; border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
-    .section-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; }
-    .section-icon { font-size: 1rem; }
+    /* Main Body */
+    .lesson-body { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      padding: 32px 24px; 
+      background: #f1f5f9; 
+      min-height: calc(100vh - 140px); 
+    }
     
-    /* Empty State */
-    .empty-state { text-align: center; padding: 3rem 2rem; color: #94a3b8; }
-    .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
-    .empty-state p { font-size: 0.9rem; }
+    /* Section Card Styles */
+    .section-card { 
+      background: #fff; 
+      border-radius: 16px; 
+      margin-bottom: 24px; 
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); 
+      border: 1px solid #e2e8f0; 
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .section-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #3b82f6;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section-content {
+      padding: 24px;
+    }
     
-    /* Vocabulary Styles */
-    .vocab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-    .vocab-item { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 1rem; transition: all 0.2s ease; }
-    .vocab-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
-    .vocab-word { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.25rem; }
-    .vocab-reading { font-size: 0.875rem; font-style: italic; color: #64748b; margin-bottom: 0.5rem; }
-    .vocab-english { font-size: 1rem; color: #475569; }
+    /* Explanation Text */
+    .explanation-text {
+      font-size: 16px;
+      color: #334155;
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+    .explanation-jp {
+      font-size: 14px;
+      color: #64748b;
+      border-left: 3px solid #e2e8f0;
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
     
-    /* Grammar Styles */
-    .grammar-item { background: #f8fafc; border-left: 4px solid #0ea5e9; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; }
-    .grammar-header { display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
-    .grammar-structure { font-size: 1.125rem; font-weight: 700; color: #0f172a; }
-    .grammar-meaning { font-size: 1rem; font-style: italic; color: #64748b; }
-    .grammar-example { margin-top: 0.75rem; }
-    .example-jp { font-size: 1rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem; }
-    .example-en { font-size: 0.875rem; font-style: italic; color: #64748b; }
+    /* Section Image */
+    .section-image {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 12px;
+      margin: 20px auto;
+      display: block;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
     
-    /* Exercise Styles */
-    .exercise-item { background: #f1f5f9; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; border: 1px solid #cbd5e1; }
-    .exercise-number { font-size: 0.875rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
-    .exercise-question { font-size: 1.125rem; font-weight: 600; color: #0f172a; margin-bottom: 1rem; }
-    .exercise-options { margin: 1rem 0; }
-    .option { padding: 0.5rem 0; color: #475569; }
-    .exercise-answer { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #cbd5e1; font-size: 0.875rem; font-weight: 600; color: #22c55e; }
+    /* Step Title */
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #3b82f6;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    
+    /* Instruction */
+    .instruction-text {
+      font-size: 15px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+    .instruction-jp {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+    
+    /* Vocabulary Cards */
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .vocab-card {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1px solid #bae6fd;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .vocab-word {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0369a1;
+      margin-bottom: 4px;
+    }
+    .vocab-reading {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .vocab-meaning {
+      font-size: 14px;
+      color: #334155;
+      font-weight: 500;
+    }
+    .vocab-image {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    /* Grammar Rules */
+    .grammar-rule {
+      background: #fefce8;
+      border-left: 4px solid #eab308;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .grammar-pattern {
+      font-size: 16px;
+      font-weight: 700;
+      color: #854d0e;
+      margin-bottom: 8px;
+    }
+    .grammar-meaning {
+      font-size: 14px;
+      color: #713f12;
+      margin-bottom: 8px;
+    }
+    .grammar-example {
+      font-size: 14px;
+      color: #92400e;
+      font-style: italic;
+    }
+    
+    /* Dialogue */
+    .dialogue-container {
+      margin-top: 16px;
+    }
+    .dialogue-line {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .dialogue-speaker {
+      font-weight: 700;
+      color: #3b82f6;
+      min-width: 80px;
+    }
+    .dialogue-text {
+      flex: 1;
+    }
+    .dialogue-en {
+      font-size: 15px;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    .dialogue-jp {
+      font-size: 13px;
+      color: #64748b;
+    }
+    
+    /* Practice Items */
+    .practice-example {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .practice-example-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #16a34a;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .practice-question {
+      font-size: 15px;
+      color: #334155;
+    }
+    .practice-answer {
+      font-size: 15px;
+      color: #15803d;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+    .practice-items {
+      margin-top: 16px;
+    }
+    .practice-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .practice-number {
+      font-weight: 700;
+      color: #3b82f6;
+      min-width: 24px;
+    }
+    
+    /* Challenge Section */
+    .challenge-badge {
+      display: inline-block;
+      background: #dc2626;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .optional-badge {
+      display: inline-block;
+      background: #f59e0b;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .situation-box {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .situation-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #92400e;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .situation-text {
+      font-size: 15px;
+      color: #78350f;
+    }
+    
+    /* Grammar Tip Box */
+    .grammar-tip-box {
+      background: #f0fdfa;
+      border: 1px solid #5eead4;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .grammar-tip-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f766e;
+      margin-bottom: 12px;
+    }
+    .grammar-tip-item {
+      font-size: 14px;
+      color: #115e59;
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+    .grammar-tip-item::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #14b8a6;
+    }
+    
+    /* Questions */
+    .questions-list {
+      margin-top: 16px;
+    }
+    .question-item {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-left: 4px solid #3b82f6;
+    }
+    .question-text {
+      font-size: 15px;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    .question-answer {
+      font-size: 14px;
+      color: #16a34a;
+      font-weight: 600;
+    }
+    
+    /* Trivia */
+    .trivia-examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .trivia-card {
+      background: #fdf4ff;
+      border: 1px solid #e879f9;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .trivia-jp {
+      font-size: 18px;
+      font-weight: 700;
+      color: #a21caf;
+      margin-bottom: 8px;
+    }
+    .trivia-en {
+      font-size: 14px;
+      color: #86198f;
+    }
+    
+    /* Listening Section */
+    .script-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+      font-size: 16px;
+      line-height: 2;
+      color: #334155;
+    }
+    .underlined {
+      text-decoration: underline;
+      text-decoration-color: #3b82f6;
+      text-underline-offset: 4px;
+    }
+    
+    /* Reading Section */
+    .reading-dialogue {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    .reading-line {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .reading-speaker {
+      font-weight: 700;
+      color: #7c3aed;
+      min-width: 70px;
+    }
+    .reading-text {
+      font-size: 15px;
+      color: #334155;
+    }
+    
+    /* Image Cards */
+    .image-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .image-card {
+      text-align: center;
+    }
+    .image-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .image-card-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+    }
+    
+    /* Pronunciation */
+    .pronunciation-columns {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 24px;
+      margin-top: 16px;
+    }
+    .pronunciation-column {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .pronunciation-header {
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #3b82f6;
+    }
+    .pronunciation-item {
+      padding: 8px 0;
+      font-size: 15px;
+      color: #334155;
+    }
+    
+    /* Conversation Lines */
+    .conversation-container {
+      margin-top: 16px;
+    }
+    .conversation-line {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .conversation-role {
+      font-weight: 700;
+      color: #3b82f6;
+      min-width: 70px;
+    }
+    .conversation-text {
+      font-size: 15px;
+      color: #334155;
+    }
+    .conversation-blank {
+      display: inline-block;
+      min-width: 80px;
+      border-bottom: 2px dashed #94a3b8;
+      margin: 0 4px;
+    }
+    
+    /* Word Box */
+    .word-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 16px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .word-tag {
+      background: #fff;
+      border: 1px solid #0ea5e9;
+      color: #0369a1;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    /* Topic Boxes */
+    .topic-boxes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .topic-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .topic-title {
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #3b82f6;
+    }
+    .topic-item {
+      padding: 6px 0;
+      font-size: 14px;
+      color: #475569;
+    }
+    
+    /* Print Styles */
+    @media print {
+      body { background: #fff; }
+      .lesson-body { padding: 20px; max-width: 100%; }
+      .section-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -269,25 +683,297 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
     <div class="lesson-header-overlay"></div>
     <div class="lesson-header-content">
       <div class="lesson-header-top">
-        <span class="level-badge">${escapeHtml(header.levelBadge)}</span>
+        <span class="level-badge">${escapeHtml(header?.levelBadge || '')}</span>
         <span class="header-divider">|</span>
-        <span>${escapeHtml(header.chapterLabel)}</span>
+        <span>${escapeHtml(header?.chapterLabel || '')}</span>
       </div>
-      <h1 class="lesson-label">${escapeHtml(header.lessonLabel)}</h1>
+      <h1 class="lesson-label">${escapeHtml(header?.lessonLabel || '')}</h1>
       <div class="goal-row">
         <span class="goal-badge">GOAL</span>
-        <span class="goal-text">${escapeHtml(header.goalText)}</span>
+        <span class="goal-text">${escapeHtml(header?.goalText || '')}</span>
       </div>
-      <p class="goal-subtext">${escapeHtml(header.goalSubtext)}</p>
+      <p class="goal-subtext">${escapeHtml(header?.goalSubtext || '')}</p>
     </div>
   </header>
   <main class="lesson-body">
-    ${vocabHtml}
-    ${grammarHtml}
-    ${exercisesHtml}
+    ${sectionsHtml || '<div class="section-card"><div class="section-content"><p>No content available.</p></div></div>'}
   </main>
 </body>
 </html>`;
+}
+
+/**
+ * Generate HTML for a single section based on its type
+ */
+function generateSectionHtml(section: any): string {
+  const sectionNumber = section.sectionNumber || '';
+  const sectionTitle = section.sectionTitle || '';
+  const sectionType = section.sectionType || 'introduce';
+
+  let contentHtml = '';
+
+  // Common elements
+  if (section.explanationEn) {
+    contentHtml += `<p class="explanation-text">${escapeHtml(section.explanationEn)}</p>`;
+  }
+  if (section.explanationJp) {
+    contentHtml += `<p class="explanation-jp">${escapeHtml(section.explanationJp)}</p>`;
+  }
+  if (section.sectionImage) {
+    contentHtml += `<img src="${escapeHtml(section.sectionImage)}" alt="Section illustration" class="section-image" />`;
+  }
+  if (section.stepTitle) {
+    contentHtml += `<div class="step-title">${escapeHtml(section.stepTitle)}</div>`;
+  }
+  if (section.instructionEn) {
+    contentHtml += `<p class="instruction-text">${escapeHtml(section.instructionEn)}</p>`;
+  }
+  if (section.instructionJp) {
+    contentHtml += `<p class="instruction-jp">${escapeHtml(section.instructionJp)}</p>`;
+  }
+
+  // Vocabulary cards
+  if (section.vocabCards && section.vocabCards.length > 0) {
+    contentHtml += `<div class="vocab-grid">
+      ${section.vocabCards.map((card: any) => `
+        <div class="vocab-card">
+          ${card.imageUrl ? `<img src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.word || '')}" class="vocab-image" />` : ''}
+          <div class="vocab-word">${escapeHtml(card.word || '')}</div>
+          <div class="vocab-reading">${escapeHtml(card.reading || '')}</div>
+          <div class="vocab-meaning">${escapeHtml(card.meaning || card.english || '')}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Image cards (for question sections)
+  if (section.imageCards && section.imageCards.length > 0) {
+    contentHtml += `<div class="image-cards-grid">
+      ${section.imageCards.map((card: any) => `
+        <div class="image-card">
+          ${card.imageUrl ? `<img src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.label || '')}" />` : ''}
+          <div class="image-card-label">${escapeHtml(card.label || '')}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Pronunciation columns
+  if (section.pronunciationColumns && section.pronunciationColumns.length > 0) {
+    contentHtml += `<div class="pronunciation-columns">
+      ${section.pronunciationColumns.map((col: any) => `
+        <div class="pronunciation-column">
+          <div class="pronunciation-header">${escapeHtml(col.header || '')}</div>
+          ${(col.items || []).map((item: any) => `
+            <div class="pronunciation-item">${escapeHtml(typeof item === 'string' ? item : item.text || '')}</div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Grammar rules
+  if (section.grammarRules && section.grammarRules.length > 0) {
+    contentHtml += section.grammarRules.map((rule: any) => `
+      <div class="grammar-rule">
+        <div class="grammar-pattern">${escapeHtml(rule.pattern || rule.structure || '')}</div>
+        <div class="grammar-meaning">${escapeHtml(rule.meaning || '')}</div>
+        ${rule.example ? `<div class="grammar-example">${escapeHtml(rule.example)}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // Dialogue lines
+  if (section.dialogueLines && section.dialogueLines.length > 0) {
+    if (section.dialogueImage) {
+      contentHtml += `<img src="${escapeHtml(section.dialogueImage)}" alt="Dialogue scene" class="section-image" />`;
+    }
+    contentHtml += `<div class="dialogue-container">
+      ${section.dialogueLines.map((line: any) => `
+        <div class="dialogue-line">
+          <span class="dialogue-speaker">${escapeHtml(line.speaker || '')}</span>
+          <div class="dialogue-text">
+            <div class="dialogue-en">${escapeHtml(line.textEn || line.lineEn || '')}</div>
+            ${line.textJp || line.lineJp ? `<div class="dialogue-jp">${escapeHtml(line.textJp || line.lineJp || '')}</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Trivia examples
+  if (section.triviaExamples && section.triviaExamples.length > 0) {
+    if (section.triviaImage) {
+      contentHtml += `<img src="${escapeHtml(section.triviaImage)}" alt="Trivia" class="section-image" />`;
+    }
+    contentHtml += `<div class="trivia-examples">
+      ${section.triviaExamples.map((ex: any) => `
+        <div class="trivia-card">
+          <div class="trivia-jp">${escapeHtml(ex.textJp || ex.japanese || '')}</div>
+          <div class="trivia-en">${escapeHtml(ex.textEn || ex.english || '')}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Practice section
+  if (section.practiceExample) {
+    contentHtml += `<div class="practice-example">
+      <div class="practice-example-label">Example</div>
+      <div class="practice-question">${escapeHtml(section.practiceExample)}</div>
+      ${section.practiceExampleAnswer ? `<div class="practice-answer">${escapeHtml(section.practiceExampleAnswer)}</div>` : ''}
+    </div>`;
+  }
+  if (section.practiceItems && section.practiceItems.length > 0) {
+    if (section.practiceImage) {
+      contentHtml += `<img src="${escapeHtml(section.practiceImage)}" alt="Practice" class="section-image" />`;
+    }
+    contentHtml += `<div class="practice-items">
+      ${section.practiceItems.map((item: any, idx: number) => `
+        <div class="practice-item">
+          <span class="practice-number">${idx + 1}.</span>
+          <span>${escapeHtml(item.question || item.text || '')}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Word box
+  if (section.wordBox && section.wordBox.length > 0) {
+    contentHtml += `<div class="word-box">
+      ${section.wordBox.map((word: string) => `<span class="word-tag">${escapeHtml(word)}</span>`).join('')}
+    </div>`;
+  }
+
+  // Conversation lines
+  if (section.conversationLines && section.conversationLines.length > 0) {
+    contentHtml += `<div class="conversation-container">
+      ${section.conversationLines.map((line: any) => `
+        <div class="conversation-line">
+          <span class="conversation-role">${escapeHtml(line.role || line.speaker || '')}</span>
+          <span class="conversation-text">${escapeHtml(line.text || '').replace(/___+/g, '<span class="conversation-blank"></span>')}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Challenge section
+  if (section.challengeTitle) {
+    contentHtml = `<span class="challenge-badge">${escapeHtml(section.challengeTitle)}</span>
+      ${section.isOptional ? '<span class="optional-badge">If Time Allows</span>' : ''}` + contentHtml;
+  }
+  if (section.situationEn || section.situationJp) {
+    contentHtml += `<div class="situation-box">
+      <div class="situation-label">Situation</div>
+      ${section.situationEn ? `<div class="situation-text">${escapeHtml(section.situationEn)}</div>` : ''}
+      ${section.situationJp ? `<div class="situation-text" style="margin-top:8px;font-size:13px;color:#92400e;">${escapeHtml(section.situationJp)}</div>` : ''}
+    </div>`;
+  }
+  if (section.grammarTipTitle || (section.grammarTipItems && section.grammarTipItems.length > 0)) {
+    contentHtml += `<div class="grammar-tip-box">
+      ${section.grammarTipTitle ? `<div class="grammar-tip-title">${escapeHtml(section.grammarTipTitle)}</div>` : ''}
+      ${(section.grammarTipItems || []).map((item: string) => `<div class="grammar-tip-item">${escapeHtml(item)}</div>`).join('')}
+    </div>`;
+  }
+  if (section.challengeQuestions && section.challengeQuestions.length > 0) {
+    contentHtml += `<div class="questions-list">
+      ${section.challengeQuestions.map((q: any, idx: number) => `
+        <div class="question-item">
+          <div class="question-text">${idx + 1}. ${escapeHtml(q.question || q.text || '')}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Topic boxes (Challenge 2)
+  if (section.topicBoxes && section.topicBoxes.length > 0) {
+    contentHtml += `<div class="topic-boxes">
+      ${section.topicBoxes.map((box: any) => `
+        <div class="topic-box">
+          <div class="topic-title">${escapeHtml(box.title || '')}</div>
+          ${(box.items || []).map((item: string) => `<div class="topic-item">• ${escapeHtml(item)}</div>`).join('')}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Listening section
+  if (section.listeningScript && section.listeningScript.length > 0) {
+    const scriptText = section.listeningScript.map((word: any) => {
+      if (word.underline) {
+        return `<span class="underlined">${escapeHtml(word.text || word)}</span>`;
+      }
+      return escapeHtml(typeof word === 'string' ? word : word.text || '');
+    }).join(' ');
+    contentHtml += `<div class="script-box">${scriptText}</div>`;
+  }
+  if (section.listeningQuestions && section.listeningQuestions.length > 0) {
+    contentHtml += `<div class="questions-list">
+      ${section.listeningQuestions.map((q: any, idx: number) => `
+        <div class="question-item">
+          <div class="question-text">${idx + 1}. ${escapeHtml(q.question || q.questionEn || '')}</div>
+          ${q.answer ? `<div class="question-answer">Answer: ${escapeHtml(q.answer)}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Reading section
+  if (section.readingImage) {
+    contentHtml += `<img src="${escapeHtml(section.readingImage)}" alt="Reading scene" class="section-image" />`;
+  }
+  if (section.readingDialogueLines && section.readingDialogueLines.length > 0) {
+    contentHtml += `<div class="reading-dialogue">
+      ${section.readingDialogueLines.map((line: any) => `
+        <div class="reading-line">
+          <span class="reading-speaker">${escapeHtml(line.speaker || '')}</span>
+          <span class="reading-text">${escapeHtml(line.lineEn || line.text || '')}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+  if (section.readingQuestions && section.readingQuestions.length > 0) {
+    contentHtml += `<div class="questions-list">
+      ${section.readingQuestions.map((q: any, idx: number) => `
+        <div class="question-item">
+          <div class="question-text">${idx + 1}. ${escapeHtml(q.questionEn || q.question || '')}</div>
+          ${q.answer ? `<div class="question-answer">Answer: ${escapeHtml(q.answer)}</div>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  // Roleplay section
+  if (section.roleplaySetupLines && section.roleplaySetupLines.length > 0) {
+    contentHtml += `<div style="margin-bottom:16px;">
+      ${section.roleplaySetupLines.map((line: string) => `<p style="margin-bottom:8px;">${escapeHtml(line)}</p>`).join('')}
+    </div>`;
+  }
+  if (section.roleplayScript) {
+    contentHtml += `<div class="script-box">${escapeHtml(section.roleplayScript)}</div>`;
+  }
+  if (section.roleplayConversation && section.roleplayConversation.length > 0) {
+    contentHtml += `<div class="conversation-container">
+      ${section.roleplayConversation.map((line: any) => `
+        <div class="conversation-line">
+          <span class="conversation-role">${escapeHtml(line.role || '')}</span>
+          <span class="conversation-text">${escapeHtml(line.text || '')}</span>
+        </div>
+      `).join('')}
+    </div>`;
+  }
+
+  return `
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-number">${sectionNumber}</div>
+        <div class="section-title">${escapeHtml(sectionTitle)}</div>
+      </div>
+      <div class="section-content">
+        ${contentHtml || '<p>Section content</p>'}
+      </div>
+    </div>
+  `;
 }
 
 function escapeHtml(str: string): string {

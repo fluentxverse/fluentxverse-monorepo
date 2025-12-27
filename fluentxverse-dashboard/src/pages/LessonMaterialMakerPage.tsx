@@ -3478,41 +3478,201 @@ export default function LessonMaterialMakerPage() {
       return;
     }
 
-    // Build export data from current draft
-    const lessonTitle = currentEditingLesson?.title || draft.header?.goalText || 'Lesson Material';
+    // Build export data from current draft - using actual section structure
+    const lessonTitle = currentEditingLesson?.goalName || draft.header?.goalText || 'Lesson Material';
+    
+    // Generate section content HTML properly
+    const generateSectionContent = (section: SectionContent): string => {
+      let content = '';
+      
+      // Explanation
+      if (section.explanationEn) {
+        content += `<p style="font-size:14pt;margin-bottom:8px;">${section.explanationEn}</p>`;
+      }
+      if (section.explanationJp) {
+        content += `<p style="font-size:12pt;color:#64748b;border-left:3px solid #e2e8f0;padding-left:12px;margin-bottom:16px;">${section.explanationJp}</p>`;
+      }
+      
+      // Section image
+      if (section.sectionImage) {
+        content += `<img src="${section.sectionImage}" alt="Section illustration" style="max-width:100%;border-radius:8px;margin:16px 0;" />`;
+      }
+      
+      // Step title and instructions
+      if (section.stepTitle) {
+        content += `<p style="font-size:12pt;font-weight:700;color:#3b82f6;text-transform:uppercase;margin-bottom:8px;">${section.stepTitle}</p>`;
+      }
+      if (section.instructionEn) {
+        content += `<p style="margin-bottom:4px;">${section.instructionEn}</p>`;
+      }
+      if (section.instructionJp) {
+        content += `<p style="font-size:11pt;color:#94a3b8;margin-bottom:16px;">${section.instructionJp}</p>`;
+      }
+      
+      // Vocabulary cards
+      if (section.vocabCards && section.vocabCards.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:16px 0;">`;
+        for (const card of section.vocabCards) {
+          content += `<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px;text-align:center;">`;
+          if (card.imageUrl) {
+            content += `<img src="${card.imageUrl}" alt="${card.word || ''}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;margin-bottom:8px;" />`;
+          }
+          content += `<div style="font-size:16pt;font-weight:700;color:#0369a1;">${card.word || ''}</div>`;
+          if (card.reading) content += `<div style="font-size:11pt;color:#64748b;">${card.reading}</div>`;
+          content += `<div style="font-size:12pt;color:#334155;">${card.meaning || card.english || ''}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Image cards
+      if (section.imageCards && section.imageCards.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin:16px 0;">`;
+        for (const card of section.imageCards) {
+          content += `<div style="text-align:center;">`;
+          if (card.imageUrl) {
+            content += `<img src="${card.imageUrl}" alt="${card.label || ''}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />`;
+          }
+          content += `<div style="font-size:12pt;font-weight:600;">${card.label || ''}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Grammar rules
+      if (section.grammarRules && section.grammarRules.length > 0) {
+        for (const rule of section.grammarRules) {
+          content += `<div style="background:#fef3c7;border-left:4px solid #eab308;border-radius:8px;padding:12px;margin-bottom:12px;">`;
+          content += `<div style="font-weight:700;color:#854d0e;margin-bottom:4px;">${rule.pattern || rule.structure || ''}</div>`;
+          if (rule.meaning) content += `<div style="color:#713f12;margin-bottom:4px;">${rule.meaning}</div>`;
+          if (rule.example) content += `<div style="font-style:italic;color:#92400e;">${rule.example}</div>`;
+          content += `</div>`;
+        }
+      }
+      
+      // Dialogue lines
+      if (section.dialogueLines && section.dialogueLines.length > 0) {
+        if (section.dialogueImage) {
+          content += `<img src="${section.dialogueImage}" alt="Dialogue scene" style="max-width:100%;border-radius:8px;margin:16px 0;" />`;
+        }
+        for (const line of section.dialogueLines) {
+          content += `<div style="display:flex;gap:12px;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:6px;">`;
+          content += `<span style="font-weight:700;color:#3b82f6;min-width:70px;">${line.speaker || ''}</span>`;
+          content += `<div><div>${line.textEn || line.lineEn || ''}</div>`;
+          if (line.textJp || line.lineJp) content += `<div style="font-size:11pt;color:#64748b;">${line.textJp || line.lineJp}</div>`;
+          content += `</div></div>`;
+        }
+      }
+      
+      // Trivia examples
+      if (section.triviaExamples && section.triviaExamples.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:16px 0;">`;
+        for (const ex of section.triviaExamples) {
+          content += `<div style="background:#fdf4ff;border:1px solid #e879f9;border-radius:8px;padding:12px;">`;
+          content += `<div style="font-size:16pt;font-weight:700;color:#a21caf;margin-bottom:4px;">${ex.textJp || ex.japanese || ''}</div>`;
+          content += `<div style="font-size:12pt;color:#86198f;">${ex.textEn || ex.english || ''}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Practice items
+      if (section.practiceExample) {
+        content += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:12px;">`;
+        content += `<div style="font-size:11pt;font-weight:700;color:#16a34a;margin-bottom:4px;">Example</div>`;
+        content += `<div>${section.practiceExample}</div>`;
+        if (section.practiceExampleAnswer) content += `<div style="color:#15803d;font-weight:600;margin-top:4px;">${section.practiceExampleAnswer}</div>`;
+        content += `</div>`;
+      }
+      if (section.practiceItems && section.practiceItems.length > 0) {
+        for (let i = 0; i < section.practiceItems.length; i++) {
+          const item = section.practiceItems[i];
+          content += `<div style="display:flex;gap:8px;padding:8px;background:#f8fafc;border-radius:6px;margin-bottom:6px;">`;
+          content += `<span style="font-weight:700;color:#3b82f6;">${i + 1}.</span>`;
+          content += `<span>${item.question || item.text || ''}</span>`;
+          content += `</div>`;
+        }
+      }
+      
+      // Word box
+      if (section.wordBox && section.wordBox.length > 0) {
+        content += `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin:12px 0;">`;
+        for (const word of section.wordBox) {
+          content += `<span style="background:#fff;border:1px solid #0ea5e9;color:#0369a1;padding:4px 10px;border-radius:16px;font-size:12pt;">${word}</span>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Challenge section
+      if (section.situationEn || section.situationJp) {
+        content += `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px;margin:12px 0;">`;
+        content += `<div style="font-size:11pt;font-weight:700;color:#92400e;margin-bottom:4px;">Situation</div>`;
+        if (section.situationEn) content += `<div style="color:#78350f;">${section.situationEn}</div>`;
+        if (section.situationJp) content += `<div style="font-size:11pt;color:#92400e;margin-top:4px;">${section.situationJp}</div>`;
+        content += `</div>`;
+      }
+      
+      // Grammar tip box
+      if (section.grammarTipTitle || (section.grammarTipItems && section.grammarTipItems.length > 0)) {
+        content += `<div style="background:#f0fdfa;border:1px solid #5eead4;border-radius:8px;padding:12px;margin:12px 0;">`;
+        if (section.grammarTipTitle) content += `<div style="font-weight:700;color:#0f766e;margin-bottom:8px;">${section.grammarTipTitle}</div>`;
+        for (const item of section.grammarTipItems || []) {
+          content += `<div style="padding:2px 0;color:#115e59;">• ${item}</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Listening script
+      if (section.listeningScript && section.listeningScript.length > 0) {
+        const scriptText = section.listeningScript.map((word: any) => {
+          if (word.underline) return `<u>${word.text || word}</u>`;
+          return typeof word === 'string' ? word : word.text || '';
+        }).join(' ');
+        content += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:12px 0;line-height:2;">${scriptText}</div>`;
+      }
+      
+      // Questions (listening/reading/challenge)
+      const questions = section.listeningQuestions || section.readingQuestions || section.challengeQuestions;
+      if (questions && questions.length > 0) {
+        content += `<div style="margin:12px 0;">`;
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          content += `<div style="background:#f8fafc;border-left:4px solid #3b82f6;border-radius:6px;padding:12px;margin-bottom:8px;">`;
+          content += `<div style="font-weight:500;">${i + 1}. ${q.question || q.questionEn || q.text || ''}</div>`;
+          if (q.answer) content += `<div style="color:#16a34a;font-weight:600;margin-top:4px;">Answer: ${q.answer}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Reading dialogue
+      if (section.readingDialogueLines && section.readingDialogueLines.length > 0) {
+        if (section.readingImage) {
+          content += `<img src="${section.readingImage}" alt="Reading scene" style="max-width:100%;border-radius:8px;margin:16px 0;" />`;
+        }
+        content += `<div style="background:#f8fafc;border-radius:8px;padding:16px;margin:12px 0;">`;
+        for (const line of section.readingDialogueLines) {
+          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:10px;background:#fff;border-radius:6px;">`;
+          content += `<span style="font-weight:700;color:#7c3aed;min-width:60px;">${line.speaker || ''}</span>`;
+          content += `<span>${line.lineEn || line.text || ''}</span>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      return content;
+    };
+    
     const exportData: LessonExportData = {
       title: lessonTitle,
       level: draft.header?.levelBadge,
       chapter: draft.header?.chapterLabel,
       lesson: draft.header?.lessonLabel,
       goal: draft.header?.goalText,
-      sections: draft.sections?.map(section => ({
+      sections: draft.sections?.map((section, idx) => ({
         type: section.sectionType || 'content',
-        title: section.stepTitle || section.heading || `Section ${draft.sections?.indexOf(section) + 1}`,
-        content: [
-          section.instructions ? `<p><strong>Instructions:</strong> ${section.instructions}</p>` : '',
-          section.dialogue ? `<div class="dialogue">${section.dialogue.split('\n').map(line => `<p class="dialogue-line">${line}</p>`).join('')}</div>` : '',
-          section.exerciseTitle ? `<h3>${section.exerciseTitle}</h3>` : '',
-          section.multipleChoice ? `<div class="exercise">${section.multipleChoice.split('\n').map(line => `<p>${line}</p>`).join('')}</div>` : '',
-          section.vocabCards ? section.vocabCards.map(card => 
-            `<div class="vocab-card"><div class="word">${card.word || ''}</div><div class="definition">${card.definition || ''}</div>${card.example ? `<div class="example">"${card.example}"</div>` : ''}</div>`
-          ).join('') : '',
-        ].filter(Boolean).join(''),
-      })) || [],
-      vocabulary: draft.vocabulary?.map(v => ({
-        word: v.word || '',
-        definition: v.meaning || '',
-        example: v.example,
-      })) || [],
-      grammar: draft.grammar?.map(g => ({
-        rule: g.pattern || '',
-        explanation: g.explanation || '',
-        examples: g.examples,
-      })) || [],
-      exercises: draft.exercises?.map(e => ({
-        question: e.question || '',
-        options: e.options,
-        answer: e.answer,
+        title: section.sectionTitle || `Section ${idx + 1}`,
+        content: generateSectionContent(section),
       })) || [],
     };
 
