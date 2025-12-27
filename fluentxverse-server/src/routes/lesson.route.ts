@@ -409,9 +409,9 @@ export default new Elysia({ prefix: '/lesson' })
    * - lessonData: JSON string of LessonMaterial
    * - headerImage: (optional) image file for header background
    */
-  .post('/create', async ({ request }) => {
+  .post('/create', async ({ request, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -505,9 +505,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Update a lesson (creates new version)
    */
-  .put('/update/:lessonId', async ({ request, params }) => {
+  .put('/update/:lessonId', async ({ request, params, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -600,9 +600,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Fork a lesson (admin forks a draft to work on their own version)
    */
-  .post('/fork/:lessonId', async ({ request, params }) => {
+  .post('/fork/:lessonId', async ({ request, params, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -669,9 +669,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Create a merge request (fork author submits to original)
    */
-  .post('/merge-request', async ({ request }) => {
+  .post('/merge-request', async ({ request, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -743,9 +743,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Review a merge request (approve, reject, or merge)
    */
-  .post('/merge-request/:mrId/review', async ({ request, params }) => {
+  .post('/merge-request/:mrId/review', async ({ request, params, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -808,9 +808,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Publish a lesson
    */
-  .post('/publish/:lessonId', async ({ request, params }) => {
+  .post('/publish/:lessonId', async ({ request, params, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -1035,12 +1035,12 @@ export default new Elysia({ prefix: '/lesson' })
    * Get tutor material for a lesson (full version with hints)
    * This endpoint is for tutor/dashboard apps - returns full material
    */
-  .get('/:lessonId/tutor', async ({ params, request }) => {
+  .get('/:lessonId/tutor', async ({ params, request, cookie }) => {
     try {
       const { lessonId } = params;
       
       // Verify auth - only tutors/admins should access tutor material
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized - tutor material requires authentication' };
       }
@@ -1199,9 +1199,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Get my lessons (lessons created by authenticated user)
    */
-  .get('/my-lessons', async ({ request, query }) => {
+  .get('/my-lessons', async ({ request, query, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
@@ -1241,9 +1241,9 @@ export default new Elysia({ prefix: '/lesson' })
   /**
    * Get pending merge requests for my lessons
    */
-  .get('/my-merge-requests', async ({ request }) => {
+  .get('/my-merge-requests', async ({ request, cookie }) => {
     try {
-      const auth = await getAuthFromCookie(request);
+      const auth = await getAuthFromCookie(cookie);
       if (!auth) {
         return { success: false, error: 'Unauthorized' };
       }
