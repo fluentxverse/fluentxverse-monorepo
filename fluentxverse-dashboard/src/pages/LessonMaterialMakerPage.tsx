@@ -4,7 +4,6 @@ import { DiffViewer } from '../Components/DiffViewer/DiffViewer';
 import { useLessonSocket, type ActiveEditor } from '../hooks/useLessonSocket';
 import { AnalyticsDashboard } from '../Components/AnalyticsDashboard/AnalyticsDashboard';
 import { toast, toastConfirm } from '../Components/Toast/Toast';
-import { useUndoRedo } from '../hooks/useUndoRedo';
 import { useExport, type LessonExportData } from '../utils/export';
 import './LessonMaterialMakerPage.css';
 
@@ -2075,28 +2074,6 @@ export default function LessonMaterialMakerPage() {
   const [lessonForks, setLessonForks] = useState<Lesson[]>([]);
   const [selectedLessonForForks, setSelectedLessonForForks] = useState<string | null>(null);
   
-  // Undo/Redo for draft editing
-  const {
-    state: undoRedoState,
-    setState: setUndoRedoState,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    clear: clearUndoHistory,
-  } = useUndoRedo<LessonMaterialDraft>(draft, {
-    maxHistory: 50,
-    debounceMs: 500,
-    enableKeyboardShortcuts: true, // Ctrl+Z and Ctrl+Y
-  });
-
-  // Sync undo/redo state with draft when undo/redo is triggered
-  useEffect(() => {
-    if (undoRedoState !== draft) {
-      setDraft(undoRedoState);
-    }
-  }, [undoRedoState]);
-
   // Export functionality
   const { exportLessonData, print } = useExport();
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -3099,7 +3076,6 @@ export default function LessonMaterialMakerPage() {
     // Open the lesson for editing
     setCurrentEditingLesson(newLesson);
     setDraft(newLesson.draft);
-    clearUndoHistory(); // Clear undo history for fresh lesson
     setViewMode('editor');
     setIsFullscreen(true);
     // Persist editing lesson ID so it survives page refresh
@@ -3126,9 +3102,6 @@ export default function LessonMaterialMakerPage() {
       '',
       `${window.location.pathname}?lesson=${lesson.id}`
     );
-    
-    // Clear undo/redo history when loading a new lesson
-    clearUndoHistory();
     
     // If lesson has been saved to server, fetch the latest content from server
     if (lesson.serverLesson?.id) {
@@ -5113,30 +5086,6 @@ export default function LessonMaterialMakerPage() {
               <i className={isPreviewMode ? 'ri-edit-line' : 'ri-eye-line'} />
               <span>{isPreviewMode ? 'Edit' : 'Preview'}</span>
             </button>
-          )}
-
-          {/* Undo/Redo Buttons */}
-          {currentEditingLesson && !isPreviewMode && (
-            <div className="lm-undo-redo-group">
-              <button
-                type="button"
-                className={`lm-toolbar-btn ${!canUndo ? 'disabled' : ''}`}
-                onClick={undo}
-                disabled={!canUndo}
-                title="Undo (Ctrl+Z)"
-              >
-                <i className="ri-arrow-go-back-line" />
-              </button>
-              <button
-                type="button"
-                className={`lm-toolbar-btn ${!canRedo ? 'disabled' : ''}`}
-                onClick={redo}
-                disabled={!canRedo}
-                title="Redo (Ctrl+Y)"
-              >
-                <i className="ri-arrow-go-forward-line" />
-              </button>
-            </div>
           )}
 
           {/* Toggle Material View Mode (Tutor/Student) */}
