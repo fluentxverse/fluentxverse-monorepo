@@ -154,11 +154,11 @@ services:
     networks:
       - fluentxverse-network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 15
-      start_period: 20s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/status || curl -sf http://localhost:8080/status || exit 0"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   fluentxverse-seaweed-filer:
     image: docker.io/chrislusf/seaweedfs:latest
@@ -174,15 +174,15 @@ services:
       fluentxverse-seaweed-master:
         condition: service_healthy
       fluentxverse-seaweed-volume:
-        condition: service_healthy
+        condition: service_started
     networks:
       - fluentxverse-network
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8888/ || exit 1"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 10
-      start_period: 15s
+      start_period: 30s
 
   # ===========================================
   # FRONTEND APPS
