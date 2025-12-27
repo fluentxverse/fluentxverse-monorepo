@@ -3500,14 +3500,15 @@ export default function LessonMaterialMakerPage() {
 
   // Export lesson as PDF, HTML, or print
   const handleExportLesson = useCallback((format: 'pdf' | 'print' | 'html') => {
-    if (!currentEditingLesson) {
-      toast.warning('No lesson is currently being edited.');
+    if (!draft) {
+      toast.warning('No content to export.');
       return;
     }
 
     // Build export data from current draft
+    const lessonTitle = currentEditingLesson?.title || draft.header?.goalText || 'Lesson Material';
     const exportData: LessonExportData = {
-      title: currentEditingLesson.title || draft.header?.goalText || 'Lesson Material',
+      title: lessonTitle,
       level: draft.header?.levelBadge,
       chapter: draft.header?.chapterLabel,
       lesson: draft.header?.lessonLabel,
@@ -3545,14 +3546,14 @@ export default function LessonMaterialMakerPage() {
     try {
       switch (format) {
         case 'pdf':
-          exportLessonData(exportData, 'pdf', { fileName: currentEditingLesson.title });
+          exportLessonData(exportData, 'pdf', { fileName: lessonTitle });
           toast.success('Opening PDF export dialog...');
           break;
         case 'print':
           print(formatLessonForExport(exportData), exportData.title);
           break;
         case 'html':
-          exportLessonData(exportData, 'html', { fileName: currentEditingLesson.title });
+          exportLessonData(exportData, 'html', { fileName: lessonTitle });
           toast.success('HTML file downloaded!');
           break;
       }
@@ -5191,8 +5192,8 @@ export default function LessonMaterialMakerPage() {
             </button>
           )}
 
-          {/* Export Dropdown */}
-          {currentEditingLesson && (
+          {/* Export Dropdown - Show when in fullscreen/editor mode with content */}
+          {isFullscreen && draft && (
             <div className="lm-export-dropdown">
               <button
                 type="button"
