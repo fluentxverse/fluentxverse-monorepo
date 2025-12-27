@@ -3697,6 +3697,333 @@ export default function LessonMaterialMakerPage() {
     setShowExportMenu(false);
   }, [currentEditingLesson, draft, exportLessonData, print]);
 
+  // Open lesson preview in a new tab (static page without edit tools)
+  const handleOpenPreview = useCallback(() => {
+    if (!draft) {
+      toast.warning('No content to preview.');
+      return;
+    }
+
+    // Check if there's a server URL available
+    if (currentEditingLesson?.serverLesson?.url) {
+      window.open(currentEditingLesson.serverLesson.url, '_blank');
+      return;
+    }
+
+    // Generate preview HTML from current draft
+    const lessonTitle = currentEditingLesson?.goalName || draft.header?.goalText || 'Lesson Material';
+    
+    // Generate section content for preview
+    const generatePreviewSectionHtml = (section: SectionContent): string => {
+      let content = '';
+      
+      // Explanation
+      if (section.explanationEn) {
+        content += `<p style="font-size:16px;margin-bottom:12px;line-height:1.7;color:#334155;">${section.explanationEn}</p>`;
+      }
+      if (section.explanationJp) {
+        content += `<p style="font-size:14px;color:#64748b;border-left:3px solid #e2e8f0;padding-left:12px;margin-bottom:20px;">${section.explanationJp}</p>`;
+      }
+      
+      // Section image
+      if (section.sectionImage) {
+        content += `<img src="${section.sectionImage}" alt="Section illustration" style="max-width:100%;border-radius:12px;margin:20px auto;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.1);" />`;
+      }
+      
+      // Step title and instructions
+      if (section.stepTitle) {
+        content += `<div style="font-size:14px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">${section.stepTitle}</div>`;
+      }
+      if (section.instructionEn) {
+        content += `<p style="margin-bottom:8px;color:#475569;">${section.instructionEn}</p>`;
+      }
+      if (section.instructionJp) {
+        content += `<p style="font-size:13px;color:#94a3b8;margin-bottom:20px;">${section.instructionJp}</p>`;
+      }
+      
+      // Vocabulary cards
+      if (section.vocabCards && section.vocabCards.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin:20px 0;">`;
+        for (const card of section.vocabCards) {
+          content += `<div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1px solid #bae6fd;border-radius:12px;padding:16px;text-align:center;">`;
+          if (card.imageUrl || card.image) {
+            content += `<img src="${card.imageUrl || card.image}" alt="${card.word || card.wordEn || ''}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-bottom:12px;" />`;
+          }
+          content += `<div style="font-size:20px;font-weight:700;color:#0369a1;margin-bottom:4px;">${card.word || card.wordEn || ''}</div>`;
+          if (card.reading || card.wordJp) content += `<div style="font-size:13px;color:#64748b;">${card.reading || card.wordJp || ''}</div>`;
+          if (card.meaning || card.english) content += `<div style="font-size:14px;color:#334155;margin-top:4px;">${card.meaning || card.english || ''}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Image cards
+      if (section.imageCards && section.imageCards.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;margin:20px 0;">`;
+        for (const card of section.imageCards) {
+          content += `<div style="text-align:center;">`;
+          if (card.imageUrl || card.image) {
+            content += `<img src="${card.imageUrl || card.image}" alt="${card.label || ''}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />`;
+          }
+          content += `<div style="font-size:14px;font-weight:600;color:#334155;">${card.label || ''}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Pronunciation columns
+      if (section.pronunciationColumns && section.pronunciationColumns.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:24px;margin:20px 0;">`;
+        for (const col of section.pronunciationColumns) {
+          content += `<div style="background:#f8fafc;border-radius:8px;padding:16px;">`;
+          content += `<div style="font-weight:700;color:#3b82f6;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #3b82f6;font-size:18px;">${col.soundLabel || ''}</div>`;
+          for (const word of col.words || []) {
+            content += `<div style="padding:8px 0;font-size:15px;color:#334155;">${word.wordEn || ''} <span style="color:#64748b;font-size:13px;">${word.wordJp || ''}</span></div>`;
+          }
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Grammar rules
+      if (section.grammarRules && section.grammarRules.length > 0) {
+        for (const rule of section.grammarRules) {
+          content += `<div style="background:#fef3c7;border-left:4px solid #eab308;border-radius:8px;padding:16px;margin-bottom:16px;">`;
+          content += `<div style="font-weight:700;color:#854d0e;margin-bottom:8px;font-size:16px;">${rule.ruleEn || rule.pattern || rule.structure || ''}</div>`;
+          if (rule.ruleJp || rule.meaning) content += `<div style="color:#713f12;margin-bottom:12px;">${rule.ruleJp || rule.meaning || ''}</div>`;
+          if (rule.examples && rule.examples.length > 0) {
+            for (const ex of rule.examples) {
+              content += `<div style="background:rgba(255,255,255,0.5);padding:8px 12px;border-radius:6px;margin-top:8px;">`;
+              content += `<div style="font-weight:500;color:#78350f;">${ex.sentenceEn || ex.example || ''}</div>`;
+              if (ex.sentenceJp || ex.translation) content += `<div style="font-size:13px;color:#92400e;margin-top:4px;">${ex.sentenceJp || ex.translation || ''}</div>`;
+              content += `</div>`;
+            }
+          }
+          content += `</div>`;
+        }
+      }
+      
+      // Dialogue lines
+      if (section.dialogueLines && section.dialogueLines.length > 0) {
+        if (section.dialogueImage) {
+          content += `<img src="${section.dialogueImage}" alt="Dialogue scene" style="max-width:100%;border-radius:12px;margin:20px auto;display:block;" />`;
+        }
+        content += `<div style="margin:20px 0;">`;
+        for (const line of section.dialogueLines) {
+          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:12px 16px;background:#f8fafc;border-radius:8px;">`;
+          content += `<span style="font-weight:700;color:#3b82f6;min-width:80px;">${line.speaker || ''}</span>`;
+          content += `<div><div style="color:#0f172a;">${line.textEn || line.lineEn || ''}</div>`;
+          if (line.textJp || line.lineJp) content += `<div style="font-size:13px;color:#64748b;margin-top:4px;">${line.textJp || line.lineJp}</div>`;
+          content += `</div></div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Trivia examples
+      if (section.triviaExamples && section.triviaExamples.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:20px 0;">`;
+        for (const ex of section.triviaExamples) {
+          content += `<div style="background:${ex.isCorrect ? '#f0fdf4' : '#fef2f2'};border:1px solid ${ex.isCorrect ? '#86efac' : '#fecaca'};border-radius:12px;padding:16px;">`;
+          content += `<div style="margin-bottom:12px;"><span style="font-weight:600;color:#64748b;">${ex.speakerA || 'A'}:</span> ${ex.lineA || ''}</div>`;
+          content += `<div><span style="font-weight:600;color:#64748b;">${ex.speakerB || 'B'}:</span> ${ex.lineB || ''}</div>`;
+          content += `<div style="text-align:right;margin-top:8px;"><span style="font-size:18px;">${ex.isCorrect ? '✓' : '✗'}</span></div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Practice items
+      if (section.practiceExample) {
+        content += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;margin-bottom:16px;">`;
+        content += `<div style="font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;margin-bottom:8px;">Example</div>`;
+        content += `<div style="color:#334155;">${section.practiceExample}</div>`;
+        if (section.practiceExampleAnswer) content += `<div style="color:#15803d;font-weight:600;margin-top:8px;">${section.practiceExampleAnswer}</div>`;
+        content += `</div>`;
+      }
+      if (section.practiceItems && section.practiceItems.length > 0) {
+        content += `<div style="margin:16px 0;">`;
+        for (let i = 0; i < section.practiceItems.length; i++) {
+          const item = section.practiceItems[i];
+          content += `<div style="display:flex;gap:12px;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;">`;
+          content += `<span style="font-weight:700;color:#3b82f6;min-width:24px;">${i + 1}.</span>`;
+          content += `<span style="color:#334155;">${item.question || item.questionEn || item.text || ''}</span>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Word box
+      if (section.wordBox && section.wordBox.length > 0) {
+        content += `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:16px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin:16px 0;">`;
+        for (const word of section.wordBox) {
+          content += `<span style="background:#fff;border:1px solid #0ea5e9;color:#0369a1;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:500;">${word}</span>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Conversation lines
+      if (section.conversationLines && section.conversationLines.length > 0) {
+        content += `<div style="margin:16px 0;">`;
+        for (const line of section.conversationLines) {
+          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:16px;background:#f8fafc;border-radius:8px;">`;
+          content += `<span style="font-weight:700;color:#3b82f6;min-width:70px;">${line.speaker || ''}</span>`;
+          content += `<span style="color:#334155;">${(line.text || '').replace(/___+/g, '<span style="display:inline-block;min-width:80px;border-bottom:2px dashed #94a3b8;"></span>')}</span>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Challenge section
+      if (section.challengeTitle) {
+        content += `<span style="display:inline-block;background:#dc2626;color:#fff;padding:6px 16px;border-radius:20px;font-size:14px;font-weight:700;margin-bottom:16px;">${section.challengeTitle}</span>`;
+        if (section.isOptional) content += `<span style="display:inline-block;background:#f59e0b;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-left:8px;">If Time Allows</span>`;
+      }
+      if (section.situationEn || section.situationJp) {
+        content += `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:16px;margin:16px 0;">`;
+        content += `<div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:8px;">Situation</div>`;
+        if (section.situationEn) content += `<div style="color:#78350f;white-space:pre-line;">${section.situationEn}</div>`;
+        if (section.situationJp) content += `<div style="font-size:13px;color:#92400e;margin-top:8px;white-space:pre-line;">${section.situationJp}</div>`;
+        content += `</div>`;
+      }
+      
+      // Grammar tip box
+      if (section.grammarTipTitle || (section.grammarTipItems && section.grammarTipItems.length > 0)) {
+        content += `<div style="background:#f0fdfa;border:1px solid #5eead4;border-radius:8px;padding:16px;margin:16px 0;">`;
+        if (section.grammarTipTitle) content += `<div style="font-weight:700;color:#0f766e;margin-bottom:12px;">${section.grammarTipTitle}</div>`;
+        content += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+        for (const item of section.grammarTipItems || []) {
+          content += `<span style="background:#ccfbf1;color:#0f766e;padding:4px 12px;border-radius:16px;font-size:14px;">${item}</span>`;
+        }
+        content += `</div></div>`;
+      }
+      
+      // Challenge questions
+      if (section.challengeQuestions && section.challengeQuestions.length > 0) {
+        content += `<div style="margin:16px 0;">`;
+        for (let i = 0; i < section.challengeQuestions.length; i++) {
+          const q = section.challengeQuestions[i];
+          content += `<div style="background:#f8fafc;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin-bottom:10px;">`;
+          content += `<div style="font-weight:500;color:#0f172a;">${i + 1}. ${q.question || ''}</div>`;
+          if (q.subQuestions && q.subQuestions.length > 0) {
+            for (const sub of q.subQuestions) {
+              content += `<div style="font-size:13px;color:#64748b;margin-top:4px;padding-left:16px;">${sub}</div>`;
+            }
+          }
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Topic boxes
+      if (section.topicBoxes && section.topicBoxes.length > 0) {
+        content += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin:20px 0;">`;
+        for (const box of section.topicBoxes) {
+          content += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;">`;
+          content += `<div style="font-weight:700;color:#0f172a;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #3b82f6;">${box.topicTitle || ''}</div>`;
+          for (const q of box.questions || []) {
+            content += `<div style="padding:8px 0;font-size:14px;color:#475569;">• ${q.question || ''}</div>`;
+          }
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Listening script
+      if (section.listeningScriptText) {
+        content += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;margin:16px 0;font-size:16px;line-height:2;color:#334155;white-space:pre-line;">${section.listeningScriptText}</div>`;
+      }
+      
+      // Questions (listening/reading)
+      const questions = section.listeningQuestions || section.readingQuestions;
+      if (questions && questions.length > 0) {
+        content += `<div style="margin:16px 0;">`;
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          content += `<div style="background:#f8fafc;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin-bottom:10px;">`;
+          content += `<div style="font-weight:500;color:#0f172a;">${i + 1}. ${q.question || q.questionEn || ''}</div>`;
+          if (q.answer) content += `<div style="color:#16a34a;font-weight:600;margin-top:8px;">Answer: ${q.answer}</div>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      // Reading dialogue
+      if (section.readingDialogueLines && section.readingDialogueLines.length > 0) {
+        if (section.readingImage) {
+          content += `<img src="${section.readingImage}" alt="Reading scene" style="max-width:100%;border-radius:12px;margin:20px auto;display:block;" />`;
+        }
+        content += `<div style="background:#f8fafc;border-radius:12px;padding:20px;margin:16px 0;">`;
+        for (const line of section.readingDialogueLines) {
+          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:12px;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">`;
+          content += `<span style="font-weight:700;color:#7c3aed;min-width:70px;">${line.speaker || ''}</span>`;
+          content += `<span style="color:#334155;">${line.lineEn || line.text || ''}</span>`;
+          content += `</div>`;
+        }
+        content += `</div>`;
+      }
+      
+      return content;
+    };
+
+    // Build full HTML document
+    const sectionsHtml = draft.sections?.map((section, idx) => `
+      <div style="background:#fff;border-radius:16px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #e2e8f0;overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+          <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:#3b82f6;color:#fff;border-radius:8px;font-weight:700;font-size:14px;">${section.sectionNumber || idx + 1}</div>
+          <div style="font-size:18px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px;">${section.sectionTitle || ''}</div>
+        </div>
+        <div style="padding:24px;">
+          ${generatePreviewSectionHtml(section)}
+        </div>
+      </div>
+    `).join('') || '';
+
+    const previewHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${lessonTitle} - Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; color: #1e293b; line-height: 1.6; }
+    @media print { body { background: #fff; } }
+  </style>
+</head>
+<body>
+  <header style="position:relative;min-height:140px;display:flex;flex-direction:column;background-size:cover;background-position:center;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);${draft.header?.backgroundImage ? `background-image:url(${draft.header.backgroundImage});` : 'background:linear-gradient(135deg,#0369a1 0%,#0ea5e9 100%);'}">
+    <div style="position:absolute;inset:0;background-color:${draft.header?.overlayColor || 'rgba(0,0,0,0.45)'};"></div>
+    <div style="position:relative;z-index:2;color:#fff;text-align:center;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 16px;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;font-size:11px;font-weight:600;opacity:0.95;text-transform:uppercase;letter-spacing:0.5px;">
+        <span style="background:rgba(255,255,255,0.2);padding:3px 8px;border-radius:4px;font-weight:600;">${draft.header?.levelBadge || ''}</span>
+        <span style="opacity:0.6;">|</span>
+        <span>${draft.header?.chapterLabel || ''}</span>
+      </div>
+      <h1 style="font-size:20px;font-weight:700;margin-bottom:8px;color:#fbbf24;">${draft.header?.lessonLabel || ''}</h1>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;">
+        <span style="display:inline-block;background:#22c55e;color:#fff;padding:4px 10px;border-radius:4px;font-weight:800;font-size:11px;letter-spacing:0.8px;">GOAL</span>
+        <span style="font-size:22px;font-weight:800;text-shadow:0 2px 4px rgba(0,0,0,0.3);">${draft.header?.goalText || ''}</span>
+      </div>
+      <p style="font-size:14px;opacity:0.9;margin-top:4px;">${draft.header?.goalSubtext || ''}</p>
+    </div>
+  </header>
+  <main style="max-width:900px;margin:0 auto;padding:32px 24px;">
+    ${sectionsHtml}
+  </main>
+</body>
+</html>`;
+
+    // Open in new tab
+    const previewWindow = window.open('', '_blank');
+    if (previewWindow) {
+      previewWindow.document.write(previewHtml);
+      previewWindow.document.close();
+    } else {
+      toast.error('Unable to open preview. Please check your popup blocker settings.');
+    }
+  }, [currentEditingLesson, draft]);
+
   // Helper function to format lesson for export (inline for print)
   const formatLessonForExport = (data: LessonExportData): string => {
     let html = '';
@@ -5298,6 +5625,19 @@ export default function LessonMaterialMakerPage() {
             >
               <i className="ri-bar-chart-2-line" />
               <span>Analytics</span>
+            </button>
+          )}
+
+          {/* Preview Button - Opens lesson in new tab as static page */}
+          {isFullscreen && draft && (
+            <button
+              type="button"
+              className="lm-toolbar-btn"
+              onClick={handleOpenPreview}
+              title="Open Preview in New Tab"
+            >
+              <i className="ri-external-link-line" />
+              <span>Preview</span>
             </button>
           )}
 
