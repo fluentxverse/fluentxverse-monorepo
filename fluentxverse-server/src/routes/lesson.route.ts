@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { lessonService, type LessonMaterial } from '../services/lesson.services/lesson.service';
 import { verifyAuthToken, type JwtAuthPayload } from '../utils/jwt';
 import { generateStudentMaterial, getMaterialSizeReduction } from '../utils/studentMaterial';
+import { getAuthFromCookie } from '../utils/refreshCookie';
 
 // Internal URL for server-to-server communication inside Docker
 const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
@@ -306,34 +307,8 @@ function generateSlug(title: string): string {
     .replace(/(^-|-$)/g, '') || 'lesson';
 }
 
-// Auth middleware helper - checks multiple auth cookie types
-async function getAuthFromCookie(request: Request): Promise<JwtAuthPayload | null> {
-  const cookies = request.headers.get('cookie') || '';
-  
-  // Try different cookie formats: adminAuth, tutorAuth, studentAuth, auth_token
-  const cookiePatterns = [
-    /adminAuth=([^;]+)/,
-    /tutorAuth=([^;]+)/,
-    /studentAuth=([^;]+)/,
-    /auth_token=([^;]+)/
-  ];
-  
-  for (const pattern of cookiePatterns) {
-    const match = cookies.match(pattern);
-    if (match && match[1]) {
-      try {
-        const decoded = decodeURIComponent(match[1]);
-        const payload = await verifyAuthToken(decoded);
-        return payload;
-      } catch {
-        // Try next cookie type
-        continue;
-      }
-    }
-  }
-  
-  return null;
-}
+// Auth is now imported from ../utils/refreshCookie
+// getAuthFromCookie(cookie) - accepts Elysia cookie object and returns { sub, userId, role } or null
 
 // Get display name from auth payload
 function getDisplayName(auth: JwtAuthPayload): string | undefined {
