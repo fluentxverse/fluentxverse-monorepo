@@ -2,6 +2,7 @@ import { LocationProvider, Router, Route, useLocation } from 'preact-iso';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
+import { OfflineBanner } from './Components/Common/OfflineBanner';
 
 import { Header } from './components/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -100,6 +101,7 @@ export function App() {
   return (
     <LocationProvider>
       <AuthProvider>
+        <OfflineBanner />
         <AppContent />
         <SessionExpiredModal />
       </AuthProvider>

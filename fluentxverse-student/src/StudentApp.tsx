@@ -16,6 +16,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import { withProtected } from './Components/ProtectedRoute';
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
+import { OfflineBanner } from './Components/Common/OfflineBanner';
 import ApiTiming from './Components/Common/ApiTiming';
 
 // Import Socket.IO initialization
@@ -38,6 +39,7 @@ export function App() {
 function AppContent() {
   return (
     <main>
+      <OfflineBanner />
       <SessionExpiryModal isAuthenticated={false} />
       <SessionExpiredModal />
       <ApiTiming />

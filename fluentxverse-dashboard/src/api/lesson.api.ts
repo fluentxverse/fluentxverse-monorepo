@@ -192,6 +192,68 @@ export interface VersionResponse {
 }
 
 /**
+ * Compress an image using canvas
+ * @param dataUrl - Base64 data URL of the image
+ * @param maxWidth - Maximum width (default 1920)
+ * @param maxHeight - Maximum height (default 1080)
+ * @param quality - JPEG quality 0-1 (default 0.8)
+ * @returns Promise<string> - Compressed base64 data URL
+ */
+async function compressImage(
+  dataUrl: string, 
+  maxWidth = 1920, 
+  maxHeight = 1080, 
+  quality = 0.8
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      
+      // Calculate new dimensions while maintaining aspect ratio
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+      
+      // Create canvas and draw resized image
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(dataUrl); // Fallback to original if canvas fails
+        return;
+      }
+      
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Convert to JPEG for better compression (unless it's a PNG with transparency)
+      const originalMime = dataUrl.split(';')[0].split(':')[1];
+      const outputMime = originalMime === 'image/png' ? 'image/png' : 'image/jpeg';
+      const outputQuality = outputMime === 'image/png' ? undefined : quality;
+      
+      const compressedDataUrl = canvas.toDataURL(outputMime, outputQuality);
+      
+      // Only use compressed version if it's actually smaller
+      if (compressedDataUrl.length < dataUrl.length) {
+        console.log(`📸 Image compressed: ${Math.round(dataUrl.length / 1024)}KB → ${Math.round(compressedDataUrl.length / 1024)}KB (${Math.round((1 - compressedDataUrl.length / dataUrl.length) * 100)}% reduction)`);
+        resolve(compressedDataUrl);
+      } else {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl); // Fallback to original on error
+    img.src = dataUrl;
+  });
+}
+
+/**
  * Convert base64 data URL to Blob
  */
 function dataUrlToBlob(dataUrl: string): Blob | null {
@@ -224,23 +286,32 @@ function isBase64Image(str: string | undefined): boolean {
 }
 
 /**
- * Extract all base64 images from lesson data and add them to FormData
+ * Extract all base64 images from lesson data, compress them, and add them to FormData
  * Returns the lesson data with base64 images replaced with placeholder keys
  */
-function extractAndPrepareImages(lesson: any, formData: FormData): any {
+async function extractAndPrepareImages(lesson: any, formData: FormData): Promise<any> {
   const lessonCopy = JSON.parse(JSON.stringify(lesson));
   let imageIndex = 0;
+  const compressionPromises: Promise<void>[] = [];
   
   // Helper to process an image field
   const processImage = (obj: any, key: string, prefix: string) => {
     if (obj && isBase64Image(obj[key])) {
-      const blob = dataUrlToBlob(obj[key]);
-      if (blob) {
-        const imageKey = `${prefix}_${imageIndex++}`;
-        const ext = blob.type.split('/')[1] || 'jpg';
-        formData.append(imageKey, blob, `${imageKey}.${ext}`);
-        obj[key] = `__UPLOAD__:${imageKey}`; // Placeholder to be replaced by server
-      }
+      const originalDataUrl = obj[key];
+      const imageKey = `${prefix}_${imageIndex++}`;
+      
+      // Create a promise that compresses the image and adds it to formData
+      const promise = compressImage(originalDataUrl).then(compressedDataUrl => {
+        const blob = dataUrlToBlob(compressedDataUrl);
+        if (blob) {
+          const ext = blob.type.split('/')[1] || 'jpg';
+          formData.append(imageKey, blob, `${imageKey}.${ext}`);
+        }
+      });
+      compressionPromises.push(promise);
+      
+      // Set placeholder immediately
+      obj[key] = `__UPLOAD__:${imageKey}`;
     }
   };
   
@@ -280,6 +351,9 @@ function extractAndPrepareImages(lesson: any, formData: FormData): any {
     });
   }
   
+  // Wait for all image compressions to complete
+  await Promise.all(compressionPromises);
+  
   return lessonCopy;
 }
 
@@ -291,9 +365,9 @@ export const lessonApi = {
   async createLesson(lesson: LessonMaterial): Promise<CreateLessonResponse> {
     const formData = new FormData();
     
-    // Extract all base64 images and add them to formData
+    // Extract all base64 images, compress them, and add them to formData
     // This replaces base64 strings with placeholders like "__UPLOAD__:key"
-    const lessonToSave = extractAndPrepareImages(lesson, formData);
+    const lessonToSave = await extractAndPrepareImages(lesson, formData);
     
     formData.append('lessonData', JSON.stringify(lessonToSave));
     
@@ -313,8 +387,8 @@ export const lessonApi = {
   async updateLesson(lessonId: string, lesson: LessonMaterial, changeSummary?: string): Promise<UpdateLessonResponse> {
     const formData = new FormData();
     
-    // Extract all base64 images and add them to formData
-    const lessonToSave = extractAndPrepareImages(lesson, formData);
+    // Extract all base64 images, compress them, and add them to formData
+    const lessonToSave = await extractAndPrepareImages(lesson, formData);
     
     formData.append('lessonData', JSON.stringify(lessonToSave));
     if (changeSummary) {

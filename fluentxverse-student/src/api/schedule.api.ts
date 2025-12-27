@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import { getErrorMessage } from './utils';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -110,7 +111,7 @@ export const scheduleApi = {
       return response.data.data;
     } catch (error) {
       console.error('Failed to get available slots:', error);
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   },
 
@@ -133,7 +134,7 @@ export const scheduleApi = {
       return response.data.data;
     } catch (error: any) {
       console.error('Failed to book slot:', error);
-      throw error.response?.data?.error || error.message || 'Failed to book slot';
+      throw new Error(getErrorMessage(error));
     }
   },
 

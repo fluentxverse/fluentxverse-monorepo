@@ -1,8 +1,24 @@
 import axios from 'axios'
 import { API_BASE_URL } from '../config/api';
+import { getErrorMessage } from '../utils/errorUtils';
 
 let unauthorizedHandler: (() => void) | null = null;
 let isLoginInProgress = false;
+
+/**
+ * Extract a user-friendly error message from an error object
+ * Re-exported from errorUtils for convenience
+ */
+export { getErrorMessage } from '../utils/errorUtils';
+
+/**
+ * Create a user-friendly error from any error type
+ * Useful for throwing friendlier errors from API functions
+ */
+export const createFriendlyError = (error: unknown): Error => {
+  const message = getErrorMessage(error);
+  return new Error(message);
+};
 
 export const registerUnauthorizedHandler = (fn: () => void) => {
   unauthorizedHandler = fn;

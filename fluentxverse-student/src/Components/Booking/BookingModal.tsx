@@ -3,6 +3,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi, AvailableSlot } from '../../api/schedule.api';
 import { transferTicketForBooking, getTicketBalance, type TicketBalance } from '../../services/ticket.service';
 import { useActiveAccount } from 'thirdweb/react';
+import { getErrorMessage } from '../../api/utils';
 import './BookingModal.css';
 
 interface BookingModalProps {
@@ -127,7 +128,7 @@ export const BookingModal = ({
       }
       setAvailableSlots(slots);
     } catch (err: any) {
-      setError(err.message || 'Failed to load available slots');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -191,7 +192,7 @@ export const BookingModal = ({
       }, 2000);
     } catch (err: any) {
       console.error('❌ Booking failed:', err);
-      setError(err.message || err || 'Failed to book slot');
+      setError(getErrorMessage(err));
     } finally {
       setBooking(false);
       setTransferringTicket(false);

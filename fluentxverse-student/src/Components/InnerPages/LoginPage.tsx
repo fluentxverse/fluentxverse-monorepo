@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { useAuthContext } from '@/context/AuthContext';
+import { getErrorMessage } from '@/api/utils';
 
 const LoginPage = () => {
   const { login } = useAuthContext();
@@ -16,7 +17,7 @@ const LoginPage = () => {
       await login(email, password);
       window.location.href = '/home';
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(getErrorMessage(err));
       setLoading(false);
     }
   };

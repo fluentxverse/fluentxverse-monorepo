@@ -66,6 +66,9 @@ export interface AuthData {
     lastName?: string;
     walletAddress?: string;
     mobileNumber?: string;
+    familyName?: string;
+    givenName?: string;
+    role?: string;
     tier: number;
 }
 

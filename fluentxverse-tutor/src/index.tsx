@@ -29,6 +29,7 @@ import TermsOfService from "./pages/TermsOfService";
 import NotFoundPage from "./pages/NotFoundPage";
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
+import { OfflineBanner } from './Components/Common/OfflineBanner';
 import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
 
@@ -77,6 +78,7 @@ export function AppInner() {
 						{/* Mobile Header for logged-in users */}
 						<MobileHeader />
 						<main>
+							<OfflineBanner />
 							{/* Session expiry warning modal visible when authenticated */}
 							<SessionExpiryModal isAuthenticated={isAuthenticated} />
 							{/* Session expired modal - shows when 401 received */}

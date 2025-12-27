@@ -5,6 +5,7 @@ import Header from '../Components/Header/Header';
 import Footer from '../Components/Footer/Footer';
 import { register } from '../api/auth.api';
 import { useAuthContext } from '../context/AuthContext';
+import { getErrorMessage } from '../api/utils';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -74,8 +75,8 @@ const RegisterPage = () => {
         submitInProgressRef.current = false;
       }
     } catch (err: any) {
-      // Extract error message from Axios error response or error object
-      const errorMsg = err?.response?.data?.message || err?.message || 'An unexpected error occurred. Please try again.';
+      // Use friendly error message utility
+      const errorMsg = getErrorMessage(err);
       setError(errorMsg);
       submitInProgressRef.current = false;
     } finally {

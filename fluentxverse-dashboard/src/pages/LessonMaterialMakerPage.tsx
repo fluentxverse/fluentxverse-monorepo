@@ -1914,6 +1914,7 @@ export default function LessonMaterialMakerPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [savedLessonUrl, setSavedLessonUrl] = useState<string | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false); // Read-only preview mode
   const [materialViewMode, setMaterialViewMode] = useState<'tutor' | 'student'>('tutor'); // Tutor view (with hints) or Student view (without hints)
@@ -2086,6 +2087,31 @@ export default function LessonMaterialMakerPage() {
   useEffect(() => {
     document.title = 'Lesson Material Maker | FluentXVerse Admin';
   }, []);
+
+  // Warn user before leaving if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && viewMode === 'editor') {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, viewMode]);
+
+  // Track unsaved changes by comparing current draft with last saved content
+  useEffect(() => {
+    if (!currentEditingLesson || viewMode !== 'editor') {
+      setHasUnsavedChanges(false);
+      return;
+    }
+    const currentContent = JSON.stringify(draft);
+    const hasChanges = lastSavedContentRef.current !== '' && currentContent !== lastSavedContentRef.current;
+    setHasUnsavedChanges(hasChanges);
+  }, [draft, currentEditingLesson, viewMode]);
 
   // Handle browser back/forward button navigation
   useEffect(() => {
@@ -2517,6 +2543,7 @@ export default function LessonMaterialMakerPage() {
         if (result.success && result.url) {
           setLastSaved(new Date());
           setSavedLessonUrl(result.url);
+          setHasUnsavedChanges(false);
           // Update last saved content to prevent duplicate saves
           lastSavedContentRef.current = JSON.stringify(draftToSave);
           // Update the serverLesson with new version info
@@ -2551,6 +2578,7 @@ export default function LessonMaterialMakerPage() {
         if (result.success && result.url) {
           setLastSaved(new Date());
           setSavedLessonUrl(result.url);
+          setHasUnsavedChanges(false);
           // Update last saved content to prevent duplicate saves
           lastSavedContentRef.current = JSON.stringify(draftToSave);
           // Update the saved lesson with server info
@@ -4581,15 +4609,17 @@ export default function LessonMaterialMakerPage() {
             <>
               {/* Autosave status */}
               <div
-                className="lm-autosave-status"
+                className={`lm-autosave-status ${hasUnsavedChanges ? 'has-changes' : ''}`}
                 title={
                   isSaving
                     ? 'Saving...'
                     : saveError
                       ? 'Save failed'
-                      : lastSaved
-                        ? `Saved ${formatTimeAgo(lastSaved)}`
-                        : 'Not saved yet'
+                      : hasUnsavedChanges
+                        ? 'You have unsaved changes'
+                        : lastSaved
+                          ? `Saved ${formatTimeAgo(lastSaved)}`
+                          : 'Not saved yet'
                 }
               >
             {isSaving ? (
@@ -4601,6 +4631,11 @@ export default function LessonMaterialMakerPage() {
               <>
                 <i className="ri-error-warning-line error-icon" />
                 <span className="error-text">Save failed</span>
+              </>
+            ) : hasUnsavedChanges ? (
+              <>
+                <i className="ri-edit-circle-line unsaved-icon" />
+                <span className="unsaved-text">Unsaved changes</span>
               </>
             ) : lastSaved ? (
               <>

@@ -4,6 +4,7 @@ import Header from '../Components/Header/Header';
 
 import { register } from '../api/auth.api';
 import { useAuthContext } from '../context/AuthContext';
+import { getErrorMessage } from '../api/utils';
 import './RegisterPage.css';
 import { getUserEmail } from 'thirdweb/wallets/in-app';
 import { thirdwebClient } from '../config/wallet';
@@ -194,7 +195,7 @@ const RegisterPage = () => {
         }
       }
     } catch (err: any) {
-      setError(err?.message || 'An unexpected error occurred. Please try again.');
+      setError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

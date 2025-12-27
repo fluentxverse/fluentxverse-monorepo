@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import { getErrorMessage } from './utils';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -52,7 +53,7 @@ export const scheduleApi = {
         console.error('  Response status:', error.response?.status);
         console.error('  Response data:', error.response?.data);
       }
-      throw error;
+      throw new Error(getErrorMessage(error));
     }
   },
 

@@ -1338,7 +1338,7 @@ body.lm-fullscreen-mode .main-content {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px;
+  padding: 6px 10px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
@@ -1346,10 +1346,18 @@ body.lm-fullscreen-mode .main-content {
   border-radius: 6px;
   border: 1px solid var(--border-color);
   height: 34px;
+  transition: all 0.2s ease;
+}
+
+.lm-autosave-status.has-changes {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
 }
 
 .lm-autosave-status span {
-  display: none;
+  display: block;
+  white-space: nowrap;
 }
 
 .lm-autosave-status i {
@@ -1366,6 +1374,14 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-autosave-status .error-text {
   color: var(--error);
+}
+
+.lm-autosave-status .unsaved-icon {
+  color: #f59e0b;
+}
+
+.lm-autosave-status .unsaved-text {
+  color: #92400e;
 }
 
 /* Spinning animation for loader */
