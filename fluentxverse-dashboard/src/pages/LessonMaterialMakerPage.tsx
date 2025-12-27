@@ -304,6 +304,18 @@ type NewLessonFormData = {
 };
 
 // Version history types
+type VersionChange = {
+  id: string;
+  type: 'added' | 'removed' | 'modified';
+  category: 'section' | 'header' | 'vocabulary' | 'grammar' | 'exercise' | 'image';
+  target: string; // e.g., "Section 3", "Header Background", "Vocabulary Item"
+  targetId?: string; // ID for scrolling (e.g., section id)
+  sectionIndex?: number; // Section index for navigation
+  description: string;
+  oldValue?: string;
+  newValue?: string;
+};
+
 type VersionHistoryEntry = {
   id: string;
   lessonId: string;
@@ -311,7 +323,9 @@ type VersionHistoryEntry = {
   snapshot: LessonMaterialDraft;
   timestamp: string;
   changeDescription: string;
+  changes?: VersionChange[]; // Detailed list of changes
   autoSave: boolean;
+  changedByName?: string;
 };
 
 type LessonVersionHistory = {
@@ -1972,6 +1986,45 @@ export default function LessonMaterialMakerPage() {
   });
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [selectedVersionToPreview, setSelectedVersionToPreview] = useState<VersionHistoryEntry | null>(null);
+  const [expandedVersionChanges, setExpandedVersionChanges] = useState<Set<string>>(new Set());
+
+  // Scroll to a section by index or id
+  const scrollToSection = useCallback((sectionIndex?: number, sectionId?: string) => {
+    // Close the version history panel first
+    setShowVersionHistory(false);
+    
+    // Small delay to let the panel close
+    setTimeout(() => {
+      let targetElement: Element | null = null;
+      
+      if (sectionId === 'lm-header') {
+        // Scroll to header
+        targetElement = document.querySelector('.lm-header');
+      } else if (sectionId) {
+        // Find section by ID
+        const sections = document.querySelectorAll('.lm-section');
+        const sectionElements = Array.from(sections);
+        const sectionData = draft.sections.find(s => s.id === sectionId);
+        if (sectionData) {
+          const idx = draft.sections.indexOf(sectionData);
+          targetElement = sectionElements[idx];
+        }
+      } else if (typeof sectionIndex === 'number') {
+        // Find section by index
+        const sections = document.querySelectorAll('.lm-section');
+        targetElement = sections[sectionIndex];
+      }
+      
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add highlight effect
+        targetElement.classList.add('lm-section-highlight');
+        setTimeout(() => {
+          targetElement?.classList.remove('lm-section-highlight');
+        }, 2000);
+      }
+    }, 300);
+  }, [draft.sections]);
   
   // Server-side lessons state (fork/merge system)
   const [serverLessons, setServerLessons] = useState<Lesson[]>([]);
@@ -2395,6 +2448,261 @@ export default function LessonMaterialMakerPage() {
     }
   }, [showVersionHistory, currentEditingLesson?.serverLesson?.id]);
 
+  // Generate detailed changes list by comparing versions
+  const generateDetailedChanges = useCallback((
+    current: any,
+    previous: any | null
+  ): VersionChange[] => {
+    if (!previous) {
+      return [{
+        id: 'initial',
+        type: 'added',
+        category: 'section',
+        target: 'All Content',
+        description: 'Initial version created'
+      }];
+    }
+
+    const changes: VersionChange[] = [];
+    let changeId = 0;
+
+    // Compare header
+    if (current.header?.goalText !== previous.header?.goalText) {
+      changes.push({
+        id: `change-${changeId++}`,
+        type: 'modified',
+        category: 'header',
+        target: 'Lesson Goal',
+        targetId: 'lm-header',
+        description: 'Goal text updated',
+        oldValue: previous.header?.goalText?.substring(0, 50),
+        newValue: current.header?.goalText?.substring(0, 50)
+      });
+    }
+    if (current.header?.lessonLabel !== previous.header?.lessonLabel) {
+      changes.push({
+        id: `change-${changeId++}`,
+        type: 'modified',
+        category: 'header',
+        target: 'Lesson Title',
+        targetId: 'lm-header',
+        description: 'Lesson title changed',
+        oldValue: previous.header?.lessonLabel,
+        newValue: current.header?.lessonLabel
+      });
+    }
+    if (current.header?.backgroundImage !== previous.header?.backgroundImage) {
+      changes.push({
+        id: `change-${changeId++}`,
+        type: current.header?.backgroundImage ? 'modified' : 'removed',
+        category: 'image',
+        target: 'Header Background',
+        targetId: 'lm-header',
+        description: current.header?.backgroundImage ? 'Background image updated' : 'Background image removed'
+      });
+    }
+
+    // Compare sections
+    const currentSections = current.sections || [];
+    const prevSections = previous.sections || [];
+    const maxLen = Math.max(currentSections.length, prevSections.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      const currSection = currentSections[i];
+      const prevSection = prevSections[i];
+
+      if (currSection && !prevSection) {
+        // New section added
+        changes.push({
+          id: `change-${changeId++}`,
+          type: 'added',
+          category: 'section',
+          target: `Section ${i + 1}: ${currSection.sectionTitle || currSection.sectionType || 'New'}`,
+          targetId: currSection.id,
+          sectionIndex: i,
+          description: `Added new ${currSection.sectionType || 'section'} section`
+        });
+      } else if (!currSection && prevSection) {
+        // Section removed
+        changes.push({
+          id: `change-${changeId++}`,
+          type: 'removed',
+          category: 'section',
+          target: `Section ${i + 1}: ${prevSection.sectionTitle || prevSection.sectionType || 'Deleted'}`,
+          sectionIndex: i,
+          description: `Removed ${prevSection.sectionType || 'section'} section`
+        });
+      } else if (currSection && prevSection) {
+        // Compare section content
+        if (currSection.sectionTitle !== prevSection.sectionTitle) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: 'modified',
+            category: 'section',
+            target: `Section ${i + 1} Title`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: 'Section title changed',
+            oldValue: prevSection.sectionTitle,
+            newValue: currSection.sectionTitle
+          });
+        }
+
+        // Check section image
+        if (currSection.sectionImage !== prevSection.sectionImage) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: currSection.sectionImage ? (prevSection.sectionImage ? 'modified' : 'added') : 'removed',
+            category: 'image',
+            target: `Section ${i + 1} Image`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: currSection.sectionImage 
+              ? (prevSection.sectionImage ? 'Image updated' : 'Image added')
+              : 'Image removed'
+          });
+        }
+
+        // Check vocab cards
+        const currVocab = currSection.vocabCards || [];
+        const prevVocab = prevSection.vocabCards || [];
+        if (currVocab.length !== prevVocab.length) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: currVocab.length > prevVocab.length ? 'added' : 'removed',
+            category: 'vocabulary',
+            target: `Section ${i + 1} Vocabulary`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: `Vocabulary cards: ${prevVocab.length} → ${currVocab.length}`
+          });
+        } else {
+          // Check for vocab card image changes
+          for (let v = 0; v < currVocab.length; v++) {
+            if (currVocab[v]?.image !== prevVocab[v]?.image) {
+              changes.push({
+                id: `change-${changeId++}`,
+                type: currVocab[v]?.image ? 'modified' : 'removed',
+                category: 'image',
+                target: `Section ${i + 1} Vocab Card ${v + 1}`,
+                targetId: currSection.id,
+                sectionIndex: i,
+                description: currVocab[v]?.image ? 'Vocabulary image updated' : 'Vocabulary image removed'
+              });
+            }
+          }
+        }
+
+        // Check dialogue lines
+        const currDialogue = currSection.dialogueLines || [];
+        const prevDialogue = prevSection.dialogueLines || [];
+        if (JSON.stringify(currDialogue) !== JSON.stringify(prevDialogue)) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: 'modified',
+            category: 'section',
+            target: `Section ${i + 1} Dialogue`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: `Dialogue content updated (${currDialogue.length} lines)`
+          });
+        }
+
+        // Check grammar rules
+        const currGrammar = currSection.grammarRules || [];
+        const prevGrammar = prevSection.grammarRules || [];
+        if (JSON.stringify(currGrammar) !== JSON.stringify(prevGrammar)) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: 'modified',
+            category: 'grammar',
+            target: `Section ${i + 1} Grammar`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: `Grammar rules updated (${currGrammar.length} rules)`
+          });
+        }
+
+        // Check lesson goal steps
+        const currSteps = currSection.lessonGoalSteps || [];
+        const prevSteps = prevSection.lessonGoalSteps || [];
+        if (JSON.stringify(currSteps) !== JSON.stringify(prevSteps)) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: 'modified',
+            category: 'section',
+            target: `Section ${i + 1} Lesson Steps`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: `Lesson goal steps updated (${currSteps.length} steps)`
+          });
+        }
+
+        // Check practice items
+        const currPractice = currSection.practiceItems || [];
+        const prevPractice = prevSection.practiceItems || [];
+        if (JSON.stringify(currPractice) !== JSON.stringify(prevPractice)) {
+          changes.push({
+            id: `change-${changeId++}`,
+            type: 'modified',
+            category: 'exercise',
+            target: `Section ${i + 1} Practice`,
+            targetId: currSection.id,
+            sectionIndex: i,
+            description: `Practice items updated (${currPractice.length} items)`
+          });
+        }
+      }
+    }
+
+    // Compare top-level vocabulary
+    const currentVocab = current.vocabulary || [];
+    const prevVocab = previous.vocabulary || [];
+    if (currentVocab.length !== prevVocab.length) {
+      changes.push({
+        id: `change-${changeId++}`,
+        type: currentVocab.length > prevVocab.length ? 'added' : 'removed',
+        category: 'vocabulary',
+        target: 'Vocabulary List',
+        description: `Vocabulary count: ${prevVocab.length} → ${currentVocab.length}`
+      });
+    }
+
+    // Compare top-level grammar
+    const currentGrammar = current.grammar || [];
+    const prevGrammar = previous.grammar || [];
+    if (currentGrammar.length !== prevGrammar.length) {
+      changes.push({
+        id: `change-${changeId++}`,
+        type: currentGrammar.length > prevGrammar.length ? 'added' : 'removed',
+        category: 'grammar',
+        target: 'Grammar Points',
+        description: `Grammar count: ${prevGrammar.length} → ${currentGrammar.length}`
+      });
+    }
+
+    // Compare exercises
+    const currentExercises = current.exercises || [];
+    const prevExercises = previous.exercises || [];
+    if (currentExercises.length !== prevExercises.length) {
+      changes.push({
+        id: `change-${changeId++}`,
+        type: currentExercises.length > prevExercises.length ? 'added' : 'removed',
+        category: 'exercise',
+        target: 'Exercises',
+        description: `Exercise count: ${prevExercises.length} → ${currentExercises.length}`
+      });
+    }
+
+    return changes.length > 0 ? changes : [{
+      id: 'minor',
+      type: 'modified',
+      category: 'section',
+      target: 'Content',
+      description: 'Minor content changes'
+    }];
+  }, []);
+
   // Generate change description by comparing with previous version
   const generateVersionChangeDescription = (
     current: any, 
@@ -2482,6 +2790,7 @@ export default function LessonMaterialMakerPage() {
     ? serverVersions.map((v, idx, arr) => {
         // Previous version is the next item in array (since newest is first)
         const previousVersion = arr[idx + 1];
+        const detailedChanges = generateDetailedChanges(v.lessonData, previousVersion?.lessonData || null);
         return {
           id: v.id,
           lessonId: v.lessonId,
@@ -2493,6 +2802,7 @@ export default function LessonMaterialMakerPage() {
             previousVersion?.lessonData || null,
             v.changeSummary
           ),
+          changes: detailedChanges,
           autoSave: !v.changeSummary || v.changeSummary === 'Auto-save',
           changedByName: v.changedByName,
         };
@@ -4865,6 +5175,71 @@ export default function LessonMaterialMakerPage() {
                     <div className="lm-version-description">
                       {entry.changeDescription}
                     </div>
+                    
+                    {/* Detailed Changes List - Clickable */}
+                    {entry.changes && entry.changes.length > 0 && (
+                      <div className="lm-version-changes">
+                        <button
+                          type="button"
+                          className="lm-version-changes-toggle"
+                          onClick={() => {
+                            setExpandedVersionChanges(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(entry.id)) {
+                                newSet.delete(entry.id);
+                              } else {
+                                newSet.add(entry.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                        >
+                          <i className={expandedVersionChanges.has(entry.id) ? 'ri-arrow-down-s-line' : 'ri-arrow-right-s-line'} />
+                          <span>{entry.changes.length} change{entry.changes.length !== 1 ? 's' : ''}</span>
+                        </button>
+                        
+                        {expandedVersionChanges.has(entry.id) && (
+                          <div className="lm-version-changes-list">
+                            {entry.changes.map((change) => (
+                              <div 
+                                key={change.id} 
+                                className={`lm-version-change-item lm-version-change-${change.type}`}
+                                onClick={() => {
+                                  if (change.targetId || typeof change.sectionIndex === 'number') {
+                                    scrollToSection(change.sectionIndex, change.targetId);
+                                  }
+                                }}
+                                style={{ cursor: (change.targetId || typeof change.sectionIndex === 'number') ? 'pointer' : 'default' }}
+                                title={(change.targetId || typeof change.sectionIndex === 'number') ? 'Click to navigate to this section' : ''}
+                              >
+                                <div className="lm-version-change-icon">
+                                  {change.type === 'added' && <i className="ri-add-circle-line" />}
+                                  {change.type === 'removed' && <i className="ri-indeterminate-circle-line" />}
+                                  {change.type === 'modified' && <i className="ri-edit-circle-line" />}
+                                </div>
+                                <div className="lm-version-change-content">
+                                  <span className="lm-version-change-target">{change.target}</span>
+                                  <span className="lm-version-change-desc">{change.description}</span>
+                                  {change.oldValue && change.newValue && (
+                                    <div className="lm-version-change-diff">
+                                      <span className="lm-version-change-old">{change.oldValue}...</span>
+                                      <i className="ri-arrow-right-line" />
+                                      <span className="lm-version-change-new">{change.newValue}...</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {(change.targetId || typeof change.sectionIndex === 'number') && (
+                                  <div className="lm-version-change-nav">
+                                    <i className="ri-external-link-line" />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="lm-version-actions">
                       <button
                         type="button"
