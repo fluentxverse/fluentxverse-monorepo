@@ -1273,6 +1273,110 @@ body.lm-fullscreen-mode .main-content {
   cursor: not-allowed;
 }
 
+/* Undo/Redo Button Group */
+.lm-undo-redo-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-secondary, #f1f5f9);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.lm-undo-redo-group .lm-toolbar-btn {
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  min-width: auto;
+}
+
+.lm-undo-redo-group .lm-toolbar-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary, #e2e8f0);
+}
+
+.lm-undo-redo-group .lm-toolbar-btn.disabled,
+.lm-undo-redo-group .lm-toolbar-btn:disabled {
+  color: var(--text-muted, #94a3b8);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lm-undo-redo-group .lm-toolbar-btn i {
+  font-size: 16px;
+}
+
+/* Export Dropdown */
+.lm-export-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.lm-export-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: white;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+  animation: slideDown 0.15s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lm-export-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text-primary, #1e293b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.lm-export-menu-item:hover {
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--primary, #6366f1);
+}
+
+.lm-export-menu-item i {
+  font-size: 16px;
+  color: var(--text-secondary, #64748b);
+}
+
+.lm-export-menu-item:hover i {
+  color: var(--primary, #6366f1);
+}
+
+.lm-export-menu-item:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.lm-export-menu-item:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
 /* Material View Mode Toggle (Tutor/Student) */
 .lm-view-mode-toggle {
   display: flex;

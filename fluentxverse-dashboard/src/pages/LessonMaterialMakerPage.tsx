@@ -4,6 +4,8 @@ import { DiffViewer } from '../Components/DiffViewer/DiffViewer';
 import { useLessonSocket, type ActiveEditor } from '../hooks/useLessonSocket';
 import { AnalyticsDashboard } from '../Components/AnalyticsDashboard/AnalyticsDashboard';
 import { toast, toastConfirm } from '../Components/Toast/Toast';
+import { useUndoRedo } from '../hooks/useUndoRedo';
+import { useExport, type LessonExportData } from '../utils/export';
 import './LessonMaterialMakerPage.css';
 
 type HeaderConfig = {
@@ -2073,6 +2075,32 @@ export default function LessonMaterialMakerPage() {
   const [lessonForks, setLessonForks] = useState<Lesson[]>([]);
   const [selectedLessonForForks, setSelectedLessonForForks] = useState<string | null>(null);
   
+  // Undo/Redo for draft editing
+  const {
+    state: undoRedoState,
+    setState: setUndoRedoState,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    clear: clearUndoHistory,
+  } = useUndoRedo<LessonMaterialDraft>(draft, {
+    maxHistory: 50,
+    debounceMs: 500,
+    enableKeyboardShortcuts: true, // Ctrl+Z and Ctrl+Y
+  });
+
+  // Sync undo/redo state with draft when undo/redo is triggered
+  useEffect(() => {
+    if (undoRedoState !== draft) {
+      setDraft(undoRedoState);
+    }
+  }, [undoRedoState]);
+
+  // Export functionality
+  const { exportLessonData, print } = useExport();
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  
   // Collaborative editing state
   const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
   const [recentActivity, setRecentActivity] = useState<{ user: string; section: string; action: string; time: Date }[]>([]);
@@ -3071,6 +3099,7 @@ export default function LessonMaterialMakerPage() {
     // Open the lesson for editing
     setCurrentEditingLesson(newLesson);
     setDraft(newLesson.draft);
+    clearUndoHistory(); // Clear undo history for fresh lesson
     setViewMode('editor');
     setIsFullscreen(true);
     // Persist editing lesson ID so it survives page refresh
@@ -3097,6 +3126,9 @@ export default function LessonMaterialMakerPage() {
       '',
       `${window.location.pathname}?lesson=${lesson.id}`
     );
+    
+    // Clear undo/redo history when loading a new lesson
+    clearUndoHistory();
     
     // If lesson has been saved to server, fetch the latest content from server
     if (lesson.serverLesson?.id) {
@@ -3464,6 +3496,88 @@ export default function LessonMaterialMakerPage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to save as template');
     }
+  };
+
+  // Export lesson as PDF, HTML, or print
+  const handleExportLesson = useCallback((format: 'pdf' | 'print' | 'html') => {
+    if (!currentEditingLesson) {
+      toast.warning('No lesson is currently being edited.');
+      return;
+    }
+
+    // Build export data from current draft
+    const exportData: LessonExportData = {
+      title: currentEditingLesson.title || draft.header?.goalText || 'Lesson Material',
+      level: draft.header?.levelBadge,
+      chapter: draft.header?.chapterLabel,
+      lesson: draft.header?.lessonLabel,
+      goal: draft.header?.goalText,
+      sections: draft.sections?.map(section => ({
+        type: section.sectionType || 'content',
+        title: section.stepTitle || section.heading || `Section ${draft.sections?.indexOf(section) + 1}`,
+        content: [
+          section.instructions ? `<p><strong>Instructions:</strong> ${section.instructions}</p>` : '',
+          section.dialogue ? `<div class="dialogue">${section.dialogue.split('\n').map(line => `<p class="dialogue-line">${line}</p>`).join('')}</div>` : '',
+          section.exerciseTitle ? `<h3>${section.exerciseTitle}</h3>` : '',
+          section.multipleChoice ? `<div class="exercise">${section.multipleChoice.split('\n').map(line => `<p>${line}</p>`).join('')}</div>` : '',
+          section.vocabCards ? section.vocabCards.map(card => 
+            `<div class="vocab-card"><div class="word">${card.word || ''}</div><div class="definition">${card.definition || ''}</div>${card.example ? `<div class="example">"${card.example}"</div>` : ''}</div>`
+          ).join('') : '',
+        ].filter(Boolean).join(''),
+      })) || [],
+      vocabulary: draft.vocabulary?.map(v => ({
+        word: v.word || '',
+        definition: v.meaning || '',
+        example: v.example,
+      })) || [],
+      grammar: draft.grammar?.map(g => ({
+        rule: g.pattern || '',
+        explanation: g.explanation || '',
+        examples: g.examples,
+      })) || [],
+      exercises: draft.exercises?.map(e => ({
+        question: e.question || '',
+        options: e.options,
+        answer: e.answer,
+      })) || [],
+    };
+
+    try {
+      switch (format) {
+        case 'pdf':
+          exportLessonData(exportData, 'pdf', { fileName: currentEditingLesson.title });
+          toast.success('Opening PDF export dialog...');
+          break;
+        case 'print':
+          print(formatLessonForExport(exportData), exportData.title);
+          break;
+        case 'html':
+          exportLessonData(exportData, 'html', { fileName: currentEditingLesson.title });
+          toast.success('HTML file downloaded!');
+          break;
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Export failed');
+    }
+    
+    setShowExportMenu(false);
+  }, [currentEditingLesson, draft, exportLessonData, print]);
+
+  // Helper function to format lesson for export (inline for print)
+  const formatLessonForExport = (data: LessonExportData): string => {
+    let html = '';
+    if (data.level || data.chapter || data.lesson) {
+      html += `<div style="margin-bottom:16px;color:#6b7280;">${data.level || ''} ${data.chapter || ''} ${data.lesson || ''}</div>`;
+    }
+    if (data.goal) {
+      html += `<div style="margin-bottom:24px;"><h2 style="margin:0 0 8px 0;">🎯 Lesson Goal</h2><p>${data.goal}</p></div>`;
+    }
+    if (data.sections) {
+      for (const section of data.sections) {
+        html += `<div style="margin-bottom:20px;page-break-inside:avoid;"><h2>${section.title}</h2><div>${section.content}</div></div>`;
+      }
+    }
+    return html;
   };
 
   // Merge request comments
@@ -5000,6 +5114,30 @@ export default function LessonMaterialMakerPage() {
             </button>
           )}
 
+          {/* Undo/Redo Buttons */}
+          {currentEditingLesson && !isPreviewMode && (
+            <div className="lm-undo-redo-group">
+              <button
+                type="button"
+                className={`lm-toolbar-btn ${!canUndo ? 'disabled' : ''}`}
+                onClick={undo}
+                disabled={!canUndo}
+                title="Undo (Ctrl+Z)"
+              >
+                <i className="ri-arrow-go-back-line" />
+              </button>
+              <button
+                type="button"
+                className={`lm-toolbar-btn ${!canRedo ? 'disabled' : ''}`}
+                onClick={redo}
+                disabled={!canRedo}
+                title="Redo (Ctrl+Y)"
+              >
+                <i className="ri-arrow-go-forward-line" />
+              </button>
+            </div>
+          )}
+
           {/* Toggle Material View Mode (Tutor/Student) */}
           {currentEditingLesson && (
             <div className="lm-view-mode-toggle">
@@ -5051,6 +5189,50 @@ export default function LessonMaterialMakerPage() {
               <i className="ri-bar-chart-2-line" />
               <span>Analytics</span>
             </button>
+          )}
+
+          {/* Export Dropdown */}
+          {currentEditingLesson && (
+            <div className="lm-export-dropdown">
+              <button
+                type="button"
+                className={`lm-toolbar-btn ${showExportMenu ? 'active' : ''}`}
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                title="Export Options"
+              >
+                <i className="ri-download-2-line" />
+                <span>Export</span>
+                <i className="ri-arrow-down-s-line" style={{ marginLeft: '4px', fontSize: '12px' }} />
+              </button>
+              {showExportMenu && (
+                <div className="lm-export-menu">
+                  <button
+                    type="button"
+                    className="lm-export-menu-item"
+                    onClick={() => handleExportLesson('pdf')}
+                  >
+                    <i className="ri-file-pdf-line" />
+                    <span>Export as PDF</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="lm-export-menu-item"
+                    onClick={() => handleExportLesson('html')}
+                  >
+                    <i className="ri-file-code-line" />
+                    <span>Export as HTML</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="lm-export-menu-item"
+                    onClick={() => handleExportLesson('print')}
+                  >
+                    <i className="ri-printer-line" />
+                    <span>Print</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Mark as Finished / Back to Draft Button */}
