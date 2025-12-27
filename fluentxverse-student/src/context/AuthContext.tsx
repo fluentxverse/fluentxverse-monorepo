@@ -38,11 +38,14 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   initialLoading: boolean; // initial /me check
   loginLoading: boolean; // active login attempt
+  sessionExpired: boolean;
+  sessionExpiredMessage: string | null;
   login: (email: string, password: string) => Promise<void>;
   loginByWallet: (params: WalletAuthParams) => Promise<WalletLoginResult>;
   registerByWallet: (params: WalletRegisterParams) => Promise<void>;
   logout: () => void;
   getUserId: () => string | undefined;
+  clearSessionExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -51,6 +54,14 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
+
+  // Clear session expired state
+  const clearSessionExpired = () => {
+    setSessionExpired(false);
+    setSessionExpiredMessage(null);
+  };
 
   useEffect(() => {
     // Check if user is authenticated on mount
@@ -100,14 +111,9 @@ export const AuthProvider = ({ children }: { children: any }) => {
       // Prevent clearing user during active login request
       if (loginLoading) return;
       setUser(null);
-      if (typeof window !== 'undefined') {
-        const current = window.location.pathname;
-        // Avoid redirect loop when already on landing/login page
-        const isOnLanding = current === '/' || current === '/home';
-        if (!isOnLanding && PROTECTED_PATHS.some(p => current.startsWith(p))) {
-          window.location.href = '/';
-        }
-      }
+      // Show session expired modal instead of immediate redirect
+      setSessionExpired(true);
+      setSessionExpiredMessage('Your session has expired. Please log in again to continue.');
     });
   }, [loginLoading]);
 
@@ -316,7 +322,20 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, loginByWallet, registerByWallet, logout, getUserId }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated: !!user, 
+      initialLoading, 
+      loginLoading, 
+      sessionExpired,
+      sessionExpiredMessage,
+      login, 
+      loginByWallet, 
+      registerByWallet, 
+      logout, 
+      getUserId,
+      clearSessionExpired
+    }}>
       {children}
     </AuthContext.Provider>
   );

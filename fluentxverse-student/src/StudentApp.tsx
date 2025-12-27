@@ -15,6 +15,7 @@ import NotFoundPage from './pages/NotFoundPage';
 // Components
 import { withProtected } from './Components/ProtectedRoute';
 import SessionExpiryModal from './Components/SessionExpiryModal';
+import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
 import ApiTiming from './Components/Common/ApiTiming';
 
 // Import Socket.IO initialization
@@ -38,6 +39,7 @@ function AppContent() {
   return (
     <main>
       <SessionExpiryModal isAuthenticated={false} />
+      <SessionExpiredModal />
       <ApiTiming />
       <Router>
         <Route path="/" component={Home} />

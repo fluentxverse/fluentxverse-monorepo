@@ -28,6 +28,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFoundPage from "./pages/NotFoundPage";
 import SessionExpiryModal from './Components/SessionExpiryModal';
+import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
 import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
 
@@ -78,6 +79,8 @@ export function AppInner() {
 						<main>
 							{/* Session expiry warning modal visible when authenticated */}
 							<SessionExpiryModal isAuthenticated={isAuthenticated} />
+							{/* Session expired modal - shows when 401 received */}
+							<SessionExpiredModal />
 						<Router>
 						<Route path="/" component={Home} />
 					<Route path="/home" component={withProtected(HomeProtected)} />

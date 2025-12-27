@@ -27,10 +27,13 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   initialLoading: boolean; // initial /me check
   loginLoading: boolean; // active login attempt
+  sessionExpired: boolean;
+  sessionExpiredMessage: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   getUserId: () => string | undefined; // Helper to get userId consistently
   setUserFromRegistration: (userData: AuthUser) => void; // Set user after successful registration
+  clearSessionExpired: () => void;
 }
 const allowedRole = 'tutor';
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -39,10 +42,18 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
   // Ref to track login in progress - survives re-renders and is synchronously readable
   const loginInProgressRef = useRef(false);
   // Ref to track if initial auth check has been done
   const initialCheckDoneRef = useRef(false);
+
+  // Clear session expired state
+  const clearSessionExpired = () => {
+    setSessionExpired(false);
+    setSessionExpiredMessage(null);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -96,14 +107,9 @@ export const AuthProvider = ({ children }: { children: any }) => {
       // Prevent clearing user during active login request (check both state and ref)
       if (loginLoading || loginInProgressRef.current) return;
       setUser(null);
-      if (typeof window !== 'undefined') {
-        const current = window.location.pathname;
-        // Avoid redirect loop when already on landing/login page
-        const isOnLanding = current === '/' || current === '/home';
-        if (!isOnLanding && PROTECTED_PATHS.some(p => current.startsWith(p))) {
-          window.location.href = '/';
-        }
-      }
+      // Show session expired modal instead of immediate redirect
+      setSessionExpired(true);
+      setSessionExpiredMessage('Your session has expired. Please log in again to continue.');
     });
   }, [loginLoading]);
 
@@ -200,7 +206,19 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, initialLoading, loginLoading, login, logout, getUserId, setUserFromRegistration }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated: !!user, 
+      initialLoading, 
+      loginLoading, 
+      sessionExpired,
+      sessionExpiredMessage,
+      login, 
+      logout, 
+      getUserId, 
+      setUserFromRegistration,
+      clearSessionExpired
+    }}>
       {children}
     </AuthContext.Provider>
   );
