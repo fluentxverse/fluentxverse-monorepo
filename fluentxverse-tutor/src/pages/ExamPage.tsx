@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { toastConfirm } from '../Components/Common/Toast';
 import {
   generateExam,
   submitExam,
@@ -306,10 +307,11 @@ const ExamPage = () => {
     const unanswered = answers.filter((a) => a === -1).length;
 
     if (unanswered > 0 && timeRemaining > 0) {
-      const confirm = window.confirm(
-        `You have ${unanswered} unanswered question(s). Are you sure you want to submit?`
+      const confirmed = await toastConfirm(
+        `You have ${unanswered} unanswered question(s). Are you sure you want to submit?`,
+        'Submit Exam'
       );
-      if (!confirm) return;
+      if (!confirmed) return;
     }
 
     if (timerRef.current) {

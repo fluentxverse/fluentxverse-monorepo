@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "preact/hooks";
 import { LocationProvider, Router, Route, hydrate, prerender as ssr } from 'preact-iso';
 
-
+import { ToastProvider } from './Components/Common/Toast';
 import Home from './pages/Home';
 import HomeProtected from './pages/HomeProtected';
 import SchedulePage from './pages/SchedulePage';
@@ -120,9 +120,11 @@ export function AppInner() {
 
 export function App() {
 	return (
-		<AuthProvider>
-			<AppInner />
-		</AuthProvider>
+		<ToastProvider>
+			<AuthProvider>
+				<AppInner />
+			</AuthProvider>
+		</ToastProvider>
 	);
 }
 

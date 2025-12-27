@@ -36,7 +36,7 @@ const ToastItem = ({ toast, onRemove }: { toast: ToastMessage; onRemove: (id: st
     const timer = setTimeout(() => {
       setIsExiting(true);
       setTimeout(() => onRemove(toast.id), 300);
-    }, toast.duration || 3000);
+    }, toast.duration || 5000);
 
     return () => clearTimeout(timer);
   }, [toast.id, toast.duration, onRemove]);
@@ -49,26 +49,28 @@ const ToastItem = ({ toast, onRemove }: { toast: ToastMessage; onRemove: (id: st
   const getIcon = () => {
     switch (toast.type) {
       case 'success':
-        return 'fas fa-check-circle';
+        return 'ri-check-line';
       case 'error':
-        return 'fas fa-times-circle';
+        return 'ri-close-circle-line';
       case 'warning':
-        return 'fas fa-exclamation-triangle';
+        return 'ri-alert-line';
       case 'info':
       default:
-        return 'fas fa-info-circle';
+        return 'ri-information-line';
     }
   };
 
   return (
     <div className={`toast toast-${toast.type} ${isExiting ? 'toast-exit' : ''}`}>
-      <i className={`toast-icon ${getIcon()}`}></i>
+      <div className="toast-icon-wrapper">
+        <i className={`toast-icon ${getIcon()}`}></i>
+      </div>
       <div className="toast-content">
         {toast.title && <div className="toast-title">{toast.title}</div>}
         <span className="toast-message">{toast.message}</span>
       </div>
       <button className="toast-close" onClick={handleClose}>
-        <i className="fas fa-times"></i>
+        <i className="ri-close-line"></i>
       </button>
     </div>
   );
@@ -84,7 +86,7 @@ interface ConfirmState {
   resolve: ((value: boolean) => void) | null;
 }
 
-// Toast Context for provider pattern
+// Toast Context
 interface ToastContextValue {
   success: (message: string, title?: string) => string;
   error: (message: string, title?: string) => string;
@@ -99,10 +101,10 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
-export const useToastContext = () => {
+export const useToast = () => {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToastContext must be used within a ToastProvider');
+    throw new Error('useToast must be used within a ToastProvider');
   }
   return context;
 };
@@ -194,72 +196,4 @@ export const ToastProvider = ({ children }: { children: any }) => {
   );
 };
 
-// Toast hook for easy usage (legacy support)
-let toastId = 0;
-let globalSetToasts: ((fn: (prev: ToastMessage[]) => ToastMessage[]) => void) | null = null;
-
-export const useToast = () => {
-  const [toasts, setToasts] = useState<ToastMessage[]>([]);
-
-  useEffect(() => {
-    globalSetToasts = setToasts;
-    return () => {
-      globalSetToasts = null;
-    };
-  }, []);
-
-  const addToast = (type: ToastType, message: string, duration = 3000) => {
-    const id = `toast-${++toastId}`;
-    setToasts((prev) => [...prev, { id, type, message, duration }]);
-    return id;
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const showSuccess = (message: string, duration?: number) => addToast('success', message, duration);
-  const showError = (message: string, duration?: number) => addToast('error', message, duration);
-  const showInfo = (message: string, duration?: number) => addToast('info', message, duration);
-  const showWarning = (message: string, duration?: number) => addToast('warning', message, duration);
-
-  return {
-    toasts,
-    addToast,
-    removeToast,
-    showSuccess,
-    showError,
-    showInfo,
-    showWarning,
-  };
-};
-
-// Global toast function (for use outside of React components)
-export const toast = {
-  success: (message: string, duration = 3000) => {
-    if (globalSetToasts) {
-      const id = `toast-${++toastId}`;
-      globalSetToasts((prev) => [...prev, { id, type: 'success', message, duration }]);
-    }
-  },
-  error: (message: string, duration = 3000) => {
-    if (globalSetToasts) {
-      const id = `toast-${++toastId}`;
-      globalSetToasts((prev) => [...prev, { id, type: 'error', message, duration }]);
-    }
-  },
-  info: (message: string, duration = 3000) => {
-    if (globalSetToasts) {
-      const id = `toast-${++toastId}`;
-      globalSetToasts((prev) => [...prev, { id, type: 'info', message, duration }]);
-    }
-  },
-  warning: (message: string, duration = 3000) => {
-    if (globalSetToasts) {
-      const id = `toast-${++toastId}`;
-      globalSetToasts((prev) => [...prev, { id, type: 'warning', message, duration }]);
-    }
-  },
-};
-
-export default Toast;
+export default ToastProvider;

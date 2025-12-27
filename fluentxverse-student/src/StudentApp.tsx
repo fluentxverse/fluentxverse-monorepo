@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { LocationProvider, Router, Route } from 'preact-iso';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ToastProvider } from './Components/Common/Toast';
 
 // Pages
 import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
@@ -26,13 +27,15 @@ import './assets/css/style.css';
 
 export function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <LocationProvider>
-          <AppContent />
-        </LocationProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <LocationProvider>
+            <AppContent />
+          </LocationProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ToastProvider>
   );
 }
 

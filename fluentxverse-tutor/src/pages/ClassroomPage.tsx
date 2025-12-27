@@ -5,6 +5,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { initSocket, connectSocket, getSocket, destroySocket } from '../client/socket/socket.client';
 import { useWebRTC } from '../hooks/useWebRTC';
 import PdfViewer from '../Components/PdfViewer/PdfViewer';
+import { toast, toastConfirm } from '../Components/Common/Toast';
 import type { ChatMessageData } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
 import './ClassroomPage.css';
@@ -502,7 +503,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Check file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+      toast.error('File size must be less than 10MB');
       return;
     }
     
@@ -594,8 +595,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  const handleLeaveClassroom = () => {
-    if (confirm('Are you sure you want to leave the classroom?')) {
+  const handleLeaveClassroom = async () => {
+    if (await toastConfirm('Are you sure you want to leave the classroom?', 'Leave Classroom')) {
       cleanup();
       getSocket().emit('session:leave');
       route('/schedule');

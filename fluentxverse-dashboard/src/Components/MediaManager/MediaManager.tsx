@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { lessonApi, type LessonMedia } from '../../api/lesson.api';
+import { toastConfirm } from '../Toast/Toast';
 import './MediaManager.css';
 
 interface MediaManagerProps {
@@ -111,7 +112,7 @@ export function MediaManager({
   };
 
   const handleDelete = async (mediaId: string) => {
-    if (!confirm('Delete this file? This action cannot be undone.')) return;
+    if (!await toastConfirm('Delete this file? This action cannot be undone.', 'Delete File')) return;
 
     try {
       const result = await lessonApi.deleteMedia(mediaId);

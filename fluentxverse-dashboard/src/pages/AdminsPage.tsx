@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { authApi, AdminListItem } from '../api/auth.api';
+import { toast } from '../Components/Toast/Toast';
 import './AdminsPage.css';
 
 interface CreateAdminForm {
@@ -94,7 +95,7 @@ export function AdminsPage() {
       setDeleteConfirm(null);
       loadAdmins();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete admin');
+      toast.error(err.message || 'Failed to delete admin');
     }
   };
 

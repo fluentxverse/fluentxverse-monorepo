@@ -3,6 +3,7 @@ import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
 import { OfflineBanner } from './Components/Common/OfflineBanner';
+import { ToastProvider } from './Components/Toast/Toast';
 
 import { Header } from './components/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -101,9 +102,11 @@ export function App() {
   return (
     <LocationProvider>
       <AuthProvider>
-        <OfflineBanner />
-        <AppContent />
-        <SessionExpiredModal />
+        <ToastProvider>
+          <OfflineBanner />
+          <AppContent />
+          <SessionExpiredModal />
+        </ToastProvider>
       </AuthProvider>
     </LocationProvider>
   );

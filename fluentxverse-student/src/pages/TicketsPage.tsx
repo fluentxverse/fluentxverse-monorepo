@@ -5,6 +5,7 @@ import { Bridge } from "thirdweb";
 import { useAuthContext } from '../context/AuthContext';
 import { useTicketNotifications } from '../hooks/useTicketNotifications';
 import { useToastContext } from '../context/ToastContext';
+import { toast } from '../Components/Common/Toast';
 
 // Development mode flag - set to true to use mock checkout
 const DEV_MODE = true;
@@ -523,7 +524,7 @@ export default function TicketsPage() {
     
     if (!buyerWallet) {
       console.error('❌ CRITICAL: No wallet address available for purchase!');
-      alert('Error: No wallet address found. Please make sure you are logged in and have a wallet connected.');
+      toast.error('No wallet address found. Please make sure you are logged in and have a wallet connected.');
       setShowCheckout(false);
       setSelectedPackage(null);
       setAdjustedAmount(null);
@@ -533,7 +534,7 @@ export default function TicketsPage() {
     // Validate wallet address format
     if (!buyerWallet.startsWith('0x') || buyerWallet.length !== 42) {
       console.error('❌ CRITICAL: Invalid wallet address format:', buyerWallet);
-      alert('Error: Invalid wallet address. Please contact support.');
+      toast.error('Invalid wallet address. Please contact support.');
       setShowCheckout(false);
       setSelectedPackage(null);
       setAdjustedAmount(null);

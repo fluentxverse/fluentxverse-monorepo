@@ -8,6 +8,7 @@ import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SettingsModal from '../Components/Settings/SettingsModal';
 import ImageCropper from '../Components/Common/ImageCropper';
 import VideoPlayer from '../Components/Common/VideoPlayer';
+import { toast, toastConfirm } from '../Components/Common/Toast';
 import './MyProfilePage.css';
 
 interface ProfileItemStatus {
@@ -149,12 +150,12 @@ export const MyProfilePage = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      toast.error('Please select an image file');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('Image must be less than 10MB');
+      toast.error('Image must be less than 10MB');
       return;
     }
 
@@ -272,7 +273,7 @@ export const MyProfilePage = () => {
   };
 
   const handleDeleteVideo = async () => {
-    if (!confirm('Are you sure you want to delete your introduction video?')) return;
+    if (!await toastConfirm('Are you sure you want to delete your introduction video?', 'Delete Video')) return;
 
     try {
       const response = await client.delete('/tutor/intro-video');
@@ -283,7 +284,7 @@ export const MyProfilePage = () => {
       }
     } catch (error) {
       console.error('Delete video error:', error);
-      alert('Failed to delete video');
+      toast.error('Failed to delete video');
     }
   };
 
@@ -389,7 +390,7 @@ export const MyProfilePage = () => {
   const handleSubmitForReview = async () => {
     if (submittingProfile) return;
     
-    if (!confirm('Are you sure you want to submit your profile for review? Once submitted, you cannot edit your profile until it is reviewed.')) {
+    if (!await toastConfirm('Are you sure you want to submit your profile for review? Once submitted, you cannot edit your profile until it is reviewed.', 'Submit Profile')) {
       return;
     }
     
@@ -403,13 +404,13 @@ export const MyProfilePage = () => {
           profileStatus: 'pending_review',
           profileSubmittedAt: new Date().toISOString()
         } : null);
-        alert('Your profile has been submitted for review! An admin will review it shortly.');
+        toast.success('Your profile has been submitted for review! An admin will review it shortly.');
       } else {
         throw new Error(response.data.error || 'Failed to submit profile');
       }
     } catch (error: any) {
       console.error('Submit error:', error);
-      alert(error.response?.data?.error || error.message || 'Failed to submit profile for review');
+      toast.error(error.response?.data?.error || error.message || 'Failed to submit profile for review');
     } finally {
       setSubmittingProfile(false);
     }

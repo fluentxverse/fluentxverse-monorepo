@@ -3,6 +3,7 @@ import { lessonApi, type Lesson, type MergeRequest, type LessonVersion, type Mer
 import { DiffViewer } from '../Components/DiffViewer/DiffViewer';
 import { useLessonSocket, type ActiveEditor } from '../hooks/useLessonSocket';
 import { AnalyticsDashboard } from '../Components/AnalyticsDashboard/AnalyticsDashboard';
+import { toast, toastConfirm } from '../Components/Toast/Toast';
 import './LessonMaterialMakerPage.css';
 
 type HeaderConfig = {
@@ -3137,8 +3138,8 @@ export default function LessonMaterialMakerPage() {
   };
 
   // Delete a saved lesson
-  const handleDeleteLesson = (lessonId: string) => {
-    if (!confirm('Are you sure you want to delete this lesson?')) return;
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!await toastConfirm('Are you sure you want to delete this lesson?', 'Delete Lesson')) return;
     setSavedLessons(prev => prev.filter(l => l.id !== lessonId));
   };
 
@@ -3176,7 +3177,7 @@ export default function LessonMaterialMakerPage() {
   // Fork a lesson
   const handleForkLesson = async (lesson: SavedLesson) => {
     if (!lesson.serverLesson) {
-      alert('This lesson is not synced with the server yet. Save it first.');
+      toast.warning('This lesson is not synced with the server yet. Save it first.');
       return;
     }
     
@@ -3210,19 +3211,19 @@ export default function LessonMaterialMakerPage() {
         setSavedLessons(prev => [...prev, forkedLesson]);
         setShowForkConfirmModal(false);
         setLessonToFork(null);
-        alert('Lesson forked successfully! You can now edit your fork.');
+        toast.success('Lesson forked successfully! You can now edit your fork.');
       } else {
-        alert(result.error || 'Failed to fork lesson');
+        toast.error(result.error || 'Failed to fork lesson');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to fork lesson');
+      toast.error(err instanceof Error ? err.message : 'Failed to fork lesson');
     }
   };
 
   // Create merge request
   const handleCreateMergeRequest = (lesson: SavedLesson) => {
     if (!lesson.isFork || !lesson.forkOf) {
-      alert('Only forked lessons can create merge requests');
+      toast.warning('Only forked lessons can create merge requests');
       return;
     }
     setLessonToFork(lesson);
@@ -3251,12 +3252,12 @@ export default function LessonMaterialMakerPage() {
         ));
         setShowMergeRequestModal(false);
         setLessonToFork(null);
-        alert('Merge request submitted! The original author will review it.');
+        toast.success('Merge request submitted! The original author will review it.');
       } else {
-        alert(result.error || 'Failed to create merge request');
+        toast.error(result.error || 'Failed to create merge request');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to create merge request');
+      toast.error(err instanceof Error ? err.message : 'Failed to create merge request');
     }
   };
 
@@ -3279,17 +3280,17 @@ export default function LessonMaterialMakerPage() {
         setSelectedMergeRequest(null);
         
         if (action === 'merge') {
-          alert('Changes merged successfully!');
+          toast.success('Changes merged successfully!');
           // Reload lessons to reflect the merge
           loadServerLessons();
         } else {
-          alert(`Merge request ${action}ed.`);
+          toast.success(`Merge request ${action}ed.`);
         }
       } else {
-        alert(result.error || `Failed to ${action} merge request`);
+        toast.error(result.error || `Failed to ${action} merge request`);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : `Failed to ${action} merge request`);
+      toast.error(err instanceof Error ? err.message : `Failed to ${action} merge request`);
     }
   };
 
@@ -3300,7 +3301,7 @@ export default function LessonMaterialMakerPage() {
   // Version Restore
   const handleShowVersions = async (lesson: SavedLesson) => {
     if (!lesson.serverLesson) {
-      alert('This lesson is not synced with the server yet.');
+      toast.warning('This lesson is not synced with the server yet.');
       return;
     }
     
@@ -3311,38 +3312,38 @@ export default function LessonMaterialMakerPage() {
         setLessonToFork(lesson);
         setShowVersionRestoreModal(true);
       } else {
-        alert(result.error || 'Failed to load version history');
+        toast.error(result.error || 'Failed to load version history');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to load version history');
+      toast.error(err instanceof Error ? err.message : 'Failed to load version history');
     }
   };
 
   const handleRestoreVersion = async (version: LessonVersion) => {
     if (!lessonToFork?.serverLesson) return;
     
-    if (!confirm(`Restore to version ${version.versionNumber}? This will create a new version with the old content.`)) {
+    if (!await toastConfirm(`Restore to version ${version.versionNumber}? This will create a new version with the old content.`, 'Restore Version')) {
       return;
     }
     
     try {
       const result = await lessonApi.restoreVersion(lessonToFork.serverLesson.id, version.versionNumber);
       if (result.success) {
-        alert('Version restored successfully!');
+        toast.success('Version restored successfully!');
         setShowVersionRestoreModal(false);
         loadServerLessons();
       } else {
-        alert(result.error || 'Failed to restore version');
+        toast.error(result.error || 'Failed to restore version');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to restore version');
+      toast.error(err instanceof Error ? err.message : 'Failed to restore version');
     }
   };
 
   // Publish/Unpublish workflow
   const handlePublishLesson = async (lesson: SavedLesson) => {
     if (!lesson.serverLesson) {
-      alert('This lesson needs to be saved to the server first.');
+      toast.warning('This lesson needs to be saved to the server first.');
       return;
     }
     
@@ -3375,45 +3376,45 @@ export default function LessonMaterialMakerPage() {
           l.id === lesson.id ? { ...l, status: 'draft' as const } : l
         ));
       } else {
-        alert(result.error || 'Failed to unpublish lesson');
+        toast.error(result.error || 'Failed to unpublish lesson');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to unpublish lesson');
+      toast.error(err instanceof Error ? err.message : 'Failed to unpublish lesson');
     }
   };
 
   const handleArchiveLesson = async (lesson: SavedLesson) => {
     if (!lesson.serverLesson) return;
     
-    if (!confirm('Archive this lesson? It will be hidden from most views.')) return;
+    if (!await toastConfirm('Archive this lesson? It will be hidden from most views.', 'Archive Lesson')) return;
     
     try {
       const result = await lessonApi.archiveLesson(lesson.serverLesson.id);
       if (result.success) {
-        alert('Lesson archived');
+        toast.success('Lesson archived');
         loadServerLessons();
         setSavedLessons(prev => prev.map(l => 
           l.id === lesson.id ? { ...l, status: 'archived' as const } : l
         ));
       } else {
-        alert(result.error || 'Failed to archive lesson');
+        toast.error(result.error || 'Failed to archive lesson');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to archive lesson');
+      toast.error(err instanceof Error ? err.message : 'Failed to archive lesson');
     }
   };
 
   // Mark as finished - lesson is complete but not yet published
   const handleMarkAsFinished = async (lesson: SavedLesson) => {
     if (!lesson.serverLesson) {
-      alert('This lesson needs to be saved to the server first.');
+      toast.warning('This lesson needs to be saved to the server first.');
       return;
     }
     
     try {
       const result = await lessonApi.markAsFinished(lesson.serverLesson.id);
       if (result.success) {
-        alert('Lesson marked as finished!');
+        toast.success('Lesson marked as finished!');
         loadServerLessons();
         setSavedLessons(prev => prev.map(l => 
           l.id === lesson.id ? { ...l, status: 'finished' as const } : l
@@ -3563,7 +3564,7 @@ export default function LessonMaterialMakerPage() {
       delete: 'delete'
     }[action];
     
-    if (!confirm(`${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${selectedLessonIds.size} lesson(s)?`)) {
+    if (!await toastConfirm(`${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${selectedLessonIds.size} lesson(s)?`, 'Bulk Action')) {
       return;
     }
     
@@ -3571,14 +3572,14 @@ export default function LessonMaterialMakerPage() {
     try {
       const result = await lessonApi.bulkAction(action, Array.from(selectedLessonIds));
       if (result.success) {
-        alert(result.message || `Bulk ${actionLabel} completed`);
+        toast.success(result.message || `Bulk ${actionLabel} completed`);
         clearSelection();
         loadServerLessons();
       } else {
-        alert(result.error || `Bulk ${actionLabel} failed`);
+        toast.error(result.error || `Bulk ${actionLabel} failed`);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : `Bulk ${actionLabel} failed`);
+      toast.error(err instanceof Error ? err.message : `Bulk ${actionLabel} failed`);
     } finally {
       setIsBulkActionLoading(false);
     }
@@ -5080,8 +5081,8 @@ export default function LessonMaterialMakerPage() {
           <button
             className="lm-toolbar-btn"
             type="button"
-            onClick={() => {
-              if (!confirm('Reset to blank template? This will delete the current lesson.')) return;
+            onClick={async () => {
+              if (!await toastConfirm('Reset to blank template? This will delete the current lesson.', 'Reset Lesson')) return;
               localStorage.removeItem(STORAGE_KEY);
               setDraft(createBlankDraft());
               setLastSaved(null);
@@ -5254,8 +5255,8 @@ export default function LessonMaterialMakerPage() {
                       <button
                         type="button"
                         className="lm-version-action-btn rollback"
-                        onClick={() => {
-                          if (confirm(`Rollback to version ${entry.version}? Your current changes will be saved as a new version.`)) {
+                        onClick={async () => {
+                          if (await toastConfirm(`Rollback to version ${entry.version}? Your current changes will be saved as a new version.`, 'Rollback Version')) {
                             rollbackToVersion(entry);
                           }
                         }}
@@ -5311,8 +5312,8 @@ export default function LessonMaterialMakerPage() {
               <button
                 type="button"
                 className="lm-version-clear-btn"
-                onClick={() => {
-                  if (confirm('Clear all version history for this lesson?')) {
+                onClick={async () => {
+                  if (await toastConfirm('Clear all version history for this lesson?', 'Clear History')) {
                     setVersionHistory(prev => {
                       const updated = { ...prev };
                       delete updated[currentEditingLesson.id];

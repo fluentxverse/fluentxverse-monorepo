@@ -1,104 +1,98 @@
 /* Toast Container */
 .toast-container {
   position: fixed;
-  top: 100px;
+  top: 20px;
   right: 20px;
   z-index: 10000;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   max-width: 400px;
+  pointer-events: none;
 }
 
 /* Toast Item */
 .toast {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  padding: 14px 18px;
-  border-radius: 12px;
+  padding: 14px 16px;
   background: #fff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
   animation: toast-slide-in 0.3s ease-out;
-  min-width: 280px;
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.toast.toast-exit {
+  animation: toast-slide-out 0.3s ease-in forwards;
 }
 
 @keyframes toast-slide-in {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateX(100%);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
   }
 }
 
 /* Toast Icon */
-.toast-icon {
-  font-size: 20px;
+.toast-icon-wrapper {
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.toast-icon {
+  font-size: 14px;
+}
+
+.toast-success .toast-icon-wrapper {
+  background: rgba(34, 197, 94, 0.1);
+}
 .toast-success .toast-icon {
-  color: #10b981;
+  color: #22c55e;
 }
 
+.toast-error .toast-icon-wrapper {
+  background: rgba(239, 68, 68, 0.1);
+}
 .toast-error .toast-icon {
   color: #ef4444;
 }
 
+.toast-warning .toast-icon-wrapper {
+  background: rgba(245, 158, 11, 0.1);
+}
 .toast-warning .toast-icon {
   color: #f59e0b;
 }
 
+.toast-info .toast-icon-wrapper {
+  background: rgba(59, 130, 246, 0.1);
+}
 .toast-info .toast-icon {
-  color: #0245ae;
-}
-
-/* Toast Message */
-.toast-message {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1e293b;
-  line-height: 1.4;
-}
-
-/* Toast Close Button */
-.toast-close {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  color: #94a3b8;
-  transition: color 0.2s;
-  flex-shrink: 0;
-}
-
-.toast-close:hover {
-  color: #64748b;
-}
-
-.toast-close i {
-  font-size: 14px;
-}
-
-/* Toast Type Borders */
-.toast-success {
-  border-left: 4px solid #10b981;
-}
-
-.toast-error {
-  border-left: 4px solid #ef4444;
-}
-
-.toast-warning {
-  border-left: 4px solid #f59e0b;
-}
-
-.toast-info {
-  border-left: 4px solid #0245ae;
+  color: #3b82f6;
 }
 
 /* Toast Content */
@@ -114,20 +108,50 @@
   margin-bottom: 2px;
 }
 
-/* Toast Exit Animation */
-.toast-exit {
-  animation: toast-slide-out 0.3s ease-in forwards;
+.toast-message {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
-@keyframes toast-slide-out {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
+/* Toast Close Button */
+.toast-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 16px;
+}
+
+.toast-close:hover {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Type-specific border accents */
+.toast-success {
+  border-left: 4px solid #22c55e;
+}
+
+.toast-error {
+  border-left: 4px solid #ef4444;
+}
+
+.toast-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.toast-info {
+  border-left: 4px solid #3b82f6;
 }
 
 /* Confirmation Modal */
@@ -227,32 +251,32 @@
     bottom: 20px;
     left: 10px;
     right: 10px;
-    max-width: none;
   }
 
   .toast {
-    min-width: auto;
+    min-width: unset;
+    max-width: 100%;
   }
-  
+
   @keyframes toast-slide-in {
     from {
-      transform: translateY(100%);
       opacity: 0;
+      transform: translateY(100%);
     }
     to {
-      transform: translateY(0);
       opacity: 1;
+      transform: translateY(0);
     }
   }
-  
+
   @keyframes toast-slide-out {
     from {
-      transform: translateY(0);
       opacity: 1;
+      transform: translateY(0);
     }
     to {
-      transform: translateY(100%);
       opacity: 0;
+      transform: translateY(100%);
     }
   }
 }

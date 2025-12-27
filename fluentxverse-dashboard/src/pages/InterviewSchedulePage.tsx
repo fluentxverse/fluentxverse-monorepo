@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { interviewApi, type InterviewSlot, type PendingInterview } from '@api/interview.api';
 import InterviewFeedback from '../Components/InterviewFeedback';
 import InterviewResultModal from '../Components/InterviewResultModal';
+import { toastConfirm } from '../Components/Toast/Toast';
 import './InterviewSchedulePage.css';
 
 const InterviewSchedulePage = () => {
@@ -255,7 +256,7 @@ const InterviewSchedulePage = () => {
 
   // Cancel interview
   const handleCancelInterview = async (slotId: string) => {
-    if (!confirm('Are you sure you want to cancel this interview?')) return;
+    if (!await toastConfirm('Are you sure you want to cancel this interview?', 'Cancel Interview')) return;
     
     try {
       await interviewApi.adminCancelBooking(slotId);
