@@ -130,7 +130,7 @@ export default function InboxPage() {
     <>
       <SideBar />
       <div className="inbox-page main-content">
-        <DashboardHeader title='Inbox' />
+        <DashboardHeader />
         
         <div className="inbox-container">
         <div className="inbox-header">
