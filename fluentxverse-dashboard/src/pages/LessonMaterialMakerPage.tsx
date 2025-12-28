@@ -3965,18 +3965,86 @@ export default function LessonMaterialMakerPage() {
       return content;
     };
 
+    // Helper to generate sidebar HTML for a section
+    const generatePreviewSidebarHtml = (section: SectionContent): string => {
+      let sidebar = '';
+      
+      // Sidebar header (e.g., "PRESENT", "STEP A I (2 minutes)")
+      if (section.sidebarTitle) {
+        sidebar += `<div style="font-size:13px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${section.sidebarTitle}</div>`;
+      }
+      if (section.sidebarSubtitle) {
+        sidebar += `<div style="font-size:12px;color:#64748b;margin-bottom:16px;">${section.sidebarSubtitle}</div>`;
+      }
+      
+      // Lesson Goal section
+      if (section.lessonGoalTitle || (section.lessonGoalSteps && section.lessonGoalSteps.length > 0)) {
+        sidebar += `<div style="margin-bottom:16px;">`;
+        if (section.lessonGoalTitle) {
+          sidebar += `<div style="display:inline-block;background:#16a34a;color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">LESSON GOAL</div>`;
+        }
+        
+        // Lesson goal steps
+        if (section.lessonGoalSteps && section.lessonGoalSteps.length > 0) {
+          for (let i = 0; i < section.lessonGoalSteps.length; i++) {
+            const step = section.lessonGoalSteps[i];
+            sidebar += `<div style="margin-bottom:16px;">`;
+            
+            // Step number and instruction
+            sidebar += `<div style="display:flex;gap:8px;margin-bottom:6px;">`;
+            sidebar += `<span style="display:flex;align-items:center;justify-content:center;min-width:20px;height:20px;background:#3b82f6;color:#fff;border-radius:50%;font-size:11px;font-weight:700;">${i + 1}</span>`;
+            sidebar += `<span style="font-size:13px;color:#334155;line-height:1.5;">${step.instruction || ''}</span>`;
+            sidebar += `</div>`;
+            
+            // Script lines (green italic)
+            if (step.scriptLines && step.scriptLines.length > 0) {
+              for (const line of step.scriptLines) {
+                sidebar += `<div style="font-style:italic;color:#16a34a;font-size:12px;padding-left:28px;margin-bottom:4px;line-height:1.5;">${line}</div>`;
+              }
+            } else if (step.scriptLine) {
+              sidebar += `<div style="font-style:italic;color:#16a34a;font-size:12px;padding-left:28px;margin-bottom:4px;line-height:1.5;">${step.scriptLine}</div>`;
+            }
+            
+            // Tip text (orange with diamond)
+            if (step.tipText) {
+              sidebar += `<div style="display:flex;gap:6px;align-items:flex-start;padding-left:28px;margin-top:6px;">`;
+              sidebar += `<span style="color:#f97316;font-size:10px;">◆</span>`;
+              sidebar += `<span style="font-size:11px;color:#f97316;line-height:1.5;">${step.tipText}</span>`;
+              sidebar += `</div>`;
+            }
+            
+            sidebar += `</div>`;
+          }
+        }
+        sidebar += `</div>`;
+      }
+      
+      return sidebar;
+    };
+
     // Build full HTML document
-    const sectionsHtml = draft.sections?.map((section, idx) => `
+    const sectionsHtml = draft.sections?.map((section, idx) => {
+      const sidebarHtml = generatePreviewSidebarHtml(section);
+      const hasSidebar = sidebarHtml.trim().length > 0;
+      
+      return `
       <div style="background:#fff;border-radius:16px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #e2e8f0;overflow:hidden;">
         <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
           <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:#3b82f6;color:#fff;border-radius:8px;font-weight:700;font-size:14px;">${section.sectionNumber || idx + 1}</div>
           <div style="font-size:18px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px;">${section.sectionTitle || ''}</div>
         </div>
-        <div style="padding:24px;">
-          ${generatePreviewSectionHtml(section)}
+        <div style="display:flex;${hasSidebar ? 'flex-direction:row;' : ''}">
+          <div style="flex:1;padding:24px;${hasSidebar ? 'border-right:1px solid #e2e8f0;' : ''}">
+            ${generatePreviewSectionHtml(section)}
+          </div>
+          ${hasSidebar ? `
+          <div style="width:280px;flex-shrink:0;background:#f8fafc;padding:20px;">
+            ${sidebarHtml}
+          </div>
+          ` : ''}
         </div>
       </div>
-    `).join('') || '';
+    `}).join('') || '';
 
     const previewHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -4008,7 +4076,7 @@ export default function LessonMaterialMakerPage() {
       <p style="font-size:14px;opacity:0.9;margin-top:4px;">${draft.header?.goalSubtext || ''}</p>
     </div>
   </header>
-  <main style="max-width:900px;margin:0 auto;padding:32px 24px;">
+  <main style="max-width:1100px;margin:0 auto;padding:32px 24px;">
     ${sectionsHtml}
   </main>
 </body>
