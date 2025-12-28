@@ -2344,16 +2344,32 @@ export default new Elysia({ prefix: '/lesson' })
       
       // Get content type from SeaweedFS response
       const contentType = res.headers.get('content-type') || 'application/octet-stream';
+
+      const isHtml = filePath.endsWith('.html');
+      const isJson = filePath.endsWith('.json');
+      const cacheControl = (isHtml || isJson)
+        ? 'no-store, max-age=0'
+        : 'public, max-age=31536000';
       
       // Set appropriate headers
       set.headers['content-type'] = contentType;
-      set.headers['cache-control'] = 'public, max-age=31536000'; // Cache for 1 year (immutable content)
+      set.headers['cache-control'] = cacheControl;
+      if (isHtml || isJson) {
+        set.headers['pragma'] = 'no-cache';
+        set.headers['expires'] = '0';
+      }
       
       // Stream the response body
       return new Response(res.body, {
         headers: {
           'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=31536000'
+          'Cache-Control': cacheControl,
+          ...(isHtml || isJson
+            ? {
+                Pragma: 'no-cache',
+                Expires: '0'
+              }
+            : {})
         }
       });
     } catch (error) {
