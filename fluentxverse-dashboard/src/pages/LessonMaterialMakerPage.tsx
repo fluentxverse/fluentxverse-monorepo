@@ -3969,54 +3969,62 @@ export default function LessonMaterialMakerPage() {
     const generatePreviewSidebarHtml = (section: SectionContent): string => {
       let sidebar = '';
       
-      // Sidebar header (e.g., "PRESENT", "STEP A I (2 minutes)")
-      if (section.sidebarTitle) {
-        sidebar += `<div style="font-size:13px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${section.sidebarTitle}</div>`;
-      }
-      if (section.sidebarSubtitle) {
-        sidebar += `<div style="font-size:12px;color:#64748b;margin-bottom:16px;">${section.sidebarSubtitle}</div>`;
+      // For INTRODUCE type sections - show lessonGoalTitle as the main header
+      if (section.sectionType === 'introduce' || (!section.sectionType && section.lessonGoalTitle)) {
+        if (section.lessonGoalTitle) {
+          sidebar += `<div style="background:#16a34a;color:#fff;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;">${section.lessonGoalTitle}</div>`;
+        }
+      } else {
+        // For other section types - show sidebarTitle and sidebarSubtitle as headers
+        if (section.sidebarTitle) {
+          sidebar += `<div style="font-size:14px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${section.sidebarTitle}</div>`;
+        }
+        if (section.sidebarSubtitle) {
+          sidebar += `<div style="font-size:12px;color:#64748b;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">${section.sidebarSubtitle}</div>`;
+        }
+        // Show "LESSON GOAL" badge only if there's a lessonGoalTitle for non-introduce sections
+        if (section.lessonGoalTitle) {
+          sidebar += `<div style="display:inline-block;background:#16a34a;color:#fff;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">LESSON GOAL</div>`;
+        }
       }
       
-      // Lesson Goal section
-      if (section.lessonGoalTitle || (section.lessonGoalSteps && section.lessonGoalSteps.length > 0)) {
-        sidebar += `<div style="margin-bottom:16px;">`;
-        if (section.lessonGoalTitle) {
-          sidebar += `<div style="display:inline-block;background:#16a34a;color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">LESSON GOAL</div>`;
-        }
-        
-        // Lesson goal steps
-        if (section.lessonGoalSteps && section.lessonGoalSteps.length > 0) {
-          for (let i = 0; i < section.lessonGoalSteps.length; i++) {
-            const step = section.lessonGoalSteps[i];
-            sidebar += `<div style="margin-bottom:16px;">`;
-            
-            // Step number and instruction
-            sidebar += `<div style="display:flex;gap:8px;margin-bottom:6px;">`;
-            sidebar += `<span style="display:flex;align-items:center;justify-content:center;min-width:20px;height:20px;background:#3b82f6;color:#fff;border-radius:50%;font-size:11px;font-weight:700;">${i + 1}</span>`;
-            sidebar += `<span style="font-size:13px;color:#334155;line-height:1.5;">${step.instruction || ''}</span>`;
-            sidebar += `</div>`;
-            
-            // Script lines (green italic)
-            if (step.scriptLines && step.scriptLines.length > 0) {
-              for (const line of step.scriptLines) {
-                sidebar += `<div style="font-style:italic;color:#16a34a;font-size:12px;padding-left:28px;margin-bottom:4px;line-height:1.5;">${line}</div>`;
-              }
-            } else if (step.scriptLine) {
-              sidebar += `<div style="font-style:italic;color:#16a34a;font-size:12px;padding-left:28px;margin-bottom:4px;line-height:1.5;">${step.scriptLine}</div>`;
-            }
-            
-            // Tip text (orange with diamond)
-            if (step.tipText) {
-              sidebar += `<div style="display:flex;gap:6px;align-items:flex-start;padding-left:28px;margin-top:6px;">`;
-              sidebar += `<span style="color:#f97316;font-size:10px;">◆</span>`;
-              sidebar += `<span style="font-size:11px;color:#f97316;line-height:1.5;">${step.tipText}</span>`;
+      // Lesson goal steps
+      if (section.lessonGoalSteps && section.lessonGoalSteps.length > 0) {
+        for (let i = 0; i < section.lessonGoalSteps.length; i++) {
+          const step = section.lessonGoalSteps[i];
+          sidebar += `<div style="margin-bottom:14px;">`;
+          
+          // Step number and instruction
+          sidebar += `<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;">`;
+          sidebar += `<span style="display:flex;align-items:center;justify-content:center;min-width:20px;height:20px;background:#3b82f6;color:#fff;border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;">${i + 1}</span>`;
+          sidebar += `<span style="font-size:13px;color:#334155;line-height:1.5;">${step.instruction || ''}</span>`;
+          sidebar += `</div>`;
+          
+          // Script lines (green italic with bullet)
+          if (step.scriptLines && step.scriptLines.length > 0) {
+            for (const line of step.scriptLines) {
+              sidebar += `<div style="display:flex;gap:6px;align-items:flex-start;padding-left:28px;margin-top:4px;">`;
+              sidebar += `<span style="color:#16a34a;font-size:8px;margin-top:5px;">●</span>`;
+              sidebar += `<span style="font-style:italic;color:#16a34a;font-size:12px;line-height:1.5;">${line}</span>`;
               sidebar += `</div>`;
             }
-            
+          } else if (step.scriptLine) {
+            sidebar += `<div style="display:flex;gap:6px;align-items:flex-start;padding-left:28px;margin-top:4px;">`;
+            sidebar += `<span style="color:#16a34a;font-size:8px;margin-top:5px;">●</span>`;
+            sidebar += `<span style="font-style:italic;color:#16a34a;font-size:12px;line-height:1.5;">${step.scriptLine}</span>`;
             sidebar += `</div>`;
           }
+          
+          // Tip text (orange with diamond)
+          if (step.tipText) {
+            sidebar += `<div style="display:flex;gap:6px;align-items:flex-start;padding-left:28px;margin-top:6px;">`;
+            sidebar += `<span style="color:#f97316;font-size:10px;margin-top:2px;">◆</span>`;
+            sidebar += `<span style="font-size:11px;color:#f97316;line-height:1.5;">${step.tipText}</span>`;
+            sidebar += `</div>`;
+          }
+          
+          sidebar += `</div>`;
         }
-        sidebar += `</div>`;
       }
       
       return sidebar;
