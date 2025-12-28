@@ -267,7 +267,7 @@ export class LessonService {
   }
   
   /**
-   * Publish a lesson (only original author can publish)
+   * Publish a lesson (original author or admin can publish)
    */
   async publishLesson(lessonId: string, publishedBy: string): Promise<Lesson> {
     const lesson = await this.getLessonById(lessonId);
@@ -275,7 +275,9 @@ export class LessonService {
       throw new Error('Lesson not found');
     }
     
-    if (lesson.createdBy !== publishedBy) {
+    // Allow the creator or any ADMIN user to publish
+    const isAdmin = publishedBy.startsWith('ADMIN-');
+    if (lesson.createdBy !== publishedBy && !isAdmin) {
       throw new Error('Only the lesson creator can publish this lesson');
     }
     

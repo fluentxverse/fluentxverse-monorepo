@@ -156,10 +156,10 @@ export class FavoritesService {
       
       return {
         favorites,
-        total,
+        total: Number(total),
         page,
         limit,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(Number(total) / limit)
       };
     } catch (error) {
       console.error('Error getting favorites:', error);

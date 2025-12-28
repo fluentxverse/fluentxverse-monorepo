@@ -634,7 +634,7 @@ class StudentService {
         joinDate: studentData.signUpdate || null,
         totalLessons: typeof studentData.totalLessons === 'object' ? studentData.totalLessons.toInt() : (studentData.totalLessons || 0),
         upcomingLessons: typeof studentData.upcomingLessons === 'object' ? studentData.upcomingLessons.toInt() : (studentData.upcomingLessons || 0),
-        attendance: Math.round(studentData.attendanceRate || 0),
+        attendance: Math.round(Number(studentData.attendanceRate) || 0),
         smartWalletAddress: studentData.smartWalletAddress,
         // Personal info fields
         currentProficiency: studentData.currentProficiency || 'Beginner',
