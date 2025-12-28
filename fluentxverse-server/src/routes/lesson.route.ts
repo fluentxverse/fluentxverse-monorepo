@@ -734,13 +734,17 @@ function generateSectionHtml(section: any): string {
 
   // Vocabulary cards
   if (section.vocabCards && section.vocabCards.length > 0) {
+    const getVocabImage = (card: any): string => card?.imageUrl || card?.image || '';
+    const getVocabWord = (card: any): string => card?.word || card?.wordEn || '';
+    const getVocabReading = (card: any): string => card?.reading || card?.wordJp || '';
+    const getVocabMeaning = (card: any): string => card?.meaning || card?.english || card?.definition || '';
     contentHtml += `<div class="vocab-grid">
       ${section.vocabCards.map((card: any) => `
         <div class="vocab-card">
-          ${card.imageUrl ? `<img src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.word || '')}" class="vocab-image" />` : ''}
-          <div class="vocab-word">${escapeHtml(card.word || '')}</div>
-          <div class="vocab-reading">${escapeHtml(card.reading || '')}</div>
-          <div class="vocab-meaning">${escapeHtml(card.meaning || card.english || '')}</div>
+          ${getVocabImage(card) ? `<img src="${escapeHtml(getVocabImage(card))}" alt="${escapeHtml(getVocabWord(card))}" class="vocab-image" />` : ''}
+          <div class="vocab-word">${escapeHtml(getVocabWord(card))}</div>
+          ${getVocabReading(card) ? `<div class="vocab-reading">${escapeHtml(getVocabReading(card))}</div>` : ''}
+          ${getVocabMeaning(card) ? `<div class="vocab-meaning">${escapeHtml(getVocabMeaning(card))}</div>` : ''}
         </div>
       `).join('')}
     </div>`;
@@ -748,10 +752,11 @@ function generateSectionHtml(section: any): string {
 
   // Image cards (for question sections)
   if (section.imageCards && section.imageCards.length > 0) {
+    const getImageCardUrl = (card: any): string => card?.imageUrl || card?.image || '';
     contentHtml += `<div class="image-cards-grid">
       ${section.imageCards.map((card: any) => `
         <div class="image-card">
-          ${card.imageUrl ? `<img src="${escapeHtml(card.imageUrl)}" alt="${escapeHtml(card.label || '')}" />` : ''}
+          ${getImageCardUrl(card) ? `<img src="${escapeHtml(getImageCardUrl(card))}" alt="${escapeHtml(card.label || '')}" />` : ''}
           <div class="image-card-label">${escapeHtml(card.label || '')}</div>
         </div>
       `).join('')}
@@ -763,10 +768,16 @@ function generateSectionHtml(section: any): string {
     contentHtml += `<div class="pronunciation-columns">
       ${section.pronunciationColumns.map((col: any) => `
         <div class="pronunciation-column">
-          <div class="pronunciation-header">${escapeHtml(col.header || '')}</div>
-          ${(col.items || []).map((item: any) => `
-            <div class="pronunciation-item">${escapeHtml(typeof item === 'string' ? item : item.text || '')}</div>
-          `).join('')}
+          <div class="pronunciation-header">${escapeHtml(col.soundLabel || col.header || '')}</div>
+          ${col.image ? `<img src="${escapeHtml(col.image)}" alt="Mouth position" class="section-image" />` : ''}
+          ${(col.words || col.items || []).map((item: any) => {
+            if (typeof item === 'string') {
+              return `<div class="pronunciation-item">${escapeHtml(item)}</div>`;
+            }
+            const en = item?.wordEn || item?.text || item?.word || '';
+            const jp = item?.wordJp || item?.reading || '';
+            return `<div class="pronunciation-item">${escapeHtml(en)}${jp ? ` <span style="opacity:0.75;">(${escapeHtml(jp)})</span>` : ''}</div>`;
+          }).join('')}
         </div>
       `).join('')}
     </div>`;
@@ -774,13 +785,30 @@ function generateSectionHtml(section: any): string {
 
   // Grammar rules
   if (section.grammarRules && section.grammarRules.length > 0) {
-    contentHtml += section.grammarRules.map((rule: any) => `
-      <div class="grammar-rule">
-        <div class="grammar-pattern">${escapeHtml(rule.pattern || rule.structure || '')}</div>
-        <div class="grammar-meaning">${escapeHtml(rule.meaning || '')}</div>
-        ${rule.example ? `<div class="grammar-example">${escapeHtml(rule.example)}</div>` : ''}
-      </div>
-    `).join('');
+    contentHtml += section.grammarRules.map((rule: any) => {
+      const ruleEn = rule?.ruleEn || rule?.pattern || rule?.structure || '';
+      const ruleJp = rule?.ruleJp || '';
+      const meaning = rule?.meaning || '';
+      const example = rule?.example || '';
+      const examples = Array.isArray(rule?.examples) ? rule.examples : [];
+      const examplesHtml = examples.length
+        ? `<div class="questions-list">${examples.map((ex: any) => {
+            const en = ex?.sentenceEn || ex?.textEn || ex?.english || '';
+            const jp = ex?.sentenceJp || ex?.textJp || ex?.japanese || '';
+            return `<div class="question-item"><div class="question-text">${escapeHtml(en)}</div>${jp ? `<div class="question-answer">${escapeHtml(jp)}</div>` : ''}</div>`;
+          }).join('')}</div>`
+        : '';
+
+      return `
+        <div class="grammar-rule">
+          ${ruleEn ? `<div class="grammar-pattern">${escapeHtml(ruleEn)}</div>` : ''}
+          ${ruleJp ? `<div class="grammar-meaning">${escapeHtml(ruleJp)}</div>` : ''}
+          ${meaning && !ruleJp ? `<div class="grammar-meaning">${escapeHtml(meaning)}</div>` : ''}
+          ${example ? `<div class="grammar-example">${escapeHtml(example)}</div>` : ''}
+          ${examplesHtml}
+        </div>
+      `;
+    }).join('');
   }
 
   // Dialogue lines
@@ -809,8 +837,11 @@ function generateSectionHtml(section: any): string {
     contentHtml += `<div class="trivia-examples">
       ${section.triviaExamples.map((ex: any) => `
         <div class="trivia-card">
-          <div class="trivia-jp">${escapeHtml(ex.textJp || ex.japanese || '')}</div>
-          <div class="trivia-en">${escapeHtml(ex.textEn || ex.english || '')}</div>
+          ${ex.speakerA || ex.lineA ? `<div class="trivia-en"><strong>${escapeHtml(ex.speakerA || 'A')}:</strong> ${escapeHtml(ex.lineA || '')}</div>` : ''}
+          ${ex.speakerB || ex.lineB ? `<div class="trivia-en"><strong>${escapeHtml(ex.speakerB || 'B')}:</strong> ${escapeHtml(ex.lineB || '')}</div>` : ''}
+          ${(ex.lineAJp || ex.lineBJp) ? `<div class="trivia-jp">${[ex.lineAJp, ex.lineBJp].filter(Boolean).map((t: string) => escapeHtml(t)).join('<br/>')}</div>` : ''}
+          ${typeof ex.isCorrect === 'boolean' ? `<div class="trivia-en" style="margin-top:8px;font-weight:700;">${ex.isCorrect ? '✓ Correct' : '✗ Wrong'}</div>` : ''}
+          ${(!ex.speakerA && !ex.lineA && !ex.speakerB && !ex.lineB) ? `<div class="trivia-jp">${escapeHtml(ex.textJp || ex.japanese || '')}</div><div class="trivia-en">${escapeHtml(ex.textEn || ex.english || '')}</div>` : ''}
         </div>
       `).join('')}
     </div>`;
@@ -890,8 +921,13 @@ function generateSectionHtml(section: any): string {
     contentHtml += `<div class="topic-boxes">
       ${section.topicBoxes.map((box: any) => `
         <div class="topic-box">
-          <div class="topic-title">${escapeHtml(box.title || '')}</div>
-          ${(box.items || []).map((item: string) => `<div class="topic-item">• ${escapeHtml(item)}</div>`).join('')}
+          <div class="topic-title">${escapeHtml(box.topicTitle || box.title || '')}</div>
+          ${(box.questions || box.items || []).map((item: any) => {
+            if (typeof item === 'string') return `<div class="topic-item">• ${escapeHtml(item)}</div>`;
+            const q = item?.question || item?.text || '';
+            const subs = Array.isArray(item?.subQuestions) ? item.subQuestions : [];
+            return `<div class="topic-item">• ${escapeHtml(q)}${subs.length ? `<div style="margin-left:14px;opacity:0.8;">${subs.map((s: string) => `- ${escapeHtml(s)}`).join('<br/>')}</div>` : ''}</div>`;
+          }).join('')}
         </div>
       `).join('')}
     </div>`;
@@ -900,10 +936,10 @@ function generateSectionHtml(section: any): string {
   // Listening section
   if (section.listeningScript && section.listeningScript.length > 0) {
     const scriptText = section.listeningScript.map((word: any) => {
-      if (word.underline) {
-        return `<span class="underlined">${escapeHtml(word.text || word)}</span>`;
-      }
-      return escapeHtml(typeof word === 'string' ? word : word.text || '');
+      if (typeof word === 'string') return escapeHtml(word);
+      const rawWord = word?.word || word?.text || '';
+      const isUnderlined = Boolean(word?.isUnderlined || word?.underline || word?.isUnderline);
+      return isUnderlined ? `<span class="underlined">${escapeHtml(rawWord)}</span>` : escapeHtml(rawWord);
     }).join(' ');
     contentHtml += `<div class="script-box">${scriptText}</div>`;
   }
@@ -956,8 +992,8 @@ function generateSectionHtml(section: any): string {
     contentHtml += `<div class="conversation-container">
       ${section.roleplayConversation.map((line: any) => `
         <div class="conversation-line">
-          <span class="conversation-role">${escapeHtml(line.role || '')}</span>
-          <span class="conversation-text">${escapeHtml(line.text || '')}</span>
+          <span class="conversation-role">${escapeHtml(line.number ? `${line.number}` : (line.role || ''))}</span>
+          <span class="conversation-text">${escapeHtml(line.text || '')}${line.comment ? ` <span style="opacity:0.75;"><i>${escapeHtml(line.comment)}</i></span>` : ''}</span>
         </div>
       `).join('')}
     </div>`;
@@ -1146,6 +1182,7 @@ export default new Elysia({ prefix: '/lesson' })
       const html = generateLessonHtml(lessonData, headerImageUrl);
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
+      const lessonUrlWithVersion = `${lessonUrl}?v=${version.versionNumber}`;
 
       // Save tutor JSON data (full version with hints) - now includes all image URLs
       const tutorJsonPath = `${basePath}/tutor-data.json`;
@@ -1173,7 +1210,7 @@ export default new Elysia({ prefix: '/lesson' })
         success: true,
         lesson,
         version: processedVersion,
-        url: lessonUrl,
+        url: lessonUrlWithVersion,
         headerImageUrl,
         studentDataUrl: `${API_BASE}/lesson/files${studentJsonPath}`,
         tutorDataUrl: `${API_BASE}/lesson/files${tutorJsonPath}`,
@@ -1247,6 +1284,7 @@ export default new Elysia({ prefix: '/lesson' })
       const html = generateLessonHtml(lessonData, headerImageUrl);
       const htmlPath = `${basePath}/index.html`;
       const lessonUrl = await uploadToSeaweed(htmlPath, html, 'text/html');
+      const lessonUrlWithVersion = `${lessonUrl}?v=${version.versionNumber}`;
 
       // Save tutor JSON data (full version with hints) - includes all image URLs
       const tutorJsonPath = `${basePath}/tutor-data.json`;
@@ -1271,7 +1309,7 @@ export default new Elysia({ prefix: '/lesson' })
         success: true,
         lesson,
         version: processedVersion,
-        url: lessonUrl,
+        url: lessonUrlWithVersion,
         message: 'Lesson updated successfully'
       };
     } catch (error) {
@@ -1866,7 +1904,7 @@ export default new Elysia({ prefix: '/lesson' })
       // Enrich with URLs (using API proxy, not internal SeaweedFS)
       const enrichedLessons = lessons.map(lesson => ({
         ...lesson,
-        url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html`
+        url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html?v=${lesson.currentVersion || ''}`
       }));
       
       return { 
@@ -1908,7 +1946,7 @@ export default new Elysia({ prefix: '/lesson' })
       // Enrich with URLs (using API proxy, not internal SeaweedFS)
       const enrichedLessons = lessons.map(lesson => ({
         ...lesson,
-        url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html`
+        url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html?v=${lesson.currentVersion || ''}`
       }));
       
       return { 

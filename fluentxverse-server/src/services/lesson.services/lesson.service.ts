@@ -40,6 +40,13 @@ export interface LessonMaterial {
   vocabulary: VocabularyItem[];
   grammar: GrammarPoint[];
   exercises: Exercise[];
+
+  // Newer builder format (dashboard) stores most content in sections
+  version?: number;
+  sections?: any[];
+
+  // Allow forward-compatible fields without blocking saves
+  [key: string]: any;
 }
 
 export interface Lesson {
