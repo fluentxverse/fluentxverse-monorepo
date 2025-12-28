@@ -3710,164 +3710,190 @@ export default function LessonMaterialMakerPage() {
       return;
     }
 
-    // Generate preview HTML from current draft
+    // Generate preview HTML from current draft using EXACT same CSS classes as editor
     const lessonTitle = currentEditingLesson?.goalName || draft.header?.goalText || 'Lesson Material';
     
-    // Generate section content for preview
+    // Generate section content for preview (main column)
     const generatePreviewSectionHtml = (section: SectionContent): string => {
       let content = '';
       
-      // Explanation
-      if (section.explanationEn) {
-        content += `<p style="font-size:16px;margin-bottom:12px;line-height:1.7;color:#334155;">${section.explanationEn}</p>`;
-      }
-      if (section.explanationJp) {
-        content += `<p style="font-size:14px;color:#64748b;border-left:3px solid #e2e8f0;padding-left:12px;margin-bottom:20px;">${section.explanationJp}</p>`;
-      }
-      
-      // Section image
-      if (section.sectionImage) {
-        content += `<img src="${section.sectionImage}" alt="Section illustration" style="max-width:100%;border-radius:12px;margin:20px auto;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.1);" />`;
-      }
-      
-      // Step title and instructions
-      if (section.stepTitle) {
-        content += `<div style="font-size:14px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">${section.stepTitle}</div>`;
-      }
-      if (section.instructionEn) {
-        content += `<p style="margin-bottom:8px;color:#475569;">${section.instructionEn}</p>`;
-      }
-      if (section.instructionJp) {
-        content += `<p style="font-size:13px;color:#94a3b8;margin-bottom:20px;">${section.instructionJp}</p>`;
-      }
-      
-      // Vocabulary cards
-      if (section.vocabCards && section.vocabCards.length > 0) {
-        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin:20px 0;">`;
-        for (const card of section.vocabCards) {
-          content += `<div style="background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);border:1px solid #bae6fd;border-radius:12px;padding:16px;text-align:center;">`;
-          if (card.imageUrl || card.image) {
-            content += `<img src="${card.imageUrl || card.image}" alt="${card.word || card.wordEn || ''}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-bottom:12px;" />`;
-          }
-          content += `<div style="font-size:20px;font-weight:700;color:#0369a1;margin-bottom:4px;">${card.word || card.wordEn || ''}</div>`;
-          if (card.reading || card.wordJp) content += `<div style="font-size:13px;color:#64748b;">${card.reading || card.wordJp || ''}</div>`;
-          if (card.meaning || card.english) content += `<div style="font-size:14px;color:#334155;margin-top:4px;">${card.meaning || card.english || ''}</div>`;
-          content += `</div>`;
+      // INTRODUCE type content
+      if (section.sectionType === 'introduce' || !section.sectionType) {
+        // Explanation - English
+        if (section.explanationEn) {
+          content += `<p class="lm-section-explanation">${section.explanationEn}</p>`;
         }
-        content += `</div>`;
-      }
-      
-      // Image cards
-      if (section.imageCards && section.imageCards.length > 0) {
-        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;margin:20px 0;">`;
-        for (const card of section.imageCards) {
-          content += `<div style="text-align:center;">`;
-          if (card.imageUrl || card.image) {
-            content += `<img src="${card.imageUrl || card.image}" alt="${card.label || ''}" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />`;
-          }
-          content += `<div style="font-size:14px;font-weight:600;color:#334155;">${card.label || ''}</div>`;
-          content += `</div>`;
+        // Explanation - Japanese
+        if (section.explanationJp) {
+          content += `<p class="lm-section-explanation-jp">${section.explanationJp}</p>`;
         }
-        content += `</div>`;
-      }
-      
-      // Pronunciation columns
-      if (section.pronunciationColumns && section.pronunciationColumns.length > 0) {
-        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:24px;margin:20px 0;">`;
-        for (const col of section.pronunciationColumns) {
-          content += `<div style="background:#f8fafc;border-radius:8px;padding:16px;">`;
-          content += `<div style="font-weight:700;color:#3b82f6;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #3b82f6;font-size:18px;">${col.soundLabel || ''}</div>`;
-          for (const word of col.words || []) {
-            content += `<div style="padding:8px 0;font-size:15px;color:#334155;">${word.wordEn || ''} <span style="color:#64748b;font-size:13px;">${word.wordJp || ''}</span></div>`;
-          }
-          content += `</div>`;
+        // Section Image
+        if (section.sectionImage) {
+          content += `<div class="lm-section-image-container"><div class="lm-section-image-wrapper"><img src="${section.sectionImage}" alt="Section visual" class="lm-section-image" /></div></div>`;
         }
-        content += `</div>`;
       }
       
-      // Grammar rules
-      if (section.grammarRules && section.grammarRules.length > 0) {
-        for (const rule of section.grammarRules) {
-          content += `<div style="background:#fef3c7;border-left:4px solid #eab308;border-radius:8px;padding:16px;margin-bottom:16px;">`;
-          content += `<div style="font-weight:700;color:#854d0e;margin-bottom:8px;font-size:16px;">${rule.ruleEn || rule.pattern || rule.structure || ''}</div>`;
-          if (rule.ruleJp || rule.meaning) content += `<div style="color:#713f12;margin-bottom:12px;">${rule.ruleJp || rule.meaning || ''}</div>`;
-          if (rule.examples && rule.examples.length > 0) {
-            for (const ex of rule.examples) {
-              content += `<div style="background:rgba(255,255,255,0.5);padding:8px 12px;border-radius:6px;margin-top:8px;">`;
-              content += `<div style="font-weight:500;color:#78350f;">${ex.sentenceEn || ex.example || ''}</div>`;
-              if (ex.sentenceJp || ex.translation) content += `<div style="font-size:13px;color:#92400e;margin-top:4px;">${ex.sentenceJp || ex.translation || ''}</div>`;
-              content += `</div>`;
+      // VOCABULARY type content
+      if (section.sectionType === 'vocabulary') {
+        if (section.stepTitle) {
+          content += `<h3 class="lm-step-title">${section.stepTitle}</h3>`;
+        }
+        if (section.instructionEn) {
+          content += `<p class="lm-vocab-instruction">${section.instructionEn}</p>`;
+        }
+        if (section.instructionJp) {
+          content += `<p class="lm-vocab-instruction-jp">${section.instructionJp}</p>`;
+        }
+        // Vocabulary Grid
+        if (section.vocabCards && section.vocabCards.length > 0) {
+          content += `<div class="lm-vocab-grid">`;
+          for (const card of section.vocabCards) {
+            content += `<div class="lm-vocab-card-preview">`;
+            if (card.imageUrl || card.image) {
+              content += `<div class="lm-vocab-image-wrapper"><img src="${card.imageUrl || card.image}" alt="${card.word || card.wordEn || ''}" class="lm-vocab-image" /></div>`;
             }
+            content += `<div class="lm-vocab-word">${card.word || card.wordEn || ''}</div>`;
+            if (card.reading || card.wordJp) content += `<div class="lm-vocab-reading">${card.reading || card.wordJp || ''}</div>`;
+            if (card.meaning || card.english) content += `<div class="lm-vocab-meaning">${card.meaning || card.english || ''}</div>`;
+            content += `</div>`;
           }
           content += `</div>`;
         }
       }
       
-      // Dialogue lines
-      if (section.dialogueLines && section.dialogueLines.length > 0) {
+      // IMAGE type content
+      if (section.sectionType === 'image') {
+        if (section.stepTitle) {
+          content += `<h3 class="lm-step-title">${section.stepTitle}</h3>`;
+        }
+        if (section.instructionEn) {
+          content += `<p class="lm-vocab-instruction">${section.instructionEn}</p>`;
+        }
+        if (section.instructionJp) {
+          content += `<p class="lm-vocab-instruction-jp">${section.instructionJp}</p>`;
+        }
+        // Image cards
+        if (section.imageCards && section.imageCards.length > 0) {
+          content += `<div class="lm-image-grid">`;
+          for (const card of section.imageCards) {
+            content += `<div class="lm-image-card-preview">`;
+            if (card.imageUrl || card.image) {
+              content += `<img src="${card.imageUrl || card.image}" alt="${card.label || ''}" class="lm-image-card-img" />`;
+            }
+            content += `<div class="lm-image-card-label">${card.label || ''}</div>`;
+            content += `</div>`;
+          }
+          content += `</div>`;
+        }
+      }
+      
+      // PRONUNCIATION type content
+      if (section.sectionType === 'pronunciation') {
+        if (section.pronunciationColumns && section.pronunciationColumns.length > 0) {
+          content += `<div class="lm-pronunciation-grid">`;
+          for (const col of section.pronunciationColumns) {
+            content += `<div class="lm-pronunciation-column">`;
+            content += `<div class="lm-pronunciation-header">${col.soundLabel || ''}</div>`;
+            for (const word of col.words || []) {
+              content += `<div class="lm-pronunciation-word"><span class="lm-word-en">${word.wordEn || ''}</span> <span class="lm-word-jp">${word.wordJp || ''}</span></div>`;
+            }
+            content += `</div>`;
+          }
+          content += `</div>`;
+        }
+      }
+      
+      // GRAMMAR type content
+      if (section.sectionType === 'grammar') {
+        if (section.grammarRules && section.grammarRules.length > 0) {
+          for (const rule of section.grammarRules) {
+            content += `<div class="lm-grammar-rule">`;
+            content += `<div class="lm-grammar-rule-text">${rule.ruleEn || rule.pattern || rule.structure || ''}</div>`;
+            if (rule.ruleJp || rule.meaning) content += `<div class="lm-grammar-rule-jp">${rule.ruleJp || rule.meaning || ''}</div>`;
+            if (rule.examples && rule.examples.length > 0) {
+              for (const ex of rule.examples) {
+                content += `<div class="lm-grammar-example">`;
+                content += `<div class="lm-grammar-example-en">${ex.sentenceEn || ex.example || ''}</div>`;
+                if (ex.sentenceJp || ex.translation) content += `<div class="lm-grammar-example-jp">${ex.sentenceJp || ex.translation || ''}</div>`;
+                content += `</div>`;
+              }
+            }
+            content += `</div>`;
+          }
+        }
+      }
+      
+      // DIALOGUE type content
+      if (section.sectionType === 'dialogue') {
         if (section.dialogueImage) {
-          content += `<img src="${section.dialogueImage}" alt="Dialogue scene" style="max-width:100%;border-radius:12px;margin:20px auto;display:block;" />`;
+          content += `<div class="lm-dialogue-image-wrapper"><img src="${section.dialogueImage}" alt="Dialogue scene" class="lm-dialogue-image" /></div>`;
         }
-        content += `<div style="margin:20px 0;">`;
-        for (const line of section.dialogueLines) {
-          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:12px 16px;background:#f8fafc;border-radius:8px;">`;
-          content += `<span style="font-weight:700;color:#3b82f6;min-width:80px;">${line.speaker || ''}</span>`;
-          content += `<div><div style="color:#0f172a;">${line.textEn || line.lineEn || ''}</div>`;
-          if (line.textJp || line.lineJp) content += `<div style="font-size:13px;color:#64748b;margin-top:4px;">${line.textJp || line.lineJp}</div>`;
-          content += `</div></div>`;
-        }
-        content += `</div>`;
-      }
-      
-      // Trivia examples
-      if (section.triviaExamples && section.triviaExamples.length > 0) {
-        content += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:20px 0;">`;
-        for (const ex of section.triviaExamples) {
-          content += `<div style="background:${ex.isCorrect ? '#f0fdf4' : '#fef2f2'};border:1px solid ${ex.isCorrect ? '#86efac' : '#fecaca'};border-radius:12px;padding:16px;">`;
-          content += `<div style="margin-bottom:12px;"><span style="font-weight:600;color:#64748b;">${ex.speakerA || 'A'}:</span> ${ex.lineA || ''}</div>`;
-          content += `<div><span style="font-weight:600;color:#64748b;">${ex.speakerB || 'B'}:</span> ${ex.lineB || ''}</div>`;
-          content += `<div style="text-align:right;margin-top:8px;"><span style="font-size:18px;">${ex.isCorrect ? '✓' : '✗'}</span></div>`;
+        if (section.dialogueLines && section.dialogueLines.length > 0) {
+          content += `<div class="lm-dialogue-lines">`;
+          for (const line of section.dialogueLines) {
+            content += `<div class="lm-dialogue-line">`;
+            content += `<span class="lm-dialogue-speaker">${line.speaker || ''}</span>`;
+            content += `<div class="lm-dialogue-text"><div class="lm-dialogue-en">${line.textEn || line.lineEn || ''}</div>`;
+            if (line.textJp || line.lineJp) content += `<div class="lm-dialogue-jp">${line.textJp || line.lineJp}</div>`;
+            content += `</div></div>`;
+          }
           content += `</div>`;
         }
-        content += `</div>`;
       }
       
-      // Practice items
-      if (section.practiceExample) {
-        content += `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;margin-bottom:16px;">`;
-        content += `<div style="font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;margin-bottom:8px;">Example</div>`;
-        content += `<div style="color:#334155;">${section.practiceExample}</div>`;
-        if (section.practiceExampleAnswer) content += `<div style="color:#15803d;font-weight:600;margin-top:8px;">${section.practiceExampleAnswer}</div>`;
-        content += `</div>`;
-      }
-      if (section.practiceItems && section.practiceItems.length > 0) {
-        content += `<div style="margin:16px 0;">`;
-        for (let i = 0; i < section.practiceItems.length; i++) {
-          const item = section.practiceItems[i];
-          content += `<div style="display:flex;gap:12px;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;">`;
-          content += `<span style="font-weight:700;color:#3b82f6;min-width:24px;">${i + 1}.</span>`;
-          content += `<span style="color:#334155;">${item.question || item.questionEn || item.text || ''}</span>`;
+      // TRIVIA type content
+      if (section.sectionType === 'trivia') {
+        if (section.triviaExamples && section.triviaExamples.length > 0) {
+          content += `<div class="lm-trivia-grid">`;
+          for (const ex of section.triviaExamples) {
+            content += `<div class="lm-trivia-card ${ex.isCorrect ? 'correct' : 'incorrect'}">`;
+            content += `<div class="lm-trivia-line"><span class="lm-trivia-speaker">${ex.speakerA || 'A'}:</span> ${ex.lineA || ''}</div>`;
+            content += `<div class="lm-trivia-line"><span class="lm-trivia-speaker">${ex.speakerB || 'B'}:</span> ${ex.lineB || ''}</div>`;
+            content += `<div class="lm-trivia-indicator">${ex.isCorrect ? '✓' : '✗'}</div>`;
+            content += `</div>`;
+          }
           content += `</div>`;
         }
-        content += `</div>`;
+      }
+      
+      // PRACTICE type content
+      if (section.sectionType === 'practice') {
+        if (section.practiceExample) {
+          content += `<div class="lm-practice-example">`;
+          content += `<div class="lm-practice-example-label">Example</div>`;
+          content += `<div class="lm-practice-example-text">${section.practiceExample}</div>`;
+          if (section.practiceExampleAnswer) content += `<div class="lm-practice-example-answer">${section.practiceExampleAnswer}</div>`;
+          content += `</div>`;
+        }
+        if (section.practiceItems && section.practiceItems.length > 0) {
+          content += `<div class="lm-practice-items">`;
+          for (let i = 0; i < section.practiceItems.length; i++) {
+            const item = section.practiceItems[i];
+            content += `<div class="lm-practice-item">`;
+            content += `<span class="lm-practice-number">${i + 1}.</span>`;
+            content += `<span class="lm-practice-question">${item.question || ''}</span>`;
+            content += `</div>`;
+          }
+          content += `</div>`;
+        }
       }
       
       // Word box
       if (section.wordBox && section.wordBox.length > 0) {
-        content += `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:16px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin:16px 0;">`;
+        content += `<div class="lm-word-box">`;
         for (const word of section.wordBox) {
-          content += `<span style="background:#fff;border:1px solid #0ea5e9;color:#0369a1;padding:6px 14px;border-radius:20px;font-size:14px;font-weight:500;">${word}</span>`;
+          content += `<span class="lm-word-box-item">${word}</span>`;
         }
         content += `</div>`;
       }
       
       // Conversation lines
       if (section.conversationLines && section.conversationLines.length > 0) {
-        content += `<div style="margin:16px 0;">`;
+        content += `<div class="lm-conversation-lines">`;
         for (const line of section.conversationLines) {
-          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:16px;background:#f8fafc;border-radius:8px;">`;
-          content += `<span style="font-weight:700;color:#3b82f6;min-width:70px;">${line.speaker || ''}</span>`;
-          content += `<span style="color:#334155;">${(line.text || '').replace(/___+/g, '<span style="display:inline-block;min-width:80px;border-bottom:2px dashed #94a3b8;"></span>')}</span>`;
+          content += `<div class="lm-conversation-line">`;
+          content += `<span class="lm-conversation-speaker">${line.speaker || ''}</span>`;
+          content += `<span class="lm-conversation-text">${(line.text || '').replace(/___+/g, '<span class="lm-blank"></span>')}</span>`;
           content += `</div>`;
         }
         content += `</div>`;
@@ -3875,38 +3901,40 @@ export default function LessonMaterialMakerPage() {
       
       // Challenge section
       if (section.challengeTitle) {
-        content += `<span style="display:inline-block;background:#dc2626;color:#fff;padding:6px 16px;border-radius:20px;font-size:14px;font-weight:700;margin-bottom:16px;">${section.challengeTitle}</span>`;
-        if (section.isOptional) content += `<span style="display:inline-block;background:#f59e0b;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;margin-left:8px;">If Time Allows</span>`;
+        content += `<div class="lm-challenge-header">`;
+        content += `<span class="lm-challenge-title">${section.challengeTitle}</span>`;
+        if (section.isOptional) content += `<span class="lm-challenge-optional">If Time Allows</span>`;
+        content += `</div>`;
       }
       if (section.situationEn || section.situationJp) {
-        content += `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:16px;margin:16px 0;">`;
-        content += `<div style="font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:8px;">Situation</div>`;
-        if (section.situationEn) content += `<div style="color:#78350f;white-space:pre-line;">${section.situationEn}</div>`;
-        if (section.situationJp) content += `<div style="font-size:13px;color:#92400e;margin-top:8px;white-space:pre-line;">${section.situationJp}</div>`;
+        content += `<div class="lm-situation-box">`;
+        content += `<div class="lm-situation-label">Situation</div>`;
+        if (section.situationEn) content += `<div class="lm-situation-en">${section.situationEn}</div>`;
+        if (section.situationJp) content += `<div class="lm-situation-jp">${section.situationJp}</div>`;
         content += `</div>`;
       }
       
       // Grammar tip box
       if (section.grammarTipTitle || (section.grammarTipItems && section.grammarTipItems.length > 0)) {
-        content += `<div style="background:#f0fdfa;border:1px solid #5eead4;border-radius:8px;padding:16px;margin:16px 0;">`;
-        if (section.grammarTipTitle) content += `<div style="font-weight:700;color:#0f766e;margin-bottom:12px;">${section.grammarTipTitle}</div>`;
-        content += `<div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+        content += `<div class="lm-grammar-tip-box">`;
+        if (section.grammarTipTitle) content += `<div class="lm-grammar-tip-title">${section.grammarTipTitle}</div>`;
+        content += `<div class="lm-grammar-tip-items">`;
         for (const item of section.grammarTipItems || []) {
-          content += `<span style="background:#ccfbf1;color:#0f766e;padding:4px 12px;border-radius:16px;font-size:14px;">${item}</span>`;
+          content += `<span class="lm-grammar-tip-item">${item}</span>`;
         }
         content += `</div></div>`;
       }
       
       // Challenge questions
       if (section.challengeQuestions && section.challengeQuestions.length > 0) {
-        content += `<div style="margin:16px 0;">`;
+        content += `<div class="lm-challenge-questions">`;
         for (let i = 0; i < section.challengeQuestions.length; i++) {
           const q = section.challengeQuestions[i];
-          content += `<div style="background:#f8fafc;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin-bottom:10px;">`;
-          content += `<div style="font-weight:500;color:#0f172a;">${i + 1}. ${q.question || ''}</div>`;
+          content += `<div class="lm-challenge-question">`;
+          content += `<div class="lm-challenge-question-text">${i + 1}. ${q.question || ''}</div>`;
           if (q.subQuestions && q.subQuestions.length > 0) {
             for (const sub of q.subQuestions) {
-              content += `<div style="font-size:13px;color:#64748b;margin-top:4px;padding-left:16px;">${sub}</div>`;
+              content += `<div class="lm-challenge-sub-question">${sub}</div>`;
             }
           }
           content += `</div>`;
@@ -3916,12 +3944,12 @@ export default function LessonMaterialMakerPage() {
       
       // Topic boxes
       if (section.topicBoxes && section.topicBoxes.length > 0) {
-        content += `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin:20px 0;">`;
+        content += `<div class="lm-topic-boxes">`;
         for (const box of section.topicBoxes) {
-          content += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;">`;
-          content += `<div style="font-weight:700;color:#0f172a;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #3b82f6;">${box.topicTitle || ''}</div>`;
+          content += `<div class="lm-topic-box">`;
+          content += `<div class="lm-topic-title">${box.topicTitle || ''}</div>`;
           for (const q of box.questions || []) {
-            content += `<div style="padding:8px 0;font-size:14px;color:#475569;">• ${q.question || ''}</div>`;
+            content += `<div class="lm-topic-question">• ${q.question || ''}</div>`;
           }
           content += `</div>`;
         }
@@ -3930,18 +3958,18 @@ export default function LessonMaterialMakerPage() {
       
       // Listening script
       if (section.listeningScriptText) {
-        content += `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px;margin:16px 0;font-size:16px;line-height:2;color:#334155;white-space:pre-line;">${section.listeningScriptText}</div>`;
+        content += `<div class="lm-listening-script">${section.listeningScriptText}</div>`;
       }
       
       // Questions (listening/reading)
       const questions = section.listeningQuestions || section.readingQuestions;
       if (questions && questions.length > 0) {
-        content += `<div style="margin:16px 0;">`;
+        content += `<div class="lm-questions">`;
         for (let i = 0; i < questions.length; i++) {
           const q = questions[i];
-          content += `<div style="background:#f8fafc;border-left:4px solid #3b82f6;border-radius:6px;padding:12px 16px;margin-bottom:10px;">`;
-          content += `<div style="font-weight:500;color:#0f172a;">${i + 1}. ${q.question || q.questionEn || ''}</div>`;
-          if (q.answer) content += `<div style="color:#16a34a;font-weight:600;margin-top:8px;">Answer: ${q.answer}</div>`;
+          content += `<div class="lm-question-item">`;
+          content += `<div class="lm-question-text">${i + 1}. ${q.question || q.questionEn || ''}</div>`;
+          if (q.answer) content += `<div class="lm-question-answer">Answer: ${q.answer}</div>`;
           content += `</div>`;
         }
         content += `</div>`;
@@ -3950,13 +3978,13 @@ export default function LessonMaterialMakerPage() {
       // Reading dialogue
       if (section.readingDialogueLines && section.readingDialogueLines.length > 0) {
         if (section.readingImage) {
-          content += `<img src="${section.readingImage}" alt="Reading scene" style="max-width:100%;border-radius:12px;margin:20px auto;display:block;" />`;
+          content += `<div class="lm-reading-image-wrapper"><img src="${section.readingImage}" alt="Reading scene" class="lm-reading-image" /></div>`;
         }
-        content += `<div style="background:#f8fafc;border-radius:12px;padding:20px;margin:16px 0;">`;
+        content += `<div class="lm-reading-dialogue">`;
         for (const line of section.readingDialogueLines) {
-          content += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:12px;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">`;
-          content += `<span style="font-weight:700;color:#7c3aed;min-width:70px;">${line.speaker || ''}</span>`;
-          content += `<span style="color:#334155;">${line.lineEn || line.text || ''}</span>`;
+          content += `<div class="lm-reading-line">`;
+          content += `<span class="lm-reading-speaker">${line.speaker || ''}</span>`;
+          content += `<span class="lm-reading-text">${line.lineEn || line.text || ''}</span>`;
           content += `</div>`;
         }
         content += `</div>`;
@@ -3965,82 +3993,70 @@ export default function LessonMaterialMakerPage() {
       return content;
     };
 
-    // Helper to generate sidebar HTML for a section (matching editor styles)
+    // Helper to generate sidebar HTML for a section using exact CSS classes as editor
     const generatePreviewSidebarHtml = (section: SectionContent): string => {
       let sidebar = '';
       
-      // For INTRODUCE type sections - use lm-goal-box style
+      // For INTRODUCE type sections - use lm-goal-box
       if (section.sectionType === 'introduce' || (!section.sectionType && section.lessonGoalTitle)) {
-        sidebar += `<div style="border:none;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 12px rgba(2,69,174,0.08);">`;
-        // Goal box header (blue gradient)
+        sidebar += `<div class="lm-goal-box">`;
         if (section.lessonGoalTitle) {
-          sidebar += `<div style="background:linear-gradient(135deg,#0245ae 0%,#01337d 100%);padding:14px 20px;font-size:14px;font-weight:700;color:#fff;letter-spacing:0.3px;">${section.lessonGoalTitle}</div>`;
+          sidebar += `<div class="lm-goal-box-header">${section.lessonGoalTitle}</div>`;
         }
-        // Steps container
-        sidebar += `<div style="padding:20px;">`;
+        sidebar += `<div class="lm-goal-steps">`;
       } else {
-        // For other section types - use lm-vocab-sidebar style
-        sidebar += `<div style="border:none;border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 2px 12px rgba(2,69,174,0.08);">`;
-        // Sidebar header (blue gradient) - sidebarTitle
+        // For other section types - use lm-vocab-sidebar
+        sidebar += `<div class="lm-vocab-sidebar">`;
         if (section.sidebarTitle) {
-          sidebar += `<div style="background:linear-gradient(135deg,#0245ae 0%,#01337d 100%);padding:12px 20px;font-size:14px;font-weight:700;color:#fff;letter-spacing:0.3px;">${section.sidebarTitle}</div>`;
+          sidebar += `<div class="lm-vocab-sidebar-header">${section.sidebarTitle}</div>`;
         }
-        // Sidebar subheader (light blue) - sidebarSubtitle
         if (section.sidebarSubtitle) {
-          sidebar += `<div style="background:#dbeafe;padding:10px 20px;font-size:13px;font-weight:700;color:#01337d;">${section.sidebarSubtitle}</div>`;
+          sidebar += `<div class="lm-vocab-sidebar-subheader">${section.sidebarSubtitle}</div>`;
         }
-        // Steps container
-        sidebar += `<div style="padding:20px;">`;
+        sidebar += `<div class="lm-goal-steps">`;
       }
       
       // Lesson goal steps
       if (section.lessonGoalSteps && section.lessonGoalSteps.length > 0) {
         for (let i = 0; i < section.lessonGoalSteps.length; i++) {
           const step = section.lessonGoalSteps[i];
-          // Step container with bottom border
-          const isLast = i === section.lessonGoalSteps.length - 1;
-          sidebar += `<div style="display:flex;gap:14px;margin-bottom:${isLast ? '0' : '18px'};padding-bottom:${isLast ? '0' : '18px'};border-bottom:${isLast ? 'none' : '1px solid #f1f5f9'};">`;
+          sidebar += `<div class="lm-goal-step">`;
+          sidebar += `<span class="lm-step-number">${i + 1}</span>`;
+          sidebar += `<div class="lm-step-content">`;
           
-          // Step number (blue rounded square)
-          sidebar += `<div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:linear-gradient(135deg,#0245ae 0%,#4a9eff 100%);color:#fff;font-size:12px;font-weight:700;border-radius:8px;flex-shrink:0;">${i + 1}</div>`;
-          
-          // Step content
-          sidebar += `<div style="flex:1;padding-top:2px;">`;
-          
-          // Instruction text
           if (step.instruction) {
-            sidebar += `<div style="font-size:14px;color:#1e293b;line-height:1.5;margin-bottom:${(step.scriptLines?.length || step.scriptLine || step.tipText) ? '8px' : '0'};">${step.instruction}</div>`;
+            sidebar += `<span class="lm-step-instruction">${step.instruction}</span>`;
           }
           
-          // Script lines (green box with bullet)
+          // Script lines
           const scriptLines = step.scriptLines || (step.scriptLine ? [step.scriptLine] : []);
           for (const line of scriptLines) {
-            sidebar += `<div style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 12px;background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border-radius:8px;border-left:3px solid #10b981;">`;
-            sidebar += `<span style="color:#10b981;font-size:8px;">●</span>`;
-            sidebar += `<span style="font-size:14px;font-style:italic;font-weight:600;color:#10b981;">${line}</span>`;
+            sidebar += `<div class="lm-step-script">`;
+            sidebar += `<span class="lm-script-bullet">●</span>`;
+            sidebar += `<span class="lm-script-text">${line}</span>`;
             sidebar += `</div>`;
           }
           
-          // Tip text (orange box with diamond)
+          // Tip text
           if (step.tipText) {
-            sidebar += `<div style="display:flex;align-items:flex-start;gap:8px;margin-top:8px;padding:10px 12px;background:linear-gradient(135deg,#fff7ed 0%,#ffedd5 100%);border-radius:8px;border-left:3px solid #f97316;">`;
-            sidebar += `<span style="color:#f97316;font-size:10px;line-height:1.6;">◆</span>`;
-            sidebar += `<span style="font-size:13px;font-weight:600;color:#ea580c;line-height:1.5;">${step.tipText}</span>`;
+            sidebar += `<div class="lm-step-tip">`;
+            sidebar += `<span class="lm-tip-icon">◆</span>`;
+            sidebar += `<span class="lm-tip-text">${step.tipText}</span>`;
             sidebar += `</div>`;
           }
           
           sidebar += `</div>`; // Close step content
-          sidebar += `</div>`; // Close step container
+          sidebar += `</div>`; // Close step
         }
       }
       
-      sidebar += `</div>`; // Close steps container
-      sidebar += `</div>`; // Close main sidebar container
+      sidebar += `</div>`; // Close goal-steps
+      sidebar += `</div>`; // Close sidebar container
       
       return sidebar;
     };
 
-    // Build full HTML document - matching editor layout exactly
+    // Build full HTML document using actual CSS classes
     const sectionsHtml = draft.sections?.map((section, idx) => {
       const sidebarHtml = generatePreviewSidebarHtml(section);
       const hasSidebar = section.lessonGoalSteps && section.lessonGoalSteps.length > 0;
@@ -4054,27 +4070,567 @@ export default function LessonMaterialMakerPage() {
                           !(section.sectionType === 'practice' && !section.sectionTitle);
       
       const sectionTitleHtml = showTitleRow && section.sectionTitle ? `
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #e2e8f0;">
-          <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#0245ae 0%,#4a9eff 100%);color:#fff;font-size:16px;font-weight:700;border-radius:10px;box-shadow:0 2px 8px rgba(2,69,174,0.25);">${section.sectionNumber || idx + 1}</div>
-          <div style="font-size:20px;font-weight:800;color:#0245ae;letter-spacing:0.5px;text-transform:uppercase;">${section.sectionTitle}</div>
+        <div class="lm-section-title-row">
+          <span class="lm-section-number">${section.sectionNumber || idx + 1}</span>
+          <span class="lm-section-title">${section.sectionTitle}</span>
         </div>
       ` : '';
       
       return `
-      <div style="margin-bottom:48px;background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(2,69,174,0.06);">
-        <div style="display:flex;gap:40px;">
-          <div style="flex:0 0 56%;max-width:56%;">
+      <div class="lm-section">
+        <div class="lm-section-layout">
+          <div class="lm-section-main">
             ${sectionTitleHtml}
             ${generatePreviewSectionHtml(section)}
           </div>
           ${hasSidebar ? `
-          <div style="flex:0 0 42%;max-width:42%;">
+          <div class="lm-section-sidebar">
             ${sidebarHtml}
           </div>
           ` : ''}
         </div>
       </div>
     `}).join('') || '';
+
+    // CSS styles - using EXACT same styles from LessonMaterialMakerPage.css
+    const previewCss = `
+      /* CSS Variables */
+      :root {
+        --primary: #0245ae;
+        --primary-light: #4a9eff;
+        --primary-dark: #01337d;
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --warning-light: #fef3c7;
+        --info-light: #dbeafe;
+      }
+      
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; color: #1e293b; line-height: 1.6; }
+      
+      /* Section Styles - Two Column Layout */
+      .lm-section {
+        margin-bottom: 48px;
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 2px 12px rgba(2, 69, 174, 0.06);
+      }
+      
+      .lm-section-layout {
+        display: flex;
+        gap: 40px;
+      }
+      
+      .lm-section-main {
+        flex: 0 0 56%;
+        max-width: 56%;
+      }
+      
+      .lm-section-sidebar {
+        flex: 0 0 42%;
+        max-width: 42%;
+      }
+      
+      /* Section Title Row */
+      .lm-section-title-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #e2e8f0;
+      }
+      
+      .lm-section-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(2, 69, 174, 0.25);
+      }
+      
+      .lm-section-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      
+      /* Section Explanation */
+      .lm-section-explanation {
+        font-size: 17px;
+        line-height: 1.7;
+        color: #1e293b;
+        margin: 0 0 12px 0;
+      }
+      
+      .lm-section-explanation-jp {
+        font-size: 15px;
+        line-height: 1.7;
+        color: #64748b;
+        margin: 0 0 28px 0;
+        padding-left: 12px;
+        border-left: 3px solid var(--primary-light);
+      }
+      
+      /* Section Image */
+      .lm-section-image-container { margin-top: 20px; }
+      .lm-section-image-wrapper {
+        position: relative;
+        display: inline-block;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .lm-section-image { max-width: 100%; height: auto; display: block; }
+      
+      /* Lesson Goal Box */
+      .lm-goal-box {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 2px 12px rgba(2, 69, 174, 0.08);
+      }
+      
+      .lm-goal-box-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 14px 20px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.3px;
+      }
+      
+      .lm-goal-steps { padding: 20px; }
+      
+      .lm-goal-step {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 18px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .lm-goal-step:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+      
+      .lm-step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+      
+      .lm-step-content { flex: 1; padding-top: 2px; }
+      
+      .lm-step-instruction {
+        font-size: 14px;
+        color: #1e293b;
+        display: block;
+        line-height: 1.5;
+      }
+      
+      .lm-step-script {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        border-radius: 8px;
+        border-left: 3px solid var(--success);
+      }
+      
+      .lm-script-bullet { color: var(--success); font-size: 8px; }
+      
+      .lm-script-text {
+        font-size: 14px;
+        font-style: italic;
+        font-weight: 600;
+        color: var(--success);
+      }
+      
+      .lm-step-tip {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 10px 12px;
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        border-radius: 8px;
+        border-left: 3px solid #f97316;
+      }
+      
+      .lm-tip-icon { color: #f97316; font-size: 10px; line-height: 1.6; }
+      
+      .lm-tip-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ea580c;
+        line-height: 1.5;
+      }
+      
+      /* Vocabulary Sidebar */
+      .lm-vocab-sidebar {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 2px 12px rgba(2, 69, 174, 0.08);
+      }
+      
+      .lm-vocab-sidebar-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.3px;
+      }
+      
+      .lm-vocab-sidebar-subheader {
+        background: var(--info-light);
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary-dark);
+      }
+      
+      /* Step Title */
+      .lm-step-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+      }
+      
+      /* Vocabulary Instruction */
+      .lm-vocab-instruction {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #475569;
+        margin-bottom: 8px;
+      }
+      
+      .lm-vocab-instruction-jp {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-bottom: 20px;
+      }
+      
+      /* Vocabulary Grid */
+      .lm-vocab-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+      
+      .lm-vocab-card-preview {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #bae6fd;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+      }
+      
+      .lm-vocab-image-wrapper { margin-bottom: 12px; }
+      .lm-vocab-image { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; margin: 0 auto; }
+      .lm-vocab-word { font-size: 20px; font-weight: 700; color: #0369a1; margin-bottom: 4px; }
+      .lm-vocab-reading { font-size: 13px; color: #64748b; }
+      .lm-vocab-meaning { font-size: 14px; color: #334155; margin-top: 4px; }
+      
+      /* Image Grid */
+      .lm-image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+      
+      .lm-image-card-preview { text-align: center; }
+      .lm-image-card-img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+      .lm-image-card-label { font-size: 14px; font-weight: 600; color: #334155; }
+      
+      /* Pronunciation */
+      .lm-pronunciation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 24px;
+        margin: 20px 0;
+      }
+      
+      .lm-pronunciation-column {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      
+      .lm-pronunciation-header {
+        font-weight: 700;
+        color: #3b82f6;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #3b82f6;
+        font-size: 18px;
+      }
+      
+      .lm-pronunciation-word { padding: 8px 0; font-size: 15px; color: #334155; }
+      .lm-word-jp { color: #64748b; font-size: 13px; }
+      
+      /* Grammar */
+      .lm-grammar-rule {
+        background: #fef3c7;
+        border-left: 4px solid #eab308;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      
+      .lm-grammar-rule-text { font-weight: 700; color: #854d0e; margin-bottom: 8px; font-size: 16px; }
+      .lm-grammar-rule-jp { color: #713f12; margin-bottom: 12px; }
+      .lm-grammar-example { background: rgba(255,255,255,0.5); padding: 8px 12px; border-radius: 6px; margin-top: 8px; }
+      .lm-grammar-example-en { font-weight: 500; color: #78350f; }
+      .lm-grammar-example-jp { font-size: 13px; color: #92400e; margin-top: 4px; }
+      
+      /* Dialogue */
+      .lm-dialogue-image-wrapper { margin: 20px auto; text-align: center; }
+      .lm-dialogue-image { max-width: 100%; border-radius: 12px; }
+      .lm-dialogue-lines { margin: 20px 0; }
+      .lm-dialogue-line {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 12px 16px;
+        background: #f8fafc;
+        border-radius: 8px;
+      }
+      .lm-dialogue-speaker { font-weight: 700; color: #3b82f6; min-width: 80px; }
+      .lm-dialogue-en { color: #0f172a; }
+      .lm-dialogue-jp { font-size: 13px; color: #64748b; margin-top: 4px; }
+      
+      /* Trivia */
+      .lm-trivia-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        margin: 20px 0;
+      }
+      
+      .lm-trivia-card {
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .lm-trivia-card.correct { background: #f0fdf4; border: 1px solid #86efac; }
+      .lm-trivia-card.incorrect { background: #fef2f2; border: 1px solid #fecaca; }
+      .lm-trivia-line { margin-bottom: 12px; }
+      .lm-trivia-speaker { font-weight: 600; color: #64748b; }
+      .lm-trivia-indicator { text-align: right; margin-top: 8px; font-size: 18px; }
+      
+      /* Practice */
+      .lm-practice-example {
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .lm-practice-example-label { font-size: 12px; font-weight: 700; color: #16a34a; text-transform: uppercase; margin-bottom: 8px; }
+      .lm-practice-example-text { color: #334155; }
+      .lm-practice-example-answer { color: #15803d; font-weight: 600; margin-top: 8px; }
+      .lm-practice-items { margin: 16px 0; }
+      .lm-practice-item {
+        display: flex;
+        gap: 12px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      .lm-practice-number { font-weight: 700; color: #3b82f6; min-width: 24px; }
+      .lm-practice-question { color: #334155; }
+      
+      /* Word Box */
+      .lm-word-box {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 16px;
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        margin: 16px 0;
+      }
+      .lm-word-box-item {
+        background: #fff;
+        border: 1px solid #0ea5e9;
+        color: #0369a1;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      /* Conversation */
+      .lm-conversation-lines { margin: 16px 0; }
+      .lm-conversation-line {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 16px;
+        background: #f8fafc;
+        border-radius: 8px;
+      }
+      .lm-conversation-speaker { font-weight: 700; color: #3b82f6; min-width: 70px; }
+      .lm-conversation-text { color: #334155; }
+      .lm-blank { display: inline-block; min-width: 80px; border-bottom: 2px dashed #94a3b8; }
+      
+      /* Challenge */
+      .lm-challenge-header { margin-bottom: 16px; }
+      .lm-challenge-title {
+        display: inline-block;
+        background: #dc2626;
+        color: #fff;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .lm-challenge-optional {
+        display: inline-block;
+        background: #f59e0b;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+      
+      .lm-situation-box {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+        padding: 16px;
+        margin: 16px 0;
+      }
+      .lm-situation-label { font-size: 12px; font-weight: 700; color: #92400e; text-transform: uppercase; margin-bottom: 8px; }
+      .lm-situation-en { color: #78350f; white-space: pre-line; }
+      .lm-situation-jp { font-size: 13px; color: #92400e; margin-top: 8px; white-space: pre-line; }
+      
+      .lm-grammar-tip-box {
+        background: #f0fdfa;
+        border: 1px solid #5eead4;
+        border-radius: 8px;
+        padding: 16px;
+        margin: 16px 0;
+      }
+      .lm-grammar-tip-title { font-weight: 700; color: #0f766e; margin-bottom: 12px; }
+      .lm-grammar-tip-items { display: flex; flex-wrap: wrap; gap: 8px; }
+      .lm-grammar-tip-item { background: #ccfbf1; color: #0f766e; padding: 4px 12px; border-radius: 16px; font-size: 14px; }
+      
+      .lm-challenge-questions { margin: 16px 0; }
+      .lm-challenge-question {
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+      }
+      .lm-challenge-question-text { font-weight: 500; color: #0f172a; }
+      .lm-challenge-sub-question { font-size: 13px; color: #64748b; margin-top: 4px; padding-left: 16px; }
+      
+      .lm-topic-boxes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .lm-topic-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+      }
+      .lm-topic-title {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #3b82f6;
+      }
+      .lm-topic-question { padding: 8px 0; font-size: 14px; color: #475569; }
+      
+      .lm-listening-script {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 16px 0;
+        font-size: 16px;
+        line-height: 2;
+        color: #334155;
+        white-space: pre-line;
+      }
+      
+      .lm-questions { margin: 16px 0; }
+      .lm-question-item {
+        background: #f8fafc;
+        border-left: 4px solid #3b82f6;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+      }
+      .lm-question-text { font-weight: 500; color: #0f172a; }
+      .lm-question-answer { color: #16a34a; font-weight: 600; margin-top: 8px; }
+      
+      .lm-reading-image-wrapper { margin: 20px auto; text-align: center; }
+      .lm-reading-image { max-width: 100%; border-radius: 12px; }
+      .lm-reading-dialogue {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 16px 0;
+      }
+      .lm-reading-line {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 12px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+      .lm-reading-speaker { font-weight: 700; color: #7c3aed; min-width: 70px; }
+      .lm-reading-text { color: #334155; }
+      
+      @media print { body { background: #fff; } }
+    `;
 
     const previewHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -4083,11 +4639,7 @@ export default function LessonMaterialMakerPage() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${lessonTitle} - Preview</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; color: #1e293b; line-height: 1.6; }
-    @media print { body { background: #fff; } }
-  </style>
+  <style>${previewCss}</style>
 </head>
 <body>
   <header style="position:relative;min-height:140px;display:flex;flex-direction:column;background-size:cover;background-position:center;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);${draft.header?.backgroundImage ? `background-image:url(${draft.header.backgroundImage});` : 'background:linear-gradient(135deg,#0369a1 0%,#0ea5e9 100%);'}">
