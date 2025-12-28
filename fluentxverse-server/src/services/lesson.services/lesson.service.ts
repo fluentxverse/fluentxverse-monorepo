@@ -267,7 +267,7 @@ export class LessonService {
   }
   
   /**
-   * Publish a lesson (original author or admin can publish)
+   * Publish a lesson (any authenticated dashboard user can publish)
    */
   async publishLesson(lessonId: string, publishedBy: string): Promise<Lesson> {
     const lesson = await this.getLessonById(lessonId);
@@ -275,11 +275,8 @@ export class LessonService {
       throw new Error('Lesson not found');
     }
     
-    // Allow the creator or any ADMIN user to publish
-    const isAdmin = publishedBy.startsWith('ADMIN-');
-    if (lesson.createdBy !== publishedBy && !isAdmin) {
-      throw new Error('Only the lesson creator can publish this lesson');
-    }
+    // Allow any authenticated user to publish (dashboard users)
+    // The route already requires authentication
     
     if (lesson.isFork) {
       throw new Error('Forks cannot be published directly. Submit a merge request instead.');

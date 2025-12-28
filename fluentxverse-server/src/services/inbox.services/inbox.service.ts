@@ -261,7 +261,7 @@ export class InboxService {
       FROM system_messages sm
       LEFT JOIN system_message_recipients smr 
         ON sm.id = smr.message_id AND smr.user_id = ${userId}
-      WHERE sm.target_audience = ANY(${targetAudiences})
+      WHERE sm.target_audience = ANY(${db.array(targetAudiences)})
         AND COALESCE(smr.is_read, false) = false
     `;
 
