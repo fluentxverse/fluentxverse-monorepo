@@ -22,7 +22,9 @@ export default function ConversationalSkillsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const result = await lessonApi.getPublishedLessons('conversational-skills');
+      // Fetch ALL published lessons (use 'all' to bypass course filtering)
+      // TODO: Once lessons have course metadata, change back to 'conversational-skills'
+      const result = await lessonApi.getPublishedLessons('all');
       if (result.success) {
         setLessons(result.lessons);
       } else {

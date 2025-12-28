@@ -2114,9 +2114,11 @@ export default new Elysia({ prefix: '/lesson' })
         offset: 0
       });
       
+      console.log(`[Published Lessons] Found ${lessons.length} published lessons total`);
+      
       // Map course slugs to match the materials page course IDs
       const courseSlugMap: Record<string, string[]> = {
-        'conversational-skills': ['Conversational Skills', 'conversational-skills', 'Conversation'],
+        'conversational-skills': ['Conversational Skills', 'conversational-skills', 'Conversation', 'conversation'],
         'business-english': ['Business English', 'business-english', 'Business'],
         'job-interview-prep': ['Job Interview', 'job-interview-prep', 'Career'],
         'travel-english': ['Travel English', 'travel-english', 'Travel'],
@@ -2127,6 +2129,27 @@ export default new Elysia({ prefix: '/lesson' })
       };
       
       const matchingCourseNames = courseSlugMap[courseSlug] || [courseSlug];
+      
+      // If courseSlug is 'all', return all published lessons without filtering
+      if (courseSlug === 'all') {
+        const allLessons = [];
+        for (const lesson of lessons) {
+          const latestVersion = await lessonService.getLatestVersion(lesson.id);
+          if (!latestVersion) continue;
+          allLessons.push({
+            ...lesson,
+            url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html?v=${lesson.currentVersion || ''}`,
+            lessonData: latestVersion.lessonData
+          });
+        }
+        return { 
+          success: true, 
+          lessons: allLessons.slice(offset, offset + limit),
+          total: allLessons.length,
+          limit,
+          offset 
+        };
+      }
       
       // Filter lessons that belong to the requested course
       // We need to check the lesson data for course info
@@ -2147,14 +2170,19 @@ export default new Elysia({ prefix: '/lesson' })
         
         // Also check header.chapterLabel for course indication
         const chapterLabel = lessonData.header?.chapterLabel || '';
+        const lessonLabel = lessonData.header?.lessonLabel || '';
+        
+        console.log(`[Published Lessons] Checking lesson: ${lesson.title}, course: "${lessonCourse}", chapter: "${chapterLabel}"`);
         
         const isMatch = matchingCourseNames.some(name => 
           lessonCourse.toLowerCase().includes(name.toLowerCase()) ||
           chapterLabel.toLowerCase().includes(name.toLowerCase()) ||
+          lessonLabel.toLowerCase().includes(name.toLowerCase()) ||
           lesson.title.toLowerCase().includes(name.toLowerCase())
         );
         
         if (isMatch) {
+          console.log(`[Published Lessons] ✓ Lesson matches course: ${lesson.title}`);
           filteredLessons.push({
             ...lesson,
             url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html?v=${lesson.currentVersion || ''}`,
@@ -2162,6 +2190,8 @@ export default new Elysia({ prefix: '/lesson' })
           });
         }
       }
+      
+      console.log(`[Published Lessons] Filtered to ${filteredLessons.length} lessons for course: ${courseSlug}`);
       
       // Apply pagination to filtered results
       const paginatedLessons = filteredLessons.slice(offset, offset + limit);
