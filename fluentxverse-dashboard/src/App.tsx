@@ -66,6 +66,30 @@ const AppContent = () => {
 
   // Interview room is fullscreen, no sidebar/header
   const path = location.path || location.url || window.location.pathname;
+  const search = (() => {
+    try {
+      return window.location.search || '';
+    } catch {
+      return '';
+    }
+  })();
+  const searchParams = (() => {
+    try {
+      return new URLSearchParams(search);
+    } catch {
+      return new URLSearchParams();
+    }
+  })();
+
+  // Public lesson material view (used by server-hosted index.html redirect)
+  if (path.startsWith('/lesson-material-maker') && (searchParams.has('previewToken') || searchParams.has('src'))) {
+    return (
+      <Router>
+        <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
+      </Router>
+    );
+  }
+
   if (path.startsWith('/interview-room')) {
     if (!isAuthenticated) {
       return <LoginPage />;

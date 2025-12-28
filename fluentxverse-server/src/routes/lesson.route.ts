@@ -9,6 +9,20 @@ const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
 // API base URL for constructing proxy URLs (browser accesses files via API)
 const API_BASE = process.env.API_PUBLIC_URL || 'http://localhost:8765';
 
+const getDashboardPublicUrl = (): string => {
+  const explicit = process.env.ADMIN_DASHBOARD_PUBLIC_URL || process.env.DASHBOARD_PUBLIC_URL;
+  if (explicit) return explicit;
+
+  const raw = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '';
+  const origins = raw
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
+  const preferred = origins.find(o => /dashboard|admin/i.test(o)) || origins[0];
+  return preferred || 'http://localhost:5175';
+};
+
 /**
  * Upload a file to SeaweedFS Filer
  * Returns a proxy URL through the API server (not direct SeaweedFS URL)
@@ -55,6 +69,49 @@ async function fetchFromSeaweed(path: string): Promise<any | null> {
  * Supports both old format (vocabulary/grammar/exercises) and new format (sections)
  */
 function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
+  const dashboardBase = getDashboardPublicUrl();
+
+  // Pixel-perfect: redirect to the real dashboard lesson renderer in preview mode.
+  // The viewer computes tutor-data.json URL from the current index.html location.
+  // NOTE: Requires dashboard to allow unauth access when `src` or `previewToken` is present.
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>Lesson Material</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 16px; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <p>Opening lesson…</p>
+  <script>
+    (function () {
+      try {
+        var indexUrl = new URL(window.location.href);
+        // /.../index.html -> /.../tutor-data.json
+        indexUrl.pathname = indexUrl.pathname.replace(/\/index\.html$/, '/tutor-data.json');
+        var src = indexUrl.toString();
+        var viewer = new URL('${dashboardBase.replace(/'/g, "\\'")}');
+        viewer.pathname = (viewer.pathname || '/').replace(/\/$/, '') + '/lesson-material-maker';
+        viewer.searchParams.set('src', src);
+        // Preserve print flow if present
+        var print = new URLSearchParams(window.location.search).get('print');
+        if (print === '1') viewer.searchParams.set('print', '1');
+        window.location.replace(viewer.toString());
+      } catch (e) {
+        document.body.innerHTML = '<p>Failed to open lesson. Please open in the dashboard directly.</p>';
+      }
+    })();
+  </script>
+</body>
+</html>`;
+
+  // Legacy standalone HTML generator below (kept for reference).
+  // eslint-disable-next-line no-unreachable
   const { header } = lesson;
   const sections = (lesson as any).sections || [];
   
@@ -2323,7 +2380,7 @@ export default new Elysia({ prefix: '/lesson' })
    * This keeps SeaweedFS internal and secure
    * Path: /lesson/files/lessons/{lessonId}/{filename}
    */
-  .get('/files/*', async ({ params, set }) => {
+  .get('/files/*', async ({ params, set, request }) => {
     try {
       // Get the file path from wildcard parameter
       const filePath = '/' + (params['*'] || '');
@@ -2331,6 +2388,41 @@ export default new Elysia({ prefix: '/lesson' })
       if (!filePath || filePath === '/') {
         set.status = 400;
         return { error: 'File path required' };
+      }
+
+      // Pixel-perfect view: serve index.html by redirecting into the dashboard renderer.
+      // This avoids relying on the stored standalone HTML (which will never match the app preview).
+      if (filePath.endsWith('/index.html')) {
+        const dashboardBase = getDashboardPublicUrl();
+        const reqUrl = new URL(request.url);
+        const tutorDataUrl = new URL(reqUrl.toString());
+        tutorDataUrl.pathname = `/lesson/files${filePath.replace(/\/index\.html$/, '/tutor-data.json')}`;
+
+        const viewer = new URL(dashboardBase);
+        viewer.pathname = (viewer.pathname || '/').replace(/\/$/, '') + '/lesson-material-maker';
+        viewer.searchParams.set('src', tutorDataUrl.toString());
+        if (reqUrl.searchParams.get('print') === '1') {
+          viewer.searchParams.set('print', '1');
+        }
+
+        set.headers['content-type'] = 'text/html; charset=utf-8';
+        set.headers['cache-control'] = 'no-store, max-age=0';
+        set.headers['pragma'] = 'no-cache';
+        set.headers['expires'] = '0';
+
+        return new Response(
+          `<!doctype html><html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Opening lesson…</title></head><body><p>Opening lesson…</p><script>location.replace(${JSON.stringify(
+            viewer.toString()
+          )});</script></body></html>`,
+          {
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-store, max-age=0',
+              Pragma: 'no-cache',
+              Expires: '0'
+            }
+          }
+        );
       }
       
       // Fetch from internal SeaweedFS

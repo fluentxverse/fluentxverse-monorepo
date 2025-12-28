@@ -1944,6 +1944,13 @@ export default function LessonMaterialMakerPage() {
       return null;
     }
   });
+  const [previewSrcFromUrl] = useState<string | null>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('src');
+    } catch {
+      return null;
+    }
+  });
   const [shouldAutoPrintFromUrl] = useState<boolean>(() => {
     try {
       return new URLSearchParams(window.location.search).get('print') === '1';
@@ -2030,6 +2037,47 @@ export default function LessonMaterialMakerPage() {
       console.error('Failed to restore preview payload:', err);
     }
   }, [previewTokenFromUrl]);
+
+  useEffect(() => {
+    if (previewTokenFromUrl) return;
+    if (!previewSrcFromUrl) return;
+
+    const makeToken = () => {
+      try {
+        // @ts-ignore - crypto might not exist in some older browsers
+        return crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      } catch {
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+    };
+
+    const run = async () => {
+      try {
+        const res = await fetch(previewSrcFromUrl, { credentials: 'omit' });
+        if (!res.ok) {
+          console.error('Failed to load preview src:', res.status);
+          return;
+        }
+        const json = await res.json();
+
+        // Some endpoints may wrap lessonData; accept both shapes
+        const draftCandidate = (json?.lessonData ?? json) as LessonMaterialDraft;
+
+        const token = makeToken();
+        const key = `${PREVIEW_PAYLOAD_PREFIX}${token}`;
+        localStorage.setItem(key, JSON.stringify({ draft: draftCandidate, currentEditingLesson: null }));
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('src');
+        url.searchParams.set('previewToken', token);
+        window.location.replace(url.toString());
+      } catch (err) {
+        console.error('Failed to load preview src:', err);
+      }
+    };
+
+    void run();
+  }, [previewTokenFromUrl, previewSrcFromUrl]);
 
   useEffect(() => {
     if (!previewTokenFromUrl) return;
@@ -4164,6 +4212,18 @@ export default function LessonMaterialMakerPage() {
     acc[levelKey][chapterKey][lessonKey].push(lesson);
     return acc;
   }, {} as Record<number, Record<number, Record<number, SavedLesson[]>>>);
+
+  // When opened via server link (`?src=...`), we first fetch and then redirect to `?previewToken=...`.
+  // While that happens, keep UI minimal to avoid flashing the template list.
+  if (previewSrcFromUrl && !previewTokenFromUrl) {
+    return (
+      <div className="lm-template-list">
+        <div style={{ padding: 24 }}>
+          <h2 style={{ margin: 0 }}>Loading lesson…</h2>
+        </div>
+      </div>
+    );
+  }
 
   // Template List View - also show when editing but not in fullscreen
   // This allows users to see the lesson list while having an edit session in progress
