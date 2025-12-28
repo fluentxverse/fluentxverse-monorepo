@@ -4040,23 +4040,35 @@ export default function LessonMaterialMakerPage() {
       return sidebar;
     };
 
-    // Build full HTML document
+    // Build full HTML document - matching editor layout exactly
     const sectionsHtml = draft.sections?.map((section, idx) => {
       const sidebarHtml = generatePreviewSidebarHtml(section);
       const hasSidebar = section.lessonGoalSteps && section.lessonGoalSteps.length > 0;
       
-      return `
-      <div style="background:#fff;border-radius:16px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:1px solid #e2e8f0;overflow:hidden;">
-        <div style="display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid #e2e8f0;background:#f8fafc;">
-          <div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:#3b82f6;color:#fff;border-radius:8px;font-weight:700;font-size:14px;">${section.sectionNumber || idx + 1}</div>
-          <div style="font-size:18px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:0.5px;">${section.sectionTitle || ''}</div>
+      // Generate section title row (only for certain section types)
+      const showTitleRow = section.sectionType !== 'question' && 
+                          section.sectionType !== 'trivia' && 
+                          section.sectionType !== 'challenge2' &&
+                          section.sectionType !== 'pronunciation' && 
+                          section.sectionType !== 'grammar' &&
+                          !(section.sectionType === 'practice' && !section.sectionTitle);
+      
+      const sectionTitleHtml = showTitleRow && section.sectionTitle ? `
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #e2e8f0;">
+          <div style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:linear-gradient(135deg,#0245ae 0%,#4a9eff 100%);color:#fff;font-size:16px;font-weight:700;border-radius:10px;box-shadow:0 2px 8px rgba(2,69,174,0.25);">${section.sectionNumber || idx + 1}</div>
+          <div style="font-size:20px;font-weight:800;color:#0245ae;letter-spacing:0.5px;text-transform:uppercase;">${section.sectionTitle}</div>
         </div>
-        <div style="display:flex;">
-          <div style="flex:${hasSidebar ? '0 0 58%' : '1'};max-width:${hasSidebar ? '58%' : '100%'};padding:24px;">
+      ` : '';
+      
+      return `
+      <div style="margin-bottom:48px;background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(2,69,174,0.06);">
+        <div style="display:flex;gap:40px;">
+          <div style="flex:0 0 56%;max-width:56%;">
+            ${sectionTitleHtml}
             ${generatePreviewSectionHtml(section)}
           </div>
           ${hasSidebar ? `
-          <div style="flex:0 0 42%;max-width:42%;background:#f8fafc;padding:20px;">
+          <div style="flex:0 0 42%;max-width:42%;">
             ${sidebarHtml}
           </div>
           ` : ''}
