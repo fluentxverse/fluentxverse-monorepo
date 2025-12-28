@@ -1138,6 +1138,19 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+@media print {
+  html,
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #fff !important;
+  }
+
+  .lm-toolbar {
+    display: none !important;
+  }
+}
+
 /* Hide dashboard elements when fullscreen */
 body.lm-fullscreen-mode .sidebar,
 body.lm-fullscreen-mode .dashboard-header,

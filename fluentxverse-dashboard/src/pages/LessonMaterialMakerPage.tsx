@@ -1944,6 +1944,14 @@ export default function LessonMaterialMakerPage() {
       return null;
     }
   });
+  const [shouldAutoPrintFromUrl] = useState<boolean>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('print') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const didAutoPrintRef = useRef(false);
   const [activeTab, setActiveTab] = useState<'templates' | 'myLessons'>('templates');
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
   const [selectedTemplateForLesson, setSelectedTemplateForLesson] = useState<TemplateInfo | null>(null);
@@ -2000,6 +2008,13 @@ export default function LessonMaterialMakerPage() {
         currentEditingLesson?: SavedLesson | null;
       };
 
+      const previewTitle =
+        payload?.currentEditingLesson?.goalName ||
+        payload?.draft?.header?.goalText ||
+        payload?.draft?.header?.lessonLabel ||
+        'Lesson Material';
+      document.title = previewTitle;
+
       if (payload?.draft) {
         setDraft(payload.draft);
       }
@@ -2015,6 +2030,58 @@ export default function LessonMaterialMakerPage() {
       console.error('Failed to restore preview payload:', err);
     }
   }, [previewTokenFromUrl]);
+
+  useEffect(() => {
+    if (!previewTokenFromUrl) return;
+    if (!shouldAutoPrintFromUrl) return;
+    if (!isPreviewMode) return;
+    if (didAutoPrintRef.current) return;
+
+    didAutoPrintRef.current = true;
+
+    const waitForImages = () => {
+      const images = Array.from(document.images);
+      if (images.length === 0) return Promise.resolve();
+
+      const imagePromises = images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise<void>(resolve => {
+          const done = () => resolve();
+          img.addEventListener('load', done, { once: true });
+          img.addEventListener('error', done, { once: true });
+        });
+      });
+
+      return Promise.all(imagePromises).then(() => undefined);
+    };
+
+    const waitForFonts = async () => {
+      const fonts = (document as unknown as { fonts?: { ready?: Promise<void> } }).fonts;
+      if (fonts?.ready) {
+        try {
+          await fonts.ready;
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    const runPrint = async () => {
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
+      await waitForFonts();
+
+      await Promise.race([
+        waitForImages(),
+        new Promise<void>(resolve => setTimeout(resolve, 1500)),
+      ]);
+
+      window.print();
+    };
+
+    void runPrint();
+  }, [isPreviewMode, previewTokenFromUrl, shouldAutoPrintFromUrl]);
   
   // Version history state
   const [versionHistory, setVersionHistory] = useState<Record<string, LessonVersionHistory>>(() => {
@@ -2114,7 +2181,7 @@ export default function LessonMaterialMakerPage() {
   const [selectedLessonForForks, setSelectedLessonForForks] = useState<string | null>(null);
   
   // Export functionality
-  const { exportLessonData, print } = useExport();
+  const { exportLessonData } = useExport();
   const [showExportMenu, setShowExportMenu] = useState(false);
   
   // Collaborative editing state
@@ -3510,6 +3577,39 @@ export default function LessonMaterialMakerPage() {
     }
   };
 
+  const openLocalPreviewTab = useCallback((opts?: { autoPrint?: boolean }) => {
+    if (!draft) {
+      toast.warning('No content to preview.');
+      return;
+    }
+
+    const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    try {
+      localStorage.setItem(
+        `${PREVIEW_PAYLOAD_PREFIX}${token}`,
+        JSON.stringify({ draft, currentEditingLesson })
+      );
+    } catch (err) {
+      console.error('Failed to persist preview payload:', err);
+      toast.error('Unable to open preview (storage blocked).');
+      return;
+    }
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('previewToken', token);
+      if (opts?.autoPrint) {
+        url.searchParams.set('print', '1');
+      } else {
+        url.searchParams.delete('print');
+      }
+      window.open(url.toString(), '_blank');
+    } catch (err) {
+      console.error('Failed to open preview tab:', err);
+      toast.error('Unable to open preview. Please check your popup blocker settings.');
+    }
+  }, [PREVIEW_PAYLOAD_PREFIX, currentEditingLesson, draft]);
+
   // Export lesson as PDF, HTML, or print
   const handleExportLesson = useCallback((format: 'pdf' | 'print' | 'html') => {
     if (!draft) {
@@ -3754,11 +3854,11 @@ export default function LessonMaterialMakerPage() {
     try {
       switch (format) {
         case 'pdf':
-          exportLessonData(exportData, 'pdf', { fileName: lessonTitle });
-          toast.success('Opening PDF export dialog...');
+          openLocalPreviewTab({ autoPrint: true });
+          toast.success('Opening print dialog (Save as PDF)...');
           break;
         case 'print':
-          print(formatLessonForExport(exportData), exportData.title);
+          openLocalPreviewTab({ autoPrint: true });
           break;
         case 'html':
           exportLessonData(exportData, 'html', { fileName: lessonTitle });
@@ -3770,7 +3870,7 @@ export default function LessonMaterialMakerPage() {
     }
     
     setShowExportMenu(false);
-  }, [currentEditingLesson, draft, exportLessonData, print]);
+  }, [currentEditingLesson, draft, exportLessonData, openLocalPreviewTab]);
 
   // Open lesson preview in a new tab (static page without edit tools)
   const handleOpenPreview = useCallback(() => {
