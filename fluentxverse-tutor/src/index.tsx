@@ -13,6 +13,7 @@ import InterviewBookingPage from './pages/InterviewBookingPage';
 import InterviewRoomPage from './pages/InterviewRoomPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MaterialsPage from './pages/MaterialsPage';
+import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import InboxPage from './pages/InboxPage';
 import MyProfilePage from "./pages/MyProfilePage";
 import PerformanceMetricsPage from "./pages/PerformanceMetricsPage";
@@ -98,6 +99,7 @@ export function AppInner() {
 							<Route path="/interview/room/:interviewId?" component={withProtected(InterviewRoomPage)} />
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
+							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 							<Route path="/profile" component={withProtected(MyProfilePage)} />
 							<Route path="/performance-metrics" component={withProtected(PerformanceMetricsPage)} />

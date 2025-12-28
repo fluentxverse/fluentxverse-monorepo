@@ -2096,6 +2096,89 @@ export default new Elysia({ prefix: '/lesson' })
     }
   })
   
+  /**
+   * Get published lessons for a specific course (for student/tutor apps)
+   * Returns lessons with their content
+   */
+  .get('/published/:courseSlug', async ({ params, query }) => {
+    try {
+      const { courseSlug } = params;
+      const limit = parseInt(query.limit as string, 10) || 50;
+      const offset = parseInt(query.offset as string, 10) || 0;
+      
+      // Get all published lessons
+      const { lessons, total } = await lessonService.getLessons({
+        status: 'published',
+        includeForks: false,
+        limit: 200, // Get more to filter by course
+        offset: 0
+      });
+      
+      // Map course slugs to match the materials page course IDs
+      const courseSlugMap: Record<string, string[]> = {
+        'conversational-skills': ['Conversational Skills', 'conversational-skills', 'Conversation'],
+        'business-english': ['Business English', 'business-english', 'Business'],
+        'job-interview-prep': ['Job Interview', 'job-interview-prep', 'Career'],
+        'travel-english': ['Travel English', 'travel-english', 'Travel'],
+        'academic-english': ['Academic English', 'academic-english', 'Academic'],
+        'pronunciation': ['Pronunciation', 'pronunciation', 'Speaking'],
+        'grammar-improvement': ['Grammar', 'grammar-improvement', 'grammar'],
+        'vocabulary-building': ['Vocabulary', 'vocabulary-building']
+      };
+      
+      const matchingCourseNames = courseSlugMap[courseSlug] || [courseSlug];
+      
+      // Filter lessons that belong to the requested course
+      // We need to check the lesson data for course info
+      const filteredLessons = [];
+      
+      for (const lesson of lessons) {
+        // Get latest version data to check course
+        const latestVersion = await lessonService.getLatestVersion(lesson.id);
+        if (!latestVersion) continue;
+        
+        const lessonData = latestVersion.lessonData;
+        
+        // Check if lesson belongs to this course (check various fields)
+        const lessonCourse = (lessonData as any).course || 
+                           (lessonData as any).category ||
+                           (lessonData as any).templateCourse ||
+                           '';
+        
+        // Also check header.chapterLabel for course indication
+        const chapterLabel = lessonData.header?.chapterLabel || '';
+        
+        const isMatch = matchingCourseNames.some(name => 
+          lessonCourse.toLowerCase().includes(name.toLowerCase()) ||
+          chapterLabel.toLowerCase().includes(name.toLowerCase()) ||
+          lesson.title.toLowerCase().includes(name.toLowerCase())
+        );
+        
+        if (isMatch) {
+          filteredLessons.push({
+            ...lesson,
+            url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html?v=${lesson.currentVersion || ''}`,
+            lessonData
+          });
+        }
+      }
+      
+      // Apply pagination to filtered results
+      const paginatedLessons = filteredLessons.slice(offset, offset + limit);
+      
+      return { 
+        success: true, 
+        lessons: paginatedLessons,
+        total: filteredLessons.length,
+        limit,
+        offset 
+      };
+    } catch (error) {
+      console.error('Error fetching published lessons for course:', error);
+      return { success: true, lessons: [], total: 0 };
+    }
+  })
+
   // Unpublish a lesson (set back to draft)
   .post('/unpublish/:lessonId', async ({ params, cookie }) => {
     try {

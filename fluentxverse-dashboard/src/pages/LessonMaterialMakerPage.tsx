@@ -258,6 +258,9 @@ type LessonMaterialDraft = {
   vocabulary: VocabularyItem[];
   grammar: GrammarPoint[];
   exercises: ExerciseItem[];
+  // Course metadata for filtering published lessons
+  course?: string;
+  category?: string;
 };
 
 // Template types for the course list
@@ -3220,6 +3223,9 @@ export default function LessonMaterialMakerPage() {
           lessonLabel: `Lesson ${newLessonForm.lessonNumber}`,
           goalText: newLessonForm.goalName.trim(),
         },
+        // Include course metadata for filtering published lessons
+        course: selectedTemplateForLesson.course,
+        category: selectedTemplateForLesson.category,
       },
     };
 
