@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import type { ReactNode } from 'react';
 import { LocationProvider, Router, Route } from 'preact-iso';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -8,7 +9,7 @@ import { ToastProvider } from './Components/Common/Toast';
 import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
 import { TutorProfilePage } from './pages/TutorProfilePage';
 import { StudentDashboard } from './pages/StudentDashboard';
-import { ClassroomPage } from './pages/ClassroomPage';
+import ClassroomPage from './pages/ClassroomPage';
 import Home from './pages/Home';
 import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -25,16 +26,21 @@ import { initSocket, connectSocket } from './client/socket/socket.client';
 
 import './assets/css/style.css';
 
+
 export function App() {
+  const appTree = (
+    <LocationProvider>
+      <AppContent />
+    </LocationProvider>
+  ) as unknown as ReactNode;
+
+  const authedTree = (
+    <AuthProvider>{appTree}</AuthProvider>
+  ) as unknown as ReactNode;
+
   return (
     <ToastProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <LocationProvider>
-            <AppContent />
-          </LocationProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <ThemeProvider>{authedTree}</ThemeProvider>
     </ToastProvider>
   );
 }
