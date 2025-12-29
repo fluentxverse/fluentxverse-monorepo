@@ -52,8 +52,8 @@ export default function ConversationalSkillsPage() {
   const { route } = useLocation();
 
   const handleOpenLesson = (lesson: Lesson) => {
-    // Navigate to internal lesson view page with lesson ID
-    route(`/lesson/view?id=${lesson.id}`);
+    // Open lesson in a new tab using the app's own URL
+    window.open(`/lesson/view?id=${lesson.id}`, '_blank');
   };
 
   const getLevelFromHeader = (lesson: Lesson): string => {
