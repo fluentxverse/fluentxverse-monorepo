@@ -92,7 +92,8 @@ export function AppInner() {
 					<Route path="/register" component={RegisterPage} />
 
 					<Route path="/schedule" component={withCertified(SchedulePage)} />
-						<Route path="/lesson/:bookingId" component={withCertified(StudentProfilePage)} />
+							<Route path="/lesson/view" component={withProtected(LessonViewPage)} />
+							<Route path="/lesson/:bookingId" component={withCertified(StudentProfilePage)} />
 							<Route path="/classroom/:sessionId" component={withCertified(ClassroomPage)} />
 							<Route path="/exam/written" component={withProtected(ExamPage)} />
 							<Route path="/exam/speaking" component={withProtected(SpeakingExamPage)} />
@@ -101,7 +102,6 @@ export function AppInner() {
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
-							<Route path="/lesson/view" component={withProtected(LessonViewPage)} />
 							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={withProtected(LessonViewPage)} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 							<Route path="/profile" component={withProtected(MyProfilePage)} />
