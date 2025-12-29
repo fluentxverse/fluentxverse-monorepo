@@ -1,38 +1,31 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef } from 'preact/hooks';
 import { useRoute, useLocation } from 'preact-iso';
 import { lessonApi } from '../api/lesson.api';
 import './LessonViewPage.css';
-
-interface LessonInfo {
-  id: string;
-  title: string;
-  status: string;
-}
 
 export default function LessonViewPage() {
   const { query } = useRoute();
   const { route } = useLocation();
   const lessonId = query.id as string;
+  const hasOpenedRef = useRef(false);
   
-  const [lesson, setLesson] = useState<LessonInfo | null>(null);
-  const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = 'Lesson | FluentXVerse';
+    document.title = 'Opening Lesson... | FluentXVerse';
   }, []);
 
   useEffect(() => {
-    if (lessonId) {
-      loadLesson();
-    } else {
+    if (lessonId && !hasOpenedRef.current) {
+      loadAndOpenLesson();
+    } else if (!lessonId) {
       setError('No lesson ID provided');
       setIsLoading(false);
     }
   }, [lessonId]);
 
-  const loadLesson = async () => {
+  const loadAndOpenLesson = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -41,19 +34,20 @@ export default function LessonViewPage() {
       const result = await lessonApi.getTutorLesson(lessonId);
       
       if (result.success && result.viewUrl) {
-        setLesson(result.lesson);
-        setViewUrl(result.viewUrl);
+        // Mark that we've opened to prevent double-opening
+        hasOpenedRef.current = true;
         
-        // Update page title with lesson name
-        if (result.lesson?.title) {
-          document.title = `${result.lesson.title} | FluentXVerse`;
-        }
+        // Open lesson in new tab
+        window.open(result.viewUrl, '_blank');
+        
+        // Navigate back to materials page
+        route('/materials/conversational-skills');
       } else {
         setError(result.error || 'Failed to load lesson');
+        setIsLoading(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load lesson');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -67,13 +61,13 @@ export default function LessonViewPage() {
       <div className="lesson-fullpage">
         <div className="lesson-fullpage-loading">
           <div className="spinner"></div>
-          <p>Loading lesson...</p>
+          <p>Opening lesson in new tab...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !viewUrl) {
+  if (error) {
     return (
       <div className="lesson-fullpage">
         <div className="lesson-fullpage-error">
@@ -81,7 +75,7 @@ export default function LessonViewPage() {
             <i className="fi-sr-exclamation"></i>
           </div>
           <h3>Failed to load lesson</h3>
-          <p>{error || 'Lesson not found'}</p>
+          <p>{error}</p>
           <button onClick={handleBack} className="btn-back">
             <i className="fi-sr-arrow-left"></i>
             Back to Materials
@@ -91,25 +85,5 @@ export default function LessonViewPage() {
     );
   }
 
-  return (
-    <div className="lesson-fullpage">
-      {/* Back Button - Fixed position */}
-      <button 
-        className="lesson-back-btn"
-        onClick={handleBack}
-        title="Back to Materials"
-      >
-        <i className="fi-sr-arrow-left"></i>
-        <span>Back</span>
-      </button>
-
-      {/* Full-page iframe */}
-      <iframe
-        src={viewUrl}
-        className="lesson-fullpage-iframe"
-        title={lesson?.title || 'Lesson Material'}
-        allowFullScreen
-      />
-    </div>
-  );
+  return null;
 }
