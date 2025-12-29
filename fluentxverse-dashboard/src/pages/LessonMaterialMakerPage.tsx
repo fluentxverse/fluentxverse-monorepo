@@ -5792,7 +5792,7 @@ export default function LessonMaterialMakerPage() {
                         
                         {expandedVersionChanges.has(entry.id) && (
                           <div className="lm-version-changes-list">
-                            {entry.changes.map((change) => (
+                            {(entry.changes || []).map((change) => (
                               <div 
                                 key={change.id} 
                                 className={`lm-version-change-item lm-version-change-${change.type}`}
@@ -6189,7 +6189,7 @@ export default function LessonMaterialMakerPage() {
 
         {/* Page body - sections */}
         <div className="lm-body">
-          {draft.sections.map((section, sectionIndex) => {
+          {(draft.sections || []).map((section, sectionIndex) => {
             // Hide feedback section in student view mode
             if (materialViewMode === 'student' && section.sectionType === 'feedback') {
               return null;
@@ -8685,7 +8685,7 @@ export default function LessonMaterialMakerPage() {
                           {section.lessonGoalTitle}
                         </div>
                         <div className="lm-goal-steps">
-                          {section.lessonGoalSteps.map((step, stepIndex) => (
+                          {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                             <div key={step.id} className="lm-goal-step">
                               <span className="lm-step-number">{stepIndex + 1}</span>
                               <div className="lm-step-content">
@@ -8893,7 +8893,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -9100,7 +9100,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -9306,7 +9306,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -9512,7 +9512,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -9718,7 +9718,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -9924,7 +9924,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -10130,7 +10130,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -10300,7 +10300,7 @@ export default function LessonMaterialMakerPage() {
                       {section.answerItems && section.answerItems.length > 0 && (
                         <div className="lm-practice-answer-box">
                           <ol className="lm-practice-answer-list">
-                            {section.answerItems.map((answer, ansIndex) => (
+                            {(section.answerItems || []).map((answer, ansIndex) => (
                               <li key={`answer-${ansIndex}`} className="lm-practice-answer-item">
                                 <span
                                   className="lm-practice-answer-text"
@@ -10361,7 +10361,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -10552,7 +10552,7 @@ export default function LessonMaterialMakerPage() {
 
                       {/* Steps List */}
                       <div className="lm-feedback-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-feedback-step">
                             <span className="lm-feedback-step-number">{stepIndex + 1}</span>
                             <div className="lm-feedback-step-content">
@@ -10664,7 +10664,7 @@ export default function LessonMaterialMakerPage() {
                       
                       {/* Steps with Add Button */}
                       <div className="lm-listening-steps-container">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-listening-step">
                             <div className="lm-listening-step-header">
                               <span className="lm-step-number">{stepIndex + 1}</span>
@@ -10857,7 +10857,7 @@ export default function LessonMaterialMakerPage() {
                       {/* Questions Box */}
                       {section.listeningQuestions && section.listeningQuestions.length > 0 && (
                         <div className="lm-listening-questions-sidebar">
-                          {section.listeningQuestions.map((q, qIdx) => (
+                          {(section.listeningQuestions || []).map((q, qIdx) => (
                             <div key={q.id} className="lm-listening-q-item">
                               <div className="lm-listening-q-bullet">•</div>
                               <div className="lm-listening-q-content">
@@ -10954,7 +10954,7 @@ export default function LessonMaterialMakerPage() {
                       
                       {/* Steps with Script/Tip support */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -11159,7 +11159,7 @@ export default function LessonMaterialMakerPage() {
                       {/* Questions Box (green background) */}
                       {section.readingQuestions && section.readingQuestions.length > 0 && (
                         <div className="lm-reading-questions-sidebar">
-                          {section.readingQuestions.map((q, qIdx) => (
+                          {(section.readingQuestions || []).map((q, qIdx) => (
                             <div key={q.id} className="lm-reading-q-item">
                               <div className="lm-reading-q-bullet">•</div>
                               <div className="lm-reading-q-content">
@@ -11266,7 +11266,7 @@ export default function LessonMaterialMakerPage() {
                       </div>
                       {/* Steps */}
                       <div className="lm-goal-steps">
-                        {section.lessonGoalSteps.map((step, stepIndex) => (
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
                           <div key={step.id} className="lm-goal-step">
                             <span className="lm-step-number">{stepIndex + 1}</span>
                             <div className="lm-step-content">
@@ -11340,7 +11340,7 @@ export default function LessonMaterialMakerPage() {
                         <div className="lm-listening-prompts-box">
                           <div className="lm-listening-prompts-header">Conversation Prompts</div>
                           <div className="lm-listening-prompts-content">
-                            {section.conversationPrompts.map((prompt, promptIndex) => (
+                            {(section.conversationPrompts || []).map((prompt, promptIndex) => (
                               <div key={`prompt-${promptIndex}`} className="lm-listening-prompt-item">
                                 <span className="lm-listening-prompt-bullet">●</span>
                                 <span
