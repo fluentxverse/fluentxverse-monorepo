@@ -113,6 +113,3 @@ export default function LessonViewPage() {
     </div>
   );
 }
-    </>
-  );
-}
