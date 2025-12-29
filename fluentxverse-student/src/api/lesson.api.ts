@@ -63,10 +63,26 @@ export const lessonApi = {
   },
 
   /**
-   * Get a specific lesson by ID
+   * Get a specific lesson by ID (full data)
    */
   async getLesson(lessonId: string): Promise<{ success: boolean; lesson: Lesson | null; lessonData?: LessonMaterial; url?: string; error?: string }> {
     const response = await client.get(`/lesson/${lessonId}`);
+    return response.data;
+  },
+
+  /**
+   * Get student view of a lesson (stripped of tutor hints)
+   * Returns viewUrl for displaying in dashboard's student view mode
+   */
+  async getStudentLesson(lessonId: string): Promise<{ 
+    success: boolean; 
+    lesson: { id: string; title: string; status: string } | null; 
+    lessonData?: LessonMaterial; 
+    materialType?: string; 
+    viewUrl?: string;
+    error?: string 
+  }> {
+    const response = await client.get(`/lesson/${lessonId}/student`);
     return response.data;
   }
 };

@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'preact/hooks';
-import { useRoute } from 'preact-iso';
-import DashboardHeader from '../Components/Dashboard/DashboardHeader';
-import SideBar from '../Components/IndexOne/SideBar';
-import { useAuthContext } from '../context/AuthContext';
-import { lessonApi, type Lesson } from '../api/lesson.api';
+import { useRoute, useLocation } from 'preact-iso';
+import { lessonApi } from '../api/lesson.api';
 import './LessonViewPage.css';
+
+interface LessonInfo {
+  id: string;
+  title: string;
+  status: string;
+}
 
 export default function LessonViewPage() {
   const { query } = useRoute();
-  const { user } = useAuthContext();
+  const { route } = useLocation();
   const lessonId = query.id as string;
   
-  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [lesson, setLesson] = useState<LessonInfo | null>(null);
+  const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,14 +36,18 @@ export default function LessonViewPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const result = await lessonApi.getLesson(lessonId);
-      if (result.success && result.lesson) {
-        setLesson({
-          ...result.lesson,
-          lessonData: result.lessonData
-        });
+      
+      // Use the student endpoint to get the proper student view URL
+      const result = await lessonApi.getStudentLesson(lessonId);
+      
+      if (result.success && result.viewUrl) {
+        setLesson(result.lesson);
+        setViewUrl(result.viewUrl);
+        
         // Update page title with lesson name
-        document.title = `${result.lesson.title} | FluentXVerse`;
+        if (result.lesson?.title) {
+          document.title = `${result.lesson.title} | FluentXVerse`;
+        }
       } else {
         setError(result.error || 'Failed to load lesson');
       }
@@ -50,124 +58,61 @@ export default function LessonViewPage() {
     }
   };
 
-  const getLevelFromHeader = (): string => {
-    return lesson?.lessonData?.header?.levelBadge || 'All Levels';
-  };
-
-  const getChapterFromHeader = (): string => {
-    return lesson?.lessonData?.header?.chapterLabel || '';
+  const handleBack = () => {
+    route('/materials/conversational-skills');
   };
 
   if (isLoading) {
     return (
-      <>
-        <SideBar />
-        <div className="main-content">
-          <DashboardHeader user={user || undefined} />
-          <div className="lesson-view-page">
-            <div className="lesson-view-loading">
-              <div className="spinner"></div>
-              <p>Loading lesson...</p>
-            </div>
-          </div>
+      <div className="lesson-fullpage">
+        <div className="lesson-fullpage-loading">
+          <div className="spinner"></div>
+          <p>Loading lesson...</p>
         </div>
-      </>
+      </div>
     );
   }
 
-  if (error || !lesson) {
+  if (error || !viewUrl) {
     return (
-      <>
-        <SideBar />
-        <div className="main-content">
-          <DashboardHeader user={user || undefined} />
-          <div className="lesson-view-page">
-            <div className="lesson-view-error">
-              <div className="error-icon">
-                <i className="fi-sr-exclamation"></i>
-              </div>
-              <h3>Failed to load lesson</h3>
-              <p>{error || 'Lesson not found'}</p>
-              <a href="/materials/conversational-skills" className="btn-back">
-                <i className="fi-sr-arrow-left"></i>
-                Back to Materials
-              </a>
-            </div>
+      <div className="lesson-fullpage">
+        <div className="lesson-fullpage-error">
+          <div className="error-icon">
+            <i className="fi-sr-exclamation"></i>
           </div>
+          <h3>Failed to load lesson</h3>
+          <p>{error || 'Lesson not found'}</p>
+          <button onClick={handleBack} className="btn-back">
+            <i className="fi-sr-arrow-left"></i>
+            Back to Materials
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <SideBar />
-      <div className="main-content">
-        <DashboardHeader user={user || undefined} />
-        <div className="lesson-view-page">
-          <div className="lesson-view-container">
-            {/* Breadcrumb */}
-            <div className="lesson-breadcrumb">
-              <a href="/materials">Materials</a>
-              <i className="fi-sr-angle-right"></i>
-              <a href="/materials/conversational-skills">Conversational Skills</a>
-              <i className="fi-sr-angle-right"></i>
-              <span>{lesson.title}</span>
-            </div>
+    <div className="lesson-fullpage">
+      {/* Back Button - Fixed position */}
+      <button 
+        className="lesson-back-btn"
+        onClick={handleBack}
+        title="Back to Materials"
+      >
+        <i className="fi-sr-arrow-left"></i>
+        <span>Back</span>
+      </button>
 
-            {/* Lesson Header */}
-            <div 
-              className="lesson-view-header"
-              style={{
-                backgroundImage: lesson.lessonData?.header?.backgroundImage 
-                  ? `url(${lesson.lessonData.header.backgroundImage})`
-                  : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)'
-              }}
-            >
-              <div className="lesson-header-overlay">
-                <div className="lesson-header-content">
-                  <div className="lesson-header-badges">
-                    <span className="level-badge">{getLevelFromHeader()}</span>
-                    <span className="chapter-badge">{getChapterFromHeader()}</span>
-                  </div>
-                  <h1 className="lesson-title">{lesson.title}</h1>
-                  <p className="lesson-goal">
-                    {lesson.lessonData?.header?.goalText || 'English conversation practice'}
-                  </p>
-                  <p className="lesson-subgoal">
-                    {lesson.lessonData?.header?.goalSubtext || ''}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Lesson Content - Embedded iframe */}
-            <div className="lesson-content-wrapper">
-              {lesson.url ? (
-                <iframe
-                  src={lesson.url}
-                  className="lesson-iframe"
-                  title={lesson.title}
-                  allowFullScreen
-                />
-              ) : (
-                <div className="lesson-no-content">
-                  <i className="fi-sr-file"></i>
-                  <p>Lesson content is not available</p>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="lesson-actions">
-              <a href="/materials/conversational-skills" className="btn-secondary">
-                <i className="fi-sr-arrow-left"></i>
-                Back to Course
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Full-page iframe */}
+      <iframe
+        src={viewUrl}
+        className="lesson-fullpage-iframe"
+        title={lesson?.title || 'Lesson Material'}
+        allowFullScreen
+      />
+    </div>
+  );
+}
     </>
   );
 }

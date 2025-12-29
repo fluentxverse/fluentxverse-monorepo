@@ -1961,6 +1961,13 @@ export default function LessonMaterialMakerPage() {
       return false;
     }
   });
+  const [studentViewFromUrl] = useState<boolean>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('studentView') === '1';
+    } catch {
+      return false;
+    }
+  });
   const didAutoPrintRef = useRef(false);
   const [activeTab, setActiveTab] = useState<'templates' | 'myLessons'>('templates');
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
@@ -2035,11 +2042,12 @@ export default function LessonMaterialMakerPage() {
       setViewMode('editor');
       setIsFullscreen(true);
       setIsPreviewMode(true);
-      setMaterialViewMode('tutor');
+      // Set student view mode if requested via URL param
+      setMaterialViewMode(studentViewFromUrl ? 'student' : 'tutor');
     } catch (err) {
       console.error('Failed to restore preview payload:', err);
     }
-  }, [previewTokenFromUrl]);
+  }, [previewTokenFromUrl, studentViewFromUrl]);
 
   useEffect(() => {
     if (previewTokenFromUrl) return;

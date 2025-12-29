@@ -1736,6 +1736,7 @@ export default new Elysia({ prefix: '/lesson' })
   .get('/:lessonId/student', async ({ params }) => {
     try {
       const { lessonId } = params;
+      const dashboardBase = getDashboardPublicUrl();
       
       // First try to get from database
       const dbLesson = await lessonService.getLessonById(lessonId);
@@ -1743,6 +1744,10 @@ export default new Elysia({ prefix: '/lesson' })
       if (dbLesson) {
         // Try to get pre-generated student data from SeaweedFS
         const studentData = await fetchFromSeaweed(`${dbLesson.storagePath}/student-data.json`);
+        
+        // Construct the student view URL for the dashboard
+        const studentDataUrl = `${API_BASE}/lesson/files${dbLesson.storagePath}/student-data.json`;
+        const viewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(studentDataUrl)}&studentView=1`;
         
         if (studentData) {
           return {
@@ -1753,7 +1758,8 @@ export default new Elysia({ prefix: '/lesson' })
               status: dbLesson.status,
             },
             lessonData: studentData,
-            materialType: 'student'
+            materialType: 'student',
+            viewUrl
           };
         }
         
@@ -1770,7 +1776,8 @@ export default new Elysia({ prefix: '/lesson' })
             },
             lessonData: generatedStudentData,
             materialType: 'student',
-            generatedOnFly: true
+            generatedOnFly: true,
+            viewUrl
           };
         }
       }
@@ -1779,13 +1786,18 @@ export default new Elysia({ prefix: '/lesson' })
       const studentJsonUrl = `${FILER_BASE}/lessons/${lessonId}/student-data.json`;
       const res = await fetch(studentJsonUrl);
       
+      // Legacy URL construction
+      const legacyStudentDataUrl = `${API_BASE}/lesson/files/lessons/${lessonId}/student-data.json`;
+      const legacyViewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(legacyStudentDataUrl)}&studentView=1`;
+      
       if (res.ok) {
         const studentData = await res.json();
         return {
           success: true,
           lesson: null,
           lessonData: studentData,
-          materialType: 'student'
+          materialType: 'student',
+          viewUrl: legacyViewUrl
         };
       }
       
@@ -1801,7 +1813,8 @@ export default new Elysia({ prefix: '/lesson' })
           lesson: null,
           lessonData: generatedStudentData,
           materialType: 'student',
-          generatedOnFly: true
+          generatedOnFly: true,
+          viewUrl: legacyViewUrl
         };
       }
       
