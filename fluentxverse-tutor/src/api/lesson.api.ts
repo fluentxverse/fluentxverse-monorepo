@@ -84,6 +84,22 @@ export const lessonApi = {
   }> {
     const response = await client.get(`/lesson/${lessonId}/student`);
     return response.data;
+  },
+
+  /**
+   * Get tutor view of a lesson (full version with hints/tips)
+   * Returns viewUrl for displaying in dashboard's tutor view mode
+   */
+  async getTutorLesson(lessonId: string): Promise<{ 
+    success: boolean; 
+    lesson: Lesson | null; 
+    lessonData?: LessonMaterial; 
+    materialType?: string; 
+    viewUrl?: string;
+    error?: string 
+  }> {
+    const response = await client.get(`/lesson/${lessonId}/tutor`);
+    return response.data;
   }
 };
 

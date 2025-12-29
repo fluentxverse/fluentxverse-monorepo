@@ -1,33 +1,12 @@
 import { useEffect, useState } from 'preact/hooks';
-import { useLocation } from 'preact-iso';
 import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import { useAuthContext } from '../context/AuthContext';
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './ConversationalSkillsPage.css';
 
-// Helper functions to generate URL-friendly slugs
-const generateGoalSlug = (goalText: string): string => {
-  return goalText
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '') // Remove special characters
-    .trim()
-    .replace(/\s+/g, '_'); // Replace spaces with underscores
-};
-
-const extractLevelNumber = (levelBadge: string): string => {
-  const match = levelBadge.match(/(\d+)/);
-  return match ? match[1] : '1';
-};
-
-const extractChapterNumber = (chapterLabel: string): string => {
-  const match = chapterLabel.match(/(\d+)/);
-  return match ? match[1] : '1';
-};
-
 const ConversationalSkillsPage = () => {
   const { user } = useAuthContext();
-  const { route } = useLocation();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,19 +49,21 @@ const ConversationalSkillsPage = () => {
     );
   });
 
-  const handleOpenLesson = (lesson: Lesson) => {
-    // Generate the custom URL based on lesson metadata
-    const header = lesson.lessonData?.header;
-    if (header) {
-      const level = extractLevelNumber(header.levelBadge || 'Level 1');
-      const chapter = extractChapterNumber(header.chapterLabel || 'Chapter 1');
-      const goalSlug = generateGoalSlug(header.goalText || lesson.title);
-      
-      // Navigate to custom URL with lesson ID as query param
-      route(`/conversation-mat/lvl${level}/ch${chapter}/${goalSlug}?id=${lesson.id}`);
-    } else if (lesson.url) {
-      // Fallback to external URL if no header data
-      window.open(lesson.url, '_blank');
+  const handleOpenLesson = async (lesson: Lesson) => {
+    try {
+      // Fetch the tutor view URL from the API (includes tip boxes)
+      const result = await lessonApi.getTutorLesson(lesson.id);
+      if (result.success && result.viewUrl) {
+        // Open the dashboard's tutor view in a new tab
+        window.open(result.viewUrl, '_blank');
+      } else if (lesson.url) {
+        // Fallback to external URL if no viewUrl
+        window.open(lesson.url, '_blank');
+      } else {
+        console.error('No view URL available for lesson:', lesson.id);
+      }
+    } catch (error) {
+      console.error('Failed to get lesson URL:', error);
     }
   };
 

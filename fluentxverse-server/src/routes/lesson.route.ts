@@ -1832,6 +1832,7 @@ export default new Elysia({ prefix: '/lesson' })
   .get('/:lessonId/tutor', async ({ params, request, cookie }) => {
     try {
       const { lessonId } = params;
+      const dashboardBase = getDashboardPublicUrl();
       
       // Verify auth - only tutors/admins should access tutor material
       const auth = await getAuthFromCookie(cookie);
@@ -1843,6 +1844,10 @@ export default new Elysia({ prefix: '/lesson' })
       const dbLesson = await lessonService.getLessonById(lessonId);
       
       if (dbLesson) {
+        // Construct the tutor view URL for the dashboard (no studentView param = tutor view)
+        const tutorDataUrl = `${API_BASE}/lesson/files${dbLesson.storagePath}/tutor-data.json`;
+        const viewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(tutorDataUrl)}`;
+        
         // Try to get tutor data from SeaweedFS
         const tutorData = await fetchFromSeaweed(`${dbLesson.storagePath}/tutor-data.json`);
         
@@ -1851,7 +1856,8 @@ export default new Elysia({ prefix: '/lesson' })
             success: true,
             lesson: dbLesson,
             lessonData: tutorData,
-            materialType: 'tutor'
+            materialType: 'tutor',
+            viewUrl
           };
         }
         
@@ -1862,7 +1868,8 @@ export default new Elysia({ prefix: '/lesson' })
             success: true,
             lesson: dbLesson,
             lessonData: legacyData,
-            materialType: 'tutor'
+            materialType: 'tutor',
+            viewUrl
           };
         }
         
@@ -1873,12 +1880,16 @@ export default new Elysia({ prefix: '/lesson' })
             success: true,
             lesson: dbLesson,
             lessonData: latestVersion.lessonData,
-            materialType: 'tutor'
+            materialType: 'tutor',
+            viewUrl
           };
         }
       }
       
       // Fallback to SeaweedFS only (for legacy lessons)
+      const legacyTutorDataUrl = `${API_BASE}/lesson/files/lessons/${lessonId}/tutor-data.json`;
+      const legacyViewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(legacyTutorDataUrl)}`;
+      
       const tutorJsonUrl = `${FILER_BASE}/lessons/${lessonId}/tutor-data.json`;
       let res = await fetch(tutorJsonUrl);
       
@@ -1896,7 +1907,8 @@ export default new Elysia({ prefix: '/lesson' })
         success: true,
         lesson: null,
         lessonData: tutorData,
-        materialType: 'tutor'
+        materialType: 'tutor',
+        viewUrl: legacyViewUrl
       };
     } catch (error) {
       console.error('Error fetching tutor material:', error);
