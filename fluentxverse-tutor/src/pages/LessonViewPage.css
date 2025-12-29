@@ -48,6 +48,17 @@
   font-size: 14px;
 }
 
+/* Full-page iframe */
+.lesson-fullpage-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 /* Content Wrapper - replaces iframe */
 .lesson-content-wrapper {
   width: 100%;
