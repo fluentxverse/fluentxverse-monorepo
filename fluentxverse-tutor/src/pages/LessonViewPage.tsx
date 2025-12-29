@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useRoute, useLocation } from 'preact-iso';
-import { lessonApi } from '../api/lesson.api';
+import { lessonApi, type LessonMaterial } from '../api/lesson.api';
+import LessonRenderer from '../Components/LessonRenderer';
 import './LessonViewPage.css';
 
 interface LessonInfo {
@@ -15,7 +16,7 @@ export default function LessonViewPage() {
   const lessonId = query.id as string;
   
   const [lesson, setLesson] = useState<LessonInfo | null>(null);
-  const [viewUrl, setViewUrl] = useState<string | null>(null);
+  const [lessonData, setLessonData] = useState<LessonMaterial | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,12 +38,12 @@ export default function LessonViewPage() {
       setIsLoading(true);
       setError(null);
       
-      // Use the student endpoint to get the proper student view URL
-      const result = await lessonApi.getStudentLesson(lessonId);
+      // Use the tutor endpoint to get the full lesson data with hints
+      const result = await lessonApi.getTutorLesson(lessonId);
       
-      if (result.success && result.viewUrl) {
+      if (result.success && result.lessonData) {
         setLesson(result.lesson);
-        setViewUrl(result.viewUrl);
+        setLessonData(result.lessonData);
         
         // Update page title with lesson name
         if (result.lesson?.title) {
@@ -67,13 +68,12 @@ export default function LessonViewPage() {
       <div className="lesson-fullpage">
         <div className="lesson-fullpage-loading">
           <div className="spinner"></div>
-          <p>Loading lesson...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !viewUrl) {
+  if (error || !lessonData) {
     return (
       <div className="lesson-fullpage">
         <div className="lesson-fullpage-error">
@@ -103,13 +103,10 @@ export default function LessonViewPage() {
         <span>Back</span>
       </button>
 
-      {/* Full-page iframe */}
-      <iframe
-        src={viewUrl}
-        className="lesson-fullpage-iframe"
-        title={lesson?.title || 'Lesson Material'}
-        allowFullScreen
-      />
+      {/* Render lesson content directly with tutor view */}
+      <div className="lesson-content-wrapper">
+        <LessonRenderer lessonData={lessonData} viewMode="tutor" />
+      </div>
     </div>
   );
 }

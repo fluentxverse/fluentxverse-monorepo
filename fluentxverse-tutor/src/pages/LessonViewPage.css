@@ -48,12 +48,12 @@
   font-size: 14px;
 }
 
-/* Full-page iframe */
-.lesson-fullpage-iframe {
+/* Content Wrapper - replaces iframe */
+.lesson-content-wrapper {
   width: 100%;
   height: 100%;
-  border: none;
-  display: block;
+  overflow-y: auto;
+  padding-top: 60px; /* Space for fixed back button */
 }
 
 /* Loading State */
@@ -157,4 +157,9 @@
   .lesson-back-btn span {
     display: none;
   }
+  
+  .lesson-content-wrapper {
+    padding-top: 50px;
+  }
 }
+
