@@ -12,6 +12,7 @@ import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
 import { TutorProfilePage } from './pages/TutorProfilePage';
 import MaterialsPage from './pages/MaterialsPage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
+import LessonViewPage from './pages/LessonViewPage';
 import TicketsPage from './pages/TicketsPage';
 import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
 import InboxPage from './pages/InboxPage';
@@ -106,6 +107,7 @@ export function AppInner() {
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
 						<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
+						<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={withProtected(LessonViewPage)} />
 						<Route path="/tickets" component={withProtected(TicketsPage)} />
 						<Route path="/purchase-history" component={withProtected(PurchaseHistoryPage)} />
 						<Route path="/inbox" component={withProtected(InboxPage)} />

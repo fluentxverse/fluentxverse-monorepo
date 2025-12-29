@@ -47,10 +47,38 @@ export default function ConversationalSkillsPage() {
     );
   });
 
+  // Generate URL-friendly slug from goal text
+  const generateGoalSlug = (goalText: string): string => {
+    return goalText
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 50);
+  };
+
+  // Extract level number from level badge (e.g., "LEVEL 1" -> "1")
+  const extractLevelNumber = (levelBadge: string): string => {
+    const match = levelBadge.match(/\d+/);
+    return match ? match[0] : '1';
+  };
+
+  // Extract chapter number from chapter label (e.g., "Chapter 1" -> "1")
+  const extractChapterNumber = (chapterLabel: string): string => {
+    const match = chapterLabel.match(/\d+/);
+    return match ? match[0] : '1';
+  };
+
   const handleOpenLesson = (lesson: Lesson) => {
-    if (lesson.url) {
-      window.open(lesson.url, '_blank');
-    }
+    const levelBadge = lesson.lessonData?.header?.levelBadge || 'LEVEL 1';
+    const chapterLabel = lesson.lessonData?.header?.chapterLabel || 'Chapter 1';
+    const goalText = lesson.lessonData?.header?.goalText || lesson.title;
+    
+    const level = extractLevelNumber(levelBadge);
+    const chapter = extractChapterNumber(chapterLabel);
+    const goalSlug = generateGoalSlug(goalText);
+    
+    // Navigate to the new URL format
+    window.location.href = `/conversation-mat/lvl${level}/ch${chapter}/${goalSlug}?id=${lesson.id}`;
   };
 
   const getLevelFromHeader = (lesson: Lesson): string => {
