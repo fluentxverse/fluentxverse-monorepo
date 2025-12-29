@@ -92,16 +92,6 @@ export default function LessonViewPage() {
 
   return (
     <div className="lesson-fullpage">
-      {/* Back Button - Fixed position */}
-      <button 
-        className="lesson-back-btn"
-        onClick={handleBack}
-        title="Close Lesson"
-      >
-        <i className="fi-sr-cross"></i>
-        <span>Close</span>
-      </button>
-
       {/* Full-page iframe */}
       <iframe
         src={viewUrl}
