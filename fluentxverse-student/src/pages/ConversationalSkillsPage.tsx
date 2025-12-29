@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
-import { lessonApi, type Lesson } from '../api/lesson.api';
+import { type Lesson } from '../api/lesson.api';
+import { lessonApi } from '../api/lesson.api';
 import './ConversationalSkillsPage.css';
 
 export default function ConversationalSkillsPage() {
@@ -47,27 +49,11 @@ export default function ConversationalSkillsPage() {
     );
   });
 
-  const handleOpenLesson = async (lesson: Lesson) => {
-    try {
-      // Fetch the student view URL from the API
-      const result = await lessonApi.getStudentLesson(lesson.id);
-      if (result.success && result.viewUrl) {
-        // Open in a new tab
-        window.open(result.viewUrl, '_blank');
-      } else {
-        console.error('Failed to get lesson URL:', result.error);
-        // Fallback to lesson URL if available
-        if (lesson.url) {
-          window.open(lesson.url, '_blank');
-        }
-      }
-    } catch (err) {
-      console.error('Error opening lesson:', err);
-      // Fallback to lesson URL if available
-      if (lesson.url) {
-        window.open(lesson.url, '_blank');
-      }
-    }
+  const { route } = useLocation();
+
+  const handleOpenLesson = (lesson: Lesson) => {
+    // Navigate to internal lesson view page with lesson ID
+    route(`/lesson/view?id=${lesson.id}`);
   };
 
   const getLevelFromHeader = (lesson: Lesson): string => {

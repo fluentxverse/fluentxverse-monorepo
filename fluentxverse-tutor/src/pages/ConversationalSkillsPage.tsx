@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import { useAuthContext } from '../context/AuthContext';
@@ -49,22 +50,11 @@ const ConversationalSkillsPage = () => {
     );
   });
 
-  const handleOpenLesson = async (lesson: Lesson) => {
-    try {
-      // Fetch the tutor view URL from the API (includes tip boxes)
-      const result = await lessonApi.getTutorLesson(lesson.id);
-      if (result.success && result.viewUrl) {
-        // Open the dashboard's tutor view in a new tab
-        window.open(result.viewUrl, '_blank');
-      } else if (lesson.url) {
-        // Fallback to external URL if no viewUrl
-        window.open(lesson.url, '_blank');
-      } else {
-        console.error('No view URL available for lesson:', lesson.id);
-      }
-    } catch (error) {
-      console.error('Failed to get lesson URL:', error);
-    }
+  const { route } = useLocation();
+
+  const handleOpenLesson = (lesson: Lesson) => {
+    // Navigate to internal lesson view page with lesson ID
+    route(`/lesson/view?id=${lesson.id}`);
   };
 
   const getLevelFromHeader = (lesson: Lesson): string => {

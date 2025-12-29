@@ -101,6 +101,7 @@ export function AppInner() {
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
+							<Route path="/lesson/view" component={withProtected(LessonViewPage)} />
 							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={withProtected(LessonViewPage)} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 							<Route path="/profile" component={withProtected(MyProfilePage)} />
