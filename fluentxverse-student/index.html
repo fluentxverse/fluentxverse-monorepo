@@ -44,11 +44,11 @@
 			@media(min-width:992px){.container{max-width:960px}}
 			@media(min-width:1200px){.container{max-width:1140px}}
 			@media(min-width:1400px){.container{max-width:1320px}}
-			/* Loading state */
+			/* Loading state - use specific class to avoid conflicts */
 			#app{min-height:100vh}
 			.loading-placeholder{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f8f9fa}
-			.loading-spinner{width:40px;height:40px;border:3px solid #e9ecef;border-top-color:#0245ae;border-radius:50%;animation:spin 1s linear infinite}
-			@keyframes spin{to{transform:rotate(360deg)}}
+			.critical-spinner{width:40px;height:40px;border:3px solid #e9ecef;border-top-color:#0245ae;border-radius:50%;animation:critical-spin 1s linear infinite}
+			@keyframes critical-spin{to{transform:rotate(360deg)}}
 			/* Header skeleton */
 			.header-skeleton{height:80px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1)}
 		</style>

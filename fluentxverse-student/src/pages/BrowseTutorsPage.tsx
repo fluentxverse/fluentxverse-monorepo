@@ -1,6 +1,5 @@
 import { h, Fragment } from 'preact';
 import { useState, useEffect, useCallback } from 'preact/hooks';
-import { Link } from 'react-router-dom';
 import { tutorApi } from '../api/tutor.api';
 import type { Tutor, TutorSearchParams } from '../types/tutor.types.ts';
 import Header from '../Components/Header/Header';

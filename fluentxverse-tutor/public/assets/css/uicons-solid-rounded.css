@@ -1,5 +1,6 @@
 @font-face {
 font-family: "uicons-solid-rounded";
+font-display: swap;
 src: url("../fonts/uicons-solid-rounded.eot#iefix") format("embedded-opentype"),
 url("../fonts/uicons-solid-rounded.woff2") format("woff2"),
 url("../fonts/uicons-solid-rounded.woff") format("woff");

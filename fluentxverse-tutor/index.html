@@ -30,10 +30,10 @@
 			.scroll-top i{color:#fff;font-size:18px}
 			/* Prevent layout shift for images */
 			img{max-width:100%;height:auto}
-			/* Loading spinner placeholder */
+			/* Loading spinner placeholder - only shows when root is empty */
 			#root:empty{display:flex;align-items:center;justify-content:center;min-height:100vh}
-			#root:empty::after{content:'';width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #6DBE45;border-radius:50%;animation:spin 1s linear infinite}
-			@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+			#root:empty::after{content:'';width:40px;height:40px;border:3px solid #f3f3f3;border-top:3px solid #6DBE45;border-radius:50%;animation:critical-spin 1s linear infinite}
+			@keyframes critical-spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 		</style>
 		
 		<!-- PWA Meta Tags -->

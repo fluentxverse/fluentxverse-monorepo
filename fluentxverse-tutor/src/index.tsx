@@ -38,6 +38,9 @@ import { useAuthContext } from './context/AuthContext';
 // Performance: Link prefetching on hover
 import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
 
+// Error handling
+import ErrorBoundary from './Components/ErrorBoundary';
+
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
 import "./assets/css/mobile-global.css";
@@ -134,7 +137,9 @@ export function App() {
 	return (
 		<ToastProvider>
 			<AuthProvider>
-				<AppInner />
+				<ErrorBoundary>
+					<AppInner />
+				</ErrorBoundary>
 			</AuthProvider>
 		</ToastProvider>
 	);

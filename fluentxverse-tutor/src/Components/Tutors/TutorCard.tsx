@@ -1,5 +1,4 @@
 import { h } from 'preact';
-import { Link } from 'react-router-dom';
 import type { Tutor } from '../../types/tutor.types';
 import './TutorCard.css';
 
@@ -18,7 +17,7 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
   return (
     <div className="tutor-card">
       <div className="tutor-card__header">
-        <Link to={`/tutor/${tutor.userId}`} className="tutor-card__avatar-link">
+        <a href={`/tutor/${tutor.userId}`} className="tutor-card__avatar-link">
           {tutor.profilePicture ? (
             <img 
               src={tutor.profilePicture} 
@@ -30,7 +29,7 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
               {initials}
             </div>
           )}
-        </Link>
+        </a>
         
         {tutor.isVerified && (
           <span className="tutor-card__badge tutor-card__badge--verified">
@@ -46,9 +45,9 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
       </div>
 
       <div className="tutor-card__body">
-        <Link to={`/tutor/${tutor.userId}`} className="tutor-card__name-link">
+        <a href={`/tutor/${tutor.userId}`} className="tutor-card__name-link">
           <h3 className="tutor-card__name">{displayName}</h3>
-        </Link>
+        </a>
 
         {tutor.bio && (
           <p className="tutor-card__bio">
@@ -97,12 +96,12 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
           <span className="tutor-card__price-value">{hourlyRate}</span>
         </div>
         
-        <Link 
-          to={`/tutor/${tutor.userId}`}
+        <a 
+          href={`/tutor/${tutor.userId}`}
           className="tutor-card__button"
         >
           View Profile
-        </Link>
+        </a>
       </div>
     </div>
   );

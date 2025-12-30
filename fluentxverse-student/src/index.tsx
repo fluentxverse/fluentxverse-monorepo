@@ -37,6 +37,9 @@ import { ToastProvider } from './context/ToastContext';
 // Performance: Link prefetching on hover
 import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
 
+// Error handling
+import ErrorBoundary from './Components/ErrorBoundary';
+
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
 import "./assets/css/force-light-mode.css";
@@ -145,7 +148,9 @@ export function App() {
 			{/* @ts-expect-error Preact/React type mismatch with thirdweb */}
 			<AuthProvider>
 				<ToastProvider>
-					<AppInner />
+					<ErrorBoundary>
+						<AppInner />
+					</ErrorBoundary>
 				</ToastProvider>
 			</AuthProvider>
 		</ThirdwebProvider>
