@@ -66,7 +66,6 @@ export default function LessonViewPage() {
       <div className="lesson-fullpage">
         <div className="lesson-fullpage-loading">
           <div className="spinner"></div>
-          <p>Loading lesson...</p>
         </div>
       </div>
     );

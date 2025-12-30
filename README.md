@@ -43,13 +43,6 @@ Configure backend and storage services as needed:
 - Backend server (Elysia): `http://localhost:8765`
 - Optional storage (SeaweedFS): Filer `:8888`, S3 `:8333`
 
-## Roadmap
-
-- Placement test + adaptive leveling
-- Lesson authoring tools
-- Pronunciation scoring and feedback
-- Gamified challenges & leaderboards
-
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.

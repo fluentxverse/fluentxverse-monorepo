@@ -534,3 +534,383 @@
     font-size: 20px;
   }
 }
+
+/* ================================
+   Filters Section
+   ================================ */
+
+.lessons-filters-section {
+  margin-bottom: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  padding: 20px 24px;
+}
+
+.filters-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.filter-group.filter-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.filter-select:hover {
+  border-color: #0245ae;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.filter-select:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.filter-group .lessons-search {
+  margin-bottom: 0;
+}
+
+.filter-group .lessons-search input {
+  padding: 12px 16px 12px 44px;
+}
+
+.btn-clear-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-clear-filters:hover {
+  background: #fecaca;
+}
+
+/* ================================
+   Grouped View (Levels & Chapters)
+   ================================ */
+
+.lessons-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.level-group {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.level-group:hover {
+  border-color: #cbd5e1;
+}
+
+.level-group.expanded {
+  border-color: #0245ae;
+}
+
+.level-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.05) 0%, rgba(74, 158, 255, 0.05) 100%);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.level-header:hover {
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+}
+
+.level-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.level-badge-large {
+  display: inline-block;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.level-lesson-count {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.level-header i {
+  font-size: 18px;
+  color: #64748b;
+  transition: transform 0.2s;
+}
+
+.level-group.expanded .level-header i {
+  color: #0245ae;
+}
+
+.level-content {
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chapter Groups */
+.chapter-group {
+  background: #f8fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.chapter-group.expanded {
+  border-color: #0245ae;
+  background: #ffffff;
+}
+
+.chapter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chapter-header:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.chapter-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chapter-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.chapter-lesson-count {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.chapter-header i {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.chapter-group.expanded .chapter-header i {
+  color: #0245ae;
+}
+
+/* Lesson Items */
+.chapter-lessons {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lesson-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lesson-item:hover {
+  border-color: #0245ae;
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.1);
+}
+
+.lesson-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lesson-item-number {
+  display: inline-block;
+  padding: 3px 8px;
+  background: rgba(2, 69, 174, 0.1);
+  color: #0245ae;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.lesson-item-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lesson-item-goal {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-start-lesson {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.btn-start-lesson:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.btn-start-lesson i {
+  font-size: 12px;
+}
+
+/* Chapter Empty State */
+.chapter-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.chapter-empty i {
+  font-size: 14px;
+}
+
+/* Responsive adjustments for filters */
+@media (max-width: 768px) {
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: 100%;
+  }
+
+  .filter-group.filter-search {
+    min-width: 100%;
+  }
+
+  .btn-clear-filters {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .level-header {
+    padding: 16px;
+  }
+
+  .level-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chapter-header {
+    padding: 12px 14px;
+  }
+
+  .lesson-item {
+    padding: 12px;
+  }
+}
