@@ -328,8 +328,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
         console.warn('Failed to disconnect wallet:', walletErr);
       }
       
-      // Call server to clear cookie
+      // Call server to clear cookie - MUST complete before redirect
       await logoutUser();
+      console.log('Server logout complete - cookie should be cleared');
+      
+      // Small delay to ensure Set-Cookie header is processed by browser
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err) {
       console.error('Logout error:', err);
     }

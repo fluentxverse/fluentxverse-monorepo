@@ -130,21 +130,29 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       // Must match the same attributes used when setting the cookie
       const isProduction = process.env.NODE_ENV === 'production';
       
-      // Aggressively clear the cookie with all possible methods
+      // Method 1: Set empty value with expired date
       cookie.tutorAuth?.set({
         value: '',
         httpOnly: true,
-        secure: isProduction, // Must match login cookie
+        secure: isProduction,
         sameSite: 'lax',
-        maxAge: 0, // Expire immediately
-        expires: new Date(0), // Also set explicit past date
+        maxAge: 0,
+        expires: new Date(0),
         path: '/'
       });
+      
+      // Method 2: Use remove()
       cookie.tutorAuth?.remove();
+      
+      // Method 3: Explicitly set Set-Cookie header to clear the cookie
+      const domain = isProduction ? '; Domain=.fluentxverse.xyz' : '';
+      set.headers['Set-Cookie'] = `tutorAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domain}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
       
       // Set headers to prevent caching
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
+      
+      console.log('🚪 Tutor logout - cookie cleared');
       
       return { success: true, message: 'Logged out successfully' };
     }, LogoutSchema)

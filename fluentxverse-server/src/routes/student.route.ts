@@ -148,17 +148,29 @@ const Student = new Elysia({ name: "student" })
   .post('/student/logout', async ({ cookie, set }) => {
     // Aggressively clear the student cookie with all possible methods
     const isProduction = process.env.NODE_ENV === 'production';
+    const cookieConfig = getCookieConfig(isProduction);
+    
+    // Method 1: Set empty value with expired date
     cookie.studentAuth?.set({
       value: '',
-      ...getCookieConfig(isProduction),
-      maxAge: 0, // Expire immediately
-      expires: new Date(0) // Also set explicit past date
+      ...cookieConfig,
+      maxAge: 0,
+      expires: new Date(0)
     });
+    
+    // Method 2: Use remove()
     cookie.studentAuth?.remove();
+    
+    // Method 3: Explicitly set Set-Cookie header to clear the cookie
+    // This is the most reliable way to clear cookies across browsers
+    const domain = isProduction ? '; Domain=.fluentxverse.xyz' : '';
+    set.headers['Set-Cookie'] = `studentAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domain}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
     
     // Set headers to prevent caching
     set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
     set.headers['Pragma'] = 'no-cache';
+    
+    console.log('🚪 Student logout - cookie cleared');
     
     return { success: true, message: 'Logged out successfully' };
   }, {
