@@ -11,6 +11,7 @@ export default function LessonViewPage() {
   const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [lessonTitle, setLessonTitle] = useState<string>('Lesson');
   const [isLoading, setIsLoading] = useState(true);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,9 +62,16 @@ export default function LessonViewPage() {
     }
   };
 
-  // Show nothing while loading (iframe will appear when ready)
+  // Show loading spinner while fetching lesson
   if (isLoading) {
-    return null;
+    return (
+      <div className="lesson-fullpage">
+        <div className="lesson-fullpage-loading">
+          <div className="spinner"></div>
+          <p>Loading lesson...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error || !viewUrl) {
@@ -86,12 +94,20 @@ export default function LessonViewPage() {
 
   return (
     <div className="lesson-fullpage">
+      {/* Show loading overlay until iframe is fully loaded */}
+      {!iframeLoaded && (
+        <div className="lesson-fullpage-loading">
+          <div className="spinner"></div>
+          <p>Loading lesson...</p>
+        </div>
+      )}
       {/* Full-page iframe */}
       <iframe
         src={viewUrl}
-        className="lesson-fullpage-iframe"
+        className={`lesson-fullpage-iframe ${iframeLoaded ? 'loaded' : 'loading'}`}
         title={lessonTitle}
         allowFullScreen
+        onLoad={() => setIframeLoaded(true)}
       />
     </div>
   );
