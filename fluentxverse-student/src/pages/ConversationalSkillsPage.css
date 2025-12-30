@@ -1,36 +1,15 @@
 /* ================================
    Course Detail Page - Conversational Skills (Student)
-   Ultra Modern & Aesthetic Design
+   FluentXVerse Color Scheme - Modern Aesthetic
    ================================ */
 
-/* Animated Background */
+/* Page Background */
 .course-detail-page {
-  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
   min-height: calc(100vh - 80px);
   padding: 120px 20px 60px;
   animation: pageLoad 0.6s ease-out;
   position: relative;
-  overflow: hidden;
-}
-
-.course-detail-page::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(74, 158, 255, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(255, 107, 107, 0.1) 0%, transparent 40%);
-  pointer-events: none;
-  animation: floatingOrbs 15s ease-in-out infinite;
-}
-
-@keyframes floatingOrbs {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
 @keyframes pageLoad {
@@ -48,8 +27,6 @@
   padding: 28px 120px 48px 28px;
   max-width: 1400px;
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
 }
 
 /* Header */
@@ -61,7 +38,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
@@ -69,13 +46,14 @@
   transition: all 0.3s ease;
   padding: 8px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
 }
 
 .course-detail-page .back-link:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.15);
+  color: #0245ae;
+  background: #f0f7ff;
+  border-color: #0245ae;
   transform: translateX(-5px);
 }
 
@@ -88,19 +66,16 @@
   transform: translateX(-3px);
 }
 
-/* Course Hero - Glassmorphism */
+/* Course Hero - Clean Card */
 .course-hero {
   display: flex;
   gap: 32px;
   align-items: flex-start;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border-radius: 24px;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -108,27 +83,32 @@
 .course-hero::before {
   content: '';
   position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgba(74, 158, 255, 0.15) 0%, transparent 60%);
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0245ae 0%, #4a9eff 50%, #0245ae 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 200% 0; }
+  50% { background-position: -200% 0; }
 }
 
 .course-hero-icon {
   width: 120px;
   height: 120px;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(74, 158, 255, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 56px;
   flex-shrink: 0;
   animation: iconFloat 3s ease-in-out infinite;
-  box-shadow: 0 10px 40px rgba(74, 158, 255, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 40px rgba(2, 69, 174, 0.3);
 }
 
 @keyframes iconFloat {
@@ -138,35 +118,27 @@
 
 .course-hero-content {
   flex: 1;
-  position: relative;
-  z-index: 1;
 }
 
 .course-category-badge {
   display: inline-block;
   padding: 8px 18px;
-  background: linear-gradient(135deg, rgba(74, 158, 255, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  color: #0245ae;
   font-size: 11px;
   font-weight: 700;
   border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: badgePulse 2s ease-in-out infinite;
-}
-
-@keyframes badgePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 158, 255, 0.4); }
-  50% { box-shadow: 0 0 20px 5px rgba(74, 158, 255, 0.2); }
+  border: 1px solid rgba(2, 69, 174, 0.2);
 }
 
 .course-title-main {
   margin: 0 0 16px;
   font-size: 42px;
   font-weight: 800;
-  background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 50%, #818cf8 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -177,14 +149,14 @@
 .course-description-main {
   margin: 0 0 24px;
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #64748b;
   line-height: 1.7;
   max-width: 600px;
 }
 
 .course-stats-row {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
@@ -193,36 +165,38 @@
   align-items: center;
   gap: 10px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #475569;
   font-weight: 500;
   padding: 10px 18px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
 }
 
 .course-stat:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: #f0f7ff;
+  border-color: #0245ae;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.1);
 }
 
 .course-stat i {
-  color: #a5b4fc;
+  color: #0245ae;
   font-size: 16px;
 }
 
 /* ================================
-   Filters Section - Glassmorphism
+   Filters Section
    ================================ */
 
 .lessons-filters-section {
   margin-bottom: 32px;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
+  background: #ffffff;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid #e2e8f0;
   padding: 24px 28px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .filters-row {
@@ -247,47 +221,41 @@
 .filter-label {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .filter-select {
   padding: 14px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 500;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
+  color: #1e293b;
+  background: #ffffff;
   cursor: pointer;
   transition: all 0.3s ease;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' fill-opacity='0.6' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   padding-right: 40px;
 }
 
-.filter-select option {
-  background: #1e1b4b;
-  color: #ffffff;
-}
-
 .filter-select:hover {
-  border-color: rgba(74, 158, 255, 0.5);
-  background: rgba(255, 255, 255, 0.12);
+  border-color: #0245ae;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #4a9eff;
-  box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
 }
 
 .filter-select:disabled {
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.3);
+  background: #f8fafc;
+  color: #94a3b8;
   cursor: not-allowed;
 }
 
@@ -297,23 +265,22 @@
 
 .filter-group .lessons-search input {
   padding: 14px 18px 14px 48px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  color: #1e293b;
 }
 
 .filter-group .lessons-search input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 .filter-group .lessons-search input:focus {
-  border-color: #4a9eff;
-  box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
-  background: rgba(255, 255, 255, 0.12);
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
 }
 
 .filter-group .lessons-search i {
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
 }
 
 .btn-clear-filters {
@@ -321,9 +288,9 @@
   align-items: center;
   gap: 8px;
   padding: 14px 22px;
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.3) 100%);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: #fef2f2;
+  color: #dc2626;
+  border: 2px solid #fecaca;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
@@ -333,7 +300,8 @@
 }
 
 .btn-clear-filters:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.4) 100%);
+  background: #fee2e2;
+  border-color: #f87171;
   transform: translateY(-2px);
 }
 
@@ -352,7 +320,7 @@
   left: 18px;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   font-size: 16px;
   transition: color 0.3s ease;
 }
@@ -360,32 +328,31 @@
 .lessons-search input {
   width: 100%;
   padding: 16px 18px 16px 52px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid #e2e8f0;
   border-radius: 14px;
   font-size: 15px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: #ffffff;
+  color: #1e293b;
   transition: all 0.3s ease;
 }
 
 .lessons-search input:focus {
   outline: none;
-  border-color: #4a9eff;
-  box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.2);
-  background: rgba(255, 255, 255, 0.12);
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
 }
 
 .lessons-search input:focus + i,
 .lessons-search:focus-within i {
-  color: #4a9eff;
+  color: #0245ae;
 }
 
 .lessons-search input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
 }
 
 /* ================================
-   Grouped View (Levels & Chapters) - Glass Cards
+   Grouped View (Levels & Chapters)
    ================================ */
 
 .lessons-grouped {
@@ -395,23 +362,22 @@
 }
 
 .level-group {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid #e2e8f0;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .level-group:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .level-group.expanded {
-  border-color: rgba(74, 158, 255, 0.4);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 40px rgba(74, 158, 255, 0.15);
+  border-color: #0245ae;
+  box-shadow: 0 8px 30px rgba(2, 69, 174, 0.15);
 }
 
 .level-header {
@@ -420,14 +386,14 @@
   justify-content: space-between;
   width: 100%;
   padding: 24px 28px;
-  background: transparent;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.03) 0%, rgba(74, 158, 255, 0.03) 100%);
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .level-header:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.06) 0%, rgba(74, 158, 255, 0.06) 100%);
 }
 
 .level-info {
@@ -440,30 +406,30 @@
   display: inline-flex;
   align-items: center;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #4a9eff 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(74, 158, 255, 0.4);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
 }
 
 .level-lesson-count {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   font-weight: 500;
 }
 
 .level-header i {
   font-size: 16px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   transition: all 0.3s ease;
 }
 
 .level-group.expanded .level-header i {
-  color: #4a9eff;
+  color: #0245ae;
   transform: rotate(180deg);
 }
 
@@ -482,20 +448,21 @@
 
 /* Chapter Groups */
 .chapter-group {
-  background: rgba(255, 255, 255, 0.04);
+  background: #f8fafc;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
 }
 
 .chapter-group:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: #f1f5f9;
 }
 
 .chapter-group.expanded {
-  border-color: rgba(168, 85, 247, 0.4);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: #0245ae;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(2, 69, 174, 0.1);
 }
 
 .chapter-header {
@@ -511,7 +478,7 @@
 }
 
 .chapter-header:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(2, 69, 174, 0.04);
 }
 
 .chapter-info {
@@ -523,26 +490,26 @@
 .chapter-title {
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
 }
 
 .chapter-lesson-count {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   font-weight: 500;
   padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #e2e8f0;
   border-radius: 6px;
 }
 
 .chapter-header i {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   transition: all 0.3s ease;
 }
 
 .chapter-group.expanded .chapter-header i {
-  color: #a855f7;
+  color: #0245ae;
   transform: rotate(180deg);
 }
 
@@ -560,18 +527,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  background: rgba(255, 255, 255, 0.04);
+  background: #ffffff;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .lesson-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(74, 158, 255, 0.3);
+  background: #f0f7ff;
+  border-color: #0245ae;
   transform: translateX(8px);
-  box-shadow: 0 4px 20px rgba(74, 158, 255, 0.15);
+  box-shadow: 0 4px 20px rgba(2, 69, 174, 0.12);
 }
 
 .lesson-item-info {
@@ -582,8 +549,8 @@
 .lesson-item-number {
   display: inline-block;
   padding: 4px 10px;
-  background: linear-gradient(135deg, rgba(74, 158, 255, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
-  color: #a5b4fc;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  color: #0245ae;
   font-size: 10px;
   font-weight: 700;
   border-radius: 6px;
@@ -596,7 +563,7 @@
   margin: 0 0 6px;
   font-size: 14px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
+  color: #1e293b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -605,7 +572,7 @@
 .lesson-item-goal {
   margin: 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -615,7 +582,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #4a9eff 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   border: none;
   color: #ffffff;
   cursor: pointer;
@@ -625,12 +592,12 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
   margin-left: 16px;
-  box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
 }
 
 .btn-start-lesson:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 6px 25px rgba(74, 158, 255, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(2, 69, 174, 0.4);
 }
 
 .btn-start-lesson i {
@@ -644,7 +611,7 @@
   justify-content: center;
   gap: 10px;
   padding: 24px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #94a3b8;
   font-size: 13px;
   font-style: italic;
 }
@@ -669,18 +636,18 @@
   gap: 24px;
 }
 
-/* Lesson Card - Glassmorphism */
+/* Lesson Card */
 .lesson-card {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .lesson-card::before {
@@ -690,16 +657,15 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #4a9eff 0%, #a855f7 50%, #f472b6 100%);
+  background: linear-gradient(90deg, #0245ae 0%, #4a9eff 50%, #0245ae 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .lesson-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 
-    0 20px 50px rgba(74, 158, 255, 0.2),
-    0 0 0 1px rgba(74, 158, 255, 0.3);
+  transform: translateY(-8px);
+  border-color: #0245ae;
+  box-shadow: 0 20px 50px rgba(2, 69, 174, 0.15);
 }
 
 .lesson-card:hover::before {
@@ -719,8 +685,8 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, 
-    rgba(15, 12, 41, 0) 0%,
-    rgba(15, 12, 41, 0.8) 100%
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.4) 100%
   );
 }
 
@@ -735,7 +701,7 @@
 }
 
 .level-badge {
-  background: linear-gradient(135deg, rgba(74, 158, 255, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #ffffff;
   padding: 6px 14px;
   border-radius: 8px;
@@ -743,8 +709,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.3);
 }
 
 .lesson-content {
@@ -754,7 +719,7 @@
 
 .lesson-chapter {
   font-size: 11px;
-  color: #a5b4fc;
+  color: #0245ae;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -765,7 +730,7 @@
   margin: 0 0 10px;
   font-size: 17px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
+  color: #1e293b;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -776,7 +741,7 @@
 .lesson-goal {
   margin: 0 0 16px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -788,7 +753,7 @@
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
 }
 
 .lesson-sections,
@@ -801,12 +766,12 @@
 .lesson-sections i,
 .lesson-date i {
   font-size: 12px;
-  color: #a5b4fc;
+  color: #0245ae;
 }
 
 .lesson-action {
   padding: 16px 24px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid #f1f5f9;
 }
 
 .btn-open-lesson {
@@ -816,7 +781,7 @@
   justify-content: center;
   gap: 10px;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #4a9eff 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   border: none;
   border-radius: 12px;
   color: #ffffff;
@@ -824,12 +789,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
 }
 
 .btn-open-lesson:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(74, 158, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(2, 69, 174, 0.4);
 }
 
 .btn-open-lesson i {
@@ -850,10 +815,10 @@
 .lessons-empty {
   text-align: center;
   padding: 80px 40px;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(10px);
+  background: #ffffff;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .lessons-loading .spinner,
@@ -865,8 +830,8 @@
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid rgba(74, 158, 255, 0.2);
-  border-top-color: #4a9eff;
+  border: 3px solid #e2e8f0;
+  border-top-color: #0245ae;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -876,7 +841,7 @@
 }
 
 .lessons-loading p {
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   font-size: 15px;
 }
 
@@ -892,13 +857,13 @@
 }
 
 .error-icon {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .empty-icon {
-  background: rgba(74, 158, 255, 0.15);
-  color: #a5b4fc;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  color: #0245ae;
 }
 
 .lessons-error h3,
@@ -906,13 +871,13 @@
   margin: 0 0 12px;
   font-size: 22px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
 }
 
 .lessons-error p,
 .lessons-empty p {
   margin: 0 0 24px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #64748b;
   font-size: 15px;
 }
 
@@ -931,24 +896,25 @@
 }
 
 .btn-retry {
-  background: linear-gradient(135deg, #4a9eff 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(74, 158, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
 }
 
 .btn-retry:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(74, 158, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(2, 69, 174, 0.4);
 }
 
 .btn-reset {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #f8fafc;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
 }
 
 .btn-reset:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #f0f7ff;
+  border-color: #0245ae;
   transform: translateY(-2px);
 }
 
