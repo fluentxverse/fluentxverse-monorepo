@@ -34,6 +34,7 @@ export const forceAuthCleanup = () => {
   try {
     localStorage.removeItem('fxv_user_fullname');
     localStorage.removeItem('fxv_user_id');
+    localStorage.removeItem('fxv_logged_out'); // Clear logout flag on cleanup before login
   } catch (e) {}
 };
 

@@ -67,6 +67,17 @@ export const AuthProvider = ({ children }: { children: any }) => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
       try {
+        // Check if user just logged out - skip auto-login
+        const justLoggedOut = localStorage.getItem('fxv_logged_out');
+        if (justLoggedOut === 'true') {
+          // Clear the flag and don't attempt to restore session
+          localStorage.removeItem('fxv_logged_out');
+          console.log('Skipping auth check - user just logged out');
+          setUser(null);
+          setInitialLoading(false);
+          return;
+        }
+        
         const me = await getMe();
 
         if (me?.user) {
@@ -302,17 +313,23 @@ export const AuthProvider = ({ children }: { children: any }) => {
     // Clear all cached auth data
     forceAuthCleanup();
     
+    // Set a flag to prevent auto-reconnect on page reload
     try {
-      // Call server to clear cookie
-      await logoutUser();
-      
-      // Disconnect Thirdweb wallet to clear the wallet session
+      localStorage.setItem('fxv_logged_out', 'true');
+    } catch (e) {}
+    
+    try {
+      // Disconnect Thirdweb wallet FIRST to clear the wallet session
+      // This prevents auto-reconnect on page reload
       try {
         await appWallet.disconnect();
         console.log('Wallet disconnected on logout');
       } catch (walletErr) {
         console.warn('Failed to disconnect wallet:', walletErr);
       }
+      
+      // Call server to clear cookie
+      await logoutUser();
     } catch (err) {
       console.error('Logout error:', err);
     }
