@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import Footer from '../Components/Footer/Footer';
 import Header from '../Components/Header/Header';
 import IndexOne from '../Components/IndexOne/IndexOne';
@@ -7,9 +7,28 @@ import CallToAction from '../Components/Common/CallToAction';
 import { useAuthContext } from '../context/AuthContext';
 
 const Home = () => {
-  const { isAuthenticated, initialLoading } = useAuthContext();
+  const { isAuthenticated, initialLoading, logout } = useAuthContext();
+  const logoutRetryRef = useRef(false);
 
   useEffect(() => {
+    // Check if we just attempted logout but cookie wasn't cleared
+    const pendingLogout = sessionStorage.getItem('fxv_pending_logout');
+    
+    if (!initialLoading && pendingLogout === 'true') {
+      // Clear the flag first to prevent infinite loops
+      sessionStorage.removeItem('fxv_pending_logout');
+      
+      if (isAuthenticated) {
+        // Cookie still exists - retry logout
+        console.log('Logout incomplete, retrying...');
+        if (!logoutRetryRef.current) {
+          logoutRetryRef.current = true;
+          logout();
+        }
+        return;
+      }
+    }
+    
     // Only redirect if:
     // 1. Initial auth check is complete (not still loading)
     // 2. User is actually authenticated
@@ -19,7 +38,7 @@ const Home = () => {
     if (!initialLoading && isAuthenticated && hasLocalSession) {
       window.location.href = '/home';
     }
-  }, [isAuthenticated, initialLoading]);
+  }, [isAuthenticated, initialLoading, logout]);
 
   // Landing page - no redirect needed for unauthenticated users
   return (

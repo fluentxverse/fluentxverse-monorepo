@@ -303,6 +303,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
     // Clear all cached auth data BEFORE calling server
     forceAuthCleanup();
     
+    // Set a flag so the landing page knows we're attempting logout
+    // If the cookie doesn't get cleared, the landing page will retry
+    try {
+      sessionStorage.setItem('fxv_pending_logout', 'true');
+    } catch (e) {}
+    
     // Mark that we're intentionally logging out
     setLoginInProgress(true);
     
@@ -323,9 +329,15 @@ export const AuthProvider = ({ children }: { children: any }) => {
       // Without this delay, navigation can occur before the cookie is actually deleted,
       // causing the user to be "logged back in" on the next page load.
       await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Clear the pending logout flag on success
+      try {
+        sessionStorage.removeItem('fxv_pending_logout');
+      } catch (e) {}
     } catch (err) {
       console.error('Logout error:', err);
       // Continue with logout even if server call fails
+      // Keep the pending flag so landing page can retry
     } finally {
       setLoginInProgress(false);
       // Force a full page reload to clear all state and prevent any race conditions
