@@ -32,7 +32,7 @@ export default defineConfig({
 				manualChunks: {
 					// Vendor chunks - split large dependencies
 					'vendor-preact': ['preact', 'preact/hooks', 'preact-iso'],
-					'vendor-ui': ['zustand', 'wouter'],
+					'vendor-ui': ['zustand'],
 					'vendor-pdf': ['pdfjs-dist'],
 					// Thirdweb is huge - separate it so it caches independently
 					'vendor-thirdweb': ['thirdweb', 'thirdweb/react', 'thirdweb/wallets/in-app'],

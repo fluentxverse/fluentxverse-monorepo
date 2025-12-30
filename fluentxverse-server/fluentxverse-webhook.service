@@ -5,17 +5,18 @@ Wants=docker.service
 
 [Service]
 Type=simple
-User=maryann
-WorkingDirectory=/home/maryann/fluentxverse-monorepo/fluentxverse-server
-ExecStart=/home/maryann/.bun/bin/bun run scripts/webhook-server.ts
+# UPDATE THESE VALUES for your system:
+User=paulanthonyarriola
+WorkingDirectory=/home/paulanthonyarriola/Desktop/fluentxverse/fluentxverse-server
+ExecStart=/home/paulanthonyarriola/.bun/bin/bun run scripts/webhook-server.ts
 Restart=always
 RestartSec=10
-StandardOutput=append:/home/maryann/webhook.log
-StandardError=append:/home/maryann/webhook.log
+StandardOutput=append:/home/paulanthonyarriola/webhook.log
+StandardError=append:/home/paulanthonyarriola/webhook.log
 
-# Environment variables
-Environment=WEBHOOK_SECRET=CHANGE_THIS_TO_YOUR_GITHUB_SECRET
-Environment=PATH=/home/maryann/.bun/bin:/usr/local/bin:/usr/bin:/bin
+# Environment variables - SET YOUR ACTUAL GITHUB WEBHOOK SECRET HERE
+Environment=WEBHOOK_SECRET=${WEBHOOK_SECRET}
+Environment=PATH=/home/paulanthonyarriola/.bun/bin:/usr/local/bin:/usr/bin:/bin
 
 [Install]
 WantedBy=multi-user.target
