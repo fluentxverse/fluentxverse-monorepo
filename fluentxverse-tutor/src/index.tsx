@@ -102,7 +102,8 @@ export function AppInner() {
 					<Route path="/register" component={RegisterPage} />
 
 					<Route path="/schedule" component={withCertified(SchedulePage)} />
-							<Route path="/lesson/view" component={withProtected(LessonViewPage)} />
+							{/* LessonViewPage handles its own loading - not wrapped to avoid triple spinner */}
+							<Route path="/lesson/view" component={LessonViewPage} />
 							<Route path="/lesson/:bookingId" component={withCertified(StudentProfilePage)} />
 							<Route path="/classroom/:sessionId" component={withCertified(ClassroomPage)} />
 							<Route path="/exam/written" component={withProtected(ExamPage)} />
@@ -112,7 +113,7 @@ export function AppInner() {
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
-							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={withProtected(LessonViewPage)} />
+							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 							<Route path="/profile" component={withProtected(MyProfilePage)} />
 							<Route path="/performance-metrics" component={withProtected(PerformanceMetricsPage)} />

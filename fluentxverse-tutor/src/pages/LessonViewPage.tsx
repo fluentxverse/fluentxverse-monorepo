@@ -10,8 +10,8 @@ export default function LessonViewPage() {
   
   const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [lessonTitle, setLessonTitle] = useState<string>('Lesson');
-  const [isLoading, setIsLoading] = useState(true);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
+  // Single loading state - true until iframe is fully loaded
+  const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,13 +23,11 @@ export default function LessonViewPage() {
       loadLesson();
     } else {
       setError('No lesson ID provided');
-      setIsLoading(false);
     }
   }, [lessonId]);
 
   const loadLesson = async () => {
     try {
-      setIsLoading(true);
       setError(null);
       
       // Use the tutor endpoint to get the proper tutor view URL (with hints)
@@ -43,13 +41,12 @@ export default function LessonViewPage() {
           setLessonTitle(result.lesson.title);
           document.title = `${result.lesson.title} | FluentXVerse`;
         }
+        // Note: isReady stays false until iframe onLoad fires
       } else {
         setError(result.error || 'Failed to load lesson');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load lesson');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -62,19 +59,8 @@ export default function LessonViewPage() {
     }
   };
 
-  // Show loading spinner while fetching lesson
-  if (isLoading) {
-    return (
-      <div className="lesson-fullpage">
-        <div className="lesson-fullpage-loading">
-          <div className="spinner"></div>
-          <p>Loading lesson...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !viewUrl) {
+  // Error state
+  if (error) {
     return (
       <div className="lesson-fullpage">
         <div className="lesson-fullpage-error">
@@ -82,7 +68,7 @@ export default function LessonViewPage() {
             <i className="fi-sr-exclamation"></i>
           </div>
           <h3>Failed to load lesson</h3>
-          <p>{error || 'Lesson not found'}</p>
+          <p>{error}</p>
           <button onClick={handleBack} className="btn-back">
             <i className="fi-sr-arrow-left"></i>
             Back to Materials
@@ -94,21 +80,23 @@ export default function LessonViewPage() {
 
   return (
     <div className="lesson-fullpage">
-      {/* Show loading overlay until iframe is fully loaded */}
-      {!iframeLoaded && (
+      {/* Single loading spinner - shows until iframe content is fully loaded */}
+      {!isReady && (
         <div className="lesson-fullpage-loading">
           <div className="spinner"></div>
           <p>Loading lesson...</p>
         </div>
       )}
-      {/* Full-page iframe */}
-      <iframe
-        src={viewUrl}
-        className={`lesson-fullpage-iframe ${iframeLoaded ? 'loaded' : 'loading'}`}
-        title={lessonTitle}
-        allowFullScreen
-        onLoad={() => setIframeLoaded(true)}
-      />
+      {/* Iframe starts loading immediately when viewUrl is available */}
+      {viewUrl && (
+        <iframe
+          src={viewUrl}
+          className={`lesson-fullpage-iframe ${isReady ? 'loaded' : 'loading'}`}
+          title={lessonTitle}
+          allowFullScreen
+          onLoad={() => setIsReady(true)}
+        />
+      )}
     </div>
   );
 }

@@ -118,8 +118,9 @@ export function AppInner() {
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
 						<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
-						<Route path="/lesson/view" component={withProtected(LessonViewPage)} />
-						<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={withProtected(LessonViewPage)} />
+						{/* LessonViewPage handles its own loading - not wrapped in ProtectedRoute to avoid triple spinner */}
+						<Route path="/lesson/view" component={LessonViewPage} />
+						<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage} />
 						<Route path="/tickets" component={withProtected(TicketsPage)} />
 						<Route path="/purchase-history" component={withProtected(PurchaseHistoryPage)} />
 						<Route path="/inbox" component={withProtected(InboxPage)} />
