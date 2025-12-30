@@ -34,10 +34,18 @@ import SessionExpiryModal from './Components/SessionExpiryModal';
 import { useAuthContext } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 
+// Performance: Link prefetching on hover
+import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
 
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
 import "./assets/css/force-light-mode.css";
+
+// Initialize prefetching after DOM ready
+if (typeof window !== 'undefined') {
+  initPrefetching();
+  prefetchCriticalRoutes();
+}
 
 
 

@@ -35,12 +35,19 @@ import { OfflineBanner } from './Components/Common/OfflineBanner';
 import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
 
+// Performance: Link prefetching on hover
+import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
 
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
 import "./assets/css/mobile-global.css";
 import "./assets/css/force-light-mode.css";
 
+// Initialize prefetching after DOM ready
+if (typeof window !== 'undefined') {
+	initPrefetching();
+	prefetchCriticalRoutes();
+}
 
 
 export function AppInner() {
