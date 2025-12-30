@@ -1,4 +1,5 @@
 import { client as api, getErrorMessage } from './utils';
+import axios from 'axios';
 
 export interface TimeSlot {
   date: string;  // ISO date string (YYYY-MM-DD)
@@ -26,26 +27,14 @@ export const scheduleApi = {
    * Open time slots
    */
   openSlots: async (slots: TimeSlot[]): Promise<void> => {
-    console.log('📡 scheduleApi.openSlots called with:', {
-      baseURL: API_BASE_URL,
-      endpoint: '/schedule/open',
-      slots
-    });
-    
     try {
       const response = await api.post('/schedule/open', { slots });
-      console.log('📡 scheduleApi.openSlots response:', response.data);
       
       if (!response.data.success) {
         throw new Error(response.data.error || 'Failed to open slots');
       }
     } catch (error) {
-      console.error('❌ scheduleApi.openSlots error:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('  Request:', error.config?.url, error.config?.method);
-        console.error('  Response status:', error.response?.status);
-        console.error('  Response data:', error.response?.data);
-      }
+      console.error('scheduleApi.openSlots error:', error);
       throw new Error(getErrorMessage(error));
     }
   },

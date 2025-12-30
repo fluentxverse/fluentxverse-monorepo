@@ -34,6 +34,8 @@ export default defineConfig({
 					'vendor-preact': ['preact', 'preact/hooks', 'preact-iso'],
 					'vendor-ui': ['zustand', 'wouter'],
 					'vendor-pdf': ['pdfjs-dist'],
+					// Thirdweb is huge - separate it so it caches independently
+					'vendor-thirdweb': ['thirdweb', 'thirdweb/react', 'thirdweb/wallets/in-app'],
 					// Feature-based chunks
 					'pages-auth': [
 						'./src/pages/RegisterPage.tsx',

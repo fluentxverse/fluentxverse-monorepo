@@ -8,16 +8,16 @@ import LoadingSpinner from '@/Components/LoadingSpinner';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user, isAuthenticated, loading, logout } = useAuthContext();
+  const { user, isAuthenticated, initialLoading, logout } = useAuthContext();
   const { isDarkMode } = useThemeStore();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!initialLoading && !isAuthenticated) {
       window.location.href = '/';
     }
-  }, [isAuthenticated, loading, user]);
+  }, [isAuthenticated, initialLoading, user]);
 
-  if (loading) {
+  if (initialLoading) {
     return <LoadingSpinner />;
   }
 
