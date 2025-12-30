@@ -85,10 +85,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [infoSuccess, setInfoSuccess] = useState('');
   const [infoLoading, setInfoLoading] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    // Important: don't navigate away before the logout request completes,
+    // otherwise the browser can cancel the request and keep the cookie.
     onClose();
-    window.location.href = '/';
+    await logout();
   };
 
   const handleBack = () => {

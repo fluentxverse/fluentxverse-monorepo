@@ -43,7 +43,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   loginByWallet: (params: WalletAuthParams) => Promise<WalletLoginResult>;
   registerByWallet: (params: WalletRegisterParams) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   getUserId: () => string | undefined;
   clearSessionExpired: () => void;
 }
