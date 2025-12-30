@@ -86,10 +86,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [infoLoading, setInfoLoading] = useState(false);
 
   const handleLogout = async () => {
-    // Important: don't navigate away before the logout request completes,
-    // otherwise the browser can cancel the request and keep the cookie.
-    onClose();
+    // Important: do NOT close modal or navigate before logout completes.
+    // The logout() function handles navigation after the cookie is cleared.
     await logout();
+    // onClose() not needed - page will reload anyway
   };
 
   const handleBack = () => {

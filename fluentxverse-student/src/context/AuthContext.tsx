@@ -318,6 +318,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
       // Call server to clear cookie
       await logoutUser();
       console.log('Server logout complete');
+      
+      // CRITICAL: Wait for browser to process the Set-Cookie header before navigating.
+      // Without this delay, navigation can occur before the cookie is actually deleted,
+      // causing the user to be "logged back in" on the next page load.
+      await new Promise(resolve => setTimeout(resolve, 150));
     } catch (err) {
       console.error('Logout error:', err);
       // Continue with logout even if server call fails
