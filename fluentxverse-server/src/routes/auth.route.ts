@@ -129,24 +129,39 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
     .post('/logout', async ({ cookie, set }) => {
       // Must match the same attributes used when setting the cookie
       const isProduction = process.env.NODE_ENV === 'production';
+      const cookieConfig = getCookieConfig(isProduction);
       
       // Method 1: Set empty value with expired date
       cookie.tutorAuth?.set({
         value: '',
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
+        ...cookieConfig,
         maxAge: 0,
-        expires: new Date(0),
-        path: '/'
+        expires: new Date(0)
       });
       
       // Method 2: Use remove()
       cookie.tutorAuth?.remove();
       
-      // Method 3: Explicitly set Set-Cookie header to clear the cookie
-      const domain = isProduction ? '; Domain=.fluentxverse.xyz' : '';
-      set.headers['Set-Cookie'] = `tutorAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domain}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
+      // Method 3: Explicitly set Set-Cookie headers to clear the cookie.
+      // Important: cookies are keyed by (name + domain + path). Clear both host-only and domain variants.
+      const cookieName = 'tutorAuth';
+      const expires = 'Thu, 01 Jan 1970 00:00:00 GMT';
+      const baseAttrs = (path: string) =>
+        `Path=${path}; Expires=${expires}; Max-Age=0; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
+
+      const clearCookies: string[] = [];
+      const pathsToClear = ['/'];
+      for (const path of pathsToClear) {
+        // Host-only cookie (no Domain attribute)
+        clearCookies.push(`${cookieName}=; ${baseAttrs(path)}`);
+
+        // Domain cookie variant (shared across subdomains)
+        if (cookieConfig.domain) {
+          clearCookies.push(`${cookieName}=; ${baseAttrs(path)}; Domain=${cookieConfig.domain}`);
+        }
+      }
+
+      set.headers['Set-Cookie'] = clearCookies as any;
       
       // Set headers to prevent caching
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
