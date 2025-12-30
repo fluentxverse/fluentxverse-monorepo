@@ -67,17 +67,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
       try {
-        // Check if user just logged out - skip auto-login
-        const justLoggedOut = localStorage.getItem('fxv_logged_out');
-        if (justLoggedOut === 'true') {
-          // Clear the flag and don't attempt to restore session
-          localStorage.removeItem('fxv_logged_out');
-          console.log('Skipping auth check - user just logged out');
-          setUser(null);
-          setInitialLoading(false);
-          return;
-        }
-        
         const me = await getMe();
 
         if (me?.user) {
@@ -307,20 +296,18 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   const logout = async () => {
-    // Clear user state immediately to prevent redirect back to /home
+    // IMPORTANT: Clear local state FIRST to prevent race conditions
+    // This ensures checkAuth won't find a session and auto-login won't trigger
     setUser(null);
     
-    // Clear all cached auth data
+    // Clear all cached auth data BEFORE calling server
     forceAuthCleanup();
     
-    // Set a flag to prevent auto-reconnect on page reload
-    try {
-      localStorage.setItem('fxv_logged_out', 'true');
-    } catch (e) {}
+    // Mark that we're intentionally logging out
+    setLoginInProgress(true);
     
     try {
       // Disconnect Thirdweb wallet FIRST to clear the wallet session
-      // This prevents auto-reconnect on page reload
       try {
         await appWallet.disconnect();
         console.log('Wallet disconnected on logout');
@@ -328,19 +315,19 @@ export const AuthProvider = ({ children }: { children: any }) => {
         console.warn('Failed to disconnect wallet:', walletErr);
       }
       
-      // Call server to clear cookie - MUST complete before redirect
+      // Call server to clear cookie
       await logoutUser();
-      console.log('Server logout complete - cookie should be cleared');
-      
-      // Small delay to ensure Set-Cookie header is processed by browser
-      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('Server logout complete');
     } catch (err) {
       console.error('Logout error:', err);
-    }
-    
-    // Redirect to landing page
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
+      // Continue with logout even if server call fails
+    } finally {
+      setLoginInProgress(false);
+      // Force a full page reload to clear all state and prevent any race conditions
+      // Use replace to prevent back button from going to authenticated page
+      if (typeof window !== 'undefined') {
+        window.location.replace('/');
+      }
     }
   };
 

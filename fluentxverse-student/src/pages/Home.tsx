@@ -9,12 +9,14 @@ import { useAuthContext } from '../context/AuthContext';
 const Home = () => {
   const { isAuthenticated, initialLoading } = useAuthContext();
 
-  // Redirect authenticated users to /home (but wait for auth check to complete)
   useEffect(() => {
-    // Don't redirect while still checking authentication
-    if (initialLoading) return;
+    // Only redirect if:
+    // 1. Initial auth check is complete (not still loading)
+    // 2. User is actually authenticated
+    // 3. Not coming from a logout (check localStorage as source of truth)
+    const hasLocalSession = localStorage.getItem('fxv_user_id');
     
-    if (isAuthenticated) {
+    if (!initialLoading && isAuthenticated && hasLocalSession) {
       window.location.href = '/home';
     }
   }, [isAuthenticated, initialLoading]);
