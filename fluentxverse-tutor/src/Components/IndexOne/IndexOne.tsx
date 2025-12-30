@@ -1,39 +1,14 @@
 import Banner from './Banner'
-import VisionSection from './VisionSection'
-import NarrativeSection from './NarrativeSection'
-import TokenizationSection from './TokenizationSection'
-import FieldCarousel from './FieldCarousel'
 import CareerSection from './CareerSection'
-// Legacy components removed during FluentXVerse rebrand
-import Partnerships from './Partnerships'
-import RoadmapSection from './RoadmapSection'
 import CallToAction from '../Common/CallToAction'
-import FAQ from '../Common/FAQ'
 import './IndexOne.css'
-
 
 const IndexOne = () => {
   return (
     <main>
-        <Banner/>
-        <CareerSection />
-        <CallToAction />
-
-        
-        {/* <NarrativeSection /> */}
-        {/* <TokenizationSection /> */}
-        {/* <VisionSection /> */}
-        {/* Legacy components removed */}
-
-
-        {/* <FAQ /> */}
-        
-        {/* <TopCollection/>
-        <AreaBg/>
-        <ExploreProduct/>
-        <LatestNews/>
-        <DesignNews/>
-        <Testimonial/> */}
+      <Banner />
+      <CareerSection />
+      <CallToAction />
     </main>
   )
 }

@@ -1,16 +1,10 @@
-import axios from 'axios';
 import type { 
   Tutor, 
   TutorProfile, 
   TutorSearchParams, 
   TutorSearchResponse 
 } from '../types/tutor.types';
-import { API_BASE_URL } from '../config/api';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true
-});
+import { client as api } from './utils';
 
 export const tutorApi = {
   /**

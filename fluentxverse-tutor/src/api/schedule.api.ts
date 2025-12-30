@@ -1,11 +1,4 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
-import { getErrorMessage } from './utils';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true
-});
+import { client as api, getErrorMessage } from './utils';
 
 export interface TimeSlot {
   date: string;  // ISO date string (YYYY-MM-DD)
