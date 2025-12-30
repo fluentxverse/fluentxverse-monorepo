@@ -14,7 +14,7 @@ export default function LessonViewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = 'Loading Lesson... | FluentXVerse';
+    document.title = 'FluentXVerse';
   }, []);
 
   useEffect(() => {
@@ -61,14 +61,9 @@ export default function LessonViewPage() {
     }
   };
 
+  // Show nothing while loading (iframe will appear when ready)
   if (isLoading) {
-    return (
-      <div className="lesson-fullpage">
-        <div className="lesson-fullpage-loading">
-          <div className="spinner"></div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (error || !viewUrl) {
