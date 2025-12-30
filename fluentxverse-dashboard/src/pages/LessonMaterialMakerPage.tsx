@@ -4230,13 +4230,7 @@ export default function LessonMaterialMakerPage() {
   // When opened via server link (`?src=...`), we first fetch and then redirect to `?previewToken=...`.
   // While that happens, keep UI minimal to avoid flashing the template list.
   if (previewSrcFromUrl && !previewTokenFromUrl) {
-    return (
-      <div className="lm-template-list">
-        <div style={{ padding: 24 }}>
-          <h2 style={{ margin: 0 }}>Loading lesson…</h2>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Template List View - also show when editing but not in fullscreen
