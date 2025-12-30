@@ -49,7 +49,7 @@ const NarrativeSection = () => (
           <div className="narrative-image-backdrop"></div>
           <img
             src="/assets/img/banner/hero1.png"
-            alt="Decentragri AI Farm"
+            alt="FluentXVerse Language Learning"
             className="narrative-image"
             loading="lazy"
           />
@@ -59,15 +59,15 @@ const NarrativeSection = () => (
         <div className="narrative-tech-indicators">
           <div className="narrative-tech-item">
             <div className="narrative-tech-pulse"></div>
-            <span>AI Processing</span>
+            <span>Live Sessions</span>
           </div>
           <div className="narrative-tech-item">
             <div className="narrative-tech-pulse"></div>
-            <span>Real-time Data</span>
+            <span>Expert Tutors</span>
           </div>
           <div className="narrative-tech-item">
             <div className="narrative-tech-pulse"></div>
-            <span>Blockchain Sync</span>
+            <span>Progress Tracking</span>
           </div>
         </div>
       </div>

@@ -48,10 +48,10 @@ const getApiBaseUrl = () => {
 export const API_BASE_URL = getApiBaseUrl();
 
 export const API_CONFIG = {
-  BASE_URL: 'https://consumer.decentragri.com',
+  BASE_URL: getApiBaseUrl(),
   ENDPOINTS: {
-    FARM_LIST: '/api/farm/list',
-    FARM_SCANS: '/api/farm/scans',
+    STUDENTS: '/api/students',
+    SESSIONS: '/api/sessions',
   },
   TIMEOUT: 10000, // 10 seconds
 };

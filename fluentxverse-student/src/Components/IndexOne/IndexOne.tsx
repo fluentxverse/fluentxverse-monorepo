@@ -3,9 +3,7 @@ import Banner from './Banner'
 import NarrativeSection from './NarrativeSection'
 import TokenizationSection from './TokenizationSection'
 import FieldCarousel from './FieldCarousel'
-// Decentragri components disabled during rebrand
-// import DecentragriFeatures from './DecentragriFeatures'
-// import DecentragriTech from './DecentragriTech'
+// Legacy components removed during FluentXVerse rebrand
 import Partnerships from './Partnerships'
 import RoadmapSection from './RoadmapSection'
 import CallToAction from '../Common/CallToAction'
@@ -22,11 +20,7 @@ const IndexOne = () => {
         {/* <NarrativeSection /> */}
         {/* <TokenizationSection /> */}
         {/* <VisionSection /> */}
-        {/* <DecentragriFeatures />
-        <DecentragriTech />
-        <FieldCarousel />
-        <RoadmapSection />
-        <Partnerships /> */}
+        {/* Legacy components removed */}
 
 
         {/* <FAQ /> */}

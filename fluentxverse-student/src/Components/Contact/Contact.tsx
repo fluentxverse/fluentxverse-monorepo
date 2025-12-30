@@ -15,18 +15,18 @@ const Contact = () => {
           <div className="contact-info-card">
             <h2>Get in Touch</h2>
             <ul className="contact-info-list">
-              <li><i className="fas fa-envelope"></i> <a href="mailto:hello@decentragri.com">hello@decentragri.com</a></li>
+              <li><i className="fas fa-envelope"></i> <a href="mailto:support@fluentxverse.com">support@fluentxverse.com</a></li>
               <li><i className="fas fa-map-marker-alt"></i> Goa, Camarines Sur, Philippines</li>
             </ul>
             <h3 className="social-heading">Connect With Us</h3>
             <div className="contact-social">
-              <a href="https://x.com/decentragri" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i className="fab fa-twitter" /></a>
-              <a href="https://www.facebook.com/profile.php?id=61577572165938" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fab fa-facebook-f" /></a>
-              <a href="https://www.linkedin.com/in/decentr-agri-a598bb36b/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fab fa-linkedin-in" /></a>
+              <a href="https://x.com/fluentxverse" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i className="fab fa-twitter" /></a>
+              <a href="https://www.facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i className="fab fa-facebook-f" /></a>
+              <a href="https://www.linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i className="fab fa-linkedin-in" /></a>
             </div>
             <div className="contact-map">
               <iframe
-                title="Decentragri Location"
+                title="FluentXVerse Location"
                 src="https://www.openstreetmap.org/export/embed.html?bbox=123.45710%2C13.68728%2C123.47710%2C13.70728&layer=mapnik"
                 style={{ border: 0, width: '100%', height: '200px', borderRadius: '20px', minHeight: '200px' }}
                 allowFullScreen
@@ -40,12 +40,12 @@ const Contact = () => {
           <h2>Frequently Asked Questions</h2>
           <div className="faq-list compact-faq-list">
             <div className="faq-item">
-              <h3>How can I partner with Decentragri?</h3>
-              <p>Contact us via the form or email for partnership opportunities. We welcome collaborations with agri-tech innovators, NGOs, and government agencies.</p>
+              <h3>How can I become a tutor on FluentXVerse?</h3>
+              <p>Visit our "Become a Tutor" page and complete the application process. We welcome passionate language educators from around the world.</p>
             </div>
             <div className="faq-item">
-              <h3>Where is Decentragri based?</h3>
-              <p>We are headquartered in Bicol, Philippines, and Benue State, Nigeria but our platform is accessible globally.</p>
+              <h3>Where is FluentXVerse based?</h3>
+              <p>We are headquartered in Bicol, Philippines, but our platform connects learners and tutors globally.</p>
             </div>
             <div className="faq-item">
               <h3>How soon will I get a response?</h3>

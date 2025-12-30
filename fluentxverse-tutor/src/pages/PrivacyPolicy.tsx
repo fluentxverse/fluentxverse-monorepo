@@ -45,7 +45,7 @@ const PrivacyPolicy = () => {
               <div className="privacy-section mb-5">
                 <h2 className="privacy-heading">1. Introduction</h2>
                 <p className="privacy-text">
-                  Welcome to Decentragri. We respect your privacy and are committed to protecting your personal data. 
+                  Welcome to FluentXVerse. We respect your privacy and are committed to protecting your personal data. 
                   This Privacy Policy will inform you about how we look after your personal data when you visit our website 
                   and tell you about your privacy rights and how the law protects you.
                 </p>
@@ -143,7 +143,7 @@ const PrivacyPolicy = () => {
                   If you have any questions about this Privacy Policy or our privacy practices, please contact us at:
                 </p>
                 <p className="privacy-text">
-                  Email: <a href="mailto:privacy@decentragri.com" className="text-primary">hello@decentragri.com</a>
+                  Email: <a href="mailto:support@fluentxverse.com" className="text-primary">support@fluentxverse.com</a>
                 </p>
               </div>
             </div>

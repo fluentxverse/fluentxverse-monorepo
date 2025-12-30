@@ -1,12 +1,10 @@
 import { useEffect } from 'preact/hooks';
 import { useThemeStore } from '@/context/ThemeContext';
 import { useAuthStore } from '@/context/AuthContext';
-import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
+import DashboardHeader from '@/Components/Common/DashboardHeader';
 import SideBar from '@/Components/IndexOne/SideBar';
-import DecentragriLoader from '@/Components/IndexOne/DecentragriLoader';
+import LoadingSpinner from '@/Components/LoadingSpinner';
 import Wallet from '@components/Wallet/Wallet';
-
-import './Staking.css';
 
 
 const WalletPage = () => {
@@ -26,7 +24,7 @@ const WalletPage = () => {
   }, [isLoggedIn, loading]);
 
   if (loading) {
-    return <DecentragriLoader />;
+    return <LoadingSpinner />;
   }
 
 

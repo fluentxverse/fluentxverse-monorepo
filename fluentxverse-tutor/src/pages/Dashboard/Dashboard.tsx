@@ -4,7 +4,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
 import SideBar from '@/Components/IndexOne/SideBar';
 import DashboardOverview from '@/Components/Dashboard/DashboardOverview';
-import DecentragriLoader from '../../Components/IndexOne/DecentragriLoader';
+import LoadingSpinner from '@/Components/LoadingSpinner';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -18,7 +18,7 @@ const Dashboard = () => {
   }, [isAuthenticated, loading, user]);
 
   if (loading) {
-    return <DecentragriLoader />;
+    return <LoadingSpinner />;
   }
 
   if (!isAuthenticated) {

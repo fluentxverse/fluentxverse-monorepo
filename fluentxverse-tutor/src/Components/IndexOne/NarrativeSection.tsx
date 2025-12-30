@@ -49,7 +49,7 @@ const NarrativeSection = () => (
           <div className="narrative-image-backdrop"></div>
           <img
             src="/assets/img/banner/hero1.png"
-            alt="Decentragri AI Farm"
+            alt="FluentXVerse Language Learning"
             className="narrative-image"
             loading="lazy"
           />

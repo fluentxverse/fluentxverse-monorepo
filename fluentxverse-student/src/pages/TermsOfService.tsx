@@ -43,14 +43,14 @@ const TermsOfService = () => {
               <div className="privacy-section">
                 <h2 className="privacy-heading">1. Acceptance of Terms</h2>
                 <p className="privacy-text">
-                  By accessing or using the Decentragri platform ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
+                  By accessing or using the FluentXVerse platform ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
                   If you do not agree to these Terms, please do not use our Service.
                 </p>
 
                 <h2 className="privacy-heading">2. Description of Service</h2>
                 <p className="privacy-text">
-                  Decentragri provides an agricultural technology platform that enables farmers to monitor and manage their farming operations. 
-                  The Service includes data collection, analysis, and reporting tools designed to improve agricultural productivity and sustainability.
+                  FluentXVerse provides an online language learning platform that connects students with qualified tutors. 
+                  The Service includes scheduling, video conferencing, lesson materials, and learning management tools designed to improve language fluency.
                 </p>
 
                 <h2 className="privacy-heading">3. User Accounts</h2>
@@ -79,7 +79,7 @@ const TermsOfService = () => {
                 <h2 className="privacy-heading">5. Intellectual Property</h2>
                 <p className="privacy-text">
                   All content, features, and functionality of the Service, including but not limited to text, graphics, logos, 
-                  and software, are the exclusive property of Decentragri and are protected by international copyright, trademark, 
+                  and software, are the exclusive property of FluentXVerse and are protected by international copyright, trademark, 
                   and other intellectual property laws.
                 </p>
                 <p className="privacy-text">
@@ -89,7 +89,7 @@ const TermsOfService = () => {
 
                 <h2 className="privacy-heading">6. Limitation of Liability</h2>
                 <p className="privacy-text">
-                  To the maximum extent permitted by law, Decentragri shall not be liable for any indirect, incidental, special, 
+                  To the maximum extent permitted by law, FluentXVerse shall not be liable for any indirect, incidental, special, 
                   consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, 
                   or any loss of data, use, goodwill, or other intangible losses resulting from:
                 </p>
@@ -111,7 +111,7 @@ const TermsOfService = () => {
                   If you have any questions about these Terms of Service, please contact us at:
                 </p>
                 <p className="privacy-text">
-                  Email: <a href="mailto:legal@decentragri.com" className="text-primary">legal@decentragri.com</a>
+                  Email: <a href="mailto:support@fluentxverse.com" className="text-primary">support@fluentxverse.com</a>
                 </p>
               </div>
             </div>

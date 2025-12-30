@@ -35,10 +35,10 @@ const DashboardSidebar = ({
       <div className="dashboard-sidebar-header">
         <img 
           src="/assets/img/logo/icon_logo.png" 
-          alt="Decentragri Logo" 
+          alt="FluentXVerse Logo" 
           className="dashboard-logo" 
         />
-        <h3>Decentragri</h3>
+        <h3>FluentXVerse</h3>
       </div>
 
       <div className="dashboard-nav">

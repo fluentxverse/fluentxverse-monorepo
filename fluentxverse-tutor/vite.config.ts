@@ -37,4 +37,44 @@ export default defineConfig({
 			'@context': path.resolve(__dirname, 'src/context'),
 		},
 	},
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					// Vendor chunks - split large dependencies
+					'vendor-preact': ['preact', 'preact/hooks', 'preact-iso'],
+					'vendor-ui': ['zustand', 'wouter'],
+					'vendor-pdf': ['pdfjs-dist'],
+					// Feature-based chunks
+					'pages-auth': [
+						'./src/pages/RegisterPage.tsx',
+						'./src/pages/Home.tsx',
+					],
+					'pages-classroom': [
+						'./src/pages/ClassroomPage.tsx',
+						'./src/pages/InterviewRoomPage.tsx',
+					],
+					'pages-exam': [
+						'./src/pages/ExamPage.tsx',
+						'./src/pages/SpeakingExamPage.tsx',
+					],
+					'pages-profile': [
+						'./src/pages/MyProfilePage.tsx',
+						'./src/pages/PerformanceMetricsPage.tsx',
+						'./src/pages/StudentProfilePage.tsx',
+					],
+					'pages-materials': [
+						'./src/pages/MaterialsPage.tsx',
+						'./src/pages/ConversationalSkillsPage.tsx',
+						'./src/pages/LessonViewPage.tsx',
+					],
+					'pages-schedule': [
+						'./src/pages/SchedulePage.tsx',
+						'./src/pages/InterviewBookingPage.tsx',
+					],
+				},
+			},
+		},
+		chunkSizeWarningLimit: 600, // Increase limit slightly while we optimize
+	},
 });
