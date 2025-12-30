@@ -7,14 +7,17 @@ import CallToAction from '../Components/Common/CallToAction';
 import { useAuthContext } from '../context/AuthContext';
 
 const Home = () => {
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, initialLoading } = useAuthContext();
 
-  // Redirect authenticated users to /home
+  // Redirect authenticated users to /home (but wait for auth check to complete)
   useEffect(() => {
+    // Don't redirect while still checking authentication
+    if (initialLoading) return;
+    
     if (isAuthenticated) {
       window.location.href = '/home';
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, initialLoading]);
 
   // Landing page - no redirect needed for unauthenticated users
   return (

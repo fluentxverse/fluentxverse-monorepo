@@ -296,7 +296,14 @@ export const AuthProvider = ({ children }: { children: any }) => {
   };
 
   const logout = async () => {
+    // Clear user state immediately to prevent redirect back to /home
+    setUser(null);
+    
+    // Clear all cached auth data
+    forceAuthCleanup();
+    
     try {
+      // Call server to clear cookie
       await logoutUser();
       
       // Disconnect Thirdweb wallet to clear the wallet session
@@ -308,16 +315,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
       }
     } catch (err) {
       console.error('Logout error:', err);
-    } finally {
-      setUser(null);
-      // Clear any cached auth data
-      try {
-        localStorage.removeItem('fxv_user_fullname');
-        localStorage.removeItem('fxv_user_id');
-      } catch (e) {}
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
+    }
+    
+    // Redirect to landing page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
     }
   };
 
