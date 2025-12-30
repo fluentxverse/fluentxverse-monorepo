@@ -161,29 +161,12 @@ const Student = new Elysia({ name: "student" })
     // Method 2: Use remove()
     cookie.studentAuth?.remove();
     
-    // Method 3: Explicitly set Set-Cookie headers to clear the cookie.
-    // Important: cookies are keyed by (name + domain + path).
-    // If a legacy cookie was set without Domain (host-only) or with a different Path,
-    // clearing only one variant won't remove the other.
-    const cookieName = 'studentAuth';
-    const expires = 'Thu, 01 Jan 1970 00:00:00 GMT';
-    const baseAttrs = (path: string) =>
-      `Path=${path}; Expires=${expires}; Max-Age=0; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
-
-    const clearCookies: string[] = [];
-    const pathsToClear = ['/', '/student'];
-    for (const path of pathsToClear) {
-      // Host-only cookie (no Domain attribute)
-      clearCookies.push(`${cookieName}=; ${baseAttrs(path)}`);
-
-      // Domain cookie variant (shared across subdomains)
-      if (cookieConfig.domain) {
-        clearCookies.push(`${cookieName}=; ${baseAttrs(path)}; Domain=${cookieConfig.domain}`);
-      }
-    }
-
-    // Elysia (Bun) supports multiple Set-Cookie headers via an array
-    set.headers['Set-Cookie'] = clearCookies as any;
+    // Method 3: Explicit Set-Cookie header to clear the *domain cookie*.
+    // Important: some runtimes/frameworks will only emit ONE Set-Cookie header
+    // when multiple cookie operations occur; ensure the last one targets the
+    // cross-subdomain cookie your frontends actually use.
+    const domainAttr = cookieConfig.domain ? `; Domain=${cookieConfig.domain}` : '';
+    set.headers['Set-Cookie'] = `studentAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
     
     // Set headers to prevent caching
     set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
