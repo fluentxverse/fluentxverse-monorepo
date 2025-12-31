@@ -1,0 +1,196 @@
+/* Mobile Menu Polish & Improvements */
+
+/* Improved hamburger button */
+.mobile-nav-toggler {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.mobile-nav-toggler:hover {
+  background: rgba(2, 69, 174, 0.1);
+}
+
+.mobile-nav-toggler:active {
+  transform: scale(0.95);
+}
+
+.mobile-nav-toggler i {
+  font-size: 24px;
+  color: var(--text-color, #1a1f2e);
+  transition: color 0.3s ease;
+}
+
+/* Smooth menu slide animation */
+.mobile-menu {
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-menu .menu-box {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-100%);
+}
+
+.mobile-menu-visible .mobile-menu .menu-box {
+  transform: translateX(0);
+}
+
+/* Improved close button */
+.mobile-menu .close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu .close-btn:hover {
+  background: rgba(2, 69, 174, 0.1);
+  color: #0245ae;
+}
+
+.mobile-menu .close-btn:active {
+  transform: scale(0.9);
+}
+
+/* Improved mobile navigation links */
+.mobile-menu .navigation .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  color: var(--text-color, #1a1f2e);
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 12px;
+  margin: 4px 12px;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu .navigation .nav-link:hover,
+.mobile-menu .navigation .nav-link:focus {
+  background: rgba(2, 69, 174, 0.08);
+  color: #0245ae;
+}
+
+.mobile-menu .navigation .nav-link:active {
+  transform: scale(0.98);
+}
+
+.mobile-menu .navigation .nav-link i {
+  width: 24px;
+  font-size: 18px;
+  color: #0245ae;
+  opacity: 0.8;
+}
+
+.mobile-menu .navigation .nav-link span {
+  flex: 1;
+}
+
+/* Active state for current page */
+.mobile-menu .navigation li.active .nav-link {
+  background: rgba(2, 69, 174, 0.1);
+  color: #0245ae;
+  font-weight: 600;
+}
+
+/* Improved social links */
+.mobile-menu .social-links ul {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.mobile-menu .social-links li a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu .social-links li a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Better backdrop blur */
+.menu-backdrop {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Safe area padding for notched devices */
+@supports (padding: max(0px)) {
+  .mobile-menu .menu-box {
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  
+  .mobile-menu-actions {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Dark mode adjustments */
+.dark-mode .mobile-nav-toggler i {
+  color: #f1f5f9;
+}
+
+.dark-mode .mobile-nav-toggler:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .mobile-menu .close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.dark-mode .mobile-menu .close-btn:hover {
+  background: rgba(74, 158, 255, 0.2);
+  color: #4a9eff;
+}
+
+.dark-mode .mobile-menu .navigation .nav-link {
+  color: #f1f5f9;
+}
+
+.dark-mode .mobile-menu .navigation .nav-link:hover,
+.dark-mode .mobile-menu .navigation .nav-link:focus {
+  background: rgba(74, 158, 255, 0.15);
+  color: #4a9eff;
+}
+
+.dark-mode .mobile-menu .navigation .nav-link i {
+  color: #4a9eff;
+}
+
+/* Improved touch feedback */
+@media (hover: none) {
+  .mobile-menu .navigation .nav-link:active {
+    background: rgba(2, 69, 174, 0.15);
+  }
+  
+  .dark-mode .mobile-menu .navigation .nav-link:active {
+    background: rgba(74, 158, 255, 0.25);
+  }
+}
