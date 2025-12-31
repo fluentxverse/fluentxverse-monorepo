@@ -6,11 +6,17 @@ const Banner = () => {
     <section className="hero-section">
       <div className="hero-image-wrapper">
         <div className="hero-image-bg"></div>
-        <img 
-          src="/assets/img/banner/banner_man.png" 
-          alt="Become an ESL Tutor" 
-          className="hero-image"
-        />
+        <picture>
+          <source srcSet="/assets/img/banner/banner_man.webp" type="image/webp" />
+          <img 
+            src="/assets/img/banner/banner_man.png" 
+            alt="Become an ESL Tutor" 
+            className="hero-image"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
       </div>
       <div className="container">
         <div className="row align-items-center">

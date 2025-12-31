@@ -10,7 +10,15 @@ const CareerSection = () => {
       <div className="container">
         <div className="career-content">
           <div className="career-image">
-            <img src="/assets/img/banner/teacher_home.png" alt="Online ESL Tutor" />
+            <picture>
+              <source srcSet="/assets/img/banner/teacher_home.webp" type="image/webp" />
+              <img 
+                src="/assets/img/banner/teacher_home.png" 
+                alt="Online ESL Tutor"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </div>
           
           <div className="career-text">
