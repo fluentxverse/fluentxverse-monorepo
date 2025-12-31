@@ -1,0 +1,178 @@
+.how-it-works-section {
+  padding: 80px 0;
+  background: #ffffff;
+}
+
+.how-it-works-section .container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.how-it-works-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.how-it-works-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.steps-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.step-card {
+  flex: 1;
+  text-align: center;
+  padding: 20px 15px;
+  position: relative;
+}
+
+.step-number-circle {
+  width: 36px;
+  height: 36px;
+  background: #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.step-number-circle span {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.step-icon-wrapper {
+  width: 70px;
+  height: 70px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  transition: all 0.3s ease;
+}
+
+.step-card:hover .step-icon-wrapper {
+  background: #3b82f6;
+}
+
+.step-card:hover .step-icon-wrapper i {
+  color: white;
+}
+
+.step-icon-wrapper i {
+  font-size: 28px;
+  color: #3b82f6;
+  transition: all 0.3s ease;
+}
+
+.step-card .step-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.step-card .step-description {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.step-arrow {
+  position: absolute;
+  right: -22px;
+  top: 85px;
+  color: #cbd5e1;
+  font-size: 18px;
+  z-index: 1;
+}
+
+.how-it-works-cta {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.how-it-works-btn {
+  display: inline-block;
+  padding: 14px 40px;
+  background: #3b82f6;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.how-it-works-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .steps-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .step-card {
+    flex: 0 0 45%;
+    margin-bottom: 30px;
+  }
+  
+  .step-arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .how-it-works-section {
+    padding: 60px 0;
+  }
+  
+  .how-it-works-title {
+    font-size: 28px;
+  }
+  
+  .step-card {
+    flex: 0 0 100%;
+  }
+}
+
+/* Dark mode */
+.dark-mode .how-it-works-section {
+  background: #0f172a;
+}
+
+.dark-mode .how-it-works-title,
+.dark-mode .step-card .step-title {
+  color: #f1f5f9;
+}
+
+.dark-mode .step-card .step-description {
+  color: #94a3b8;
+}
+
+.dark-mode .step-icon-wrapper {
+  background: #1e293b;
+}
+
+.dark-mode .step-arrow {
+  color: #475569;
+}
