@@ -293,7 +293,10 @@ const HomePage = () => {
                   <div className={`home-tickets-grid ${ticketBalance?.trial ? 'has-trial' : ''}`}>
                     <div className="home-ticket-card basic">
                       <div className="home-ticket-icon">
-                        <img src="/assets/img/icons/basic_ticket2.png" alt="Basic Ticket" />
+                        <picture>
+                          <source srcSet="/assets/img/icons/basic_ticket2.webp" type="image/webp" />
+                          <img src="/assets/img/icons/basic_ticket2.png" alt="Basic Ticket" loading="lazy" />
+                        </picture>
                       </div>
                       <div className="home-ticket-info">
                         <div className="home-ticket-count">
@@ -304,7 +307,10 @@ const HomePage = () => {
                     </div>
                     <div className="home-ticket-card premium">
                       <div className="home-ticket-icon">
-                        <img src="/assets/img/icons/premium_ticket2.png" alt="Premium Ticket" />
+                        <picture>
+                          <source srcSet="/assets/img/icons/premium_ticket2.webp" type="image/webp" />
+                          <img src="/assets/img/icons/premium_ticket2.png" alt="Premium Ticket" loading="lazy" />
+                        </picture>
                       </div>
                       <div className="home-ticket-info">
                         <div className="home-ticket-count">
@@ -316,7 +322,10 @@ const HomePage = () => {
                     {ticketBalance?.trial ? (
                       <div className="home-ticket-card trial">
                         <div className="home-ticket-icon">
-                          <img src="/assets/img/icons/trial_ticket.png" alt="Trial Ticket" />
+                          <picture>
+                            <source srcSet="/assets/img/icons/trial_ticket.webp" type="image/webp" />
+                            <img src="/assets/img/icons/trial_ticket.png" alt="Trial Ticket" loading="lazy" />
+                          </picture>
                         </div>
                         <div className="home-ticket-info">
                           <div className="home-ticket-count">
