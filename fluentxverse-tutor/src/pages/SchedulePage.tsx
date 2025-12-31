@@ -491,6 +491,52 @@ const SchedulePage = () => {
     setPendingSelections(new Set());
   };
 
+  // Select all available slots for the current period
+  const selectAllAvailable = () => {
+    const newSelections = new Set<string>();
+    
+    // Get all time slots for the current period
+    const currentPeriodSlots = timeSlots[selectedPeriod];
+    
+    // Iterate through all days and times
+    currentPeriodSlots.forEach((time) => {
+      weekDates.forEach((date, dayIdx) => {
+        const key = `${dayIdx}-${time}`;
+        const isBooked = bookedSlots.has(key);
+        const isAlreadyOpen = selectedTimeSlots.has(key);
+        const canOpen = canOpenSlot(date, time);
+        
+        // Only select available slots (not booked, not already open, and can be opened)
+        if (!isBooked && !isAlreadyOpen && canOpen) {
+          newSelections.add(key);
+        }
+      });
+    });
+    
+    setPendingSelections(newSelections);
+  };
+
+  // Count available slots for current period
+  const countAvailableSlots = () => {
+    let count = 0;
+    const currentPeriodSlots = timeSlots[selectedPeriod];
+    
+    currentPeriodSlots.forEach((time) => {
+      weekDates.forEach((date, dayIdx) => {
+        const key = `${dayIdx}-${time}`;
+        const isBooked = bookedSlots.has(key);
+        const isAlreadyOpen = selectedTimeSlots.has(key);
+        const canOpen = canOpenSlot(date, time);
+        
+        if (!isBooked && !isAlreadyOpen && canOpen) {
+          count++;
+        }
+      });
+    });
+    
+    return count;
+  };
+
   // Check if any pending selection is booked
   const hasBookedSlots = () => {
     return Array.from(pendingSelections).some(key => bookedSlots.has(key));
@@ -826,7 +872,7 @@ const SchedulePage = () => {
               <div style={{
                 display: 'flex',
                 gap: '12px',
-                marginBottom: '28px',
+                marginBottom: '16px',
                 justifyContent: 'center',
                 flexWrap: 'wrap'
               }}>
@@ -857,6 +903,50 @@ const SchedulePage = () => {
                     {period}
                   </button>
                 ))}
+              </div>
+
+              {/* Select All Available Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '20px'
+              }}>
+                <button
+                  onClick={selectAllAvailable}
+                  disabled={countAvailableSlots() === 0}
+                  style={{
+                    background: countAvailableSlots() === 0 
+                      ? 'rgba(148, 163, 184, 0.2)'
+                      : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
+                    color: countAvailableSlots() === 0 ? '#94a3b8' : '#fff',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: countAvailableSlots() === 0 ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: countAvailableSlots() === 0 ? 'none' : '0 4px 12px rgba(2, 69, 174, 0.3)',
+                    opacity: countAvailableSlots() === 0 ? 0.6 : 1
+                  }}
+                >
+                  <i className="fas fa-check-double"></i>
+                  Select All {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Slots
+                  {countAvailableSlots() > 0 && (
+                    <span style={{
+                      background: 'rgba(255, 255, 255, 0.25)',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: 800
+                    }}>
+                      {countAvailableSlots()}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Calendar Grid */}
