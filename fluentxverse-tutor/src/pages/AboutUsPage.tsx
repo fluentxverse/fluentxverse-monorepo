@@ -64,15 +64,20 @@ const AboutUsPage = () => {
             <div className="about-content-grid reverse">
               <div className="about-image-content">
                 <div className="about-image-wrapper">
-                  <img 
-                    src="/assets/img/banner/about_hero.png" 
-                    alt="FluentXVerse Team" 
-                    className="about-team-image"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = '<div class="image-placeholder"><i class="fas fa-users"></i></div>';
-                    }}
-                  />
+                  <picture>
+                    <source srcSet="/assets/img/banner/about_hero.webp" type="image/webp" />
+                    <img 
+                      src="/assets/img/banner/about_hero.png" 
+                      alt="FluentXVerse Team" 
+                      className="about-team-image"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement!.parentElement!.innerHTML = '<div class="image-placeholder"><i class="fas fa-users"></i></div>';
+                      }}
+                    />
+                  </picture>
                 </div>
               </div>
               
