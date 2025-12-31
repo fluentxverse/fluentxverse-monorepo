@@ -6,6 +6,24 @@
   overflow: hidden;
 }
 
+/* Background Image */
+.how-it-works-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  background-image: url('/assets/img/banner/teacher_home.webp');
+  background-size: cover;
+  background-position: center left;
+  background-repeat: no-repeat;
+  opacity: 0.08;
+  pointer-events: none;
+  mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+}
+
 /* Background decorative shapes */
 .how-it-works-bg-shapes {
   position: absolute;
@@ -357,6 +375,10 @@
 /* Dark mode */
 .dark-mode .how-it-works-section {
   background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+}
+
+.dark-mode .how-it-works-section::before {
+  opacity: 0.05;
 }
 
 .dark-mode .shape {
