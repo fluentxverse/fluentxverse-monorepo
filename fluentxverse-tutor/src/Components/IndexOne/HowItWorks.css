@@ -14,11 +14,15 @@
   right: 0;
   bottom: 0;
   width: 50%;
-  background-image: url('/assets/img/banner/teacher_home.webp');
+  background-image: url('/assets/img/banner/teacher_home.png');
+  background-image: image-set(
+    url('/assets/img/banner/teacher_home.webp') type('image/webp'),
+    url('/assets/img/banner/teacher_home.png') type('image/png')
+  );
   background-size: cover;
-  background-position: center left;
+  background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.08;
+  opacity: 0.12;
   pointer-events: none;
   mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
   -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
