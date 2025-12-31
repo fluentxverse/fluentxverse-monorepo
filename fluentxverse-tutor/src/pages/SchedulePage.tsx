@@ -491,47 +491,42 @@ const SchedulePage = () => {
     setPendingSelections(new Set());
   };
 
-  // Select all available slots for the current period
-  const selectAllAvailable = () => {
-    const newSelections = new Set<string>();
-    
-    // Get all time slots for the current period
+  // Select all available slots for a specific day column in the current period
+  const selectAllForDay = (dayIdx: number) => {
+    const newSelections = new Set(pendingSelections);
     const currentPeriodSlots = timeSlots[selectedPeriod];
+    const date = weekDates[dayIdx];
     
-    // Iterate through all days and times
     currentPeriodSlots.forEach((time) => {
-      weekDates.forEach((date, dayIdx) => {
-        const key = `${dayIdx}-${time}`;
-        const isBooked = bookedSlots.has(key);
-        const isAlreadyOpen = selectedTimeSlots.has(key);
-        const canOpen = canOpenSlot(date, time);
-        
-        // Only select available slots (not booked, not already open, and can be opened)
-        if (!isBooked && !isAlreadyOpen && canOpen) {
-          newSelections.add(key);
-        }
-      });
+      const key = `${dayIdx}-${time}`;
+      const isBooked = bookedSlots.has(key);
+      const isAlreadyOpen = selectedTimeSlots.has(key);
+      const canOpen = canOpenSlot(date, time);
+      
+      // Only select available slots (not booked, not already open, and can be opened)
+      if (!isBooked && !isAlreadyOpen && canOpen) {
+        newSelections.add(key);
+      }
     });
     
     setPendingSelections(newSelections);
   };
 
-  // Count available slots for current period
-  const countAvailableSlots = () => {
+  // Count available slots for a specific day in the current period
+  const countAvailableSlotsForDay = (dayIdx: number) => {
     let count = 0;
     const currentPeriodSlots = timeSlots[selectedPeriod];
+    const date = weekDates[dayIdx];
     
     currentPeriodSlots.forEach((time) => {
-      weekDates.forEach((date, dayIdx) => {
-        const key = `${dayIdx}-${time}`;
-        const isBooked = bookedSlots.has(key);
-        const isAlreadyOpen = selectedTimeSlots.has(key);
-        const canOpen = canOpenSlot(date, time);
-        
-        if (!isBooked && !isAlreadyOpen && canOpen) {
-          count++;
-        }
-      });
+      const key = `${dayIdx}-${time}`;
+      const isBooked = bookedSlots.has(key);
+      const isAlreadyOpen = selectedTimeSlots.has(key);
+      const canOpen = canOpenSlot(date, time);
+      
+      if (!isBooked && !isAlreadyOpen && canOpen) {
+        count++;
+      }
     });
     
     return count;
@@ -905,50 +900,6 @@ const SchedulePage = () => {
                 ))}
               </div>
 
-              {/* Select All Available Button */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
-                <button
-                  onClick={selectAllAvailable}
-                  disabled={countAvailableSlots() === 0}
-                  style={{
-                    background: countAvailableSlots() === 0 
-                      ? 'rgba(148, 163, 184, 0.2)'
-                      : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                    color: countAvailableSlots() === 0 ? '#94a3b8' : '#fff',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: countAvailableSlots() === 0 ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    boxShadow: countAvailableSlots() === 0 ? 'none' : '0 4px 12px rgba(2, 69, 174, 0.3)',
-                    opacity: countAvailableSlots() === 0 ? 0.6 : 1
-                  }}
-                >
-                  <i className="fas fa-check-double"></i>
-                  Select All {selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Slots
-                  {countAvailableSlots() > 0 && (
-                    <span style={{
-                      background: 'rgba(255, 255, 255, 0.25)',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      fontSize: '11px',
-                      fontWeight: 800
-                    }}>
-                      {countAvailableSlots()}
-                    </span>
-                  )}
-                </button>
-              </div>
-
               {/* Calendar Grid */}
               <div style={{ overflowX: 'auto' }} className="schedule-scrollable">
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px' }}>
@@ -988,6 +939,50 @@ const SchedulePage = () => {
                             <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', marginTop: '2px', letterSpacing: '0.5px' }}>
                               {month}
                             </div>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                    {/* Select All Row */}
+                    <tr>
+                      <th style={{
+                        background: 'transparent',
+                        padding: '4px',
+                        textAlign: 'center'
+                      }}>
+                        {/* Empty cell for time column */}
+                      </th>
+                      {weekDates.map((_, dayIdx) => {
+                        const availableCount = countAvailableSlotsForDay(dayIdx);
+                        return (
+                          <th key={`select-${dayIdx}`} style={{ padding: '4px' }}>
+                            <button
+                              onClick={() => selectAllForDay(dayIdx)}
+                              disabled={availableCount === 0}
+                              title={availableCount > 0 ? `Select all ${availableCount} available slots` : 'No available slots'}
+                              style={{
+                                width: '100%',
+                                background: availableCount === 0 
+                                  ? 'rgba(148, 163, 184, 0.15)'
+                                  : 'rgba(2, 69, 174, 0.1)',
+                                color: availableCount === 0 ? '#94a3b8' : '#0245ae',
+                                border: availableCount === 0 ? 'none' : '1px dashed rgba(2, 69, 174, 0.3)',
+                                padding: '6px 4px',
+                                borderRadius: '6px',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                cursor: availableCount === 0 ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px',
+                                opacity: availableCount === 0 ? 0.5 : 1
+                              }}
+                            >
+                              <i className="fas fa-check-double" style={{ fontSize: '9px' }}></i>
+                              {availableCount > 0 ? availableCount : '-'}
+                            </button>
                           </th>
                         );
                       })}
