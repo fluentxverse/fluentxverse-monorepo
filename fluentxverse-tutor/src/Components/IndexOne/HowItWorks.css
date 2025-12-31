@@ -14,10 +14,10 @@
   right: 0;
   bottom: 0;
   width: 50%;
-  background-image: url('/assets/img/banner/teacher_home.png');
+  background-image: url('/assets/img/banner/teacher_home2.png');
   background-image: image-set(
-    url('/assets/img/banner/teacher_home.webp') type('image/webp'),
-    url('/assets/img/banner/teacher_home.png') type('image/png')
+    url('/assets/img/banner/teacher_home2.webp') type('image/webp'),
+    url('/assets/img/banner/teacher_home2.png') type('image/png')
   );
   background-size: cover;
   background-position: center;
