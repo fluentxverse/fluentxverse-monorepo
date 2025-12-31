@@ -7,28 +7,28 @@ const HowItWorks = () => {
       title: 'Apply Online',
       description: 'Fill out a simple application form. Share your background, availability, and passion for teaching.',
       icon: 'fas fa-paper-plane',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
     },
     {
       number: '02',
       title: 'Get Assessed',
       description: 'Complete a brief English proficiency check and a short demo lesson with our team.',
       icon: 'fas fa-award',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+      gradient: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)'
     },
     {
       number: '03',
       title: 'Get Certified',
       description: 'Access our exclusive training modules and earn your FluentXVerse teaching certification.',
       icon: 'fas fa-certificate',
-      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+      gradient: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)'
     },
     {
       number: '04',
       title: 'Start Earning',
       description: 'Set your own hours, connect with students worldwide, and grow your teaching career.',
       icon: 'fas fa-rocket',
-      gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+      gradient: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)'
     }
   ];
 
