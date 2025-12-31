@@ -861,22 +861,22 @@ const SchedulePage = () => {
 
               {/* Calendar Grid */}
               <div style={{ overflowX: 'auto' }} className="schedule-scrollable">
-                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '8px' }}>
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '4px' }}>
                   <thead>
                     <tr>
                       <th style={{
                         background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                        padding: '16px',
-                        borderRadius: '12px',
+                        padding: '10px',
+                        borderRadius: '10px',
                         color: '#fff',
                         fontWeight: 800,
-                        fontSize: '13px',
+                        fontSize: '12px',
                         textAlign: 'center',
-                        minWidth: '120px'
+                        minWidth: '100px'
                       }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                          <img src="https://flagcdn.com/w40/ph.png" alt="PH" style={{ width: '24px', height: '16px', borderRadius: '3px' }} />
-                          <div>Philippine Time</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                          <img src="https://flagcdn.com/w40/ph.png" alt="PH" style={{ width: '20px', height: '14px', borderRadius: '2px' }} />
+                          <div>PH Time</div>
                         </div>
                       </th>
                       {weekDates.map((date, idx) => {
@@ -884,18 +884,18 @@ const SchedulePage = () => {
                         return (
                           <th key={idx} style={{
                             background: 'rgba(2, 69, 174, 0.08)',
-                            padding: '16px 12px',
-                            borderRadius: '12px',
+                            padding: '10px 8px',
+                            borderRadius: '10px',
                             textAlign: 'center',
-                            minWidth: '100px'
+                            minWidth: '80px'
                           }}>
-                            <div style={{ fontWeight: 800, fontSize: '12px', color: '#64748b', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                            <div style={{ fontWeight: 800, fontSize: '11px', color: '#64748b', marginBottom: '4px', letterSpacing: '0.5px' }}>
                               {days[idx]}
                             </div>
-                            <div style={{ fontSize: '24px', fontWeight: 900, color: '#0245ae', lineHeight: 1 }}>
+                            <div style={{ fontSize: '20px', fontWeight: 900, color: '#0245ae', lineHeight: 1 }}>
                               {day}
                             </div>
-                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginTop: '4px', letterSpacing: '0.5px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', marginTop: '2px', letterSpacing: '0.5px' }}>
                               {month}
                             </div>
                           </th>
@@ -908,10 +908,10 @@ const SchedulePage = () => {
                       <tr key={timeIdx}>
                         <td style={{
                           background: 'rgba(248, 250, 252, 0.8)',
-                          padding: '12px',
-                          borderRadius: '12px',
+                          padding: '8px',
+                          borderRadius: '8px',
                           fontWeight: 700,
-                          fontSize: '13px',
+                          fontSize: '12px',
                           color: '#475569',
                           textAlign: 'center'
                         }}>
@@ -950,15 +950,15 @@ const SchedulePage = () => {
                           }
                           
                           return (
-                            <td key={dayIdx} style={{ padding: '4px' }}>
+                            <td key={dayIdx} style={{ padding: '2px' }}>
                               <button
                                 onClick={() => handleSlotClick(dayIdx, time)}
                                 onDblClick={() => handleSlotDoubleClick(dayIdx, time)}
                                 disabled={!isBooked && (isPastOrNear || (isSelected && !canMarkAttend))}
                                 style={{
                                   width: '100%',
-                                  padding: '16px 8px',
-                                  borderRadius: '10px',
+                                  padding: '10px 6px',
+                                  borderRadius: '8px',
                                   cursor: isBooked ? 'pointer' : isPastOrNear || (isSelected && !canMarkAttend) ? 'not-allowed' : 'pointer',
                                   background: penalty
                                     ? PENALTY_LABELS[penalty.code].bgColor
