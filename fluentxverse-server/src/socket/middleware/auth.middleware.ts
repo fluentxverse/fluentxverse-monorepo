@@ -74,18 +74,10 @@ export const authMiddleware = async (
       }
     }
 
-    // In development, allow anonymous sockets but mark as unauthenticated
-    const isDev = process.env.NODE_ENV !== 'production';
-    if (!authPayload && isDev) {
-      // This shouldn't happen now since clients send their tier, but fallback just in case
-      socket.data.userId = `anon-${socket.id}`;
-      socket.data.userType = 'student';
-      socket.data.email = undefined;
-      console.warn('⚠️ Dev mode: allowing unauthenticated socket', socket.id);
-      return next();
-    }
-
+    // SECURITY: Require authentication in ALL environments
+    // Anonymous sockets are a security risk - they can listen to events and send malicious data
     if (!authPayload) {
+      console.warn('❌ Socket connection rejected: No valid authentication');
       return next(new Error('Authentication required: No valid JWT token or cookie'));
     }
 

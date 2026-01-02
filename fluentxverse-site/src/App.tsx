@@ -74,6 +74,15 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
         <div className="hero-background">
           <div className="hero-gradient"></div>
           <div className="hero-particles"></div>
+          {/* Will-o-wisps */}
+          <div className="hero-wisps" aria-hidden="true">
+            <span className="hero-wisp"></span>
+            <span className="hero-wisp"></span>
+            <span className="hero-wisp"></span>
+            <span className="hero-wisp"></span>
+            <span className="hero-wisp"></span>
+            <span className="hero-wisp"></span>
+          </div>
         </div>
 
         {/* Hero Content (Top) */}

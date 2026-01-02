@@ -1,7 +1,23 @@
 import { Elysia } from 'elysia';
 import { lessonMediaService } from '../services/lesson.services/media.service';
+import { createAdminGuard } from '../middleware/auth.middleware';
 
 export const mediaRoute = new Elysia({ prefix: '/lesson' })
+  // Auth guard for write operations (POST, PATCH, DELETE)
+  .onBeforeHandle(async ({ request, cookie, set }) => {
+    const method = request.method;
+    
+    // Only POST, PATCH, DELETE require admin auth
+    if (['POST', 'PATCH', 'DELETE'].includes(method)) {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return {
+          success: false,
+          error: 'Unauthorized - Admin authentication required'
+        };
+      }
+    }
+  })
   
   // Get all media for a lesson
   .get('/:lessonId/media', async ({ params }) => {

@@ -42,33 +42,47 @@ export class InboxService {
    * Get all system messages for admin dashboard
    */
   async getAllMessages(params: GetAllMessagesParams): Promise<{ messages: SystemMessage[]; total: number }> {
-    const limit = params.limit || 50;
-    const offset = params.offset || 0;
+    const limit = Math.max(1, Math.min(100, params.limit || 50));
+    const offset = Math.max(0, params.offset || 0);
 
-    let whereClause = '';
-    const conditions: string[] = [];
+    // Build parameterized query to prevent SQL injection
+    let whereConditions: string[] = [];
+    let queryParams: any[] = [];
+    let paramIndex = 1;
 
     if (params.category) {
-      conditions.push(`category = '${params.category}'`);
+      // Validate category against allowed values
+      const allowedCategories = ['announcement', 'update', 'promotion', 'alert', 'general'];
+      if (allowedCategories.includes(params.category)) {
+        whereConditions.push(`category = $${paramIndex}`);
+        queryParams.push(params.category);
+        paramIndex++;
+      }
     }
     if (params.targetAudience) {
-      conditions.push(`target_audience = '${params.targetAudience}'`);
+      // Validate targetAudience against allowed values
+      const allowedAudiences = ['all', 'students', 'tutors'];
+      if (allowedAudiences.includes(params.targetAudience)) {
+        whereConditions.push(`target_audience = $${paramIndex}`);
+        queryParams.push(params.targetAudience);
+        paramIndex++;
+      }
     }
 
-    if (conditions.length > 0) {
-      whereClause = `WHERE ${conditions.join(' AND ')}`;
-    }
+    const whereClause = whereConditions.length > 0 
+      ? `WHERE ${whereConditions.join(' AND ')}` 
+      : '';
 
     const messagesResult = await db.unsafe(`
       SELECT * FROM system_messages
       ${whereClause}
       ORDER BY created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `);
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, [...queryParams, limit, offset]);
 
     const countResult = await db.unsafe(`
       SELECT COUNT(*) as total FROM system_messages ${whereClause}
-    `);
+    `, queryParams);
 
     const messages: SystemMessage[] = messagesResult.map((row: any) => ({
       id: row.id,
@@ -92,8 +106,14 @@ export class InboxService {
    * Get messages for a specific user (student or tutor)
    */
   async getUserMessages(params: GetUserMessagesParams): Promise<{ messages: SystemMessageWithStatus[]; stats: MessageStats }> {
-    const limit = params.limit || 50;
-    const offset = params.offset || 0;
+    const limit = Math.max(1, Math.min(100, params.limit || 50));
+    const offset = Math.max(0, params.offset || 0);
+    
+    // Validate userType
+    if (!['student', 'tutor'].includes(params.userType)) {
+      throw new Error('Invalid user type');
+    }
+    
     const targetAudiences = params.userType === 'student' 
       ? ['all', 'students'] 
       : ['all', 'tutors'];
@@ -101,19 +121,36 @@ export class InboxService {
     // First, ensure recipient records exist for this user
     await this.ensureRecipientRecords(params.userId, params.userType, targetAudiences);
 
-    let whereClause = `
-      WHERE sm.target_audience IN ('${targetAudiences.join("','")}')
-    `;
+    // Build parameterized query
+    let whereConditions: string[] = [`sm.target_audience = ANY($1)`];
+    let queryParams: any[] = [targetAudiences];
+    let paramIndex = 2;
 
     if (params.category) {
-      whereClause += ` AND sm.category = '${params.category}'`;
+      // Validate category
+      const allowedCategories = ['announcement', 'update', 'promotion', 'alert', 'general'];
+      if (allowedCategories.includes(params.category)) {
+        whereConditions.push(`sm.category = $${paramIndex}`);
+        queryParams.push(params.category);
+        paramIndex++;
+      }
     }
     if (params.isRead !== undefined) {
-      whereClause += ` AND COALESCE(smr.is_read, false) = ${params.isRead}`;
+      whereConditions.push(`COALESCE(smr.is_read, false) = $${paramIndex}`);
+      queryParams.push(params.isRead);
+      paramIndex++;
     }
     if (params.isPinned !== undefined) {
-      whereClause += ` AND COALESCE(smr.is_pinned, false) = ${params.isPinned}`;
+      whereConditions.push(`COALESCE(smr.is_pinned, false) = $${paramIndex}`);
+      queryParams.push(params.isPinned);
+      paramIndex++;
     }
+
+    const userIdParam = paramIndex;
+    queryParams.push(params.userId);
+    paramIndex++;
+
+    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
 
     const messagesResult = await db.unsafe(`
       SELECT 
@@ -123,11 +160,11 @@ export class InboxService {
         smr.read_at
       FROM system_messages sm
       LEFT JOIN system_message_recipients smr 
-        ON sm.id = smr.message_id AND smr.user_id = '${params.userId}'
+        ON sm.id = smr.message_id AND smr.user_id = $${userIdParam}
       ${whereClause}
       ORDER BY smr.is_pinned DESC NULLS LAST, sm.created_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `);
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, [...queryParams, limit, offset]);
 
     // Get stats
     const statsResult = await db.unsafe(`
@@ -137,9 +174,9 @@ export class InboxService {
         COUNT(*) FILTER (WHERE COALESCE(smr.is_pinned, false) = true) as pinned
       FROM system_messages sm
       LEFT JOIN system_message_recipients smr 
-        ON sm.id = smr.message_id AND smr.user_id = '${params.userId}'
-      WHERE sm.target_audience IN ('${targetAudiences.join("','")}')
-    `);
+        ON sm.id = smr.message_id AND smr.user_id = $2
+      WHERE sm.target_audience = ANY($1)
+    `, [targetAudiences, params.userId]);
 
     const messages: SystemMessageWithStatus[] = messagesResult.map((row: any) => ({
       id: row.id,
@@ -169,23 +206,28 @@ export class InboxService {
    * Ensure recipient records exist for all relevant messages
    */
   private async ensureRecipientRecords(userId: string, userType: 'tutor' | 'student', targetAudiences: string[]): Promise<void> {
+    // Validate userType to prevent injection
+    if (!['tutor', 'student'].includes(userType)) {
+      throw new Error('Invalid user type');
+    }
+    
     await db.unsafe(`
       INSERT INTO system_message_recipients (id, message_id, user_id, user_type, is_read, is_pinned, created_at)
       SELECT 
         gen_random_uuid(),
         sm.id,
-        '${userId}',
-        '${userType}',
+        $1,
+        $2,
         false,
         false,
         NOW()
       FROM system_messages sm
-      WHERE sm.target_audience IN ('${targetAudiences.join("','")}')
+      WHERE sm.target_audience = ANY($3)
         AND NOT EXISTS (
           SELECT 1 FROM system_message_recipients smr 
-          WHERE smr.message_id = sm.id AND smr.user_id = '${userId}'
+          WHERE smr.message_id = sm.id AND smr.user_id = $1
         )
-    `);
+    `, [userId, userType, targetAudiences]);
   }
 
   /**

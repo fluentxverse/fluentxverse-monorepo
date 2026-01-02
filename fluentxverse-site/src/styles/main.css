@@ -297,6 +297,111 @@ img {
     radial-gradient(circle at 50% 50%, rgba(74, 158, 255, 0.05) 0%, transparent 70%);
 }
 
+/* Will-o-wisps (subtle drifting glow orbs) */
+.hero-wisps {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-wisp {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 9999px;
+  filter: blur(18px);
+  opacity: 0.32;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.14), transparent 55%),
+    radial-gradient(circle at 60% 60%, rgba(74, 158, 255, 0.38), transparent 60%),
+    radial-gradient(circle at 45% 65%, rgba(109, 190, 69, 0.22), transparent 65%);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.hero-wisp:nth-child(1) {
+  top: 12%;
+  left: 8%;
+  width: 260px;
+  height: 260px;
+  animation: wispDriftA 16s infinite, wispFlicker 4.5s infinite;
+}
+
+.hero-wisp:nth-child(2) {
+  top: 18%;
+  right: 10%;
+  width: 200px;
+  height: 200px;
+  animation: wispDriftB 18s infinite, wispFlicker 5.2s infinite;
+}
+
+.hero-wisp:nth-child(3) {
+  top: 42%;
+  left: 18%;
+  width: 180px;
+  height: 180px;
+  animation: wispDriftC 15s infinite, wispFlicker 4.1s infinite;
+}
+
+.hero-wisp:nth-child(4) {
+  top: 52%;
+  right: 18%;
+  width: 240px;
+  height: 240px;
+  animation: wispDriftA 20s infinite reverse, wispFlicker 6s infinite;
+}
+
+.hero-wisp:nth-child(5) {
+  bottom: 10%;
+  left: 40%;
+  width: 300px;
+  height: 300px;
+  opacity: 0.26;
+  animation: wispDriftB 22s infinite reverse, wispFlicker 7s infinite;
+}
+
+.hero-wisp:nth-child(6) {
+  bottom: 16%;
+  right: 36%;
+  width: 190px;
+  height: 190px;
+  animation: wispDriftC 17s infinite reverse, wispFlicker 5.6s infinite;
+}
+
+@keyframes wispDriftA {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(60px, -25px, 0) scale(1.06); }
+  55% { transform: translate3d(20px, 40px, 0) scale(0.98); }
+  80% { transform: translate3d(-50px, 15px, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes wispDriftB {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  30% { transform: translate3d(-55px, 25px, 0) scale(1.05); }
+  60% { transform: translate3d(35px, 55px, 0) scale(0.97); }
+  85% { transform: translate3d(70px, -10px, 0) scale(1.03); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes wispDriftC {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  20% { transform: translate3d(30px, 40px, 0) scale(1.04); }
+  50% { transform: translate3d(-35px, 15px, 0) scale(0.98); }
+  75% { transform: translate3d(10px, -35px, 0) scale(1.06); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes wispFlicker {
+  0%, 100% { opacity: 0.22; }
+  45% { opacity: 0.38; }
+  70% { opacity: 0.28; }
+}
+
 .hero-top-content {
   position: relative;
   z-index: 2;

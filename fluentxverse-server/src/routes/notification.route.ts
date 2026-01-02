@@ -2,6 +2,7 @@ import Elysia, { t } from 'elysia';
 import { NotificationService } from '../services/notification.services/notification.service';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { getIO } from '../socket/socket.server';
+import { safePaginationLimit, safePaginationOffset, MAX_PAGINATION_LIMITS } from '../utils/rateLimiter';
 
 const notificationService = new NotificationService();
 
@@ -34,8 +35,8 @@ const Notification = new Elysia({ prefix: '/notifications' })
         await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
       }
 
-      const limit = query.limit ? parseInt(query.limit, 10) : 50;
-      const offset = query.offset ? parseInt(query.offset, 10) : 0;
+      const limit = safePaginationLimit(query.limit, 50, MAX_PAGINATION_LIMITS.list);
+      const offset = safePaginationOffset(query.offset, 0);
 
       const filters: any = {
         userId,

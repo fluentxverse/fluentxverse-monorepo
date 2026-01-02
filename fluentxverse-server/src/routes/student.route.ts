@@ -91,7 +91,13 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
-  .post("/student/login", async ({ body, cookie }) => {
+  .post("/student/login", async ({ body, cookie, request, set }) => {
+    // Rate limit login attempts to prevent brute force attacks
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                     request.headers.get('x-real-ip') || 'unknown';
+    const rateLimitResult = await rateLimitMiddleware(clientIp, 'auth', set as any);
+    if (rateLimitResult) return rateLimitResult;
+    
     try {
       const studentService = new StudentService();
       const userData: StudentUserData = await studentService.login(body);

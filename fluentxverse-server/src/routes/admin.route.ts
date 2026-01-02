@@ -2,10 +2,41 @@ import Elysia, { t } from 'elysia';
 import { AdminService } from '../services/admin.services/admin.service';
 import { suspensionJobService } from '../services/admin.services/suspension.job';
 import { signAuthToken, verifyAuthToken, getCookieConfig } from '../utils/jwt';
+import { createAdminGuard } from '../middleware/auth.middleware';
+import { rateLimitMiddleware } from '../utils/rateLimiter';
 
 const adminService = new AdminService();
 
+// Helper to get client IP for rate limiting
+const getClientIp = (request: Request): string => {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+         request.headers.get('x-real-ip') ||
+         'unknown';
+};
+
+// Public routes that don't require authentication
+const publicRoutes = ['/admin/login'];
+
 const Admin = new Elysia({ prefix: '/admin' })
+  // Global authentication guard for all admin routes
+  .onBeforeHandle(async ({ path, cookie, set }) => {
+    // Skip auth for public routes
+    if (publicRoutes.some(route => path === route)) {
+      return;
+    }
+    
+    // All other admin routes require authentication
+    const adminPayload = await createAdminGuard(cookie, set);
+    if (!adminPayload) {
+      return {
+        success: false,
+        error: 'Unauthorized - Admin authentication required'
+      };
+    }
+    
+    // Store admin info in request context for use in handlers
+    return;
+  })
   /**
    * Get dashboard overview stats
    * GET /admin/stats
@@ -431,7 +462,12 @@ const Admin = new Elysia({ prefix: '/admin' })
    * Admin Login
    * POST /admin/login
    */
-  .post('/login', async ({ body, cookie }) => {
+  .post('/login', async ({ body, cookie, request, set }) => {
+    // Rate limit login attempts to prevent brute force attacks
+    const clientIp = getClientIp(request);
+    const rateLimitResult = await rateLimitMiddleware(clientIp, 'auth', set as any);
+    if (rateLimitResult) return rateLimitResult;
+    
     try {
       const { username, password } = body as { username: string; password: string };
       
@@ -572,11 +608,37 @@ const Admin = new Elysia({ prefix: '/admin' })
   })
 
   /**
-   * Create admin user (for initial setup - should be protected in production)
+   * Create admin user (requires superadmin authentication)
    * POST /admin/create
    */
-  .post('/create', async ({ body }) => {
+  .post('/create', async ({ body, cookie }) => {
     try {
+      // Verify the current user is a superadmin
+      const authCookie = cookie.adminAuth?.value;
+      if (!authCookie) {
+        return {
+          success: false,
+          error: 'Unauthorized - Superadmin authentication required'
+        };
+      }
+
+      const userData = await verifyAuthToken(typeof authCookie === 'string' ? authCookie : String(authCookie));
+      if (!userData?.userId) {
+        return {
+          success: false,
+          error: 'Invalid session'
+        };
+      }
+
+      // Verify current user is superadmin
+      const currentAdmin = await adminService.getById(userData.userId);
+      if (!currentAdmin || currentAdmin.role !== 'superadmin') {
+        return {
+          success: false,
+          error: 'Only superadmins can create new admin accounts'
+        };
+      }
+
       const { username, password, firstName, lastName, role } = body as {
         username: string;
         password: string;

@@ -18,19 +18,38 @@ import {
   getSpeakingExamResult,
   transcribeAudio,
 } from "../services/exam.services/speaking.service";
+import { verifyAuthToken, refreshJwtCookie } from "../utils/jwt";
 
 const Examination = new Elysia({ prefix: "/exam" })
 
   // ============================================================================
   // GENERATE WRITTEN EXAM
   // POST /exam/written/generate
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/written/generate",
-    async ({ body }) => {
-      try {
-        const { tutorId } = body;
+    async ({ body, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      // SECURITY: Use authenticated tutor ID, ignore any tutorId from body
+      const tutorId = payload.userId;
+      
+      // Refresh cookie
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
+      try {
         // Check for existing active exam first
         const existingExam = await getActiveExam(tutorId, "written");
         if (existingExam) {
@@ -59,23 +78,35 @@ const Examination = new Elysia({ prefix: "/exam" })
           error: error instanceof Error ? error.message : "Unknown error",
         };
       }
-    },
-    {
-      body: t.Object({
-        tutorId: t.String(),
-      }),
     }
   )
 
   // ============================================================================
   // SUBMIT EXAM ANSWERS
   // POST /exam/written/submit
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/written/submit",
-    async ({ body }) => {
+    async ({ body, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const { examId, tutorId, answers } = body;
+        const { examId, answers } = body;
 
         // Grade the exam (fetches from Memgraph, no AI needed)
         console.log(`📝 Grading exam ${examId} for tutor ${tutorId}...`);
@@ -100,7 +131,6 @@ const Examination = new Elysia({ prefix: "/exam" })
     {
       body: t.Object({
         examId: t.String(),
-        tutorId: t.String(),
         answers: t.Array(t.Number()), // Array of selected answer indices (0-3)
       }),
     }
@@ -109,12 +139,29 @@ const Examination = new Elysia({ prefix: "/exam" })
   // ============================================================================
   // SAVE ANSWERS (for resume functionality)
   // POST /exam/written/save
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/written/save",
-    async ({ body }) => {
+    async ({ body, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const { examId, tutorId, answers, currentQuestion } = body;
+        const { examId, answers, currentQuestion } = body;
 
         const success = await saveExamAnswers(examId, tutorId, answers, currentQuestion);
 
@@ -134,7 +181,6 @@ const Examination = new Elysia({ prefix: "/exam" })
     {
       body: t.Object({
         examId: t.String(),
-        tutorId: t.String(),
         answers: t.Array(t.Number()),
         currentQuestion: t.Number(),
       }),
@@ -144,13 +190,28 @@ const Examination = new Elysia({ prefix: "/exam" })
   // ============================================================================
   // CHECK EXPIRED EXAM
   // POST /exam/written/check-expired
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/written/check-expired",
-    async ({ body }) => {
-      try {
-        const { tutorId } = body;
+    async ({ cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
+      try {
         const result = await checkAndAutoSubmitExpiredExam(tutorId, "written");
 
         if (result.expired) {
@@ -177,23 +238,35 @@ const Examination = new Elysia({ prefix: "/exam" })
           error: error instanceof Error ? error.message : "Unknown error",
         };
       }
-    },
-    {
-      body: t.Object({
-        tutorId: t.String(),
-      }),
     }
   )
 
   // ============================================================================
   // GET EXAM STATUS
-  // GET /exam/status/:tutorId
+  // GET /exam/status
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .get(
-    "/status/:tutorId",
-    async ({ params }) => {
+    "/status",
+    async ({ cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const status = await getExamStatus(params.tutorId, "written");
+        const status = await getExamStatus(tutorId, "written");
         return {
           success: true,
           status,
@@ -211,13 +284,30 @@ const Examination = new Elysia({ prefix: "/exam" })
 
   // ============================================================================
   // GET EXAM RESULT WITH DETAILS
-  // GET /exam/result/:tutorId/:examId
+  // GET /exam/result/:examId
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .get(
-    "/result/:tutorId/:examId",
-    async ({ params }) => {
+    "/result/:examId",
+    async ({ params, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const data = await getExamResultWithDetails(params.tutorId, params.examId);
+        const data = await getExamResultWithDetails(tutorId, params.examId);
 
         if (!data) {
           return {
@@ -244,13 +334,30 @@ const Examination = new Elysia({ prefix: "/exam" })
 
   // ============================================================================
   // GET ACTIVE EXAM (resume incomplete exam)
-  // GET /exam/active/:tutorId
+  // GET /exam/active
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .get(
-    "/active/:tutorId",
-    async ({ params }) => {
+    "/active",
+    async ({ cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const exam = await getActiveExam(params.tutorId, "written");
+        const exam = await getActiveExam(tutorId, "written");
 
         if (!exam) {
           return {
@@ -281,13 +388,28 @@ const Examination = new Elysia({ prefix: "/exam" })
   // ============================================================================
   // GENERATE SPEAKING EXAM
   // POST /exam/speaking/generate
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/speaking/generate",
-    async ({ body }) => {
-      try {
-        const { tutorId } = body;
+    async ({ cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
+      try {
         // Check for existing active exam first
         const existingExam = await getActiveSpeakingExam(tutorId);
         if (existingExam) {
@@ -316,21 +438,32 @@ const Examination = new Elysia({ prefix: "/exam" })
           error: error instanceof Error ? error.message : "Unknown error",
         };
       }
-    },
-    {
-      body: t.Object({
-        tutorId: t.String(),
-      }),
     }
   )
 
   // ============================================================================
   // TRANSCRIBE AUDIO
   // POST /exam/speaking/transcribe
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/speaking/transcribe",
-    async ({ body }) => {
+    async ({ body, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
         const { audioBase64 } = body;
 
@@ -363,12 +496,29 @@ const Examination = new Elysia({ prefix: "/exam" })
   // ============================================================================
   // SUBMIT SPEAKING EXAM
   // POST /exam/speaking/submit
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .post(
     "/speaking/submit",
-    async ({ body }) => {
+    async ({ body, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const { examId, tutorId, recordings } = body;
+        const { examId, recordings } = body;
 
         console.log(`🎤 Grading speaking exam ${examId} for tutor ${tutorId}...`);
         const result = await gradeSpeakingExam(examId, tutorId, recordings);
@@ -392,7 +542,6 @@ const Examination = new Elysia({ prefix: "/exam" })
     {
       body: t.Object({
         examId: t.String(),
-        tutorId: t.String(),
         recordings: t.Array(
           t.Object({
             taskId: t.Number(),
@@ -407,13 +556,30 @@ const Examination = new Elysia({ prefix: "/exam" })
 
   // ============================================================================
   // GET SPEAKING EXAM STATUS
-  // GET /exam/speaking/status/:tutorId
+  // GET /exam/speaking/status
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .get(
-    "/speaking/status/:tutorId",
-    async ({ params }) => {
+    "/speaking/status",
+    async ({ cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const status = await getSpeakingExamStatus(params.tutorId);
+        const status = await getSpeakingExamStatus(tutorId);
         return {
           success: true,
           status,
@@ -431,13 +597,30 @@ const Examination = new Elysia({ prefix: "/exam" })
 
   // ============================================================================
   // GET SPEAKING EXAM RESULT
-  // GET /exam/speaking/result/:tutorId/:examId
+  // GET /exam/speaking/result/:examId
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .get(
-    "/speaking/result/:tutorId/:examId",
-    async ({ params }) => {
+    "/speaking/result/:examId",
+    async ({ params, cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const data = await getSpeakingExamResult(params.tutorId, params.examId);
+        const data = await getSpeakingExamResult(tutorId, params.examId);
 
         if (!data) {
           return {
@@ -464,13 +647,30 @@ const Examination = new Elysia({ prefix: "/exam" })
 
   // ============================================================================
   // GET ACTIVE SPEAKING EXAM
-  // GET /exam/speaking/active/:tutorId
+  // GET /exam/speaking/active
+  // SECURITY: Requires tutor authentication
   // ============================================================================
   .get(
-    "/speaking/active/:tutorId",
-    async ({ params }) => {
+    "/speaking/active",
+    async ({ cookie, set }) => {
+      // SECURITY: Verify tutor authentication
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, message: "Authentication required" };
+      }
+      
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, message: "Invalid or expired token" };
+      }
+      
+      const tutorId = payload.userId;
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
       try {
-        const exam = await getActiveSpeakingExam(params.tutorId);
+        const exam = await getActiveSpeakingExam(tutorId);
 
         if (!exam) {
           return {

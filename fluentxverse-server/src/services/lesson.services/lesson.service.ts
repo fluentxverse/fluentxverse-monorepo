@@ -871,16 +871,32 @@ export class LessonService {
       offset = 0 
     } = options;
     
+    // Use parameterized queries to prevent SQL injection
     let whereConditions: string[] = [];
+    let params: any[] = [];
+    let paramIndex = 1;
     
     if (query) {
-      whereConditions.push(`(l.title ILIKE '%${query}%' OR l.slug ILIKE '%${query}%')`);
+      // Sanitize and escape the search query for LIKE patterns
+      const sanitizedQuery = query.replace(/[%_\\]/g, '\\$&'); // Escape special LIKE chars
+      whereConditions.push(`(l.title ILIKE $${paramIndex} OR l.slug ILIKE $${paramIndex})`);
+      params.push(`%${sanitizedQuery}%`);
+      paramIndex++;
     }
     if (status) {
-      whereConditions.push(`l.status = '${status}'`);
+      // Validate status is one of allowed values
+      const allowedStatuses = ['draft', 'finished', 'published', 'archived'];
+      if (!allowedStatuses.includes(status)) {
+        throw new Error('Invalid status value');
+      }
+      whereConditions.push(`l.status = $${paramIndex}`);
+      params.push(status);
+      paramIndex++;
     }
     if (createdBy) {
-      whereConditions.push(`l.created_by = '${createdBy}'`);
+      whereConditions.push(`l.created_by = $${paramIndex}`);
+      params.push(createdBy);
+      paramIndex++;
     }
     if (!includeForks) {
       whereConditions.push(`l.is_fork = false`);
@@ -904,8 +920,18 @@ export class LessonService {
       ? 'WHERE ' + whereConditions.join(' AND ')
       : '';
     
-    const sortColumn = sortBy === 'created' ? 'l.created_at' : sortBy === 'title' ? 'l.title' : 'l.updated_at';
+    // Validate sortBy to prevent SQL injection
+    const sortColumnMap: Record<string, string> = {
+      'created': 'l.created_at',
+      'title': 'l.title',
+      'updated': 'l.updated_at'
+    };
+    const sortColumn = sortColumnMap[sortBy] || 'l.updated_at';
     const sortDir = sortOrder === 'asc' ? 'ASC' : 'DESC';
+    
+    // Validate limit and offset are positive integers
+    const safeLimit = Math.max(1, Math.min(100, Number(limit) || 50));
+    const safeOffset = Math.max(0, Number(offset) || 0);
     
     const result = await db.unsafe(`
       SELECT l.*, 
@@ -915,12 +941,12 @@ export class LessonService {
       FROM lessons l
       ${whereClause}
       ORDER BY ${sortColumn} ${sortDir}
-      LIMIT ${limit} OFFSET ${offset}
-    `);
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `, [...params, safeLimit, safeOffset]);
     
     const countResult = await db.unsafe(`
       SELECT COUNT(*) as total FROM lessons l ${whereClause}
-    `);
+    `, params);
     
     return {
       lessons: result.map((row: any) => this.mapLessonRow(row)),

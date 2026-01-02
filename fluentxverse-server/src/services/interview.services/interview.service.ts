@@ -7,14 +7,10 @@ import type {
   PendingInterview 
 } from './interview.interface';
 
-// Generate unique ID for interview slots
+// Generate unique ID for interview slots (cryptographically secure)
 function generateSlotId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = 'INT-';
-  for (let i = 0; i < 12; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  const uuid = crypto.randomUUID();
+  return `INT-${uuid.slice(0, 12)}`;
 }
 
 // Format date as YYYY-MM-DD

@@ -65,6 +65,22 @@ class LessonMediaService {
     return result.rows.map(this.mapMediaRow);
   }
 
+  // Allowed MIME types for security
+  private readonly ALLOWED_MIME_TYPES: Record<string, string[]> = {
+    audio: ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/aac'],
+    video: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
+    image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+    document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+  };
+
+  // Max file sizes in bytes
+  private readonly MAX_FILE_SIZES: Record<string, number> = {
+    audio: 50 * 1024 * 1024,    // 50MB
+    video: 500 * 1024 * 1024,   // 500MB
+    image: 10 * 1024 * 1024,    // 10MB
+    document: 20 * 1024 * 1024  // 20MB
+  };
+
   /**
    * Upload media file to SeaweedFS and create database record
    */
@@ -85,6 +101,29 @@ class LessonMediaService {
     }
   ): Promise<{ success: boolean; media?: LessonMedia; error?: string }> {
     try {
+      // SECURITY: Validate file type matches declared MIME type
+      const allowedMimes = this.ALLOWED_MIME_TYPES[metadata.type];
+      if (!allowedMimes || !allowedMimes.includes(file.mimeType)) {
+        return { 
+          success: false, 
+          error: `Invalid file type. Allowed types for ${metadata.type}: ${allowedMimes?.join(', ') || 'none'}` 
+        };
+      }
+
+      // SECURITY: Validate file size
+      const maxSize = this.MAX_FILE_SIZES[metadata.type];
+      if (file.size > maxSize) {
+        return { 
+          success: false, 
+          error: `File too large. Maximum size for ${metadata.type}: ${Math.floor(maxSize / 1024 / 1024)}MB` 
+        };
+      }
+
+      // SECURITY: Validate filename doesn't contain path traversal
+      if (file.filename.includes('..') || file.filename.includes('/') || file.filename.includes('\\')) {
+        return { success: false, error: 'Invalid filename' };
+      }
+
       // Generate storage path
       const timestamp = Date.now();
       const sanitizedFilename = file.filename.replace(/[^a-zA-Z0-9.-]/g, '_');

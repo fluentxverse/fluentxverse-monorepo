@@ -1137,7 +1137,7 @@ export class AdminService {
 
       // Hash password
       const hashedPassword = await hash(password, 12);
-      const adminId = `ADMIN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const adminId = `ADMIN-${crypto.randomUUID()}`;
       const now = new Date().toISOString();
 
       // Create admin

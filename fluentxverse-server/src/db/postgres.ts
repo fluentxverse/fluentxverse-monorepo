@@ -1,5 +1,13 @@
 import { SQL } from "bun";
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+// SECURITY: Require DATABASE_URL in production
+if (isProduction && !process.env.DATABASE_URL) {
+  console.error('❌ SECURITY: DATABASE_URL required in production');
+  process.exit(1);
+}
+
 // Create a single SQL instance using Bun's built-in postgres
 const sql = new SQL({
   url: process.env.DATABASE_URL || 'postgresql://fluentxverse_user:fluentxverse_pass@localhost:5432/fluentxverse',

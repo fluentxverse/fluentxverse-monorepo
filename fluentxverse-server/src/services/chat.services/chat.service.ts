@@ -18,9 +18,9 @@ export interface SaveMessageData {
   correction?: string;
 }
 
-// Generate a unique message ID
+// Generate a unique message ID (cryptographically secure)
 const generateMessageId = (): string => {
-  return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `msg-${crypto.randomUUID()}`;
 };
 
 export class ChatService {

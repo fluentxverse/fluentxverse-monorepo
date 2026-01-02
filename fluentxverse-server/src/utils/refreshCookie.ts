@@ -43,10 +43,12 @@ export async function getAuthFromCookie(cookie: Record<string, Cookie<any>>): Pr
 }
 
 /**
+ * @deprecated Use refreshJwtCookie from jwt.ts instead - this function stores raw JSON, not signed JWTs
  * Refresh the auth cookie with a new expiration time (1 hour)
  * Call this on every authenticated request to keep the session alive
  */
 export function refreshAuthCookie(cookie: Record<string, Cookie<any>>, authData: AuthData, cookieName: 'tutorAuth' | 'studentAuth' = 'tutorAuth') {
+  console.warn('SECURITY WARNING: refreshAuthCookie is deprecated. Use refreshJwtCookie from jwt.ts instead.');
   const isProduction = process.env.NODE_ENV === 'production';
   
   cookie[cookieName]?.set({

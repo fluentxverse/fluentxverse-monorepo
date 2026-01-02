@@ -25,8 +25,14 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
   })
 
   // Update view time
-  .patch('/view/:viewId', async ({ params, body }) => {
+  .patch('/view/:viewId', async ({ params, body, cookie }) => {
     try {
+      // SECURITY: Verify user owns this view record
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth?.sub) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
       const { timeSpent, completionPercentage } = body as {
         timeSpent: number;
         completionPercentage: number;
@@ -66,8 +72,14 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
   })
 
   // Complete a section
-  .post('/progress/:progressId/section', async ({ params, body }) => {
+  .post('/progress/:progressId/section', async ({ params, body, cookie }) => {
     try {
+      // SECURITY: Require authentication for progress updates
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth?.sub) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
       const { sectionId } = body as { sectionId: string };
       const result = await lessonAnalyticsService.completeSection(params.progressId, sectionId);
       return result;
@@ -78,8 +90,14 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
   })
 
   // Master vocabulary
-  .post('/progress/:progressId/vocabulary', async ({ params, body }) => {
+  .post('/progress/:progressId/vocabulary', async ({ params, body, cookie }) => {
     try {
+      // SECURITY: Require authentication for progress updates
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth?.sub) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
       const { vocabularyId } = body as { vocabularyId: string };
       const result = await lessonAnalyticsService.masterVocabulary(params.progressId, vocabularyId);
       return result;
@@ -90,8 +108,14 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
   })
 
   // Complete exercise
-  .post('/progress/:progressId/exercise', async ({ params, body }) => {
+  .post('/progress/:progressId/exercise', async ({ params, body, cookie }) => {
     try {
+      // SECURITY: Require authentication for progress updates
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth?.sub) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
       const exerciseResult = body as {
         exerciseId: string;
         correct: boolean;
@@ -108,8 +132,14 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
   })
 
   // Update scores
-  .patch('/progress/:progressId/scores', async ({ params, body }) => {
+  .patch('/progress/:progressId/scores', async ({ params, body, cookie }) => {
     try {
+      // SECURITY: Require authentication for score updates
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth?.sub) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
       const scores = body as {
         vocabularyScore?: number;
         grammarScore?: number;
@@ -125,8 +155,14 @@ export const analyticsRoute = new Elysia({ prefix: '/lesson' })
   })
 
   // Complete lesson
-  .post('/progress/:progressId/complete', async ({ params }) => {
+  .post('/progress/:progressId/complete', async ({ params, cookie }) => {
     try {
+      // SECURITY: Require authentication for lesson completion
+      const auth = await getAuthFromCookie(cookie);
+      if (!auth?.sub) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
       const result = await lessonAnalyticsService.completeLesson(params.progressId);
       return result;
     } catch (error) {

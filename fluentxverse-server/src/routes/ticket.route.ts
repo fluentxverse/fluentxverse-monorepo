@@ -3,9 +3,11 @@ import { ticketService, type TicketTier } from '@/services/ticket.services/ticke
 import { cacheGetOrSet, invalidateCache } from '@/db/redis';
 import { getIO } from '@/socket/socket.server';
 import { notifyTicketReceived } from '@/socket/handlers/ticket.handler';
-import { verifyAuthToken } from '@/utils/jwt';
+import { verifyAuthToken, verifyAdminToken } from '@/utils/jwt';
 import * as fs from 'fs';
 import * as path from 'path';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const Ticket = new Elysia({ prefix: '/tickets' })
   /**
@@ -167,12 +169,24 @@ const Ticket = new Elysia({ prefix: '/tickets' })
   })
 
   /**
-   * Process ticket purchase (DEV MODE - simulates purchase after mock checkout success)
-   * In production, this would verify the payment transaction before transferring tickets
+   * Process ticket purchase - transfers NFT to buyer
+   * SECURITY: This endpoint is DISABLED in production.
+   * In production, purchases are processed via Thirdweb Pay webhooks which verify payment.
+   * This endpoint only exists for development/testing with mock transactions.
    * POST /tickets/purchase
    */
-  .post('/purchase', async ({ body }) => {
-    console.log('=== POST /tickets/purchase called ===');
+  .post('/purchase', async ({ body, cookie, set }) => {
+    // CRITICAL SECURITY: Disable in production - purchases should go through verified payment flow
+    if (isProduction) {
+      console.log('❌ SECURITY: /tickets/purchase called in production - BLOCKED');
+      set.status = 403;
+      return {
+        success: false,
+        error: 'Direct purchase endpoint is disabled. Use the payment gateway.'
+      };
+    }
+    
+    console.log('=== POST /tickets/purchase called (DEV MODE) ===');
     console.log('Request body:', body);
     
     try {

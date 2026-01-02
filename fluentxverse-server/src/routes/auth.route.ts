@@ -7,10 +7,23 @@ import { TutorService } from "../services/tutor.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
 import type { LoginReturnParams, MeResponse } from "@/services/auth.services/auth.interface";
 import { signAuthToken, verifyAuthToken, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
+import { rateLimitMiddleware } from "../utils/rateLimiter";
+
+// Helper to get client IP for rate limiting
+const getClientIp = (request: Request): string => {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+         request.headers.get('x-real-ip') ||
+         'unknown';
+};
 
 // Define routes as an Elysia plugin instance to preserve route types
 const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
-    .post('/register', async ({ body, cookie }) => {
+    .post('/register', async ({ body, cookie, request, set }) => {
+      // Rate limit registration to prevent spam accounts
+      const clientIp = getClientIp(request);
+      const rateLimitResult = await rateLimitMiddleware(clientIp, 'auth', set as any);
+      if (rateLimitResult) return rateLimitResult;
+      
       try 
       {
         // Log incoming request body (without password)
@@ -82,7 +95,12 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       }, RegisterSchema)
 
 
-    .post('/login', async ({ body, cookie }) => {
+    .post('/login', async ({ body, cookie, request, set }) => {
+      // Rate limit login attempts to prevent brute force attacks
+      const clientIp = getClientIp(request);
+      const rateLimitResult = await rateLimitMiddleware(clientIp, 'auth', set as any);
+      if (rateLimitResult) return rateLimitResult;
+      
       try {
         const authService = new AuthService();
         const userData = await authService.login(body);

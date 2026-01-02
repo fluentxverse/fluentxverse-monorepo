@@ -278,6 +278,156 @@ img {
   inset: 0;
 }
 
+.hero-wisps {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  inset: 0;
+}
+
+.hero-wisp {
+  position: absolute;
+  filter: blur(18px);
+  opacity: .22;
+  mix-blend-mode: screen;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  background: radial-gradient(circle at 35% 35%, #ffffff1a, #0000 55%), radial-gradient(circle at 60% 60%, #4a9eff47, #0000 60%), radial-gradient(circle at 45% 65%, #6dbe4529, #0000 65%);
+  border-radius: 9999px;
+  width: 220px;
+  height: 220px;
+}
+
+.hero-wisp:first-child {
+  animation: wispDriftA 16s infinite, wispFlicker 4.5s infinite;
+  width: 260px;
+  height: 260px;
+  top: 12%;
+  left: 8%;
+}
+
+.hero-wisp:nth-child(2) {
+  animation: wispDriftB 18s infinite, wispFlicker 5.2s infinite;
+  width: 200px;
+  height: 200px;
+  top: 18%;
+  right: 10%;
+}
+
+.hero-wisp:nth-child(3) {
+  animation: wispDriftC 15s infinite, wispFlicker 4.1s infinite;
+  width: 180px;
+  height: 180px;
+  top: 42%;
+  left: 18%;
+}
+
+.hero-wisp:nth-child(4) {
+  animation: wispDriftA 20s infinite reverse, wispFlicker 6s infinite;
+  width: 240px;
+  height: 240px;
+  top: 52%;
+  right: 18%;
+}
+
+.hero-wisp:nth-child(5) {
+  opacity: .18;
+  animation: wispDriftB 22s infinite reverse, wispFlicker 7s infinite;
+  width: 300px;
+  height: 300px;
+  bottom: 10%;
+  left: 40%;
+}
+
+.hero-wisp:nth-child(6) {
+  animation: wispDriftC 17s infinite reverse, wispFlicker 5.6s infinite;
+  width: 190px;
+  height: 190px;
+  bottom: 16%;
+  right: 36%;
+}
+
+@keyframes wispDriftA {
+  0% {
+    transform: translate3d(0, 0, 0)scale(1);
+  }
+
+  25% {
+    transform: translate3d(60px, -25px, 0)scale(1.06);
+  }
+
+  55% {
+    transform: translate3d(20px, 40px, 0)scale(.98);
+  }
+
+  80% {
+    transform: translate3d(-50px, 15px, 0)scale(1.04);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0)scale(1);
+  }
+}
+
+@keyframes wispDriftB {
+  0% {
+    transform: translate3d(0, 0, 0)scale(1);
+  }
+
+  30% {
+    transform: translate3d(-55px, 25px, 0)scale(1.05);
+  }
+
+  60% {
+    transform: translate3d(35px, 55px, 0)scale(.97);
+  }
+
+  85% {
+    transform: translate3d(70px, -10px, 0)scale(1.03);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0)scale(1);
+  }
+}
+
+@keyframes wispDriftC {
+  0% {
+    transform: translate3d(0, 0, 0)scale(1);
+  }
+
+  20% {
+    transform: translate3d(30px, 40px, 0)scale(1.04);
+  }
+
+  50% {
+    transform: translate3d(-35px, 15px, 0)scale(.98);
+  }
+
+  75% {
+    transform: translate3d(10px, -35px, 0)scale(1.06);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0)scale(1);
+  }
+}
+
+@keyframes wispFlicker {
+  0%, 100% {
+    opacity: .18;
+  }
+
+  45% {
+    opacity: .26;
+  }
+
+  70% {
+    opacity: .2;
+  }
+}
+
 .hero-top-content {
   position: relative;
   z-index: 2;

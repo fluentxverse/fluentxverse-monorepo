@@ -43,13 +43,33 @@ export const getCookieConfig = (isProduction: boolean) => ({
   domain: getCookieDomain()
 });
 
-// Get JWT secret from environment (with validation)
+// Get JWT secret from environment (with strict validation)
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret === 'change-me-in-production') {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET must be set in production!');
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // In production, JWT_SECRET is absolutely required
+  if (isProduction) {
+    if (!secret) {
+      console.error('\n❌ FATAL: JWT_SECRET environment variable is not set!');
+      console.error('   This is required in production for security.');
+      console.error('   Please set a strong, random secret (min 32 characters).\n');
+      process.exit(1);
     }
+    if (secret.length < 32) {
+      console.error('\n❌ FATAL: JWT_SECRET must be at least 32 characters long!');
+      process.exit(1);
+    }
+    if (secret === 'change-me-in-production' || secret.includes('dev-secret')) {
+      console.error('\n❌ FATAL: JWT_SECRET appears to be a default/dev value!');
+      console.error('   Please use a secure, random secret in production.\n');
+      process.exit(1);
+    }
+    return secret;
+  }
+  
+  // In development, warn but allow default secret
+  if (!secret || secret === 'change-me-in-production') {
     console.warn('⚠️  Warning: Using default JWT_SECRET. Set a proper secret in production!');
     return 'dev-secret-change-me-in-production-min-32-chars';
   }

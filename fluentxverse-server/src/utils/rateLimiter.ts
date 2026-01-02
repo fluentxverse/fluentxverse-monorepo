@@ -18,6 +18,42 @@ interface RateLimitResult {
   retryAfter?: number;   // Seconds until retry (if blocked)
 }
 
+// Maximum allowed pagination limits to prevent DoS
+export const MAX_PAGINATION_LIMITS = {
+  default: 100,
+  search: 50,
+  list: 200,
+  export: 1000
+};
+
+/**
+ * Safely parse and cap pagination parameters to prevent DoS attacks
+ * @param value - The raw query value (string or undefined)
+ * @param defaultVal - Default value if not provided
+ * @param maxVal - Maximum allowed value (capped)
+ * @returns Safe integer value
+ */
+export function safePaginationLimit(
+  value: string | undefined,
+  defaultVal: number = 20,
+  maxVal: number = MAX_PAGINATION_LIMITS.default
+): number {
+  if (!value) return defaultVal;
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 1) return defaultVal;
+  return Math.min(parsed, maxVal);
+}
+
+/**
+ * Safely parse page/offset parameter
+ */
+export function safePaginationOffset(value: string | undefined, defaultVal: number = 0): number {
+  if (!value) return defaultVal;
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 0) return defaultVal;
+  return parsed;
+}
+
 // Default rate limit configurations
 export const RATE_LIMITS = {
   // Booking endpoints - strict limits

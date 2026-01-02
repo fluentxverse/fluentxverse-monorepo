@@ -27,7 +27,17 @@ import Student from "./routes/student.route";
 import Debug from './routes/debug.route';
 
 // Initialize databases (async)
+const isProduction = process.env.NODE_ENV === 'production';
+
 const initDatabases = async () => {
+  // SECURITY: Require database credentials in production
+  if (isProduction) {
+    if (!process.env.MEMGRAPH_URI || !process.env.MEMGRAPH_PASSWORD) {
+      console.error('❌ SECURITY: MEMGRAPH_URI and MEMGRAPH_PASSWORD required in production');
+      process.exit(1);
+    }
+  }
+  
   try {
     await initDriver(
       process.env.MEMGRAPH_URI || 'bolt://localhost:7687',
@@ -66,12 +76,22 @@ const allowedOrigins = envOrigins.length > 0 ? [...new Set([...envOrigins, ...de
 
 console.log('🌐 CORS allowed origins:', allowedOrigins);
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
   .use(cors({
     origin: (request) => {
       const origin = request.headers.get('origin');
-      if (!origin) return true; // Allow requests with no origin (like curl)
+      // In production, require an origin header for security
+      // In development, allow requests with no origin (like curl) for testing
+      if (!origin) {
+        if (isProduction) {
+          console.warn('⚠️ CORS blocked request with no origin (production mode)');
+          return false;
+        }
+        return true; // Allow in development only
+      }
       if (allowedOrigins.includes(origin)) return true;
       console.warn(`⚠️ CORS blocked origin: ${origin}`);
       return false;
@@ -81,6 +101,23 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   }))
   .use(cookie())
+  // Security headers middleware
+  .onAfterHandle(({ set }) => {
+    // Prevent clickjacking attacks
+    set.headers['X-Frame-Options'] = 'DENY';
+    // Prevent MIME type sniffing
+    set.headers['X-Content-Type-Options'] = 'nosniff';
+    // Enable XSS filter in browsers
+    set.headers['X-XSS-Protection'] = '1; mode=block';
+    // Referrer policy for privacy
+    set.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin';
+    // Permissions policy - restrict sensitive features
+    set.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()';
+    // Content Security Policy (adjust as needed for your app)
+    if (isProduction) {
+      set.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+    }
+  })
   .use(Auth)
   .use(Tutor)
   .use(Schedule)

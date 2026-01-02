@@ -60,7 +60,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
         // Fallback: use in-memory storage
         console.warn('⚠️ Using in-memory chat storage due to DB error');
         messageData = {
-          id: `mem-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `mem-${crypto.randomUUID()}`,
           sessionId,
           senderId: userId,
           senderType: userType,

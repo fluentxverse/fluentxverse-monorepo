@@ -1,7 +1,37 @@
 import { Elysia, t } from 'elysia';
 import { lessonCategoryService, lessonTagService } from '../services/lesson.services/category.service';
+import { createAdminGuard } from '../middleware/auth.middleware';
+
+// Define which routes are public (read-only) vs admin-only (write)
+const adminOnlyRoutes = [
+  { method: 'POST', path: '/lesson/categories' },
+  { method: 'PATCH', path: '/lesson/category' },
+  { method: 'DELETE', path: '/lesson/category' },
+  { method: 'POST', path: '/lesson/tags' },
+  { method: 'POST', path: '/lesson/tags/lesson' },
+  { method: 'DELETE', path: '/lesson/tag' },
+];
 
 export const categoryRoute = new Elysia({ prefix: '/lesson' })
+  // Auth guard for admin-only routes (POST, PATCH, DELETE)
+  .onBeforeHandle(async ({ request, path, cookie, set }) => {
+    const method = request.method;
+    
+    // Check if this is an admin-only route
+    const requiresAdmin = adminOnlyRoutes.some(route => 
+      route.method === method && path.startsWith(route.path)
+    );
+    
+    if (requiresAdmin) {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return {
+          success: false,
+          error: 'Unauthorized - Admin authentication required'
+        };
+      }
+    }
+  })
   // ============= CATEGORIES =============
   
   // Get all categories (tree structure)

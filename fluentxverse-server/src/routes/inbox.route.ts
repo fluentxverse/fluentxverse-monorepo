@@ -1,7 +1,30 @@
 import Elysia, { t } from 'elysia';
 import { inboxService } from '../services/inbox.services/inbox.service';
 import { db } from '../db/postgres';
+import { verifyAuthToken, verifyAdminToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
+import { safePaginationLimit, safePaginationOffset, MAX_PAGINATION_LIMITS } from '../utils/rateLimiter';
 import type { MessageCategory, TargetAudience, MessagePriority } from '../services/inbox.services/inbox.interface';
+
+/**
+ * Helper to get authenticated user from cookies
+ */
+async function getAuthUser(cookie: any, set: any): Promise<{ payload: JwtAuthPayload; userType: 'tutor' | 'student'; cookieName: string } | null> {
+  const tutorRaw = cookie.tutorAuth?.value;
+  const studentRaw = cookie.studentAuth?.value;
+  
+  if (tutorRaw) {
+    const payload = await verifyAuthToken(String(tutorRaw));
+    if (payload) return { payload, userType: 'tutor', cookieName: 'tutorAuth' };
+  }
+  
+  if (studentRaw) {
+    const payload = await verifyAuthToken(String(studentRaw));
+    if (payload) return { payload, userType: 'student', cookieName: 'studentAuth' };
+  }
+  
+  set.status = 401;
+  return null;
+}
 
 const Inbox = new Elysia({ prefix: '/inbox' })
 
@@ -51,18 +74,21 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Get messages for a user (student or tutor)
    * GET /inbox/messages
+   * SECURITY: Requires authentication, returns only the authenticated user's messages
    */
-  .get('/messages', async ({ query }) => {
+  .get('/messages', async ({ query, cookie, set }) => {
     try {
-      const userId = query.userId;
-      const userType = query.userType as 'tutor' | 'student';
-
-      if (!userId || !userType) {
-        return {
-          success: false,
-          error: 'userId and userType are required'
-        };
+      // SECURITY: Authenticate user from cookie - no longer trust query params
+      const auth = await getAuthUser(cookie, set);
+      if (!auth) {
+        return { success: false, error: 'Not authenticated' };
       }
+      
+      const { payload, userType, cookieName } = auth;
+      const userId = payload.userId;
+      
+      // Refresh JWT cookie
+      await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
 
       const result = await inboxService.getUserMessages({
         userId,
@@ -70,8 +96,8 @@ const Inbox = new Elysia({ prefix: '/inbox' })
         category: query.category as MessageCategory,
         isRead: query.isRead === 'true' ? true : query.isRead === 'false' ? false : undefined,
         isPinned: query.isPinned === 'true' ? true : query.isPinned === 'false' ? false : undefined,
-        limit: query.limit ? Number(query.limit) : 50,
-        offset: query.offset ? Number(query.offset) : 0
+        limit: safePaginationLimit(query.limit, 50, MAX_PAGINATION_LIMITS.list),
+        offset: safePaginationOffset(query.offset, 0)
       });
 
       return {
@@ -82,9 +108,7 @@ const Inbox = new Elysia({ prefix: '/inbox' })
       console.error('Error in /inbox/messages:', error);
       return {
         success: false,
-        error: 'Failed to get messages',
-        // Include error details in development for debugging
-        ...(process.env.NODE_ENV !== 'production' && { details: error?.message })
+        error: 'Failed to get messages'
       };
     }
   })
@@ -92,18 +116,19 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Get unread count for a user
    * GET /inbox/unread-count
+   * SECURITY: Requires authentication
    */
-  .get('/unread-count', async ({ query }) => {
+  .get('/unread-count', async ({ cookie, set }) => {
     try {
-      const userId = query.userId;
-      const userType = query.userType as 'tutor' | 'student';
-
-      if (!userId || !userType) {
-        return {
-          success: false,
-          error: 'userId and userType are required'
-        };
+      const auth = await getAuthUser(cookie, set);
+      if (!auth) {
+        return { success: false, error: 'Not authenticated' };
       }
+      
+      const { payload, userType, cookieName } = auth;
+      const userId = payload.userId;
+      
+      await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
 
       const count = await inboxService.getUnreadCount(userId, userType);
 
@@ -115,9 +140,7 @@ const Inbox = new Elysia({ prefix: '/inbox' })
       console.error('Error in /inbox/unread-count:', error);
       return {
         success: false,
-        error: 'Failed to get unread count',
-        // Include error details in development for debugging
-        ...(process.env.NODE_ENV !== 'production' && { details: error?.message })
+        error: 'Failed to get unread count'
       };
     }
   })
@@ -125,17 +148,19 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Mark a message as read
    * POST /inbox/mark-read/:messageId
+   * SECURITY: Requires authentication, only marks for authenticated user
    */
-  .post('/mark-read/:messageId', async ({ params, body }) => {
+  .post('/mark-read/:messageId', async ({ params, cookie, set }) => {
     try {
-      const { userId, userType } = body as { userId: string; userType: 'tutor' | 'student' };
-
-      if (!userId || !userType) {
-        return {
-          success: false,
-          error: 'userId and userType are required'
-        };
+      const auth = await getAuthUser(cookie, set);
+      if (!auth) {
+        return { success: false, error: 'Not authenticated' };
       }
+      
+      const { payload, userType, cookieName } = auth;
+      const userId = payload.userId;
+      
+      await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
 
       await inboxService.markAsRead({
         messageId: params.messageId,
@@ -159,17 +184,19 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Mark all messages as read for a user
    * POST /inbox/mark-all-read
+   * SECURITY: Requires authentication
    */
-  .post('/mark-all-read', async ({ body }) => {
+  .post('/mark-all-read', async ({ cookie, set }) => {
     try {
-      const { userId, userType } = body as { userId: string; userType: 'tutor' | 'student' };
-
-      if (!userId || !userType) {
-        return {
-          success: false,
-          error: 'userId and userType are required'
-        };
+      const auth = await getAuthUser(cookie, set);
+      if (!auth) {
+        return { success: false, error: 'Not authenticated' };
       }
+      
+      const { payload, userType, cookieName } = auth;
+      const userId = payload.userId;
+      
+      await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
 
       const count = await inboxService.markAllAsRead(userId, userType);
 
@@ -189,17 +216,19 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Toggle pin status for a message
    * POST /inbox/toggle-pin/:messageId
+   * SECURITY: Requires authentication
    */
-  .post('/toggle-pin/:messageId', async ({ params, body }) => {
+  .post('/toggle-pin/:messageId', async ({ params, cookie, set }) => {
     try {
-      const { userId, userType } = body as { userId: string; userType: 'tutor' | 'student' };
-
-      if (!userId || !userType) {
-        return {
-          success: false,
-          error: 'userId and userType are required'
-        };
+      const auth = await getAuthUser(cookie, set);
+      if (!auth) {
+        return { success: false, error: 'Not authenticated' };
       }
+      
+      const { payload, userType, cookieName } = auth;
+      const userId = payload.userId;
+      
+      await refreshJwtCookie(cookie, payload, cookieName as 'tutorAuth' | 'studentAuth');
 
       const isPinned = await inboxService.togglePin({
         messageId: params.messageId,
@@ -223,22 +252,35 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Admin: Create a new system message
    * POST /inbox/admin/create
+   * SECURITY: Requires admin authentication
    */
-  .post('/admin/create', async ({ body }) => {
+  .post('/admin/create', async ({ body, cookie, set }) => {
     try {
-      const { title, content, category, targetAudience, priority, createdBy } = body as {
+      // Verify admin authentication
+      const adminRaw = cookie.adminAuth?.value;
+      if (!adminRaw) {
+        set.status = 401;
+        return { success: false, error: 'Admin authentication required' };
+      }
+      
+      const adminPayload = await verifyAdminToken(String(adminRaw));
+      if (!adminPayload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired admin token' };
+      }
+
+      const { title, content, category, targetAudience, priority } = body as {
         title: string;
         content: string;
         category: MessageCategory;
         targetAudience: TargetAudience;
         priority?: MessagePriority;
-        createdBy: string;
       };
 
-      if (!title || !content || !category || !targetAudience || !createdBy) {
+      if (!title || !content || !category || !targetAudience) {
         return {
           success: false,
-          error: 'title, content, category, targetAudience, and createdBy are required'
+          error: 'title, content, category, and targetAudience are required'
         };
       }
 
@@ -248,7 +290,7 @@ const Inbox = new Elysia({ prefix: '/inbox' })
         category,
         targetAudience,
         priority,
-        createdBy
+        createdBy: adminPayload.userId
       });
 
       return {
@@ -267,14 +309,27 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Admin: Get all system messages
    * GET /inbox/admin/messages
+   * SECURITY: Requires admin authentication
    */
-  .get('/admin/messages', async ({ query }) => {
+  .get('/admin/messages', async ({ query, cookie, set }) => {
     try {
+      const adminRaw = cookie.adminAuth?.value;
+      if (!adminRaw) {
+        set.status = 401;
+        return { success: false, error: 'Admin authentication required' };
+      }
+      
+      const adminPayload = await verifyAdminToken(String(adminRaw));
+      if (!adminPayload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired admin token' };
+      }
+
       const result = await inboxService.getAllMessages({
         category: query.category as MessageCategory,
         targetAudience: query.targetAudience as TargetAudience,
-        limit: query.limit ? Number(query.limit) : 50,
-        offset: query.offset ? Number(query.offset) : 0
+        limit: safePaginationLimit(query.limit, 50, MAX_PAGINATION_LIMITS.list),
+        offset: safePaginationOffset(query.offset, 0)
       });
 
       return {
@@ -293,9 +348,22 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Admin: Update a system message
    * PUT /inbox/admin/update/:messageId
+   * SECURITY: Requires admin authentication
    */
-  .put('/admin/update/:messageId', async ({ params, body }) => {
+  .put('/admin/update/:messageId', async ({ params, body, cookie, set }) => {
     try {
+      const adminRaw = cookie.adminAuth?.value;
+      if (!adminRaw) {
+        set.status = 401;
+        return { success: false, error: 'Admin authentication required' };
+      }
+      
+      const adminPayload = await verifyAdminToken(String(adminRaw));
+      if (!adminPayload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired admin token' };
+      }
+
       const updates = body as {
         title?: string;
         content?: string;
@@ -329,9 +397,22 @@ const Inbox = new Elysia({ prefix: '/inbox' })
   /**
    * Admin: Delete a system message
    * DELETE /inbox/admin/delete/:messageId
+   * SECURITY: Requires admin authentication
    */
-  .delete('/admin/delete/:messageId', async ({ params }) => {
+  .delete('/admin/delete/:messageId', async ({ params, cookie, set }) => {
     try {
+      const adminRaw = cookie.adminAuth?.value;
+      if (!adminRaw) {
+        set.status = 401;
+        return { success: false, error: 'Admin authentication required' };
+      }
+      
+      const adminPayload = await verifyAdminToken(String(adminRaw));
+      if (!adminPayload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired admin token' };
+      }
+
       const deleted = await inboxService.deleteMessage(params.messageId);
 
       return {

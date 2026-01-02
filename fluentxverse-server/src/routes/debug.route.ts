@@ -3,7 +3,29 @@ import { getDriver } from '../db/memgraph';
 import { getRetentionHistory } from '../db/redis';
 import { createAdminGuard } from '../middleware/auth.middleware';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const Debug = new Elysia({ name: 'debug', prefix: '/debug' })
+  // Global auth guard for all debug routes - only admins can access
+  .onBeforeHandle(async ({ path, cookie, set }) => {
+    // In production, completely disable debug routes
+    if (isProduction) {
+      set.status = 404;
+      return { success: false, error: 'Not found' };
+    }
+    
+    // In development, still require admin auth for sensitive endpoints
+    const sensitiveRoutes = ['/debug/tutors-raw', '/debug/all-nodes', '/debug/exams-raw', '/debug/retention-history'];
+    if (sensitiveRoutes.some(route => path === route)) {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return {
+          success: false,
+          error: 'Unauthorized - Admin authentication required'
+        };
+      }
+    }
+  })
   .post('/log', async ({ body }) => {
     try {
       const { tag = 'frontend', level = 'info', message = '', data = null } = body as any;
