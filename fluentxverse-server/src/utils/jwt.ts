@@ -160,6 +160,23 @@ export async function verifyAuthToken(token: string): Promise<JwtAuthPayload | n
 }
 
 /**
+ * Verify an admin JWT token
+ * Same as verifyAuthToken but checks for admin role
+ */
+export async function verifyAdminToken(token: string): Promise<JwtAuthPayload | null> {
+  const payload = await verifyAuthToken(token);
+  if (!payload) return null;
+  
+  // Check if user has admin role
+  if (payload.role !== 'admin' && payload.role !== 'superadmin') {
+    console.warn('🚫 Token valid but user is not admin:', payload.userId);
+    return null;
+  }
+  
+  return payload;
+}
+
+/**
  * Decode a JWT without verifying (for debugging/logging only)
  * DO NOT use this for authentication - always use verifyAuthToken
  */

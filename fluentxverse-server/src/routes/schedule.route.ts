@@ -3,6 +3,7 @@ import { ScheduleService } from '../services/schedule.services/schedule.service'
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
 import { cacheGetOrSet, invalidateCache, getRedis } from '../db/redis';
+import { DateString, TimeString, ID, SafeString } from '../utils/validation';
 
 const scheduleService = new ScheduleService();
 
@@ -54,9 +55,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
   }, {
     body: t.Object({
       slots: t.Array(t.Object({
-        date: t.String(),
-        time: t.String()
-      }))
+        date: DateString(),
+        time: TimeString()
+      }), { minItems: 1, maxItems: 100 })
     })
   })
 
@@ -101,7 +102,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, {
     body: t.Object({
-      slotIds: t.Array(t.String())
+      slotIds: t.Array(ID(), { minItems: 1, maxItems: 100 })
     })
   })
 
@@ -479,8 +480,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, {
     body: t.Object({
-      slotId: t.String(),
-      ticketTransferTxHash: t.Optional(t.String())
+      slotId: ID(),
+      ticketTransferTxHash: t.Optional(t.String({ maxLength: 66 }))
     })
   })
 
@@ -534,8 +535,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, {
     body: t.Object({
-      bookingId: t.String(),
-      reason: t.Optional(t.String())
+      bookingId: ID(),
+      reason: t.Optional(SafeString({ maxLength: 500 }))
     })
   })
 

@@ -1,5 +1,6 @@
 import Elysia from "elysia";
 import { createServer } from "http";
+import { swagger } from "@elysiajs/swagger";
 
 import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
@@ -14,17 +15,18 @@ import Lesson from './routes/lesson.route';
 import { categoryRoute } from './routes/category.route';
 import { mediaRoute } from './routes/media.route';
 import { analyticsRoute } from './routes/analytics.route';
-import { initDriver } from './db/memgraph';
+import { initDriver, getDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
 import { startReminderService } from './services/notification.services/reminder.service';
 import { NotificationService } from './services/notification.services/notification.service';
 import { startSuspensionJob } from './services/admin.services/suspension.job';
-import { initRedis, logRetentionCleanup } from './db/redis';
+import { initRedis, logRetentionCleanup, isRedisConnected } from './db/redis';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
 import Student from "./routes/student.route";
 import Debug from './routes/debug.route';
+import { logger, generateRequestId } from './utils/logger';
 
 // Initialize databases (async)
 const isProduction = process.env.NODE_ENV === 'production';
@@ -76,10 +78,49 @@ const allowedOrigins = envOrigins.length > 0 ? [...new Set([...envOrigins, ...de
 
 console.log('🌐 CORS allowed origins:', allowedOrigins);
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 // Initialize Elysia app
 const app = new Elysia({ serve: {idleTimeout: 255 }}) 
+  .use(swagger({
+    documentation: {
+      info: {
+        title: 'FluentXVerse API',
+        version: '1.0.0',
+        description: 'API documentation for FluentXVerse - Language learning platform connecting tutors and students',
+        contact: {
+          name: 'FluentXVerse Team',
+          url: 'https://fluentxverse.xyz'
+        }
+      },
+      tags: [
+        { name: 'Auth', description: 'Tutor authentication endpoints' },
+        { name: 'Student', description: 'Student authentication and profile endpoints' },
+        { name: 'Tutor', description: 'Tutor profile and management endpoints' },
+        { name: 'Schedule', description: 'Booking and scheduling endpoints' },
+        { name: 'Lesson', description: 'Lesson content and materials endpoints' },
+        { name: 'Exam', description: 'Speaking examination endpoints' },
+        { name: 'Interview', description: 'Tutor interview scheduling endpoints' },
+        { name: 'Notification', description: 'User notification endpoints' },
+        { name: 'Inbox', description: 'System messages and announcements' },
+        { name: 'Ticket', description: 'NFT ticket management endpoints' },
+        { name: 'Admin', description: 'Admin dashboard endpoints' },
+        { name: 'Category', description: 'Lesson category management' },
+        { name: 'Media', description: 'Media file management' },
+        { name: 'Analytics', description: 'Platform analytics endpoints' }
+      ],
+      components: {
+        securitySchemes: {
+          cookieAuth: {
+            type: 'apiKey',
+            in: 'cookie',
+            name: 'tutorAuth',
+            description: 'JWT token stored in httpOnly cookie'
+          }
+        }
+      }
+    },
+    path: '/docs',
+    exclude: ['/docs', '/docs/json', '/health'],
+  }))
   .use(cors({
     origin: (request) => {
       const origin = request.headers.get('origin');
@@ -101,6 +142,40 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   }))
   .use(cookie())
+  // Request logging middleware
+  .onRequest(({ request, set }) => {
+    const requestId = generateRequestId();
+    (request as any).requestId = requestId;
+    (request as any).startTime = Date.now();
+    set.headers['X-Request-ID'] = requestId;
+  })
+  .onAfterHandle(({ request, set }) => {
+    const duration = Date.now() - ((request as any).startTime || Date.now());
+    const path = new URL(request.url).pathname;
+    
+    // Skip logging for health checks and static assets
+    if (path === '/health' || path.startsWith('/docs')) return;
+    
+    logger.response({
+      method: request.method,
+      path,
+      statusCode: 200,
+      duration,
+      requestId: (request as any).requestId,
+    });
+  })
+  .onError(({ request, error, set }) => {
+    const duration = Date.now() - ((request as any).startTime || Date.now());
+    const path = new URL(request.url).pathname;
+    
+    logger.error('Request failed', error, {
+      method: request.method,
+      path,
+      duration,
+      requestId: (request as any).requestId,
+      statusCode: (set as any).status || 500,
+    });
+  })
   // Security headers middleware
   .onAfterHandle(({ set }) => {
     // Prevent clickjacking attacks
@@ -133,8 +208,51 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
   .use(categoryRoute)
   .use(mediaRoute)
   .use(analyticsRoute)
-  // Health check endpoint for Docker/Podman
+  // Simple health check for load balancers
   .get('/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
+  // Detailed health check with dependency status
+  .get('/health/detailed', async () => {
+    const checks: Record<string, { status: 'ok' | 'degraded' | 'down'; latency?: number; error?: string }> = {};
+    
+    // Check PostgreSQL
+    const pgStart = Date.now();
+    try {
+      await db`SELECT 1`;
+      checks.postgres = { status: 'ok', latency: Date.now() - pgStart };
+    } catch (err: any) {
+      checks.postgres = { status: 'down', error: err.message };
+    }
+    
+    // Check Memgraph
+    const mgStart = Date.now();
+    try {
+      const driver = getDriver();
+      const session = driver.session();
+      await session.run('RETURN 1');
+      await session.close();
+      checks.memgraph = { status: 'ok', latency: Date.now() - mgStart };
+    } catch (err: any) {
+      checks.memgraph = { status: 'down', error: err.message };
+    }
+    
+    // Check Redis
+    checks.redis = {
+      status: isRedisConnected() ? 'ok' : 'degraded',
+      latency: 0
+    };
+    
+    // Determine overall status
+    const allOk = Object.values(checks).every(c => c.status === 'ok');
+    const anyDown = Object.values(checks).some(c => c.status === 'down');
+    
+    return {
+      status: allOk ? 'ok' : anyDown ? 'degraded' : 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: process.env.APP_VERSION || '1.0.0',
+      checks
+    };
+  })
 
 
 // Start HTTP server - listen on all interfaces for LAN access

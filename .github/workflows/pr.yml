@@ -1,0 +1,94 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+      student: ${{ steps.filter.outputs.student }}
+      tutor: ${{ steps.filter.outputs.tutor }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            server:
+              - 'fluentxverse-server/**'
+            student:
+              - 'fluentxverse-student/**'
+            tutor:
+              - 'fluentxverse-tutor/**'
+
+  server-check:
+    name: Server PR Check
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fluentxverse-server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run tsc --noEmit
+      - run: bun test
+
+  student-check:
+    name: Student App PR Check
+    needs: changes
+    if: needs.changes.outputs.student == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fluentxverse-student
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run tsc --noEmit
+      - run: bun run build
+
+  tutor-check:
+    name: Tutor App PR Check
+    needs: changes
+    if: needs.changes.outputs.tutor == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./fluentxverse-tutor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run tsc --noEmit
+      - run: bun run build
