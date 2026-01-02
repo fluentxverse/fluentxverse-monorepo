@@ -402,6 +402,18 @@ const COURSE_TEMPLATES: TemplateInfo[] = [
     lastUpdated: '2024-12-17',
     status: 'draft',
   },
+  // Young Learners
+  {
+    id: 'young-learners-basics',
+    name: 'Basics Template',
+    course: 'Young Learners',
+    category: 'Kids',
+    icon: '🧒',
+    description: 'Fun and engaging lessons for young learners.',
+    sections: 5,
+    lastUpdated: '2025-01-02',
+    status: 'draft',
+  },
   // Other courses
   {
     id: 'business-english-meetings',
@@ -1799,6 +1811,404 @@ const createReadingDraft = (): LessonMaterialDraft => ({
   exercises: [],
 });
 
+// Create Young Learners template draft - designed for children (ages 4-12)
+const createYoungLearnersDraft = (): LessonMaterialDraft => ({
+  version: 2,
+  header: {
+    backgroundImage: '',
+    overlayColor: '#7c3aedcc', // Purple overlay for fun, kid-friendly feel
+    levelBadge: 'YOUNG LEARNERS',
+    chapterLabel: 'Chapter 1: Fun with English',
+    lessonLabel: 'Lesson 1: Hello Friends!',
+    goalText: 'I can say hello and introduce myself.',
+    goalSubtext: '挨拶と自己紹介ができるようになる。',
+  },
+  sections: [
+    // Section 1 - FUN WARM-UP (with song/chant)
+    {
+      id: 'yl-section-1',
+      sectionNumber: 1,
+      sectionTitle: '🎵 WARM-UP',
+      sectionType: 'introduce',
+      explanationEn: 'Let\'s start with a fun hello song! 🎶\n\n♪ Hello, hello! How are you?\n♪ Hello, hello! Nice to meet you!\n♪ Hello, hello! What\'s your name?\n♪ Hello, hello! Let\'s play a game!',
+      explanationJp: '楽しい挨拶の歌から始めましょう！🎶',
+      sectionImage: '',
+      importantNote: '💡 Tip: Use lots of energy and gestures! Kids learn best when they\'re having fun.',
+      copyTemplate: '',
+      lessonGoalTitle: 'LESSON GOAL (2 minutes)',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Greet the student with energy!', scriptLine: '"Hi! Hello! How are you today?" (wave enthusiastically)' },
+        { id: 'step-2', instruction: 'Sing or chant the Hello Song together.', tipText: 'Use hand gestures and encourage the child to copy you.' },
+        { id: 'step-3', instruction: 'Read the lesson goal simply.', scriptLine: '"Today, we\'re going to learn how to say hello!"' },
+        { id: 'step-4', instruction: 'Get excited!', scriptLine: '"Are you ready? Let\'s go!"' },
+      ],
+    },
+    // Section 2 - PICTURE VOCABULARY (with fun images)
+    {
+      id: 'yl-section-2',
+      sectionNumber: 2,
+      sectionTitle: '📚 LEARN NEW WORDS',
+      sectionType: 'vocabulary',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'PICTURE WORDS',
+      instructionEn: 'Look at the pictures! Say the words with me!',
+      instructionJp: '絵を見て！一緒に言ってみよう！',
+      vocabCards: [
+        { id: 'vocab-1', image: '', wordEn: 'hello', wordJp: 'こんにちは' },
+        { id: 'vocab-2', image: '', wordEn: 'goodbye', wordJp: 'さようなら' },
+        { id: 'vocab-3', image: '', wordEn: 'friend', wordJp: '友達' },
+        { id: 'vocab-4', image: '', wordEn: 'happy', wordJp: '嬉しい' },
+      ],
+      sidebarTitle: 'LEARN',
+      sidebarSubtitle: 'PICTURE WORDS (3 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Show excitement!', scriptLine: '"Now let\'s learn some new words! Are you ready?"' },
+        { id: 'step-2', instruction: 'Point to each picture and say the word clearly.', tipText: 'Speak slowly and clearly. Use gestures!' },
+        { id: 'step-3', instruction: 'Have the student repeat after you.', scriptLine: '"Can you say it? Hello! Your turn!"' },
+        { id: 'step-4', instruction: 'Praise them!', scriptLine: '"Great job! You\'re so smart!"' },
+        { id: 'step-5', instruction: 'Play a quick game - point to random pictures and have them say the word.' },
+      ],
+    },
+    // Section 3 - FUN ACTIVITY (Matching Game)
+    {
+      id: 'yl-section-3',
+      sectionNumber: 2,
+      sectionTitle: '🎮 FUN GAME',
+      sectionType: 'question',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'MATCHING GAME',
+      instructionEn: 'Let\'s play! Match the words to the pictures!',
+      instructionJp: 'ゲームをしよう！言葉と絵を合わせてね！',
+      imageCards: [
+        { id: 'img-1', image: '', label: 'waving hand (hello)' },
+        { id: 'img-2', image: '', label: 'smiling face (happy)' },
+        { id: 'img-3', image: '', label: 'two friends (friend)' },
+        { id: 'img-4', image: '', label: 'waving bye (goodbye)' },
+      ],
+      sidebarTitle: 'PLAY',
+      sidebarSubtitle: 'MATCHING GAME (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Introduce the game with energy!', scriptLine: '"Let\'s play a game! Are you ready?"' },
+        { id: 'step-2', instruction: 'Say a word and have the student point to the matching picture.', tipText: 'Give hints if they need help!' },
+        { id: 'step-3', instruction: 'Cheer when they get it right!', scriptLine: '"Yes! That\'s right! High five! ✋"' },
+        { id: 'step-4', instruction: 'Let them say a word and you point to the picture.', tipText: 'This makes them feel like the teacher!' },
+      ],
+    },
+    // Section 4 - LISTEN & REPEAT (Simple Sounds)
+    {
+      id: 'yl-section-4',
+      sectionNumber: 2,
+      sectionTitle: '👂 LISTEN & SAY',
+      sectionType: 'pronunciation',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'FUN SOUNDS',
+      instructionEn: 'Let\'s practice saying these sounds! Repeat after me!',
+      instructionJp: '音を練習しよう！先生の後に言ってね！',
+      pronunciationColumns: [
+        {
+          id: 'col-1',
+          soundLabel: '/h/',
+          image: '',
+          words: [
+            { id: 'w1', wordEn: 'hello', wordJp: 'こんにちは' },
+            { id: 'w2', wordEn: 'happy', wordJp: '嬉しい' },
+            { id: 'w3', wordEn: 'hi', wordJp: 'やあ' },
+          ],
+        },
+        {
+          id: 'col-2',
+          soundLabel: '/f/',
+          image: '',
+          words: [
+            { id: 'w4', wordEn: 'friend', wordJp: '友達' },
+            { id: 'w5', wordEn: 'fun', wordJp: '楽しい' },
+            { id: 'w6', wordEn: 'five', wordJp: '5' },
+          ],
+        },
+      ],
+      sidebarTitle: 'LISTEN',
+      sidebarSubtitle: 'FUN SOUNDS (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Make it fun!', scriptLine: '"Now let\'s make some fun sounds! Watch my mouth!"' },
+        { id: 'step-2', instruction: 'Show how to make the /h/ sound (like breathing on a window).', tipText: 'Use silly comparisons kids can relate to!' },
+        { id: 'step-3', instruction: 'Practice the /h/ words together.' },
+        { id: 'step-4', instruction: 'Show how to make the /f/ sound (like a cat hissing).', tipText: 'Make animal sounds to keep it fun!' },
+        { id: 'step-5', instruction: 'Practice the /f/ words together.' },
+        { id: 'step-6', instruction: 'Celebrate!', scriptLine: '"Wow! You sound amazing!"' },
+      ],
+    },
+    // Section 5 - SIMPLE PATTERN (Basic Grammar)
+    {
+      id: 'yl-section-5',
+      sectionNumber: 2,
+      sectionTitle: '💬 LET\'S TALK',
+      sectionType: 'grammar',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'TALKING PATTERN',
+      instructionEn: 'Learn this easy pattern to introduce yourself!',
+      instructionJp: 'この簡単なパターンで自己紹介しよう！',
+      grammarRules: [
+        {
+          id: 'rule-1',
+          ruleEn: 'Say "My name is..." to tell people your name.',
+          ruleJp: '「My name is...」で自分の名前を伝えます。',
+          examples: [
+            { id: 'ex-1', sentenceEn: 'My name is Yuki.', sentenceJp: '私の名前はユキです。', boldWords: ['My', 'name', 'is'] },
+            { id: 'ex-2', sentenceEn: 'My name is Max.', sentenceJp: '私の名前はマックスです。', boldWords: ['My', 'name', 'is'] },
+          ],
+        },
+        {
+          id: 'rule-2',
+          ruleEn: 'Say "Nice to meet you!" to be friendly.',
+          ruleJp: '「Nice to meet you!」で友好的に挨拶します。',
+          examples: [
+            { id: 'ex-3', sentenceEn: 'Nice to meet you!', sentenceJp: 'はじめまして！', boldWords: ['Nice', 'to', 'meet', 'you'] },
+          ],
+        },
+      ],
+      sidebarTitle: 'TALK',
+      sidebarSubtitle: 'TALKING PATTERN (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Introduce the pattern with energy!', scriptLine: '"Now let\'s learn how to introduce ourselves!"' },
+        { id: 'step-2', instruction: 'Model the pattern first.', scriptLine: '"My name is [Teacher Name]. Nice to meet you!"' },
+        { id: 'step-3', instruction: 'Have the student try.', scriptLine: '"Your turn! What\'s your name?"' },
+        { id: 'step-4', instruction: 'Practice together several times.', tipText: 'Use different voices (robot, princess, superhero) to make it fun!' },
+        { id: 'step-5', instruction: 'High five!', scriptLine: '"You did it! High five! ✋"' },
+      ],
+    },
+    // Section 6 - STORY TIME (Simple Dialogue)
+    {
+      id: 'yl-section-6',
+      sectionNumber: 3,
+      sectionTitle: '📖 STORY TIME',
+      sectionType: 'dialogue',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'LET\'S READ',
+      instructionEn: 'Two friends meet at school. Let\'s read their story!',
+      instructionJp: '2人の友達が学校で会います。一緒に読もう！',
+      dialogueImage: '',
+      dialogueLines: [
+        { id: 'line-1', speaker: 'Yuki', lineEn: 'Hello!' },
+        { id: 'line-2', speaker: 'Max', lineEn: 'Hi! What\'s your name?' },
+        { id: 'line-3', speaker: 'Yuki', lineEn: 'My name is Yuki. Nice to meet you!' },
+        { id: 'line-4', speaker: 'Max', lineEn: 'Nice to meet you too! My name is Max.' },
+        { id: 'line-5', speaker: 'Yuki', lineEn: 'Do you want to be friends?' },
+        { id: 'line-6', speaker: 'Max', lineEn: 'Yes! Let\'s be friends!' },
+      ],
+      sidebarTitle: 'STORY',
+      sidebarSubtitle: 'STORY TIME (3 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Set up the story with excitement!', scriptLine: '"Now it\'s story time! Let\'s read about two friends!"' },
+        { id: 'step-2', instruction: 'Read the dialogue together - use different voices for each character.', tipText: 'Use expressive voices! Kids love silly voices.' },
+        { id: 'step-3', instruction: 'Switch roles and read again.', scriptLine: '"Now let\'s switch! You be Yuki and I\'ll be Max!"' },
+        { id: 'step-4', instruction: 'Ask simple questions.', scriptLine: '"What is Yuki\'s name? What does Max say?"' },
+        { id: 'step-5', instruction: 'Celebrate!', scriptLine: '"Great reading! You\'re a star! ⭐"' },
+      ],
+    },
+    // Section 7 - FUN FACT
+    {
+      id: 'yl-section-7',
+      sectionNumber: 3,
+      sectionTitle: '🌟 FUN FACT',
+      sectionType: 'trivia',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'DID YOU KNOW?',
+      instructionEn: 'People around the world say hello in different ways! In Japan, people bow when they say hello. In America, people shake hands or wave!',
+      instructionJp: '世界中の人々はいろいろな方法で挨拶します！日本ではお辞儀をして挨拶します。アメリカでは握手や手を振って挨拶します！',
+      triviaImage: '',
+      triviaExamples: [
+        {
+          id: 'trivia-ex-1',
+          speakerA: '🇯🇵',
+          lineA: 'Konnichiwa! (bow)',
+          speakerB: '🇺🇸',
+          lineB: 'Hello! (wave)',
+          isCorrect: true,
+          lineAJp: 'こんにちは！（お辞儀）',
+          lineBJp: 'ハロー！（手を振る）',
+        },
+        {
+          id: 'trivia-ex-2',
+          speakerA: '🇫🇷',
+          lineA: 'Bonjour! (kiss on cheek)',
+          speakerB: '🇮🇳',
+          lineB: 'Namaste! (hands together)',
+          isCorrect: true,
+          lineAJp: 'ボンジュール！（ほっぺにキス）',
+          lineBJp: 'ナマステ！（手を合わせる）',
+        },
+      ],
+      sidebarTitle: 'FUN FACT',
+      sidebarSubtitle: 'DID YOU KNOW? (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Share the fun fact!', scriptLine: '"Did you know? People say hello differently around the world!"' },
+        { id: 'step-2', instruction: 'Practice different greetings together.', tipText: 'Do the gestures - bow, wave, etc.!' },
+        { id: 'step-3', instruction: 'Ask which one they like best.', scriptLine: '"Which hello do you like? Let\'s try them all!"' },
+        { id: 'step-4', instruction: 'Make it interactive!', scriptLine: '"Can you say hello in Japanese? In English?"' },
+      ],
+    },
+    // Section 8 - ACTIVITY TIME (Practice)
+    {
+      id: 'yl-section-8',
+      sectionNumber: 4,
+      sectionTitle: '✏️ ACTIVITY TIME',
+      sectionType: 'practice',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      stepTitle: 'LET\'S PRACTICE',
+      instructionEn: 'Fill in the blanks to complete the sentences!',
+      instructionJp: '空欄を埋めて文を完成させよう！',
+      practiceExample: 'ex. _____ name is Yuki.',
+      practiceExampleAnswer: '→ My name is Yuki.',
+      practiceItems: [
+        { id: 'practice-1', question: '_____ name is Max.', answer: 'My' },
+        { id: 'practice-2', question: 'Nice to _____ you!', answer: 'meet' },
+        { id: 'practice-3', question: '_____ (Hello/Goodbye)! How are you?', answer: 'Hello' },
+      ],
+      practiceImage: '',
+      answerItems: ['My', 'meet', 'Hello'],
+      sidebarTitle: 'ACTIVITY',
+      sidebarSubtitle: 'LET\'S PRACTICE (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Introduce the activity!', scriptLine: '"Now let\'s practice what we learned!"' },
+        { id: 'step-2', instruction: 'Read the example together.' },
+        { id: 'step-3', instruction: 'Work through each question together.', tipText: 'Give hints if they struggle - keep it positive!' },
+        { id: 'step-4', instruction: 'Celebrate each correct answer!', scriptLine: '"Yes! You got it! ⭐"' },
+      ],
+    },
+    // Section 9 - CHALLENGE (Role Play)
+    {
+      id: 'yl-section-9',
+      sectionNumber: 5,
+      sectionTitle: '🎭 CHALLENGE',
+      sectionType: 'challenge',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      challengeTitle: 'Role Play',
+      situationEn: 'Let\'s pretend! You are meeting a new friend at school. Introduce yourself!',
+      situationJp: 'ごっこ遊びをしよう！学校で新しい友達に会います。自己紹介しよう！',
+      instructionEn: '',
+      instructionJp: '',
+      grammarTipTitle: 'Remember to say:',
+      grammarTipItems: ['Hello!', 'My name is...', 'Nice to meet you!'],
+      practiceImage: '',
+      challengeQuestions: [
+        { id: 'cq-1', question: 'Hello! Are you new here?' },
+        { id: 'cq-2', question: 'What\'s your name?' },
+        { id: 'cq-3', question: 'Nice to meet you! Do you want to play?' },
+      ],
+      sidebarTitle: 'CHALLENGE',
+      sidebarSubtitle: 'ROLE PLAY (3 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Set up the role play!', scriptLine: '"Let\'s play pretend! I\'ll be your new friend at school!"' },
+        { id: 'step-2', instruction: 'Start the conversation and guide them through.', tipText: 'Be encouraging and help them if they get stuck!' },
+        { id: 'step-3', instruction: 'Let them lead the conversation.', scriptLine: '"Now you start! Say hello to me!"' },
+        { id: 'step-4', instruction: 'Big celebration!', scriptLine: '"WOW! You did amazing! You\'re an English superstar! ⭐🎉"' },
+      ],
+    },
+    // Section 10 - REWARD TIME (Feedback)
+    {
+      id: 'yl-section-10',
+      sectionNumber: 6,
+      sectionTitle: '🏆 REWARD TIME',
+      sectionType: 'feedback',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      feedbackRubric: [
+        { score: 4, label: '⭐⭐⭐⭐ Super Star!', description: 'Amazing job! You did everything perfectly!' },
+        { score: 3, label: '⭐⭐⭐ Great Job!', description: 'Wonderful! You learned a lot today!' },
+        { score: 2, label: '⭐⭐ Good Try!', description: 'Nice work! Keep practicing!' },
+        { score: 1, label: '⭐ Keep Going!', description: 'Good effort! You\'ll do even better next time!' },
+      ],
+      feedbackCategories: [
+        { id: 'fc-1', title: 'NEW WORDS', titleJp: '新しい言葉', descJp: '新しい単語をどれだけ覚えたか' },
+        { id: 'fc-2', title: 'SPEAKING', titleJp: '話す力', descJp: '英語で話す練習をどれだけしたか' },
+        { id: 'fc-3', title: 'FUN', titleJp: '楽しさ', descJp: 'レッスンを楽しめたか' },
+      ],
+      feedbackGuide: [
+        {
+          id: 'fg-1',
+          category: 'NEW WORDS',
+          categoryJp: '',
+          categoryDesc: 'words the student learned today',
+          focusOn: '<strong>Words they remembered</strong>\n+\n<strong>Words to practice more</strong>',
+          exampleFeedback: '⭐ Great job learning these words:\n- hello ✓\n- friend ✓\n- happy ✓\n\n📚 Let\'s practice more:\n- goodbye',
+        },
+        {
+          id: 'fg-2',
+          category: 'SPEAKING',
+          categoryJp: '',
+          categoryDesc: 'how well the student spoke English',
+          focusOn: '<strong>Great sentences</strong>\n+\n<strong>Keep practicing</strong>',
+          exampleFeedback: '⭐ You said:\n"My name is [name]." - Perfect!\n"Nice to meet you!" - Amazing!\n\n📚 Keep practicing:\nSay "hello" a little louder! You can do it!',
+        },
+        {
+          id: 'fg-3',
+          category: 'FUN',
+          categoryJp: '',
+          categoryDesc: 'engagement and enthusiasm',
+          focusOn: '<strong>What went well</strong>\n+\n<strong>What was fun</strong>',
+          exampleFeedback: '🎉 You did great today!\n- You sang the hello song!\n- You played the matching game!\n- You made a new friend!\n\nSee you next time! 👋',
+        },
+      ],
+      feedbackTemplate: '🏆 TODAY\'S SCORE\n⭐⭐⭐⭐ / ⭐⭐⭐ / ⭐⭐ / ⭐\n\n🌟 GREAT JOB WITH:\n[words learned]\n[sentences practiced]\n\n📚 KEEP PRACTICING:\n[areas to improve]\n\n🎉 YOU\'RE AMAZING! SEE YOU NEXT TIME!',
+      sidebarTitle: 'REWARD',
+      sidebarSubtitle: 'REWARD TIME (2 minutes)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Celebrate the lesson!', scriptLine: '"Wow! We had so much fun today!"' },
+        { id: 'step-2', instruction: 'Review what they learned.', scriptLine: '"Can you say hello? Can you say your name?"' },
+        { id: 'step-3', instruction: 'Give them their reward/score.', scriptLine: '"You are a ⭐⭐⭐⭐ Super Star today!"' },
+        { id: 'step-4', instruction: 'End with energy!', scriptLine: '"Great job! See you next time! Bye bye! 👋🎉"' },
+      ],
+    },
+  ],
+  vocabulary: [],
+  grammar: [],
+  exercises: [],
+});
+
 // Helper function to get the appropriate draft based on template
 const getDraftForTemplate = (templateId: string): LessonMaterialDraft => {
   if (templateId === 'conversational-skills-listening') {
@@ -1806,6 +2216,9 @@ const getDraftForTemplate = (templateId: string): LessonMaterialDraft => {
   }
   if (templateId === 'conversational-skills-reading') {
     return createReadingDraft();
+  }
+  if (templateId === 'young-learners') {
+    return createYoungLearnersDraft();
   }
   return createBlankDraft();
 };
@@ -3211,6 +3624,9 @@ export default function LessonMaterialMakerPage() {
   const handleCreateLesson = () => {
     if (!selectedTemplateForLesson || !newLessonForm.goalName.trim()) return;
 
+    // Get the appropriate draft template based on course type
+    const templateDraft = getDraftForTemplate(selectedTemplateForLesson.id);
+
     const newLesson: SavedLesson = {
       id: `lesson-${Date.now()}`,
       templateId: selectedTemplateForLesson.id,
@@ -3223,9 +3639,9 @@ export default function LessonMaterialMakerPage() {
       updatedAt: new Date().toISOString(),
       status: 'draft',
       draft: {
-        ...createBlankDraft(),
+        ...templateDraft,
         header: {
-          ...createBlankDraft().header,
+          ...templateDraft.header,
           levelBadge: `LEVEL ${newLessonForm.level}`,
           chapterLabel: `Chapter ${newLessonForm.chapter}`,
           lessonLabel: `Lesson ${newLessonForm.lessonNumber}`,

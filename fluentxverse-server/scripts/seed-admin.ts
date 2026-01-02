@@ -6,6 +6,29 @@
 import { hash } from 'bcrypt-ts';
 import { initDriver, getDriver, closeDriver } from '../src/db/memgraph';
 
+// Load .env file from the server directory
+const envPath = new URL('../.env', import.meta.url).pathname;
+const envFile = Bun.file(envPath);
+if (await envFile.exists()) {
+  const envContent = await envFile.text();
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key && valueParts.length > 0) {
+        let value = valueParts.join('=');
+        // Remove surrounding quotes if present
+        if ((value.startsWith('"') && value.endsWith('"')) || 
+            (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+        process.env[key.trim()] = value;
+      }
+    }
+  }
+  console.log('Loaded .env file');
+}
+
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || '';
@@ -14,11 +37,11 @@ const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || '';
 async function seedAdmin() {
   console.log('🔧 Initializing database connection...');
   
-  // Initialize Memgraph connection
-  initDriver(
-    process.env.MEMGRAPH_URI || '',
-    process.env.MEMGRAPH_USER || '',
-    process.env.MEMGRAPH_PASSWORD || ''
+  // Initialize Memgraph connection (await since initDriver is async)
+  await initDriver(
+    process.env.MEMGRAPH_URI || 'bolt://localhost:7687',
+    process.env.MEMGRAPH_USER || 'fluentxverse',
+    process.env.MEMGRAPH_PASSWORD || 'devpassword123!ChangeMe'
   );
 
   const driver = getDriver();

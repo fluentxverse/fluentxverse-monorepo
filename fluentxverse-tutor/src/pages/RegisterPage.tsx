@@ -182,7 +182,7 @@ const RegisterPage = () => {
 
               <div>
                 <label className="form-label">
-                  MIDDLE NAME
+                  MIDDLE NAME <span className="required-asterisk">*</span>
                 </label>
                 <input
                   type="text"
@@ -190,6 +190,7 @@ const RegisterPage = () => {
                   placeholder="Middle Name"
                   value={formData.middleName}
                   onChange={(e) => handleChange('middleName', (e.target as HTMLInputElement).value)}
+                  required
                 />
               </div>
 

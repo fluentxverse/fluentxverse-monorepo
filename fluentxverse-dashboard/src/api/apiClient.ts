@@ -20,8 +20,17 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     // Check if it's a 401 Unauthorized error
     if (error.response?.status === 401) {
-      // Prevent multiple simultaneous handlers
-      if (!isHandlingUnauthorized) {
+      const url = error.config?.url || '';
+      
+      // Don't show session expired modal for auth-related endpoints
+      // These are expected to return 401 when not logged in
+      const isAuthEndpoint = url.includes('/login') || 
+                             url.includes('/logout') || 
+                             url.includes('/me') ||
+                             url.includes('/register');
+      
+      // Only show session expired for non-auth endpoints (actual session timeouts)
+      if (!isAuthEndpoint && !isHandlingUnauthorized) {
         isHandlingUnauthorized = true;
         
         console.warn('[API] Session expired or unauthorized');
