@@ -139,7 +139,29 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         
         return { success: true, user: normalizedUser };
       } catch (error: any) {
-        console.log(error);
+        console.log('[/tutor/login] Error:', error?.message || error);
+        
+        // Handle specific error messages with appropriate status codes
+        const errorMessage = error?.message || 'Login failed';
+        
+        // Return friendly error messages
+        if (errorMessage.includes('Invalid email or password')) {
+          return {
+            success: false,
+            error: 'Invalid email or password. Please check your credentials and try again.',
+            user: null
+          };
+        }
+        
+        if (errorMessage.includes('suspended')) {
+          return {
+            success: false,
+            error: errorMessage, // Keep suspension details
+            user: null
+          };
+        }
+        
+        // For other errors, throw to let global handler process
         throw error;
       }
     }, LoginSchema)

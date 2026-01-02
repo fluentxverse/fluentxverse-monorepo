@@ -135,7 +135,28 @@ const Student = new Elysia({ name: "student" })
         user: normalizedUser
       };
     } catch (error: any) {
-      console.log(error);
+      console.log('[/student/login] Error:', error?.message || error);
+      
+      // Handle specific error messages with friendly responses
+      const errorMessage = error?.message || 'Login failed';
+      
+      if (errorMessage.includes('Invalid email or password')) {
+        return {
+          success: false,
+          error: 'Invalid email or password. Please check your credentials and try again.',
+          user: null
+        };
+      }
+      
+      if (errorMessage.includes('suspended')) {
+        return {
+          success: false,
+          error: errorMessage, // Keep suspension details
+          user: null
+        };
+      }
+      
+      // For other errors, throw to let global handler process
       throw error;
     }
   }, {
@@ -146,7 +167,8 @@ const Student = new Elysia({ name: "student" })
     response: {
       200: t.Object({
         success: t.Boolean(),
-        user: t.Any()
+        user: t.Any(),
+        error: t.Optional(t.String())
       })
     }
   })

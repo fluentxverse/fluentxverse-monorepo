@@ -124,6 +124,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
 
       if (!loginInProgressRef.current) return;
 
+      // Check for server-provided error message first
+      if (data?.success === false || data?.error) {
+        throw new Error(data.error || 'Invalid email or password. Please try again.');
+      }
+
       if (data?.user) {
         const loggedInUser = data.user as AuthUser;
         
@@ -143,11 +148,25 @@ export const AuthProvider = ({ children }: { children: any }) => {
           localStorage.setItem('fxv_user_id', loggedInUser.userId);
         }
       } else {
-        throw new Error('Login failed - no user data returned');
+        throw new Error('Unable to sign in. Please check your credentials and try again.');
       }
     } catch (err: any) {
       setUser(null);
-      throw new Error(err?.message || 'Login failed');
+      
+      // Extract user-friendly error message from Axios error response
+      let errorMessage = 'Login failed. Please try again.';
+      
+      // Check for server-provided error message in response data
+      if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message && !err.message.includes('status code')) {
+        // Use error.message only if it's not the generic Axios message
+        errorMessage = err.message;
+      }
+      
+      throw new Error(errorMessage);
     } finally {
       setLoginLoading(false);
       setTimeout(() => {

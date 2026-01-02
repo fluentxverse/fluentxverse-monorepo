@@ -164,17 +164,83 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
       requestId: (request as any).requestId,
     });
   })
-  .onError(({ request, error, set }) => {
+  .onError(({ request, error, set, code }) => {
     const duration = Date.now() - ((request as any).startTime || Date.now());
     const path = new URL(request.url).pathname;
+    const requestId = (request as any).requestId;
     
+    // Determine appropriate status code
+    let statusCode = 500;
+    let userMessage = 'An unexpected error occurred. Please try again.';
+    
+    // Handle Elysia error codes
+    if (code === 'VALIDATION') {
+      statusCode = 400;
+      userMessage = 'Invalid request data. Please check your input.';
+    } else if (code === 'NOT_FOUND') {
+      statusCode = 404;
+      userMessage = 'The requested resource was not found.';
+    } else if (code === 'PARSE') {
+      statusCode = 400;
+      userMessage = 'Invalid request format.';
+    }
+    
+    // Handle specific error messages
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Auth-related errors
+    if (errorMessage.includes('Invalid email or password')) {
+      statusCode = 401;
+      userMessage = 'Invalid email or password. Please check your credentials.';
+    } else if (errorMessage.includes('Not authenticated') || errorMessage.includes('Invalid or expired token')) {
+      statusCode = 401;
+      userMessage = 'Your session has expired. Please log in again.';
+    } else if (errorMessage.includes('account is suspended')) {
+      statusCode = 403;
+      userMessage = errorMessage; // Keep the suspension details
+    } else if (errorMessage.includes('EMAIL_EXISTS') || errorMessage.includes('already registered')) {
+      statusCode = 409;
+      userMessage = 'This email is already registered. Please use a different email or try logging in.';
+    }
+    
+    // Rate limiting
+    else if (errorMessage.includes('Rate limit') || errorMessage.includes('Too many requests')) {
+      statusCode = 429;
+      userMessage = 'Too many requests. Please wait a moment and try again.';
+    }
+    
+    // Database connection errors
+    else if (errorMessage.includes('connection') || errorMessage.includes('ECONNREFUSED')) {
+      statusCode = 503;
+      userMessage = 'Service temporarily unavailable. Please try again in a moment.';
+    }
+    
+    // Validation errors from services
+    else if (errorMessage.includes('required') || errorMessage.includes('invalid') || errorMessage.includes('must be')) {
+      statusCode = 400;
+      userMessage = errorMessage;
+    }
+    
+    // Set the status code
+    set.status = statusCode;
+    
+    // Log the error (with full details for debugging)
     logger.error('Request failed', error, {
       method: request.method,
       path,
       duration,
-      requestId: (request as any).requestId,
-      statusCode: (set as any).status || 500,
+      requestId,
+      statusCode,
+      errorCode: code,
     });
+    
+    // Return user-friendly JSON response
+    return {
+      success: false,
+      error: userMessage,
+      requestId, // Include for support/debugging
+      statusCode,
+    };
   })
   // Security headers middleware
   .onAfterHandle(({ set }) => {

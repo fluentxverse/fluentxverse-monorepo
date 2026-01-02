@@ -130,6 +130,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
       const data = await loginUser(email, password);
       console.log('Login response received:', data?.success);
 
+      // Check for server-provided error message first
+      if (data?.success === false || data?.error) {
+        throw new Error(data.error || 'Invalid email or password. Please try again.');
+      }
+
       if (data?.user) {
         // /login returns full user data from RegisteredParams
         const loggedInUser = data.user as AuthUser;
@@ -168,12 +173,26 @@ export const AuthProvider = ({ children }: { children: any }) => {
           // Don't throw - login was successful, just /me failed
         }
       } else {
-        throw new Error('Login failed - no user data returned');
+        throw new Error('Unable to sign in. Please check your credentials and try again.');
       }
     } catch (err: any) {
       // Clear any partial state on error
       setUser(null);
-      throw new Error(err?.message || 'Login failed');
+      
+      // Extract user-friendly error message from Axios error response
+      let errorMessage = 'Login failed. Please try again.';
+      
+      // Check for server-provided error message in response data
+      if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message && !err.message.includes('status code')) {
+        // Use error.message only if it's not the generic Axios message
+        errorMessage = err.message;
+      }
+      
+      throw new Error(errorMessage);
     } finally {
       setLoginLoading(false);
       // Delay clearing the global flag slightly to cover any in-flight requests
@@ -242,7 +261,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
         return { status: 'authenticated', user: loggedInUser };
       }
 
-      throw new Error('Wallet login failed - no user data returned');
+      throw new Error('Unable to sign in with wallet. Please try again.');
     } catch (err: any) {
       setUser(null);
       throw new Error(err?.message || 'Wallet login failed');

@@ -48,7 +48,8 @@ export const LoginSchema = {
     response: {
         200: t.Object({
             success: t.Boolean(),
-            user: t.Any()
+            user: t.Any(),
+            error: t.Optional(t.String())
         })
     }
 }
