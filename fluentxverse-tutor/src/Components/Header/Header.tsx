@@ -125,7 +125,7 @@ const Header = () => {
                 <nav className="menu-nav">
                   <div className="logo"><a href="/#"><img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" /></a></div>
                   <div className="brand-text">
-                    <span className="brand-fluent">Fluent</span><span className="brand-xverse">XVerse</span>
+                    Fluent<span className="brand-x">X</span>Verse
                   </div>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul className="navigation">
@@ -174,7 +174,7 @@ const Header = () => {
                   <div className="menu-outer">
                     <div className="mobile-menu-header">
                       <div className="mobile-logo">
-                        <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="32" height="32" /> <div className="brand-text"><span className="brand-fluent">Fluent</span><span className="brand-xverse">XVerse</span></div>
+                        <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="32" height="32" /> <div className="brand-text">Fluent<span className="brand-x">X</span>Verse</div>
                       </div>
                     </div>
                     
@@ -248,7 +248,7 @@ const Header = () => {
               <div className="modal-logo">
                 <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="48" height="48" />
               </div>
-              <div className="modal-brand-text"><span className="brand-fluent">Fluent</span><span className="brand-xverse">XVerse</span></div>
+              <div className="modal-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
             </div>
             <form className="login-form" onSubmit={handleLoginSubmit as unknown as (e: any) => void}>
               <div className="form-group">

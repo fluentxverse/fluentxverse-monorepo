@@ -155,7 +155,7 @@ const AboutUsPage = () => {
                   FluentXVerse was born from a simple observation: talented tutors worldwide struggle to reach students who need them most, while learners face barriers to accessing quality, affordable education.
                 </p>
                 <p className="about-description">
-                  We envisioned a platform where geography doesn't limit opportunity—where a tutor in Manila can inspire a professional in Tokyo or Seoul, where Web3 technology rewards dedication, and where every interaction builds toward something bigger than a single lesson.
+                  We envisioned a platform where geography doesn't limit opportunity, where a tutor in Manila can inspire a professional in Tokyo or Seoul, where Web3 technology rewards dedication, and where every interaction builds toward something bigger than a single lesson.
                 </p>
                 <p className="about-description">
                   Today, we're building that future. Through innovative technology, transparent practices, and a deep commitment to human connection, FluentXVerse is redefining what's possible in language education.

@@ -66,7 +66,7 @@ const MobileHeader = () => {
           
           <div className="mobile-header-logo">
             <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" />
-            <span className="mobile-header-brand">FluentXVerse</span>
+            <span className="mobile-header-brand">Fluent<span className="brand-x">X</span>Verse</span>
           </div>
 
           <Link href="/profile" className="mobile-header-user">
@@ -91,7 +91,7 @@ const MobileHeader = () => {
             <div className="mobile-menu-header">
               <div className="mobile-menu-logo">
                 <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" />
-                <span>FluentXVerse</span>
+                <span>Fluent<span className="brand-x">X</span>Verse</span>
               </div>
               <button className="mobile-menu-close" onClick={closeMenu}>
                 <i className="fas fa-times"></i>

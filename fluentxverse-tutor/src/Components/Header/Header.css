@@ -177,22 +177,9 @@
   align-items: center;
 }
 
-.brand-fluent {
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-.brand-xverse {
-  color: #0245ae;
-  font-weight: 600;
-}
-
-.dark-mode .brand-fluent {
-  color: #ecf0f1;
-}
-
-.dark-mode .brand-xverse {
+.brand-x {
   color: #4a9eff;
+  font-weight: 600;
 }
 
 .modal-header h2 {

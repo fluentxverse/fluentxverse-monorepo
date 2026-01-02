@@ -1,0 +1,8 @@
+/* App-specific styles - extends main.css */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Additional component styles can go here */

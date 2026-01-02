@@ -24,7 +24,7 @@ api.interceptors.response.use(
 		// Console log for developers
 		// eslint-disable-next-line no-console
 		console.log(
-			`[API Timing] ${response.config.method?.toUpperCase()} ${response.config.url} — sent: ${meta.sentAt}, received: ${receivedAt}, total: ${totalMs.toFixed(0)} ms`
+			`[API Timing] ${response.config.method?.toUpperCase()} ${response.config.url}, sent: ${meta.sentAt}, received: ${receivedAt}, total: ${totalMs.toFixed(0)} ms`
 		);
 
 		// Emit a browser event so UI can display the latest timing
@@ -52,7 +52,7 @@ api.interceptors.response.use(
 
 		// eslint-disable-next-line no-console
 		console.warn(
-			`[API Timing] ${cfg.method?.toUpperCase() || 'REQUEST'} ${cfg.url || ''} — sent: ${meta.sentAt}, received: ${receivedAt}, total: ${totalMs.toFixed(0)} ms (error)`
+			`[API Timing] ${cfg.method?.toUpperCase() || 'REQUEST'} ${cfg.url || ''}, sent: ${meta.sentAt}, received: ${receivedAt}, total: ${totalMs.toFixed(0)} ms (error)`
 		);
 
 		if (typeof window !== 'undefined') {

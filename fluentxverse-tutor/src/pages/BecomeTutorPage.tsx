@@ -198,7 +198,7 @@ const BecomeTutorPage = () => {
                     <li><i className="fas fa-check"></i> Quiet surroundings with no unnecessary noise</li>
                     <li><i className="fas fa-check"></i> Stable lighting and clear video feed</li>
                     <li><i className="fas fa-check"></i> Tidy, distraction-free background (preferably plain)</li>
-                    <li><i className="fas fa-check"></i> Presentable attire — smart casual recommended; formal clothing optional</li>
+                    <li><i className="fas fa-check"></i> Presentable attire, smart casual recommended; formal clothing optional</li>
                   </ul>
                 </div>
               </div>

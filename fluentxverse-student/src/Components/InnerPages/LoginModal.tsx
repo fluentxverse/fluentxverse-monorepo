@@ -50,7 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         <button className="modal-close" onClick={onClose} aria-label="Close login modal">×</button>
         <div className="modal-logo">
           <img src= "/assets/img/logo/icon_logo.png" alt="FluentXVerse" />
-          <div className="modal-brand-text">FLUENTXVERSE</div>
+          <div className="modal-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
         </div>
         <h2 className="modal-title">Login to Your Account</h2>
         <p className="modal-subtitle">Unlock your farm’s secrets and log in to get growing!</p>

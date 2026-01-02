@@ -57,10 +57,11 @@
 .mobile-header-brand {
   font-size: 18px;
   font-weight: 700;
-  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary, #1a1f2e);
+}
+
+.mobile-header-brand .brand-x {
+  color: #4a9eff;
 }
 
 .mobile-header-user {
@@ -342,7 +343,7 @@
 }
 
 .dark-mode .mobile-header-brand {
-  -webkit-text-fill-color: #4a9eff;
+  color: #fff;
 }
 
 .dark-mode .mobile-header-user i {

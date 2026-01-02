@@ -121,7 +121,7 @@ const Header = () => {
                 <nav className="menu-nav">
                   <div className="logo"><a href="/#"><img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" /></a></div>
                   <div className="brand-text">
-                    FluentXVerse
+                    Fluent<span className="brand-x">X</span>Verse
                   </div>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul className="navigation">
@@ -178,7 +178,7 @@ const Header = () => {
                   <div className="menu-outer">
                     <div className="mobile-menu-header">
                       <div className="mobile-logo">
-                        <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="32" height="32" /> <div className="brand-text">FLUENTXVERSE</div>
+                        <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="32" height="32" /> <div className="brand-text">Fluent<span className="brand-x">X</span>Verse</div>
                       </div>
                     </div>
                     

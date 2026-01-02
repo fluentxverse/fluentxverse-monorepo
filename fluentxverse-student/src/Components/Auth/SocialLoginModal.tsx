@@ -128,7 +128,7 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
           <div className="modal-logo">
             <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" />
           </div>
-          <div className="modal-brand-text">FluentXVerse</div>
+          <div className="modal-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
         </div>
 
         {/* Title */}

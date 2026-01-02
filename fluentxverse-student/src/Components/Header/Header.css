@@ -165,8 +165,12 @@
   font-size: 28px;
   font-weight: 600;
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  color: #0245ae;
+  color: var(--text-primary, #1a1f2e);
   letter-spacing: 0.5px;
+}
+
+.brand-x {
+  color: #4a9eff;
 }
 
 .dark-mode .modal-brand-text {

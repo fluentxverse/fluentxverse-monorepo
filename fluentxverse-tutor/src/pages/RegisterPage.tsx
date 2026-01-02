@@ -117,7 +117,7 @@ const RegisterPage = () => {
                   { icon: 'fas fa-users', title: 'Engaged learners', desc: 'Teach active students who regularly book, learn, and progress.' },
                   { icon: 'fas fa-calendar-alt', title: 'Truly flexible time', desc: 'Open slots that fit your day and manage your time with ease.' },
                   { icon: 'fas fa-book', title: 'Original materials', desc: 'Use clear, purpose‑built lessons designed by our own team.' },
-                  { icon: 'fas fa-headset', title: 'Responsive support', desc: 'Get fast help when you need it—technical or teaching‑related.' },
+                  { icon: 'fas fa-headset', title: 'Responsive support', desc: 'Get fast help when you need it, technical or teaching‑related.' },
                   { icon: 'fas fa-star', title: 'Room to grow', desc: 'Unlock more opportunities as you build consistency and quality.' }
                 ].map((item, idx) => (
                   <div key={idx} className="feature-item">

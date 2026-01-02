@@ -29,13 +29,8 @@ footer * {
   align-items: center;
 }
 
-.footer-brand-text .brand-fluent {
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-.footer-brand-text .brand-xverse {
-  color: #0245ae;
+.footer-brand-text .brand-x {
+  color: #4a9eff;
   font-weight: 600;
 }
 

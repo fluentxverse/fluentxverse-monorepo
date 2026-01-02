@@ -1,0 +1,24 @@
+{
+  "name": "fluentxverse-site",
+  "version": "1.0.0",
+  "description": "FluentXVerse - Static project/team site",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run dev.ts --watch",
+    "build": "bun run build.ts",
+    "preview": "bun run build && cd dist && bunx serve"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}

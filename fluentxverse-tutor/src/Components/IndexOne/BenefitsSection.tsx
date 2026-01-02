@@ -5,7 +5,7 @@ const BenefitsSection = () => {
     {
       icon: 'fas fa-clock',
       title: 'Flexible Schedule',
-      description: 'Set your own hours and work when it suits you. Early bird or night owl—you decide your teaching schedule.'
+      description: 'Set your own hours and work when it suits you. Early bird or night owl, you decide your teaching schedule.'
     },
     {
       icon: 'fas fa-home',
@@ -15,7 +15,7 @@ const BenefitsSection = () => {
     {
       icon: 'fas fa-wallet',
       title: 'Competitive Pay',
-      description: 'Earn competitive rates for your expertise. The more you teach, the more you earn—with transparent payouts.'
+      description: 'Earn competitive rates for your expertise. The more you teach, the more you earn, with transparent payouts.'
     },
     {
       icon: 'fas fa-graduation-cap',

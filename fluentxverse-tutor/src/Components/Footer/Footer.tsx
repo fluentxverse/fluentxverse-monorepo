@@ -13,7 +13,7 @@ const Footer = () => {
                 <div className="footer-logo mb-25">
                   <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" />
-                    <div className="footer-brand-text"><span className="brand-fluent">Fluent</span><span className="brand-xverse">XVerse</span></div>
+                    <div className="footer-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
                   </a>
                 </div>
                 <p style={{ marginBottom: '20px', color: '#666', lineHeight: '1.6' }}>
