@@ -1504,7 +1504,7 @@ const SchedulePage = () => {
                         flexWrap: 'wrap',
                         gap: '4px'
                       }}>
-                        {times.slice(0, 3).map((time, idx) => (
+                        {times.map((time, idx) => (
                           <span key={idx} style={{
                             background: 'rgba(245, 158, 11, 0.15)',
                             padding: '2px 6px',
@@ -1513,15 +1513,6 @@ const SchedulePage = () => {
                             fontWeight: 600
                           }}>{time}</span>
                         ))}
-                        {times.length > 3 && (
-                          <span style={{
-                            background: 'rgba(2, 69, 174, 0.1)',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            color: '#0245ae',
-                            fontWeight: 600
-                          }}>+{times.length - 3} more</span>
-                        )}
                       </div>
                     </div>
                   ));
