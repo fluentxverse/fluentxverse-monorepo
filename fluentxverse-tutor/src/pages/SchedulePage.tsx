@@ -1092,55 +1092,53 @@ const SchedulePage = () => {
                                     : isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? '#94a3b8' : isSelected ? '#10b981' : '#64748b',
                                   fontWeight: 800,
                                   fontSize: isBooked || penalty ? '13px' : '11px',
-                                  transition: 'all 0.3s ease',
+                                  transition: 'all 0.2s ease',
                                   boxShadow: penalty
                                     ? `0 2px 8px ${PENALTY_LABELS[penalty.code].color}40`
                                     : isBookedAndPresent
-                                    ? '0 4px 12px rgba(59, 130, 246, 0.5), 0 0 0 3px rgba(16, 185, 129, 0.5)'
+                                    ? '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 0 0 2px rgba(16, 185, 129, 0.8)'
                                     : isBooked
-                                    ? '0 4px 12px rgba(59, 130, 246, 0.5)'
+                                    ? '0 2px 8px rgba(59, 130, 246, 0.4)'
                                     : isPendingSelection
-                                    ? '0 4px 12px rgba(245, 158, 11, 0.5), 0 0 0 2px rgba(245, 158, 11, 0.3)'
+                                    ? '0 2px 8px rgba(245, 158, 11, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.3)'
                                     : isMarkedPresent
-                                    ? '0 4px 12px rgba(16, 185, 129, 0.4)'
-                                    : '0 2px 4px rgba(0, 0, 0, 0.05)',
+                                    ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                    : '0 1px 3px rgba(0, 0, 0, 0.05)',
                                   letterSpacing: isBooked || penalty ? '1px' : '0.5px',
                                   border: penalty
                                     ? `2px solid ${PENALTY_LABELS[penalty.code].color}`
                                     : isBookedAndPresent
-                                    ? '3px solid #10b981'
+                                    ? '2px solid #10b981'
                                     : isBooked
-                                    ? 'none'
-                                    : isSelected && !isMarkedPresent && !isPendingSelection 
+                                    ? '2px solid transparent'
+                                    : isPendingSelection
+                                    ? '2px solid rgba(251, 191, 36, 0.6)'
+                                    : isSelected && !isMarkedPresent
                                     ? '2px solid #10b981' 
-                                    : !isSelected && !isPastOrNear && !isPendingSelection 
-                                    ? '1px solid rgba(2, 69, 174, 0.1)' 
-                                    : 'none',
-                                  transform: isPendingSelection || isBooked ? 'scale(1.05)' : 'scale(1)',
-                                  opacity: isSelected && !canMarkAttend && !isBooked ? 0.5 : 1
+                                    : !isSelected && !isPastOrNear
+                                    ? '2px solid rgba(2, 69, 174, 0.1)' 
+                                    : '2px solid transparent',
+                                  opacity: isSelected && !canMarkAttend && !isBooked ? 0.5 : 1,
+                                  boxSizing: 'border-box'
                                 }}
                                 onMouseEnter={(e) => {
                                   if (isBookedAndPresent) {
-                                    e.currentTarget.style.transform = 'scale(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.6), 0 0 0 3px rgba(16, 185, 129, 0.6)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5), inset 0 0 0 2px rgba(16, 185, 129, 1)';
                                   } else if (isBooked) {
-                                    e.currentTarget.style.transform = 'scale(1.1)';
-                                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.6)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
                                     e.currentTarget.style.background = 'rgba(2, 69, 174, 0.1)';
-                                    e.currentTarget.style.transform = 'scale(1.05)';
+                                    e.currentTarget.style.borderColor = 'rgba(2, 69, 174, 0.3)';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
                                   if (isBookedAndPresent) {
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5), 0 0 0 3px rgba(16, 185, 129, 0.5)';
+                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 0 0 2px rgba(16, 185, 129, 0.8)';
                                   } else if (isBooked) {
-                                    e.currentTarget.style.transform = 'scale(1.05)';
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
+                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
                                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.borderColor = 'rgba(2, 69, 174, 0.1)';
                                   }
                                 }}
                                 title={penalty ? penalty.reason : undefined}
