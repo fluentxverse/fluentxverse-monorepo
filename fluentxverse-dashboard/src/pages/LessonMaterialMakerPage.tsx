@@ -2423,7 +2423,8 @@ export default function LessonMaterialMakerPage() {
   const [expandedLevels, setExpandedLevels] = useState<number[]>([1]);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCourses, setExpandedCourses] = useState<string[]>(['Conversational Skills']); // Default expanded
+  const [expandedCourses, setExpandedCourses] = useState<string[]>(['Conversational Skills']); // Default expanded for templates
+  const [expandedLessonCourses, setExpandedLessonCourses] = useState<string[]>([]); // Expanded courses in My Lessons
 
   useEffect(() => {
     if (!previewTokenFromUrl) return;
@@ -4625,7 +4626,47 @@ export default function LessonMaterialMakerPage() {
     );
   };
 
-  // Group saved lessons by level > chapter > lesson
+  // Group saved lessons by course > level > chapter > lesson
+  const groupedLessonsByCourse = savedLessons.reduce((acc, lesson) => {
+    const courseName = lesson.draft?.course || 'Uncategorized';
+    if (!acc[courseName]) {
+      acc[courseName] = {
+        lessons: [],
+        levels: {}
+      };
+    }
+    acc[courseName].lessons.push(lesson);
+    
+    // Also group by level/chapter/lesson within each course
+    const levelKey = lesson.level;
+    if (!acc[courseName].levels[levelKey]) {
+      acc[courseName].levels[levelKey] = {};
+    }
+    const chapterKey = lesson.chapter;
+    if (!acc[courseName].levels[levelKey][chapterKey]) {
+      acc[courseName].levels[levelKey][chapterKey] = {};
+    }
+    const lessonKey = lesson.lessonNumber;
+    if (!acc[courseName].levels[levelKey][chapterKey][lessonKey]) {
+      acc[courseName].levels[levelKey][chapterKey][lessonKey] = [];
+    }
+    acc[courseName].levels[levelKey][chapterKey][lessonKey].push(lesson);
+    return acc;
+  }, {} as Record<string, { 
+    lessons: SavedLesson[]; 
+    levels: Record<number, Record<number, Record<number, SavedLesson[]>>> 
+  }>);
+
+  // Toggle course expansion in My Lessons
+  const toggleLessonCourse = (course: string) => {
+    setExpandedLessonCourses(prev =>
+      prev.includes(course)
+        ? prev.filter(c => c !== course)
+        : [...prev, course]
+    );
+  };
+
+  // Legacy grouping for backwards compatibility (without course grouping)
   const groupedLessons = savedLessons.reduce((acc, lesson) => {
     const levelKey = lesson.level;
     if (!acc[levelKey]) {
@@ -5563,226 +5604,259 @@ export default function LessonMaterialMakerPage() {
               </div>
             ) : (
               <div className="lm-lessons-list">
-                {Object.entries(groupedLessons)
-                  .sort(([a], [b]) => Number(a) - Number(b))
-                  .map(([level, chapters]) => {
-                    const levelNum = Number(level);
-                    const isLevelExpanded = expandedLevels.includes(levelNum);
-                    const lessonCount = Object.values(chapters).reduce(
-                      (sum, lessons) => sum + Object.values(lessons).reduce((s, l) => s + l.length, 0),
-                      0
-                    );
+                {/* Course-based grouping */}
+                {Object.entries(groupedLessonsByCourse)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([courseName, courseData]) => {
+                    const isCourseExpanded = expandedLessonCourses.includes(courseName);
+                    const lessonCount = courseData.lessons.length;
+                    
+                    // Get course icon from templates if available
+                    const courseTemplate = COURSE_TEMPLATES.find(t => t.course === courseName);
+                    const courseIcon = courseTemplate?.icon || '📚';
 
                     return (
-                      <div key={level} className={`lm-level-group ${isLevelExpanded ? 'expanded' : ''}`}>
+                      <div key={courseName} className={`lm-course-group ${isCourseExpanded ? 'expanded' : ''}`}>
                         <button
                           type="button"
-                          className="lm-level-header"
-                          onClick={() => toggleLevel(levelNum)}
+                          className="lm-course-header"
+                          onClick={() => toggleLessonCourse(courseName)}
                         >
-                          <div className="lm-level-info">
-                            <span className="lm-level-badge">Level {level}</span>
-                            <span className="lm-level-count">{lessonCount} lesson{lessonCount !== 1 ? 's' : ''}</span>
+                          <div className="lm-course-info">
+                            <span className="lm-course-icon">{courseIcon}</span>
+                            <span className="lm-course-name">{courseName}</span>
+                            <span className="lm-course-count">{lessonCount} lesson{lessonCount !== 1 ? 's' : ''}</span>
                           </div>
-                          <i className={`ri-arrow-${isLevelExpanded ? 'up' : 'down'}-s-line`} />
+                          <i className={`ri-arrow-${isCourseExpanded ? 'up' : 'down'}-s-line`} />
                         </button>
 
-                        {isLevelExpanded && (
-                          <div className="lm-level-content">
-                            {Object.entries(chapters)
+                        {isCourseExpanded && (
+                          <div className="lm-course-content">
+                            {Object.entries(courseData.levels)
                               .sort(([a], [b]) => Number(a) - Number(b))
-                              .map(([chapter, lessons]) => (
-                                <div key={chapter} className="lm-chapter-group">
-                                  <h4 className="lm-chapter-title">Chapter {chapter}</h4>
-                                  {Object.entries(lessons)
-                                    .sort(([a], [b]) => Number(a) - Number(b))
-                                    .map(([lessonNum, lessonList]) => (
-                                      <div key={lessonNum} className="lm-lesson-group">
-                                        <h5 className="lm-lesson-title">Lesson {lessonNum}</h5>
-                                        <div className="lm-lesson-cards">
-                                          {lessonList.map(lesson => (
-                                            <div key={lesson.id} className={`lm-lesson-card ${lesson.isFork ? 'is-fork' : ''}`}>
-                                              <div className="lm-lesson-card-main">
-                                                <div className="lm-lesson-goal">
-                                                  {lesson.goalName}
-                                                  {lesson.isFork && (
-                                                    <span className="lm-fork-badge" title="This is a fork">
-                                                      <i className="ri-git-branch-line" /> Fork
-                                                    </span>
-                                                  )}
-                                                </div>
-                                                <div className="lm-lesson-meta">
-                                                  <span className="lm-lesson-template">
-                                                    <i className="ri-file-copy-line" />
-                                                    {lesson.templateName}
-                                                  </span>
-                                                  <span className={`lm-lesson-status ${lesson.status}`}>
-                                                    {lesson.status}
-                                                  </span>
-                                                  {lesson.currentVersion && (
-                                                    <span className="lm-lesson-version" title="Current version">
-                                                      v{lesson.currentVersion}
-                                                    </span>
-                                                  )}
-                                                  {lesson.forkCount && lesson.forkCount > 0 && (
-                                                    <span className="lm-fork-count" title={`${lesson.forkCount} fork(s)`}>
-                                                      <i className="ri-git-branch-line" /> {lesson.forkCount}
-                                                    </span>
-                                                  )}
-                                                  {lesson.hasPendingMergeRequest && (
-                                                    <span className="lm-mr-badge" title="Has pending merge request">
-                                                      <i className="ri-git-merge-line" /> MR
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </div>
-                                              <div className="lm-lesson-card-actions">
-                                                {/* Bulk select checkbox */}
-                                                {lesson.serverLesson && (
-                                                  <label className="lm-bulk-checkbox" title="Select for bulk action">
-                                                    <input
-                                                      type="checkbox"
-                                                      checked={selectedLessonIds.has(lesson.serverLesson.id)}
-                                                      onChange={() => toggleLessonSelection(lesson.serverLesson!.id)}
-                                                    />
-                                                  </label>
-                                                )}
-                                                <button
-                                                  type="button"
-                                                  className="lm-lesson-btn edit"
-                                                  onClick={() => handleEditLesson(lesson)}
-                                                  title="Edit Lesson"
-                                                >
-                                                  <i className="ri-edit-line" />
-                                                </button>
-                                                {/* Version history button */}
-                                                {lesson.serverLesson && (
-                                                  <button
-                                                    type="button"
-                                                    className="lm-lesson-btn versions"
-                                                    onClick={() => handleShowVersions(lesson)}
-                                                    title="View version history"
-                                                  >
-                                                    <i className="ri-history-line" />
-                                                  </button>
-                                                )}
-                                                {/* Status workflow buttons */}
-                                                {/* Draft -> Mark as Finished */}
-                                                {lesson.serverLesson && lesson.status === 'draft' && (
-                                                  <button
-                                                    type="button"
-                                                    className="lm-lesson-btn finish"
-                                                    onClick={() => handleMarkAsFinished(lesson)}
-                                                    title="Mark as finished"
-                                                  >
-                                                    <i className="ri-check-double-line" />
-                                                  </button>
-                                                )}
-                                                {/* Finished -> Publish or Back to Draft */}
-                                                {lesson.serverLesson && lesson.status === 'finished' && (
-                                                  <>
-                                                    <button
-                                                      type="button"
-                                                      className="lm-lesson-btn publish"
-                                                      onClick={() => handlePublishLesson(lesson)}
-                                                      title="Publish lesson"
-                                                    >
-                                                      <i className="ri-upload-cloud-line" />
-                                                    </button>
-                                                    <button
-                                                      type="button"
-                                                      className="lm-lesson-btn draft"
-                                                      onClick={() => handleMarkAsDraft(lesson)}
-                                                      title="Back to draft"
-                                                    >
-                                                      <i className="ri-edit-2-line" />
-                                                    </button>
-                                                  </>
-                                                )}
-                                                {/* Published -> Unpublish */}
-                                                {lesson.serverLesson && lesson.status === 'published' && (
-                                                  <button
-                                                    type="button"
-                                                    className="lm-lesson-btn unpublish"
-                                                    onClick={() => handleUnpublishLesson(lesson)}
-                                                    title="Unpublish (back to draft)"
-                                                  >
-                                                    <i className="ri-download-cloud-line" />
-                                                  </button>
-                                                )}
-                                                {/* Fork button - only for non-fork lessons */}
-                                                {!lesson.isFork && lesson.serverLesson && (
-                                                  <>
-                                                    <button
-                                                      type="button"
-                                                      className="lm-lesson-btn fork"
-                                                      onClick={() => handleForkLesson(lesson)}
-                                                      title="Fork this lesson to create your own version"
-                                                    >
-                                                      <i className="ri-git-branch-line" />
-                                                    </button>
-                                                    {/* View forks */}
-                                                    {lesson.forkCount && lesson.forkCount > 0 && (
-                                                      <button
-                                                        type="button"
-                                                        className="lm-lesson-btn view-forks"
-                                                        onClick={() => handleViewForks(lesson)}
-                                                        title={`View ${lesson.forkCount} fork(s)`}
-                                                      >
-                                                        <i className="ri-git-repository-line" />
-                                                      </button>
-                                                    )}
-                                                  </>
-                                                )}
-                                                {/* Merge request button - only for fork lessons */}
-                                                {lesson.isFork && lesson.forkOf && !lesson.hasPendingMergeRequest && (
-                                                  <button
-                                                    type="button"
-                                                    className="lm-lesson-btn merge"
-                                                    onClick={() => handleCreateMergeRequest(lesson)}
-                                                    title="Submit changes to original"
-                                                  >
-                                                    <i className="ri-git-merge-line" />
-                                                  </button>
-                                                )}
-                                                {/* Save as template */}
-                                                {lesson.serverLesson && !lesson.isFork && (
-                                                  <button
-                                                    type="button"
-                                                    className="lm-lesson-btn template"
-                                                    onClick={() => handleSaveAsTemplate(lesson)}
-                                                    title="Save as template"
-                                                  >
-                                                    <i className="ri-file-copy-2-line" />
-                                                  </button>
-                                                )}
-                                                {/* Archive button */}
-                                                {lesson.serverLesson && lesson.status !== 'archived' && (
-                                                  <button
-                                                    type="button"
-                                                    className="lm-lesson-btn archive"
-                                                    onClick={() => handleArchiveLesson(lesson)}
-                                                    title="Archive lesson"
-                                                  >
-                                                    <i className="ri-archive-line" />
-                                                  </button>
-                                                )}
-                                                <button
-                                                  type="button"
-                                                  className="lm-lesson-btn delete"
-                                                  onClick={() => handleDeleteLesson(lesson.id)}
-                                                  title="Delete Lesson"
-                                                >
-                                                  <i className="ri-delete-bin-line" />
-                                                </button>
-                                              </div>
+                              .map(([level, chapters]) => {
+                                const levelNum = Number(level);
+                                const isLevelExpanded = expandedLevels.includes(levelNum);
+                                const levelLessonCount = Object.values(chapters).reduce(
+                                  (sum, lessons) => sum + Object.values(lessons).reduce((s, l) => s + l.length, 0),
+                                  0
+                                );
+
+                                return (
+                                  <div key={level} className={`lm-level-group ${isLevelExpanded ? 'expanded' : ''}`}>
+                                    <button
+                                      type="button"
+                                      className="lm-level-header"
+                                      onClick={() => toggleLevel(levelNum)}
+                                    >
+                                      <div className="lm-level-info">
+                                        <span className="lm-level-badge">Level {level}</span>
+                                        <span className="lm-level-count">{levelLessonCount} lesson{levelLessonCount !== 1 ? 's' : ''}</span>
+                                      </div>
+                                      <i className={`ri-arrow-${isLevelExpanded ? 'up' : 'down'}-s-line`} />
+                                    </button>
+
+                                    {isLevelExpanded && (
+                                      <div className="lm-level-content">
+                                        {Object.entries(chapters)
+                                          .sort(([a], [b]) => Number(a) - Number(b))
+                                          .map(([chapter, lessons]) => (
+                                            <div key={chapter} className="lm-chapter-group">
+                                              <h4 className="lm-chapter-title">Chapter {chapter}</h4>
+                                              {Object.entries(lessons)
+                                                .sort(([a], [b]) => Number(a) - Number(b))
+                                                .map(([lessonNum, lessonList]) => (
+                                                  <div key={lessonNum} className="lm-lesson-group">
+                                                    <h5 className="lm-lesson-title">Lesson {lessonNum}</h5>
+                                                    <div className="lm-lesson-cards">
+                                                      {lessonList.map(lesson => (
+                                                        <div key={lesson.id} className={`lm-lesson-card ${lesson.isFork ? 'is-fork' : ''}`}>
+                                                          <div className="lm-lesson-card-main">
+                                                            <div className="lm-lesson-goal">
+                                                              {lesson.goalName}
+                                                              {lesson.isFork && (
+                                                                <span className="lm-fork-badge" title="This is a fork">
+                                                                  <i className="ri-git-branch-line" /> Fork
+                                                                </span>
+                                                              )}
+                                                            </div>
+                                                            <div className="lm-lesson-meta">
+                                                              <span className="lm-lesson-template">
+                                                                <i className="ri-file-copy-line" />
+                                                                {lesson.templateName}
+                                                              </span>
+                                                              <span className={`lm-lesson-status ${lesson.status}`}>
+                                                                {lesson.status}
+                                                              </span>
+                                                              {lesson.currentVersion && (
+                                                                <span className="lm-lesson-version" title="Current version">
+                                                                  v{lesson.currentVersion}
+                                                                </span>
+                                                              )}
+                                                              {lesson.forkCount && lesson.forkCount > 0 && (
+                                                                <span className="lm-fork-count" title={`${lesson.forkCount} fork(s)`}>
+                                                                  <i className="ri-git-branch-line" /> {lesson.forkCount}
+                                                                </span>
+                                                              )}
+                                                              {lesson.hasPendingMergeRequest && (
+                                                                <span className="lm-mr-badge" title="Has pending merge request">
+                                                                  <i className="ri-git-merge-line" /> MR
+                                                                </span>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                          <div className="lm-lesson-card-actions">
+                                                            {/* Bulk select checkbox */}
+                                                            {lesson.serverLesson && (
+                                                              <label className="lm-bulk-checkbox" title="Select for bulk action">
+                                                                <input
+                                                                  type="checkbox"
+                                                                  checked={selectedLessonIds.has(lesson.serverLesson.id)}
+                                                                  onChange={() => toggleLessonSelection(lesson.serverLesson!.id)}
+                                                                />
+                                                              </label>
+                                                            )}
+                                                            <button
+                                                              type="button"
+                                                              className="lm-lesson-btn edit"
+                                                              onClick={() => handleEditLesson(lesson)}
+                                                              title="Edit Lesson"
+                                                            >
+                                                              <i className="ri-edit-line" />
+                                                            </button>
+                                                            {/* Version history button */}
+                                                            {lesson.serverLesson && (
+                                                              <button
+                                                                type="button"
+                                                                className="lm-lesson-btn versions"
+                                                                onClick={() => handleShowVersions(lesson)}
+                                                                title="View version history"
+                                                              >
+                                                                <i className="ri-history-line" />
+                                                              </button>
+                                                            )}
+                                                            {/* Status workflow buttons */}
+                                                            {/* Draft -> Mark as Finished */}
+                                                            {lesson.serverLesson && lesson.status === 'draft' && (
+                                                              <button
+                                                                type="button"
+                                                                className="lm-lesson-btn finish"
+                                                                onClick={() => handleMarkAsFinished(lesson)}
+                                                                title="Mark as finished"
+                                                              >
+                                                                <i className="ri-check-double-line" />
+                                                              </button>
+                                                            )}
+                                                            {/* Finished -> Publish or Back to Draft */}
+                                                            {lesson.serverLesson && lesson.status === 'finished' && (
+                                                              <>
+                                                                <button
+                                                                  type="button"
+                                                                  className="lm-lesson-btn publish"
+                                                                  onClick={() => handlePublishLesson(lesson)}
+                                                                  title="Publish lesson"
+                                                                >
+                                                                  <i className="ri-upload-cloud-line" />
+                                                                </button>
+                                                                <button
+                                                                  type="button"
+                                                                  className="lm-lesson-btn draft"
+                                                                  onClick={() => handleMarkAsDraft(lesson)}
+                                                                  title="Back to draft"
+                                                                >
+                                                                  <i className="ri-edit-2-line" />
+                                                                </button>
+                                                              </>
+                                                            )}
+                                                            {/* Published -> Unpublish */}
+                                                            {lesson.serverLesson && lesson.status === 'published' && (
+                                                              <button
+                                                                type="button"
+                                                                className="lm-lesson-btn unpublish"
+                                                                onClick={() => handleUnpublishLesson(lesson)}
+                                                                title="Unpublish (back to draft)"
+                                                              >
+                                                                <i className="ri-download-cloud-line" />
+                                                              </button>
+                                                            )}
+                                                            {/* Fork button - only for non-fork lessons */}
+                                                            {!lesson.isFork && lesson.serverLesson && (
+                                                              <>
+                                                                <button
+                                                                  type="button"
+                                                                  className="lm-lesson-btn fork"
+                                                                  onClick={() => handleForkLesson(lesson)}
+                                                                  title="Fork this lesson to create your own version"
+                                                                >
+                                                                  <i className="ri-git-branch-line" />
+                                                                </button>
+                                                                {/* View forks */}
+                                                                {lesson.forkCount && lesson.forkCount > 0 && (
+                                                                  <button
+                                                                    type="button"
+                                                                    className="lm-lesson-btn view-forks"
+                                                                    onClick={() => handleViewForks(lesson)}
+                                                                    title={`View ${lesson.forkCount} fork(s)`}
+                                                                  >
+                                                                    <i className="ri-git-repository-line" />
+                                                                  </button>
+                                                                )}
+                                                              </>
+                                                            )}
+                                                            {/* Merge request button - only for fork lessons */}
+                                                            {lesson.isFork && lesson.forkOf && !lesson.hasPendingMergeRequest && (
+                                                              <button
+                                                                type="button"
+                                                                className="lm-lesson-btn merge"
+                                                                onClick={() => handleCreateMergeRequest(lesson)}
+                                                                title="Submit changes to original"
+                                                              >
+                                                                <i className="ri-git-merge-line" />
+                                                              </button>
+                                                            )}
+                                                            {/* Save as template */}
+                                                            {lesson.serverLesson && !lesson.isFork && (
+                                                              <button
+                                                                type="button"
+                                                                className="lm-lesson-btn template"
+                                                                onClick={() => handleSaveAsTemplate(lesson)}
+                                                                title="Save as template"
+                                                              >
+                                                                <i className="ri-file-copy-2-line" />
+                                                              </button>
+                                                            )}
+                                                            {/* Archive button */}
+                                                            {lesson.serverLesson && lesson.status !== 'archived' && (
+                                                              <button
+                                                                type="button"
+                                                                className="lm-lesson-btn archive"
+                                                                onClick={() => handleArchiveLesson(lesson)}
+                                                                title="Archive lesson"
+                                                              >
+                                                                <i className="ri-archive-line" />
+                                                              </button>
+                                                            )}
+                                                            <button
+                                                              type="button"
+                                                              className="lm-lesson-btn delete"
+                                                              onClick={() => handleDeleteLesson(lesson.id)}
+                                                              title="Delete Lesson"
+                                                            >
+                                                              <i className="ri-delete-bin-line" />
+                                                            </button>
+                                                          </div>
+                                                        </div>
+                                                      ))}
+                                                    </div>
+                                                  </div>
+                                                ))}
                                             </div>
                                           ))}
-                                        </div>
                                       </div>
-                                    ))}
-                                </div>
-                              ))}
+                                    )}
+                                  </div>
+                                );
+                              })}
                           </div>
                         )}
                       </div>
