@@ -1407,23 +1407,21 @@ const SchedulePage = () => {
             style={{
               background: 'rgba(255, 255, 255, 0.98)',
               backdropFilter: 'blur(10px)',
-              borderRadius: '24px',
-              padding: '40px',
-              maxWidth: '600px',
+              borderRadius: '20px',
+              padding: '28px',
+              maxWidth: '480px',
               width: '100%',
-              maxHeight: '80vh',
-              overflowY: 'auto',
               boxShadow: '0 20px 60px rgba(2, 69, 174, 0.3)',
               border: '1px solid rgba(2, 69, 174, 0.1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            {/* Modal Header - Compact */}
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '20px',
+                width: '56px',
+                height: '56px',
+                borderRadius: '14px',
                 background: bulkAction === 'attendance'
                   ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)'
                   : bulkAction === 'open'
@@ -1432,21 +1430,21 @@ const SchedulePage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 24px',
+                margin: '0 auto 16px',
                 boxShadow: bulkAction === 'attendance'
-                  ? '0 8px 24px rgba(2, 69, 174, 0.4)'
+                  ? '0 6px 16px rgba(2, 69, 174, 0.3)'
                   : bulkAction === 'open'
-                  ? '0 8px 24px rgba(16, 185, 129, 0.4)'
-                  : '0 8px 24px rgba(239, 68, 68, 0.4)'
+                  ? '0 6px 16px rgba(16, 185, 129, 0.3)'
+                  : '0 6px 16px rgba(239, 68, 68, 0.3)'
               }}>
-                <i className={`fas fa-${bulkAction === 'attendance' ? 'clipboard-check' : bulkAction === 'open' ? 'unlock-alt' : 'lock'}`} style={{ color: '#fff', fontSize: '36px' }}></i>
+                <i className={`fas fa-${bulkAction === 'attendance' ? 'clipboard-check' : bulkAction === 'open' ? 'unlock-alt' : 'lock'}`} style={{ color: '#fff', fontSize: '24px' }}></i>
               </div>
               <h3 style={{
-                margin: '0 0 12px',
-                fontSize: '28px',
+                margin: '0 0 6px',
+                fontSize: '22px',
                 fontWeight: 900,
                 color: '#0f172a',
-                letterSpacing: '0.5px'
+                letterSpacing: '0.3px'
               }}>
                 {bulkAction === 'attendance' 
                   ? 'Update Attendance?' 
@@ -1454,78 +1452,89 @@ const SchedulePage = () => {
                   ? 'Open Selected Slots?' 
                   : 'Close Selected Slots?'}
               </h3>
-              <p style={{ margin: 0, fontSize: '14px', color: '#64748b', fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
                 You have selected {pendingSelections.size} time slot{pendingSelections.size > 1 ? 's' : ''}
               </p>
             </div>
 
-            {/* Selected Slots List */}
+            {/* Selected Slots List - Compact View */}
             <div style={{
               background: 'rgba(2, 69, 174, 0.05)',
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px',
               border: '1px solid rgba(2, 69, 174, 0.1)',
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }}
-            className="schedule-scrollable"
-            >
-              <h4 style={{ 
-                margin: '0 0 16px', 
-                fontSize: '14px', 
-                fontWeight: 800, 
-                color: '#0245ae',
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase'
-              }}>
-                Selected Time Slots
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {Array.from(pendingSelections).map((key) => {
-                  const details = getSlotDetails(key);
-                  return (
-                    <div key={key} style={{
-                      background: 'rgba(255, 255, 255, 0.8)',
-                      borderRadius: '12px',
-                      padding: '14px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      border: '1px solid rgba(2, 69, 174, 0.1)'
+            }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {(() => {
+                  // Group slots by date for compact display
+                  const groupedSlots = Array.from(pendingSelections).reduce((acc, key) => {
+                    const details = getSlotDetails(key);
+                    const dateKey = details.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    if (!acc[dateKey]) acc[dateKey] = [];
+                    acc[dateKey].push(details.time);
+                    return acc;
+                  }, {} as Record<string, string[]>);
+                  
+                  return Object.entries(groupedSlots).map(([date, times]) => (
+                    <div key={date} style={{
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      border: '1px solid rgba(2, 69, 174, 0.15)',
+                      minWidth: 'fit-content'
                     }}>
-                      <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '8px',
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      <div style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 700, 
+                        color: '#0245ae',
+                        marginBottom: '4px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
+                        gap: '6px'
                       }}>
-                        <i className="fas fa-clock" style={{ color: '#fff', fontSize: '16px' }}></i>
+                        <i className="fas fa-calendar-day" style={{ fontSize: '10px' }}></i>
+                        {date}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', marginBottom: '2px' }}>
-                          {details.dayName}, {details.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                          {details.time}
-                        </div>
+                      <div style={{ 
+                        fontSize: '11px', 
+                        color: '#64748b',
+                        fontWeight: 500,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '4px'
+                      }}>
+                        {times.slice(0, 3).map((time, idx) => (
+                          <span key={idx} style={{
+                            background: 'rgba(245, 158, 11, 0.15)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            color: '#b45309',
+                            fontWeight: 600
+                          }}>{time}</span>
+                        ))}
+                        {times.length > 3 && (
+                          <span style={{
+                            background: 'rgba(2, 69, 174, 0.1)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            color: '#0245ae',
+                            fontWeight: 600
+                          }}>+{times.length - 3} more</span>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
+                  ));
+                })()}
               </div>
             </div>
 
             {/* Confirmation Message or Attendance Selection */}
             {bulkAction === 'attendance' ? (
-              <div style={{ marginBottom: '32px' }}>
+              <div style={{ marginBottom: '20px' }}>
                 <h4 style={{ 
-                  margin: '0 0 16px', 
-                  fontSize: '14px', 
+                  margin: '0 0 12px', 
+                  fontSize: '13px', 
                   fontWeight: 800, 
                   color: '#0245ae',
                   letterSpacing: '0.5px',
@@ -1551,22 +1560,22 @@ const SchedulePage = () => {
                       border: hasBookedSlots()
                         ? '2px solid rgba(203, 213, 225, 0.3)'
                         : attendanceStatus === 'present' ? 'none' : '2px solid rgba(16, 185, 129, 0.3)',
-                      padding: '16px 24px',
-                      borderRadius: '12px',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
                       fontWeight: 800,
-                      fontSize: '15px',
+                      fontSize: '14px',
                       cursor: hasBookedSlots() ? 'not-allowed' : 'pointer',
                       letterSpacing: '0.5px',
                       transition: 'all 0.3s ease',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       gap: '8px',
                       boxShadow: attendanceStatus === 'present' ? '0 4px 16px rgba(16, 185, 129, 0.4)' : 'none',
                       opacity: hasBookedSlots() ? 0.5 : 1
                     }}
                   >
-                    <i className="fas fa-check-circle" style={{ fontSize: '32px' }}></i>
+                    <i className="fas fa-check-circle" style={{ fontSize: '18px' }}></i>
                     Present
                   </button>
                   <button
@@ -1585,21 +1594,21 @@ const SchedulePage = () => {
                       border: !canChangeToAbsent()
                         ? '2px solid rgba(203, 213, 225, 0.3)'
                         : attendanceStatus === 'absent' ? 'none' : '2px solid rgba(239, 68, 68, 0.3)',
-                      padding: '16px 24px',
-                      borderRadius: '12px',
+                      padding: '12px 16px',
+                      borderRadius: '10px',
                       fontWeight: 800,
-                      fontSize: '15px',
+                      fontSize: '14px',
                       cursor: !canChangeToAbsent() ? 'not-allowed' : 'pointer',
                       letterSpacing: '0.5px',
                       transition: 'all 0.3s ease',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
+                      justifyContent: 'center',
                       gap: '8px',
                       boxShadow: attendanceStatus === 'absent' ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
                     }}
                   >
-                    <i className="fas fa-times-circle" style={{ fontSize: '32px' }}></i>
+                    <i className="fas fa-times-circle" style={{ fontSize: '18px' }}></i>
                     Absent
                   </button>
                 </div>
@@ -1607,12 +1616,12 @@ const SchedulePage = () => {
             ) : (
               <div style={{
                 background: bulkAction === 'open' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '32px',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                marginBottom: '20px',
                 border: bulkAction === 'open' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)'
               }}>
-                <p style={{ margin: 0, fontSize: '14px', color: '#334155', lineHeight: '1.6', fontWeight: 500, textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '13px', color: '#334155', lineHeight: '1.5', fontWeight: 500, textAlign: 'center' }}>
                   {bulkAction === 'open'
                     ? `You are about to open ${pendingSelections.size} time slot${pendingSelections.size > 1 ? 's' : ''}. Students will be able to book these times for lessons.`
                     : `You are about to close ${pendingSelections.size} time slot${pendingSelections.size > 1 ? 's' : ''}. Students will no longer be able to book these times.`}
