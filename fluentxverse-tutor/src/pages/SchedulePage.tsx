@@ -500,23 +500,35 @@ const SchedulePage = () => {
     setPendingSelections(new Set());
   };
 
-  // Select all available slots for a specific day column in the current period
+  // Select all available slots for a specific day column in the current period (toggle behavior)
   const selectAllForDay = (dayIdx: number) => {
     const newSelections = new Set(pendingSelections);
     const currentPeriodSlots = timeSlots[selectedPeriod];
     const date = weekDates[dayIdx];
     
+    // First, count how many available slots exist and how many are already selected
+    const availableKeys: string[] = [];
     currentPeriodSlots.forEach((time) => {
       const key = `${dayIdx}-${time}`;
       const isBooked = bookedSlots.has(key);
       const isAlreadyOpen = selectedTimeSlots.has(key);
       const canOpen = canOpenSlot(date, time);
       
-      // Only select available slots (not booked, not already open, and can be opened)
       if (!isBooked && !isAlreadyOpen && canOpen) {
-        newSelections.add(key);
+        availableKeys.push(key);
       }
     });
+    
+    // Check if all available slots are already selected
+    const allSelected = availableKeys.length > 0 && availableKeys.every(key => newSelections.has(key));
+    
+    if (allSelected) {
+      // Deselect all slots for this day
+      availableKeys.forEach(key => newSelections.delete(key));
+    } else {
+      // Select all available slots
+      availableKeys.forEach(key => newSelections.add(key));
+    }
     
     setPendingSelections(newSelections);
   };
@@ -820,7 +832,10 @@ const SchedulePage = () => {
                 borderBottom: '2px solid rgba(2, 69, 174, 0.1)'
               }}>
                 <button
-                  onClick={() => setCurrentWeekOffset(currentWeekOffset - 1)}
+                  onClick={() => {
+                    setCurrentWeekOffset(currentWeekOffset - 1);
+                    setPendingSelections(new Set());
+                  }}
                   style={{
                     background: 'rgba(2, 69, 174, 0.1)',
                     border: 'none',
@@ -851,7 +866,10 @@ const SchedulePage = () => {
                 </h3>
 
                 <button
-                  onClick={() => setCurrentWeekOffset(currentWeekOffset + 1)}
+                  onClick={() => {
+                    setCurrentWeekOffset(currentWeekOffset + 1);
+                    setPendingSelections(new Set());
+                  }}
                   style={{
                     background: 'rgba(2, 69, 174, 0.1)',
                     border: 'none',
@@ -1548,114 +1566,6 @@ const SchedulePage = () => {
               <p style={{ margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
                 You have selected {pendingSelections.size} time slot{pendingSelections.size > 1 ? 's' : ''}
               </p>
-            </div>
-
-            {/* Selected Slots List - Compact View with Sorted Times */}
-            <div style={{
-              background: 'rgba(2, 69, 174, 0.05)',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '20px',
-              border: '1px solid rgba(2, 69, 174, 0.1)',
-            }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {(() => {
-                  // Helper to parse time for sorting
-                  const parseTime = (timeStr: string): number => {
-                    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-                    if (!match) return 0;
-                    let hours = parseInt(match[1]);
-                    const minutes = parseInt(match[2]);
-                    const period = match[3].toUpperCase();
-                    if (period === 'PM' && hours !== 12) hours += 12;
-                    if (period === 'AM' && hours === 12) hours = 0;
-                    return hours * 60 + minutes;
-                  };
-                  
-                  // Group slots by date for compact display
-                  const groupedSlots = Array.from(pendingSelections).reduce((acc, key) => {
-                    const details = getSlotDetails(key);
-                    const dateKey = details.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                    const dateTimestamp = details.date.getTime();
-                    if (!acc[dateKey]) acc[dateKey] = { times: [], timestamp: dateTimestamp };
-                    acc[dateKey].times.push(details.time);
-                    return acc;
-                  }, {} as Record<string, { times: string[], timestamp: number }>);
-                  
-                  // Sort dates chronologically and times within each date
-                  const sortedEntries = Object.entries(groupedSlots)
-                    .sort((a, b) => a[1].timestamp - b[1].timestamp)
-                    .map(([date, data]) => ({
-                      date,
-                      times: data.times.sort((a, b) => parseTime(a) - parseTime(b))
-                    }));
-                  
-                  const dateCount = sortedEntries.length;
-                  
-                  return sortedEntries.map(({ date, times }, dateIdx) => (
-                    <div key={date} style={{
-                      background: 'rgba(255, 255, 255, 0.95)',
-                      borderRadius: '10px',
-                      padding: '12px 14px',
-                      border: dateCount > 1 ? '2px solid rgba(2, 69, 174, 0.2)' : '1px solid rgba(2, 69, 174, 0.15)',
-                      position: 'relative'
-                    }}>
-                      {/* Date badge - more prominent for multi-date */}
-                      <div style={{ 
-                        fontSize: dateCount > 1 ? '13px' : '12px', 
-                        fontWeight: 700, 
-                        color: '#0245ae',
-                        marginBottom: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        paddingBottom: dateCount > 1 ? '8px' : '4px',
-                        borderBottom: dateCount > 1 ? '1px dashed rgba(2, 69, 174, 0.2)' : 'none'
-                      }}>
-                        <span style={{
-                          background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
-                          color: '#fff',
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          fontSize: '11px',
-                          fontWeight: 800
-                        }}>
-                          {dateCount > 1 ? `Day ${dateIdx + 1}` : <i className="fas fa-calendar-day"></i>}
-                        </span>
-                        {date}
-                        <span style={{
-                          marginLeft: 'auto',
-                          fontSize: '11px',
-                          color: '#64748b',
-                          fontWeight: 500
-                        }}>
-                          {times.length} slot{times.length > 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div style={{ 
-                        fontSize: '11px', 
-                        color: '#64748b',
-                        fontWeight: 500,
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '5px'
-                      }}>
-                        {times.map((time, idx) => (
-                          <span key={idx} style={{
-                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%)',
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            color: '#92400e',
-                            fontWeight: 600,
-                            fontSize: '12px',
-                            border: '1px solid rgba(245, 158, 11, 0.3)'
-                          }}>{time}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
             </div>
 
             {/* Confirmation Message or Attendance Selection */}
