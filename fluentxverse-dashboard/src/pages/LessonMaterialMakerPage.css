@@ -9418,3 +9418,373 @@ body.lm-fullscreen-mode .main-content {
 .lm-young-learners::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #7c3aed 0%, #db2777 100%);
 }
+
+/* ============================================
+   BUSINESS ENGLISH STYLES
+   Professional, clean, corporate theme
+   ============================================ */
+
+.lm-business-english {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+.lm-business-english .lm-body {
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100%;
+}
+
+/* Header - Corporate Blue Theme */
+.lm-business-english .lm-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%) !important;
+  border-bottom: 4px solid #0ea5e9 !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.lm-business-english .lm-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.lm-business-english .lm-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0ea5e9, #3b82f6, #6366f1, #3b82f6, #0ea5e9);
+  pointer-events: none;
+}
+
+/* Level Badge - Professional Styling */
+.lm-business-english .lm-level-badge {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  border: 2px solid #7dd3fc !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3) !important;
+}
+
+/* Sections - Clean Corporate Look */
+.lm-business-english .lm-section {
+  background: #fff !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  padding: 24px !important;
+  position: relative;
+}
+
+.lm-business-english .lm-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #0ea5e9 0%, #3b82f6 100%);
+  border-radius: 12px 0 0 12px;
+}
+
+/* Section Numbers - Professional Badge */
+.lm-business-english .lm-section-number {
+  background: linear-gradient(135deg, #1e3a5f 0%, #334155 100%) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Section Titles - Corporate Typography */
+.lm-business-english .lm-section-title {
+  color: #1e3a5f !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+.lm-business-english .lm-section-title-row {
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+/* Explanation Text */
+.lm-business-english .lm-section-explanation {
+  color: #334155 !important;
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+  background: #f8fafc !important;
+  padding: 16px !important;
+  border-radius: 8px !important;
+  border-left: 4px solid #0ea5e9 !important;
+}
+
+.lm-business-english .lm-section-explanation-jp {
+  color: #64748b !important;
+  font-style: italic !important;
+  font-size: 14px !important;
+  margin-top: 8px !important;
+}
+
+/* Sidebar - Professional Panel */
+.lm-business-english .lm-sidebar {
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+}
+
+.lm-business-english .lm-sidebar-header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #334155 100%) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 12px 16px !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.lm-business-english .lm-sidebar-subtitle {
+  color: #94a3b8 !important;
+  font-size: 12px !important;
+}
+
+/* Goal Steps - Clean Checklist */
+.lm-business-english .lm-goal-step {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  margin: 6px 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.lm-business-english .lm-goal-step:hover {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15) !important;
+}
+
+.lm-business-english .lm-step-number {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: #fff !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+/* Script Lines - Professional Callout */
+.lm-business-english .lm-script-line {
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  color: #1e40af !important;
+  font-style: italic !important;
+}
+
+.lm-business-english .lm-script-line::before {
+  content: '💬 ';
+}
+
+/* Tip Text - Info Box */
+.lm-business-english .lm-tip-text {
+  background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 100%) !important;
+  border-radius: 8px !important;
+  border: 1px solid #0ea5e9 !important;
+  border-left: 4px solid #0ea5e9 !important;
+  color: #0c4a6e !important;
+  padding: 12px 16px !important;
+}
+
+.lm-business-english .lm-tip-text::before {
+  content: '📋 ';
+}
+
+/* Image Upload Area - Clean */
+.lm-business-english .lm-section-image-wrapper {
+  border: 2px dashed #94a3b8 !important;
+  border-radius: 12px !important;
+  background: #f8fafc !important;
+}
+
+.lm-business-english .lm-section-image-wrapper:hover {
+  border-color: #0ea5e9 !important;
+  background: #eff6ff !important;
+}
+
+/* Vocabulary Cards - Professional Tiles */
+.lm-business-english .lm-vocab-card {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease !important;
+}
+
+.lm-business-english .lm-vocab-card:hover {
+  border-color: #0ea5e9 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2) !important;
+}
+
+.lm-business-english .lm-vocab-word-en {
+  color: #1e3a5f !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+}
+
+.lm-business-english .lm-vocab-word-jp {
+  color: #64748b !important;
+  font-size: 14px !important;
+}
+
+/* Dialogue Section - Meeting Style */
+.lm-business-english .lm-dialogue-wrapper {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+}
+
+.lm-business-english .lm-dialogue-line {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  margin: 8px 0 !important;
+}
+
+.lm-business-english .lm-dialogue-speaker {
+  color: #0ea5e9 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 12px !important;
+  letter-spacing: 0.5px !important;
+}
+
+.lm-business-english .lm-dialogue-text {
+  color: #334155 !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+/* Challenge Section - Professional Box */
+.lm-business-english .lm-challenge-box {
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
+  border: 2px solid #3b82f6 !important;
+  border-radius: 12px !important;
+  padding: 24px !important;
+}
+
+.lm-business-english .lm-challenge-title {
+  color: #1e3a5f !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  margin-bottom: 12px !important;
+}
+
+.lm-business-english .lm-challenge-question {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  margin: 8px 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.lm-business-english .lm-challenge-question:hover {
+  border-color: #3b82f6 !important;
+}
+
+/* Grammar Section - Professional Reference */
+.lm-business-english .lm-grammar-box {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 4px solid #6366f1 !important;
+  border-radius: 8px !important;
+  padding: 20px !important;
+}
+
+.lm-business-english .lm-grammar-rule {
+  color: #1e3a5f !important;
+  font-weight: 600 !important;
+}
+
+.lm-business-english .lm-grammar-example {
+  background: #f8fafc !important;
+  border-radius: 6px !important;
+  padding: 10px 14px !important;
+  margin: 6px 0 !important;
+}
+
+/* Pronunciation Columns */
+.lm-business-english .lm-pron-column {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.lm-business-english .lm-pron-sound {
+  background: linear-gradient(135deg, #1e3a5f 0%, #334155 100%) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  font-size: 18px !important;
+}
+
+/* Feedback Section - Professional Rating */
+.lm-business-english .lm-feedback-rubric {
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+}
+
+.lm-business-english .lm-feedback-score {
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+}
+
+.lm-business-english .lm-feedback-category {
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+}
+
+/* Professional scroll indicators */
+.lm-business-english::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lm-business-english::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.lm-business-english::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  border-radius: 4px;
+}
+
+.lm-business-english::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%);
+}

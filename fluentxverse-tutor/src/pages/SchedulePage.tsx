@@ -56,6 +56,8 @@ const SchedulePage = () => {
   const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent' | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [bookingToast, setBookingToast] = useState<{ studentName?: string; time: string; date: string } | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false); // Loading state for confirm button
+  const [showSuccess, setShowSuccess] = useState(false); // Success animation state
 
   // Refresh handler
   const handleRefresh = () => {
@@ -411,7 +413,7 @@ const SchedulePage = () => {
       pendingSelectionsArray: Array.from(pendingSelections)
     });
     
-    setLoading(true);
+    setIsConfirming(true);
     setError(null);
 
     try {
@@ -469,15 +471,22 @@ const SchedulePage = () => {
         setSelectedTimeSlots(newSet);
       }
       
-      setPendingSelections(new Set());
-      setShowModal(false);
-      setBulkAction(null);
-      setAttendanceStatus(null);
+      // Show success animation
+      setIsConfirming(false);
+      setShowSuccess(true);
+      
+      // Wait for animation then close
+      setTimeout(() => {
+        setShowSuccess(false);
+        setPendingSelections(new Set());
+        setShowModal(false);
+        setBulkAction(null);
+        setAttendanceStatus(null);
+      }, 1200);
     } catch (err: any) {
       console.error('Failed to perform action:', err);
       setError(err.message || 'Failed to perform action');
-    } finally {
-      setLoading(false);
+      setIsConfirming(false);
     }
   };
 
@@ -1412,10 +1421,94 @@ const SchedulePage = () => {
               maxWidth: '480px',
               width: '100%',
               boxShadow: '0 20px 60px rgba(2, 69, 174, 0.3)',
-              border: '1px solid rgba(2, 69, 174, 0.1)'
+              border: '1px solid rgba(2, 69, 174, 0.1)',
+              position: 'relative',
+              overflow: 'hidden'
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Success Overlay Animation */}
+            {showSuccess && (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(255, 255, 255, 0.98)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                animation: 'fadeIn 0.3s ease'
+              }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
+                  animation: 'scaleIn 0.4s ease'
+                }}>
+                  <i className="fas fa-check" style={{ 
+                    color: '#fff', 
+                    fontSize: '36px',
+                    animation: 'checkmark 0.5s ease 0.2s both'
+                  }}></i>
+                </div>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '20px',
+                  fontWeight: 800,
+                  color: '#059669',
+                  animation: 'fadeInUp 0.4s ease 0.3s both'
+                }}>
+                  {bulkAction === 'attendance' 
+                    ? `Marked as ${attendanceStatus === 'present' ? 'Present' : 'Absent'}!`
+                    : bulkAction === 'open'
+                    ? 'Slots Opened!'
+                    : 'Slots Closed!'}
+                </h3>
+                <p style={{
+                  margin: '8px 0 0',
+                  fontSize: '14px',
+                  color: '#64748b',
+                  animation: 'fadeInUp 0.4s ease 0.4s both'
+                }}>
+                  {pendingSelections.size} slot{pendingSelections.size > 1 ? 's' : ''} updated successfully
+                </p>
+              </div>
+            )}
+            
+            {/* Keyframe styles */}
+            <style>{`
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              @keyframes scaleIn {
+                from { transform: scale(0); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+              }
+              @keyframes checkmark {
+                from { transform: scale(0) rotate(-45deg); opacity: 0; }
+                to { transform: scale(1) rotate(0deg); opacity: 1; }
+              }
+              @keyframes fadeInUp {
+                from { transform: translateY(10px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+              }
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+
             {/* Modal Header - Compact */}
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
               <div style={{
@@ -1457,7 +1550,7 @@ const SchedulePage = () => {
               </p>
             </div>
 
-            {/* Selected Slots List - Compact View */}
+            {/* Selected Slots List - Compact View with Sorted Times */}
             <div style={{
               background: 'rgba(2, 69, 174, 0.05)',
               borderRadius: '12px',
@@ -1465,36 +1558,79 @@ const SchedulePage = () => {
               marginBottom: '20px',
               border: '1px solid rgba(2, 69, 174, 0.1)',
             }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {(() => {
+                  // Helper to parse time for sorting
+                  const parseTime = (timeStr: string): number => {
+                    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                    if (!match) return 0;
+                    let hours = parseInt(match[1]);
+                    const minutes = parseInt(match[2]);
+                    const period = match[3].toUpperCase();
+                    if (period === 'PM' && hours !== 12) hours += 12;
+                    if (period === 'AM' && hours === 12) hours = 0;
+                    return hours * 60 + minutes;
+                  };
+                  
                   // Group slots by date for compact display
                   const groupedSlots = Array.from(pendingSelections).reduce((acc, key) => {
                     const details = getSlotDetails(key);
                     const dateKey = details.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                    if (!acc[dateKey]) acc[dateKey] = [];
-                    acc[dateKey].push(details.time);
+                    const dateTimestamp = details.date.getTime();
+                    if (!acc[dateKey]) acc[dateKey] = { times: [], timestamp: dateTimestamp };
+                    acc[dateKey].times.push(details.time);
                     return acc;
-                  }, {} as Record<string, string[]>);
+                  }, {} as Record<string, { times: string[], timestamp: number }>);
                   
-                  return Object.entries(groupedSlots).map(([date, times]) => (
+                  // Sort dates chronologically and times within each date
+                  const sortedEntries = Object.entries(groupedSlots)
+                    .sort((a, b) => a[1].timestamp - b[1].timestamp)
+                    .map(([date, data]) => ({
+                      date,
+                      times: data.times.sort((a, b) => parseTime(a) - parseTime(b))
+                    }));
+                  
+                  const dateCount = sortedEntries.length;
+                  
+                  return sortedEntries.map(({ date, times }, dateIdx) => (
                     <div key={date} style={{
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '8px',
-                      padding: '10px 12px',
-                      border: '1px solid rgba(2, 69, 174, 0.15)',
-                      minWidth: 'fit-content'
+                      background: 'rgba(255, 255, 255, 0.95)',
+                      borderRadius: '10px',
+                      padding: '12px 14px',
+                      border: dateCount > 1 ? '2px solid rgba(2, 69, 174, 0.2)' : '1px solid rgba(2, 69, 174, 0.15)',
+                      position: 'relative'
                     }}>
+                      {/* Date badge - more prominent for multi-date */}
                       <div style={{ 
-                        fontSize: '12px', 
+                        fontSize: dateCount > 1 ? '13px' : '12px', 
                         fontWeight: 700, 
                         color: '#0245ae',
-                        marginBottom: '4px',
+                        marginBottom: '8px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px'
+                        gap: '8px',
+                        paddingBottom: dateCount > 1 ? '8px' : '4px',
+                        borderBottom: dateCount > 1 ? '1px dashed rgba(2, 69, 174, 0.2)' : 'none'
                       }}>
-                        <i className="fas fa-calendar-day" style={{ fontSize: '10px' }}></i>
+                        <span style={{
+                          background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
+                          color: '#fff',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 800
+                        }}>
+                          {dateCount > 1 ? `Day ${dateIdx + 1}` : <i className="fas fa-calendar-day"></i>}
+                        </span>
                         {date}
+                        <span style={{
+                          marginLeft: 'auto',
+                          fontSize: '11px',
+                          color: '#64748b',
+                          fontWeight: 500
+                        }}>
+                          {times.length} slot{times.length > 1 ? 's' : ''}
+                        </span>
                       </div>
                       <div style={{ 
                         fontSize: '11px', 
@@ -1502,15 +1638,17 @@ const SchedulePage = () => {
                         fontWeight: 500,
                         display: 'flex',
                         flexWrap: 'wrap',
-                        gap: '4px'
+                        gap: '5px'
                       }}>
                         {times.map((time, idx) => (
                           <span key={idx} style={{
-                            background: 'rgba(245, 158, 11, 0.15)',
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            color: '#b45309',
-                            fontWeight: 600
+                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%)',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            color: '#92400e',
+                            fontWeight: 600,
+                            fontSize: '12px',
+                            border: '1px solid rgba(245, 158, 11, 0.3)'
                           }}>{time}</span>
                         ))}
                       </div>
@@ -1624,6 +1762,7 @@ const SchedulePage = () => {
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={closeModal}
+                disabled={isConfirming}
                 style={{
                   flex: 1,
                   background: 'rgba(100, 116, 139, 0.1)',
@@ -1633,16 +1772,17 @@ const SchedulePage = () => {
                   borderRadius: '12px',
                   fontWeight: 800,
                   fontSize: '15px',
-                  cursor: 'pointer',
+                  cursor: isConfirming ? 'not-allowed' : 'pointer',
                   letterSpacing: '0.5px',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  opacity: isConfirming ? 0.5 : 1
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmBulkAction}
-                disabled={bulkAction === 'attendance' && !attendanceStatus}
+                disabled={(bulkAction === 'attendance' && !attendanceStatus) || isConfirming}
                 style={{
                   flex: 1,
                   background: bulkAction === 'attendance'
@@ -1660,7 +1800,7 @@ const SchedulePage = () => {
                   borderRadius: '12px',
                   fontWeight: 800,
                   fontSize: '15px',
-                  cursor: (bulkAction === 'attendance' && !attendanceStatus) ? 'not-allowed' : 'pointer',
+                  cursor: ((bulkAction === 'attendance' && !attendanceStatus) || isConfirming) ? 'not-allowed' : 'pointer',
                   letterSpacing: '0.5px',
                   boxShadow: (bulkAction === 'attendance' && !attendanceStatus)
                     ? 'none'
@@ -1672,16 +1812,30 @@ const SchedulePage = () => {
                     ? '0 4px 16px rgba(16, 185, 129, 0.4)'
                     : '0 4px 16px rgba(239, 68, 68, 0.4)',
                   transition: 'all 0.3s ease',
-                  opacity: (bulkAction === 'attendance' && !attendanceStatus) ? 0.6 : 1
+                  opacity: ((bulkAction === 'attendance' && !attendanceStatus) || isConfirming) ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
               >
-                {bulkAction === 'attendance'
-                  ? attendanceStatus
-                    ? `Mark as ${attendanceStatus === 'present' ? 'Present' : 'Absent'}`
-                    : 'Select Status'
-                  : bulkAction === 'open' 
-                  ? `Open ${pendingSelections.size} Slot${pendingSelections.size > 1 ? 's' : ''}` 
-                  : `Close ${pendingSelections.size} Slot${pendingSelections.size > 1 ? 's' : ''}`}
+                {isConfirming ? (
+                  <>
+                    <i className="fas fa-circle-notch" style={{ 
+                      fontSize: '16px',
+                      animation: 'spin 1s linear infinite' 
+                    }}></i>
+                    Processing...
+                  </>
+                ) : (
+                  bulkAction === 'attendance'
+                    ? attendanceStatus
+                      ? `Mark as ${attendanceStatus === 'present' ? 'Present' : 'Absent'}`
+                      : 'Select Status'
+                    : bulkAction === 'open' 
+                    ? `Open ${pendingSelections.size} Slot${pendingSelections.size > 1 ? 's' : ''}` 
+                    : `Close ${pendingSelections.size} Slot${pendingSelections.size > 1 ? 's' : ''}`
+                )}
               </button>
             </div>
           </div>
