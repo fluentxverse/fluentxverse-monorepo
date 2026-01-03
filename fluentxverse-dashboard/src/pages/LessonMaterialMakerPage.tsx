@@ -2207,6 +2207,8 @@ const createYoungLearnersDraft = (): LessonMaterialDraft => ({
   vocabulary: [],
   grammar: [],
   exercises: [],
+  course: 'Young Learners',
+  category: 'Kids',
 });
 
 // Helper function to get the appropriate draft based on template
@@ -2217,7 +2219,7 @@ const getDraftForTemplate = (templateId: string): LessonMaterialDraft => {
   if (templateId === 'conversational-skills-reading') {
     return createReadingDraft();
   }
-  if (templateId === 'young-learners') {
+  if (templateId === 'young-learners-basics' || templateId.startsWith('young-learners')) {
     return createYoungLearnersDraft();
   }
   return createBlankDraft();
@@ -2394,7 +2396,57 @@ export default function LessonMaterialMakerPage() {
   const [savedLessons, setSavedLessons] = useState<SavedLesson[]>(() => {
     try {
       const stored = localStorage.getItem(SAVED_LESSONS_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+      const lessons: SavedLesson[] = JSON.parse(stored);
+      
+      // Migration: Add course/category to existing lessons based on templateId
+      let needsMigration = false;
+      const migratedLessons = lessons.map(lesson => {
+        if (!lesson.draft?.course && lesson.templateId) {
+          needsMigration = true;
+          const template = COURSE_TEMPLATES.find(t => t.id === lesson.templateId);
+          if (template) {
+            return {
+              ...lesson,
+              draft: {
+                ...lesson.draft,
+                course: template.course,
+                category: template.category,
+              }
+            };
+          }
+          // Fallback: infer from templateId string
+          if (lesson.templateId.includes('young-learners')) {
+            return {
+              ...lesson,
+              draft: {
+                ...lesson.draft,
+                course: 'Young Learners',
+                category: 'Kids',
+              }
+            };
+          }
+          if (lesson.templateId.includes('conversational-skills')) {
+            return {
+              ...lesson,
+              draft: {
+                ...lesson.draft,
+                course: 'Conversational Skills',
+                category: 'General',
+              }
+            };
+          }
+        }
+        return lesson;
+      });
+      
+      // Save migrated lessons back to localStorage
+      if (needsMigration) {
+        console.log('[Migration] Added course/category to existing lessons');
+        localStorage.setItem(SAVED_LESSONS_KEY, JSON.stringify(migratedLessons));
+      }
+      
+      return migratedLessons;
     } catch {
       return [];
     }
@@ -3702,7 +3754,10 @@ export default function LessonMaterialMakerPage() {
             sections: (response.lessonData as any).sections || lesson.draft.sections,
             vocabulary: response.lessonData.vocabulary || [],
             grammar: response.lessonData.grammar || [],
-            exercises: response.lessonData.exercises || []
+            exercises: response.lessonData.exercises || [],
+            // Preserve course/category from local lesson or infer from template
+            course: lesson.draft?.course || COURSE_TEMPLATES.find(t => t.id === lesson.templateId)?.course,
+            category: lesson.draft?.category || COURSE_TEMPLATES.find(t => t.id === lesson.templateId)?.category,
           };
           setDraft(serverDraft);
           // Update lastSavedContent to prevent immediate re-save
@@ -5871,8 +5926,38 @@ export default function LessonMaterialMakerPage() {
   }
 
   // Editor View (existing code)
+  // Determine course type for styling - check multiple sources for course info
+  const getCourseType = (): string => {
+    // First check draft.course
+    if (draft.course) return draft.course;
+    
+    // Check if viewing a template (not editing a lesson)
+    if (selectedTemplate) {
+      return selectedTemplate.course;
+    }
+    
+    // Then check currentEditingLesson draft
+    if (currentEditingLesson?.draft?.course) return currentEditingLesson.draft.course;
+    
+    // Then try to infer from templateId
+    if (currentEditingLesson?.templateId) {
+      const template = COURSE_TEMPLATES.find(t => t.id === currentEditingLesson.templateId);
+      if (template) return template.course;
+      // Also check if templateId contains 'young-learners'
+      if (currentEditingLesson.templateId.includes('young-learners')) return 'Young Learners';
+    }
+    
+    // Then try templateName
+    if (currentEditingLesson?.templateName?.toLowerCase().includes('young')) return 'Young Learners';
+    
+    return '';
+  };
+  
+  const courseType = getCourseType();
+  const courseClass = courseType === 'Young Learners' ? 'lm-young-learners' : '';
+  
   return (
-    <div className={`lm-builder ${isFullscreen ? 'lm-builder-fullscreen' : ''} ${isPreviewMode ? 'lm-preview-mode' : ''}`}>
+    <div className={`lm-builder ${isFullscreen ? 'lm-builder-fullscreen' : ''} ${isPreviewMode ? 'lm-preview-mode' : ''} ${courseClass}`}>
       {!previewTokenFromUrl && (
         <>
           {/* Hidden file input for header image */}

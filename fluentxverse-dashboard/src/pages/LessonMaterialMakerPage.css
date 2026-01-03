@@ -9046,3 +9046,397 @@ body.lm-fullscreen-mode .main-content {
   }
 }
 
+/* ========================================
+   YOUNG LEARNERS - KID-FRIENDLY STYLES
+   Fun, colorful, playful design for children
+   ======================================== */
+
+/* Main Builder - Colorful Background */
+.lm-young-learners {
+  background: linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #ddd6fe 100%) !important;
+}
+
+.lm-young-learners .lm-body {
+  background: transparent;
+}
+
+/* Header - Bright & Fun */
+.lm-young-learners .lm-header {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.5) !important;
+}
+
+.lm-young-learners .lm-header::before {
+  content: '⭐';
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  font-size: 24px;
+  animation: twinkle 1.5s ease-in-out infinite;
+}
+
+.lm-young-learners .lm-header::after {
+  content: '🌟';
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  font-size: 24px;
+  animation: twinkle 1.5s ease-in-out infinite 0.5s;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* Section Cards - Rounded & Colorful */
+.lm-young-learners .lm-section {
+  background: #fff !important;
+  border-radius: 24px !important;
+  border: 3px solid transparent !important;
+  background-image: linear-gradient(white, white), linear-gradient(135deg, #8b5cf6, #ec4899, #f59e0b) !important;
+  background-origin: border-box !important;
+  background-clip: padding-box, border-box !important;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15), 0 4px 12px rgba(236, 72, 153, 0.1) !important;
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Decorative corner elements */
+.lm-young-learners .lm-section::before {
+  content: '🎈';
+  position: absolute;
+  top: -12px;
+  right: 30px;
+  font-size: 28px;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Section Number - Fun Bubble Style */
+.lm-young-learners .lm-section-number {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  border-radius: 50% !important;
+  width: 48px !important;
+  height: 48px !important;
+  font-size: 20px !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4), inset 0 2px 4px rgba(255,255,255,0.4) !important;
+  border: 3px solid #fff !important;
+}
+
+/* Section Title - Playful Font */
+.lm-young-learners .lm-section-title {
+  color: #7c3aed !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  text-shadow: 2px 2px 0 rgba(236, 72, 153, 0.2);
+}
+
+/* Section Title Row - Colorful Border */
+.lm-young-learners .lm-section-title-row {
+  border-bottom: 3px dashed #ec4899 !important;
+  padding-bottom: 20px !important;
+}
+
+/* Explanation Text - Friendly & Readable */
+.lm-young-learners .lm-section-explanation {
+  font-size: 18px !important;
+  line-height: 1.8 !important;
+  color: #4c1d95 !important;
+  background: linear-gradient(135deg, #fef3c7 0%, #fce7f3 100%);
+  padding: 16px 20px !important;
+  border-radius: 16px !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+/* Japanese Explanation - Kid-Friendly */
+.lm-young-learners .lm-section-explanation-jp {
+  background: linear-gradient(135deg, #ddd6fe 0%, #fce7f3 100%);
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  border-left: 4px solid #8b5cf6 !important;
+  color: #6b21a8 !important;
+}
+
+/* Sidebar - Fun Design */
+.lm-young-learners .lm-sidebar {
+  background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border-radius: 20px !important;
+  border: 3px solid #fbbf24 !important;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3) !important;
+}
+
+.lm-young-learners .lm-sidebar-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  border-radius: 16px 16px 0 0 !important;
+  color: #7c2d12 !important;
+  font-weight: 800 !important;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+}
+
+.lm-young-learners .lm-sidebar-subtitle {
+  color: #fef3c7 !important;
+}
+
+/* Steps - Bubble Style */
+.lm-young-learners .lm-goal-step {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important;
+  border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+  margin-bottom: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.lm-young-learners .lm-goal-step:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  transform: translateX(4px);
+}
+
+.lm-young-learners .lm-step-number {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #7c2d12 !important;
+  font-weight: 800 !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Script Lines - Speech Bubble Style */
+.lm-young-learners .lm-script-line {
+  background: linear-gradient(135deg, #fef3c7 0%, #fff 100%) !important;
+  border-radius: 16px 16px 16px 4px !important;
+  border: 2px solid #fbbf24 !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+}
+
+.lm-young-learners .lm-script-line::before {
+  content: '💬';
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  font-size: 16px;
+}
+
+/* Tip Text - Fun Callout */
+.lm-young-learners .lm-tip-text {
+  background: linear-gradient(135deg, #fce7f3 0%, #fff 100%) !important;
+  border-radius: 12px !important;
+  border: 2px dashed #ec4899 !important;
+  color: #9d174d !important;
+  padding: 10px 14px !important;
+}
+
+.lm-young-learners .lm-tip-text::before {
+  content: '💡 ';
+}
+
+/* Image Upload Area - Playful */
+.lm-young-learners .lm-section-image-wrapper {
+  border: 3px dashed #8b5cf6 !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #ddd6fe 100%) !important;
+}
+
+.lm-young-learners .lm-section-image-wrapper:hover {
+  border-color: #ec4899 !important;
+  background: linear-gradient(135deg, #fce7f3 0%, #ddd6fe 50%, #c4b5fd 100%) !important;
+}
+
+/* Vocabulary Cards - Colorful Tiles */
+.lm-young-learners .lm-vocab-card {
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%) !important;
+  border: 3px solid #fbbf24 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.lm-young-learners .lm-vocab-card:nth-child(2n) {
+  border-color: #ec4899 !important;
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.2) !important;
+}
+
+.lm-young-learners .lm-vocab-card:nth-child(3n) {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.2) !important;
+}
+
+.lm-young-learners .lm-vocab-card:nth-child(4n) {
+  border-color: #10b981 !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.2) !important;
+}
+
+.lm-young-learners .lm-vocab-card:hover {
+  transform: translateY(-4px) rotate(2deg) !important;
+}
+
+.lm-young-learners .lm-vocab-word {
+  color: #7c3aed !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+
+.lm-young-learners .lm-vocab-jp {
+  color: #ec4899 !important;
+  font-weight: 600 !important;
+}
+
+/* Practice Items - Fun Numbers */
+.lm-young-learners .lm-practice-item {
+  background: linear-gradient(135deg, #fff 0%, #ddd6fe 100%) !important;
+  border-radius: 16px !important;
+  border: 2px solid #8b5cf6 !important;
+  padding: 16px !important;
+}
+
+.lm-young-learners .lm-practice-number {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  border-radius: 50% !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* Dialogue Section - Chat Bubbles */
+.lm-young-learners .lm-dialogue-line {
+  border-radius: 20px !important;
+  border: 2px solid #8b5cf6 !important;
+  background: linear-gradient(135deg, #fff 0%, #fce7f3 100%) !important;
+  margin-bottom: 12px !important;
+}
+
+.lm-young-learners .lm-dialogue-speaker {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 4px 12px !important;
+}
+
+/* Add Step Button - Playful */
+.lm-young-learners .lm-add-step-btn {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  color: #fff !important;
+  border: 3px dashed #fff !important;
+  border-radius: 16px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.lm-young-learners .lm-add-step-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Toolbar - Kid-Friendly Colors */
+.lm-young-learners .lm-toolbar {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Important Note Box */
+.lm-young-learners .lm-important-note {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border: 3px solid #f59e0b !important;
+  border-radius: 16px !important;
+  color: #92400e !important;
+}
+
+/* Trivia Section */
+.lm-young-learners .lm-trivia-example {
+  background: linear-gradient(135deg, #fff 0%, #ddd6fe 100%) !important;
+  border: 3px solid #8b5cf6 !important;
+  border-radius: 20px !important;
+}
+
+/* Challenge Section */
+.lm-young-learners .lm-challenge-situation {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%) !important;
+  border: 3px solid #ec4899 !important;
+  border-radius: 20px !important;
+  color: #9d174d !important;
+}
+
+/* Grammar Rules */
+.lm-young-learners .lm-grammar-rule {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border: 3px solid #10b981 !important;
+  border-radius: 16px !important;
+}
+
+/* Pronunciation Columns */
+.lm-young-learners .lm-pron-column {
+  background: linear-gradient(135deg, #fff 0%, #fef3c7 100%) !important;
+  border: 3px solid #f59e0b !important;
+  border-radius: 20px !important;
+}
+
+.lm-young-learners .lm-pron-sound {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  color: #7c2d12 !important;
+  font-weight: 800 !important;
+  border-radius: 12px !important;
+  font-size: 20px !important;
+}
+
+/* Feedback Section - Star Rating */
+.lm-young-learners .lm-feedback-rubric {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+  border: 3px solid #f59e0b !important;
+  border-radius: 20px !important;
+}
+
+/* Add Decorative Elements */
+.lm-young-learners .lm-body::before {
+  content: '🌈';
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  font-size: 48px;
+  opacity: 0.6;
+  pointer-events: none;
+  animation: float 3s ease-in-out infinite;
+}
+
+.lm-young-learners .lm-body::after {
+  content: '🎨';
+  position: fixed;
+  bottom: 80px;
+  left: 80px;
+  font-size: 32px;
+  opacity: 0.5;
+  pointer-events: none;
+  animation: float 3s ease-in-out infinite 1s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Fun scroll indicators */
+.lm-young-learners::-webkit-scrollbar {
+  width: 12px;
+}
+
+.lm-young-learners::-webkit-scrollbar-track {
+  background: #fef3c7;
+  border-radius: 6px;
+}
+
+.lm-young-learners::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%);
+  border-radius: 6px;
+  border: 2px solid #fef3c7;
+}
+
+.lm-young-learners::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #7c3aed 0%, #db2777 100%);
+}
