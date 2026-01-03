@@ -9369,6 +9369,12 @@ body.lm-fullscreen-mode .main-content {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
   border: 3px solid #10b981 !important;
   border-radius: 16px !important;
+  padding: 20px !important;
+}
+
+.lm-young-learners .lm-grammar-rule-en,
+.lm-young-learners .lm-grammar-rule-jp {
+  padding: 0 4px !important;
 }
 
 /* Pronunciation Columns */
@@ -9391,34 +9397,6 @@ body.lm-fullscreen-mode .main-content {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
   border: 3px solid #f59e0b !important;
   border-radius: 20px !important;
-}
-
-/* Add Decorative Elements */
-.lm-young-learners .lm-body::before {
-  content: '🌈';
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  font-size: 48px;
-  opacity: 0.6;
-  pointer-events: none;
-  animation: float 3s ease-in-out infinite;
-}
-
-.lm-young-learners .lm-body::after {
-  content: '🎨';
-  position: fixed;
-  bottom: 80px;
-  left: 80px;
-  font-size: 32px;
-  opacity: 0.5;
-  pointer-events: none;
-  animation: float 3s ease-in-out infinite 1s;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
 }
 
 /* Fun scroll indicators */
