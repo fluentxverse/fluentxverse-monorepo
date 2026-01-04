@@ -57,10 +57,18 @@
 .mobile-header-brand {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-primary, #1a1f2e);
+  color: #1a1f2e; /* Dark/black for Fluent and Verse */
 }
 
 .mobile-header-brand .brand-x {
+  color: #0245ae; /* Blue for X */
+}
+
+.dark-mode .mobile-header-brand {
+  color: #ffffff;
+}
+
+.dark-mode .mobile-header-brand .brand-x {
   color: #4a9eff;
 }
 

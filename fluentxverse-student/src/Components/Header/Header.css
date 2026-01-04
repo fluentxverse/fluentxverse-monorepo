@@ -165,19 +165,20 @@
   font-size: 28px;
   font-weight: 600;
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  color: var(--text-primary, #1a1f2e);
+  color: #1a1f2e; /* Dark/black for Fluent and Verse */
   letter-spacing: 0.5px;
 }
 
 .brand-x {
-  color: #4a9eff;
+  color: #0245ae; /* Blue for X */
 }
 
 .dark-mode .modal-brand-text {
-  background: linear-gradient(135deg, #4a9eff 0%, #0245ae 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
+}
+
+.dark-mode .brand-x {
+  color: #4a9eff;
 }
 
 .modal-header h2 {

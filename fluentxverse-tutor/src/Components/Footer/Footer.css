@@ -24,14 +24,23 @@ footer * {
   font-size: 22px;
   font-weight: 600;
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #1a1f2e; /* Dark/black for Fluent and Verse */
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
 }
 
 .footer-brand-text .brand-x {
-  color: #4a9eff;
+  color: #0245ae; /* Blue for X */
   font-weight: 600;
+}
+
+.dark-mode .footer-brand-text {
+  color: #ffffff;
+}
+
+.dark-mode .footer-brand-text .brand-x {
+  color: #4a9eff;
 }
 
 .footer-widget .fw-title {
