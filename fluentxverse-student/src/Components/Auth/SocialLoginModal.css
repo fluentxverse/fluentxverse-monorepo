@@ -92,16 +92,16 @@
 .social-login-modal .modal-brand-text {
   font-size: 24px;
   font-weight: 700;
-  color: #1a1f2e; /* Dark/black for Fluent and Verse */
+  color: #0245ae;
   letter-spacing: 0.3px;
 }
 
 .social-login-modal .modal-brand-text .brand-x {
-  color: #0245ae; /* Blue for X */
+  color: #0245ae;
 }
 
 .dark-mode .social-login-modal .modal-brand-text {
-  color: #ffffff;
+  color: #4a9eff;
 }
 
 .dark-mode .social-login-modal .modal-brand-text .brand-x {

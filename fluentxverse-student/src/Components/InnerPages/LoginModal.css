@@ -54,16 +54,16 @@
   font-size: 24px;
   font-weight: 600;
   font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  color: #1a1f2e; /* Dark/black for Fluent and Verse */
+  color: #0245ae;
   letter-spacing: 0.5px;
 }
 
 .modal-brand-text .brand-x {
-  color: #0245ae; /* Blue for X */
+  color: #0245ae;
 }
 
 .dark-mode .modal-brand-text {
-  color: #ffffff;
+  color: #4a9eff;
 }
 
 .dark-mode .modal-brand-text .brand-x {
