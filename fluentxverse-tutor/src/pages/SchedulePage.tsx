@@ -130,6 +130,12 @@ const SchedulePage = () => {
     return { hour, minute };
   };
 
+  // Convert 12-hour time string (e.g., "6:00 PM") to 24-hour format (e.g., "18:00")
+  const convertTo24Hour = (timeStr: string): string => {
+    const { hour, minute } = parseTimeString(timeStr);
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  };
+
   // Format date to YYYY-MM-DD for API
   const formatDateISO = (date: Date): string => {
     const year = date.getFullYear();
@@ -438,12 +444,14 @@ const SchedulePage = () => {
           
           // Convert pending selections to API format
           const slotsToOpen = Array.from(pendingSelections).map(key => {
-            const [dayIdx, time] = key.split('-');
+            const [dayIdx, ...timeParts] = key.split('-');
+            const time = timeParts.join('-'); // Rejoin in case time has dashes (unlikely but safe)
             const date = weekDates[parseInt(dayIdx)];
-            console.log(`  Processing key: ${key} -> dayIdx: ${dayIdx}, time: ${time}, date: ${formatDateISO(date)}`);
+            const time24 = convertTo24Hour(time);
+            console.log(`  Processing key: ${key} -> dayIdx: ${dayIdx}, time: ${time} -> ${time24}, date: ${formatDateISO(date)}`);
             return {
               date: formatDateISO(date),
-              time: time
+              time: time24
             };
           });
           
