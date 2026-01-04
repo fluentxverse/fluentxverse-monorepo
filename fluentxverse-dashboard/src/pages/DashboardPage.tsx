@@ -10,6 +10,16 @@ interface StatCard {
   value: string | number;
   icon: string;
   color: string;
+  trend?: { value: number; isPositive: boolean };
+  link?: string;
+}
+
+interface QuickAction {
+  title: string;
+  icon: string;
+  color: string;
+  link: string;
+  badge?: number;
 }
 
 interface InterviewStats {
@@ -49,9 +59,14 @@ const DashboardPage = () => {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     loadDashboardData();
+    
+    // Refresh data every 60 seconds
+    const interval = setInterval(loadDashboardData, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadDashboardData = async () => {
@@ -74,6 +89,7 @@ const DashboardPage = () => {
       setRecentActivities(activityData);
       setInterviewStats(interviewData);
       setTodayQueue(queueData);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
@@ -87,27 +103,66 @@ const DashboardPage = () => {
       title: 'Total Tutors',
       value: stats.totalTutors,
       icon: 'fa-chalkboard-teacher',
-      color: '#0245ae'
+      color: '#0245ae',
+      link: '/tutors'
     },
     {
       title: 'Certified Tutors',
       value: stats.certifiedTutors,
       icon: 'fa-certificate',
-      color: '#10b981'
+      color: '#10b981',
+      link: '/tutors?tab=certified'
     },
     {
       title: 'Total Students',
       value: stats.totalStudents,
       icon: 'fa-user-graduate',
-      color: '#8b5cf6'
+      color: '#8b5cf6',
+      link: '/students'
     },
     {
       title: 'Pending Tutors',
       value: stats.pendingTutors,
       icon: 'fa-clock',
-      color: '#f59e0b'
+      color: '#f59e0b',
+      link: '/tutors?tab=pending'
     }
   ] : [];
+
+  const quickActions: QuickAction[] = [
+    {
+      title: 'Review Applications',
+      icon: 'fa-file-alt',
+      color: '#0245ae',
+      link: '/tutor-applications',
+      badge: stats?.pendingTutors || 0
+    },
+    {
+      title: 'Schedule Interviews',
+      icon: 'fa-calendar-check',
+      color: '#10b981',
+      link: '/interview-schedule',
+      badge: todayQueue.filter(q => q.status === 'scheduled').length
+    },
+    {
+      title: 'View Analytics',
+      icon: 'fa-chart-line',
+      color: '#8b5cf6',
+      link: '/analytics'
+    },
+    {
+      title: 'Manage Exams',
+      icon: 'fa-tasks',
+      color: '#f59e0b',
+      link: '/exams'
+    },
+    {
+      title: 'Settings',
+      icon: 'fa-cog',
+      color: '#6b7280',
+      link: '/settings'
+    }
+  ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -206,23 +261,83 @@ const DashboardPage = () => {
   return (
     <div className="dashboard-page">
       <div className="page-header">
-        <h1>Welcome back, {user?.username || 'Admin'}!</h1>
-        <p>Here's an overview of your platform today.</p>
+        <div className="page-header-content">
+          <h1>Welcome back, {user?.username || 'Admin'}!</h1>
+          <p>Here's an overview of your platform today.</p>
+        </div>
+        <div className="page-header-actions">
+          <div className="system-status">
+            <span className="status-indicator online"></span>
+            <span className="status-text">All Systems Online</span>
+          </div>
+          <button 
+            className="refresh-btn" 
+            onClick={loadDashboardData} 
+            disabled={loading}
+            title={lastUpdated ? `Last updated: ${lastUpdated.toLocaleTimeString()}` : 'Refresh data'}
+          >
+            <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
+            {lastUpdated && (
+              <span className="last-updated">
+                Updated {formatTimeAgo(lastUpdated.toISOString())}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="stats-grid">
         {statCards.map((stat, index) => (
-          <div className="stat-card" key={index} style={{ '--accent-color': stat.color } as any}>
+          <a 
+            href={stat.link} 
+            className="stat-card" 
+            key={index} 
+            style={{ '--accent-color': stat.color } as any}
+          >
             <div className="stat-icon">
               <i className={`fas ${stat.icon}`}></i>
             </div>
             <div className="stat-content">
               <h3>{stat.title}</h3>
               <div className="stat-value">{stat.value}</div>
+              {stat.trend && (
+                <div className={`stat-trend ${stat.trend.isPositive ? 'positive' : 'negative'}`}>
+                  <i className={`fas fa-arrow-${stat.trend.isPositive ? 'up' : 'down'}`}></i>
+                  {stat.trend.value}% this week
+                </div>
+              )}
             </div>
-          </div>
+            <div className="stat-arrow">
+              <i className="fas fa-chevron-right"></i>
+            </div>
+          </a>
         ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="quick-actions-section">
+        <div className="section-header">
+          <h2><i className="fas fa-bolt"></i> Quick Actions</h2>
+        </div>
+        <div className="quick-actions-grid">
+          {quickActions.map((action, index) => (
+            <a 
+              href={action.link} 
+              className="quick-action-card" 
+              key={index}
+              style={{ '--action-color': action.color } as any}
+            >
+              <div className="action-icon">
+                <i className={`fas ${action.icon}`}></i>
+              </div>
+              <span className="action-title">{action.title}</span>
+              {action.badge && action.badge > 0 && (
+                <span className="action-badge">{action.badge}</span>
+              )}
+            </a>
+          ))}
+        </div>
       </div>
 
       {/* Main Content Grid */}
