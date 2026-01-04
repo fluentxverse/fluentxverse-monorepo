@@ -11,7 +11,7 @@ const Footer = () => {
             <div className="col-xl-3 col-lg-4 col-md-5 col-sm-9">
               <div className="footer-widget">
                 <div className="footer-logo mb-25">
-                  <a href="/"><img src="assets/img/logo/logo.png" alt="" /></a>
+                  <a href="/"><img src="/assets/img/logo/logo.png" alt="FluentXVerse" /></a>
                 </div>
                 <p className="footer-email">Email us:<br />
                   <a href="mailto:support@fluentxverse.com" style={{ color: 'var(--purple-color)', textDecoration: 'underline' }}>

@@ -134,14 +134,14 @@ const DashboardPage = () => {
       title: 'Review Applications',
       icon: 'fa-file-alt',
       color: '#0245ae',
-      link: '/tutor-applications',
+      link: '/applications',
       badge: stats?.pendingTutors || 0
     },
     {
       title: 'Schedule Interviews',
       icon: 'fa-calendar-check',
       color: '#10b981',
-      link: '/interview-schedule',
+      link: '/interviews',
       badge: todayQueue.filter(q => q.status === 'scheduled').length
     },
     {
@@ -151,10 +151,10 @@ const DashboardPage = () => {
       link: '/analytics'
     },
     {
-      title: 'Manage Exams',
-      icon: 'fa-tasks',
+      title: 'Lesson Materials',
+      icon: 'fa-book-open',
       color: '#f59e0b',
-      link: '/exams'
+      link: '/lesson-material-maker'
     },
     {
       title: 'Settings',
