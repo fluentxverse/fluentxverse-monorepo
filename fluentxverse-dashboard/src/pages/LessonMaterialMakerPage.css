@@ -9788,3 +9788,530 @@ body.lm-fullscreen-mode .main-content {
 .lm-business-english::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #475569 0%, #334155 100%);
 }
+
+/* ============================================
+   DISCUSSION QUESTIONS STYLES
+   Green accents with edgy/angular design
+   ============================================ */
+
+.lm-discussion-questions {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --dq-green-primary: #059669;
+  --dq-green-secondary: #10b981;
+  --dq-green-light: #d1fae5;
+  --dq-green-dark: #047857;
+  --dq-green-accent: #34d399;
+}
+
+.lm-discussion-questions .lm-body {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdf4 100%);
+  min-height: 100%;
+}
+
+/* Header - Edgy Green Theme with diagonal cuts */
+.lm-discussion-questions .lm-header {
+  background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #047857 100%) !important;
+  border-bottom: none !important;
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  padding-bottom: 40px !important;
+}
+
+.lm-discussion-questions .lm-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(45deg, transparent 48%, rgba(16, 185, 129, 0.2) 48%, rgba(16, 185, 129, 0.2) 52%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(16, 185, 129, 0.15) 48%, rgba(16, 185, 129, 0.15) 52%, transparent 52%);
+  background-size: 30px 30px;
+  pointer-events: none;
+}
+
+.lm-discussion-questions .lm-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #34d399, #10b981, #059669, #10b981, #34d399);
+  clip-path: polygon(0 100%, 3% 0, 6% 100%, 9% 0, 12% 100%, 15% 0, 18% 100%, 21% 0, 24% 100%, 27% 0, 30% 100%, 33% 0, 36% 100%, 39% 0, 42% 100%, 45% 0, 48% 100%, 51% 0, 54% 100%, 57% 0, 60% 100%, 63% 0, 66% 100%, 69% 0, 72% 100%, 75% 0, 78% 100%, 81% 0, 84% 100%, 87% 0, 90% 100%, 93% 0, 96% 100%, 100% 0, 100% 100%);
+  pointer-events: none;
+}
+
+/* Level Badge - Angular Design */
+.lm-discussion-questions .lm-level-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: 2px solid #34d399 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%) !important;
+  padding: 6px 20px !important;
+  box-shadow: 4px 4px 0 rgba(5, 150, 105, 0.3) !important;
+}
+
+/* Sections - Sharp Corners with Accent Border */
+.lm-discussion-questions .lm-section {
+  background: #fff !important;
+  border-radius: 0 !important;
+  border: 2px solid #d1fae5 !important;
+  border-left: 6px solid #059669 !important;
+  box-shadow: 6px 6px 0 rgba(5, 150, 105, 0.1) !important;
+  padding: 24px !important;
+  position: relative;
+}
+
+.lm-discussion-questions .lm-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, transparent 50%, #d1fae5 50%);
+  pointer-events: none;
+}
+
+/* Section Numbers - Hexagon-ish Shape */
+.lm-discussion-questions .lm-section-number {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  border-radius: 0 !important;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%) !important;
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.3) !important;
+}
+
+/* Section Titles - Bold & Angular */
+.lm-discussion-questions .lm-section-title {
+  color: #064e3b !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+}
+
+.lm-discussion-questions .lm-section-title-row {
+  border-bottom: 3px solid #d1fae5;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.lm-discussion-questions .lm-section-title-row::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100px;
+  height: 3px;
+  background: #059669;
+}
+
+/* Discussion Questions Content */
+.lm-dq-content {
+  padding: 10px 0;
+}
+
+.lm-dq-header {
+  margin-bottom: 24px;
+}
+
+.lm-dq-explanation {
+  color: #1f2937;
+  font-size: 15px;
+  line-height: 1.7;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  padding: 16px 20px;
+  border-left: 4px solid #059669;
+  margin: 0 0 8px 0;
+}
+
+.lm-dq-explanation-jp {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 13px;
+  padding-left: 24px;
+  margin: 0;
+}
+
+.lm-dq-important-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+  border: 2px solid #f59e0b;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #92400e;
+}
+
+.lm-dq-important-note i {
+  color: #f59e0b;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Questions Grid - 2 columns */
+.lm-dq-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* Question Card - Edgy Design */
+.lm-dq-card {
+  background: #fff;
+  border: 2px solid #d1fae5;
+  padding: 16px;
+  position: relative;
+  transition: all 0.2s ease;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+.lm-dq-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: #059669;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.lm-dq-card:hover {
+  border-color: #10b981;
+  box-shadow: 4px 4px 0 rgba(5, 150, 105, 0.15);
+  transform: translate(-2px, -2px);
+}
+
+.lm-dq-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.lm-dq-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.lm-dq-category {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #059669;
+  background: #d1fae5;
+  padding: 3px 10px;
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+.lm-dq-question {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1f2937;
+  margin: 0;
+  min-height: 60px;
+}
+
+.lm-dq-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 20px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.lm-dq-card:hover .lm-dq-delete-btn {
+  opacity: 1;
+}
+
+.lm-dq-delete-btn:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* Add Question Button */
+.lm-dq-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  margin-top: 20px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 2px dashed #10b981;
+  color: #059669;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lm-dq-add-btn:hover {
+  background: #d1fae5;
+  border-style: solid;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.2);
+}
+
+/* Discussion Questions Sidebar */
+.lm-dq-sidebar {
+  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 2px solid #a7f3d0;
+  padding: 0;
+}
+
+.lm-dq-sidebar-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.lm-dq-sidebar-subheader {
+  background: #d1fae5;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-bottom: 2px solid #a7f3d0;
+}
+
+.lm-dq-guide-title {
+  color: #064e3b;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px 16px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lm-dq-step {
+  margin: 6px 12px !important;
+  background: #fff !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.lm-dq-step:hover {
+  border-color: #10b981 !important;
+  box-shadow: 2px 2px 0 rgba(5, 150, 105, 0.15) !important;
+}
+
+.lm-dq-step-number {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #fff !important;
+}
+
+.lm-dq-add-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 12px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 2px dashed #10b981;
+  color: #059669;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lm-dq-add-step-btn:hover {
+  background: #d1fae5;
+  border-style: solid;
+}
+
+.lm-dq-tips-box {
+  margin: 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+  border: 2px solid #fbbf24;
+  padding: 12px;
+}
+
+.lm-dq-tips-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+
+.lm-dq-tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lm-dq-tips-list li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #78350f;
+  margin: 4px 0;
+}
+
+.lm-dq-tips-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* Discussion Questions Modal Styling */
+.dq-modal .lm-modal {
+  border: 3px solid #059669;
+}
+
+.dq-modal-content {
+  border: 3px solid #059669 !important;
+}
+
+.dq-modal-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  color: #fff !important;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+.dq-modal-header h2 {
+  color: #fff !important;
+}
+
+.dq-modal-header .lm-modal-close {
+  color: #fff !important;
+}
+
+.dq-modal-header .lm-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dq-form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.dq-form-group input {
+  border: 2px solid #d1fae5 !important;
+  border-radius: 0 !important;
+}
+
+.dq-form-group input:focus {
+  border-color: #10b981 !important;
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.2) !important;
+  outline: none !important;
+}
+
+.dq-form-group label {
+  color: #064e3b !important;
+  font-weight: 600 !important;
+}
+
+.dq-modal-footer {
+  border-top: 2px solid #d1fae5 !important;
+}
+
+.dq-primary-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border: none !important;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%) !important;
+}
+
+.dq-primary-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.3) !important;
+}
+
+/* Scrollbar for Discussion Questions */
+.lm-discussion-questions::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lm-discussion-questions::-webkit-scrollbar-track {
+  background: #ecfdf5;
+}
+
+.lm-discussion-questions::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+.lm-discussion-questions::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+}
+
+/* Vocabulary Cards for Discussion Questions */
+.lm-discussion-questions .lm-vocab-card {
+  background: #fff !important;
+  border: 2px solid #d1fae5 !important;
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.lm-discussion-questions .lm-vocab-card:hover {
+  border-color: #10b981 !important;
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 5px 5px 0 rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Print styles for Discussion Questions */
+@media print {
+  .lm-discussion-questions .lm-dq-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #d1fae5;
+  }
+  
+  .lm-discussion-questions .lm-dq-grid {
+    gap: 12px;
+  }
+  
+  .lm-discussion-questions .lm-dq-delete-btn {
+    display: none !important;
+  }
+  
+  .lm-discussion-questions .lm-dq-add-btn {
+    display: none !important;
+  }
+}

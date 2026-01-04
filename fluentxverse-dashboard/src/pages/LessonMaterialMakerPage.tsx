@@ -171,6 +171,14 @@ type FeedbackGuideRow = {
   exampleFeedback: string; // Example feedback content (HTML allowed)
 };
 
+// Discussion Questions template types
+type DiscussionQuestion = {
+  id: string;
+  number: number;
+  question: string;
+  category: string; // e.g., "Personal Growth", "Travel", "Hypothetical"
+};
+
 // Reading template types
 type ReadingDialogueLine = {
   id: string;
@@ -196,7 +204,7 @@ type SectionContent = {
   importantNote: string;
   copyTemplate: string;
   // For PRESENT/vocabulary type sections
-  sectionType: 'introduce' | 'vocabulary' | 'question' | 'pronunciation' | 'grammar' | 'dialogue' | 'trivia' | 'practice' | 'produce' | 'challenge' | 'challenge2' | 'feedback' | 'listening' | 'listeningChallenge' | 'reading';
+  sectionType: 'introduce' | 'vocabulary' | 'question' | 'pronunciation' | 'grammar' | 'dialogue' | 'trivia' | 'practice' | 'produce' | 'challenge' | 'challenge2' | 'feedback' | 'listening' | 'listeningChallenge' | 'reading' | 'discussion-questions';
   stepTitle?: string; // e.g., "STEP A VOCABULARY"
   instructionEn?: string; // e.g., "I. Listen and repeat."
   instructionJp?: string; // e.g., "聴いて、リピートしましょう。"
@@ -244,6 +252,8 @@ type SectionContent = {
   readingImage?: string; // Scene illustration for reading
   readingDialogueLines?: ReadingDialogueLine[]; // Text message conversation lines
   readingQuestions?: ReadingQuestion[]; // Questions with answers for sidebar
+  // Discussion Questions section fields
+  discussionQuestions?: DiscussionQuestion[]; // 20 discussion questions with categories
   // Sidebar content
   sidebarTitle?: string; // e.g., "PRESENT"
   sidebarSubtitle?: string; // e.g., "STEP A I (2 minutes)"
@@ -307,6 +317,13 @@ type NewLessonFormData = {
   chapter: number;
   lessonNumber: number;
   goalName: string;
+};
+
+// Form data for creating Discussion Questions lesson (string fields)
+type DiscussionQuestionsFormData = {
+  level: string;
+  chapter: string;
+  title: string;
 };
 
 // Version history types
@@ -469,6 +486,18 @@ const COURSE_TEMPLATES: TemplateInfo[] = [
     sections: 6,
     lastUpdated: '2025-01-03',
     status: 'draft',
+  },
+  // Discussion Questions - 1 Template
+  {
+    id: 'discussion-questions',
+    name: 'Discussion Questions',
+    course: 'Discussion Questions',
+    category: 'Conversation',
+    icon: '💡',
+    description: '20 thought-provoking discussion questions for engaging conversations.',
+    sections: 1,
+    lastUpdated: '2025-01-04',
+    status: 'published',
   },
   {
     id: 'job-interview-prep',
@@ -3446,6 +3475,70 @@ const createBusinessEnglishReadingDraft = (): LessonMaterialDraft => ({
   exercises: [],
 });
 
+// Discussion Questions Template - Single page with 20 questions
+const createDiscussionQuestionsDraft = (): LessonMaterialDraft => ({
+  version: 2,
+  course: 'Discussion Questions',
+  category: 'Conversation',
+  header: {
+    backgroundImage: '',
+    overlayColor: '#059669cc',
+    levelBadge: 'INTERMEDIATE',
+    chapterLabel: 'Discussion Questions',
+    lessonLabel: 'Engaging Conversations',
+    goalText: 'Discussion Questions',
+    goalSubtext: 'Engaging Conversation Starters',
+  },
+  sections: [
+    {
+      id: 'discussion-section-1',
+      sectionNumber: 1,
+      sectionTitle: 'DISCUSSION QUESTIONS',
+      sectionType: 'discussion-questions',
+      explanationEn: 'Use these questions to spark meaningful conversations. Feel free to ask follow-up questions based on the student\'s answers.',
+      explanationJp: 'これらの質問を使って、意味のある会話を始めましょう。学生の回答に基づいて追加の質問をしてください。',
+      sectionImage: '',
+      importantNote: 'Choose questions based on the student\'s interests and level. You don\'t need to ask all 20 questions.',
+      copyTemplate: '',
+      discussionQuestions: [
+        { id: 'dq-1', number: 1, question: 'What is something you\'ve always wanted to learn but never had the chance to?', category: 'Personal Growth' },
+        { id: 'dq-2', number: 2, question: 'If you could have dinner with any person, living or dead, who would it be and why?', category: 'Hypothetical' },
+        { id: 'dq-3', number: 3, question: 'What\'s the most interesting place you\'ve ever visited?', category: 'Travel' },
+        { id: 'dq-4', number: 4, question: 'How do you typically spend your weekends?', category: 'Lifestyle' },
+        { id: 'dq-5', number: 5, question: 'What\'s a skill you\'re proud of having developed?', category: 'Personal Growth' },
+        { id: 'dq-6', number: 6, question: 'If you could live in any country for a year, where would you choose?', category: 'Travel' },
+        { id: 'dq-7', number: 7, question: 'What\'s the best advice someone has ever given you?', category: 'Life Lessons' },
+        { id: 'dq-8', number: 8, question: 'How has technology changed your daily life in the past 5 years?', category: 'Technology' },
+        { id: 'dq-9', number: 9, question: 'What\'s a book, movie, or TV show that had a big impact on you?', category: 'Entertainment' },
+        { id: 'dq-10', number: 10, question: 'If you could instantly become an expert in something, what would it be?', category: 'Hypothetical' },
+        { id: 'dq-11', number: 11, question: 'What\'s the most challenging thing you\'ve ever accomplished?', category: 'Personal Growth' },
+        { id: 'dq-12', number: 12, question: 'How do you prefer to relax after a stressful day?', category: 'Lifestyle' },
+        { id: 'dq-13', number: 13, question: 'What traditions does your family have that are important to you?', category: 'Culture' },
+        { id: 'dq-14', number: 14, question: 'If you could solve one world problem, what would it be?', category: 'Society' },
+        { id: 'dq-15', number: 15, question: 'What\'s something that always makes you laugh?', category: 'Entertainment' },
+        { id: 'dq-16', number: 16, question: 'How do you stay motivated when things get difficult?', category: 'Personal Growth' },
+        { id: 'dq-17', number: 17, question: 'What\'s a hobby you\'d like to pick up in the future?', category: 'Lifestyle' },
+        { id: 'dq-18', number: 18, question: 'What qualities do you value most in a friend?', category: 'Relationships' },
+        { id: 'dq-19', number: 19, question: 'How do you think education will change in the next 20 years?', category: 'Society' },
+        { id: 'dq-20', number: 20, question: 'What\'s something you\'re looking forward to in the near future?', category: 'Personal' },
+      ],
+      sidebarTitle: 'DISCUSSION',
+      sidebarSubtitle: 'QUESTIONS (25-30 min)',
+      lessonGoalTitle: 'Tutor Guide',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Warm up with a casual greeting.' },
+        { id: 'step-2', instruction: 'Choose questions based on student interest.' },
+        { id: 'step-3', instruction: 'Ask follow-up questions to deepen the conversation.' },
+        { id: 'step-4', instruction: 'Correct errors naturally without interrupting flow.' },
+        { id: 'step-5', instruction: 'Note vocabulary and expressions for feedback.' },
+      ],
+    },
+  ],
+  vocabulary: [],
+  grammar: [],
+  exercises: [],
+});
+
 // Helper function to get the appropriate draft based on template
 const getDraftForTemplate = (templateId: string): LessonMaterialDraft => {
   // Conversational Skills templates
@@ -3474,6 +3567,10 @@ const getDraftForTemplate = (templateId: string): LessonMaterialDraft => {
   }
   if (templateId === 'business-english-reading') {
     return createBusinessEnglishReadingDraft();
+  }
+  // Discussion Questions template
+  if (templateId === 'discussion-questions') {
+    return createDiscussionQuestionsDraft();
   }
   return createBlankDraft();
 };
@@ -3645,6 +3742,11 @@ export default function LessonMaterialMakerPage() {
     chapter: 1,
     lessonNumber: 1,
     goalName: '',
+  });
+  const [discussionQuestionsForm, setDiscussionQuestionsForm] = useState<DiscussionQuestionsFormData>({
+    level: '',
+    chapter: '',
+    title: '',
   });
   const [savedLessons, setSavedLessons] = useState<SavedLesson[]>(() => {
     try {
@@ -4923,41 +5025,80 @@ export default function LessonMaterialMakerPage() {
       lessonNumber: 1,
       goalName: '',
     });
+    setDiscussionQuestionsForm({
+      level: '',
+      chapter: '',
+      title: '',
+    });
     setShowNewLessonModal(true);
   };
 
   // Create new lesson from template
   const handleCreateLesson = () => {
-    if (!selectedTemplateForLesson || !newLessonForm.goalName.trim()) return;
+    if (!selectedTemplateForLesson) return;
+
+    const isDiscussionQuestions = selectedTemplateForLesson.id === 'discussion-questions';
+
+    // Validate form based on template type
+    if (isDiscussionQuestions) {
+      if (!discussionQuestionsForm.title.trim()) return;
+    } else {
+      if (!newLessonForm.goalName.trim()) return;
+    }
 
     // Get the appropriate draft template based on course type
     const templateDraft = getDraftForTemplate(selectedTemplateForLesson.id);
 
-    const newLesson: SavedLesson = {
-      id: `lesson-${Date.now()}`,
-      templateId: selectedTemplateForLesson.id,
-      templateName: selectedTemplateForLesson.name,
-      level: newLessonForm.level,
-      chapter: newLessonForm.chapter,
-      lessonNumber: newLessonForm.lessonNumber,
-      goalName: newLessonForm.goalName.trim(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: 'draft',
-      draft: {
-        ...templateDraft,
-        header: {
-          ...templateDraft.header,
-          levelBadge: `LEVEL ${newLessonForm.level}`,
-          chapterLabel: `Chapter ${newLessonForm.chapter}`,
-          lessonLabel: `Lesson ${newLessonForm.lessonNumber}`,
-          goalText: newLessonForm.goalName.trim(),
-        },
-        // Include course metadata for filtering published lessons
-        course: selectedTemplateForLesson.course,
-        category: selectedTemplateForLesson.category,
-      },
-    };
+    // Create lesson with appropriate fields based on template type
+    const newLesson: SavedLesson = isDiscussionQuestions
+      ? {
+          id: `lesson-${Date.now()}`,
+          templateId: selectedTemplateForLesson.id,
+          templateName: selectedTemplateForLesson.name,
+          level: 0, // Not used for discussion questions
+          chapter: 0, // Not used for discussion questions
+          lessonNumber: 0, // Not used for discussion questions
+          goalName: discussionQuestionsForm.title.trim(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          status: 'draft',
+          draft: {
+            ...templateDraft,
+            header: {
+              ...templateDraft.header,
+              levelBadge: discussionQuestionsForm.level.trim() || 'INTERMEDIATE',
+              chapterLabel: discussionQuestionsForm.chapter.trim() || 'Chapter 1',
+              lessonLabel: discussionQuestionsForm.title.trim(),
+              goalText: discussionQuestionsForm.title.trim(),
+            },
+            course: selectedTemplateForLesson.course,
+            category: selectedTemplateForLesson.category,
+          },
+        }
+      : {
+          id: `lesson-${Date.now()}`,
+          templateId: selectedTemplateForLesson.id,
+          templateName: selectedTemplateForLesson.name,
+          level: newLessonForm.level,
+          chapter: newLessonForm.chapter,
+          lessonNumber: newLessonForm.lessonNumber,
+          goalName: newLessonForm.goalName.trim(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          status: 'draft',
+          draft: {
+            ...templateDraft,
+            header: {
+              ...templateDraft.header,
+              levelBadge: `LEVEL ${newLessonForm.level}`,
+              chapterLabel: `Chapter ${newLessonForm.chapter}`,
+              lessonLabel: `Lesson ${newLessonForm.lessonNumber}`,
+              goalText: newLessonForm.goalName.trim(),
+            },
+            course: selectedTemplateForLesson.course,
+            category: selectedTemplateForLesson.category,
+          },
+        };
 
     setSavedLessons(prev => [...prev, newLesson]);
     setShowNewLessonModal(false);
@@ -6005,10 +6146,10 @@ export default function LessonMaterialMakerPage() {
       <div className="lm-template-list">
         {/* New Lesson Modal */}
         {showNewLessonModal && selectedTemplateForLesson && (
-          <div className="lm-modal-overlay" onClick={() => setShowNewLessonModal(false)}>
-            <div className="lm-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="lm-modal-header">
-                <h2>Create New Lesson</h2>
+          <div className={`lm-modal-overlay ${selectedTemplateForLesson.id === 'discussion-questions' ? 'dq-modal' : ''}`} onClick={() => setShowNewLessonModal(false)}>
+            <div className={`lm-modal ${selectedTemplateForLesson.id === 'discussion-questions' ? 'dq-modal-content' : ''}`} onClick={(e) => e.stopPropagation()}>
+              <div className={`lm-modal-header ${selectedTemplateForLesson.id === 'discussion-questions' ? 'dq-modal-header' : ''}`}>
+                <h2>{selectedTemplateForLesson.id === 'discussion-questions' ? 'Create Discussion Questions' : 'Create New Lesson'}</h2>
                 <button
                   type="button"
                   className="lm-modal-close"
@@ -6022,58 +6163,106 @@ export default function LessonMaterialMakerPage() {
                   <span className="lm-modal-template-icon">{selectedTemplateForLesson.icon}</span>
                   Using template: <strong>{selectedTemplateForLesson.name}</strong>
                 </p>
-                <div className="lm-form-row">
-                  <div className="lm-form-group">
-                    <label>Level</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={newLessonForm.level}
-                      onInput={(e) => setNewLessonForm(prev => ({
-                        ...prev,
-                        level: parseInt((e.target as HTMLInputElement).value) || 1
-                      }))}
-                    />
-                  </div>
-                  <div className="lm-form-group">
-                    <label>Chapter</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={newLessonForm.chapter}
-                      onInput={(e) => setNewLessonForm(prev => ({
-                        ...prev,
-                        chapter: parseInt((e.target as HTMLInputElement).value) || 1
-                      }))}
-                    />
-                  </div>
-                  <div className="lm-form-group">
-                    <label>Lesson #</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={newLessonForm.lessonNumber}
-                      onInput={(e) => setNewLessonForm(prev => ({
-                        ...prev,
-                        lessonNumber: parseInt((e.target as HTMLInputElement).value) || 1
-                      }))}
-                    />
-                  </div>
-                </div>
-                <div className="lm-form-group full">
-                  <label>Goal Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., I can introduce myself"
-                    value={newLessonForm.goalName}
-                    onInput={(e) => setNewLessonForm(prev => ({
-                      ...prev,
-                      goalName: (e.target as HTMLInputElement).value
-                    }))}
-                  />
-                </div>
+                
+                {/* Discussion Questions Form - String fields */}
+                {selectedTemplateForLesson.id === 'discussion-questions' ? (
+                  <>
+                    <div className="lm-form-row dq-form-row">
+                      <div className="lm-form-group dq-form-group">
+                        <label>Level</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., Intermediate, Advanced"
+                          value={discussionQuestionsForm.level}
+                          onInput={(e) => setDiscussionQuestionsForm(prev => ({
+                            ...prev,
+                            level: (e.target as HTMLInputElement).value
+                          }))}
+                        />
+                      </div>
+                      <div className="lm-form-group dq-form-group">
+                        <label>Chapter</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., Lifestyle, Technology"
+                          value={discussionQuestionsForm.chapter}
+                          onInput={(e) => setDiscussionQuestionsForm(prev => ({
+                            ...prev,
+                            chapter: (e.target as HTMLInputElement).value
+                          }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="lm-form-group full dq-form-group">
+                      <label>Title</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Modern Life Discussions"
+                        value={discussionQuestionsForm.title}
+                        onInput={(e) => setDiscussionQuestionsForm(prev => ({
+                          ...prev,
+                          title: (e.target as HTMLInputElement).value
+                        }))}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  /* Regular Lesson Form - Number fields */
+                  <>
+                    <div className="lm-form-row">
+                      <div className="lm-form-group">
+                        <label>Level</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={newLessonForm.level}
+                          onInput={(e) => setNewLessonForm(prev => ({
+                            ...prev,
+                            level: parseInt((e.target as HTMLInputElement).value) || 1
+                          }))}
+                        />
+                      </div>
+                      <div className="lm-form-group">
+                        <label>Chapter</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={newLessonForm.chapter}
+                          onInput={(e) => setNewLessonForm(prev => ({
+                            ...prev,
+                            chapter: parseInt((e.target as HTMLInputElement).value) || 1
+                          }))}
+                        />
+                      </div>
+                      <div className="lm-form-group">
+                        <label>Lesson #</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={newLessonForm.lessonNumber}
+                          onInput={(e) => setNewLessonForm(prev => ({
+                            ...prev,
+                            lessonNumber: parseInt((e.target as HTMLInputElement).value) || 1
+                          }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="lm-form-group full">
+                      <label>Goal Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., I can introduce myself"
+                        value={newLessonForm.goalName}
+                        onInput={(e) => setNewLessonForm(prev => ({
+                          ...prev,
+                          goalName: (e.target as HTMLInputElement).value
+                        }))}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="lm-modal-footer">
+              <div className={`lm-modal-footer ${selectedTemplateForLesson.id === 'discussion-questions' ? 'dq-modal-footer' : ''}`}>
                 <button
                   type="button"
                   className="lm-modal-btn secondary"
@@ -6083,12 +6272,14 @@ export default function LessonMaterialMakerPage() {
                 </button>
                 <button
                   type="button"
-                  className="lm-modal-btn primary"
+                  className={`lm-modal-btn primary ${selectedTemplateForLesson.id === 'discussion-questions' ? 'dq-primary-btn' : ''}`}
                   onClick={handleCreateLesson}
-                  disabled={!newLessonForm.goalName.trim()}
+                  disabled={selectedTemplateForLesson.id === 'discussion-questions' 
+                    ? !discussionQuestionsForm.title.trim() 
+                    : !newLessonForm.goalName.trim()}
                 >
                   <i className="ri-add-line" />
-                  Create Lesson
+                  Create {selectedTemplateForLesson.id === 'discussion-questions' ? 'Questions' : 'Lesson'}
                 </button>
               </div>
             </div>
@@ -7210,8 +7401,10 @@ export default function LessonMaterialMakerPage() {
   const courseClass = courseType === 'Young Learners' 
     ? 'lm-young-learners' 
     : courseType === 'Business English' 
-      ? 'lm-business-english' 
-      : '';
+      ? 'lm-business-english'
+      : courseType === 'Discussion Questions'
+        ? 'lm-discussion-questions'
+        : '';
   
   return (
     <div className={`lm-builder ${isFullscreen ? 'lm-builder-fullscreen' : ''} ${isPreviewMode ? 'lm-preview-mode' : ''} ${courseClass}`}>
@@ -10335,6 +10528,140 @@ export default function LessonMaterialMakerPage() {
                     </div>
                   )}
 
+                  {/* DISCUSSION QUESTIONS section */}
+                  {section.sectionType === 'discussion-questions' && (
+                    <div className="lm-dq-content">
+                      {/* Header with explanation */}
+                      <div className="lm-dq-header">
+                        <p
+                          className="lm-dq-explanation"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => {
+                            const newSections = [...draft.sections];
+                            newSections[sectionIndex] = {
+                              ...section,
+                              explanationEn: (e.target as HTMLElement).textContent || ''
+                            };
+                            setDraft(prev => ({ ...prev, sections: newSections }));
+                          }}
+                        >
+                          {section.explanationEn || 'Use these questions to spark meaningful conversations.'}
+                        </p>
+                        <p
+                          className="lm-dq-explanation-jp"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => {
+                            const newSections = [...draft.sections];
+                            newSections[sectionIndex] = {
+                              ...section,
+                              explanationJp: (e.target as HTMLElement).textContent || ''
+                            };
+                            setDraft(prev => ({ ...prev, sections: newSections }));
+                          }}
+                        >
+                          {section.explanationJp || 'これらの質問を使って、意味のある会話を始めましょう。'}
+                        </p>
+                      </div>
+
+                      {/* Important Note Box */}
+                      {section.importantNote && (
+                        <div className="lm-dq-important-note">
+                          <i className="ri-information-line" />
+                          <span
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                              const newSections = [...draft.sections];
+                              newSections[sectionIndex] = {
+                                ...section,
+                                importantNote: (e.target as HTMLElement).textContent || ''
+                              };
+                              setDraft(prev => ({ ...prev, sections: newSections }));
+                            }}
+                          >
+                            {section.importantNote}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Questions Grid - 2 columns of 10 */}
+                      <div className="lm-dq-grid">
+                        {(section.discussionQuestions || []).map((q, qIndex) => (
+                          <div key={q.id} className="lm-dq-card">
+                            <div className="lm-dq-card-header">
+                              <span className="lm-dq-number">{q.number}</span>
+                              <span
+                                className="lm-dq-category"
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const newSections = [...draft.sections];
+                                  const newQuestions = [...(section.discussionQuestions || [])];
+                                  newQuestions[qIndex] = { ...q, category: (e.target as HTMLElement).textContent || '' };
+                                  newSections[sectionIndex] = { ...section, discussionQuestions: newQuestions };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                }}
+                              >
+                                {q.category}
+                              </span>
+                            </div>
+                            <p
+                              className="lm-dq-question"
+                              contentEditable
+                              suppressContentEditableWarning
+                              onBlur={(e) => {
+                                const newSections = [...draft.sections];
+                                const newQuestions = [...(section.discussionQuestions || [])];
+                                newQuestions[qIndex] = { ...q, question: (e.target as HTMLElement).textContent || '' };
+                                newSections[sectionIndex] = { ...section, discussionQuestions: newQuestions };
+                                setDraft(prev => ({ ...prev, sections: newSections }));
+                              }}
+                            >
+                              {q.question}
+                            </p>
+                            <button
+                              type="button"
+                              className="lm-dq-delete-btn"
+                              onClick={() => {
+                                const newSections = [...draft.sections];
+                                const newQuestions = (section.discussionQuestions || [])
+                                  .filter((_, i) => i !== qIndex)
+                                  .map((item, i) => ({ ...item, number: i + 1 }));
+                                newSections[sectionIndex] = { ...section, discussionQuestions: newQuestions };
+                                setDraft(prev => ({ ...prev, sections: newSections }));
+                              }}
+                              title="Delete question"
+                            >
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add Question Button */}
+                      <button
+                        type="button"
+                        className="lm-dq-add-btn"
+                        onClick={() => {
+                          const newSections = [...draft.sections];
+                          const currentQuestions = section.discussionQuestions || [];
+                          const newQuestions = [...currentQuestions, {
+                            id: `dq-${Date.now()}`,
+                            number: currentQuestions.length + 1,
+                            question: 'New discussion question...',
+                            category: 'General'
+                          }];
+                          newSections[sectionIndex] = { ...section, discussionQuestions: newQuestions };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        <i className="ri-add-circle-line" /> Add Question
+                      </button>
+                    </div>
+                  )}
+
                   {/* LISTENING CHALLENGE section */}
                   {section.sectionType === 'listeningChallenge' && (
                     <div className="lm-listening-challenge-content">
@@ -12353,6 +12680,114 @@ export default function LessonMaterialMakerPage() {
                       >
                         <i className="ri-add-circle-line" /> Add Step
                       </button>
+                    </div>
+                  )}
+
+                  {/* DISCUSSION QUESTIONS type sidebar */}
+                  {section.sectionType === 'discussion-questions' && (
+                    <div className="lm-dq-sidebar">
+                      {/* Sidebar Header */}
+                      <div
+                        className="lm-dq-sidebar-header"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            sidebarTitle: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.sidebarTitle || 'DISCUSSION'}
+                      </div>
+                      {/* Sidebar Subheader */}
+                      <div
+                        className="lm-dq-sidebar-subheader"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => {
+                          const newSections = [...draft.sections];
+                          newSections[sectionIndex] = {
+                            ...section,
+                            sidebarSubtitle: (e.target as HTMLElement).textContent || ''
+                          };
+                          setDraft(prev => ({ ...prev, sections: newSections }));
+                        }}
+                      >
+                        {section.sidebarSubtitle || 'QUESTIONS (25-30 min)'}
+                      </div>
+
+                      {/* Tutor Guide Steps */}
+                      <div className="lm-dq-guide-title">
+                        {section.lessonGoalTitle || 'Tutor Guide'}
+                      </div>
+                      <div className="lm-goal-steps">
+                        {(section.lessonGoalSteps || []).map((step, stepIndex) => (
+                          <div key={step.id} className="lm-goal-step lm-dq-step">
+                            <span className="lm-step-number lm-dq-step-number">{stepIndex + 1}</span>
+                            <div className="lm-step-content">
+                              <span
+                                className="lm-step-instruction"
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const newSections = [...draft.sections];
+                                  const newSteps = [...section.lessonGoalSteps];
+                                  newSteps[stepIndex] = {
+                                    ...step,
+                                    instruction: (e.target as HTMLElement).textContent || ''
+                                  };
+                                  newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                }}
+                              >
+                                {step.instruction}
+                              </span>
+                              <button
+                                type="button"
+                                className="lm-step-delete-btn"
+                                onClick={() => {
+                                  const newSections = [...draft.sections];
+                                  const newSteps = section.lessonGoalSteps.filter((_, i) => i !== stepIndex);
+                                  newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                                  setDraft(prev => ({ ...prev, sections: newSections }));
+                                }}
+                                title="Delete step"
+                              >
+                                <i className="ri-close-line" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Add Step Button */}
+                        <button
+                          type="button"
+                          className="lm-dq-add-step-btn"
+                          onClick={() => {
+                            const newSections = [...draft.sections];
+                            const newSteps = [...section.lessonGoalSteps, {
+                              id: `step-${Date.now()}`,
+                              instruction: 'New instruction step.'
+                            }];
+                            newSections[sectionIndex] = { ...section, lessonGoalSteps: newSteps };
+                            setDraft(prev => ({ ...prev, sections: newSections }));
+                          }}
+                        >
+                          <i className="ri-add-circle-line" /> Add Step
+                        </button>
+                      </div>
+
+                      {/* Quick Tips Box */}
+                      <div className="lm-dq-tips-box">
+                        <div className="lm-dq-tips-title">💡 Quick Tips</div>
+                        <ul className="lm-dq-tips-list">
+                          <li>Choose 5-10 questions per session</li>
+                          <li>Ask follow-up questions</li>
+                          <li>Take notes for feedback</li>
+                        </ul>
+                      </div>
                     </div>
                   )}
 
