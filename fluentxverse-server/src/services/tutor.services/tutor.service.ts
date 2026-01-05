@@ -103,6 +103,28 @@ export class TutorService {
       queryParams.today = today;
       
       console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime, 'searchQuery:', searchQuery);
+      console.log('🔎 Today\'s date for filtering:', today);
+      
+      // Debug: Check if any tutors have open slots
+      const debugResult = await session.run(`
+        MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
+        WHERE s.status = 'open'
+        RETURN u.id as tutorId, u.email as email, u.firstName as firstName, u.writtenExamPassed as written, u.speakingExamPassed as speaking, u.profileStatus as profileStatus, s.slotDate as slotDate, s.slotTime as slotTime
+        LIMIT 10
+      `);
+      console.log('🔍 DEBUG - Open slots found:', debugResult.records.length);
+      debugResult.records.forEach(r => {
+        console.log('🔍 DEBUG - Slot:', {
+          tutorId: r.get('tutorId'),
+          email: r.get('email'),
+          firstName: r.get('firstName'),
+          written: r.get('written'),
+          speaking: r.get('speaking'),
+          profileStatus: r.get('profileStatus'),
+          slotDate: r.get('slotDate'),
+          slotTime: r.get('slotTime')
+        });
+      });
       
       if (dateFilter) {
         // Only show tutors who have open slots on the specified date AND are certified
