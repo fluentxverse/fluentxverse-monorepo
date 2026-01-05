@@ -621,6 +621,16 @@ const SchedulePage = () => {
 
   return (
     <>
+      {/* Shimmer animation for loading skeleton */}
+      <style>
+        {`
+          @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+        `}
+      </style>
+      
       {/* Real-time booking toast notification */}
       {bookingToast && (
         <div
@@ -1079,6 +1089,26 @@ const SchedulePage = () => {
                           
                           // Check if booked slot is marked present
                           const isBookedAndPresent = isBooked && isMarkedPresent;
+                          
+                          // Show loading skeleton while fetching schedule data
+                          if (loading) {
+                            return (
+                              <td key={dayIdx} style={{ padding: '2px' }}>
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    padding: '10px 6px',
+                                    borderRadius: '8px',
+                                    background: 'linear-gradient(90deg, rgba(226, 232, 240, 0.6) 25%, rgba(241, 245, 249, 0.8) 50%, rgba(226, 232, 240, 0.6) 75%)',
+                                    backgroundSize: '200% 100%',
+                                    animation: 'shimmer 1.5s infinite',
+                                    height: '36px',
+                                    border: '1px solid rgba(203, 213, 225, 0.3)'
+                                  }}
+                                />
+                              </td>
+                            );
+                          }
                           
                           // Determine slot display label
                           let slotLabel = 'AVAILABLE';

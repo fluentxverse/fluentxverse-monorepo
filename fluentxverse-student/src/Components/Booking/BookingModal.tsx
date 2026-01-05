@@ -56,37 +56,64 @@ export const BookingModal = ({
     }
   }, [isOpen, activeAccount?.address]);
 
-  // Helper function to convert PHT 12h to KST 24h format
-  // IMPORTANT: Keep the original date, only convert time (11 PM PHT Dec 5 -> 00:00 KST Dec 5)
-  const convertToKoreanTimeWithDate = (phDateString: string, phTimeString: string): { date: string; time: string } => {
-    // Parse Philippine time (12-hour format like "6:00 PM")
-    const timeMatch = phTimeString.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!timeMatch) return { date: phDateString, time: phTimeString };
-
-    let hours = parseInt(timeMatch[1], 10);
-    const minutes = timeMatch[2];
-    const period = timeMatch[3].toUpperCase();
-
-    // Convert to 24-hour format
-    if (period === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (period === 'AM' && hours === 12) {
-      hours = 0;
+  // Helper function to convert PHT time to KST time
+  // Returns the ACTUAL KST date (may be next day for late-night PHT times)
+  // Handles both 12-hour format (6:00 PM) and 24-hour format (18:00)
+  const convertToKoreanTimeWithDate = (phDateString: string, phTimeString: string): { date: string; time: string; dateRolledOver: boolean } => {
+    let hours: number;
+    let minutes: string;
+    
+    // Trim input and normalize whitespace
+    const normalizedTime = phTimeString.trim();
+    
+    // Try 12-hour format first (e.g., "6:00 PM", "11:30PM", "11:30 pm")
+    const time12Match = normalizedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (time12Match) {
+      hours = parseInt(time12Match[1], 10);
+      minutes = time12Match[2];
+      const period = time12Match[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      console.log(`🕐 Parsed 12h time "${normalizedTime}" -> ${hours}:${minutes}`);
+    } else {
+      // Try 24-hour format (e.g., "18:00", "23:30")
+      const time24Match = normalizedTime.match(/^(\d{1,2}):(\d{2})$/);
+      if (time24Match) {
+        hours = parseInt(time24Match[1], 10);
+        minutes = time24Match[2];
+        console.log(`🕐 Parsed 24h time "${normalizedTime}" -> ${hours}:${minutes}`);
+      } else {
+        // Can't parse, return as-is
+        console.log(`🕐 Failed to parse time "${normalizedTime}", returning as-is`);
+        return { date: phDateString, time: phTimeString, dateRolledOver: false };
+      }
     }
 
     // Add 1 hour for Korean timezone (UTC+9 vs UTC+8)
     hours += 1;
 
-    // Handle hour overflow (wrap to 00:00, keep same date)
+    // Handle hour overflow - roll to next day
+    let dateRolledOver = false;
+    let resultDate = phDateString;
     if (hours >= 24) {
       hours -= 24;
+      dateRolledOver = true;
+      // Calculate the next day
+      const dateObj = new Date(phDateString + 'T00:00:00');
+      dateObj.setDate(dateObj.getDate() + 1);
+      resultDate = dateObj.toISOString().split('T')[0];
+      console.log(`🕐 Date rolled over: ${phDateString} -> ${resultDate}`);
     }
 
-    // Keep the original date (tutor's schedule date)
-    return { date: phDateString, time: `${String(hours).padStart(2, '0')}:${minutes}` };
+    return { date: resultDate, time: `${String(hours).padStart(2, '0')}:${minutes}`, dateRolledOver };
   };
 
-  // Simple time-only conversion for display
+  // Simple time-only conversion for display (keeps original PHT date for display grouping)
   const convertToKoreanTime = (phTimeString: string): string => {
     const result = convertToKoreanTimeWithDate('2000-01-01', phTimeString);
     return result.time;
@@ -113,24 +140,54 @@ export const BookingModal = ({
     }
   }, [preSelectedDate, preSelectedTime, availableSlots]);
 
+  // Helper to check if a PHT slot belongs to a specific KST date
+  // e.g., 11:30 PM PHT on Jan 5 = 12:30 AM KST on Jan 6, so when student selects Jan 6, show this slot
+  const slotBelongsToKSTDate = (slotDate: string, slotTime: string, targetKSTDate: string): boolean => {
+    // Convert slot's PHT date+time to actual KST date+time
+    const { date: kstDate } = convertToKoreanTimeWithDate(slotDate, slotTime);
+    
+    // Simply check if the actual KST date matches the target date
+    return kstDate === targetKSTDate;
+  };
+
   const fetchAvailableSlots = async () => {
     setLoading(true);
     setError(null);
     try {
-      // If filterDate is provided, only fetch for that date
-      // Otherwise fetch 7 days
-      const startDate = filterDate || new Date().toISOString().split('T')[0];
+      // If filterDate is provided, fetch for that date AND the previous day
+      // (to catch late-night PHT slots that appear on this KST day)
+      let startDate = filterDate || new Date().toISOString().split('T')[0];
       const endDate = filterDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
-      console.log('📅 Fetched available slots:', slots);
+      // If filtering by date, also include previous day for late-night slots
+      if (filterDate) {
+        const prevDate = new Date(filterDate + 'T00:00:00');
+        prevDate.setDate(prevDate.getDate() - 1);
+        startDate = prevDate.toISOString().split('T')[0];
+      }
       
-      // If filterDate is set, filter to only show slots for that date
+      const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
+      console.log('📅 Fetched available slots (startDate:', startDate, 'endDate:', endDate, '):', slots);
+      
+      // Debug: Log conversion for each slot
+      if (filterDate) {
+        slots.forEach(slot => {
+          const converted = convertToKoreanTimeWithDate(slot.date, slot.time);
+          console.log(`📅 Slot ${slot.date} ${slot.time} PHT -> ${converted.date} ${converted.time} KST (rolled: ${converted.dateRolledOver})`);
+        });
+      }
+      
+      // If filterDate is set, filter to show slots that belong to this KST date
+      // This includes same-day PHT slots AND previous-day late-night PHT slots
       const filteredSlots = filterDate 
-        ? slots.filter(slot => slot.date === filterDate)
+        ? slots.filter(slot => {
+            const belongs = slotBelongsToKSTDate(slot.date, slot.time, filterDate);
+            console.log(`📅 Slot ${slot.date} ${slot.time} belongs to KST ${filterDate}: ${belongs}`);
+            return belongs;
+          })
         : slots;
       
-      console.log('📅 Filtered slots for date', filterDate, ':', filteredSlots.length);
+      console.log('📅 Filtered slots for KST date', filterDate, ':', filteredSlots.length);
       setAvailableSlots(filteredSlots);
     } catch (err: any) {
       setError(getErrorMessage(err));
@@ -214,20 +271,27 @@ export const BookingModal = ({
     }
   };
 
-  // Helper to check if a slot has already elapsed (for today's date)
+  // Helper to check if a slot has already elapsed (for today's date in KST)
   const isSlotElapsed = (slotDate: string, slotTime: string): boolean => {
     // Get current time in KST (Korea Standard Time, UTC+9)
     const now = new Date();
     const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000) + (now.getTimezoneOffset() * 60 * 1000));
     const todayKST = kstNow.toISOString().split('T')[0];
     
-    // Only filter if it's today's date
-    if (slotDate !== todayKST) {
+    // Convert slot PHT date/time to actual KST date/time
+    const { date: kstDate, time: kstTime } = convertToKoreanTimeWithDate(slotDate, slotTime);
+    
+    // If slot's KST date is in the future, not elapsed
+    if (kstDate > todayKST) {
       return false;
     }
     
-    // Convert slot time to KST for comparison
-    const kstTime = convertToKoreanTime(slotTime);
+    // If slot's KST date is in the past, it's elapsed
+    if (kstDate < todayKST) {
+      return true;
+    }
+    
+    // Same day - check time
     const [slotHours, slotMinutes] = kstTime.split(':').map(Number);
     const slotTotalMinutes = slotHours * 60 + slotMinutes;
     const nowTotalMinutes = kstNow.getHours() * 60 + kstNow.getMinutes();
