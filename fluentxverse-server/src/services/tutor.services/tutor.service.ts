@@ -60,22 +60,35 @@ export class TutorService {
         return hour * 60 + parseInt(minute || "0", 10);
       };
 
-      // Helper function to convert 12h time string to minutes for comparison
-      const time12ToMinutes = (time12: string): number => {
-        // Format: "11:30 PM" or "12:00 AM"
-        const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        if (!match || !match[1] || !match[2] || !match[3]) return 0;
-        let hour = parseInt(match[1], 10);
-        const minute = parseInt(match[2], 10);
-        const isPM = match[3].toUpperCase() === 'PM';
-        
-        if (hour === 12) {
-          hour = isPM ? 12 : 0; // 12 PM = 12, 12 AM = 0
-        } else if (isPM) {
-          hour += 12;
+      // Helper function to convert any time string to minutes for comparison
+      // Handles both 12h format ("11:30 PM") and 24h format ("18:00")
+      const timeToMinutesAny = (timeStr: string): number => {
+        // First try 12h format: "11:30 PM" or "12:00 AM"
+        const match12h = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (match12h && match12h[1] && match12h[2] && match12h[3]) {
+          let hour = parseInt(match12h[1], 10);
+          const minute = parseInt(match12h[2], 10);
+          const isPM = match12h[3].toUpperCase() === 'PM';
+          
+          if (hour === 12) {
+            hour = isPM ? 12 : 0; // 12 PM = 12, 12 AM = 0
+          } else if (isPM) {
+            hour += 12;
+          }
+          
+          return hour * 60 + minute;
         }
         
-        return hour * 60 + minute;
+        // Try 24h format: "18:00" or "6:00"
+        const match24h = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+        if (match24h && match24h[1] && match24h[2]) {
+          const hour = parseInt(match24h[1], 10);
+          const minute = parseInt(match24h[2], 10);
+          return hour * 60 + minute;
+        }
+        
+        console.warn('Could not parse time string:', timeStr);
+        return 0;
       };
 
       // Build WHERE clause for date and time filtering
@@ -249,7 +262,7 @@ export class TutorService {
           
           // Check if any slot falls within the time range
           const hasMatchingSlot = slotTimes.some((slotTime: string) => {
-            const slotMinutes = time12ToMinutes(slotTime);
+            const slotMinutes = timeToMinutesAny(slotTime);
             const startOk = !queryParams.startTimeMinutes || slotMinutes >= queryParams.startTimeMinutes;
             const endOk = !queryParams.endTimeMinutes || slotMinutes <= queryParams.endTimeMinutes;
             return startOk && endOk;
