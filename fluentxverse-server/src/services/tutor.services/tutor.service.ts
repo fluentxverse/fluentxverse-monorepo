@@ -84,9 +84,9 @@ export class TutorService {
       const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
       
       // Certification requirement - tutor must have passed both exams AND have approved profile
-      // OR be a test account (bypass for development)
+      // OR be a test account (bypass for development) - use toLower for case-insensitive email check
       const TEST_ACCOUNT_IDS = ['paulanthonyarriola@gmail.com']; // Test tutor emails
-      const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR u.email IN ['paulanthonyarriola@gmail.com']`;
+      const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR toLower(u.email) = 'paulanthonyarriola@gmail.com'`;
       
       // Name search condition (case-insensitive using toLower and CONTAINS)
       const nameSearchCondition = nameSearchLower 
