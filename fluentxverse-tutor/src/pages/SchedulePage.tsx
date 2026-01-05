@@ -121,6 +121,17 @@ const SchedulePage = () => {
     })
   };
 
+  // Convert 24-hour time string (e.g., "18:00") to 12-hour format (e.g., "6:00 PM")
+  const convertTo12Hour = (time24h: string): string => {
+    const [hourStr, minuteStr] = time24h.split(':');
+    let hour = parseInt(hourStr, 10);
+    const minute = minuteStr || '00';
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    if (hour === 0) hour = 12;
+    else if (hour > 12) hour -= 12;
+    return `${hour}:${minute} ${ampm}`;
+  };
+
   // Parse time string to Date object
   const parseTimeString = (timeStr: string): { hour: number; minute: number } => {
     const [time, period] = timeStr.split(' ');
@@ -184,16 +195,20 @@ const SchedulePage = () => {
           console.log('📅 dayIdx found:', dayIdx);
           
           if (dayIdx !== -1) {
-            const key = `${dayIdx}-${slot.time}`;
+            // Convert 24h time from API to 12h format used by UI grid
+            const time12h = convertTo12Hour(slot.time);
+            const key = `${dayIdx}-${time12h}`;
             
-            // Parse slot time and check if it's in the past
-            const { hour, minute } = parseTimeString(slot.time);
+            // Parse slot time and check if it's in the past (use 24h format for parsing)
+            const [hourStr, minuteStr] = slot.time.split(':');
+            const hour = parseInt(hourStr, 10);
+            const minute = parseInt(minuteStr || '0', 10);
             const slotDateTime = new Date(slotDate);
             slotDateTime.setHours(hour, minute, 0, 0);
             const now = new Date();
             const isPast = slotDateTime < now;
 
-            console.log(`📅 Slot key=${key}, status=${slot.status}, isPast=${isPast}`);
+            console.log(`📅 Slot key=${key}, time12h=${time12h}, status=${slot.status}, isPast=${isPast}`);
 
             if (slot.status === 'open' && !isPast) {
               // Only add to selected slots if not in the past

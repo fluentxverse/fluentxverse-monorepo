@@ -60,10 +60,26 @@ export class ScheduleService {
       const now = new Date();
       const minOpenTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes ahead
       
+      console.log('📅 openSlots - tutorId:', input.tutorId);
+      console.log('📅 openSlots - slots count:', input.slots.length);
+      
+      // First verify the tutor exists
+      const tutorCheck = await session.run(
+        `MATCH (t:User {id: $tutorId}) RETURN t`,
+        { tutorId: input.tutorId }
+      );
+      console.log('📅 openSlots - tutor found:', tutorCheck.records.length > 0);
+      
+      if (tutorCheck.records.length === 0) {
+        throw new Error(`Tutor with id ${input.tutorId} not found`);
+      }
+      
       for (const slot of input.slots) {
         // Convert 12h time to 24h for proper Date parsing
         const time24h = this.convert12hTo24h(slot.time);
         const slotDateTime = new Date(`${slot.date}T${time24h}:00`);
+        
+        console.log('📅 openSlots - processing slot:', slot.date, slot.time, '-> 24h:', time24h);
         
         // Validate: slot must be at least 5 minutes in the future
         if (slotDateTime <= minOpenTime) {
@@ -73,7 +89,7 @@ export class ScheduleService {
         const slotId = nanoid(16);
         
         // Create TimeSlot node in Memgraph
-        await session.run(
+        const createResult = await session.run(
           `
           MATCH (t:User {id: $tutorId})
           CREATE (s:TimeSlot {
@@ -88,6 +104,7 @@ export class ScheduleService {
             updatedAt: datetime()
           })
           CREATE (t)-[:OPENS_SLOT]->(s)
+          RETURN s
           `,
           {
             tutorId: input.tutorId,
@@ -96,6 +113,11 @@ export class ScheduleService {
             slotTime: slot.time
           }
         );
+        
+        console.log('📅 openSlots - slot created:', createResult.records.length > 0);
+        if (createResult.records.length > 0) {
+          console.log('📅 openSlots - created slot properties:', createResult.records[0].get('s')?.properties);
+        }
       }
     } finally {
       await session.close();
