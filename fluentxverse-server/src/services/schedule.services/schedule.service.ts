@@ -31,6 +31,25 @@ const notificationService = new NotificationService();
 export class ScheduleService {
   
   /**
+   * Helper to convert 12h time to 24h format for Date parsing
+   */
+  private convert12hTo24h(time12: string): string {
+    const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (!match) return time12; // Return as-is if already 24h format
+    let hour = parseInt(match[1] || '', 10);
+    const minute = match[2];
+    const isPM = match[3] && match[3].toUpperCase() === 'PM';
+    
+    if (hour === 12) {
+      hour = isPM ? 12 : 0;
+    } else if (isPM) {
+      hour += 12;
+    }
+    
+    return `${String(hour).padStart(2, '0')}:${minute}`;
+  }
+
+  /**
    * Open time slots for tutoring
    */
   async openSlots(input: OpenSlotsInput): Promise<void> {
@@ -42,7 +61,9 @@ export class ScheduleService {
       const minOpenTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes ahead
       
       for (const slot of input.slots) {
-        const slotDateTime = new Date(`${slot.date}T${slot.time}:00`);
+        // Convert 12h time to 24h for proper Date parsing
+        const time24h = this.convert12hTo24h(slot.time);
+        const slotDateTime = new Date(`${slot.date}T${time24h}:00`);
         
         // Validate: slot must be at least 5 minutes in the future
         if (slotDateTime <= minOpenTime) {
@@ -112,7 +133,9 @@ export class ScheduleService {
           throw new Error(`Cannot close booked slot ${slotId}`);
         }
         
-        const slotDateTime = new Date(`${slot.slotDate}T${slot.slotTime}:00`);
+        // Convert 12h time to 24h for proper Date parsing
+        const time24h = this.convert12hTo24h(slot.slotTime);
+        const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00`);
         
         // Check for short notice cancellation (TA-303)
         if (slotDateTime <= shortNoticeThreshold && slot.status === 'open') {
@@ -256,23 +279,6 @@ export class ScheduleService {
       const now = new Date();
       const minBookTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 min ahead
       
-      // Helper to convert 12h time to 24h format for Date parsing
-      const convert12hTo24h = (time12: string): string => {
-        const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        if (!match) return '00:00';
-        let hour = parseInt(match[1] || '', 10);
-        const minute = match[2];
-        const isPM = match[3] && match[3].toUpperCase() === 'PM';
-        
-        if (hour === 12) {
-          hour = isPM ? 12 : 0;
-        } else if (isPM) {
-          hour += 12;
-        }
-        
-        return `${String(hour).padStart(2, '0')}:${minute}`;
-      };
-      
       const result = await session.run(
         `
         MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
@@ -290,7 +296,7 @@ export class ScheduleService {
           const slot = record.get('s').properties;
           
           // Convert 12h time to 24h for proper Date parsing
-          const time24h = convert12hTo24h(slot.slotTime);
+          const time24h = this.convert12hTo24h(slot.slotTime);
           const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00`);
           
           // Filter out slots less than 30 minutes away
