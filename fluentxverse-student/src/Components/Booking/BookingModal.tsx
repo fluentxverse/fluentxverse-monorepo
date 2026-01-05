@@ -15,6 +15,7 @@ interface BookingModalProps {
   hourlyRate?: number;
   preSelectedDate?: string;
   preSelectedTime?: string;
+  filterDate?: string; // YYYY-MM-DD format - only show slots for this date
 }
 
 export const BookingModal = ({ 
@@ -25,7 +26,8 @@ export const BookingModal = ({
   tutorAvatar,
   hourlyRate,
   preSelectedDate,
-  preSelectedTime
+  preSelectedTime,
+  filterDate
 }: BookingModalProps) => {
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,18 +117,21 @@ export const BookingModal = ({
     setLoading(true);
     setError(null);
     try {
-      const now = new Date();
-      const startDate = now.toISOString().split('T')[0];
-      const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      // If filterDate is provided, only fetch for that date
+      // Otherwise fetch 7 days
+      const startDate = filterDate || new Date().toISOString().split('T')[0];
+      const endDate = filterDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
       const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
       console.log('📅 Fetched available slots:', slots);
-      console.log('📅 First slot sample:', slots[0]);
-      if (slots[0]) {
-        console.log('📅 Slot time:', slots[0].time);
-        console.log('📅 Slot duration:', slots[0].durationMinutes, 'Type:', typeof slots[0].durationMinutes);
-      }
-      setAvailableSlots(slots);
+      
+      // If filterDate is set, filter to only show slots for that date
+      const filteredSlots = filterDate 
+        ? slots.filter(slot => slot.date === filterDate)
+        : slots;
+      
+      console.log('📅 Filtered slots for date', filterDate, ':', filteredSlots.length);
+      setAvailableSlots(filteredSlots);
     } catch (err: any) {
       setError(getErrorMessage(err));
     } finally {
@@ -209,12 +214,21 @@ export const BookingModal = ({
     }
   };
 
-  // Group slots by date
+  // Group slots by date and deduplicate by time
   const slotsByDate = availableSlots.reduce((acc, slot) => {
     if (!acc[slot.date]) {
-      acc[slot.date] = [];
+      acc[slot.date] = new Map<string, AvailableSlot>();
     }
-    acc[slot.date].push(slot);
+    // Only keep one slot per time (first one wins)
+    if (!acc[slot.date].has(slot.time)) {
+      acc[slot.date].set(slot.time, slot);
+    }
+    return acc;
+  }, {} as Record<string, Map<string, AvailableSlot>>);
+
+  // Convert Map values back to arrays
+  const dedupedSlotsByDate = Object.entries(slotsByDate).reduce((acc, [date, slotsMap]) => {
+    acc[date] = Array.from(slotsMap.values());
     return acc;
   }, {} as Record<string, AvailableSlot[]>);
 
@@ -253,10 +267,7 @@ export const BookingModal = ({
             )}
             <div className="booking-modal-tutor-info">
               <h2 className="booking-modal-title">Book a Lesson</h2>
-              <p className="booking-modal-tutor-name">with {tutorName}</p>
-              {hourlyRate && (
-                <p className="booking-modal-rate">₱{hourlyRate}/hour</p>
-              )}
+              <p className="booking-modal-tutor-name">{tutorName}</p>
             </div>
           </div>
         </div>
@@ -302,7 +313,7 @@ export const BookingModal = ({
         {!loading && !bookingSuccess && !error && (
           <>
             <div className="booking-modal-content">
-              {Object.keys(slotsByDate).length === 0 ? (
+              {Object.keys(dedupedSlotsByDate).length === 0 ? (
                 <div className="booking-modal-empty">
                   <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -310,12 +321,12 @@ export const BookingModal = ({
                     <line x1="8" y1="2" x2="8" y2="6"/>
                     <line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
-                  <p>No available slots in the next 7 days</p>
-                  <small>Please check back later or try another tutor</small>
+                  <p>No available slots for this date</p>
+                  <small>Please check another date or try another tutor</small>
                 </div>
               ) : (
                 <div className="booking-modal-slots">
-                  {Object.entries(slotsByDate).map(([date, slots]) => (
+                  {Object.entries(dedupedSlotsByDate).map(([date, slots]) => (
                     <div key={date} className="booking-modal-date-group">
                       <h3 className="booking-modal-date-header">{formatDate(date)}</h3>
                       <div className="booking-modal-time-grid">

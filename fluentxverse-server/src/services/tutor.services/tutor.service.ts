@@ -98,8 +98,9 @@ export class TutorService {
       
       // Certification requirement - tutor must have passed both exams AND have approved profile
       // OR be a test account (bypass for development) - use toLower for case-insensitive email check
+      // IMPORTANT: Wrap entire check in parentheses for correct OR precedence
       const TEST_ACCOUNT_IDS = ['paulanthonyarriola@gmail.com']; // Test tutor emails
-      const certificationCheck = `(u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR toLower(u.email) = 'paulanthonyarriola@gmail.com'`;
+      const certificationCheck = `((u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR toLower(u.email) = 'paulanthonyarriola@gmail.com')`;
       
       // Name search condition (case-insensitive using toLower and CONTAINS)
       const nameSearchCondition = nameSearchLower 
@@ -123,9 +124,13 @@ export class TutorService {
         MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
         WHERE s.status = 'open'
         RETURN u.id as tutorId, u.email as email, u.firstName as firstName, u.writtenExamPassed as written, u.speakingExamPassed as speaking, u.profileStatus as profileStatus, s.slotDate as slotDate, s.slotTime as slotTime
-        LIMIT 10
+        LIMIT 20
       `);
-      console.log('🔍 DEBUG - Open slots found:', debugResult.records.length);
+      console.log('🔍 DEBUG - Total open slots found:', debugResult.records.length);
+      if (debugResult.records.length > 0) {
+        const uniqueDates = new Set(debugResult.records.map(r => r.get('slotDate')));
+        console.log('🔍 DEBUG - Unique slot dates:', Array.from(uniqueDates));
+      }
       debugResult.records.forEach(r => {
         console.log('🔍 DEBUG - Slot:', {
           tutorId: r.get('tutorId'),
@@ -138,6 +143,19 @@ export class TutorService {
           slotTime: r.get('slotTime')
         });
       });
+      
+      // Debug: Check specific date filter
+      if (dateFilter) {
+        const dateDebugResult = await session.run(`
+          MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
+          WHERE s.slotDate = $dateFilter AND s.status = 'open'
+          RETURN count(s) as slotCount, u.email as email
+        `, { dateFilter });
+        console.log('🔍 DEBUG - Slots for dateFilter', dateFilter, ':', dateDebugResult.records.map(r => ({
+          email: r.get('email'),
+          slotCount: r.get('slotCount')?.toNumber?.() || r.get('slotCount')
+        })));
+      }
       
       if (dateFilter) {
         // Only show tutors who have open slots on the specified date AND are certified
@@ -244,7 +262,10 @@ export class TutorService {
       }
 
       console.log('🔢 Count query:', countQuery);
-      console.log('🔢 Query parameters:', queryParams);
+      console.log('🔢 Tutors query:', tutorsQuery);
+      console.log('🔢 Query parameters:', JSON.stringify(queryParams, null, 2));
+      console.log('🔢 dateFilter value:', dateFilter);
+      console.log('🔢 needsTimeFiltering:', needsTimeFiltering);
       
       let total: number;
       let tutors: Tutor[];

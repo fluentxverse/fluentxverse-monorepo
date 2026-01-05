@@ -230,7 +230,15 @@ export const BrowseTutorsPage = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>('all');
+  // Default to today's date
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
   const [startTime, setStartTime] = useState<string>('05:00');
   const [endTime, setEndTime] = useState<string>('24:30');
   const [sortBy, setSortBy] = useState<'rating' | 'price-low' | 'price-high' | 'popular' | 'newest'>('rating');
@@ -253,7 +261,7 @@ export const BrowseTutorsPage = () => {
 
   // Generate next 7 days with formatted labels
   const generateDateOptions = () => {
-    const options = [{ label: 'All Dates', value: 'all' }];
+    const options: { label: string; value: string }[] = [];
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
     for (let i = 0; i < 7; i++) {
@@ -263,7 +271,7 @@ export const BrowseTutorsPage = () => {
       const day = date.getDate();
       const year = date.getFullYear();
       const dayName = days[date.getDay()];
-      const label = `${month}/${day} ${dayName}`;
+      const label = i === 0 ? `Today (${month}/${day})` : `${month}/${day} ${dayName}`;
       // Format as YYYY-MM-DD in local timezone to avoid UTC shift
       const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       options.push({ label, value });
@@ -327,12 +335,9 @@ export const BrowseTutorsPage = () => {
     }
   };
 
-  // Quick filter options - all dates (remove budget friendly)
-  const quickFilters = [
-    { label: 'All Tutors', value: 'all' },
-    ...dateOptions.slice(1).map(d => ({ label: d.label, value: d.value })),
-  ];
-  const [activeQuickFilter, setActiveQuickFilter] = useState('all');
+  // Quick filter options - date buttons
+  const quickFilters = dateOptions.map(d => ({ label: d.label, value: d.value }));
+  const [activeQuickFilter, setActiveQuickFilter] = useState(getTodayDate());
 
 
   // Search tutors
@@ -344,8 +349,8 @@ export const BrowseTutorsPage = () => {
       const params: TutorSearchParams = {
         query: searchQuery || undefined,
         specializations: selectedSpecs.length > 0 ? selectedSpecs : undefined,
-        dateFilter: selectedDate !== 'all' ? selectedDate : undefined,
-        startTime: startTime !== '06:00' ? startTime : undefined,
+        dateFilter: selectedDate, // Always send the date filter
+        startTime: startTime !== '05:00' ? startTime : undefined,
         endTime: endTime !== '24:30' ? endTime : undefined,
         sortBy,
         page: resetPage ? 1 : page,
@@ -354,22 +359,16 @@ export const BrowseTutorsPage = () => {
 
       const result = await tutorApi.searchTutors(params);
 
-      // If "All Dates" is selected, show only tutors with any open schedule
-      const filteredTutors = selectedDate === 'all'
-        ? result.tutors.filter(t => t.isAvailable)
-        : result.tutors;
-
+      // Use results directly since we always have a date filter
       if (resetPage) {
-        setTutors(filteredTutors);
+        setTutors(result.tutors);
         setPage(1);
       } else {
-        setTutors(prev => [...prev, ...filteredTutors]);
+        setTutors(prev => [...prev, ...result.tutors]);
       }
 
-      // Adjust count/hasMore based on filtered results when on "All Dates"
-      const totalCount = selectedDate === 'all' ? filteredTutors.length : result.total;
-      setTotal(totalCount);
-      setHasMore(selectedDate === 'all' ? false : result.hasMore);
+      setTotal(result.total);
+      setHasMore(result.hasMore);
     } catch (err) {
       console.error('Failed to search tutors:', err);
       setError('Failed to load tutors. Please try again.');
@@ -407,30 +406,23 @@ export const BrowseTutorsPage = () => {
   // Handle quick filters
   const handleQuickFilter = (value: string) => {
     setActiveQuickFilter(value);
-    if (value === 'all') {
-      setSelectedDate('all');
-      setSortBy('rating');
-    } else {
-      // It's a date value
-      setSelectedDate(value);
-      setSortBy('rating');
-    }
+    setSelectedDate(value);
+    setSortBy('rating');
   };
 
   // Clear all filters
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedSpecs([]);
-    setSelectedDate('all');
-    setStartTime('06:00');
+    setSelectedDate(getTodayDate());
+    setStartTime('05:00');
     setEndTime('24:30');
     setSortBy('rating');
-    setActiveQuickFilter('all');
+    setActiveQuickFilter(getTodayDate());
   };
 
   const hasActiveFilters = selectedSpecs.length > 0 || 
-    selectedDate !== 'all' ||
-    startTime !== '06:00' ||
+    startTime !== '05:00' ||
     endTime !== '24:30';
 
   return (
@@ -842,6 +834,7 @@ export const BrowseTutorsPage = () => {
           tutorName={selectedTutor.displayName || `${selectedTutor.firstName} ${selectedTutor.lastName}`}
           tutorAvatar={selectedTutor.profilePicture}
           hourlyRate={selectedTutor.hourlyRate}
+          filterDate={selectedDate}
         />
       )}
     </>
