@@ -9062,9 +9062,16 @@ body.lm-fullscreen-mode .main-content {
 
 /* Header - Bright & Fun */
 .lm-young-learners .lm-header {
-  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%) !important;
+  background-color: #8b5cf6 !important;
+  background-size: cover !important;
+  background-position: center !important;
   border-radius: 24px !important;
   box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Colorful gradient overlay for Young Learners */
+.lm-young-learners .lm-header-overlay {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.75) 0%, rgba(236, 72, 153, 0.75) 50%, rgba(245, 158, 11, 0.75) 100%) !important;
 }
 
 .lm-young-learners .lm-header::before {
@@ -9810,12 +9817,20 @@ body.lm-fullscreen-mode .main-content {
 
 /* Header - Edgy Green Theme with diagonal cuts */
 .lm-discussion-questions .lm-header {
-  background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #047857 100%) !important;
+  background-color: #064e3b !important;
+  background-size: cover !important;
+  background-position: center !important;
   border-bottom: none !important;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
   padding-bottom: 40px !important;
+}
+
+/* Green gradient overlay - respects user color picker */
+.lm-discussion-questions .lm-header-overlay {
+  /* Uses inline backgroundColor from color picker, just add a subtle gradient shine */
+  background-image: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
 }
 
 .lm-discussion-questions .lm-header::before {
@@ -9842,6 +9857,26 @@ body.lm-fullscreen-mode .main-content {
   background: linear-gradient(90deg, #34d399, #10b981, #059669, #10b981, #34d399);
   clip-path: polygon(0 100%, 3% 0, 6% 100%, 9% 0, 12% 100%, 15% 0, 18% 100%, 21% 0, 24% 100%, 27% 0, 30% 100%, 33% 0, 36% 100%, 39% 0, 42% 100%, 45% 0, 48% 100%, 51% 0, 54% 100%, 57% 0, 60% 100%, 63% 0, 66% 100%, 69% 0, 72% 100%, 75% 0, 78% 100%, 81% 0, 84% 100%, 87% 0, 90% 100%, 93% 0, 96% 100%, 100% 0, 100% 100%);
   pointer-events: none;
+}
+
+/* Header Toolbar - ensure visibility outside clip-path */
+.lm-discussion-questions .lm-header-toolbar {
+  top: 12px;
+  right: 12px;
+  z-index: 200;
+  background: rgba(5, 150, 105, 0.8);
+  border: 2px solid #34d399;
+  border-radius: 0;
+}
+
+.lm-discussion-questions .lm-header-toolbar .lm-header-tool-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0;
+}
+
+.lm-discussion-questions .lm-header-toolbar .lm-header-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 /* Level Badge - Angular Design */
@@ -9969,19 +10004,22 @@ body.lm-fullscreen-mode .main-content {
 
 /* Questions Grid - 2 columns */
 .lm-dq-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Question Card - Edgy Design */
+/* Question Card - Edgy Design - Compact Single Row */
 .lm-dq-card {
   background: #fff;
   border: 2px solid #d1fae5;
-  padding: 16px;
+  padding: 10px 14px;
   position: relative;
   transition: all 0.2s ease;
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .lm-dq-card::before {
@@ -9989,35 +10027,34 @@ body.lm-fullscreen-mode .main-content {
   position: absolute;
   top: 0;
   right: 0;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background: #059669;
   clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
 
 .lm-dq-card:hover {
   border-color: #10b981;
-  box-shadow: 4px 4px 0 rgba(5, 150, 105, 0.15);
-  transform: translate(-2px, -2px);
+  box-shadow: 3px 3px 0 rgba(5, 150, 105, 0.15);
+  transform: translate(-1px, -1px);
 }
 
 .lm-dq-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .lm-dq-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   color: #fff;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
@@ -10034,16 +10071,16 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-dq-question {
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
   color: #1f2937;
   margin: 0;
-  min-height: 60px;
+  flex: 1;
 }
 
 .lm-dq-delete-btn {
-  position: absolute;
-  top: 8px;
-  right: 20px;
+  position: relative;
+  top: auto;
+  right: auto;
   width: 22px;
   height: 22px;
   border: none;
@@ -10056,6 +10093,8 @@ body.lm-fullscreen-mode .main-content {
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .lm-dq-card:hover .lm-dq-delete-btn {
@@ -10074,8 +10113,8 @@ body.lm-fullscreen-mode .main-content {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 14px;
-  margin-top: 20px;
+  padding: 12px;
+  margin-top: 14px;
   background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
   border: 2px dashed #10b981;
   color: #059669;
@@ -10130,8 +10169,10 @@ body.lm-fullscreen-mode .main-content {
 
 .lm-dq-step {
   margin: 6px 12px !important;
+  padding: 12px 14px !important;
   background: #fff !important;
   border: 1px solid #a7f3d0 !important;
+  border-radius: 8px !important;
 }
 
 .lm-dq-step:hover {
@@ -10293,6 +10334,222 @@ body.lm-fullscreen-mode .main-content {
   border-color: #10b981 !important;
   transform: translate(-2px, -2px) !important;
   box-shadow: 5px 5px 0 rgba(5, 150, 105, 0.15) !important;
+}
+
+/* Discussion Questions Feedback Section - Green Theme */
+.lm-discussion-questions .lm-goal-row {
+  display: none;
+}
+
+.lm-discussion-questions .lm-goal-subtext {
+  display: none;
+}
+
+.lm-discussion-questions .lm-feedback-rubric {
+  display: none;
+}
+
+.lm-discussion-questions .lm-feedback-goal {
+  display: none;
+}
+
+.lm-discussion-questions .lm-feedback-goal-jp {
+  display: none;
+}
+
+.lm-discussion-questions .lm-feedback-categories {
+  border: 2px solid #d1fae5;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+.lm-discussion-questions .lm-feedback-categories-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  letter-spacing: 1px;
+}
+
+.lm-discussion-questions .lm-feedback-categories-grid {
+  grid-template-columns: repeat(4, 1fr);
+  background: #f0fdf4;
+}
+
+.lm-discussion-questions .lm-feedback-category {
+  border-right: 2px solid #d1fae5;
+}
+
+.lm-discussion-questions .lm-feedback-cat-title {
+  color: #047857;
+}
+
+.lm-discussion-questions .lm-feedback-cat-title:focus {
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.lm-discussion-questions .lm-feedback-cat-jp:focus,
+.lm-discussion-questions .lm-feedback-cat-desc:focus {
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.lm-discussion-questions .lm-feedback-guide {
+  border: 2px solid #d1fae5;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+.lm-discussion-questions .lm-feedback-guide-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  letter-spacing: 1px;
+}
+
+.lm-discussion-questions .lm-feedback-guide-table th {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.lm-discussion-questions .lm-feedback-guide-table td {
+  border-color: #d1fae5;
+}
+
+.lm-discussion-questions .lm-guide-category {
+  background: #f0fdf4;
+}
+
+.lm-discussion-questions .lm-guide-category strong {
+  color: #047857;
+}
+
+.lm-discussion-questions .lm-guide-category strong:focus,
+.lm-discussion-questions .lm-guide-category span:focus,
+.lm-discussion-questions .lm-guide-focus:focus,
+.lm-discussion-questions .lm-guide-example:focus {
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.lm-discussion-questions .lm-copy-template {
+  border: 2px solid #d1fae5;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+.lm-discussion-questions .lm-copy-template-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  letter-spacing: 1px;
+}
+
+.lm-discussion-questions .lm-copy-template textarea {
+  border: none;
+  background: #f0fdf4;
+}
+
+.lm-discussion-questions .lm-copy-template textarea:focus {
+  background: #ecfdf5;
+  outline: 2px solid #10b981;
+}
+
+.lm-discussion-questions .lm-copy-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+.lm-discussion-questions .lm-copy-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+/* Discussion Questions Feedback Sidebar - Green Theme */
+.lm-discussion-questions .lm-feedback-sidebar {
+  border: 2px solid #d1fae5;
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+
+.lm-discussion-questions .lm-feedback-sidebar-header {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  letter-spacing: 1px;
+}
+
+.lm-discussion-questions .lm-feedback-sidebar-subtitle {
+  background: #d1fae5;
+  color: #047857;
+  border-bottom: 2px solid #a7f3d0;
+}
+
+.lm-discussion-questions .lm-feedback-sidebar .lm-dq-guide-title {
+  color: #064e3b;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px 16px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f0fdf4;
+}
+
+.lm-discussion-questions .lm-feedback-steps {
+  background: #f0fdf4;
+  padding: 12px 0;
+}
+
+.lm-discussion-questions .lm-feedback-step {
+  background: #fff;
+  border: 1px solid #a7f3d0;
+  margin: 6px 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+}
+
+.lm-discussion-questions .lm-feedback-step:hover {
+  border-color: #10b981;
+  box-shadow: 2px 2px 0 rgba(5, 150, 105, 0.15);
+}
+
+.lm-discussion-questions .lm-feedback-step-number {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Discussion Questions Footer - Edgy Design */
+.lm-dq-footer {
+  margin-top: 40px;
+  position: relative;
+  background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%);
+  clip-path: polygon(0 12px, 20px 0, 100% 0, 100% 100%, 0 100%);
+  padding: 16px 24px;
+  overflow: hidden;
+}
+
+.lm-dq-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%);
+}
+
+.lm-dq-footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.lm-dq-footer-copyright {
+  font-size: 11px;
+  color: #a7f3d0;
+  letter-spacing: 0.5px;
+  font-weight: 500;
 }
 
 /* Print styles for Discussion Questions */

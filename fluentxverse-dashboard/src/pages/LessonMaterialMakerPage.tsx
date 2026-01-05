@@ -3533,6 +3533,76 @@ const createDiscussionQuestionsDraft = (): LessonMaterialDraft => ({
         { id: 'step-5', instruction: 'Note vocabulary and expressions for feedback.' },
       ],
     },
+    // Section 2: FEEDBACK
+    {
+      id: 'discussion-section-2',
+      sectionNumber: 2,
+      sectionTitle: 'FEEDBACK',
+      sectionType: 'feedback',
+      explanationEn: '',
+      explanationJp: '',
+      sectionImage: '',
+      importantNote: '',
+      copyTemplate: '',
+      feedbackRubric: [
+        { score: 4, label: 'Very Good', description: 'Could communicate ideas clearly and naturally' },
+        { score: 3, label: 'Good', description: 'Could communicate ideas with minor hesitations' },
+        { score: 2, label: 'Fair', description: 'Could communicate ideas with some difficulty' },
+        { score: 1, label: 'Poor', description: 'Had difficulty communicating ideas' },
+      ],
+      feedbackCategories: [
+        { id: 'fc-1', title: 'RANGE', titleJp: '表現の幅', descJp: '語彙をどの程度使えるか' },
+        { id: 'fc-2', title: 'ACCURACY', titleJp: '正確さ', descJp: '文法が正しく使えているかどうか' },
+        { id: 'fc-3', title: 'FLUENCY', titleJp: '流暢さ', descJp: '円滑に喋ることができるかどうか' },
+        { id: 'fc-4', title: 'INTERACTION', titleJp: '対話力', descJp: '会話を続ける力があるかどうか' },
+      ],
+      feedbackGuide: [
+        {
+          id: 'fg-1',
+          category: 'RANGE',
+          categoryJp: '',
+          categoryDesc: 'the ability to use a wide variety of vocabulary',
+          focusOn: '<strong>words</strong> the student <strong>learned</strong>\n+\n<strong>words</strong> the student <strong>overused</strong>',
+          exampleFeedback: 'New vocabulary learned:\n• [word] - [meaning]\n\nYou said: I think it\'s <span class="error">VERY VERY</span> important.\nBetter: I think it\'s <strong>EXTREMELY</strong> important.',
+        },
+        {
+          id: 'fg-2',
+          category: 'ACCURACY',
+          categoryJp: '',
+          categoryDesc: 'the ability to speak correctly',
+          focusOn: '<strong>grammar mistakes</strong>',
+          exampleFeedback: 'You said: I <span class="error">GO</span> there last week.\nCorrect: I <strong>WENT</strong> there last week.',
+        },
+        {
+          id: 'fg-3',
+          category: 'FLUENCY',
+          categoryJp: '',
+          categoryDesc: 'the ability to speak smoothly without pauses or fillers',
+          focusOn: 'unnaturally <strong>long pauses</strong>\n+\n<strong>fillers</strong> (um, uh, etc.)',
+          exampleFeedback: 'You said: I think... um... it\'s good.\nBetter: I think it\'s good.',
+        },
+        {
+          id: 'fg-4',
+          category: 'INTERACTION',
+          categoryJp: '',
+          categoryDesc: 'the ability to engage and respond naturally in conversation',
+          focusOn: '<strong>asking follow-up questions</strong>\n+\n<strong>showing interest</strong> (reactions, comments)',
+          exampleFeedback: 'You said: Yes, I agree.\nBetter: Yes, I agree! What about you? Have you tried that?',
+        },
+      ],
+      feedbackTemplate: '*Personalized FEEDBACK*\n\n*RANGE*\n[word] - [meaning]\n\nYou said:\nBetter:\n\n*ACCURACY*\nYou said:\nCorrect:\n\n*FLUENCY*\nYou said:\nBetter:\n\n*INTERACTION*\nYou said:\nBetter:',
+      sidebarTitle: 'FEEDBACK',
+      sidebarSubtitle: 'FEEDBACK (2-3 min)',
+      lessonGoalTitle: '',
+      lessonGoalSteps: [
+        { id: 'step-1', instruction: 'Transition to feedback.' },
+        { id: 'step-2', instruction: 'Give feedback on range - vocabulary used.' },
+        { id: 'step-3', instruction: 'Give feedback on accuracy - grammar corrections.' },
+        { id: 'step-4', instruction: 'Give feedback on fluency - speaking smoothness.' },
+        { id: 'step-5', instruction: 'Give feedback on interaction - engagement level.' },
+        { id: 'step-6', instruction: 'Wrap up the lesson.' },
+      ],
+    },
   ],
   vocabulary: [],
   grammar: [],
@@ -10592,20 +10662,6 @@ export default function LessonMaterialMakerPage() {
                           <div key={q.id} className="lm-dq-card">
                             <div className="lm-dq-card-header">
                               <span className="lm-dq-number">{q.number}</span>
-                              <span
-                                className="lm-dq-category"
-                                contentEditable
-                                suppressContentEditableWarning
-                                onBlur={(e) => {
-                                  const newSections = [...draft.sections];
-                                  const newQuestions = [...(section.discussionQuestions || [])];
-                                  newQuestions[qIndex] = { ...q, category: (e.target as HTMLElement).textContent || '' };
-                                  newSections[sectionIndex] = { ...section, discussionQuestions: newQuestions };
-                                  setDraft(prev => ({ ...prev, sections: newSections }));
-                                }}
-                              >
-                                {q.category}
-                              </span>
                             </div>
                             <p
                               className="lm-dq-question"
@@ -12794,7 +12850,7 @@ export default function LessonMaterialMakerPage() {
                   {/* FEEDBACK type sidebar */}
                   {section.sectionType === 'feedback' && (
                     <div className="lm-feedback-sidebar">
-                      {/* Sidebar Header - Red background */}
+                      {/* Sidebar Header */}
                       <div
                         className="lm-feedback-sidebar-header"
                         contentEditable
@@ -12810,6 +12866,9 @@ export default function LessonMaterialMakerPage() {
                       >
                         {section.sidebarSubtitle}
                       </div>
+
+                      {/* Tutor Guide Title */}
+                      <div className="lm-dq-guide-title">Tutor Guide</div>
 
                       {/* Steps List */}
                       <div className="lm-feedback-steps">
@@ -13631,6 +13690,17 @@ export default function LessonMaterialMakerPage() {
             </div>
           );
           })}
+
+          {/* Discussion Questions Footer */}
+          {selectedTemplate?.id === 'discussion-questions' && (
+            <div className="lm-dq-footer">
+              <div className="lm-dq-footer-content">
+                <div className="lm-dq-footer-copyright">
+                  © {new Date().getFullYear()} FluentXVerse. All rights reserved.
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
