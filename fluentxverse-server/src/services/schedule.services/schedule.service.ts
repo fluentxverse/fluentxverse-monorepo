@@ -227,6 +227,10 @@ export class ScheduleService {
       const startDate = monday.toISOString().split('T')[0];
       const endDate = sunday.toISOString().split('T')[0];
       
+      console.log('📅 getTutorSchedule - tutorId:', params.tutorId);
+      console.log('📅 getTutorSchedule - weekOffset:', params.weekOffset);
+      console.log('📅 getTutorSchedule - date range:', startDate, 'to', endDate);
+      
       // Get all slots for the week
       const result = await session.run(
         `
@@ -240,10 +244,14 @@ export class ScheduleService {
         { tutorId: params.tutorId, startDate, endDate }
       );
       
+      console.log('📅 getTutorSchedule - records found:', result.records.length);
+      
       const slots = result.records.map(record => {
         const slot = record.get('s')?.properties;
         const booking = record.get('b')?.properties;
         const student = record.get('student')?.properties;
+        
+        console.log('📅 getTutorSchedule - slot:', slot);
         
         return {
           date: slot.slotDate,
@@ -257,6 +265,8 @@ export class ScheduleService {
           attendanceStudent: booking?.attendanceStudent
         };
       });
+      
+      console.log('📅 getTutorSchedule - returning slots:', slots.length);
       
       return {
         weekStart: monday,

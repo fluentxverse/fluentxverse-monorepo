@@ -158,24 +158,30 @@ const SchedulePage = () => {
       try {
         const scheduleData = await scheduleApi.getWeekSchedule(currentWeekOffset);
         
+        console.log('📅 Schedule API Response:', scheduleData);
+        console.log('📅 Slots received:', scheduleData.slots.length);
+        console.log('📅 weekDates array:', weekDates.map(d => formatDateISO(d)));
+        
         // Convert schedule data to local state format
         const newSelectedSlots = new Set<string>();
         const newBookedSlots = new Map<string, BookedSlotInfo>();
         
         scheduleData.slots.forEach(slot => {
-
+          console.log('📅 Processing slot:', slot);
           
           // Find which day of the week this slot belongs to
           const slotDate = new Date(slot.date + 'T00:00:00'); // Parse as local date
-
+          console.log('📅 Slot date parsed:', slotDate.toISOString());
           
           const dayIdx = weekDates.findIndex(d => {
             const match = d.getFullYear() === slotDate.getFullYear() &&
               d.getMonth() === slotDate.getMonth() &&
               d.getDate() === slotDate.getDate();
-
+            console.log(`📅 Comparing: weekDate=${formatDateISO(d)} vs slotDate=${formatDateISO(slotDate)} match=${match}`);
             return match;
           });
+          
+          console.log('📅 dayIdx found:', dayIdx);
           
           if (dayIdx !== -1) {
             const key = `${dayIdx}-${slot.time}`;
@@ -187,9 +193,12 @@ const SchedulePage = () => {
             const now = new Date();
             const isPast = slotDateTime < now;
 
+            console.log(`📅 Slot key=${key}, status=${slot.status}, isPast=${isPast}`);
+
             if (slot.status === 'open' && !isPast) {
               // Only add to selected slots if not in the past
               newSelectedSlots.add(key);
+              console.log('📅 Added to selectedSlots:', key);
             } else if (slot.status === 'booked' && slot.studentId && slot.bookingId) {
               newSelectedSlots.add(key); // Keep as open slot visually
               newBookedSlots.set(key, {
@@ -197,6 +206,9 @@ const SchedulePage = () => {
                 bookingId: slot.bookingId,
                 studentName: slot.studentName
               });
+              console.log('📅 Added to bookedSlots:', key);
+            } else {
+              console.log('📅 Slot NOT added - status:', slot.status, 'isPast:', isPast);
             }
             // Past open slots are simply not added, so they show as PAST
           } else {
@@ -204,7 +216,8 @@ const SchedulePage = () => {
           }
         });
         
-
+        console.log('📅 Final selectedSlots:', Array.from(newSelectedSlots));
+        console.log('📅 Final bookedSlots:', Array.from(newBookedSlots.keys()));
         
         setSelectedTimeSlots(newSelectedSlots);
         setBookedSlots(newBookedSlots);
