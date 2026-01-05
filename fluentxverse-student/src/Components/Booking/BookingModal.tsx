@@ -214,8 +214,35 @@ export const BookingModal = ({
     }
   };
 
+  // Helper to check if a slot has already elapsed (for today's date)
+  const isSlotElapsed = (slotDate: string, slotTime: string): boolean => {
+    // Get current time in KST (Korea Standard Time, UTC+9)
+    const now = new Date();
+    const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000) + (now.getTimezoneOffset() * 60 * 1000));
+    const todayKST = kstNow.toISOString().split('T')[0];
+    
+    // Only filter if it's today's date
+    if (slotDate !== todayKST) {
+      return false;
+    }
+    
+    // Convert slot time to KST for comparison
+    const kstTime = convertToKoreanTime(slotTime);
+    const [slotHours, slotMinutes] = kstTime.split(':').map(Number);
+    const slotTotalMinutes = slotHours * 60 + slotMinutes;
+    const nowTotalMinutes = kstNow.getHours() * 60 + kstNow.getMinutes();
+    
+    // Slot is elapsed if its time has already passed
+    return slotTotalMinutes <= nowTotalMinutes;
+  };
+
   // Group slots by date and deduplicate by time
   const slotsByDate = availableSlots.reduce((acc, slot) => {
+    // Skip elapsed slots
+    if (isSlotElapsed(slot.date, slot.time)) {
+      return acc;
+    }
+    
     if (!acc[slot.date]) {
       acc[slot.date] = new Map<string, AvailableSlot>();
     }
@@ -336,7 +363,7 @@ export const BookingModal = ({
                             className={`booking-modal-time-slot ${selectedSlot?.slotId === slot.slotId ? 'selected' : ''}`}
                             onClick={() => setSelectedSlot(slot)}
                           >
-                            {formatTime(slot.time)} KST
+                            <span>{formatTime(slot.time)} KST</span>
                           </button>
                         ))}
                       </div>
