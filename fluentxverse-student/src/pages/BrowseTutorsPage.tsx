@@ -6,14 +6,16 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
 import { useAuthContext } from '../context/AuthContext';
-import { useActiveAccount, useAutoConnect } from 'thirdweb/react';
-import { thirdwebClient, appWallet } from '../config/wallet';
 import './BrowseTutorsPage.css';
 
-// API URL for ticket images
+// API URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+
+// Get ticket image URL from local assets (same as TicketsPage)
 const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
-  return `${API_BASE_URL}/tickets/image/${tier}`;
+  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.png';
+  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.png';
+  return '/assets/img/icons/trial_ticket.png';
 };
 
 // Ticket balance type
@@ -180,16 +182,11 @@ export const BrowseTutorsPage = () => {
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   
-  // Auth and wallet state
-  const { user, isAuthenticated } = useAuthContext();
-  const activeAccount = useActiveAccount();
-  const { isLoading: isWalletConnecting } = useAutoConnect({
-    client: thirdwebClient,
-    wallets: [appWallet],
-  });
+  // Auth state
+  const { user, isAuthenticated, initialLoading } = useAuthContext();
   
   // Ticket balance state
-  const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, basicTokenId: null, premiumTokenId: null });
+  const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, trial: 0, basicTokenId: null, premiumTokenId: null, trialTokenId: null });
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
   
   // Fetch ticket balance when user is logged in
@@ -208,12 +205,12 @@ export const BrowseTutorsPage = () => {
     }
   };
 
-  // Fetch balance when wallet connects
+  // Fetch balance when user is logged in (use user.walletAddress from auth context)
   useEffect(() => {
-    if (activeAccount?.address && isAuthenticated) {
-      fetchTicketBalance(activeAccount.address);
+    if (user?.walletAddress && isAuthenticated) {
+      fetchTicketBalance(user.walletAddress);
     }
-  }, [activeAccount?.address, isAuthenticated]);
+  }, [user?.walletAddress, isAuthenticated]);
   
   // Booking modal state
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -434,7 +431,7 @@ export const BrowseTutorsPage = () => {
         <Header />
         
         {/* Conditionally render hero or balance section */}
-        {isAuthenticated ? (
+        {(isAuthenticated || initialLoading) ? (
           /* Logged-in user: Show balance card instead of hero */
           <section className="browse-balance-section">
             <div className="browse-balance-card">
@@ -449,13 +446,26 @@ export const BrowseTutorsPage = () => {
                 </a>
               </div>
               
-              {isLoadingBalance || isWalletConnecting ? (
+              {isLoadingBalance ? (
                 <div className="browse-balance-loading">
                   <i className="ri-loader-4-line ri-spin"></i>
-                  <span>{isWalletConnecting ? 'Connecting wallet...' : 'Loading balance...'}</span>
+                  <span>Loading...</span>
                 </div>
               ) : (
                 <div className="browse-balance-tickets">
+                  {(ticketBalance?.trial || 0) > 0 && (
+                    <div className="browse-balance-ticket">
+                      <img 
+                        src={getTicketImageUrl('trial')} 
+                        alt="Trial Ticket" 
+                        className="browse-balance-ticket-img"
+                      />
+                      <div className="browse-balance-ticket-info">
+                        <span className="browse-balance-ticket-count trial">{ticketBalance?.trial || 0}</span>
+                        <span className="browse-balance-ticket-label">Trial</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="browse-balance-ticket">
                     <img 
                       src={getTicketImageUrl('basic')} 
@@ -480,31 +490,6 @@ export const BrowseTutorsPage = () => {
                   </div>
                 </div>
               )}
-              
-              {/* Inline Search for logged-in users */}
-              <form className="browse-balance-search" onSubmit={handleSearch}>
-                <div className="browse-balance-search-wrapper">
-                  <i className="ri-search-line"></i>
-                  <input
-                    type="text"
-                    placeholder="Search tutors by name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-                  />
-                  {searchQuery && (
-                    <button 
-                      type="button" 
-                      className="browse-balance-search-clear"
-                      onClick={() => { setSearchQuery(''); searchTutors(true); }}
-                    >
-                      <i className="ri-close-line"></i>
-                    </button>
-                  )}
-                </div>
-                <button type="submit" className="browse-balance-search-btn">
-                  Search
-                </button>
-              </form>
             </div>
           </section>
         ) : (

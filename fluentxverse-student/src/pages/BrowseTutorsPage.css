@@ -1627,34 +1627,43 @@
 }
 
 /* ================================
-   Balance Section (Logged In Users)
-   ================================ */
+   Balance Section (Logged In Users) - Compact Card
+   ================================================= */
 .browse-balance-section {
-  padding: 140px 24px 24px;
+  min-height: 260px;
+  padding: 24px 24px 20px;
+  padding-top: 120px;
   background: linear-gradient(135deg, #0245ae 0%, #0369a1 50%, #4a9eff 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .browse-balance-card {
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 600px;
+  width: 100%;
   background: var(--browse-card);
-  border-radius: var(--browse-radius-lg);
-  padding: 24px;
-  box-shadow: var(--browse-shadow-xl);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 2;
 }
 
 .browse-balance-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .browse-balance-title {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 1.25rem;
+  gap: 6px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--browse-text);
   margin: 0;
@@ -1662,18 +1671,18 @@
 
 .browse-balance-title i {
   color: var(--browse-primary);
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 
 .browse-balance-buy-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 4px 10px;
   background: var(--browse-primary);
   color: white;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
   font-weight: 500;
   text-decoration: none;
   transition: var(--browse-transition);
@@ -1688,13 +1697,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 24px;
+  gap: 6px;
+  padding: 8px;
   color: var(--browse-text-secondary);
+  font-size: 0.8rem;
 }
 
 .browse-balance-loading i {
-  font-size: 1.25rem;
+  font-size: 0.9rem;
   animation: spin 1s linear infinite;
 }
 
@@ -1705,35 +1715,37 @@
 
 .browse-balance-tickets {
   display: flex;
-  gap: 24px;
-  margin-bottom: 20px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .browse-balance-ticket {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex: 1;
-  padding: 16px;
+  min-width: 100px;
+  padding: 8px 12px;
   background: var(--browse-bg);
-  border-radius: var(--browse-radius);
+  border-radius: 8px;
   border: 1px solid var(--browse-border);
 }
 
 .browse-balance-ticket-img {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .browse-balance-ticket-info {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .browse-balance-ticket-count {
-  font-size: 1.75rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--browse-primary);
   line-height: 1;
@@ -1743,119 +1755,46 @@
   color: #d97706;
 }
 
+.browse-balance-ticket-count.trial {
+  color: #10b981;
+}
+
 .browse-balance-ticket-label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--browse-text-secondary);
-  margin-top: 2px;
-}
-
-/* Balance Search */
-.browse-balance-search {
-  display: flex;
-  gap: 12px;
-}
-
-.browse-balance-search-wrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--browse-bg);
-  border: 1px solid var(--browse-border);
-  border-radius: var(--browse-radius);
-  transition: var(--browse-transition);
-}
-
-.browse-balance-search-wrapper:focus-within {
-  border-color: var(--browse-primary);
-  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
-}
-
-.browse-balance-search-wrapper i {
-  color: var(--browse-text-secondary);
-  font-size: 1.125rem;
-}
-
-.browse-balance-search-wrapper input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-size: 0.95rem;
-  color: var(--browse-text);
-  outline: none;
-}
-
-.browse-balance-search-wrapper input::placeholder {
-  color: var(--browse-text-secondary);
-}
-
-.browse-balance-search-clear {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: var(--browse-border);
-  border: none;
-  border-radius: 50%;
-  color: var(--browse-text-secondary);
-  cursor: pointer;
-  transition: var(--browse-transition);
-}
-
-.browse-balance-search-clear:hover {
-  background: var(--browse-text-secondary);
-  color: white;
-}
-
-.browse-balance-search-btn {
-  padding: 12px 24px;
-  background: var(--browse-primary);
-  color: white;
-  border: none;
-  border-radius: var(--browse-radius);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--browse-transition);
-}
-
-.browse-balance-search-btn:hover {
-  background: var(--browse-primary-dark);
 }
 
 /* Responsive for balance section */
 @media (max-width: 640px) {
   .browse-balance-section {
-    padding: 90px 16px 20px;
+    min-height: 220px;
+    padding: 16px 16px 16px;
+    padding-top: 100px;
   }
   
   .browse-balance-card {
-    padding: 16px;
+    padding: 10px 12px;
   }
   
   .browse-balance-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .browse-balance-buy-btn {
-    width: 100%;
-    justify-content: center;
+    margin-bottom: 8px;
   }
   
   .browse-balance-tickets {
-    flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
   
-  .browse-balance-search {
-    flex-direction: column;
+  .browse-balance-ticket {
+    min-width: 80px;
+    padding: 6px 10px;
   }
   
-  .browse-balance-search-btn {
-    width: 100%;
+  .browse-balance-ticket-img {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .browse-balance-ticket-count {
+    font-size: 1rem;
   }
 }
