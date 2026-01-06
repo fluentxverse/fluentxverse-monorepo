@@ -672,145 +672,114 @@ export default function TicketsPage() {
         <Header />
         <div className="tickets-page">
           <div className="tickets-container">
-            {/* Header */}
-            <div className="tickets-header">
-              <div className="tickets-header-left">
-                <div className="tickets-page-icon">
-                  <i className="fas fa-ticket-alt"></i>
-                </div>
-                <div>
-                  <h1 className="tickets-page-title">Buy Lesson Tickets</h1>
-                  <p className="tickets-page-subtitle">Purchase tickets to book lessons with our expert tutors</p>
-                </div>
-              </div>
-              <a 
-                href="/purchase-history"
-                className="tickets-history-btn"
-              >
-                <i className="fas fa-receipt"></i>
-                Purchase History
-              </a>
-            </div>
 
-            {/* Current Balance */}
-            <div className="tickets-balance">
-              <div className="balance-card">
-                <div className="balance-header">
-                  <span className="balance-label">Your Ticket Balance</span>
+            {/* Hero Section - Your Ticket Balance */}
+            <div className="tickets-hero">
+              <div className="tickets-hero-content">
+                <div className="tickets-hero-text">
+                  <h1>Your Lesson Tickets</h1>
+                  <p>Purchase tickets to book lessons with our verified tutors</p>
                 </div>
-                {isLoadingBalance || isWalletConnecting ? (
-                  <div className="balance-loading">
-                    <i className="fas fa-spinner fa-spin"></i>
-                    <span>{isWalletConnecting ? 'Connecting wallet...' : 'Loading balance...'}</span>
-                  </div>
-                ) : (
-                  <div className="balance-tickets-row">
-                    <div className="balance-ticket-item">
-                      <img 
-                        src={getTicketImageUrl('basic')} 
-                        alt="Basic Ticket" 
-                        className="balance-ticket-img"
-                      />
-                      <span className="balance-ticket-count">{ticketBalance?.basic || 0}</span>
+                <div className="tickets-hero-balance">
+                  {isLoadingBalance || isWalletConnecting ? (
+                    <div className="balance-loading">
+                      <div className="balance-loading-spinner"></div>
+                      <span>{isWalletConnecting ? 'Connecting wallet...' : 'Loading...'}</span>
                     </div>
-                    <div className="balance-ticket-item">
-                      <img 
-                        src={getTicketImageUrl('premium')} 
-                        alt="Premium Ticket" 
-                        className="balance-ticket-img"
-                      />
-                      <span className="balance-ticket-count premium">{ticketBalance?.premium || 0}</span>
-                    </div>
-                    {ticketBalance?.trial > 0 && (
-                      <div className="balance-ticket-item">
-                        <img 
-                          src={getTicketImageUrl('trial')} 
-                          alt="Trial Ticket" 
-                          className="balance-ticket-img"
-                        />
-                        <span className="balance-ticket-count trial">{ticketBalance?.trial || 0}</span>
+                  ) : (
+                    <div className="balance-tickets-display">
+                      <div className="balance-ticket-card basic">
+                        <div className="balance-ticket-icon">
+                          <img src={getTicketImageUrl('basic')} alt="Basic" />
+                        </div>
+                        <div className="balance-ticket-info">
+                          <span className="balance-ticket-number">{ticketBalance?.basic || 0}</span>
+                          <span className="balance-ticket-type">Basic</span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div className="balance-ticket-card premium">
+                        <div className="balance-ticket-icon">
+                          <img src={getTicketImageUrl('premium')} alt="Premium" />
+                        </div>
+                        <div className="balance-ticket-info">
+                          <span className="balance-ticket-number">{ticketBalance?.premium || 0}</span>
+                          <span className="balance-ticket-type">Premium</span>
+                        </div>
+                      </div>
+                      {ticketBalance?.trial > 0 && (
+                        <div className="balance-ticket-card trial">
+                          <div className="balance-ticket-icon">
+                            <img src={getTicketImageUrl('trial')} alt="Trial" />
+                          </div>
+                          <div className="balance-ticket-info">
+                            <span className="balance-ticket-number">{ticketBalance?.trial || 0}</span>
+                            <span className="balance-ticket-type">Trial</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <a href="/tutors" className="hero-book-btn">
+                    <i className="ri-calendar-line"></i>
+                    Book a Lesson
+                  </a>
+                </div>
               </div>
             </div>
 
-            {/* How it Works */}
+            {/* Quick Steps */}
             <div className="how-it-works">
-              <h2>How it Works</h2>
-              <div className="steps-grid">
-                <div className="step-card">
-                  <div className="step-number">1</div>
-                  <div className="step-icon">🎫</div>
-                  <h3>Buy Tickets</h3>
-                  <p>Choose a package that fits your learning goals</p>
+              <div className="steps-row">
+                <div className="step-item">
+                  <div className="step-icon-wrap"><span>1</span></div>
+                  <div className="step-text">
+                    <strong>Buy Tickets</strong>
+                    <span>Choose a package below</span>
+                  </div>
                 </div>
-                <div className="step-card">
-                  <div className="step-number">2</div>
-                  <div className="step-icon">👨‍🏫</div>
-                  <h3>Find a Tutor</h3>
-                  <p>Browse our verified tutors and pick your favorite</p>
+                <div className="step-connector"><i className="ri-arrow-right-line"></i></div>
+                <div className="step-item">
+                  <div className="step-icon-wrap"><span>2</span></div>
+                  <div className="step-text">
+                    <strong>Find a Tutor</strong>
+                    <span>Browse verified tutors</span>
+                  </div>
                 </div>
-                <div className="step-card">
-                  <div className="step-number">3</div>
-                  <div className="step-icon">📅</div>
-                  <h3>Book a Lesson</h3>
-                  <p>Use your tickets to schedule lessons at your convenience</p>
-                </div>
-                <div className="step-card">
-                  <div className="step-number">4</div>
-                  <div className="step-icon">🚀</div>
-                  <h3>Learn & Grow</h3>
-                  <p>Improve your English skills with personalized lessons</p>
+                <div className="step-connector"><i className="ri-arrow-right-line"></i></div>
+                <div className="step-item">
+                  <div className="step-icon-wrap"><span>3</span></div>
+                  <div className="step-text">
+                    <strong>Book & Learn</strong>
+                    <span>Schedule your lesson</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Packages Grid */}
             <div className="packages-section">
-              <h2>Choose Your Package</h2>
-              
-              {/* Tier Comparison */}
-              <div className="tier-comparison">
-                <div className="tier-info basic-tier">
-                  <div className="tier-header">
-                    <span className="tier-badge basic">Basic</span>
-                    <span className="tier-price">$6/ticket</span>
-                  </div>
-                  <p>25-minute lessons with any available tutor</p>
+              <div className="packages-header">
+                <h2>Choose Your Package</h2>
+                <div className="tier-tabs">
+                  <button 
+                    className={`tier-tab ${selectedTier === 'all' ? 'active' : ''}`}
+                    onClick={() => setSelectedTier('all')}
+                  >
+                    All
+                  </button>
+                  <button 
+                    className={`tier-tab basic ${selectedTier === 'basic' ? 'active' : ''}`}
+                    onClick={() => setSelectedTier('basic')}
+                  >
+                    Basic
+                  </button>
+                  <button 
+                    className={`tier-tab premium ${selectedTier === 'premium' ? 'active' : ''}`}
+                    onClick={() => setSelectedTier('premium')}
+                  >
+                    Premium
+                  </button>
                 </div>
-                <div className="tier-info premium-tier">
-                  <div className="tier-header">
-                    <span className="tier-badge premium">Premium</span>
-                    <span className="tier-price">$9/ticket</span>
-                  </div>
-                  <p>25-minute premium lessons with premium tutors</p>
-                </div>
-              </div>
-              
-              {/* Tier Tabs */}
-              <div className="tier-tabs">
-                <button 
-                  className={`tier-tab ${selectedTier === 'all' ? 'active' : ''}`}
-                  onClick={() => setSelectedTier('all')}
-                >
-                  All Packages
-                </button>
-                <button 
-                  className={`tier-tab ${selectedTier === 'basic' ? 'active' : ''}`}
-                  onClick={() => setSelectedTier('basic')}
-                >
-                  <span className="tier-badge basic small">Basic</span>
-                  $6/ticket
-                </button>
-                <button 
-                  className={`tier-tab ${selectedTier === 'premium' ? 'active' : ''}`}
-                  onClick={() => setSelectedTier('premium')}
-                >
-                  <span className="tier-badge premium small">Premium</span>
-                  $9/ticket
-                </button>
               </div>
               
               <div className="packages-grid">
@@ -819,65 +788,54 @@ export default function TicketsPage() {
                     key={pkg.id}
                     className={`package-card ${pkg.popular ? 'popular' : ''} ${selectedPackage?.id === pkg.id ? 'selected' : ''} ${pkg.tier}-tier`}
                   >
-                    {pkg.popular && (
-                      <div className="popular-badge">
-                        <i className="fas fa-fire"></i>
-                        Most Popular
-                      </div>
-                    )}
                     {pkg.discount && (
-                      <div className="discount-badge">
-                        <i className="fas fa-bolt"></i>
-                        {pkg.discount}% OFF
+                      <div className="discount-ribbon">
+                        <span>SAVE {pkg.discount}%</span>
                       </div>
                     )}
                     
-                    <span className={`tier-badge ${pkg.tier}`}>{pkg.tier === 'basic' ? 'Basic' : 'Premium'}</span>
-                    <div className="package-icon">
+                    <div className="package-card-header">
+                      <span className={`tier-badge ${pkg.tier}`}>{pkg.tier === 'basic' ? 'Basic' : 'Premium'}</span>
+                      {pkg.popular && <span className="popular-tag"><i className="ri-fire-fill"></i> Best Value</span>}
+                    </div>
+                    
+                    <div className="package-visual">
                       <img src={getTicketImageUrl(pkg.tier)} alt={`${pkg.tier} ticket`} />
-                    </div>
-                    <h3 className="package-name">{pkg.name}</h3>
-                    <p className="package-description">{pkg.description}</p>
-                    
-                    <div className="package-tickets">
-                      <span className="ticket-count">{pkg.tickets}</span>
-                      <span className="ticket-label">Ticket{pkg.tickets > 1 ? 's' : ''}</span>
+                      <div className="package-ticket-count">
+                        <span className="count">{pkg.tickets}</span>
+                        <span className="label">{pkg.tickets === 1 ? 'Ticket' : 'Tickets'}</span>
+                      </div>
                     </div>
                     
-                    <div className="package-price">
+                    <div className="package-pricing">
                       {pkg.originalPrice && (
                         <span className="original-price">${pkg.originalPrice}</span>
                       )}
-                      <span className="current-price">${pkg.price}</span>
-                      <span className="price-per-ticket">
-                        ${(pkg.price / pkg.tickets).toFixed(2)}/ticket
-                      </span>
+                      <div className="price-main">
+                        <span className="currency">$</span>
+                        <span className="amount">{pkg.price}</span>
+                      </div>
+                      <span className="price-per-ticket">${(pkg.price / pkg.tickets).toFixed(2)} per ticket</span>
                     </div>
                     
                     <ul className="package-features">
-                      {pkg.features.map((feature, index) => (
+                      {pkg.features.slice(0, 3).map((feature, index) => (
                         <li key={index}>
-                          <i className="fas fa-check"></i>
-                          {feature}
+                          <i className="ri-check-line"></i>
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
                     
                     <button
-                      className={`purchase-btn ${pkg.tier === 'premium' ? 'premium-btn' : ''} ${pkg.popular ? 'popular-btn' : ''}`}
+                      className={`purchase-btn ${pkg.tier}`}
                       onClick={() => handlePurchase(pkg)}
                       disabled={isLoadingQuote && selectedPackage?.id === pkg.id}
                     >
                       {isLoadingQuote && selectedPackage?.id === pkg.id ? (
-                        <>
-                          <i className="fas fa-spinner fa-spin"></i>
-                          Loading...
-                        </>
+                        <><i className="ri-loader-4-line ri-spin"></i> Loading...</>
                       ) : (
-                        <>
-                          <i className="fas fa-shopping-cart"></i>
-                          Buy Now
-                        </>
+                        <><i className="ri-shopping-cart-2-line"></i> Buy Now</>
                       )}
                     </button>
                   </div>

@@ -1,4 +1,5 @@
 import { getDriver } from '../../db/memgraph';
+import { invalidateUserTokens } from '../../db/redis';
 import neo4j from 'neo4j-driver';
 import { hash, compare } from 'bcrypt-ts';
 import type { 
@@ -1331,11 +1332,15 @@ export class AdminService {
       // Hash new password
       const hashedPassword = await hash(newPassword, 12);
 
-      // Update password
+      // Update password with signUpdate timestamp
+      const signUpdate = Date.now();
       await session.run(`
         MATCH (a:Admin {id: $adminId})
-        SET a.password = $password
-      `, { adminId, password: hashedPassword });
+        SET a.password = $password, a.signUpdate = $signUpdate
+      `, { adminId, password: hashedPassword, signUpdate });
+
+      // Invalidate all existing tokens for this admin
+      await invalidateUserTokens(adminId, signUpdate);
 
       return { success: true };
     } finally {

@@ -6,6 +6,7 @@
  */
 
 import type { Cookie } from 'elysia';
+import { isTokenInvalidatedBySignUpdate } from '../db/redis';
 
 // JWT payload structure for auth cookies
 export interface JwtAuthPayload {
@@ -116,7 +117,7 @@ export async function signAuthToken(
 /**
  * Verify and decode a JWT token
  * @param token - JWT string to verify
- * @returns Decoded payload if valid, null if invalid/expired
+ * @returns Decoded payload if valid, null if invalid/expired/revoked
  */
 export async function verifyAuthToken(token: string): Promise<JwtAuthPayload | null> {
   try {
@@ -150,6 +151,15 @@ export async function verifyAuthToken(token: string): Promise<JwtAuthPayload | n
     if (payload.exp && payload.exp < now) {
       console.warn('[JWT] Token expired');
       return null;
+    }
+
+    // Check if token was invalidated by password change (signUpdate)
+    if (payload.userId && payload.iat) {
+      const isInvalidated = await isTokenInvalidatedBySignUpdate(payload.userId, payload.iat);
+      if (isInvalidated) {
+        console.warn('[JWT] Token invalidated by password change');
+        return null;
+      }
     }
 
     return payload;

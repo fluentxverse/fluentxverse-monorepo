@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import DOMPurify from 'dompurify';
 import { lessonApi, type Lesson, type MergeRequest, type LessonVersion, type MergeRequestComment, type LessonMaterial } from '../api/lesson.api';
 import { DiffViewer } from '../Components/DiffViewer/DiffViewer';
 import { useLessonSocket, type ActiveEditor } from '../hooks/useLessonSocket';
@@ -10363,7 +10364,7 @@ export default function LessonMaterialMakerPage() {
                                     newSections[sectionIndex] = { ...section, feedbackGuide: newGuide };
                                     setDraft(prev => ({ ...prev, sections: newSections }));
                                   }}
-                                  dangerouslySetInnerHTML={{ __html: row.focusOn.replace(/\n/g, '<br/>') }}
+                                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(row.focusOn.replace(/\n/g, '<br/>')) }}
                                 />
                                 <td
                                   className="lm-guide-example"
@@ -10376,7 +10377,7 @@ export default function LessonMaterialMakerPage() {
                                     newSections[sectionIndex] = { ...section, feedbackGuide: newGuide };
                                     setDraft(prev => ({ ...prev, sections: newSections }));
                                   }}
-                                  dangerouslySetInnerHTML={{ __html: row.exampleFeedback.replace(/\n/g, '<br/>') }}
+                                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(row.exampleFeedback.replace(/\n/g, '<br/>')) }}
                                 />
                               </tr>
                             ))}
@@ -10555,10 +10556,10 @@ export default function LessonMaterialMakerPage() {
                                 setDraft(prev => ({ ...prev, sections: newSections }));
                               }}
                               dangerouslySetInnerHTML={{
-                                __html: line.underlineWords?.reduce(
+                                __html: DOMPurify.sanitize(line.underlineWords?.reduce(
                                   (text, word) => text.replace(word, `<u>${word}</u>`),
                                   line.lineEn
-                                ) || line.lineEn
+                                ) || line.lineEn)
                               }}
                             />
                             <button

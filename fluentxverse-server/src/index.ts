@@ -78,8 +78,24 @@ const allowedOrigins = envOrigins.length > 0 ? [...new Set([...envOrigins, ...de
 
 console.log('🌐 CORS allowed origins:', allowedOrigins);
 
+// Security: Maximum body size limit (10MB)
+const MAX_BODY_SIZE = 10 * 1024 * 1024;
+
 // Initialize Elysia app
-const app = new Elysia({ serve: {idleTimeout: 255 }}) 
+const app = new Elysia({ 
+  serve: { idleTimeout: 255 }
+})
+  // Security: Request body size limit middleware
+  .onRequest(({ request, set }) => {
+    const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+    if (contentLength > MAX_BODY_SIZE) {
+      set.status = 413;
+      return { 
+        success: false, 
+        error: 'Request body too large. Maximum size is 10MB.' 
+      };
+    }
+  })
   .use(swagger({
     documentation: {
       info: {
@@ -254,9 +270,22 @@ const app = new Elysia({ serve: {idleTimeout: 255 }})
     set.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin';
     // Permissions policy - restrict sensitive features
     set.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()';
-    // Content Security Policy (adjust as needed for your app)
+    // Content Security Policy - prevent XSS and injection attacks
+    set.headers['Content-Security-Policy'] = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: https: blob:",
+      "media-src 'self' https: blob:",
+      "connect-src 'self' wss: ws: https:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ');
+    // HSTS in production
     if (isProduction) {
-      set.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+      set.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload';
     }
   })
   .use(Auth)

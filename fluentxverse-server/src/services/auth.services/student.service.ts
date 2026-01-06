@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { hash, compare } from "bcrypt-ts";
 import { getDriver } from "../../db/memgraph";
 import type { RegisterParams, LoginParams, RegisteredParams, Suspended, RegisterStudentParams, UpdatePersonalInfoParams, UpdateEmailParams, UpdatePasswordParams } from "./auth.interface";
+import { invalidateUserTokens } from '../../db/redis';
 import WalletService from "../wallet.services/wallet.service";
 
 class StudentService {
@@ -363,17 +364,21 @@ class StudentService {
       // Hash the new password
       const newEncryptedPassword = await hash(newPassword, 10);
 
-      // Update the password
+      // Update the password and signUpdate timestamp
+      const signUpdate = Date.now();
       await session.run(
         `
         MATCH (s:Student { id: $userId })
         SET s.password = $newPassword, s.signUpdate = $signUpdate
         `,
-        { userId, newPassword: newEncryptedPassword, signUpdate: Date.now() }
+        { userId, newPassword: newEncryptedPassword, signUpdate }
       );
 
+      // Invalidate all existing tokens for this user
+      await invalidateUserTokens(userId, signUpdate);
+
       await session.close();
-      return { message: 'Password updated successfully' };
+      return { message: 'Password updated successfully. Please log in again.' };
     } catch (error: any) {
       console.error('Update password error:', error);
       throw error;

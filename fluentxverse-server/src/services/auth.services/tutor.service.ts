@@ -6,6 +6,7 @@ import { hash, compare } from 'bcrypt-ts'
 
 //** TYPE IMPORT */
 import type { LoginParams, RegisteredParams, RegisterParams, Suspended, UpdatePersonalInfoParams, UpdateEmailParams, UpdatePasswordParams, LoginReturnParams } from "./auth.interface";
+import { invalidateUserTokens } from '../../db/redis';
 import WalletService from "../wallet.services/wallet.service";
 import { getDriver } from "../../db/memgraph";
 
@@ -406,17 +407,21 @@ class AuthService {
             // Hash the new password
             const newEncryptedPassword = await hash(newPassword, 10);
 
-            // Update the password
+            // Update the password and signUpdate timestamp
+            const signUpdate = Date.now();
             await session.run(
                 `
                 MATCH (u:User { id: $userId })
                 SET u.password = $newPassword, u.signUpdate = $signUpdate
                 `,
-                { userId, newPassword: newEncryptedPassword, signUpdate: Date.now() }
+                { userId, newPassword: newEncryptedPassword, signUpdate }
             );
 
+            // Invalidate all existing tokens for this user
+            await invalidateUserTokens(userId, signUpdate);
+
             await session.close();
-            return { message: 'Password updated successfully' };
+            return { message: 'Password updated successfully. Please log in again.' };
         } catch (error: any) {
             console.error('Update password error:', error);
             throw error;

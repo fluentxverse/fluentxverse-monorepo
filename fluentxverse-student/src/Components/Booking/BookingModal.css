@@ -46,8 +46,8 @@
   height: 40px;
   border-radius: 12px;
   border: none;
-  background: rgba(0, 0, 0, 0.05);
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -55,11 +55,12 @@
   justify-content: center;
   transition: all 0.2s ease;
   z-index: 10;
+  backdrop-filter: blur(4px);
 }
 
 .booking-modal-close:hover {
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
+  background: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
   transform: rotate(90deg);
 }
 

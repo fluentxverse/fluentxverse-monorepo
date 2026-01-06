@@ -196,3 +196,97 @@ export const closeRedis = async () => {
     console.log('✅ Cache connection closed');
   }
 };
+
+// ============ Token Blacklist for Session Invalidation ============
+
+/**
+ * Add a token to the blacklist (for logout or password change)
+ * @param tokenId - Unique identifier for the token (userId + iat timestamp)
+ * @param expiresInSeconds - Time until the blacklist entry expires (should match token TTL)
+ */
+export const blacklistToken = async (tokenId: string, expiresInSeconds: number = 3600): Promise<void> => {
+  if (!isRedisConnected()) {
+    console.warn('⚠️ Token blacklist unavailable - cache not connected');
+    return;
+  }
+
+  try {
+    const key = `token:blacklist:${tokenId}`;
+    await redisClient!.setEx(key, expiresInSeconds, 'revoked');
+    console.log(`🔒 Token blacklisted: ${tokenId}`);
+  } catch (error) {
+    console.error('Error blacklisting token:', error);
+  }
+};
+
+/**
+ * Check if a token is blacklisted
+ * @param tokenId - Unique identifier for the token
+ * @returns true if blacklisted, false otherwise
+ */
+export const isTokenBlacklisted = async (tokenId: string): Promise<boolean> => {
+  if (!isRedisConnected()) {
+    return false; // Allow if cache unavailable (fail-open for availability)
+  }
+
+  try {
+    const key = `token:blacklist:${tokenId}`;
+    const result = await redisClient!.get(key);
+    return result !== null;
+  } catch (error) {
+    console.error('Error checking token blacklist:', error);
+    return false;
+  }
+};
+
+/**
+ * Invalidate all tokens for a user (e.g., on password change)
+ * Uses signUpdate timestamp stored in user record
+ * @param userId - User ID to invalidate tokens for
+ * @param signUpdate - Timestamp when tokens should be invalidated from
+ */
+export const invalidateUserTokens = async (userId: string, signUpdate: number): Promise<void> => {
+  if (!isRedisConnected()) {
+    console.warn('⚠️ Token invalidation unavailable - cache not connected');
+    return;
+  }
+
+  try {
+    const key = `user:signUpdate:${userId}`;
+    // Store the signUpdate timestamp - tokens issued before this are invalid
+    await redisClient!.setEx(key, 86400, signUpdate.toString()); // 24 hour TTL
+    console.log(`🔒 Invalidated tokens for user ${userId} issued before ${new Date(signUpdate).toISOString()}`);
+  } catch (error) {
+    console.error('Error invalidating user tokens:', error);
+  }
+};
+
+/**
+ * Check if a token was issued before user's last signUpdate
+ * @param userId - User ID
+ * @param tokenIat - Token issued-at timestamp (seconds)
+ * @returns true if token is invalid (issued before signUpdate), false otherwise
+ */
+export const isTokenInvalidatedBySignUpdate = async (userId: string, tokenIat: number): Promise<boolean> => {
+  if (!isRedisConnected()) {
+    return false;
+  }
+
+  try {
+    const key = `user:signUpdate:${userId}`;
+    const signUpdate = await redisClient!.get(key);
+    
+    if (!signUpdate) {
+      return false; // No signUpdate record, token is valid
+    }
+
+    const signUpdateMs = parseInt(signUpdate, 10);
+    const tokenIatMs = tokenIat * 1000; // Convert seconds to ms
+    
+    // Token is invalid if issued before signUpdate
+    return tokenIatMs < signUpdateMs;
+  } catch (error) {
+    console.error('Error checking token signUpdate:', error);
+    return false;
+  }
+};
