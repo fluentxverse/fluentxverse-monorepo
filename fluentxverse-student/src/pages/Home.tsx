@@ -7,7 +7,7 @@ import CallToAction from '../Components/Common/CallToAction';
 import { useAuthContext } from '../context/AuthContext';
 
 const Home = () => {
-  const { isAuthenticated, initialLoading, logout } = useAuthContext();
+  const { isAuthenticated, initialLoading, logout, user } = useAuthContext();
   const logoutRetryRef = useRef(false);
 
   useEffect(() => {
@@ -41,14 +41,16 @@ const Home = () => {
   }, [isAuthenticated, initialLoading, logout]);
 
   // Landing page - no redirect needed for unauthenticated users
+  const showSidebar = Boolean(isAuthenticated && user);
+
   return (
     <>
-      <SideBar/>
-      <div className="main-content">
+      {showSidebar ? <SideBar /> : null}
+      <div className={`main-content ${showSidebar ? '' : 'no-sidebar'}`}>
         <Header/>
         <IndexOne/>
-        {/* <CallToAction />
-        <Footer /> */}
+        {/* <CallToAction /> */}
+        <Footer />
       </div>
     </>
   );

@@ -27,87 +27,58 @@ const BeginnerWelcome = () => {
           </p>
           
           <div className="beginner-welcome__features">
-            <div className="beginner-welcome__feature">
-              <div className="beginner-welcome__feature-icon">
+            {/* Featured Card */}
+            <div className="beginner-welcome__featured-card">
+              <div className="beginner-welcome__featured-icon">
                 <i className="fas fa-heart"></i>
               </div>
-              <div className="beginner-welcome__feature-content">
+              <div className="beginner-welcome__featured-content">
                 <h3>Patient & Supportive</h3>
-                <p>Our tutors understand that learning takes time. No judgment, just encouragement.</p>
+                <p>Our tutors understand that learning takes time. No judgment, just encouragement and personalized guidance every step of the way.</p>
               </div>
+              <div className="beginner-welcome__featured-decoration"></div>
             </div>
             
-            <div className="beginner-welcome__feature">
-              <div className="beginner-welcome__feature-icon">
-                <i className="fas fa-tachometer-alt"></i>
+            {/* Regular Feature Cards */}
+            <div className="beginner-welcome__features-grid">
+              <div className="beginner-welcome__feature">
+                <div className="beginner-welcome__feature-icon">
+                  <i className="fas fa-tachometer-alt"></i>
+                </div>
+                <div className="beginner-welcome__feature-content">
+                  <h3>Learn at Your Pace</h3>
+                  <p>Go slow or speed up — lessons adapt to your comfort level and learning style.</p>
+                </div>
               </div>
-              <div className="beginner-welcome__feature-content">
-                <h3>Learn at Your Pace</h3>
-                <p>Go slow or speed up — lessons adapt to your comfort level and learning style.</p>
+              
+              <div className="beginner-welcome__feature">
+                <div className="beginner-welcome__feature-icon">
+                  <i className="fas fa-comments"></i>
+                </div>
+                <div className="beginner-welcome__feature-content">
+                  <h3>Speak from Day One</h3>
+                  <p>Practice real conversations in a safe environment. Making mistakes is how we learn!</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="beginner-welcome__feature">
-              <div className="beginner-welcome__feature-icon">
-                <i className="fas fa-comments"></i>
+              
+              <div className="beginner-welcome__feature">
+                <div className="beginner-welcome__feature-icon">
+                  <i className="fas fa-chart-line"></i>
+                </div>
+                <div className="beginner-welcome__feature-content">
+                  <h3>Track Your Progress</h3>
+                  <p>See how far you've come with personalized feedback and achievement milestones.</p>
+                </div>
               </div>
-              <div className="beginner-welcome__feature-content">
-                <h3>Speak from Day One</h3>
-                <p>Practice real conversations in a safe environment. Making mistakes is how we learn!</p>
-              </div>
-            </div>
-            
-            <div className="beginner-welcome__feature">
-              <div className="beginner-welcome__feature-icon">
-                <i className="fas fa-chart-line"></i>
-              </div>
-              <div className="beginner-welcome__feature-content">
-                <h3>Track Your Progress</h3>
-                <p>See how far you've come with personalized feedback and achievement milestones.</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="beginner-welcome__stats">
-            <div className="beginner-welcome__stat">
-              <span className="beginner-welcome__stat-number">85%</span>
-              <span className="beginner-welcome__stat-label">of our students started as beginners</span>
-            </div>
-            <div className="beginner-welcome__stat-divider"></div>
-            <div className="beginner-welcome__stat">
-              <span className="beginner-welcome__stat-number">3 months</span>
-              <span className="beginner-welcome__stat-label">average time to hold basic conversations</span>
-            </div>
-            <div className="beginner-welcome__stat-divider"></div>
-            <div className="beginner-welcome__stat">
-              <span className="beginner-welcome__stat-number">100%</span>
-              <span className="beginner-welcome__stat-label">supportive learning environment</span>
             </div>
           </div>
           
           <div className="beginner-welcome__cta">
-            <a href="/browse-tutors" className="beginner-welcome__button beginner-welcome__button--primary">
-              <i className="fas fa-rocket"></i>
-              Start Your Journey
-            </a>
-            <a href="/register" className="beginner-welcome__button beginner-welcome__button--secondary">
+            <a href="/register" className="beginner-welcome__button beginner-welcome__button--primary">
+              <i className="fas fa-gift"></i>
               Try a Free Lesson
               <i className="fas fa-arrow-right"></i>
             </a>
-          </div>
-          
-          <div className="beginner-welcome__testimonial">
-            <div className="beginner-welcome__testimonial-quote">
-              <i className="fas fa-quote-left"></i>
-              <p>"I couldn't say more than 'thank you' in English. After 2 months with FluentXVerse, I had my first full conversation with a native speaker. The tutors made me feel comfortable even when I made mistakes!"</p>
-            </div>
-            <div className="beginner-welcome__testimonial-author">
-              <div className="beginner-welcome__testimonial-avatar">K</div>
-              <div className="beginner-welcome__testimonial-info">
-                <span className="beginner-welcome__testimonial-name">Kim Ji-yeon</span>
-                <span className="beginner-welcome__testimonial-level">Started as Complete Beginner</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

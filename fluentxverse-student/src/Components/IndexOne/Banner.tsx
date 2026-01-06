@@ -44,15 +44,21 @@ const Banner = () => {
               </div>
               <div className="hero-features">
                 <div className="feature-badge">
-                  <i className="fas fa-user-graduate"></i>
+                  <div className="feature-icon">
+                    <i className="fas fa-user-graduate"></i>
+                  </div>
                   <span><strong>1-on-1</strong> Lessons</span>
                 </div>
                 <div className="feature-badge">
-                  <i className="fas fa-calendar-check"></i>
+                  <div className="feature-icon">
+                    <i className="fas fa-calendar-check"></i>
+                  </div>
                   <span><strong>Flexible</strong> Scheduling</span>
                 </div>
                 <div className="feature-badge">
-                  <i className="fas fa-certificate"></i>
+                  <div className="feature-icon">
+                    <i className="fas fa-certificate"></i>
+                  </div>
                   <span><strong>Certified</strong> Tutors</span>
                 </div>
               </div>
