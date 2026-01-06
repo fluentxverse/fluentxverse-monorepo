@@ -1,4 +1,10 @@
 /* Lesson Page - Redesigned */
+
+/* Remove focus outlines on cards */
+.lesson-page *:focus {
+  outline: none;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -32,10 +38,14 @@
 }
 
 .lesson-page {
-  padding-top: 120px;
-  padding-bottom: 60px;
+  padding: 120px 20px 60px;
   background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
   min-height: 100vh;
+}
+
+.lesson-page .container {
+  padding: 28px 120px 48px 28px;
+  max-width: 1400px;
 }
 
 /* Page Header */
@@ -43,7 +53,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
 }
@@ -51,44 +61,49 @@
 .lesson-page-header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
-.lesson-back-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+/* Back Button in Header */
+.lesson-back-btn-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
   background: #fff;
   border: 1px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: 10px;
   color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
-.lesson-back-btn:hover {
-  background: #f1f5f9;
+.lesson-back-btn-header:hover {
+  background: #f8fafc;
   border-color: #0245ae;
   color: #0245ae;
-  transform: translateX(-2px);
+}
+
+.lesson-back-btn-header i {
+  font-size: 12px;
 }
 
 .lesson-page-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(2, 69, 174, 0.3);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
 }
 
 .lesson-page-icon i {
   color: #fff;
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .lesson-page-title {
@@ -108,7 +123,11 @@
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+
+.lesson-page-subtitle .status-text {
+  margin-left: 4px;
 }
 
 .status-dot {
@@ -116,6 +135,7 @@
   height: 8px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .status-dot.confirmed {
@@ -131,6 +151,30 @@
 .status-dot.cancelled {
   background: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* Cancel Button in Schedule Card */
+.lesson-cancel-btn-card {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.lesson-cancel-btn-card:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .lesson-cancel-btn {
@@ -206,20 +250,20 @@
 
 /* Lesson Cards */
 .lesson-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 4px 20px rgba(2, 69, 174, 0.06);
-  border: 1px solid rgba(2, 69, 174, 0.06);
-  transition: all 0.3s ease;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
 }
 
-.lesson-card:hover {
-  box-shadow: 0 8px 32px rgba(2, 69, 174, 0.1);
-  transform: translateY(-2px);
+.lesson-card:focus,
+.lesson-card:focus-within,
+.lesson-card:focus-visible {
+  outline: none;
+  border-color: #e2e8f0;
 }
 
 .lesson-card-header {

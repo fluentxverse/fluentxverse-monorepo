@@ -119,7 +119,7 @@ const Header = () => {
               </div>
               <div className="menu-wrap main-menu">
                 <nav className="menu-nav">
-                  <div className="logo"><a href="/#"><img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" /></a></div>
+                  <div className="logo"><a href="/#"><img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" /></a></div>
                   <div className="brand-text">
                     Fluent<span className="brand-x">X</span>Verse
                   </div>

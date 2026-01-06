@@ -268,9 +268,6 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
             {/* Page Header */}
             <div className="lesson-page-header">
               <div className="lesson-page-header-left">
-                <button onClick={() => window.history.back()} className="lesson-back-btn">
-                  <i className="fas fa-arrow-left"></i>
-                </button>
                 <div className="lesson-page-icon">
                   <i className="fas fa-chalkboard-teacher"></i>
                 </div>
@@ -278,21 +275,18 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                   <h1 className="lesson-page-title">Lesson Details</h1>
                   <p className="lesson-page-subtitle">
                     <span className={`status-dot ${lesson.status}`}></span>
-                    {lesson.status.charAt(0).toUpperCase() + lesson.status.slice(1)}
-                    {lesson.status === 'confirmed' && ` • ${getTimeUntil()}`}
+                    <span className="status-text">
+                      {lesson.status.charAt(0).toUpperCase() + lesson.status.slice(1)}
+                      {lesson.status === 'confirmed' && ` • ${getTimeUntil()}`}
+                    </span>
                   </p>
                 </div>
               </div>
               
-              {lesson.status === 'confirmed' && (
-                <button 
-                  className="lesson-cancel-btn"
-                  onClick={() => setCancelModalOpen(true)}
-                >
-                  <i className="fas fa-times-circle"></i>
-                  Cancel Lesson
-                </button>
-              )}
+              <a href="/schedule" className="lesson-back-btn-header">
+                <i className="fas fa-arrow-left"></i>
+                Back to Schedule
+              </a>
             </div>
 
             {/* Success Notification */}
@@ -378,6 +372,16 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                       </span>
                     </div>
                   </div>
+                  
+                  {lesson.status === 'confirmed' && (
+                    <button 
+                      className="lesson-cancel-btn-card"
+                      onClick={() => setCancelModalOpen(true)}
+                    >
+                      <i className="fas fa-times-circle"></i>
+                      Cancel Lesson
+                    </button>
+                  )}
                 </div>
               </div>
 
