@@ -122,6 +122,8 @@ const HomePage = () => {
   }, [user]);
 
   // Parse slot time (12-hour or 24-hour format) and create Date in Philippine time, then convert to Korean time (+1 hour)
+  // Parse slot time and return the actual moment in time (for comparisons)
+  // Slot times are stored in PHT (UTC+8)
   const parseSlotDateTime = (slotDate: string, slotTime: string): Date => {
     let hours: number;
     let minutes: number;
@@ -151,13 +153,10 @@ const HomePage = () => {
       }
     }
     
-    // Create date in Philippine time (UTC+8)
-    const phTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
-    
-    // Convert to Korean time (+1 hour from Philippine time)
-    const koreanTime = new Date(phTime.getTime() + (60 * 60 * 1000));
-    
-    return koreanTime;
+    // Create date in Philippine time (UTC+8) - this is the actual moment in time
+    // Don't add 1 hour! That would shift to a different moment.
+    // The Date object stores UTC internally, so comparisons will work correctly.
+    return new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
   };
 
   // Convert Philippine time string to Korean time display
@@ -204,9 +203,30 @@ const HomePage = () => {
     return `${koreanHours}:${String(minutes).padStart(2, '0')} ${koreanMeridiem}`;
   };
 
+  const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes
+  
+  // Helper to check if a lesson is ongoing
+  const isLessonOngoing = (date: Date): boolean => {
+    const now = new Date();
+    const lessonEnd = new Date(date.getTime() + LESSON_DURATION_MS);
+    return now >= date && now < lessonEnd;
+  };
+  
   const getTimeUntil = (date: Date) => {
     const now = new Date();
     const diff = date.getTime() - now.getTime();
+    
+    // If lesson has started, check if it's still ongoing
+    if (diff < 0) {
+      const lessonEnd = new Date(date.getTime() + LESSON_DURATION_MS);
+      const timeLeft = lessonEnd.getTime() - now.getTime();
+      if (timeLeft > 0) {
+        const minsLeft = Math.floor(timeLeft / (1000 * 60));
+        return `Ongoing • ${minsLeft}m left`;
+      }
+      return 'Ended';
+    }
+    
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
@@ -220,22 +240,50 @@ const HomePage = () => {
     }
   };
 
+  // Format date for display in KST timezone
   const formatDate = (date: Date) => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Get the date components in KST (UTC+9)
+    const kstFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    });
+    const kstParts = kstFormatter.formatToParts(date);
+    const kstYear = parseInt(kstParts.find(p => p.type === 'year')?.value || '0');
+    const kstMonth = parseInt(kstParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const kstDay = parseInt(kstParts.find(p => p.type === 'day')?.value || '0');
     
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const tomorrowOnly = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+    // Get today in KST
+    const now = new Date();
+    const todayParts = kstFormatter.formatToParts(now);
+    const todayYear = parseInt(todayParts.find(p => p.type === 'year')?.value || '0');
+    const todayMonth = parseInt(todayParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const todayDay = parseInt(todayParts.find(p => p.type === 'day')?.value || '0');
     
-    if (dateOnly.getTime() === todayOnly.getTime()) {
+    // Check if same day in KST
+    if (kstYear === todayYear && kstMonth === todayMonth && kstDay === todayDay) {
       return 'Today';
-    } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
+    
+    // Check if tomorrow in KST
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowParts = kstFormatter.formatToParts(tomorrow);
+    const tomorrowYear = parseInt(tomorrowParts.find(p => p.type === 'year')?.value || '0');
+    const tomorrowMonth = parseInt(tomorrowParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const tomorrowDay = parseInt(tomorrowParts.find(p => p.type === 'day')?.value || '0');
+    
+    if (kstYear === tomorrowYear && kstMonth === tomorrowMonth && kstDay === tomorrowDay) {
+      return 'Tomorrow';
+    }
+    
+    // Format as readable date in KST
+    return date.toLocaleDateString('en-US', { 
+      timeZone: 'Asia/Seoul',
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   return (
@@ -330,12 +378,16 @@ const HomePage = () => {
                         <i className="fas fa-video"></i>
                         Next Lesson
                       </h3>
-                      {stats?.nextLesson && (
-                        <div className="home-time-badge">
-                          <i className="fas fa-clock"></i>
-                          in {getTimeUntil(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}
-                        </div>
-                      )}
+                      {stats?.nextLesson && (() => {
+                        const lessonDate = parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime);
+                        const ongoing = isLessonOngoing(lessonDate);
+                        return (
+                          <div className={`home-time-badge ${ongoing ? 'ongoing' : ''}`}>
+                            <i className={ongoing ? 'fas fa-play-circle' : 'fas fa-clock'}></i>
+                            {ongoing ? '' : 'in '}{getTimeUntil(lessonDate)}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {loading ? (

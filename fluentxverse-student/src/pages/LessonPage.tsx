@@ -78,12 +78,20 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
     if (period === 'PM' && hours !== 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
 
-    // Add 1 hour for Korean timezone
-    hours += 1;
-    if (hours >= 24) hours -= 24;
+    // Time is in PHT (UTC+8), convert to KST (UTC+9) by adding 1 hour
+    let kstHours = hours + 1;
+    let kstDate = date;
+    
+    if (kstHours >= 24) {
+      kstHours -= 24;
+      // Calculate next day
+      const [year, month, day] = date.split('-').map(Number);
+      const nextDay = new Date(year, month - 1, day + 1);
+      kstDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+    }
 
-    const [year, month, day] = date.split('-').map(Number);
-    return new Date(year, month - 1, day, hours, minutes);
+    // Create Date with explicit KST timezone (UTC+9)
+    return new Date(`${kstDate}T${String(kstHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+09:00`);
   };
 
   const fetchLessonDetails = async () => {

@@ -77,7 +77,8 @@ export class ScheduleService {
       for (const slot of input.slots) {
         // Convert 12h time to 24h for proper Date parsing
         const time24h = this.convert12hTo24h(slot.time);
-        const slotDateTime = new Date(`${slot.date}T${time24h}:00`);
+        // Use PHT timezone (+08:00) since slot times are stored in Philippine time
+        const slotDateTime = new Date(`${slot.date}T${time24h}:00+08:00`);
         
         console.log('📅 openSlots - processing slot:', slot.date, slot.time, '-> 24h:', time24h);
         
@@ -157,7 +158,8 @@ export class ScheduleService {
         
         // Convert 12h time to 24h for proper Date parsing
         const time24h = this.convert12hTo24h(slot.slotTime);
-        const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00`);
+        // Use PHT timezone (+08:00) since slot times are stored in Philippine time
+        const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00+08:00`);
         
         // Check for short notice cancellation (TA-303)
         if (slotDateTime <= shortNoticeThreshold && slot.status === 'open') {
@@ -208,7 +210,8 @@ export class ScheduleService {
         }
         
         for (const time of input.times) {
-          const slotDateTime = new Date(`${d.toISOString().split('T')[0]}T${time}:00`);
+          // Use PHT timezone (+08:00) since slot times are stored in Philippine time
+          const slotDateTime = new Date(`${d.toISOString().split('T')[0]}T${time}:00+08:00`);
           
           if (slotDateTime > minOpenTime) {
             slots.push({
@@ -309,7 +312,7 @@ export class ScheduleService {
     
     try {
       const now = new Date();
-      const minBookTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 min ahead
+      const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 min ahead (students can book until 5 min before start)
       
       const result = await session.run(
         `
@@ -329,10 +332,12 @@ export class ScheduleService {
           
           // Convert 12h time to 24h for proper Date parsing
           const time24h = this.convert12hTo24h(slot.slotTime);
-          const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00`);
+          // Slot times are stored in PHT (UTC+8), parse as PHT
+          const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00+08:00`);
           
-          // Filter out slots less than 30 minutes away
+          // Filter out slots less than 5 minutes away
           if (slotDateTime <= minBookTime) {
+            console.log(`[getAvailableSlots] Filtering out slot ${slot.slotDate} ${slot.slotTime} - too close to now (slot: ${slotDateTime.toISOString()}, minBook: ${minBookTime.toISOString()})`);
             return null;
           }
           
@@ -466,8 +471,8 @@ export class ScheduleService {
         
         console.log('Final 24-hour format:', hours);
         
-        // Create date with proper format
-        slotDateTime = new Date(`${slot.slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+        // Create date with proper format - use PHT timezone (+08:00) since slot times are stored in Philippine time
+        slotDateTime = new Date(`${slot.slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
         
         console.log('Created slotDateTime:', slotDateTime.toISOString());
         
@@ -1470,9 +1475,14 @@ export class ScheduleService {
             }
           }
           
-          const slotDateTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+          // Parse as PHT (UTC+8) since slot times are stored in Philippine time
+          const slotDateTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
           
-          if (isNaN(slotDateTime.getTime()) || slotDateTime <= now) {
+          // Include lessons that haven't ended yet (start time + 25 min duration)
+          const LESSON_DURATION_MS = 25 * 60 * 1000;
+          const lessonEndTime = new Date(slotDateTime.getTime() + LESSON_DURATION_MS);
+          
+          if (isNaN(slotDateTime.getTime()) || now >= lessonEndTime) {
             return null;
           }
           

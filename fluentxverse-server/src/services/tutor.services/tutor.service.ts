@@ -23,6 +23,41 @@ function neo4jDateTimeToISO(dt: any): string | undefined {
   return undefined;
 }
 
+// Helper to convert 12h time format to 24h format
+function convert12hTo24h(time12: string): string {
+  // If already in 24h format, return as-is
+  if (!time12.includes('AM') && !time12.includes('PM')) {
+    return time12;
+  }
+  
+  const match = time12.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return time12;
+  
+  let hours = parseInt(match[1], 10);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+  
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
+// Helper to check if a slot is still bookable (not past and at least 5 min away)
+function isSlotBookable(slotDate: string, slotTime: string): boolean {
+  const now = new Date();
+  const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 min from now
+  
+  const time24h = convert12hTo24h(slotTime);
+  // Slot times are in PHT (UTC+8)
+  const slotDateTime = new Date(`${slotDate}T${time24h}:00+08:00`);
+  
+  return slotDateTime > minBookTime;
+}
+
 export class TutorService {
   /**
    * Search and filter tutors
@@ -216,50 +251,29 @@ export class TutorService {
       let countQuery: string;
       let tutorsQuery: string;
       
-      // Check if we need time filtering (either with date filter or "All Dates")
+      // Always need to check if slots are still bookable (not past and at least 5 min away)
+      // So we always need to collect slot data for post-processing
       const needsTimeFiltering = startTime || endTime;
       
-      if (needsTimeFiltering) {
-        // For time filtering, we need to get slots and filter in code
+      if (needsTimeFiltering || dateFilter) {
+        // For time filtering or date filtering, we need to get slots and filter in code
         // because string comparison of 12-hour format doesn't work correctly
+        // Also need to filter out past/close slots
         countQuery = `
           ${matchPattern}
           ${whereClause}
-          RETURN DISTINCT u, collect(s.slotTime) as slotTimes
+          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots
         `;
         
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
       } else if (!dateFilter) {
-        // "All Dates" mode without time filter - need to get tutors with their slot count
+        // "All Dates" mode without time filter - need to get tutors with their slots for bookable check
         countQuery = `
           ${matchPattern}
-          WITH u, count(s) as slotCount
-          WHERE slotCount > 0
-          RETURN count(DISTINCT u) as total
+          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots
         `;
         
-        tutorsQuery = `
-          ${matchPattern}
-          WITH u, count(s) as slotCount
-          WHERE slotCount > 0
-          RETURN DISTINCT u, slotCount
-          SKIP $skip
-          LIMIT $limit
-        `;
-      } else {
-        countQuery = `
-          ${matchPattern}
-          ${whereClause}
-          RETURN count(DISTINCT u) as total
-        `;
-        
-        tutorsQuery = `
-          ${matchPattern}
-          ${whereClause}
-          RETURN DISTINCT u
-          SKIP $skip
-          LIMIT $limit
-        `;
+        tutorsQuery = countQuery; // Same query, we'll handle pagination in code
       }
 
       console.log('🔢 Count query:', countQuery);
@@ -271,88 +285,35 @@ export class TutorService {
       let total: number;
       let tutors: Tutor[];
       
-      if (needsTimeFiltering) {
-        // Time filtering mode (with or without date filter) - fetch all matching tutors with their slots
-        const result = await session.run(countQuery, queryParams);
+      // All modes now use slot-level filtering to exclude past/close slots
+      const result = await session.run(countQuery, queryParams);
+      
+      // Filter tutors who have at least one BOOKABLE slot (not past and at least 5 min away)
+      const filteredTutors: Tutor[] = [];
+      
+      for (const record of result.records) {
+        const user = record.get('u').properties;
+        const slots: Array<{date: string; time: string}> = record.get('slots') || [];
         
-        // Filter tutors who have at least one slot in the time range
-        const filteredTutors: Tutor[] = [];
+        // Filter to only bookable slots (not past and at least 5 min away)
+        const bookableSlots = slots.filter((slot: {date: string; time: string}) => 
+          isSlotBookable(slot.date, slot.time)
+        );
         
-        for (const record of result.records) {
-          const user = record.get('u').properties;
-          const slotTimes: string[] = record.get('slotTimes') || [];
-          
-          // Check if any slot falls within the time range
-          const hasMatchingSlot = slotTimes.some((slotTime: string) => {
-            const slotMinutes = timeToMinutesAny(slotTime);
+        // If time range filter is applied, also check that
+        let matchingSlots = bookableSlots;
+        if (queryParams.startTimeMinutes || queryParams.endTimeMinutes) {
+          matchingSlots = bookableSlots.filter((slot: {date: string; time: string}) => {
+            const slotMinutes = timeToMinutesAny(slot.time);
             const startOk = !queryParams.startTimeMinutes || slotMinutes >= queryParams.startTimeMinutes;
             const endOk = !queryParams.endTimeMinutes || slotMinutes <= queryParams.endTimeMinutes;
             return startOk && endOk;
           });
-          
-          if (hasMatchingSlot) {
-            filteredTutors.push({
-              userId: user.id,
-              email: user.email,
-              firstName: user.firstName,
-              middleName: user.middleName,
-              lastName: user.lastName,
-              displayName: `${user.firstName} ${user.lastName}`,
-              profilePicture: user.profilePicture,
-              tier: user.tier,
-              timezone: user.timezone,
-              isVerified: user.isVerified || false,
-              isAvailable: true,
-              joinedDate: user.createdAt
-            });
-          }
         }
         
-        total = filteredTutors.length;
-        // Apply pagination in code
-        const startIdx = (pageNum - 1) * limitNum;
-        tutors = filteredTutors.slice(startIdx, startIdx + limitNum);
-        
-        console.log(`📅 Time filtering: ${result.records.length} tutors found, ${total} after time filter`);
-      } else if (!dateFilter) {
-        // "All Dates" mode without time filter - tutors with any open slots
-        const countResult = await session.run(countQuery, queryParams);
-        total = countResult.records[0]?.get('total')?.toNumber?.() || 0;
-
-        // Get tutors with pagination
-        const result = await session.run(tutorsQuery, queryParams);
-        
-        tutors = result.records.map(record => {
-          const user = record.get('u').properties;
-          const slotCount = record.get('slotCount')?.toNumber?.() || 0;
-          return {
-            userId: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            middleName: user.middleName,
-            lastName: user.lastName,
-            displayName: `${user.firstName} ${user.lastName}`,
-            profilePicture: user.profilePicture,
-            tier: user.tier,
-            timezone: user.timezone,
-            isVerified: user.isVerified || false,
-            isAvailable: slotCount > 0,
-            joinedDate: user.createdAt
-          };
-        });
-        
-        console.log(`📅 All Dates mode: ${total} tutors with open slots`);
-      } else {
-        // Standard mode with date filter but no time filter
-        const countResult = await session.run(countQuery, queryParams);
-        total = countResult.records[0]?.get('total')?.toNumber?.() || 0;
-
-        // Get tutors with pagination
-        const result = await session.run(tutorsQuery, queryParams);
-        
-        tutors = result.records.map(record => {
-          const user = record.get('u').properties;
-          return {
+        // Only include tutor if they have at least one bookable slot
+        if (matchingSlots.length > 0) {
+          filteredTutors.push({
             userId: user.id,
             email: user.email,
             firstName: user.firstName,
@@ -365,9 +326,16 @@ export class TutorService {
             isVerified: user.isVerified || false,
             isAvailable: true,
             joinedDate: user.createdAt
-          };
-        });
+          });
+        }
       }
+      
+      total = filteredTutors.length;
+      // Apply pagination in code
+      const startIdx = (pageNum - 1) * limitNum;
+      tutors = filteredTutors.slice(startIdx, startIdx + limitNum);
+      
+      console.log(`📅 Slot filtering: ${result.records.length} tutors with open slots, ${total} with bookable slots`);
 
       return {
         tutors,
@@ -431,13 +399,9 @@ export class TutorService {
       // Check if a slot is in the past (Philippine time)
       const isSlotInPast = (dateStr: string, time12: string): boolean => {
         const { hour, minute } = parse12hTime(time12);
-        const dateParts = dateStr.split('-').map(Number);
-        const year = dateParts[0] ?? 0;
-        const month = dateParts[1] ?? 1;
-        const day = dateParts[2] ?? 1;
         
-        // Create slot datetime in Philippine time
-        const slotDate = new Date(year, month - 1, day, hour, minute);
+        // Create slot datetime in Philippine time (UTC+8)
+        const slotDate = new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+08:00`);
         const now = new Date();
         
         return slotDate < now;

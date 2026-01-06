@@ -192,7 +192,8 @@ const SchedulePage = () => {
     }
 
     const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-    const dateObj = new Date(`${kstDate}T${kstTime}:00`);
+    // Explicitly specify KST timezone (UTC+9) so JavaScript doesn't interpret as local time
+    const dateObj = new Date(`${kstDate}T${kstTime}:00+09:00`);
 
     return { date: kstDate, time: kstTime, dateObj };
   };
@@ -209,17 +210,23 @@ const SchedulePage = () => {
         setError(null);
         const data = await scheduleApi.getStudentBookings();
 
+        const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes
+        
         const transformedBookings: Booking[] = data.map((booking: StudentBooking) => {
           const { date: kstDate, time: kstTime, dateObj } = convertPHTtoKST(booking.slotDate, booking.slotTime);
+          const now = new Date();
+          const lessonEndTime = new Date(dateObj.getTime() + LESSON_DURATION_MS);
 
           let status: 'upcoming' | 'completed' | 'cancelled' = 'upcoming';
           if (booking.status === 'completed') {
             status = 'completed';
           } else if (booking.status === 'cancelled') {
             status = 'cancelled';
-          } else if (dateObj < new Date()) {
+          } else if (now >= lessonEndTime) {
+            // Only mark as completed after the full 25-minute lesson duration
             status = 'completed';
           }
+          // If lesson has started but not ended, keep status as 'upcoming' (ongoing)
 
           return {
             id: booking.bookingId,
@@ -249,35 +256,87 @@ const SchedulePage = () => {
   }, [user]);
 
   const now = new Date();
+  const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes in milliseconds
+  
+  // Helper to check if lesson is still ongoing (within 25 minutes of start)
+  const isLessonOngoing = (lessonDate: Date): boolean => {
+    const lessonEnd = new Date(lessonDate.getTime() + LESSON_DURATION_MS);
+    return now >= lessonDate && now < lessonEnd;
+  };
+  
+  // Helper to check if lesson end time has passed
+  const isLessonEnded = (lessonDate: Date): boolean => {
+    const lessonEnd = new Date(lessonDate.getTime() + LESSON_DURATION_MS);
+    return now >= lessonEnd;
+  };
+  
   const upcomingLessons = bookings
-    .filter(b => b.status === 'upcoming' && b.date > now)
+    .filter(b => b.status === 'upcoming' && (b.date > now || isLessonOngoing(b.date)))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   const pastLessons = bookings
-    .filter(b => b.status === 'completed' || b.date <= now)
+    .filter(b => b.status === 'completed' || isLessonEnded(b.date))
     .sort((a, b) => b.date.getTime() - a.date.getTime());
 
+  // Format date for display - always use KST timezone for Korean students
   const formatLessonDate = (date: Date) => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const tomorrowOnly = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
-
-    if (dateOnly.getTime() === todayOnly.getTime()) {
+    // Get the date components in KST (UTC+9)
+    const kstFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    });
+    const kstParts = kstFormatter.formatToParts(date);
+    const kstYear = parseInt(kstParts.find(p => p.type === 'year')?.value || '0');
+    const kstMonth = parseInt(kstParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const kstDay = parseInt(kstParts.find(p => p.type === 'day')?.value || '0');
+    
+    // Get today in KST
+    const now = new Date();
+    const todayParts = kstFormatter.formatToParts(now);
+    const todayYear = parseInt(todayParts.find(p => p.type === 'year')?.value || '0');
+    const todayMonth = parseInt(todayParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const todayDay = parseInt(todayParts.find(p => p.type === 'day')?.value || '0');
+    
+    // Check if same day in KST
+    if (kstYear === todayYear && kstMonth === todayMonth && kstDay === todayDay) {
       return 'Today';
-    } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
+    
+    // Check if tomorrow in KST
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowParts = kstFormatter.formatToParts(tomorrow);
+    const tomorrowYear = parseInt(tomorrowParts.find(p => p.type === 'year')?.value || '0');
+    const tomorrowMonth = parseInt(tomorrowParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const tomorrowDay = parseInt(tomorrowParts.find(p => p.type === 'day')?.value || '0');
+    
+    if (kstYear === tomorrowYear && kstMonth === tomorrowMonth && kstDay === tomorrowDay) {
+      return 'Tomorrow';
+    }
+    
+    // Format as readable date in KST
+    return date.toLocaleDateString('en-US', { 
+      timeZone: 'Asia/Seoul',
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   const getTimeUntil = (date: Date) => {
     const diff = date.getTime() - now.getTime();
-    if (diff < 0) return 'Started';
+    
+    // If lesson has started, check if it's still ongoing
+    if (diff < 0) {
+      const lessonEnd = new Date(date.getTime() + LESSON_DURATION_MS);
+      const timeLeft = lessonEnd.getTime() - now.getTime();
+      if (timeLeft > 0) {
+        const minsLeft = Math.floor(timeLeft / (1000 * 60));
+        return `Ongoing • ${minsLeft}m left`;
+      }
+      return 'Ended';
+    }
     
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(minutes / 60);
@@ -424,8 +483,8 @@ const SchedulePage = () => {
                           <span>{lesson.timeDisplay} KST ({lesson.duration} min)</span>
                         </div>
                         {activeTab === 'upcoming' && (
-                          <div className="lesson-detail countdown">
-                            <i className="fas fa-hourglass-half"></i>
+                          <div className={`lesson-detail countdown ${isLessonOngoing(lesson.date) ? 'ongoing' : ''}`}>
+                            <i className={isLessonOngoing(lesson.date) ? 'fas fa-play-circle' : 'fas fa-hourglass-half'}></i>
                             <span>{getTimeUntil(lesson.date)}</span>
                           </div>
                         )}
