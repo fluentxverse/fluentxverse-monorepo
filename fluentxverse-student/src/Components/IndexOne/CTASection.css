@@ -1,0 +1,130 @@
+/* CTA Section */
+.cta-section {
+  background: #fff;
+  padding: 80px 20px;
+}
+
+.cta-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.cta-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.cta-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cta-subtitle {
+  font-size: 18px;
+  color: #64748b;
+  margin: 0;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.cta-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 14px;
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.35);
+  transition: all 0.3s ease;
+}
+
+.cta-btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(2, 69, 174, 0.45);
+  color: #fff;
+}
+
+.cta-btn-primary i {
+  font-size: 18px;
+}
+
+.cta-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  background: #fff;
+  color: #0245ae;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 14px;
+  text-decoration: none;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.cta-btn-secondary:hover {
+  border-color: #0245ae;
+  background: #f8fafc;
+  color: #0245ae;
+}
+
+.cta-btn-secondary i {
+  font-size: 16px;
+}
+
+.cta-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.cta-note i {
+  color: #10b981;
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .cta-section {
+    padding: 60px 20px;
+  }
+
+  .cta-title {
+    font-size: 28px;
+  }
+
+  .cta-subtitle {
+    font-size: 16px;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cta-btn-primary,
+  .cta-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}

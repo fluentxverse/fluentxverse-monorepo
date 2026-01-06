@@ -3,6 +3,7 @@ import BeginnerWelcome from './BeginnerWelcome'
 import WhyChooseUs from './WhyChooseUs'
 import HowItWorks from './HowItWorks'
 import PricingSection from './PricingSection'
+import CTASection from './CTASection'
 import './IndexOne.css'
 
 const IndexOne = () => {
@@ -13,6 +14,7 @@ const IndexOne = () => {
       <WhyChooseUs />
       <HowItWorks />
       <PricingSection />
+      <CTASection />
     </main>
   )
 }
