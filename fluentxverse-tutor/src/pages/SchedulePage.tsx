@@ -1116,7 +1116,9 @@ const SchedulePage = () => {
                             const penaltyInfo = PENALTY_LABELS[penalty.code];
                             slotLabel = penaltyInfo.label;
                           } else if (isBooked && bookingInfo) {
-                            slotLabel = bookingInfo.studentId || 'BOOKED';
+                            // Truncate student ID to 6 characters to prevent cell width expansion
+                            const studentId = bookingInfo.studentId || 'BOOKED';
+                            slotLabel = studentId.length > 6 ? studentId.substring(0, 6) : studentId;
                           } else if (isPastOrNear) {
                             slotLabel = 'PAST';
                           } else if (isPendingSelection) {

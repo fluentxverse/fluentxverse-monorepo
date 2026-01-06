@@ -7,8 +7,6 @@ import { getTicketBalance, TicketBalance } from '../services/ticket.service';
 import { favoritesApi, FavoriteTutor } from '../api/favorites.api';
 import './HomePage.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
-
 const HomePage = () => {
   useEffect(() => {
     document.title = 'Home | FluentXVerse';
@@ -123,27 +121,37 @@ const HomePage = () => {
     fetchFavorites();
   }, [user]);
 
-  // Parse slot time (12-hour format) and create Date in Philippine time, then convert to Korean time (+1 hour)
+  // Parse slot time (12-hour or 24-hour format) and create Date in Philippine time, then convert to Korean time (+1 hour)
   const parseSlotDateTime = (slotDate: string, slotTime: string): Date => {
-    // slotTime is in format "6:00 PM" (Philippine time UTC+8)
-    const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!timeMatch) {
-      console.error('Invalid time format:', slotTime);
-      return new Date(); // fallback
+    let hours: number;
+    let minutes: number;
+    
+    // Try 12-hour format first (e.g., "6:00 PM")
+    const time12Match = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (time12Match) {
+      hours = parseInt(time12Match[1]);
+      minutes = parseInt(time12Match[2]);
+      const meridiem = time12Match[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (meridiem === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (meridiem === 'AM' && hours === 12) {
+        hours = 0;
+      }
+    } else {
+      // Try 24-hour format (e.g., "23:30")
+      const time24Match = slotTime.match(/^(\d{1,2}):(\d{2})$/);
+      if (time24Match) {
+        hours = parseInt(time24Match[1]);
+        minutes = parseInt(time24Match[2]);
+      } else {
+        console.error('Invalid time format:', slotTime);
+        return new Date(); // fallback
+      }
     }
     
-    let hours = parseInt(timeMatch[1]);
-    const minutes = parseInt(timeMatch[2]);
-    const meridiem = timeMatch[3].toUpperCase();
-    
-    // Convert to 24-hour format
-    if (meridiem === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (meridiem === 'AM' && hours === 12) {
-      hours = 0;
-    }
-    
-    // Create date in Philippine time
+    // Create date in Philippine time (UTC+8)
     const phTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
     
     // Convert to Korean time (+1 hour from Philippine time)
@@ -154,21 +162,31 @@ const HomePage = () => {
 
   // Convert Philippine time string to Korean time display
   const convertToKoreanTime = (slotTime: string): string => {
-    // slotTime is in format "6:00 PM" (Philippine time)
-    const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!timeMatch) {
-      return slotTime; // fallback to original
-    }
+    let hours: number;
+    let minutes: number;
     
-    let hours = parseInt(timeMatch[1]);
-    const minutes = parseInt(timeMatch[2]);
-    const meridiem = timeMatch[3].toUpperCase();
-    
-    // Convert to 24-hour format
-    if (meridiem === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (meridiem === 'AM' && hours === 12) {
-      hours = 0;
+    // Try 12-hour format first (e.g., "6:00 PM")
+    const time12Match = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (time12Match) {
+      hours = parseInt(time12Match[1]);
+      minutes = parseInt(time12Match[2]);
+      const meridiem = time12Match[3].toUpperCase();
+      
+      // Convert to 24-hour format
+      if (meridiem === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (meridiem === 'AM' && hours === 12) {
+        hours = 0;
+      }
+    } else {
+      // Try 24-hour format (e.g., "23:30")
+      const time24Match = slotTime.match(/^(\d{1,2}):(\d{2})$/);
+      if (time24Match) {
+        hours = parseInt(time24Match[1]);
+        minutes = parseInt(time24Match[2]);
+      } else {
+        return slotTime; // fallback to original
+      }
     }
     
     // Add 1 hour for Korean timezone
@@ -226,125 +244,103 @@ const HomePage = () => {
       <div className="main-content">
         <Header />
         <main className="home-page-main">
-          <div className="container">
+          <div className="home-container">
             {user ? (
               /* Logged-in: Dashboard View */
               <>
-                {/* Welcome Header */}
-                <div className="home-welcome-header">
-                  <h1 className="home-welcome-title">
-                    Welcome back, {user.givenName || user.familyName || 'Student'}! 👋
-                  </h1>
-                  <p className="home-welcome-subtitle">
-                    Here's what's happening with your learning today
-                  </p>
-                </div>
-
-                {/* Stats Cards */}
-                <div className="home-stats-grid">
-                  <div className="home-stat-card blue">
-                    <div className="home-stat-card-content">
-                      <div className="home-stat-icon blue">
-                        <i className="fas fa-book-open"></i>
+                {/* Hero Section with Welcome + Stats */}
+                <div className="home-hero">
+                  <div className="home-hero-content">
+                    <div className="home-hero-text">
+                      <h1>Welcome back, {user.givenName || user.familyName || 'Student'}! 👋</h1>
+                      <p>Track your progress and continue your English learning journey</p>
+                    </div>
+                    <div className="home-hero-stats">
+                      <div className="hero-stat-card">
+                        <div className="hero-stat-icon blue">
+                          <i className="fas fa-book-open"></i>
+                        </div>
+                        <div className="hero-stat-info">
+                          <span className="hero-stat-value">{loading ? '...' : (stats?.lessonsCompleted || 0)}</span>
+                          <span className="hero-stat-label">Lessons Done</span>
+                        </div>
                       </div>
-                      <div className="home-stat-value">
-                        {loading ? '...' : (stats?.lessonsCompleted || 0)}
+                      <div className="hero-stat-card">
+                        <div className="hero-stat-icon green">
+                          <i className="fas fa-calendar-check"></i>
+                        </div>
+                        <div className="hero-stat-info">
+                          <span className="hero-stat-value">{loading ? '...' : (stats?.upcomingLessons || 0)}</span>
+                          <span className="hero-stat-label">Upcoming</span>
+                        </div>
+                      </div>
+                      <div className="hero-stat-card">
+                        <div className="hero-stat-icon orange">
+                          <i className="fas fa-clock"></i>
+                        </div>
+                        <div className="hero-stat-info">
+                          <span className="hero-stat-value">{loading ? '...' : (stats?.totalHours || 0)}</span>
+                          <span className="hero-stat-label">Total Hours</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="home-stat-label">Lessons Completed</div>
-                  </div>
-                  
-                  <div className="home-stat-card green">
-                    <div className="home-stat-card-content">
-                      <div className="home-stat-icon green">
-                        <i className="fas fa-calendar-check"></i>
-                      </div>
-                      <div className="home-stat-value">
-                        {loading ? '...' : (stats?.upcomingLessons || 0)}
-                      </div>
-                    </div>
-                    <div className="home-stat-label">Upcoming Lessons</div>
-                  </div>
-                  
-                  <div className="home-stat-card orange">
-                    <div className="home-stat-card-content">
-                      <div className="home-stat-icon orange">
-                        <i className="fas fa-clock"></i>
-                      </div>
-                      <div className="home-stat-value">
-                        {loading ? '...' : (stats?.totalHours || 0)}
-                      </div>
-                    </div>
-                    <div className="home-stat-label">Total Hours</div>
                   </div>
                 </div>
 
-                {/* Ticket Balance Section */}
-                <div className="home-tickets-section">
-                  <div className="home-tickets-header">
-                    <h3 className="home-tickets-title">
+                {/* Quick Actions Row */}
+                <div className="home-quick-actions">
+                  <a href="/browse-tutors" className="quick-action-card browse">
+                    <div className="quick-action-icon">
+                      <i className="fas fa-search"></i>
+                    </div>
+                    <div className="quick-action-text">
+                      <span className="quick-action-title">Find a Tutor</span>
+                      <span className="quick-action-desc">Browse & book lessons</span>
+                    </div>
+                    <i className="fas fa-arrow-right quick-action-arrow"></i>
+                  </a>
+                  <a href="/tickets" className="quick-action-card tickets">
+                    <div className="quick-action-icon">
                       <i className="fas fa-ticket-alt"></i>
-                      My Tickets
-                    </h3>
-                    <a href="/tickets" className="home-tickets-link">
-                      Buy More <i className="fas fa-arrow-right"></i>
-                    </a>
-                  </div>
-                  <div className={`home-tickets-grid ${ticketBalance?.trial ? 'has-trial' : ''}`}>
-                    <div className="home-ticket-card basic">
-                      <div className="home-ticket-icon">
-                        <picture>
-                          <source srcSet="/assets/img/icons/basic_ticket2.webp" type="image/webp" />
-                          <img src="/assets/img/icons/basic_ticket2.png" alt="Basic Ticket" loading="lazy" />
-                        </picture>
-                      </div>
-                      <div className="home-ticket-info">
-                        <div className="home-ticket-count">
-                          {ticketLoading ? '...' : (ticketBalance?.basic || 0)}
-                        </div>
-                        <div className="home-ticket-label">Basic</div>
-                      </div>
                     </div>
-                    <div className="home-ticket-card premium">
-                      <div className="home-ticket-icon">
-                        <picture>
-                          <source srcSet="/assets/img/icons/premium_ticket2.webp" type="image/webp" />
-                          <img src="/assets/img/icons/premium_ticket2.png" alt="Premium Ticket" loading="lazy" />
-                        </picture>
-                      </div>
-                      <div className="home-ticket-info">
-                        <div className="home-ticket-count">
-                          {ticketLoading ? '...' : (ticketBalance?.premium || 0)}
-                        </div>
-                        <div className="home-ticket-label">Premium</div>
-                      </div>
+                    <div className="quick-action-text">
+                      <span className="quick-action-title">Buy Tickets</span>
+                      <span className="quick-action-desc">Get lesson credits</span>
                     </div>
-                    {ticketBalance?.trial ? (
-                      <div className="home-ticket-card trial">
-                        <div className="home-ticket-icon">
-                          <picture>
-                            <source srcSet="/assets/img/icons/trial_ticket.webp" type="image/webp" />
-                            <img src="/assets/img/icons/trial_ticket.png" alt="Trial Ticket" loading="lazy" />
-                          </picture>
-                        </div>
-                        <div className="home-ticket-info">
-                          <div className="home-ticket-count">
-                            {ticketLoading ? '...' : (ticketBalance?.trial || 0)}
-                          </div>
-                          <div className="home-ticket-label">Trial</div>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
+                    <i className="fas fa-arrow-right quick-action-arrow"></i>
+                  </a>
+                  <a href="/my-lessons" className="quick-action-card lessons">
+                    <div className="quick-action-icon">
+                      <i className="fas fa-calendar-alt"></i>
+                    </div>
+                    <div className="quick-action-text">
+                      <span className="quick-action-title">My Schedule</span>
+                      <span className="quick-action-desc">View upcoming lessons</span>
+                    </div>
+                    <i className="fas fa-arrow-right quick-action-arrow"></i>
+                  </a>
                 </div>
 
-                {/* Main Content Grid */}
-                <div className="home-content-grid">
+                {/* Main Grid: Next Lesson + Tickets */}
+                <div className="home-main-grid">
                   {/* Next Lesson Card */}
-                  <div className="home-card">
+                  <div className="home-card next-lesson-card">
+                    <div className="home-card-header">
+                      <h3 className="home-card-title">
+                        <i className="fas fa-video"></i>
+                        Next Lesson
+                      </h3>
+                      {stats?.nextLesson && (
+                        <div className="home-time-badge">
+                          <i className="fas fa-clock"></i>
+                          in {getTimeUntil(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}
+                        </div>
+                      )}
+                    </div>
+
                     {loading ? (
                       <div className="home-loading-state">
-                        <i className="fas fa-spinner fa-spin"></i>
+                        <div className="loading-spinner"></div>
                         <p>Loading your schedule...</p>
                       </div>
                     ) : error ? (
@@ -352,269 +348,263 @@ const HomePage = () => {
                         <i className="fas fa-exclamation-circle"></i>
                         <p>{error}</p>
                       </div>
+                    ) : stats?.nextLesson ? (
+                      <div className="next-lesson-content">
+                        <div 
+                          className={stats.nextLesson.tutorAvatar ? "next-lesson-avatar" : "next-lesson-avatar placeholder"}
+                          style={stats.nextLesson.tutorAvatar ? { backgroundImage: `url(${stats.nextLesson.tutorAvatar})` } : undefined}
+                        >
+                          {!stats.nextLesson.tutorAvatar && <i className="fas fa-user"></i>}
+                        </div>
+                        <div className="next-lesson-info">
+                          <div className="next-lesson-tutor">{stats.nextLesson.tutorName}</div>
+                          <div className="next-lesson-details">
+                            <span className="next-lesson-detail">
+                              <i className="fas fa-calendar"></i>
+                              {formatDate(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}
+                            </span>
+                            <span className="next-lesson-detail">
+                              <i className="fas fa-clock"></i>
+                              {convertToKoreanTime(stats.nextLesson.slotTime)} KST
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => window.open(`/lesson/${stats.nextLesson!.bookingId}`, '_blank')}
+                          className="join-lesson-btn"
+                        >
+                          <i className="fas fa-video"></i>
+                          Join Now
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="home-empty-state">
+                        <div className="empty-icon-wrap">
+                          <i className="fas fa-calendar-plus"></i>
+                        </div>
+                        <p className="empty-title">No upcoming lessons</p>
+                        <p className="empty-subtitle">Book a lesson with your favorite tutor</p>
+                        <a href="/browse-tutors" className="empty-action-btn">
+                          <i className="fas fa-search"></i>
+                          Find a Tutor
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ticket Balance Card */}
+                  <div className="home-card tickets-card">
+                    <div className="home-card-header">
+                      <h3 className="home-card-title">
+                        <i className="fas fa-ticket-alt"></i>
+                        My Tickets
+                      </h3>
+                      <a href="/tickets" className="card-link">
+                        Buy More <i className="fas fa-chevron-right"></i>
+                      </a>
+                    </div>
+                    
+                    {ticketLoading ? (
+                      <div className="home-loading-state compact">
+                        <div className="loading-spinner"></div>
+                      </div>
+                    ) : (
+                      <div className="ticket-balance-grid">
+                        <div className="ticket-balance-item basic">
+                          <div className="ticket-balance-icon">
+                            <picture>
+                              <source srcSet="/assets/img/icons/basic_ticket2.webp" type="image/webp" />
+                              <img src="/assets/img/icons/basic_ticket2.png" alt="Basic" loading="lazy" />
+                            </picture>
+                          </div>
+                          <div className="ticket-balance-count">{ticketBalance?.basic || 0}</div>
+                          <div className="ticket-balance-label">Basic</div>
+                        </div>
+                        <div className="ticket-balance-item premium">
+                          <div className="ticket-balance-icon">
+                            <picture>
+                              <source srcSet="/assets/img/icons/premium_ticket2.webp" type="image/webp" />
+                              <img src="/assets/img/icons/premium_ticket2.png" alt="Premium" loading="lazy" />
+                            </picture>
+                          </div>
+                          <div className="ticket-balance-count">{ticketBalance?.premium || 0}</div>
+                          <div className="ticket-balance-label">Premium</div>
+                        </div>
+                        {ticketBalance?.trial ? (
+                          <div className="ticket-balance-item trial">
+                            <div className="ticket-balance-icon">
+                              <picture>
+                                <source srcSet="/assets/img/icons/trial_ticket.webp" type="image/webp" />
+                                <img src="/assets/img/icons/trial_ticket.png" alt="Trial" loading="lazy" />
+                              </picture>
+                            </div>
+                            <div className="ticket-balance-count">{ticketBalance?.trial || 0}</div>
+                            <div className="ticket-balance-label">Trial</div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Secondary Grid: Favorites + Activity */}
+                <div className="home-secondary-grid">
+                  {/* Favorite Tutors */}
+                  <div className="home-card favorites-card">
+                    <div className="home-card-header">
+                      <h3 className="home-card-title">
+                        <i className="fas fa-heart"></i>
+                        Favorite Tutors
+                      </h3>
+                      <a href="/browse-tutors" className="card-link">
+                        Browse All <i className="fas fa-chevron-right"></i>
+                      </a>
+                    </div>
+
+                    {favoritesLoading ? (
+                      <div className="home-loading-state compact">
+                        <div className="loading-spinner"></div>
+                      </div>
+                    ) : favoriteTutors.length === 0 ? (
+                      <div className="home-empty-state compact">
+                        <div className="empty-icon-wrap small">
+                          <i className="fas fa-heart"></i>
+                        </div>
+                        <p className="empty-title">No favorites yet</p>
+                        <p className="empty-subtitle">Save tutors to quickly book again</p>
+                      </div>
+                    ) : (
+                      <div className="favorites-list">
+                        {favoriteTutors.slice(0, 4).map((tutor) => (
+                          <a 
+                            key={tutor.id} 
+                            href={`/tutor/${tutor.tutorId}`}
+                            className="favorite-tutor-item"
+                          >
+                            <div 
+                              className={tutor.tutorAvatar ? "favorite-tutor-avatar" : "favorite-tutor-avatar placeholder"}
+                              style={tutor.tutorAvatar ? { backgroundImage: `url(${tutor.tutorAvatar})` } : undefined}
+                            >
+                              {!tutor.tutorAvatar && <i className="fas fa-user"></i>}
+                            </div>
+                            <span className="favorite-tutor-name">{tutor.tutorName}</span>
+                            <i className="fas fa-chevron-right"></i>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="home-card activity-card">
+                    <div className="home-card-header">
+                      <h3 className="home-card-title">
+                        <i className="fas fa-history"></i>
+                        Recent Activity
+                      </h3>
+                    </div>
+
+                    {activityLoading ? (
+                      <div className="home-loading-state compact">
+                        <div className="loading-spinner"></div>
+                      </div>
+                    ) : recentActivity.length === 0 ? (
+                      <div className="home-empty-state compact">
+                        <div className="empty-icon-wrap small">
+                          <i className="fas fa-inbox"></i>
+                        </div>
+                        <p className="empty-title">No activity yet</p>
+                        <p className="empty-subtitle">Your lesson history will appear here</p>
+                      </div>
                     ) : (
                       <>
-                        <div className="home-card-header">
-                          <h3 className="home-card-title">
-                            <i className="fas fa-calendar-check"></i>
-                            Next Lesson
-                          </h3>
-                          {stats?.nextLesson && (
-                            <div className="home-badge-time">
-                              in {getTimeUntil(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}
-                            </div>
-                          )}
-                        </div>
-
-                        {stats?.nextLesson ? (
-                          <>
-                            {console.log('Rendering next lesson:', {
-                              tutorName: stats.nextLesson.tutorName,
-                              tutorAvatar: stats.nextLesson.tutorAvatar,
-                              slotDate: stats.nextLesson.slotDate,
-                              slotTime: stats.nextLesson.slotTime,
-                              bookingId: stats.nextLesson.bookingId
-                            })}
-                            <div className="home-next-lesson">
-                              <div 
-                                className={stats.nextLesson.tutorAvatar ? "home-tutor-avatar" : "home-tutor-avatar placeholder"}
-                                style={stats.nextLesson.tutorAvatar ? { backgroundImage: `url(${stats.nextLesson.tutorAvatar})` } : undefined}
-                              >
-                                {!stats.nextLesson.tutorAvatar && (
-                                  <i className="fas fa-user"></i>
-                                )}
-                              </div>
+                        <div className="activity-list">
+                          {recentActivity
+                            .slice((activityPage - 1) * ACTIVITY_PER_PAGE, activityPage * ACTIVITY_PER_PAGE)
+                            .map((activity, idx) => {
+                              const getIconClass = () => {
+                                if (activity.type === 'lesson_completed') return 'completed';
+                                if (activity.type === 'lesson_booked') return 'booked';
+                                if (activity.type === 'ticket_purchased') {
+                                  if (activity.ticketTier === 'premium') return 'purchase-premium';
+                                  if (activity.ticketTier === 'trial') return 'purchase-trial';
+                                  return 'purchase-basic';
+                                }
+                                return 'booked';
+                              };
                               
-                              <div className="home-lesson-info">
-                                <div className="home-lesson-tutor">
-                                  {stats.nextLesson.tutorName}
-                                </div>
-                                <div className="home-lesson-details">
-                                  <div className="home-lesson-detail">
-                                    <i className="fas fa-calendar"></i>
-                                    <span>{formatDate(parseSlotDateTime(stats.nextLesson.slotDate, stats.nextLesson.slotTime))}</span>
+                              const getIcon = () => {
+                                if (activity.type === 'lesson_completed') return 'fas fa-check-circle';
+                                if (activity.type === 'ticket_purchased') return 'fas fa-ticket-alt';
+                                return 'fas fa-calendar-check';
+                              };
+                              
+                              return (
+                                <div key={idx} className="activity-item">
+                                  <div className={`activity-icon ${getIconClass()}`}>
+                                    <i className={getIcon()}></i>
                                   </div>
-                                  <div className="home-lesson-detail">
-                                    <i className="fas fa-clock"></i>
-                                    <span>{convertToKoreanTime(stats.nextLesson.slotTime)} KST</span>
+                                  <div className="activity-content">
+                                    <span className="activity-action">{activity.action}</span>
+                                    {activity.tutorName && (
+                                      <span className="activity-tutor">with {activity.tutorName}</span>
+                                    )}
                                   </div>
+                                  <span className="activity-date">{activity.date}</span>
                                 </div>
-                              </div>
-
-                              <button
-                                onClick={() => window.open(`/lesson/${stats.nextLesson!.bookingId}`, '_blank')}
-                                className="home-btn-join"
-                              >
-                                <i className="fas fa-video"></i>
-                                <span>Join Now</span>
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="home-empty-state">
-                            <div className="home-empty-icon">
-                              <i className="fas fa-calendar-plus"></i>
-                            </div>
-                            <p className="home-empty-text">
-                              No upcoming lessons scheduled
-                            </p>
+                              );
+                            })}
+                        </div>
+                        {recentActivity.length > ACTIVITY_PER_PAGE && (
+                          <div className="activity-pagination">
                             <button
-                              onClick={() => window.location.href = '/browse-tutors'}
-                              className="home-btn-book"
+                              className="pagination-btn"
+                              onClick={() => setActivityPage(p => Math.max(1, p - 1))}
+                              disabled={activityPage === 1}
                             >
-                              Book a Lesson
+                              <i className="fas fa-chevron-left"></i>
+                            </button>
+                            <span className="pagination-info">
+                              {activityPage} / {Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE)}
+                            </span>
+                            <button
+                              className="pagination-btn"
+                              onClick={() => setActivityPage(p => Math.min(Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE), p + 1))}
+                              disabled={activityPage >= Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE)}
+                            >
+                              <i className="fas fa-chevron-right"></i>
                             </button>
                           </div>
                         )}
                       </>
                     )}
                   </div>
-
-                  {/* My Favorite Tutors */}
-                  <div className="home-card">
-                    <h3 className="home-card-title">
-                      <i className="fas fa-star"></i>
-                      My Favorite Tutors
-                    </h3>
-                    {favoritesLoading ? (
-                      <div className="home-loading-state">
-                        <i className="fas fa-spinner fa-spin"></i>
-                        <p>Loading favorites...</p>
-                      </div>
-                    ) : favoriteTutors.length === 0 ? (
-                      <div className="home-empty-state">
-                        <div className="home-empty-icon">
-                          <i className="fas fa-star"></i>
-                        </div>
-                        <p className="home-empty-text">
-                          No favorite tutors yet
-                        </p>
-                        <p className="home-empty-subtext">
-                          Browse tutors and add them to your favorites
-                        </p>
-                        <button
-                          onClick={() => window.location.href = '/browse-tutors'}
-                          className="home-btn-book"
-                        >
-                          Find a Tutor
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="home-tutors-list">
-                        {favoriteTutors.slice(0, 4).map((tutor) => (
-                          <a 
-                            key={tutor.id} 
-                            href={`/tutor/${tutor.tutorId}`}
-                            className="home-tutor-item"
-                          >
-                            <div 
-                              className={tutor.tutorAvatar ? "home-tutor-avatar small" : "home-tutor-avatar small placeholder"}
-                              style={tutor.tutorAvatar ? { backgroundImage: `url(${tutor.tutorAvatar})` } : undefined}
-                            >
-                              {!tutor.tutorAvatar && <i className="fas fa-user"></i>}
-                            </div>
-                            <div className="home-tutor-name">{tutor.tutorName}</div>
-                          </a>
-                        ))}
-                        {favoriteTutors.length > 4 && (
-                          <a href="/browse-tutors" className="home-tutors-more">
-                            +{favoriteTutors.length - 4} more
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="home-card">
-                  <h3 className="home-card-title">
-                    <i className="fas fa-history"></i>
-                    Recent Activity
-                  </h3>
-                  {activityLoading ? (
-                    <div className="home-loading-state">
-                      <i className="fas fa-spinner fa-spin"></i>
-                      <p>Loading activity...</p>
-                    </div>
-                  ) : recentActivity.length === 0 ? (
-                    <div className="home-empty-state">
-                      <div className="home-empty-icon">
-                        <i className="fas fa-history"></i>
-                      </div>
-                      <p className="home-empty-text">
-                        No recent activity yet
-                      </p>
-                      <button
-                        onClick={() => window.location.href = '/browse-tutors'}
-                        className="home-btn-book"
-                      >
-                        Book Your First Lesson
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="home-activity-list">
-                        {recentActivity
-                          .slice((activityPage - 1) * ACTIVITY_PER_PAGE, activityPage * ACTIVITY_PER_PAGE)
-                          .map((activity, idx) => {
-                            // Determine icon class based on activity type and ticket tier
-                            const getIconClass = () => {
-                              if (activity.type === 'lesson_completed') return 'lesson';
-                              if (activity.type === 'lesson_booked') return 'booking';
-                              if (activity.type === 'ticket_purchased') {
-                                // Use tier-specific colors for purchases
-                                if (activity.ticketTier === 'premium') return 'purchase-premium';
-                                if (activity.ticketTier === 'trial') return 'purchase-trial';
-                                return 'purchase-basic'; // default blue for basic
-                              }
-                              return 'booking';
-                            };
-                            
-                            return (
-                              <div
-                                key={idx}
-                                className="home-activity-item"
-                              >
-                                <div className={`home-activity-icon ${getIconClass()}`}>
-                                  <i className={`fas fa-${
-                                    activity.type === 'lesson_completed' ? 'check-circle' : 
-                                    activity.type === 'ticket_purchased' ? 'ticket-alt' : 'calendar-plus'
-                                  }`}></i>
-                                </div>
-                                <div className="home-activity-content">
-                                  <div className="home-activity-action">
-                                    {activity.action}
-                                  </div>
-                                  {activity.tutorName && (
-                                    <div className="home-activity-tutor">
-                                      with {activity.tutorName}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="home-activity-date">
-                                  {activity.date}
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                      {/* Pagination */}
-                      {recentActivity.length > ACTIVITY_PER_PAGE && (
-                        <div className="home-activity-pagination">
-                          <button
-                            className="home-activity-page-btn"
-                            onClick={() => setActivityPage(p => Math.max(1, p - 1))}
-                            disabled={activityPage === 1}
-                          >
-                            <i className="fas fa-chevron-left"></i>
-                          </button>
-                          <span className="home-activity-page-info">
-                            {activityPage} / {Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE)}
-                          </span>
-                          <button
-                            className="home-activity-page-btn"
-                            onClick={() => setActivityPage(p => Math.min(Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE), p + 1))}
-                            disabled={activityPage >= Math.ceil(recentActivity.length / ACTIVITY_PER_PAGE)}
-                          >
-                            <i className="fas fa-chevron-right"></i>
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
                 </div>
               </>
             ) : (
-              /* Not logged in: Simple Landing */
+              /* Not logged in: Landing Page */
               <>
-                <div className="home-hero">
-                  <div className="home-hero-content">
-                    <h1 className="home-hero-title">
-                      Learn English with Expert Tutors
+                <div className="landing-hero">
+                  <div className="landing-hero-content">
+                    <h1 className="landing-hero-title">
+                      Learn English with <span className="gradient-text">Expert Tutors</span>
                     </h1>
-                    <p className="home-hero-description">
+                    <p className="landing-hero-description">
                       Personalized lessons for Korean students. Improve your conversation skills, ace your exams, and gain confidence speaking English.
                     </p>
-
-                    <div className="home-hero-buttons">
-                      <button
-                        onClick={() => window.location.href = '/register'}
-                        className="home-btn-cta"
-                      >
+                    <div className="landing-hero-buttons">
+                      <a href="/register" className="landing-btn-primary">
+                        <i className="fas fa-rocket"></i>
                         Start Free Trial
-                      </button>
-                      <button
-                        onClick={() => window.location.href = '/browse-tutors'}
-                        className="home-btn-secondary"
-                      >
+                      </a>
+                      <a href="/browse-tutors" className="landing-btn-secondary">
+                        <i className="fas fa-search"></i>
                         Browse Tutors
-                      </button>
+                      </a>
                     </div>
                   </div>
-
-                  <div className="home-hero-image">
-                    <div className="home-hero-image-wrapper">
+                  <div className="landing-hero-image">
+                    <div className="landing-hero-image-wrapper">
                       <img 
                         src="/assets/img/banner/banner_woman_register.png" 
                         alt="Happy student learning English" 
@@ -624,18 +614,18 @@ const HomePage = () => {
                 </div>
 
                 {/* Features */}
-                <div className="home-features-grid">
+                <div className="landing-features">
                   {[
-                    { icon: 'comments', title: 'Real Conversation Practice', desc: 'Focus on speaking naturally and building confidence' },
-                    { icon: 'user-graduate', title: 'Expert Native Tutors', desc: 'Learn from experienced teachers who understand Korean learners' },
-                    { icon: 'clock', title: 'Flexible Scheduling', desc: 'Book lessons that fit your school and family schedule' }
+                    { icon: 'fas fa-comments', title: 'Real Conversation Practice', desc: 'Focus on speaking naturally and building confidence' },
+                    { icon: 'fas fa-user-graduate', title: 'Expert Native Tutors', desc: 'Learn from experienced teachers who understand Korean learners' },
+                    { icon: 'fas fa-clock', title: 'Flexible Scheduling', desc: 'Book lessons that fit your school and family schedule' }
                   ].map((f, i) => (
-                    <div key={i} className="home-feature-card">
-                      <div className="home-feature-icon">
-                        <i className={`fas fa-${f.icon}`}></i>
+                    <div key={i} className="landing-feature-card">
+                      <div className="landing-feature-icon">
+                        <i className={f.icon}></i>
                       </div>
-                      <h4 className="home-feature-title">{f.title}</h4>
-                      <p className="home-feature-description">{f.desc}</p>
+                      <h4 className="landing-feature-title">{f.title}</h4>
+                      <p className="landing-feature-desc">{f.desc}</p>
                     </div>
                   ))}
                 </div>

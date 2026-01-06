@@ -428,32 +428,43 @@ export class ScheduleService {
       
       // Parse slotTime - it's already in 12-hour format like "6:00 PM"
       // Convert to 24-hour format for Date constructor
-      const slotTime = slot.slotTime; // e.g., "6:00 PM"
+      const slotTime = slot.slotTime; // e.g., "6:00 PM" or "18:00"
       console.log('Parsing slot time:', slotTime, 'for date:', slot.slotDate);
       let slotDateTime: Date;
       
       try {
-        // Parse the time string (e.g., "6:00 PM")
-        const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-        if (!timeMatch) {
-          console.log('ERROR: Time format does not match regex');
-          throw new Error(`Invalid time format: ${slotTime}`);
+        let hours: number;
+        let minutes: number;
+        
+        // Try 12-hour format first (e.g., "6:00 PM", "11:30 PM")
+        const time12Match = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+        if (time12Match) {
+          hours = parseInt(time12Match[1] || '', 10);
+          minutes = parseInt(time12Match[2] || '', 10);
+          const meridiem = time12Match[3].toUpperCase();
+          
+          console.log('Parsed 12h time components:', { hours, minutes, meridiem });
+          
+          // Convert to 24-hour format
+          if (meridiem === 'PM' && hours !== 12) {
+            hours += 12;
+          } else if (meridiem === 'AM' && hours === 12) {
+            hours = 0;
+          }
+        } else {
+          // Try 24-hour format (e.g., "18:00", "23:30")
+          const time24Match = slotTime.match(/^(\d{1,2}):(\d{2})$/);
+          if (time24Match) {
+            hours = parseInt(time24Match[1] || '', 10);
+            minutes = parseInt(time24Match[2] || '', 10);
+            console.log('Parsed 24h time components:', { hours, minutes });
+          } else {
+            console.log('ERROR: Time format does not match any known format');
+            throw new Error(`Invalid time format: ${slotTime}`);
+          }
         }
         
-        let hours = parseInt(timeMatch[1] || '', 10);
-        const minutes = parseInt(timeMatch[2] || '', 10);
-        const meridiem = timeMatch[3].toUpperCase();
-        
-        console.log('Parsed time components:', { hours, minutes, meridiem });
-        
-        // Convert to 24-hour format
-        if (meridiem === 'PM' && hours !== 12) {
-          hours += 12;
-        } else if (meridiem === 'AM' && hours === 12) {
-          hours = 0;
-        }
-        
-        console.log('Converted to 24-hour format:', hours);
+        console.log('Final 24-hour format:', hours);
         
         // Create date with proper format
         slotDateTime = new Date(`${slot.slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
@@ -1432,19 +1443,31 @@ export class ScheduleService {
           const slotDate = record.get('slotDate');
           const slotTime = record.get('slotTime');
           
-          // Parse slotTime (e.g., "6:00 PM") to create proper Date
-          const timeMatch = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-          if (!timeMatch) return null;
+          let hours: number;
+          let minutes: number;
           
-          let hours = parseInt(timeMatch[1]);
-          const minutes = parseInt(timeMatch[2]);
-          const meridiem = timeMatch[3].toUpperCase();
-          
-          // Convert to 24-hour format
-          if (meridiem === 'PM' && hours !== 12) {
-            hours += 12;
-          } else if (meridiem === 'AM' && hours === 12) {
-            hours = 0;
+          // Try 12-hour format first (e.g., "6:00 PM")
+          const time12Match = slotTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+          if (time12Match) {
+            hours = parseInt(time12Match[1]);
+            minutes = parseInt(time12Match[2]);
+            const meridiem = time12Match[3].toUpperCase();
+            
+            // Convert to 24-hour format
+            if (meridiem === 'PM' && hours !== 12) {
+              hours += 12;
+            } else if (meridiem === 'AM' && hours === 12) {
+              hours = 0;
+            }
+          } else {
+            // Try 24-hour format (e.g., "23:30")
+            const time24Match = slotTime.match(/^(\d{1,2}):(\d{2})$/);
+            if (time24Match) {
+              hours = parseInt(time24Match[1]);
+              minutes = parseInt(time24Match[2]);
+            } else {
+              return null;
+            }
           }
           
           const slotDateTime = new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);

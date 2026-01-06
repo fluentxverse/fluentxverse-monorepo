@@ -36,6 +36,7 @@ export const BookingModal = ({
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [ticketBalance, setTicketBalance] = useState<TicketBalance | null>(null);
+  const [ticketLoading, setTicketLoading] = useState(true);
   const [transferringTicket, setTransferringTicket] = useState(false);
 
   // Get the connected account for ticket transfer
@@ -44,6 +45,7 @@ export const BookingModal = ({
   // Fetch ticket balance when modal opens
   useEffect(() => {
     if (isOpen && activeAccount?.address) {
+      setTicketLoading(true);
       console.log('[BookingModal] Fetching ticket balance for:', activeAccount.address);
       getTicketBalance(activeAccount.address)
         .then((balance) => {
@@ -52,7 +54,12 @@ export const BookingModal = ({
         })
         .catch((err) => {
           console.error('[BookingModal] Error fetching ticket balance:', err);
+        })
+        .finally(() => {
+          setTicketLoading(false);
         });
+    } else if (isOpen && !activeAccount?.address) {
+      setTicketLoading(false);
     }
   }, [isOpen, activeAccount?.address]);
 
@@ -103,10 +110,11 @@ export const BookingModal = ({
     if (hours >= 24) {
       hours -= 24;
       dateRolledOver = true;
-      // Calculate the next day
-      const dateObj = new Date(phDateString + 'T00:00:00');
-      dateObj.setDate(dateObj.getDate() + 1);
-      resultDate = dateObj.toISOString().split('T')[0];
+      // Calculate the next day manually without timezone issues
+      // Parse the PHT date string and add 1 day
+      const [year, month, day] = phDateString.split('-').map(Number);
+      const nextDayDate = new Date(year, month - 1, day + 1);
+      resultDate = `${nextDayDate.getFullYear()}-${String(nextDayDate.getMonth() + 1).padStart(2, '0')}-${String(nextDayDate.getDate()).padStart(2, '0')}`;
       console.log(`🕐 Date rolled over: ${phDateString} -> ${resultDate}`);
     }
 
@@ -140,31 +148,22 @@ export const BookingModal = ({
     }
   }, [preSelectedDate, preSelectedTime, availableSlots]);
 
-  // Helper to check if a PHT slot belongs to a specific KST date
-  // e.g., 11:30 PM PHT on Jan 5 = 12:30 AM KST on Jan 6, so when student selects Jan 6, show this slot
-  const slotBelongsToKSTDate = (slotDate: string, slotTime: string, targetKSTDate: string): boolean => {
-    // Convert slot's PHT date+time to actual KST date+time
-    const { date: kstDate } = convertToKoreanTimeWithDate(slotDate, slotTime);
-    
-    // Simply check if the actual KST date matches the target date
-    return kstDate === targetKSTDate;
+  // Helper to check if a PHT slot belongs to a specific PHT date
+  // The date filter now represents PHT dates (tutor's timezone)
+  // Students see all slots from that PHT date, with times converted to KST for display
+  // e.g., Jan 6 PHT 11:00 PM displays as Jan 7 00:00 KST, but it's still a "Jan 6" slot
+  const slotBelongsToPHTDate = (slotDate: string, targetPHTDate: string): boolean => {
+    return slotDate === targetPHTDate;
   };
 
   const fetchAvailableSlots = async () => {
     setLoading(true);
     setError(null);
     try {
-      // If filterDate is provided, fetch for that date AND the previous day
-      // (to catch late-night PHT slots that appear on this KST day)
-      let startDate = filterDate || new Date().toISOString().split('T')[0];
+      // filterDate is a PHT date (same as tutor's timezone)
+      // We fetch slots for that exact PHT date
+      const startDate = filterDate || new Date().toISOString().split('T')[0];
       const endDate = filterDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      // If filtering by date, also include previous day for late-night slots
-      if (filterDate) {
-        const prevDate = new Date(filterDate + 'T00:00:00');
-        prevDate.setDate(prevDate.getDate() - 1);
-        startDate = prevDate.toISOString().split('T')[0];
-      }
       
       const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
       console.log('📅 Fetched available slots (startDate:', startDate, 'endDate:', endDate, '):', slots);
@@ -177,17 +176,19 @@ export const BookingModal = ({
         });
       }
       
-      // If filterDate is set, filter to show slots that belong to this KST date
-      // This includes same-day PHT slots AND previous-day late-night PHT slots
+      // If filterDate is set, filter to show slots that belong to this PHT date
+      // All slots from that PHT date are shown, with times converted to KST for display
+      // e.g., Jan 6 PHT 11:00 PM -> displays as 00:00 KST (next day in KST, but still Jan 6 slot)
       const filteredSlots = filterDate 
         ? slots.filter(slot => {
-            const belongs = slotBelongsToKSTDate(slot.date, slot.time, filterDate);
-            console.log(`📅 Slot ${slot.date} ${slot.time} belongs to KST ${filterDate}: ${belongs}`);
+            const belongs = slotBelongsToPHTDate(slot.date, filterDate);
+            const converted = convertToKoreanTimeWithDate(slot.date, slot.time);
+            console.log(`📅 Slot ${slot.date} ${slot.time} PHT (-> ${converted.date} ${converted.time} KST) belongs to PHT ${filterDate}: ${belongs}`);
             return belongs;
           })
         : slots;
       
-      console.log('📅 Filtered slots for KST date', filterDate, ':', filteredSlots.length);
+      console.log('📅 Filtered slots for PHT date', filterDate, ':', filteredSlots.length);
       setAvailableSlots(filteredSlots);
     } catch (err: any) {
       setError(getErrorMessage(err));
@@ -202,6 +203,12 @@ export const BookingModal = ({
     // Check if user has connected wallet
     if (!activeAccount) {
       setError('Please connect your wallet to book a lesson');
+      return;
+    }
+
+    // Wait for ticket data to load
+    if (ticketLoading) {
+      setError('Loading ticket balance, please wait...');
       return;
     }
 
@@ -275,11 +282,14 @@ export const BookingModal = ({
   const isSlotElapsed = (slotDate: string, slotTime: string): boolean => {
     // Get current time in KST (Korea Standard Time, UTC+9)
     const now = new Date();
-    const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000) + (now.getTimezoneOffset() * 60 * 1000));
-    const todayKST = kstNow.toISOString().split('T')[0];
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const kstTime = new Date(utcTime + (9 * 60 * 60000)); // UTC+9
+    
+    // Format today's date in KST without using toISOString (which converts to UTC)
+    const todayKST = `${kstTime.getFullYear()}-${String(kstTime.getMonth() + 1).padStart(2, '0')}-${String(kstTime.getDate()).padStart(2, '0')}`;
     
     // Convert slot PHT date/time to actual KST date/time
-    const { date: kstDate, time: kstTime } = convertToKoreanTimeWithDate(slotDate, slotTime);
+    const { date: kstDate, time: kstTimeStr } = convertToKoreanTimeWithDate(slotDate, slotTime);
     
     // If slot's KST date is in the future, not elapsed
     if (kstDate > todayKST) {
@@ -292,9 +302,9 @@ export const BookingModal = ({
     }
     
     // Same day - check time
-    const [slotHours, slotMinutes] = kstTime.split(':').map(Number);
+    const [slotHours, slotMinutes] = kstTimeStr.split(':').map(Number);
     const slotTotalMinutes = slotHours * 60 + slotMinutes;
-    const nowTotalMinutes = kstNow.getHours() * 60 + kstNow.getMinutes();
+    const nowTotalMinutes = kstTime.getHours() * 60 + kstTime.getMinutes();
     
     // Slot is elapsed if its time has already passed
     return slotTotalMinutes <= nowTotalMinutes;
@@ -462,12 +472,17 @@ export const BookingModal = ({
                 <button
                   className="booking-modal-confirm"
                   onClick={handleBookSlot}
-                  disabled={booking}
+                  disabled={booking || ticketLoading}
                 >
                   {booking ? (
                     <>
                       <span className="booking-modal-spinner-small"></span>
                       Booking...
+                    </>
+                  ) : ticketLoading ? (
+                    <>
+                      <span className="booking-modal-spinner-small"></span>
+                      Loading...
                     </>
                   ) : (
                     <>

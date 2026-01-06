@@ -152,21 +152,32 @@ const SchedulePage = () => {
     }
   };
 
-  // Convert 12-hour PHT time to 24-hour KST time
-  const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string; dateObj: Date } => {
-    const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!match) {
-      return { date: dateStr, time: '00:00', dateObj: new Date(dateStr) };
-    }
+  // Convert 12-hour or 24-hour PHT time to 24-hour KST time
+  const convertPHTtoKST = (dateStr: string, timeStr: string): { date: string; time: string; dateObj: Date } => {
+    let hour: number;
+    let minute: number;
+    
+    // Try 12-hour format first (e.g., "11:30 PM")
+    const match12 = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (match12) {
+      hour = parseInt(match12[1], 10);
+      minute = parseInt(match12[2], 10);
+      const isPM = match12[3].toUpperCase() === 'PM';
 
-    let hour = parseInt(match[1], 10);
-    const minute = parseInt(match[2], 10);
-    const isPM = match[3].toUpperCase() === 'PM';
-
-    if (hour === 12) {
-      hour = isPM ? 12 : 0;
-    } else if (isPM) {
-      hour += 12;
+      if (hour === 12) {
+        hour = isPM ? 12 : 0;
+      } else if (isPM) {
+        hour += 12;
+      }
+    } else {
+      // Try 24-hour format (e.g., "23:30")
+      const match24 = timeStr.match(/(\d{1,2}):(\d{2})/);
+      if (match24) {
+        hour = parseInt(match24[1], 10);
+        minute = parseInt(match24[2], 10);
+      } else {
+        return { date: dateStr, time: '00:00', dateObj: new Date(dateStr) };
+      }
     }
 
     let kstHour = hour + 1;
@@ -174,9 +185,10 @@ const SchedulePage = () => {
 
     if (kstHour >= 24) {
       kstHour -= 24;
-      const nextDay = new Date(dateStr);
-      nextDay.setDate(nextDay.getDate() + 1);
-      kstDate = nextDay.toISOString().split('T')[0];
+      // Calculate next day without using toISOString (which converts to UTC)
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const nextDay = new Date(year, month - 1, day + 1);
+      kstDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
     }
 
     const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;

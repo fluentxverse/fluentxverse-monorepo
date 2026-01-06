@@ -158,7 +158,8 @@ export class TutorService {
       }
       
       if (dateFilter) {
-        // Only show tutors who have open slots on the specified date AND are certified
+        // Only show tutors who have open slots on the specified PHT date AND are certified
+        // The date filter now comes from the client as a PHT date
         matchPattern = `MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)`;
         whereClause = `WHERE s.slotDate = $dateFilter AND s.status = 'open' AND ${certificationCheck}`;
         

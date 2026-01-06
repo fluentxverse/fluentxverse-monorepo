@@ -227,12 +227,18 @@ export const BrowseTutorsPage = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
-  // Default to today's date
+  // Default to today's date in PHT timezone
+  // "Today" should only change to the next day at 1AM KST (which is midnight PHT)
+  // This ensures students see PHT-based dates that match tutor availability
   const getTodayDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const now = new Date();
+    // Get current time in PHT (UTC+8)
+    // Create a date string in PHT by adding 8 hours to UTC
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const phtTime = new Date(utcTime + (8 * 60 * 60000)); // UTC+8
+    const year = phtTime.getFullYear();
+    const month = String(phtTime.getMonth() + 1).padStart(2, '0');
+    const day = String(phtTime.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
   const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
@@ -256,20 +262,30 @@ export const BrowseTutorsPage = () => {
     setSelectedTutor(null);
   };
 
-  // Generate next 7 days with formatted labels
+  // Helper to get current PHT date object
+  const getPHTDate = (daysOffset = 0) => {
+    const now = new Date();
+    // Get current time in PHT (UTC+8)
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const phtTime = new Date(utcTime + (8 * 60 * 60000)); // UTC+8
+    phtTime.setDate(phtTime.getDate() + daysOffset);
+    return phtTime;
+  };
+
+  // Generate next 7 days with formatted labels (in PHT timezone)
+  // This ensures dates match tutor availability which is stored in PHT
   const generateDateOptions = () => {
     const options: { label: string; value: string }[] = [];
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
     for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
+      const date = getPHTDate(i);
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const year = date.getFullYear();
       const dayName = days[date.getDay()];
       const label = i === 0 ? `Today (${month}/${day})` : `${month}/${day} ${dayName}`;
-      // Format as YYYY-MM-DD in local timezone to avoid UTC shift
+      // Format as YYYY-MM-DD in PHT timezone
       const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       options.push({ label, value });
     }
