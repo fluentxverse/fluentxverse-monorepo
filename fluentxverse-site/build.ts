@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync } from "fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 const PROJECT_ROOT = import.meta.dir;
@@ -29,15 +29,6 @@ async function build() {
       chunk: "[name].[hash].js",
       asset: "[name].[hash][ext]",
     },
-    loader: {
-      ".css": "css",
-      ".svg": "file",
-      ".png": "file",
-      ".jpg": "file",
-      ".jpeg": "file",
-      ".gif": "file",
-      ".webp": "file",
-    },
   });
 
   if (!result.success) {
@@ -48,12 +39,25 @@ async function build() {
     process.exit(1);
   }
 
-  // Find the generated JS and CSS files
-  const jsFile = result.outputs.find((o) => o.path.endsWith(".js"))?.path;
-  const cssFile = result.outputs.find((o) => o.path.endsWith(".css"))?.path;
+  // Manually bundle CSS files
+  const cssFiles = ["./src/styles/main.css", "./src/styles/App.css"];
+  let combinedCss = "";
+  for (const cssPath of cssFiles) {
+    const fullPath = join(PROJECT_ROOT, cssPath);
+    if (existsSync(fullPath)) {
+      combinedCss += readFileSync(fullPath, "utf-8") + "\n";
+    }
+  }
+  
+  // Generate CSS hash
+  const cssHash = Bun.hash(combinedCss).toString(16).slice(0, 8);
+  const cssFileName = `styles.${cssHash}.css`;
+  writeFileSync(join(OUT_DIR, cssFileName), combinedCss);
+
+  // Find the generated JS file
+  const jsFile = result.outputs.find((o) => o.path.endsWith(".js") && !o.path.includes("chunk"))?.path;
 
   const jsFileName = jsFile ? jsFile.split("/").pop() : "index.js";
-  const cssFileName = cssFile ? cssFile.split("/").pop() : "";
 
   // Generate HTML with correct script/style references
   const htmlTemplate = `<!DOCTYPE html>
@@ -77,7 +81,7 @@ async function build() {
   <meta name="twitter:description" content="Connect with native language tutors worldwide. Pay with crypto, earn rewards.">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" href="/assets/img/logo/icon_logo.png">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,12 +103,15 @@ async function build() {
 
   // Copy public assets
   if (existsSync(PUBLIC_DIR)) {
-    const files = ["favicon.svg"];
-    for (const file of files) {
-      const src = join(PUBLIC_DIR, file);
-      if (existsSync(src)) {
-        copyFileSync(src, join(OUT_DIR, file));
-      }
+    // Copy assets folder
+    const assetsDir = join(PUBLIC_DIR, "assets");
+    if (existsSync(assetsDir)) {
+      cpSync(assetsDir, join(OUT_DIR, "assets"), { recursive: true });
+    }
+    // Copy favicon
+    const faviconSrc = join(PUBLIC_DIR, "favicon.png");
+    if (existsSync(faviconSrc)) {
+      copyFileSync(faviconSrc, join(OUT_DIR, "favicon.png"));
     }
   }
 
