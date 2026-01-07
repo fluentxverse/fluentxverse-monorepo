@@ -456,7 +456,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
           {lessonData && (
             <div className="lesson-info-card">
               <div className="lesson-info-header">
-                <i className="fi fi-sr-chalkboard-user"></i>
+                <i className="fi fi-sr-graduation-cap"></i>
                 <h2>Scheduled Lesson</h2>
               </div>
               <div className="lesson-info-details">
@@ -484,9 +484,6 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
                 <div className="profile-avatar">
                   {displayData.initials}
                 </div>
-                <span className="profile-level-badge">
-                  {displayData.level}
-                </span>
               </div>
 
               {/* Profile Info */}
@@ -581,13 +578,6 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
 
                 <h4 className="section-subtitle">Interests</h4>
                 <p className="card-text">{studentData.interests}</p>
-
-                <h4 className="section-subtitle">Preferred Topics</h4>
-                <div className="topic-tags">
-                  {(displayData.preferredTopics || []).map((topic, idx) => (
-                    <span key={idx} className="topic-tag">{topic}</span>
-                  ))}
-                </div>
               </div>
 
               {/* Upcoming Sessions */}

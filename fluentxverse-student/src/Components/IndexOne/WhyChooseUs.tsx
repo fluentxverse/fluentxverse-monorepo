@@ -59,8 +59,8 @@ const WhyChooseUs = () => {
           </p>
           <div className="progress-stats">
             <div className="progress-stat">
-              <span className="stat-number">85%</span>
-              <span className="stat-label">of our students started as beginners</span>
+              <span className="stat-number">All levels</span>
+              <span className="stat-label">from beginner to advanced welcome</span>
             </div>
             <div className="stat-divider"></div>
             <div className="progress-stat">

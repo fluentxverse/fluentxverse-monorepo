@@ -177,139 +177,79 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
             </p>
           </div>
 
-          <div className="problem-bento">
-            {/* Large stat card */}
-            <div className="bento-card bento-large">
-              <div className="bento-stat">40%</div>
-              <div className="bento-stat-label">Platform Fees</div>
-              <p className="bento-description">
-                Traditional platforms take up to 40% of tutor earnings, 
-                leaving talented educators struggling to make ends meet.
-              </p>
-              <div className="bento-visual">
-                <div className="fee-bar">
-                  <div className="fee-taken"></div>
-                  <span className="fee-label">Platform takes</span>
-                </div>
-                <div className="fee-bar fee-tutor">
-                  <div className="fee-kept"></div>
-                  <span className="fee-label">Tutor keeps</span>
+          <div className="problem-grid">
+            {/* Platform Fees */}
+            <div className="problem-card">
+              <div className="problem-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <div className="problem-content">
+                <h3>High Platform Fees</h3>
+                <p>Traditional platforms take up to 40% of tutor earnings, leaving talented educators struggling to make ends meet.</p>
+                <div className="problem-stat">
+                  <span className="stat-number">40%</span>
+                  <span className="stat-label">taken by platforms</span>
                 </div>
               </div>
             </div>
 
-            {/* Geographic card */}
-            <div className="bento-card bento-geo">
-              <div className="bento-icon">
+            {/* Geographic Barriers */}
+            <div className="problem-card">
+              <div className="problem-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <circle cx="12" cy="12" r="10"></circle>
                   <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
               </div>
-              <h3>Geographic Barriers</h3>
-              <p>Quality tutors can't reach students across borders</p>
-              <div className="geo-dots">
-                <div className="country-icon" title="Philippines">
-                  <svg viewBox="0 0 36 36" fill="none">
-                    <rect y="0" width="36" height="18" fill="#0038A8"/>
-                    <rect y="18" width="36" height="18" fill="#CE1126"/>
-                    <path d="M0 0 L18 18 L0 36 Z" fill="#FFF"/>
-                    <circle cx="7" cy="18" r="4" fill="#FCD116"/>
-                  </svg>
-                </div>
-                <span className="dot-line"></span>
-                <div className="country-icon" title="Vietnam">
-                  <svg viewBox="0 0 36 36" fill="none">
-                    <rect width="36" height="36" fill="#DA251D"/>
-                    <path d="M18 8 L20.5 15 L28 15 L22 19.5 L24.5 27 L18 22 L11.5 27 L14 19.5 L8 15 L15.5 15 Z" fill="#FFFF00"/>
-                  </svg>
-                </div>
-                <span className="dot-line"></span>
-                <div className="country-icon" title="South Korea">
-                  <svg viewBox="0 0 36 36" fill="none">
-                    <rect width="36" height="36" fill="#FFF"/>
-                    <circle cx="18" cy="18" r="8" fill="#C60C30"/>
-                    <path d="M18 10 Q26 18 18 26 Q18 18 18 10" fill="#003478"/>
-                  </svg>
-                </div>
-                <span className="dot-line"></span>
-                <div className="country-icon" title="Japan">
-                  <svg viewBox="0 0 36 36" fill="none">
-                    <rect width="36" height="36" fill="#FFF"/>
-                    <circle cx="18" cy="18" r="9" fill="#BC002D"/>
-                  </svg>
-                </div>
+              <div className="problem-content">
+                <h3>Geographic Barriers</h3>
+                <p>Quality tutors can't reach students across borders due to payment, timezone, and platform limitations.</p>
               </div>
             </div>
 
-            {/* Trust card */}
-            <div className="bento-card bento-trust">
-              <div className="trust-visual">
-                <div className="trust-circle">
-                  <span>?</span>
-                </div>
+            {/* Zero Transparency */}
+            <div className="problem-card">
+              <div className="problem-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
               </div>
-              <h3>Zero Transparency</h3>
-              <p>No verifiable credentials, progress tracking, or payment visibility</p>
+              <div className="problem-content">
+                <h3>Zero Transparency</h3>
+                <p>No verifiable credentials, progress tracking, or payment visibility for students or tutors.</p>
+              </div>
             </div>
 
-            {/* One size card */}
-            <div className="bento-card bento-cookie">
-              <div className="cookie-visual">
-                <div className="clone-grid">
-                  <div className="clone-box">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M20 21a8 8 0 1 0-16 0"></path>
-                    </svg>
-                  </div>
-                  <div className="clone-box">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M20 21a8 8 0 1 0-16 0"></path>
-                    </svg>
-                  </div>
-                  <div className="clone-box">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M20 21a8 8 0 1 0-16 0"></path>
-                    </svg>
-                  </div>
-                  <div className="clone-box">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M20 21a8 8 0 1 0-16 0"></path>
-                    </svg>
-                  </div>
-                  <div className="clone-box">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M20 21a8 8 0 1 0-16 0"></path>
-                    </svg>
-                  </div>
-                  <div className="clone-box">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="8" r="4"></circle>
-                      <path d="M20 21a8 8 0 1 0-16 0"></path>
-                    </svg>
-                  </div>
-                </div>
+            {/* Cookie-Cutter Learning */}
+            <div className="problem-card">
+              <div className="problem-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
               </div>
-              <h3>Cookie-Cutter Learning</h3>
-              <p>Same curriculum for everyone ignores individual goals and learning styles</p>
+              <div className="problem-content">
+                <h3>Cookie-Cutter Learning</h3>
+                <p>Same curriculum for everyone ignores individual goals, learning styles, and proficiency levels.</p>
+              </div>
             </div>
+          </div>
 
-            {/* Quote card */}
-            <div className="bento-card bento-quote">
-              <div className="quote-mark">"</div>
-              <p className="quote-text">
-                I was earning $3/hour after platform fees. 
-                I almost gave up teaching entirely.
-              </p>
-              <div className="quote-author">
-                <span className="author-name">, Maria, ESL Tutor</span>
-                <span className="author-loc">Manila, Philippines</span>
-              </div>
+          {/* Testimonial */}
+          <div className="problem-testimonial">
+            <div className="testimonial-quote">"</div>
+            <p className="testimonial-text">
+              I was earning $3/hour after platform fees. I almost gave up teaching entirely.
+            </p>
+            <div className="testimonial-author">
+              <span className="author-name">Maria, ESL Tutor</span>
+              <span className="author-location">Manila, Philippines</span>
             </div>
           </div>
         </div>
@@ -434,28 +374,57 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
           </div>
 
           <div className="tech-showcase">
-            {/* Main feature - WebRTC */}
-            <div className="tech-hero-card">
-              <div className="tech-hero-visual">
-                <div className="video-ring">
-                  <div className="video-ring-inner">
+            <div className="tech-hero-row">
+              {/* Smart Progress Tracking */}
+              <div className="tech-hero-card progress-tracking">
+                <div className="tech-hero-visual">
+                  <div className="progress-icon-ring">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M23 7l-7 5 7 5V7z"></path>
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                     </svg>
                   </div>
                 </div>
-                <div className="pulse-dot pulse-1"></div>
-                <div className="pulse-dot pulse-2"></div>
-                <div className="pulse-dot pulse-3"></div>
+                <div className="tech-hero-content">
+                  <span className="tech-feature-badge">Weekly Reports</span>
+                  <h3>Smart Progress Tracking</h3>
+                  <p>Our AI-powered system measures your weekly progress with detailed metrics. Get personalized reports showing vocabulary growth, fluency improvements, and achievement milestones.</p>
+                  <div className="progress-stats">
+                    <div className="progress-stat-item">
+                      <span className="progress-stat-value">All levels</span>
+                      <span className="progress-stat-label">From beginner to advanced welcome</span>
+                    </div>
+                    <div className="progress-stat-item">
+                      <span className="progress-stat-value">3 months</span>
+                      <span className="progress-stat-label">Average time to hold basic conversations</span>
+                    </div>
+                    <div className="progress-stat-item">
+                      <span className="progress-stat-value">100%</span>
+                      <span className="progress-stat-label">Supportive learning environment</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="tech-hero-content">
-                <h3>WebRTC Video</h3>
-                <p>Crystal-clear, low-latency video calls that feel like being in the same room. Real-time communication powered by cutting-edge browser technology.</p>
-                <div className="tech-tags">
-                  <span>P2P Connection</span>
-                  <span>HD Quality</span>
-                  <span>&lt;100ms Latency</span>
+
+              {/* Main feature - WebRTC */}
+              <div className="tech-hero-card">
+                <div className="tech-hero-visual">
+                  <div className="video-ring">
+                    <div className="video-ring-inner">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M23 7l-7 5 7 5V7z"></path>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div className="tech-hero-content">
+                  <h3>WebRTC Video</h3>
+                  <p>Crystal-clear, low-latency video calls that feel like being in the same room. Real-time communication powered by cutting-edge browser technology.</p>
+                  <div className="tech-tags">
+                    <span>P2P Connection</span>
+                    <span>HD Quality</span>
+                    <span>&lt;100ms Latency</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -463,11 +432,10 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
             {/* Tech stack grid */}
             <div className="tech-stack-grid">
               <div className="tech-stack-card">
-                <div className="tech-stack-icon web3">
+                <div className="tech-stack-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                    <path d="M2 17l10 5 10-5"></path>
-                    <path d="M2 12l10 5 10-5"></path>
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <path d="M3 9h18M9 21V9"></path>
                   </svg>
                 </div>
                 <h4>Web3 Integration</h4>
@@ -475,13 +443,11 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
               </div>
 
               <div className="tech-stack-card">
-                <div className="tech-stack-icon graph">
+                <div className="tech-stack-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <circle cx="6" cy="6" r="3"></circle>
-                    <circle cx="18" cy="18" r="3"></circle>
-                    <circle cx="18" cy="6" r="3"></circle>
-                    <circle cx="6" cy="18" r="3"></circle>
-                    <path d="M8.5 8.5l7 7M15.5 8.5l-7 7"></path>
+                    <ellipse cx="12" cy="6" rx="8" ry="3"></ellipse>
+                    <path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6"></path>
+                    <path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"></path>
                   </svg>
                 </div>
                 <h4>Graph Database</h4>
@@ -489,9 +455,12 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
               </div>
 
               <div className="tech-stack-card">
-                <div className="tech-stack-icon backend">
+                <div className="tech-stack-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"></path>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="8" y1="10" x2="14" y2="10"></line>
                   </svg>
                 </div>
                 <h4>Bun + Elysia</h4>
@@ -499,11 +468,11 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
               </div>
 
               <div className="tech-stack-card">
-                <div className="tech-stack-icon frontend">
+                <div className="tech-stack-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
-                    <line x1="12" y1="22" x2="12" y2="15.5"></line>
-                    <polyline points="22 8.5 12 15.5 2 8.5"></polyline>
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                    <line x1="14" y1="4" x2="10" y2="20"></line>
                   </svg>
                 </div>
                 <h4>React + TypeScript</h4>
@@ -531,7 +500,7 @@ function HomePage({ navigateTo }: { navigateTo: (page: 'home' | 'about') => void
             <p className="vision-big-text">
               A world where geography doesn't limit opportunity. Where a tutor in{" "}
               <span className="highlight-city">Manila</span> can inspire a professional in{" "}
-              <span className="highlight-city">Tokyo</span>, where technology rewards dedication, 
+              <span className="highlight-city">Seoul</span> or <span className="highlight-city">Hanoi</span>, where technology rewards dedication, 
               and where every interaction builds toward something bigger.
             </p>
           </div>
