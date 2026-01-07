@@ -1,0 +1,9 @@
+name = "fluentxverse-site"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./dist"
+
+# For static site hosting
+# Assets will be served from the dist folder
