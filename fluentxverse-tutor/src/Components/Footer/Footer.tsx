@@ -16,18 +16,18 @@ const Footer = () => {
                     <div className="footer-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
                   </a>
                 </div>
-                <p style={{ marginBottom: '20px', color: '#666', lineHeight: '1.6' }}>
+                <p className="footer-description">
                   Empowering language learners worldwide through innovative technology and dedicated tutors.
                 </p>
                 <p className="footer-email">Email us:<br />
-                  <a href="mailto:support@fluentxverse.com" style={{ color: '#0245ae', textDecoration: 'underline' }}>
+                  <a href="mailto:support@fluentxverse.com">
                     support@fluentxverse.com
                   </a>
                 </p>
                 <ul className="footer-social">
-                  <li><a href="https://facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer" style={{ background: '#0245ae', color: '#fff' }}><i className="fab fa-facebook-f" /></a></li>
-                  <li><a href="https://twitter.com/fluentxverse" target="_blank" rel="noopener noreferrer" style={{ background: '#0245ae', color: '#fff' }}><i className="fab fa-twitter" /></a></li>
-                  <li><a href="https://linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer" style={{ background: '#0245ae', color: '#fff' }}><i className="fab fa-linkedin-in" /></a></li>
+                  <li><a href="https://facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook-f" /></a></li>
+                  <li><a href="https://twitter.com/fluentxverse" target="_blank" rel="noopener noreferrer"><i className="fab fa-twitter" /></a></li>
+                  <li><a href="https://linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin-in" /></a></li>
                 </ul>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo, useCallback } from 'preact/hooks';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
@@ -259,86 +259,106 @@ const SchedulePage = () => {
   const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes in milliseconds
   
   // Helper to check if lesson is still ongoing (within 25 minutes of start)
-  const isLessonOngoing = (lessonDate: Date): boolean => {
-    const lessonEnd = new Date(lessonDate.getTime() + LESSON_DURATION_MS);
-    return now >= lessonDate && now < lessonEnd;
-  };
+  const isLessonOngoing = useCallback((lessonDate: Date): boolean => {
+    const currentTime = Date.now();
+    const lessonEnd = lessonDate.getTime() + LESSON_DURATION_MS;
+    return currentTime >= lessonDate.getTime() && currentTime < lessonEnd;
+  }, []);
   
   // Helper to check if lesson end time has passed
-  const isLessonEnded = (lessonDate: Date): boolean => {
-    const lessonEnd = new Date(lessonDate.getTime() + LESSON_DURATION_MS);
-    return now >= lessonEnd;
-  };
+  const isLessonEnded = useCallback((lessonDate: Date): boolean => {
+    const lessonEnd = lessonDate.getTime() + LESSON_DURATION_MS;
+    return Date.now() >= lessonEnd;
+  }, []);
   
-  const upcomingLessons = bookings
-    .filter(b => b.status === 'upcoming' && (b.date > now || isLessonOngoing(b.date)))
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  const pastLessons = bookings
-    .filter(b => b.status === 'completed' || isLessonEnded(b.date))
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-
-  // Format date for display - always use KST timezone for Korean students
-  const formatLessonDate = (date: Date) => {
-    // Get the date components in KST (UTC+9)
-    const kstFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric'
-    });
-    const kstParts = kstFormatter.formatToParts(date);
-    const kstYear = parseInt(kstParts.find(p => p.type === 'year')?.value || '0');
-    const kstMonth = parseInt(kstParts.find(p => p.type === 'month')?.value || '0') - 1;
-    const kstDay = parseInt(kstParts.find(p => p.type === 'day')?.value || '0');
+  // Memoize filtered and sorted lesson lists
+  const { upcomingLessons, pastLessons } = useMemo(() => {
+    const currentTime = Date.now();
     
-    // Get today in KST
+    const upcoming = bookings
+      .filter(b => {
+        if (b.status !== 'upcoming') return false;
+        const lessonEnd = b.date.getTime() + LESSON_DURATION_MS;
+        return b.date.getTime() > currentTime || currentTime < lessonEnd;
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const past = bookings
+      .filter(b => {
+        if (b.status === 'completed') return true;
+        const lessonEnd = b.date.getTime() + LESSON_DURATION_MS;
+        return currentTime >= lessonEnd;
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    return { upcomingLessons: upcoming, pastLessons: past };
+  }, [bookings]);
+
+  // Create KST formatter once (memoized)
+  const kstFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric'
+  }), []);
+
+  const kstDateFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  }), []);
+
+  // Pre-compute today and tomorrow in KST (memoized)
+  const { todayKST, tomorrowKST } = useMemo(() => {
     const now = new Date();
     const todayParts = kstFormatter.formatToParts(now);
     const todayYear = parseInt(todayParts.find(p => p.type === 'year')?.value || '0');
-    const todayMonth = parseInt(todayParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const todayMonth = parseInt(todayParts.find(p => p.type === 'month')?.value || '0');
     const todayDay = parseInt(todayParts.find(p => p.type === 'day')?.value || '0');
-    
-    // Check if same day in KST
-    if (kstYear === todayYear && kstMonth === todayMonth && kstDay === todayDay) {
-      return 'Today';
-    }
-    
-    // Check if tomorrow in KST
+
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const tomorrowParts = kstFormatter.formatToParts(tomorrow);
     const tomorrowYear = parseInt(tomorrowParts.find(p => p.type === 'year')?.value || '0');
-    const tomorrowMonth = parseInt(tomorrowParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const tomorrowMonth = parseInt(tomorrowParts.find(p => p.type === 'month')?.value || '0');
     const tomorrowDay = parseInt(tomorrowParts.find(p => p.type === 'day')?.value || '0');
-    
-    if (kstYear === tomorrowYear && kstMonth === tomorrowMonth && kstDay === tomorrowDay) {
-      return 'Tomorrow';
-    }
-    
-    // Format as readable date in KST
-    return date.toLocaleDateString('en-US', { 
-      timeZone: 'Asia/Seoul',
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
 
-  const getTimeUntil = (date: Date) => {
-    const diff = date.getTime() - now.getTime();
+    return {
+      todayKST: `${todayYear}-${todayMonth}-${todayDay}`,
+      tomorrowKST: `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`
+    };
+  }, [kstFormatter]);
+
+  // Format date for display - optimized with memoized formatters
+  const formatLessonDate = useCallback((date: Date) => {
+    const kstParts = kstFormatter.formatToParts(date);
+    const kstYear = parseInt(kstParts.find(p => p.type === 'year')?.value || '0');
+    const kstMonth = parseInt(kstParts.find(p => p.type === 'month')?.value || '0');
+    const kstDay = parseInt(kstParts.find(p => p.type === 'day')?.value || '0');
+    const dateKey = `${kstYear}-${kstMonth}-${kstDay}`;
+
+    if (dateKey === todayKST) return 'Today';
+    if (dateKey === tomorrowKST) return 'Tomorrow';
+
+    return kstDateFormatter.format(date);
+  }, [kstFormatter, kstDateFormatter, todayKST, tomorrowKST]);
+
+  const getTimeUntil = useCallback((date: Date) => {
+    const currentTime = Date.now();
+    const diff = date.getTime() - currentTime;
     
     // If lesson has started, check if it's still ongoing
     if (diff < 0) {
-      const lessonEnd = new Date(date.getTime() + LESSON_DURATION_MS);
-      const timeLeft = lessonEnd.getTime() - now.getTime();
+      const lessonEnd = date.getTime() + LESSON_DURATION_MS;
+      const timeLeft = lessonEnd - currentTime;
       if (timeLeft > 0) {
-        const minsLeft = Math.floor(timeLeft / (1000 * 60));
+        const minsLeft = Math.floor(timeLeft / 60000);
         return `Ongoing • ${minsLeft}m left`;
       }
       return 'Ended';
     }
     
-    const minutes = Math.floor(diff / (1000 * 60));
+    const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
@@ -349,11 +369,12 @@ const SchedulePage = () => {
     } else {
       return `in ${days} day${days > 1 ? 's' : ''}`;
     }
-  };
+  }, []);
 
-  const getTimeSince = (date: Date) => {
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
+  const getTimeSince = useCallback((date: Date) => {
+    const currentTime = Date.now();
+    const diff = currentTime - date.getTime();
+    const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
@@ -366,9 +387,11 @@ const SchedulePage = () => {
     } else {
       return `${minutes}m ago`;
     }
-  };
+  }, []);
 
-  const displayedLessons = activeTab === 'upcoming' ? upcomingLessons : pastLessons;
+  const displayedLessons = useMemo(() => 
+    activeTab === 'upcoming' ? upcomingLessons : pastLessons
+  , [activeTab, upcomingLessons, pastLessons]);
 
   return (
     <>
@@ -427,11 +450,24 @@ const SchedulePage = () => {
               <span>All times shown in Seoul Time (KST)</span>
             </div>
 
-            {/* Loading State */}
+            {/* Loading State - Skeleton Loader */}
             {loading && (
-              <div className="schedule-loading">
-                <div className="schedule-spinner"></div>
-                <p>Loading your schedule...</p>
+              <div className="schedule-skeleton">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton-card">
+                    <div className="skeleton-date"></div>
+                    <div className="skeleton-avatar"></div>
+                    <div className="skeleton-info">
+                      <div className="skeleton-title"></div>
+                      <div className="skeleton-detail"></div>
+                      <div className="skeleton-detail" style={{ width: '150px' }}></div>
+                    </div>
+                    <div className="skeleton-actions">
+                      <div className="skeleton-btn"></div>
+                      <div className="skeleton-btn" style={{ width: '80px' }}></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
