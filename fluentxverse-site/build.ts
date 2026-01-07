@@ -65,20 +65,20 @@ async function build() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="FluentXVerse - Learn languages with native tutors in the Web3 metaverse. Pay with crypto, earn rewards, and track progress on-chain.">
-  <meta name="keywords" content="language learning, web3, crypto, tutors, education, metaverse">
+  <meta name="description" content="FluentXVerse - Learn English with expert ESL tutors. Pay with crypto, earn rewards, and track progress on-chain.">
+  <meta name="keywords" content="ESL, English learning, web3, crypto, tutors, education">
   <meta name="theme-color" content="#0f0f23">
   
   <!-- Open Graph -->
-  <meta property="og:title" content="FluentXVerse - Web3 Language Learning">
-  <meta property="og:description" content="Connect with native language tutors worldwide. Pay with crypto, earn rewards.">
+  <meta property="og:title" content="FluentXVerse - Web3 ESL Learning">
+  <meta property="og:description" content="Connect with expert ESL tutors worldwide. Pay with crypto, earn rewards.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://fluentxverse.com">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="FluentXVerse - Web3 Language Learning">
-  <meta name="twitter:description" content="Connect with native language tutors worldwide. Pay with crypto, earn rewards.">
+  <meta name="twitter:title" content="FluentXVerse - Web3 ESL Learning">
+  <meta name="twitter:description" content="Connect with expert ESL tutors worldwide. Pay with crypto, earn rewards.">
   
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/assets/img/logo/icon_logo.png">
@@ -90,7 +90,7 @@ async function build() {
   
   ${cssFileName ? `<link rel="stylesheet" href="/${cssFileName}">` : ""}
   
-  <title>FluentXVerse - Learn Languages in the Web3 Metaverse</title>
+  <title>FluentXVerse - Web3 ESL Learning Platform</title>
 </head>
 <body>
   <div id="root"></div>
