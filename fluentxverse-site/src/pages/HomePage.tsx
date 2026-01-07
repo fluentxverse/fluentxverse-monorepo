@@ -40,9 +40,7 @@ export function HomePage({ navigateTo }: HomePageProps) {
               Explore Our Vision
               <span className="btn-arrow">→</span>
             </a>
-            <a href="#" onClick={() => navigateTo('about')} className="btn btn-ghost">
-              Learn More
-            </a>
+
           </div>
         </div>
 
@@ -125,9 +123,9 @@ export function HomePage({ navigateTo }: HomePageProps) {
               </div>
               <div className="problem-content">
                 <h3>High Platform Fees</h3>
-                <p>Traditional platforms take up to 40% of tutor earnings, leaving talented educators struggling to make ends meet.</p>
+                <p>Traditional platforms take up to 60% of tutor earnings, leaving talented educators struggling to make ends meet.</p>
                 <div className="problem-stat">
-                  <span className="stat-number">40%</span>
+                  <span className="stat-number">60%</span>
                   <span className="stat-label">taken by platforms</span>
                 </div>
               </div>

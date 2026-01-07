@@ -1,5 +1,49 @@
 import { Footer } from '../components/Footer';
 
+interface TeamMember {
+  name: string;
+  role: string;
+  bio: string;
+  image: string;
+  linkedin: string;
+  imagePosition?: string; // Optional: CSS object-position value
+}
+
+// ========================================
+// TEAM DATA - Edit team members here
+// ========================================
+const teamMembers: TeamMember[] = [
+  {
+    name: "Paul Anthony Arriola",
+    role: "Founder & CEO",
+    bio: "Pioneering the future of digital language education with innovative Web3 solutions.",
+    image: "/assets/img/team/paul.png",
+    linkedin: "https://www.linkedin.com/in/paul-anthony-arriola-a0436321b/"
+  },
+  {
+    name: "John Paul Belleza",
+    role: "Head of Curriculum Development",
+    bio: "Designing learning experiences that make language acquisition effective and enjoyable.",
+    image: "/assets/img/team/jp.png",
+    linkedin: "https://www.linkedin.com/in/japalveinz/"
+  },
+  {
+    name: "Jeena Marie Fuentespina",
+    role: "Learning Experience Designer",
+    bio: "Crafting engaging and intuitive educational journeys for diverse learners.",
+    image: "/assets/img/team/jeena.png",
+    linkedin: "https://www.linkedin.com/in/jeena-marie-fuentespina-898659188/"
+  },
+  {
+    name: "Ian Kenneth Soriano",
+    role: "Head of Infrastructure and Security",
+    bio: "Ensuring a robust, secure, and scalable platform for seamless global learning.",
+    image: "/assets/img/team/ian.png",
+    linkedin: "https://www.linkedin.com/in/ian-kenneth-soriano-21011b21a/"    ,
+    imagePosition: "center 40%"
+  }
+];
+
 interface AboutPageProps {
   navigateTo: (page: 'home' | 'about') => void;
 }
@@ -288,82 +332,28 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
             </p>
           </div>
           <div className="team-grid">
-            <div className="team-card">
-              <div className="team-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=face" 
-                  alt="Paul Anthony Arriola" 
-                  className="team-image"
-                />
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="team-linkedin">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </a>
+            {teamMembers.map((member, index) => (
+              <div className="team-card" key={index}>
+                <div className="team-image-wrapper">
+                  <img 
+                    src={member.image} 
+                    alt={member.name} 
+                    className="team-image"
+                    style={member.imagePosition ? { objectPosition: member.imagePosition } : undefined}
+                  />
+                  <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="team-linkedin">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  </a>
+                </div>
+                <div className="team-info">
+                  <h4>{member.name}</h4>
+                  <p className="team-role">{member.role}</p>
+                  <p className="team-bio">{member.bio}</p>
+                </div>
               </div>
-              <div className="team-info">
-                <h4>Paul Anthony Arriola</h4>
-                <p className="team-role">Founder & CEO</p>
-                <p className="team-bio">Pioneering the future of digital language education with innovative Web3 solutions.</p>
-              </div>
-            </div>
-            <div className="team-card">
-              <div className="team-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=300&fit=crop&crop=face" 
-                  alt="Maria Santos" 
-                  className="team-image"
-                />
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="team-linkedin">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </a>
-              </div>
-              <div className="team-info">
-                <h4>Maria Santos</h4>
-                <p className="team-role">Head of Education</p>
-                <p className="team-bio">Designing learning experiences that make language acquisition effective and enjoyable.</p>
-              </div>
-            </div>
-            <div className="team-card">
-              <div className="team-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop&crop=face" 
-                  alt="James Rodriguez" 
-                  className="team-image"
-                />
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="team-linkedin">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </a>
-              </div>
-              <div className="team-info">
-                <h4>James Rodriguez</h4>
-                <p className="team-role">Chief Technology Officer</p>
-                <p className="team-bio">Building scalable infrastructure with WebRTC and modern tech that connects learners and tutors seamlessly.</p>
-              </div>
-            </div>
-            <div className="team-card">
-              <div className="team-image-wrapper">
-                <img 
-                  src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop&crop=face" 
-                  alt="Angela Cruz" 
-                  className="team-image"
-                />
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="team-linkedin">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </a>
-              </div>
-              <div className="team-info">
-                <h4>Angela Cruz</h4>
-                <p className="team-role">Community Manager</p>
-                <p className="team-bio">Fostering a vibrant community of Filipino tutors and Asian learners across the globe.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
