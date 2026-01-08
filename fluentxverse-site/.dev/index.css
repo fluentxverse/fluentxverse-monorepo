@@ -109,13 +109,15 @@ img {
 .btn-primary {
   background: var(--gradient-primary);
   color: #fff;
+  border: 1px solid #4a9eff4d;
   box-shadow: 0 4px 15px #4a9eff66;
 }
 
 .btn-primary:hover {
   background: var(--gradient-hover);
+  border-color: var(--primary-light);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px #4a9eff80;
+  box-shadow: 0 6px 20px #4a9eff99;
 }
 
 .btn-outline {
@@ -2057,6 +2059,7 @@ img {
 
 .team-image {
   object-fit: cover;
+  object-position: center 30%;
   filter: grayscale(100%);
   width: 100%;
   height: 100%;
@@ -2139,6 +2142,223 @@ img {
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.6;
+}
+
+.about-commitment {
+  background: var(--bg-darker);
+  position: relative;
+  overflow: hidden;
+  padding: 100px 0;
+}
+
+.about-commitment:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: radial-gradient(circle, #4a9eff0d 0%, #0000 70%);
+  width: 1000px;
+  height: 1000px;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.commitment-content {
+  position: relative;
+  z-index: 1;
+}
+
+.commitment-header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 60px;
+}
+
+.commitment-lead {
+  color: var(--text-secondary);
+  margin-top: 20px;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.commitment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.commitment-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  padding: 32px;
+}
+
+.commitment-card:before {
+  content: "";
+  position: absolute;
+  background: var(--gradient-primary);
+  transform-origin: left;
+  width: 100%;
+  height: 3px;
+  transition: transform .4s;
+  top: 0;
+  left: 0;
+  transform: scaleX(0);
+}
+
+.commitment-card:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-4px);
+}
+
+.commitment-card:hover:before {
+  transform: scaleX(1);
+}
+
+.commitment-featured {
+  grid-column: span 3;
+  background: linear-gradient(135deg, #4a9eff1a 0%, #0245ae0d 100%);
+  border: 1px solid #4a9eff4d;
+  padding: 48px;
+}
+
+.commitment-icon {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: center;
+  align-items:  center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+}
+
+.commitment-icon svg {
+  color: #fff;
+  width: 28px;
+  height: 28px;
+}
+
+.commitment-icon-large {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: center;
+  align-items:  center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+
+.commitment-icon-large svg {
+  color: #fff;
+  width: 40px;
+  height: 40px;
+}
+
+.commitment-card h3 {
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.commitment-featured h3 {
+  font-size: 24px;
+}
+
+.commitment-card p {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.commitment-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.metric-badge {
+  display: inline-flex;
+  border-radius: var(--radius-full);
+  color: var(--primary-light);
+  background: #4a9eff26;
+  border: 1px solid #4a9eff4d;
+  align-items:  center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.metric-icon {
+  font-size: 16px;
+}
+
+.commitment-promise {
+  background: linear-gradient(135deg, var(--bg-card) 0%, #6dbe4514 100%);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #6dbe454d;
+  padding: 48px;
+}
+
+.commitment-promise:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: radial-gradient(circle, #6dbe451a 0%, #0000 70%);
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  right: -50%;
+}
+
+.promise-content {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  align-items:  flex-start;
+  gap: 32px;
+}
+
+.promise-icon {
+  background: var(--gradient-accent);
+  display: flex;
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items:  center;
+  width: 72px;
+  height: 72px;
+}
+
+.promise-icon svg {
+  color: #fff;
+  width: 36px;
+  height: 36px;
+}
+
+.promise-text h4 {
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.promise-text p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.8;
 }
 
 .footer {
@@ -2314,6 +2534,42 @@ img {
 
   .story-highlights, .values-grid, .team-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .team-image-wrapper {
+    height: 220px;
+  }
+
+  .commitment-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .commitment-featured {
+    grid-column: span 1;
+    padding: 32px;
+  }
+
+  .commitment-promise {
+    padding: 32px;
+  }
+
+  .promise-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .promise-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .promise-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .promise-text h4 {
+    font-size: 20px;
   }
 
   .steps-container {

@@ -321,6 +321,141 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
         </div>
       </section>
 
+      {/* Student Success Obsession Section */}
+      <section className="about-commitment">
+        <div className="section-container">
+          <div className="commitment-content">
+            <div className="commitment-header">
+              <span className="section-badge">Our Commitment</span>
+              <h2 className="section-title">
+                Obsessed with Your
+                <span className="gradient-text"> English Growth</span>
+              </h2>
+              <p className="commitment-lead">
+                We don't just teach English—we engineer breakthroughs. Every feature, every lesson, 
+                every interaction is meticulously designed with one singular focus: making you fluent, confident, and unstoppable.
+              </p>
+            </div>
+
+            <div className="commitment-grid">
+              <div className="commitment-card commitment-featured">
+                <div className="commitment-icon-large">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                  </svg>
+                </div>
+                <h3>Data-Driven Progress</h3>
+                <p>
+                  Advanced analytics track your speaking fluency, pronunciation accuracy, vocabulary growth, 
+                  and comprehension speed in real-time. We measure every metric that matters so you can see 
+                  tangible improvements week by week.
+                </p>
+                <div className="commitment-metrics">
+                  <div className="metric-badge">
+                    <span className="metric-icon">📊</span>
+                    <span>Real-time Analytics</span>
+                  </div>
+                  <div className="metric-badge">
+                    <span className="metric-icon">🎯</span>
+                    <span>Personalized Insights</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="commitment-card">
+                <div className="commitment-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <h3>1-on-1 Expert Tutoring</h3>
+                <p>
+                  No group classes, no distractions. Just you and a dedicated tutor who adapts to your 
+                  learning style, identifies your weak spots, and pushes you to breakthrough moments.
+                </p>
+              </div>
+
+              <div className="commitment-card">
+                <div className="commitment-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <h3>24/7 Learning Access</h3>
+                <p>
+                  Practice whenever inspiration strikes. Our platform and tutors are available around the 
+                  clock to ensure nothing stops your momentum.
+                </p>
+              </div>
+
+              <div className="commitment-card">
+                <div className="commitment-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </div>
+                <h3>Instant Feedback Loop</h3>
+                <p>
+                  Get immediate corrections on pronunciation, grammar, and fluency. Our AI-powered system 
+                  combined with tutor expertise ensures you never practice mistakes.
+                </p>
+              </div>
+
+              <div className="commitment-card">
+                <div className="commitment-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <h3>Zero Hidden Costs</h3>
+                <p>
+                  Transparent pricing, no surprise fees. Pay for results, not bureaucracy. 
+                  Your investment goes directly to your learning success.
+                </p>
+              </div>
+
+              <div className="commitment-card">
+                <div className="commitment-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                  </svg>
+                </div>
+                <h3>Gamified Milestones</h3>
+                <p>
+                  Earn rewards, track streaks, and unlock achievements as you progress. 
+                  We make fluency feel like an adventure, not a chore.
+                </p>
+              </div>
+            </div>
+
+            <div className="commitment-promise">
+              <div className="promise-content">
+                <div className="promise-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
+                <div className="promise-text">
+                  <h4>Our Promise to You</h4>
+                  <p>
+                    If you're consistent and we're not delivering measurable results, we're failing. 
+                    That's why we obsess over every detail—from curriculum design to platform performance—
+                    because your English fluency is our mission, not just our business.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Team Section */}
       <section className="about-team">
         <div className="section-container">
