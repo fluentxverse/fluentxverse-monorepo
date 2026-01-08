@@ -328,12 +328,12 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
             <div className="commitment-header">
               <span className="section-badge">Our Commitment</span>
               <h2 className="section-title">
-                Obsessed with Your
+                Obsessed with Student
                 <span className="gradient-text"> English Growth</span>
               </h2>
               <p className="commitment-lead">
                 We don't just teach English—we engineer breakthroughs. Every feature, every lesson, 
-                every interaction is meticulously designed with one singular focus: making you fluent, confident, and unstoppable.
+                every interaction is meticulously designed with one singular focus: making students fluent, confident, and unstoppable.
               </p>
             </div>
 
@@ -346,17 +346,15 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 </div>
                 <h3>Data-Driven Progress</h3>
                 <p>
-                  Advanced analytics track your speaking fluency, pronunciation accuracy, vocabulary growth, 
-                  and comprehension speed in real-time. We measure every metric that matters so you can see 
-                  tangible improvements week by week.
+                  Advanced analytics track speaking fluency, pronunciation accuracy, vocabulary growth, 
+                  and comprehension speed. We measure every metric that matters, providing students with 
+                  tangible improvement reports every week.
                 </p>
                 <div className="commitment-metrics">
                   <div className="metric-badge">
-                    <span className="metric-icon">📊</span>
-                    <span>Real-time Analytics</span>
+                    <span>Weekly Analytics</span>
                   </div>
                   <div className="metric-badge">
-                    <span className="metric-icon">🎯</span>
                     <span>Personalized Insights</span>
                   </div>
                 </div>
@@ -372,8 +370,8 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 </div>
                 <h3>1-on-1 Expert Tutoring</h3>
                 <p>
-                  No group classes, no distractions. Just you and a dedicated tutor who adapts to your 
-                  learning style, identifies your weak spots, and pushes you to breakthrough moments.
+                  No group classes, no distractions. We connect students with dedicated tutors who adapt to 
+                  individual learning styles, identify weak spots, and guide learners to breakthrough moments.
                 </p>
               </div>
 
@@ -386,8 +384,8 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 </div>
                 <h3>24/7 Learning Access</h3>
                 <p>
-                  Practice whenever inspiration strikes. Our platform and tutors are available around the 
-                  clock to ensure nothing stops your momentum.
+                  We provide round-the-clock platform access with tutors available at any time. 
+                  Students can practice whenever inspiration strikes, ensuring continuous learning momentum.
                 </p>
               </div>
 
@@ -401,8 +399,8 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 </div>
                 <h3>Instant Feedback Loop</h3>
                 <p>
-                  Get immediate corrections on pronunciation, grammar, and fluency. Our AI-powered system 
-                  combined with tutor expertise ensures you never practice mistakes.
+                  We deliver immediate corrections on pronunciation, grammar, and fluency. Our AI-powered system 
+                  combined with tutor expertise ensures students never practice mistakes.
                 </p>
               </div>
 
@@ -414,8 +412,8 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 </div>
                 <h3>Zero Hidden Costs</h3>
                 <p>
-                  Transparent pricing, no surprise fees. Pay for results, not bureaucracy. 
-                  Your investment goes directly to your learning success.
+                  We practice transparent pricing with no surprise fees. Students pay for results, not bureaucracy. 
+                  Investments go directly to learning success.
                 </p>
               </div>
 
@@ -428,8 +426,8 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 </div>
                 <h3>Gamified Milestones</h3>
                 <p>
-                  Earn rewards, track streaks, and unlock achievements as you progress. 
-                  We make fluency feel like an adventure, not a chore.
+                  We create an engaging reward system where students earn achievements, track streaks, and unlock milestones. 
+                  This approach makes fluency feel like an adventure, not a chore.
                 </p>
               </div>
             </div>
@@ -443,11 +441,11 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                   </svg>
                 </div>
                 <div className="promise-text">
-                  <h4>Our Promise to You</h4>
+                  <h4>Our Promise</h4>
                   <p>
-                    If you're consistent and we're not delivering measurable results, we're failing. 
+                    When students commit to consistent practice and we're not delivering measurable results, we're failing. 
                     That's why we obsess over every detail—from curriculum design to platform performance—
-                    because your English fluency is our mission, not just our business.
+                    because student English fluency is our mission, not just our business.
                   </p>
                 </div>
               </div>
