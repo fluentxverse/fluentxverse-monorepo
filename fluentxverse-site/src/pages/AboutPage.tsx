@@ -342,7 +342,7 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                 <span className="gradient-text"> English Growth</span>
               </h2>
               <p className="commitment-lead">
-                We don't just teach English—we engineer breakthroughs. Every feature, every lesson, 
+                We don't just teach English, we engineer breakthroughs. Every feature, every lesson, 
                 every interaction is meticulously designed with one singular focus: making students fluent, confident, and unstoppable.
               </p>
             </div>
