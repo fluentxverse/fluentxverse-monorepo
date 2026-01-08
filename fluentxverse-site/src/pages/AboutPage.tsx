@@ -17,28 +17,28 @@ const teamMembers: TeamMember[] = [
     name: "Paul Anthony Arriola",
     role: "Founder & CEO",
     bio: "Pioneering the future of digital language education with innovative Web3 solutions.",
-    image: "/assets/img/team/paul.png",
+    image: "/assets/img/team/paul.webp",
     linkedin: "https://www.linkedin.com/in/paul-anthony-arriola-a0436321b/"
   },
   {
     name: "John Paul Belleza",
     role: "Head of Curriculum Development",
     bio: "Designing learning experiences that make language acquisition effective and enjoyable.",
-    image: "/assets/img/team/jp.png",
+    image: "/assets/img/team/jp.webp",
     linkedin: "https://www.linkedin.com/in/japalveinz/"
   },
   {
     name: "Jeena Marie Fuentespina",
     role: "Learning Experience Designer",
     bio: "Crafting engaging and intuitive educational journeys for diverse learners.",
-    image: "/assets/img/team/jeena.png",
+    image: "/assets/img/team/jeena.webp",
     linkedin: "https://www.linkedin.com/in/jeena-marie-fuentespina-898659188/"
   },
   {
     name: "Ian Kenneth Soriano",
     role: "Head of Infrastructure and Security",
     bio: "Ensuring a robust, secure, and scalable platform for seamless global learning.",
-    image: "/assets/img/team/ian.png",
+    image: "/assets/img/team/ian.webp",
     linkedin: "https://www.linkedin.com/in/ian-kenneth-soriano-21011b21a/"    ,
     imagePosition: "center 40%"
   }

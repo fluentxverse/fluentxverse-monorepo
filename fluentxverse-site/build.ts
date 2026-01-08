@@ -83,6 +83,9 @@ async function build() {
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/assets/img/logo/icon_logo.png">
   
+  <!-- Preload critical assets -->
+  <link rel="preload" href="/assets/img/logo/icon_logo.png" as="image" type="image/png">
+  
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
