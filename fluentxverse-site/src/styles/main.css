@@ -2064,6 +2064,7 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 30%;
   filter: grayscale(100%);
   transition: filter 0.4s ease, transform 0.4s ease;
 }
@@ -2348,6 +2349,10 @@ img {
   
   .team-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .team-image-wrapper {
+    height: 220px;
   }
   
   .steps-container {

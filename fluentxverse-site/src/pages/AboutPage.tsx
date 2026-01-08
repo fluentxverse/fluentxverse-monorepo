@@ -339,6 +339,8 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                     src={member.image} 
                     alt={member.name} 
                     className="team-image"
+                    loading="lazy"
+                    decoding="async"
                     style={member.imagePosition ? { objectPosition: member.imagePosition } : undefined}
                   />
                   <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="team-linkedin">
