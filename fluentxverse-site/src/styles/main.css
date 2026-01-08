@@ -124,12 +124,14 @@ img {
   background: var(--gradient-primary);
   color: white;
   box-shadow: 0 4px 15px rgba(74, 158, 255, 0.4);
+  border: 1px solid rgba(74, 158, 255, 0.3);
 }
 
 .btn-primary:hover {
   background: var(--gradient-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(74, 158, 255, 0.5);
+  box-shadow: 0 6px 20px rgba(74, 158, 255, 0.6);
+  border-color: var(--primary-light);
 }
 
 .btn-outline {
