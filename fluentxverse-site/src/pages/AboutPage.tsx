@@ -115,15 +115,25 @@ export function AboutPage({ navigateTo }: AboutPageProps) {
                     <span>TypeScript</span>
                   </div>
                   <div className="tech-slide-item">
-                    <img src="https://bun.sh/logo.svg" alt="Bun" className="tech-icon" />
-                    <span>Bun</span>
-                  </div>
-                  <div className="tech-slide-item">
                     <svg viewBox="0 0 128 128" className="tech-icon">
                       <path fill="#F7DF1E" d="M2 2h124v124H2z"/>
                       <path d="M67.3 106.9c2.5 4.1 5.8 7.1 11.5 7.1 4.8 0 7.9-2.4 7.9-5.7 0-4-1.6-5.4-8.5-7.7-8.3-2.9-13-6.4-13-14 0-7 5.3-12.3 13.7-12.3 5.9 0 10.2 2.1 13.3 7.5l-7.3 4.7c-1.6-2.9-3.3-4-6-4-2.7 0-4.5 1.7-4.5 4 0 2.8 1.7 3.9 7.1 5.6 9.1 3.2 14.4 6.4 14.4 16.1 0 9.5-7.4 14.7-17.4 14.7-9.8 0-16.1-4.7-19.2-10.8l7-4.2zM35.8 107.3c1.9 3.4 3.6 6.2 7.7 6.2 4 0 6.5-1.5 6.5-7.4V74.8h9.7v31.5c0 12.2-7.1 17.7-17.6 17.7-9.4 0-14.9-4.9-17.7-10.8l11.4-5.9z"/>
                     </svg>
                     <span>JavaScript</span>
+                  </div>
+                  <div className="tech-slide-item">
+                    <img src="https://elysiajs.com/assets/elysia.svg" alt="Elysia" className="tech-icon" />
+                    <span>Elysia</span>
+                  </div>
+                  <div className="tech-slide-item">
+                    <img src="https://bun.sh/logo.svg" alt="Bun" className="tech-icon" />
+                    <span>Bun</span>
+                  </div>
+                  <div className="tech-slide-item">
+                    <svg viewBox="0 0 128 128" className="tech-icon">
+                      <path fill="#38bdf8" d="M64.004 25.602c-17.067 0-27.73 8.53-32 25.597 6.398-8.531 13.867-11.73 22.398-9.597 4.871 1.214 8.352 4.746 12.207 8.66C72.883 56.629 80.145 64 96.004 64c17.066 0 27.73-8.531 32-25.602-6.399 8.536-13.867 11.735-22.399 9.602-4.87-1.215-8.347-4.746-12.207-8.66-6.27-6.367-13.53-13.738-29.394-13.738zM32.004 64c-17.066 0-27.73 8.531-32 25.602C6.402 81.066 13.87 77.867 22.402 80c4.871 1.215 8.352 4.746 12.207 8.66 6.274 6.367 13.536 13.738 29.395 13.738 17.066 0 27.73-8.53 32-25.597-6.399 8.531-13.867 11.73-22.399 9.597-4.87-1.214-8.347-4.746-12.207-8.66C55.128 71.371 47.868 64 32.004 64z"/>
+                    </svg>
+                    <span>Tailwind CSS</span>
                   </div>
                 </div>
               ))}
