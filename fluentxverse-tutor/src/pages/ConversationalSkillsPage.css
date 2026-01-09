@@ -711,18 +711,15 @@
   text-transform: uppercase;
   letter-spacing: 0.8px;
   white-space: nowrap;
-}
-
-.th-icon {
-  display: inline-block;
-  font-size: 18px;
-  margin-right: 8px;
   vertical-align: middle;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
-.th-lesson { text-align: center; }
-.th-action { width: 80px; }
+.th-lesson { 
+  text-align: center;
+  width: 100px;
+}
+.th-skill { width: 140px; }
+.th-action { width: 80px; text-align: center; }
 
 .lessons-table th:last-child {
   width: 60px;
@@ -773,47 +770,25 @@
 .lesson-col-number {
   width: 100px;
   text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #1e293b;
+  vertical-align: middle;
 }
 
 .lesson-row:hover .lesson-col-number {
-  transform: scale(1.15);
-}
-
-.lesson-col-number::before {
-  content: '';
-  display: inline-block;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0.1;
-  transition: all 0.3s ease;
-}
-
-.lesson-row:hover .lesson-col-number::before {
-  opacity: 0.15;
-  transform: translateX(-50%) scale(1.1);
-}
-
-.lesson-col-number {
-  position: relative;
-  font-weight: 700;
-  font-size: 17px;
   color: #0245ae;
-  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .lesson-col-skill {
   width: 140px;
+  vertical-align: middle;
 }
 
 .skill-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   padding: 8px 16px;
   background: linear-gradient(135deg, rgba(2, 69, 174, 0.08) 0%, rgba(74, 158, 255, 0.08) 100%);
   border: 1.5px solid rgba(2, 69, 174, 0.15);
@@ -832,18 +807,12 @@
   box-shadow: 0 4px 8px rgba(2, 69, 174, 0.12);
 }
 
-.skill-icon {
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-}
-
 .lesson-col-title {
   font-weight: 600;
   color: #1e293b;
   font-size: 15px;
   letter-spacing: -0.01em;
+  vertical-align: middle;
 }
 
 .lesson-row:hover .lesson-col-title {
@@ -858,6 +827,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.lesson-col-action {
+  width: 80px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .lesson-col-action {
