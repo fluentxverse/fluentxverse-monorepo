@@ -363,33 +363,24 @@ const ConversationalSkillsPage = () => {
                                     <table className="lessons-table">
                                       <thead>
                                         <tr>
-                                          <th className="th-lesson"><span className="th-icon">#</span>Lesson</th>
-                                          <th className="th-skill"><span className="th-icon">◆</span>Skill</th>
-                                          <th className="th-title"><span className="th-icon">▸</span>Title</th>
-                                          <th className="th-goal"><span className="th-icon">◎</span>Goal</th>
-                                          <th className="th-action"></th>
+                                          <th>Lesson</th>
+                                          <th>Skill</th>
+                                          <th>Title</th>
+                                          <th>Goal</th>
+                                          <th></th>
                                         </tr>
                                       </thead>
                                       <tbody>
-                                        {chapterLessons.map((lesson, index) => (
+                                        {chapterLessons.map(lesson => (
                                           <tr
                                             key={lesson.id}
                                             className="lesson-row"
                                             onClick={() => handleOpenLesson(lesson)}
-                                            style={{ animationDelay: `${index * 0.05}s` }}
                                           >
-                                            <td className="lesson-col-number">
-                                              <span className="number-circle">{getLessonNumber(lesson)}</span>
-                                            </td>
-                                            <td className="lesson-col-skill">
-                                              <span className="skill-tag">{(lesson.lessonData as any)?.skill || 'Speaking'}</span>
-                                            </td>
-                                            <td className="lesson-col-title">
-                                              <span className="title-text">{lesson.title}</span>
-                                            </td>
-                                            <td className="lesson-col-goal">
-                                              <span className="goal-text">{lesson.lessonData?.header?.goalText || 'English conversation practice'}</span>
-                                            </td>
+                                            <td className="lesson-col-number">{getLessonNumber(lesson)}</td>
+                                            <td className="lesson-col-skill">{(lesson.lessonData as any)?.skill || 'Speaking'}</td>
+                                            <td className="lesson-col-title">{lesson.title}</td>
+                                            <td className="lesson-col-goal">{lesson.lessonData?.header?.goalText || 'English conversation practice'}</td>
                                             <td className="lesson-col-action">
                                               <button className="btn-start-lesson" aria-label="Start lesson">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
