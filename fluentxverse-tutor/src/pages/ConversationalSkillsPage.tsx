@@ -6,6 +6,8 @@ import { useAuthContext } from '../context/AuthContext';
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './ConversationalSkillsPage.css';
 
+/* v2.0 - Clean table design without emojis */
+
 // Constants for course structure
 const TOTAL_LEVELS = 10;
 const CHAPTERS_PER_LEVEL = 5;
