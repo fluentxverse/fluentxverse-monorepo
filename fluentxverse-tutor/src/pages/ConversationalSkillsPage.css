@@ -12,6 +12,39 @@
   position: relative;
 }
 
+.course-detail-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(2, 69, 174, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(74, 158, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(2, 69, 174, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.course-detail-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(74, 158, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: floatBlob 20s ease-in-out infinite;
+}
+
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-100px, 100px) scale(1.1); }
+  66% { transform: translate(50px, -50px) scale(0.9); }
+}
+
 @keyframes pageLoad {
   from {
     opacity: 0;
@@ -72,10 +105,10 @@
   gap: 32px;
   align-items: flex-start;
   padding: 40px;
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 24px;
   border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(2, 69, 174, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -90,6 +123,18 @@
   background: linear-gradient(90deg, #0245ae 0%, #4a9eff 50%, #0245ae 100%);
   background-size: 200% 100%;
   animation: shimmer 3s ease-in-out infinite;
+}
+
+.course-hero::after {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(74, 158, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 @keyframes shimmer {
@@ -108,7 +153,25 @@
   font-size: 56px;
   flex-shrink: 0;
   animation: iconFloat 3s ease-in-out infinite;
-  box-shadow: 0 10px 40px rgba(2, 69, 174, 0.3);
+  box-shadow: 0 10px 40px rgba(2, 69, 174, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.course-hero-icon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+  animation: iconShimmer 3s ease-in-out infinite;
+}
+
+@keyframes iconShimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 
 @keyframes iconFloat {
@@ -131,7 +194,21 @@
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 16px;
-  border: 1px solid rgba(2, 69, 174, 0.2);
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.course-category-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 1.5px;
+  background: linear-gradient(135deg, #0245ae, #4a9eff);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }
 
 .course-title-main {
@@ -192,11 +269,33 @@
 
 .lessons-filters-section {
   margin-bottom: 32px;
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 20px;
   border: 2px solid #e2e8f0;
   padding: 24px 28px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.lessons-filters-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #0245ae 0%, #4a9eff 100%);
+}
+
+.lessons-filters-section::after {
+  content: '🎨';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 32px;
+  opacity: 0.08;
+  transform: rotate(-15deg);
 }
 
 .filters-row {
@@ -362,12 +461,29 @@
 }
 
 .level-group {
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
   border-radius: 20px;
   border: 2px solid #e2e8f0;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.level-group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #0245ae 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.level-group:hover::before {
+  opacity: 0.5;
 }
 
 .level-group:hover {
@@ -414,6 +530,21 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.level-badge-large::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: badgeShine 3s ease-in-out infinite;
+}
+
+@keyframes badgeShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .level-lesson-count {
@@ -448,11 +579,32 @@
 
 /* Chapter Groups */
 .chapter-group {
-  background: #f8fafc;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #e2e8f0;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.chapter-group::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border-radius: 50%;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.chapter-group:hover::before {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.3);
+  box-shadow: 0 0 12px rgba(2, 69, 174, 0.4);
 }
 
 .chapter-group:hover {
@@ -470,7 +622,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 16px 20px;
+  padding: 16px 20px 16px 32px;
   background: transparent;
   border: none;
   cursor: pointer;
