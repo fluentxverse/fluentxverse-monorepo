@@ -929,19 +929,16 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-.lm-templates-table th:nth-child(1) { width: 40%; }
+.lm-templates-table th:nth-child(1) { width: 50%; }
 .lm-templates-table th:nth-child(2) { width: 12%; }
-.lm-templates-table th:nth-child(3) { width: 12%; }
-.lm-templates-table th:nth-child(4) { width: 16%; }
-.lm-templates-table th:nth-child(5) { width: 20%; text-align: right; }
+.lm-templates-table th:nth-child(3) { width: 18%; }
+.lm-templates-table th:nth-child(4) { width: 20%; text-align: right; }
 
 .lm-templates-table td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
   background: #fff;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
 }
 
 .lm-templates-table tr:last-child td {
@@ -10570,5 +10567,610 @@ body.lm-fullscreen-mode .main-content {
   
   .lm-discussion-questions .lm-dq-add-btn {
     display: none !important;
+  }
+}
+
+/* ========================================
+   SPEAKING STARTER - EDGY GEOMETRIC DESIGN
+   Sharp corners, angled cuts, bold shapes
+   ======================================== */
+
+/* Main Builder - Light blue gradient background */
+.lm-speaking-starter {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%) !important;
+}
+
+.lm-speaking-starter .lm-body {
+  background: transparent;
+}
+
+/* Header - Sharp angled cuts */
+.lm-speaking-starter .lm-header {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  border-radius: 0 !important;
+  box-shadow: 8px 8px 0 rgba(14, 165, 233, 0.3) !important;
+  padding: 48px 40px 56px !important;
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%) !important;
+}
+
+.lm-speaking-starter .lm-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: #38bdf8;
+}
+
+.lm-speaking-starter .lm-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.2) 50%);
+}
+
+.lm-speaking-starter .lm-header-overlay {
+  background: transparent !important;
+}
+
+/* Level Badge - Hexagonal tag */
+.lm-speaking-starter .lm-level-badge {
+  background: #0f172a !important;
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+  padding: 10px 24px 10px 16px !important;
+  border-radius: 0 !important;
+  font-size: 11px !important;
+  letter-spacing: 2px !important;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.lm-speaking-starter .lm-chapter {
+  color: #bae6fd !important;
+  font-weight: 600 !important;
+  letter-spacing: 1px !important;
+}
+
+.lm-speaking-starter .lm-lesson-title {
+  color: #fff !important;
+  font-size: 36px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+}
+
+/* Goal Box - Cut corner card */
+.lm-speaking-starter .lm-goal-box {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid #38bdf8 !important;
+  border-radius: 0 !important;
+  padding: 20px 28px !important;
+  clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px) !important;
+}
+
+.lm-speaking-starter .lm-goal-text {
+  color: #fff !important;
+  font-weight: 700 !important;
+  font-size: 17px !important;
+}
+
+.lm-speaking-starter .lm-goal-subtext {
+  color: #7dd3fc !important;
+  font-size: 14px !important;
+}
+
+/* Section Cards - Sharp edges with accent stripe */
+.lm-speaking-starter .lm-section {
+  background: #fff !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: 6px 6px 0 #0ea5e9 !important;
+  padding: 0 !important;
+  position: relative;
+  margin-bottom: 48px !important;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%) !important;
+}
+
+.lm-speaking-starter .lm-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8, #0ea5e9);
+}
+
+.lm-speaking-starter .lm-section-layout {
+  padding: 32px !important;
+}
+
+/* Section Number - Diamond shape with upright text */
+.lm-speaking-starter .lm-section-number {
+  width: 42px !important;
+  height: 42px !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  border-radius: 0 !important;
+  transform: rotate(45deg) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  box-shadow: 3px 3px 0 rgba(14, 165, 233, 0.4) !important;
+  border: none !important;
+  margin-right: 16px !important;
+  margin-left: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #fff !important;
+}
+
+/* Counter-rotate the number text to make it upright */
+.lm-speaking-starter .lm-section-number .lm-section-number-text {
+  transform: rotate(-45deg) !important;
+  display: block !important;
+}
+
+/* Section Title Row - Angular underline */
+.lm-speaking-starter .lm-section-title-row {
+  border-bottom: none !important;
+  padding-bottom: 20px !important;
+  margin-bottom: 24px !important;
+  position: relative;
+  align-items: center !important;
+}
+
+.lm-speaking-starter .lm-section-title-row::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100px;
+  height: 4px;
+  background: #0ea5e9;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+/* Section Title - Bold uppercase */
+.lm-speaking-starter .lm-section-title {
+  color: #0c4a6e !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+}
+
+/* Explanation Text - Angled left border */
+.lm-speaking-starter .lm-section-explanation {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  color: #334155 !important;
+  background: #f0f9ff !important;
+  padding: 16px 20px 16px 24px !important;
+  border-radius: 0 !important;
+  margin-bottom: 12px !important;
+  border-left: 4px solid #0ea5e9 !important;
+  position: relative;
+}
+
+.lm-speaking-starter .lm-section-explanation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 16px;
+  background: #38bdf8;
+}
+
+/* Korean/Japanese - Tag style */
+.lm-speaking-starter .lm-section-explanation-jp {
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+  color: #0369a1 !important;
+  background: transparent !important;
+  padding: 8px 16px 8px 24px !important;
+  border-radius: 0 !important;
+  border-left: 4px solid #38bdf8 !important;
+  margin-bottom: 24px !important;
+  font-style: italic !important;
+}
+
+/* Sidebar - Fit content height, no extra blue panel */
+.lm-speaking-starter .lm-section-sidebar {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: 4px 4px 0 #38bdf8 !important;
+  overflow: visible !important;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%) !important;
+  height: fit-content !important;
+  align-self: flex-start !important;
+}
+
+.lm-speaking-starter .lm-sidebar-header {
+  background: #0ea5e9 !important;
+  padding: 14px 20px !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+  clip-path: none !important;
+}
+
+.lm-speaking-starter .lm-sidebar-title {
+  color: #fff !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+}
+
+.lm-speaking-starter .lm-sidebar-subtitle {
+  color: #e0f2fe !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.lm-speaking-starter .lm-sidebar-content {
+  padding: 20px !important;
+  background: transparent !important;
+}
+
+/* Goal Steps - Edgy card style */
+.lm-speaking-starter .lm-goal-step {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+  padding: 14px 16px !important;
+  margin-bottom: 10px !important;
+  border: none !important;
+  border-left: 4px solid #38bdf8 !important;
+  position: relative;
+  box-shadow: 2px 2px 0 rgba(56, 189, 248, 0.3) !important;
+}
+
+.lm-speaking-starter .lm-goal-step::before {
+  display: none !important;
+}
+
+.lm-speaking-starter .lm-goal-step:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-left-color: #7dd3fc !important;
+}
+
+.lm-speaking-starter .lm-goal-step-text,
+.lm-speaking-starter .lm-step-instruction {
+  color: #fff !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Step Numbers - Square badge (no rotation) */
+.lm-speaking-starter .lm-step-number {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  background: #38bdf8 !important;
+  color: #0c4a6e !important;
+  border-radius: 0 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  transform: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 2px 2px 0 rgba(14, 165, 233, 0.4) !important;
+}
+
+/* Script and Tip buttons in sidebar */
+.lm-speaking-starter .lm-script-btn,
+.lm-speaking-starter .lm-tip-btn {
+  border-radius: 0 !important;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%) !important;
+}
+
+/* Add Step button */
+.lm-speaking-starter .lm-add-step-btn {
+  border-radius: 0 !important;
+  border: 2px dashed #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  color: #38bdf8 !important;
+}
+
+.lm-speaking-starter .lm-add-step-btn:hover {
+  background: rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Vocabulary Cards - Notched corners */
+.lm-speaking-starter .lm-vocab-card {
+  background: #fff !important;
+  border: 2px solid #e0f2fe !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  box-shadow: 3px 3px 0 #bae6fd !important;
+  transition: all 0.2s ease !important;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px) !important;
+}
+
+.lm-speaking-starter .lm-vocab-card:hover {
+  border-color: #0ea5e9 !important;
+  box-shadow: 5px 5px 0 #0ea5e9 !important;
+  transform: translate(-2px, -2px);
+}
+
+.lm-speaking-starter .lm-vocab-word {
+  color: #0c4a6e !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.lm-speaking-starter .lm-vocab-translation {
+  color: #0369a1 !important;
+  font-size: 13px !important;
+  background: #f0f9ff;
+  padding: 6px 12px;
+  display: inline-block;
+  margin-top: 8px;
+  border-left: 3px solid #38bdf8;
+}
+
+/* Reading Section - Sharp book style */
+.lm-speaking-starter .lm-reading-text {
+  background: #fff !important;
+  border: 2px solid #cbd5e1 !important;
+  border-radius: 0 !important;
+  padding: 28px 32px 28px 40px !important;
+  font-size: 17px !important;
+  line-height: 2 !important;
+  color: #1e293b !important;
+  box-shadow: 4px 4px 0 #94a3b8 !important;
+  position: relative;
+}
+
+.lm-speaking-starter .lm-reading-text::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(90deg, #e2e8f0 0%, transparent 100%);
+  border-right: 2px solid #cbd5e1;
+}
+
+/* Questions - Numbered with sharp badges */
+.lm-speaking-starter .lm-reading-question {
+  background: #fff !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 0 !important;
+  padding: 14px 20px !important;
+  margin-bottom: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  box-shadow: 2px 2px 0 #cbd5e1 !important;
+}
+
+.lm-speaking-starter .lm-reading-question-number {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  background: #0ea5e9 !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  transform: rotate(45deg);
+}
+
+.lm-speaking-starter .lm-reading-question-text {
+  color: #334155 !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+/* Dialogue - Sharp chat blocks */
+.lm-speaking-starter .lm-dialogue-line {
+  display: flex !important;
+  gap: 12px !important;
+  margin-bottom: 14px !important;
+  align-items: flex-start !important;
+}
+
+.lm-speaking-starter .lm-dialogue-speaker {
+  min-width: 80px !important;
+  padding: 8px 16px 8px 12px !important;
+  background: #0ea5e9 !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%) !important;
+}
+
+.lm-speaking-starter .lm-dialogue-line:nth-child(even) .lm-dialogue-speaker {
+  background: #475569 !important;
+}
+
+.lm-speaking-starter .lm-dialogue-text {
+  flex: 1 !important;
+  background: #f0f9ff !important;
+  padding: 12px 16px !important;
+  border-radius: 0 !important;
+  border-left: 3px solid #0ea5e9 !important;
+  color: #334155 !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+.lm-speaking-starter .lm-dialogue-line:nth-child(even) .lm-dialogue-text {
+  background: #f1f5f9 !important;
+  border-left-color: #475569 !important;
+}
+
+/* Practice Items - Tag/ticket style */
+.lm-speaking-starter .lm-practice-item {
+  background: #fff !important;
+  border: 2px solid #e0f2fe !important;
+  border-radius: 0 !important;
+  padding: 18px 24px !important;
+  margin-bottom: 10px !important;
+  box-shadow: 3px 3px 0 #bae6fd !important;
+  position: relative;
+  clip-path: polygon(8px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+}
+
+.lm-speaking-starter .lm-practice-item:hover {
+  border-color: #0ea5e9 !important;
+  box-shadow: 4px 4px 0 #0ea5e9 !important;
+}
+
+.lm-speaking-starter .lm-practice-question {
+  font-size: 16px !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+.lm-speaking-starter .lm-practice-answer {
+  display: inline-block !important;
+  margin-top: 10px !important;
+  padding: 6px 20px 6px 12px !important;
+  background: #0ea5e9 !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%) !important;
+}
+
+/* Step Title */
+.lm-speaking-starter .lm-step-title {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%) !important;
+  color: #fff !important;
+  padding: 14px 24px 14px 20px !important;
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 4px 4px 0 rgba(14, 165, 233, 0.4) !important;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 0 100%) !important;
+}
+
+/* Important Note - Warning stripe */
+.lm-speaking-starter .lm-important-note {
+  background: #fef3c7 !important;
+  border: 2px solid #f59e0b !important;
+  border-radius: 0 !important;
+  padding: 16px 20px !important;
+  margin: 20px 0 !important;
+  color: #92400e !important;
+  font-size: 14px !important;
+  position: relative;
+  box-shadow: 3px 3px 0 #fbbf24 !important;
+}
+
+.lm-speaking-starter .lm-important-note::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    -45deg,
+    #f59e0b,
+    #f59e0b 4px,
+    #fbbf24 4px,
+    #fbbf24 8px
+  );
+}
+
+/* Feedback Section */
+.lm-speaking-starter .lm-feedback-rubric {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-bottom: 24px !important;
+}
+
+.lm-speaking-starter .lm-rubric-item {
+  background: #fff !important;
+  border: 2px solid #e0f2fe !important;
+  border-radius: 0 !important;
+  padding: 14px 18px !important;
+  text-align: center !important;
+  min-width: 90px !important;
+  box-shadow: 2px 2px 0 #bae6fd !important;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+}
+
+.lm-speaking-starter .lm-rubric-item:hover {
+  border-color: #0ea5e9 !important;
+  box-shadow: 3px 3px 0 #0ea5e9 !important;
+}
+
+.lm-speaking-starter .lm-rubric-score {
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  color: #0ea5e9 !important;
+}
+
+.lm-speaking-starter .lm-rubric-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Print styles */
+@media print {
+  .lm-speaking-starter {
+    background: #fff !important;
+  }
+  
+  .lm-speaking-starter .lm-section {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 2px solid #e2e8f0 !important;
+    clip-path: none !important;
+  }
+  
+  .lm-speaking-starter .lm-section-sidebar {
+    background: #f0f9ff !important;
+    color: #0c4a6e !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lm-speaking-starter .lm-header {
+    padding: 32px 24px 40px !important;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%) !important;
+  }
+  
+  .lm-speaking-starter .lm-lesson-title {
+    font-size: 24px !important;
+  }
+  
+  .lm-speaking-starter .lm-section-layout {
+    padding: 24px !important;
+  }
+  
+  .lm-speaking-starter .lm-dialogue-speaker {
+    min-width: 60px !important;
   }
 }
