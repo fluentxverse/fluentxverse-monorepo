@@ -4482,13 +4482,16 @@ export default function LessonMaterialMakerPage() {
           if (response.success && response.lessonData) {
             console.log('[Init] Loaded server content successfully');
             // Use ALL data from server, including sections with image URLs
+            // Preserve course/category from local lesson or infer from template
             const serverDraft: LessonMaterialDraft = {
               version: 2,
               header: response.lessonData.header,
               sections: (response.lessonData as any).sections || currentEditingLesson.draft.sections,
               vocabulary: response.lessonData.vocabulary || [],
               grammar: response.lessonData.grammar || [],
-              exercises: response.lessonData.exercises || []
+              exercises: response.lessonData.exercises || [],
+              course: currentEditingLesson.draft?.course || COURSE_TEMPLATES.find(t => t.id === currentEditingLesson.templateId)?.course,
+              category: currentEditingLesson.draft?.category || COURSE_TEMPLATES.find(t => t.id === currentEditingLesson.templateId)?.category,
             };
             setDraft(serverDraft);
             lastSavedContentRef.current = JSON.stringify(serverDraft);
