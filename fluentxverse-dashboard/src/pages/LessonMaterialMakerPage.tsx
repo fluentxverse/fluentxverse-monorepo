@@ -5301,6 +5301,7 @@ export default function LessonMaterialMakerPage() {
             },
             course: selectedTemplateForLesson.course,
             category: selectedTemplateForLesson.category,
+            skill: selectedTemplateForLesson.name.replace(' Template', ''),
           },
         }
       : {
@@ -5325,6 +5326,7 @@ export default function LessonMaterialMakerPage() {
             },
             course: selectedTemplateForLesson.course,
             category: selectedTemplateForLesson.category,
+            skill: selectedTemplateForLesson.name.replace(' Template', ''),
           },
         };
 

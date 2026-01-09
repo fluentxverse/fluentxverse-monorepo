@@ -381,7 +381,7 @@ const ConversationalSkillsPage = () => {
                                               <span className="lesson-number-badge">Lesson {getLessonNumber(lesson)}</span>
                                             </td>
                                             <td className="lesson-col-skill">
-                                              {lesson.lessonData?.course || 'Speaking'}
+                                              {(lesson.lessonData as any)?.skill || 'Speaking'}
                                             </td>
                                             <td className="lesson-col-title">
                                               {lesson.title}
