@@ -574,19 +574,9 @@
 }
 
 .lesson-col-number {
-  width: 120px;
-}
-
-.lesson-number-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
-  color: #0245ae;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  width: 80px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .lesson-col-skill {

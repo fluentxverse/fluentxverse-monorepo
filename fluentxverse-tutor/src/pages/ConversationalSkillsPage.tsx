@@ -378,7 +378,7 @@ const ConversationalSkillsPage = () => {
                                             onClick={() => handleOpenLesson(lesson)}
                                           >
                                             <td className="lesson-col-number">
-                                              <span className="lesson-number-badge">Lesson {getLessonNumber(lesson)}</span>
+                                              {getLessonNumber(lesson)}
                                             </td>
                                             <td className="lesson-col-skill">
                                               {(lesson.lessonData as any)?.skill || 'Speaking'}
