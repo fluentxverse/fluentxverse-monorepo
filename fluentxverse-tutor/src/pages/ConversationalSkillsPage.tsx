@@ -6,8 +6,6 @@ import { useAuthContext } from '../context/AuthContext';
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './ConversationalSkillsPage.css';
 
-/* v2.0 - Clean table design without emojis */
-
 // Constants for course structure
 const TOTAL_LEVELS = 10;
 const CHAPTERS_PER_LEVEL = 5;
@@ -365,10 +363,10 @@ const ConversationalSkillsPage = () => {
                                     <table className="lessons-table">
                                       <thead>
                                         <tr>
-                                          <th className="th-lesson">Lesson</th>
-                                          <th className="th-skill">Skill</th>
-                                          <th className="th-title">Title</th>
-                                          <th className="th-goal">Goal</th>
+                                          <th className="th-lesson"><span className="th-icon">📚</span> Lesson</th>
+                                          <th className="th-skill"><span className="th-icon">✨</span> Skill</th>
+                                          <th className="th-title"><span className="th-icon">📝</span> Title</th>
+                                          <th className="th-goal"><span className="th-icon">🎯</span> Goal</th>
                                           <th className="th-action"></th>
                                         </tr>
                                       </thead>
@@ -384,6 +382,7 @@ const ConversationalSkillsPage = () => {
                                             </td>
                                             <td className="lesson-col-skill">
                                               <span className="skill-badge">
+                                                <span className="skill-icon">💬</span>
                                                 {(lesson.lessonData as any)?.skill || 'Speaking'}
                                               </span>
                                             </td>
