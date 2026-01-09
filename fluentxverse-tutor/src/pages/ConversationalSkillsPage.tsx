@@ -363,36 +363,38 @@ const ConversationalSkillsPage = () => {
                                     <table className="lessons-table">
                                       <thead>
                                         <tr>
-                                          <th><i className="fi-sr-list-check"></i> Lesson</th>
-                                          <th><i className="fi-sr-microphone"></i> Skill</th>
-                                          <th><i className="fi-sr-document"></i> Title</th>
-                                          <th><i className="fi-sr-bullseye-arrow"></i> Goal</th>
-                                          <th></th>
+                                          <th className="th-lesson"><span className="th-icon">#</span>Lesson</th>
+                                          <th className="th-skill"><span className="th-icon">◆</span>Skill</th>
+                                          <th className="th-title"><span className="th-icon">▸</span>Title</th>
+                                          <th className="th-goal"><span className="th-icon">◎</span>Goal</th>
+                                          <th className="th-action"></th>
                                         </tr>
                                       </thead>
                                       <tbody>
-                                        {chapterLessons.map(lesson => (
+                                        {chapterLessons.map((lesson, index) => (
                                           <tr
                                             key={lesson.id}
                                             className="lesson-row"
                                             onClick={() => handleOpenLesson(lesson)}
+                                            style={{ animationDelay: `${index * 0.05}s` }}
                                           >
                                             <td className="lesson-col-number">
-                                              {getLessonNumber(lesson)}
+                                              <span className="number-circle">{getLessonNumber(lesson)}</span>
                                             </td>
                                             <td className="lesson-col-skill">
-                                              <i className="fi-sr-comment-alt"></i>
-                                              {(lesson.lessonData as any)?.skill || 'Speaking'}
+                                              <span className="skill-tag">{(lesson.lessonData as any)?.skill || 'Speaking'}</span>
                                             </td>
                                             <td className="lesson-col-title">
-                                              {lesson.title}
+                                              <span className="title-text">{lesson.title}</span>
                                             </td>
                                             <td className="lesson-col-goal">
-                                              {lesson.lessonData?.header?.goalText || 'English conversation practice'}
+                                              <span className="goal-text">{lesson.lessonData?.header?.goalText || 'English conversation practice'}</span>
                                             </td>
                                             <td className="lesson-col-action">
-                                              <button className="btn-start-lesson">
-                                                <i className="fi-sr-play"></i>
+                                              <button className="btn-start-lesson" aria-label="Start lesson">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                                  <path d="M8 5v14l11-7z"/>
+                                                </svg>
                                               </button>
                                             </td>
                                           </tr>
