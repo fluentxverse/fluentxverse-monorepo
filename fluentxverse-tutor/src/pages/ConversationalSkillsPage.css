@@ -547,6 +547,17 @@
   letter-spacing: 0.5px;
 }
 
+.lessons-table th i {
+  margin-right: 6px;
+  font-size: 12px;
+  color: #0245ae;
+  opacity: 0.7;
+}
+
+.lessons-table th:first-child {
+  text-align: center;
+}
+
 .lessons-table th:last-child {
   width: 60px;
   text-align: center;
@@ -577,12 +588,19 @@
   width: 80px;
   font-weight: 600;
   color: #1e293b;
+  text-align: center;
+  font-size: 15px;
 }
 
 .lesson-col-skill {
   width: 120px;
   color: #64748b;
   font-weight: 500;
+}
+
+.lesson-col-skill i {
+  margin-right: 6px;
+  color: #0245ae;
 }
 
 .lesson-col-title {

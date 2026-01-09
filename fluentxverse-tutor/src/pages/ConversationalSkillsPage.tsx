@@ -363,10 +363,10 @@ const ConversationalSkillsPage = () => {
                                     <table className="lessons-table">
                                       <thead>
                                         <tr>
-                                          <th>Lesson</th>
-                                          <th>Skill</th>
-                                          <th>Title</th>
-                                          <th>Goal</th>
+                                          <th><i className="fi-sr-list-check"></i> Lesson</th>
+                                          <th><i className="fi-sr-microphone"></i> Skill</th>
+                                          <th><i className="fi-sr-document"></i> Title</th>
+                                          <th><i className="fi-sr-bullseye-arrow"></i> Goal</th>
                                           <th></th>
                                         </tr>
                                       </thead>
@@ -381,6 +381,7 @@ const ConversationalSkillsPage = () => {
                                               {getLessonNumber(lesson)}
                                             </td>
                                             <td className="lesson-col-skill">
+                                              <i className="fi-sr-comment-alt"></i>
                                               {(lesson.lessonData as any)?.skill || 'Speaking'}
                                             </td>
                                             <td className="lesson-col-title">
