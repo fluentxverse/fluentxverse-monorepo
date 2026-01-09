@@ -359,26 +359,44 @@ export default function ConversationalSkillsPage() {
                                 
                                 {isChapterExpanded && chapterLessons.length > 0 && (
                                   <div className="chapter-lessons">
-                                    {chapterLessons.map(lesson => (
-                                      <div
-                                        key={lesson.id}
-                                        className="lesson-item"
-                                        onClick={() => handleOpenLesson(lesson)}
-                                      >
-                                        <div className="lesson-item-info">
-                                          <span className="lesson-item-number">
-                                            Lesson {getLessonNumber(lesson)}
-                                          </span>
-                                          <h4 className="lesson-item-title">{lesson.title}</h4>
-                                          <p className="lesson-item-goal">
-                                            {lesson.lessonData?.header?.goalText || 'English conversation practice'}
-                                          </p>
-                                        </div>
-                                        <button className="btn-start-lesson">
-                                          <i className="fas fa-play"></i>
-                                        </button>
-                                      </div>
-                                    ))}
+                                    <table className="lessons-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Lesson</th>
+                                          <th>Skill</th>
+                                          <th>Title</th>
+                                          <th>Goal</th>
+                                          <th></th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {chapterLessons.map(lesson => (
+                                          <tr
+                                            key={lesson.id}
+                                            className="lesson-row"
+                                            onClick={() => handleOpenLesson(lesson)}
+                                          >
+                                            <td className="lesson-col-number">
+                                              {getLessonNumber(lesson)}
+                                            </td>
+                                            <td className="lesson-col-skill">
+                                              {(lesson.lessonData as any)?.skill || 'Speaking'}
+                                            </td>
+                                            <td className="lesson-col-title">
+                                              {lesson.title}
+                                            </td>
+                                            <td className="lesson-col-goal">
+                                              {lesson.lessonData?.header?.goalText || 'English conversation practice'}
+                                            </td>
+                                            <td className="lesson-col-action">
+                                              <button className="btn-start-lesson">
+                                                <i className="fas fa-play"></i>
+                                              </button>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
                                   </div>
                                 )}
                                 
