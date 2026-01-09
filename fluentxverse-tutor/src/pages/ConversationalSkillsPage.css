@@ -678,12 +678,12 @@
 /* Lessons Table */
 .lessons-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
   background: #ffffff;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  table-layout: fixed;
 }
 
 .lessons-table thead {
@@ -719,11 +719,20 @@
   text-align: center;
   width: 100px;
 }
-.th-skill { width: 140px; }
-.th-action { width: 80px; text-align: center; }
-
-.lessons-table th:last-child {
-  width: 60px;
+.th-skill { 
+  width: 150px;
+  text-align: left;
+}
+.th-title {
+  width: auto;
+  text-align: left;
+}
+.th-goal {
+  width: 200px;
+  text-align: left;
+}
+.th-action { 
+  width: 80px;
   text-align: center;
 }
 
@@ -782,8 +791,9 @@
 }
 
 .lesson-col-skill {
-  width: 140px;
+  width: 150px;
   vertical-align: middle;
+  text-align: left;
 }
 
 .skill-badge {
@@ -821,14 +831,15 @@
 }
 
 .lesson-col-goal {
+  width: 200px;
   color: #64748b;
   font-size: 14px;
-  max-width: 350px;
   line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
+  text-align: left;
 }
 
 .lesson-col-action {
