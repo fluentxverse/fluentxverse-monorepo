@@ -288,6 +288,16 @@
   background: linear-gradient(180deg, #0245ae 0%, #4a9eff 100%);
 }
 
+.lessons-filters-section::after {
+  content: '🎨';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 32px;
+  opacity: 0.08;
+  transform: rotate(-15deg);
+}
+
 .filters-row {
   display: flex;
   align-items: flex-end;
@@ -703,6 +713,14 @@
   white-space: nowrap;
 }
 
+.th-icon {
+  display: inline-block;
+  font-size: 18px;
+  margin-right: 8px;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
 .th-lesson { text-align: center; }
 .th-action { width: 80px; }
 
@@ -755,16 +773,37 @@
 .lesson-col-number {
   width: 100px;
   text-align: center;
-  position: relative;
-  font-weight: 700;
-  font-size: 16px;
-  color: #0245ae;
-  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .lesson-row:hover .lesson-col-number {
-  transform: scale(1.08);
-  color: #003d8f;
+  transform: scale(1.15);
+}
+
+.lesson-col-number::before {
+  content: '';
+  display: inline-block;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.1;
+  transition: all 0.3s ease;
+}
+
+.lesson-row:hover .lesson-col-number::before {
+  opacity: 0.15;
+  transform: translateX(-50%) scale(1.1);
+}
+
+.lesson-col-number {
+  position: relative;
+  font-weight: 700;
+  font-size: 17px;
+  color: #0245ae;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .lesson-col-skill {
@@ -774,7 +813,7 @@
 .skill-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
   padding: 8px 16px;
   background: linear-gradient(135deg, rgba(2, 69, 174, 0.08) 0%, rgba(74, 158, 255, 0.08) 100%);
   border: 1.5px solid rgba(2, 69, 174, 0.15);
@@ -791,6 +830,13 @@
   border-color: rgba(2, 69, 174, 0.25);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(2, 69, 174, 0.12);
+}
+
+.skill-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .lesson-col-title {
