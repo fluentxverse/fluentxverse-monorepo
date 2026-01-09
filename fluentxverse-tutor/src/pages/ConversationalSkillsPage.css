@@ -522,6 +522,102 @@
   animation: slideDown 0.3s ease-out;
 }
 
+/* Lessons Table */
+.lessons-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.lessons-table thead {
+  background: #f8fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.lessons-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lessons-table th:last-child {
+  width: 60px;
+  text-align: center;
+}
+
+.lesson-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.lesson-row:last-child {
+  border-bottom: none;
+}
+
+.lesson-row:hover {
+  background: #f0f7ff;
+}
+
+.lesson-row td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.lesson-col-number {
+  width: 120px;
+}
+
+.lesson-number-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(74, 158, 255, 0.1) 100%);
+  color: #0245ae;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.lesson-col-skill {
+  width: 120px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.lesson-col-title {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.lesson-col-goal {
+  color: #64748b;
+  font-size: 13px;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lesson-col-action {
+  width: 60px;
+  text-align: center;
+}
+
+.lesson-col-action .btn-start-lesson {
+  margin-left: 0;
+}
+
 .lesson-item {
   display: flex;
   align-items: center;

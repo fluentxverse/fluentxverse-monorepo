@@ -5406,7 +5406,25 @@ export default function LessonMaterialMakerPage() {
 
   // Delete a saved lesson
   const handleDeleteLesson = async (lessonId: string) => {
-    if (!await toastConfirm('Are you sure you want to delete this lesson?', 'Delete Lesson')) return;
+    if (!await toastConfirm('Are you sure you want to delete this lesson? This will also delete it from the server.', 'Delete Lesson')) return;
+    
+    // Find the lesson to check if it has a server version
+    const lessonToDelete = savedLessons.find(l => l.id === lessonId);
+    
+    // Delete from server if it exists there
+    if (lessonToDelete?.serverLesson?.id) {
+      try {
+        const result = await lessonApi.deleteLesson(lessonToDelete.serverLesson.id);
+        if (!result.success) {
+          console.error('[Delete] Failed to delete from server:', result.error);
+          // Still remove from local if server delete fails (might already be deleted)
+        }
+      } catch (err) {
+        console.error('[Delete] Error deleting from server:', err);
+      }
+    }
+    
+    // Remove from local state
     setSavedLessons(prev => prev.filter(l => l.id !== lessonId));
   };
 
