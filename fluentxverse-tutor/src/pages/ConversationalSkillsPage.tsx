@@ -363,11 +363,11 @@ const ConversationalSkillsPage = () => {
                                     <table className="lessons-table">
                                       <thead>
                                         <tr>
-                                          <th className="th-lesson"><span className="th-icon">📚</span> Lesson</th>
-                                          <th className="th-skill"><span className="th-icon">✨</span> Skill</th>
-                                          <th className="th-title"><span className="th-icon">📝</span> Title</th>
-                                          <th className="th-goal"><span className="th-icon">🎯</span> Goal</th>
-                                          <th className="th-action"></th>
+                                          <th>Lesson</th>
+                                          <th>Skill</th>
+                                          <th>Title</th>
+                                          <th>Goal</th>
+                                          <th></th>
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -381,10 +381,7 @@ const ConversationalSkillsPage = () => {
                                               {getLessonNumber(lesson)}
                                             </td>
                                             <td className="lesson-col-skill">
-                                              <span className="skill-badge">
-                                                <span className="skill-icon">💬</span>
-                                                {(lesson.lessonData as any)?.skill || 'Speaking'}
-                                              </span>
+                                              {(lesson.lessonData as any)?.skill || 'Speaking'}
                                             </td>
                                             <td className="lesson-col-title">
                                               {lesson.title}
