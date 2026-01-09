@@ -4,6 +4,7 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { getStudentProfile, updateLessonPreferences, updateAboutMe, type StudentProfile, type LessonPreferences, type AboutMe } from '../api/student.api';
+import { lessonApi, type Lesson } from '../api/lesson.api';
 import './StudentProfilePage.css';
 
 interface LessonNote {
@@ -26,11 +27,74 @@ const StudentProfilePage = () => {
   useEffect(() => {
     document.title = 'My Profile | FluentXVerse';
   }, []);
+  
+  useEffect(() => {
+    if (selectedCourse) {
+      loadCourseLessons();
+    }
+  }, [selectedCourse]);
+  
+  const loadCourseLessons = async () => {
+    if (!selectedCourse) return;
+    
+    try {
+      setLoadingLessons(true);
+      const result = await lessonApi.getPublishedLessons('all');
+      if (result.success) {
+        // Filter by selected course
+        const filteredLessons = result.lessons.filter(lesson => {
+          const courseName = (lesson.lessonData as any)?.course || '';
+          const selectedCourseName = courses.find(c => c.id === selectedCourse)?.name || '';
+          return courseName.toLowerCase() === selectedCourseName.toLowerCase();
+        });
+        setLessons(filteredLessons);
+      }
+    } catch (error) {
+      console.error('Failed to load lessons:', error);
+    } finally {
+      setLoadingLessons(false);
+    }
+  };
+  
+  const getLevelNumber = (lesson: Lesson): number => {
+    const levelBadge = lesson.lessonData?.header?.levelBadge || '';
+    const match = levelBadge.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 1;
+  };
+  
+  const getLessonNumber = (lesson: Lesson): number => {
+    const lessonLabel = lesson.lessonData?.header?.lessonLabel || lesson.title || '';
+    const match = lessonLabel.match(/Lesson\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 1;
+  };
+  
+  const groupedLessons = lessons.reduce((acc, lesson) => {
+    const level = getLevelNumber(lesson);
+    if (!acc[level]) acc[level] = [];
+    acc[level].push(lesson);
+    return acc;
+  }, {} as Record<number, Lesson[]>);
+  
+  const handleStartLesson = (lesson: Lesson) => {
+    window.open(`/lesson/view?id=${lesson.id}`, '_blank');
+  };
 
   const { user } = useAuthContext();
   const { route } = useLocation();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
   const [showHeadsetModal, setShowHeadsetModal] = useState(false);
+  
+  // Materials tab state
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loadingLessons, setLoadingLessons] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  
+  const courses = [
+    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', category: 'Conversation' },
+    { id: 'business-english', name: 'Business English', icon: '💼', category: 'Business' },
+    { id: 'young-learners', name: 'Young Learners', icon: '🎨', category: 'Kids' },
+  ];
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
   const [micLevel, setMicLevel] = useState(0);
   const [isPlayingLeft, setIsPlayingLeft] = useState(false);
@@ -746,10 +810,90 @@ const StudentProfilePage = () => {
           )}
 
           {activeTab === 'materials' && (
-            <div className="empty-state">
-              <i className="fi fi-sr-book"></i>
-              <h3>No Materials Yet</h3>
-              <p>Shared lesson materials will appear here</p>
+            <div className="materials-selector-container">
+              {!selectedCourse ? (
+                <>
+                  <div className="materials-header-section">
+                    <i className="fi fi-sr-book"></i>
+                    <h3>Choose a Course</h3>
+                    <p>Select a course to start your learning journey</p>
+                  </div>
+                  <div className="course-cards-grid">
+                    {courses.map(course => (
+                      <div 
+                        key={course.id}
+                        className="course-select-card"
+                        onClick={() => setSelectedCourse(course.id)}
+                      >
+                        <div className="course-card-icon">{course.icon}</div>
+                        <h4>{course.name}</h4>
+                        <span className="course-card-category">{course.category}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="materials-nav-header">
+                    <button 
+                      className="back-to-courses-btn"
+                      onClick={() => {
+                        setSelectedCourse(null);
+                        setLessons([]);
+                        setSelectedLevel(null);
+                      }}
+                    >
+                      <i className="fi fi-sr-angle-left"></i>
+                      Back to Courses
+                    </button>
+                    <h3>{courses.find(c => c.id === selectedCourse)?.name}</h3>
+                  </div>
+                  
+                  {loadingLessons ? (
+                    <div className="loading-lessons">
+                      <i className="fi fi-sr-spinner"></i>
+                      <p>Loading lessons...</p>
+                    </div>
+                  ) : lessons.length === 0 ? (
+                    <div className="empty-state">
+                      <i className="fi fi-sr-book"></i>
+                      <h3>No Lessons Available</h3>
+                      <p>There are no published lessons for this course yet</p>
+                    </div>
+                  ) : (
+                    <div className="lessons-by-level">
+                      {Object.keys(groupedLessons).sort((a, b) => Number(a) - Number(b)).map(level => (
+                        <div key={level} className="level-lessons-group">
+                          <div className="level-header-row">
+                            <span className="level-badge">Level {level}</span>
+                            <span className="level-lesson-count">{groupedLessons[Number(level)].length} lessons</span>
+                          </div>
+                          <div className="lessons-list-grid">
+                            {groupedLessons[Number(level)].sort((a, b) => getLessonNumber(a) - getLessonNumber(b)).map(lesson => (
+                              <div 
+                                key={lesson.id}
+                                className="lesson-select-card"
+                                onClick={() => handleStartLesson(lesson)}
+                              >
+                                <div className="lesson-card-header">
+                                  <span className="lesson-number">Lesson {getLessonNumber(lesson)}</span>
+                                  <span className="lesson-skill">{(lesson.lessonData as any)?.skill || 'Speaking'}</span>
+                                </div>
+                                <h4 className="lesson-card-title">{lesson.title}</h4>
+                                <p className="lesson-card-goal">{lesson.lessonData?.header?.goalText}</p>
+                                <button className="start-lesson-btn">
+                                  <i className="fi fi-sr-play"></i>
+                                  Start Lesson
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>
