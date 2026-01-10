@@ -24,16 +24,6 @@ interface Session {
 }
 
 const StudentProfilePage = () => {
-  useEffect(() => {
-    document.title = 'My Profile | FluentXVerse';
-  }, []);
-  
-  useEffect(() => {
-    if (selectedCourse) {
-      loadCourseLessons();
-    }
-  }, [selectedCourse]);
-
   const { user } = useAuthContext();
   const { route } = useLocation();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
@@ -95,6 +85,17 @@ const StudentProfilePage = () => {
       setLoadingLessons(false);
     }
   };
+  
+  useEffect(() => {
+    document.title = 'My Profile | FluentXVerse';
+  }, []);
+  
+  useEffect(() => {
+    if (selectedCourse) {
+      loadCourseLessons();
+    }
+  }, [selectedCourse]);
+  
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
   const [micLevel, setMicLevel] = useState(0);
   const [isPlayingLeft, setIsPlayingLeft] = useState(false);
