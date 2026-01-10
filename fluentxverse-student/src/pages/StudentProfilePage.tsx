@@ -33,28 +33,23 @@ const StudentProfilePage = () => {
       loadCourseLessons();
     }
   }, [selectedCourse]);
+
+  const { user } = useAuthContext();
+  const { route } = useLocation();
+  const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
+  const [showHeadsetModal, setShowHeadsetModal] = useState(false);
   
-  const loadCourseLessons = async () => {
-    if (!selectedCourse) return;
-    
-    try {
-      setLoadingLessons(true);
-      const result = await lessonApi.getPublishedLessons('all');
-      if (result.success) {
-        // Filter by selected course
-        const filteredLessons = result.lessons.filter(lesson => {
-          const courseName = (lesson.lessonData as any)?.course || '';
-          const selectedCourseName = courses.find(c => c.id === selectedCourse)?.name || '';
-          return courseName.toLowerCase() === selectedCourseName.toLowerCase();
-        });
-        setLessons(filteredLessons);
-      }
-    } catch (error) {
-      console.error('Failed to load lessons:', error);
-    } finally {
-      setLoadingLessons(false);
-    }
-  };
+  // Materials tab state
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loadingLessons, setLoadingLessons] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  
+  const courses = [
+    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', category: 'Conversation' },
+    { id: 'business-english', name: 'Business English', icon: '💼', category: 'Business' },
+    { id: 'young-learners', name: 'Young Learners', icon: '🎨', category: 'Kids' },
+  ];
   
   const getLevelNumber = (lesson: Lesson): number => {
     const levelBadge = lesson.lessonData?.header?.levelBadge || '';
@@ -78,23 +73,28 @@ const StudentProfilePage = () => {
   const handleStartLesson = (lesson: Lesson) => {
     window.open(`/lesson/view?id=${lesson.id}`, '_blank');
   };
-
-  const { user } = useAuthContext();
-  const { route } = useLocation();
-  const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
-  const [showHeadsetModal, setShowHeadsetModal] = useState(false);
   
-  // Materials tab state
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [loadingLessons, setLoadingLessons] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
-  
-  const courses = [
-    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', category: 'Conversation' },
-    { id: 'business-english', name: 'Business English', icon: '💼', category: 'Business' },
-    { id: 'young-learners', name: 'Young Learners', icon: '🎨', category: 'Kids' },
-  ];
+  const loadCourseLessons = async () => {
+    if (!selectedCourse) return;
+    
+    try {
+      setLoadingLessons(true);
+      const result = await lessonApi.getPublishedLessons('all');
+      if (result.success) {
+        // Filter by selected course
+        const filteredLessons = result.lessons.filter(lesson => {
+          const courseName = (lesson.lessonData as any)?.course || '';
+          const selectedCourseName = courses.find(c => c.id === selectedCourse)?.name || '';
+          return courseName.toLowerCase() === selectedCourseName.toLowerCase();
+        });
+        setLessons(filteredLessons);
+      }
+    } catch (error) {
+      console.error('Failed to load lessons:', error);
+    } finally {
+      setLoadingLessons(false);
+    }
+  };
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
   const [micLevel, setMicLevel] = useState(0);
   const [isPlayingLeft, setIsPlayingLeft] = useState(false);
