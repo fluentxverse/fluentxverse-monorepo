@@ -892,6 +892,75 @@ const Student = new Elysia({ name: "student" })
   })
 
   /**
+   * Save last viewed lesson for student
+   * PUT /student/last-viewed-lesson
+   */
+  .put('/student/last-viewed-lesson', async ({ body, cookie, set }) => {
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
+
+      const lesson = body as {
+        courseId: string;
+        lessonId: string;
+        lessonNumber: number;
+        title: string;
+        goal: string;
+        viewedAt: number;
+      };
+
+      const studentService = new StudentService();
+      const result = await studentService.saveLastViewedLesson(studentId, lesson);
+
+      return result;
+    } catch (error: any) {
+      console.error('[StudentRoute] Save last viewed lesson error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to save last viewed lesson' };
+    }
+  })
+
+  /**
+   * Get last viewed lesson for student
+   * GET /student/last-viewed-lesson
+   */
+  .get('/student/last-viewed-lesson', async ({ cookie, set }) => {
+    try {
+      const authCookie = cookie.studentAuth?.value;
+      if (!authCookie) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(authCookie as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
+
+      const studentService = new StudentService();
+      const result = await studentService.getLastViewedLesson(studentId);
+
+      return result;
+    } catch (error: any) {
+      console.error('[StudentRoute] Get last viewed lesson error:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to get last viewed lesson' };
+    }
+  })
+
+  /**
    * Get student's favorite tutors with pagination
    * GET /student/favorites?page=1&limit=10
    */

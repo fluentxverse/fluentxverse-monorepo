@@ -763,6 +763,106 @@ class StudentService {
       await session.close();
     }
   }
+
+  /**
+   * Save last viewed lesson for student
+   */
+  public async saveLastViewedLesson(studentId: string, lesson: {
+    courseId: string;
+    lessonId: string;
+    lessonNumber: number;
+    title: string;
+    goal: string;
+    viewedAt: number;
+  }) {
+    console.log('[StudentService] saveLastViewedLesson called with:', { studentId, lesson });
+    
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (s:Student {id: $studentId})
+        SET s.lastViewedCourseId = $courseId,
+            s.lastViewedLessonId = $lessonId,
+            s.lastViewedLessonNumber = $lessonNumber,
+            s.lastViewedLessonTitle = $title,
+            s.lastViewedLessonGoal = $goal,
+            s.lastViewedAt = $viewedAt
+        RETURN s.id as id
+        `,
+        { 
+          studentId,
+          courseId: lesson.courseId,
+          lessonId: lesson.lessonId,
+          lessonNumber: lesson.lessonNumber,
+          title: lesson.title,
+          goal: lesson.goal,
+          viewedAt: lesson.viewedAt
+        }
+      );
+
+      if (result.records.length === 0) {
+        throw new Error('Student not found');
+      }
+
+      console.log('[StudentService] Last viewed lesson saved successfully');
+      return { success: true, message: 'Last viewed lesson saved' };
+    } catch (error) {
+      console.error('[StudentService] Error saving last viewed lesson:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Get last viewed lesson for student
+   */
+  public async getLastViewedLesson(studentId: string) {
+    console.log('[StudentService] getLastViewedLesson called for student:', studentId);
+    
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `
+        MATCH (s:Student {id: $studentId})
+        RETURN s.lastViewedCourseId as courseId,
+               s.lastViewedLessonId as lessonId,
+               s.lastViewedLessonNumber as lessonNumber,
+               s.lastViewedLessonTitle as title,
+               s.lastViewedLessonGoal as goal,
+               s.lastViewedAt as viewedAt
+        `,
+        { studentId }
+      );
+
+      if (result.records.length === 0 || !result.records[0].get('courseId')) {
+        return { success: true, data: null };
+      }
+
+      const record = result.records[0];
+      const lessonData = {
+        courseId: record.get('courseId'),
+        lessonId: record.get('lessonId'),
+        lessonNumber: record.get('lessonNumber'),
+        title: record.get('title'),
+        goal: record.get('goal'),
+        viewedAt: record.get('viewedAt')
+      };
+
+      console.log('[StudentService] Last viewed lesson retrieved:', lessonData);
+      return { success: true, data: lessonData };
+    } catch (error) {
+      console.error('[StudentService] Error getting last viewed lesson:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
 }
 
 export default StudentService;

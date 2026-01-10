@@ -3,7 +3,7 @@ import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
-import { getStudentProfile, updateLessonPreferences, updateAboutMe, type StudentProfile, type LessonPreferences, type AboutMe } from '../api/student.api';
+import { getStudentProfile, updateLessonPreferences, updateAboutMe, saveLastViewedLesson, getLastViewedLesson, type StudentProfile, type LessonPreferences, type AboutMe, type LastViewedLesson } from '../api/student.api';
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './StudentProfilePage.css';
 
@@ -27,9 +27,20 @@ const StudentProfilePage = () => {
   const { route } = useLocation();
   const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'materials'>('overview');
   const [showHeadsetModal, setShowHeadsetModal] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   
   // Materials tab state
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [lastViewedCourse, setLastViewedCourse] = useState<string | null>(null);
+  const [lastViewedLesson, setLastViewedLesson] = useState<{
+    lessonId: string;
+    level: number;
+    chapter: number;
+    lessonNumber: number;
+    title: string;
+    skill: string;
+    goal: string;
+  } | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loadingLessons, setLoadingLessons] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -82,16 +93,102 @@ const StudentProfilePage = () => {
     );
   };
   
-  const handleChooseLesson = (lesson: Lesson, e: Event) => {
+  const handleChooseLesson = async (lesson: Lesson, e: Event) => {
     e.stopPropagation();
-    // Store selected lesson in local storage or state management
-    // This will be used when the tutor opens /lesson page
-    localStorage.setItem('selectedLessonForBooking', lesson.id);
-    alert(`Lesson "${lesson.title}" selected for your next booking!`);
+    
+    // Save lesson details to Memgraph
+    const lessonDetails = {
+      lessonId: lesson.id,
+      level: getLevelNumber(lesson),
+      chapter: getChapterNumber(lesson),
+      lessonNumber: getLessonNumber(lesson),
+      title: lesson.title,
+      skill: (lesson.lessonData as any)?.skill || 'Speaking',
+      goal: lesson.lessonData?.header?.goalText || 'English conversation practice'
+    };
+    setLastViewedLesson(lessonDetails);
+    
+    const lessonData: LastViewedLesson = {
+      courseId: selectedCourse || '',
+      lessonId: lesson.id,
+      lessonNumber: lessonDetails.lessonNumber,
+      title: lessonDetails.title,
+      goal: lessonDetails.goal,
+      viewedAt: Date.now()
+    };
+    
+    try {
+      const result = await saveLastViewedLesson(lessonData);
+      if (result.success) {
+        // Store for booking reference
+        localStorage.setItem('selectedLessonForBooking', lesson.id);
+        
+        // Show success notification
+        setNotification({ 
+          message: `Lesson "${lesson.title}" selected for your next booking!`, 
+          type: 'success' 
+        });
+        
+        // Auto-dismiss notification after 3 seconds
+        setTimeout(() => setNotification(null), 3000);
+        
+        // Switch back to course selection to show the chosen lesson
+        setTimeout(() => {
+          setSelectedCourse(null);
+          setLessons([]);
+        }, 500);
+      } else {
+        setNotification({ 
+          message: 'Failed to save lesson selection. Please try again.', 
+          type: 'error' 
+        });
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to save lesson:', error);
+      setNotification({ 
+        message: 'Failed to save lesson selection. Please try again.', 
+        type: 'error' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+    }
   };
   
-  const handleViewLesson = (lesson: Lesson, e: Event) => {
+  const handleViewLesson = async (lesson: Lesson, e: Event) => {
     e.stopPropagation();
+    // Save lesson details for "Continue Learning"
+    const lessonDetails = {
+      lessonId: lesson.id,
+      level: getLevelNumber(lesson),
+      chapter: getChapterNumber(lesson),
+      lessonNumber: getLessonNumber(lesson),
+      title: lesson.title,
+      skill: (lesson.lessonData as any)?.skill || 'Speaking',
+      goal: lesson.lessonData?.header?.goalText || 'English conversation practice'
+    };
+    setLastViewedLesson(lessonDetails);
+    
+    // Save to Memgraph via API
+    const lessonData: LastViewedLesson = {
+      courseId: selectedCourse || '',
+      lessonId: lesson.id,
+      lessonNumber: lessonDetails.lessonNumber,
+      title: lessonDetails.title,
+      goal: lessonDetails.goal,
+      viewedAt: Date.now()
+    };
+    
+    try {
+      await saveLastViewedLesson(lessonData);
+    } catch (error) {
+      console.error('Failed to save last viewed lesson:', error);
+      setNotification({ 
+        message: 'Failed to save lesson progress', 
+        type: 'error' 
+      });
+      setTimeout(() => setNotification(null), 3000);
+    }
+    
     window.open(`/lesson/view?id=${lesson.id}`, '_blank');
   };
   
@@ -119,11 +216,38 @@ const StudentProfilePage = () => {
   
   useEffect(() => {
     document.title = 'My Profile | FluentXVerse';
+    // Load last viewed lesson from API
+    const loadLastViewedLesson = async () => {
+      try {
+        const result = await getLastViewedLesson();
+        if (result.success && result.data) {
+          console.log('[StudentProfile] Loaded last viewed lesson:', result.data);
+          setLastViewedCourse(result.data.courseId);
+          // For now, we can only get lessonNumber, title, and goal from the API
+          // Level, chapter, and skill will need to be fetched when we load the lessons
+          setLastViewedLesson({
+            lessonId: result.data.lessonId || '',
+            level: 1, // Default, will be updated when course is loaded
+            chapter: 1, // Default, will be updated when course is loaded
+            lessonNumber: result.data.lessonNumber,
+            title: result.data.title,
+            skill: 'Speaking', // Default, will be updated when course is loaded
+            goal: result.data.goal
+          });
+        } else {
+          console.log('[StudentProfile] No last viewed lesson found or error:', result.error);
+        }
+      } catch (error) {
+        console.error('[StudentProfile] Failed to load last viewed lesson:', error);
+      }
+    };
+    loadLastViewedLesson();
   }, []);
   
   useEffect(() => {
     if (selectedCourse) {
       loadCourseLessons();
+      setLastViewedCourse(selectedCourse);
     }
   }, [selectedCourse]);
   
@@ -520,7 +644,7 @@ const StudentProfilePage = () => {
         lesson: 'Lesson 5: Effective Presentations',
         icon: '💼'
       },
-      note: 'Great confidence when presenting. Work on body language and eye contact for more natural delivery.
+      note: 'Great confidence when presenting. Work on body language and eye contact for more natural delivery.'
     }
   ];
 
@@ -899,6 +1023,69 @@ const StudentProfilePage = () => {
                     <h3>Choose a Course</h3>
                     <p>Select a course to start your learning journey</p>
                   </div>
+                  
+                  {/* Last Viewed Course */}
+                  {lastViewedCourse && (
+                    <div className="last-viewed-course">
+                      <div className="last-viewed-label">
+                        <i className="fi fi-sr-clock-three"></i>
+                        <span>Continue Learning</span>
+                      </div>
+                      <button
+                        className="last-viewed-card"
+                        onClick={() => setSelectedCourse(lastViewedCourse)}
+                      >
+                        <div className="last-viewed-icon">
+                          {courses.find(c => c.id === lastViewedCourse)?.icon}
+                        </div>
+                        <div className="last-viewed-info">
+                          <h4>{courses.find(c => c.id === lastViewedCourse)?.name}</h4>
+                          {lastViewedLesson ? (
+                            <div className="last-viewed-lesson-details">
+                              <div className="lesson-detail-item">
+                                <span className="detail-label">Level</span>
+                                <span className="detail-value">{lastViewedLesson.level}</span>
+                              </div>
+                              <span className="detail-separator">•</span>
+                              <div className="lesson-detail-item">
+                                <span className="detail-label">Chapter</span>
+                                <span className="detail-value">{lastViewedLesson.chapter}</span>
+                              </div>
+                              <span className="detail-separator">•</span>
+                              <div className="lesson-detail-item">
+                                <span className="detail-label">Lesson</span>
+                                <span className="detail-value">{lastViewedLesson.lessonNumber}</span>
+                              </div>
+                              <span className="detail-separator">•</span>
+                              <div className="lesson-detail-item">
+                                <span className="detail-label">{lastViewedLesson.skill}</span>
+                              </div>
+                              <span className="detail-separator">•</span>
+                              <div className="lesson-detail-item">
+                                <span className="detail-value">{lastViewedLesson.title}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="last-viewed-subtitle">Pick up where you left off</span>
+                          )}
+                        </div>
+                        <button 
+                          className="last-viewed-view-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (lastViewedLesson?.lessonId) {
+                              window.open(`/lesson/view?id=${lastViewedLesson.lessonId}`, '_blank');
+                            }
+                          }}
+                          title="Preview lesson"
+                        >
+                          <i className="fi fi-sr-eye"></i>
+                        </button>
+                        <i className="fi fi-sr-arrow-right"></i>
+                      </button>
+                    </div>
+                  )}
+                  
                   <div className="course-cards-grid">
                     {courses.map(course => (
                       <div 
@@ -1320,6 +1507,16 @@ const StudentProfilePage = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Notification Toast */}
+      {notification && (
+        <div className={`notification-toast ${notification.type}`}>
+          <div className="notification-content">
+            <i className={`fi fi-sr-${notification.type === 'success' ? 'check-circle' : 'exclamation'}`}></i>
+            <span>{notification.message}</span>
           </div>
         </div>
       )}

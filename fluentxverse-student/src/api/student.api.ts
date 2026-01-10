@@ -13,6 +13,15 @@ export interface AboutMe {
   bio: string;
 }
 
+export interface LastViewedLesson {
+  courseId: string;
+  lessonId: string;
+  lessonNumber: number;
+  title: string;
+  goal: string;
+  viewedAt: number;
+}
+
 export interface StudentProfile {
   id: string;
   email: string;
@@ -78,5 +87,31 @@ export const updateAboutMe = async (aboutMe: AboutMe): Promise<{ success: boolea
   } catch (error: any) {
     console.error('[StudentAPI] Failed to update about me:', error);
     return { success: false, error: error.message || 'Failed to update about me' };
+  }
+};
+
+/**
+ * Save the last viewed lesson for the student
+ */
+export const saveLastViewedLesson = async (lesson: LastViewedLesson): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { data } = await client.put('/student/last-viewed-lesson', lesson);
+    return data;
+  } catch (error: any) {
+    console.error('[StudentAPI] Failed to save last viewed lesson:', error);
+    return { success: false, error: error.message || 'Failed to save last viewed lesson' };
+  }
+};
+
+/**
+ * Get the last viewed lesson for the student
+ */
+export const getLastViewedLesson = async (): Promise<{ success: boolean; data?: LastViewedLesson; error?: string }> => {
+  try {
+    const { data } = await client.get('/student/last-viewed-lesson');
+    return data;
+  } catch (error: any) {
+    console.error('[StudentAPI] Failed to get last viewed lesson:', error);
+    return { success: false, error: error.message || 'Failed to get last viewed lesson' };
   }
 };
