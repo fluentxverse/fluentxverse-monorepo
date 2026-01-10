@@ -34,6 +34,8 @@ const StudentProfilePage = () => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loadingLessons, setLoadingLessons] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [expandedLevels, setExpandedLevels] = useState<number[]>([]);
+  const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
   
   const courses = [
     { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', category: 'Conversation' },
@@ -53,14 +55,44 @@ const StudentProfilePage = () => {
     return match ? parseInt(match[1], 10) : 1;
   };
   
+  const getChapterNumber = (lesson: Lesson): number => {
+    const chapterLabel = lesson.lessonData?.header?.chapterLabel || '';
+    const match = chapterLabel.match(/Chapter\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 1;
+  };
+  
   const groupedLessons = lessons.reduce((acc, lesson) => {
     const level = getLevelNumber(lesson);
-    if (!acc[level]) acc[level] = [];
-    acc[level].push(lesson);
+    const chapter = getChapterNumber(lesson);
+    
+    if (!acc[level]) acc[level] = {};
+    if (!acc[level][chapter]) acc[level][chapter] = [];
+    acc[level][chapter].push(lesson);
     return acc;
-  }, {} as Record<number, Lesson[]>);
+  }, {} as Record<number, Record<number, Lesson[]>>);
   
-  const handleStartLesson = (lesson: Lesson) => {
+  const toggleLevel = (level: number) => {
+    setExpandedLevels(prev => 
+      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level]
+    );
+  };
+  
+  const toggleChapter = (chapterKey: string) => {
+    setExpandedChapters(prev =>
+      prev.includes(chapterKey) ? prev.filter(c => c !== chapterKey) : [...prev, chapterKey]
+    );
+  };
+  
+  const handleChooseLesson = (lesson: Lesson, e: Event) => {
+    e.stopPropagation();
+    // Store selected lesson in local storage or state management
+    // This will be used when the tutor opens /lesson page
+    localStorage.setItem('selectedLessonForBooking', lesson.id);
+    alert(`Lesson "${lesson.title}" selected for your next booking!`);
+  };
+  
+  const handleViewLesson = (lesson: Lesson, e: Event) => {
+    e.stopPropagation();
     window.open(`/lesson/view?id=${lesson.id}`, '_blank');
   };
   
@@ -863,34 +895,105 @@ const StudentProfilePage = () => {
                     </div>
                   ) : (
                     <div className="lessons-by-level">
-                      {Object.keys(groupedLessons).sort((a, b) => Number(a) - Number(b)).map(level => (
-                        <div key={level} className="level-lessons-group">
-                          <div className="level-header-row">
-                            <span className="level-badge">Level {level}</span>
-                            <span className="level-lesson-count">{groupedLessons[Number(level)].length} lessons</span>
-                          </div>
-                          <div className="lessons-list-grid">
-                            {groupedLessons[Number(level)].sort((a, b) => getLessonNumber(a) - getLessonNumber(b)).map(lesson => (
-                              <div 
-                                key={lesson.id}
-                                className="lesson-select-card"
-                                onClick={() => handleStartLesson(lesson)}
-                              >
-                                <div className="lesson-card-header">
-                                  <span className="lesson-number">Lesson {getLessonNumber(lesson)}</span>
-                                  <span className="lesson-skill">{(lesson.lessonData as any)?.skill || 'Speaking'}</span>
-                                </div>
-                                <h4 className="lesson-card-title">{lesson.title}</h4>
-                                <p className="lesson-card-goal">{lesson.lessonData?.header?.goalText}</p>
-                                <button className="start-lesson-btn">
-                                  <i className="fi fi-sr-play"></i>
-                                  Start Lesson
-                                </button>
+                      {Object.keys(groupedLessons).sort((a, b) => Number(a) - Number(b)).map(levelKey => {
+                        const level = Number(levelKey);
+                        const isLevelExpanded = expandedLevels.includes(level);
+                        const chapters = groupedLessons[level];
+                        const totalLessonsInLevel = Object.values(chapters).flat().length;
+                        
+                        return (
+                          <div key={level} className={`level-accordion ${isLevelExpanded ? 'expanded' : ''}`}>
+                            <button 
+                              className="level-accordion-header"
+                              onClick={() => toggleLevel(level)}
+                            >
+                              <div className="level-accordion-info">
+                                <span className="level-badge">Level {level}</span>
+                                <span className="level-lesson-count">{totalLessonsInLevel} lessons available</span>
                               </div>
-                            ))}
+                              <i className={`fi fi-sr-angle-${isLevelExpanded ? 'up' : 'down'}`}></i>
+                            </button>
+                            
+                            {isLevelExpanded && (
+                              <div className="level-accordion-content">
+                                {Object.keys(chapters).sort((a, b) => Number(a) - Number(b)).map(chapterKey => {
+                                  const chapter = Number(chapterKey);
+                                  const chapterLessons = chapters[chapter];
+                                  const chapterAccordionKey = `${level}-${chapter}`;
+                                  const isChapterExpanded = expandedChapters.includes(chapterAccordionKey);
+                                  
+                                  return (
+                                    <div key={chapterAccordionKey} className={`chapter-accordion ${isChapterExpanded ? 'expanded' : ''}`}>
+                                      <button 
+                                        className="chapter-accordion-header"
+                                        onClick={() => toggleChapter(chapterAccordionKey)}
+                                      >
+                                        <div className="chapter-accordion-info">
+                                          <span className="chapter-title">Chapter {chapter}</span>
+                                          <span className="chapter-lesson-count">{chapterLessons.length} lessons</span>
+                                        </div>
+                                        <i className={`fi fi-sr-angle-${isChapterExpanded ? 'up' : 'down'}`}></i>
+                                      </button>
+                                      
+                                      {isChapterExpanded && (
+                                        <div className="chapter-accordion-content">
+                                          <div className="lessons-table-container">
+                                            <table className="lessons-table">
+                                              <thead>
+                                                <tr>
+                                                  <th>Lesson</th>
+                                                  <th>Skill</th>
+                                                  <th>Title</th>
+                                                  <th>Goal</th>
+                                                  <th></th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {chapterLessons.sort((a, b) => getLessonNumber(a) - getLessonNumber(b)).map(lesson => (
+                                                  <tr key={lesson.id} className="lesson-row">
+                                                    <td className="lesson-col-number">
+                                                      {getLessonNumber(lesson)}
+                                                    </td>
+                                                    <td className="lesson-col-skill">
+                                                      {(lesson.lessonData as any)?.skill || 'Speaking'}
+                                                    </td>
+                                                    <td className="lesson-col-title">
+                                                      {lesson.title}
+                                                    </td>
+                                                    <td className="lesson-col-goal">
+                                                      {lesson.lessonData?.header?.goalText || 'English conversation practice'}
+                                                    </td>
+                                                    <td className="lesson-col-actions">
+                                                      <button 
+                                                        className="btn-view-lesson"
+                                                        onClick={(e) => handleViewLesson(lesson, e)}
+                                                        title="Preview lesson"
+                                                      >
+                                                        <i className="fi fi-sr-eye"></i>
+                                                      </button>
+                                                      <button 
+                                                        className="btn-choose-lesson"
+                                                        onClick={(e) => handleChooseLesson(lesson, e)}
+                                                      >
+                                                        <i className="fi fi-sr-check"></i>
+                                                        Choose Lesson
+                                                      </button>
+                                                    </td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>
