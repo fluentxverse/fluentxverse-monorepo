@@ -7,26 +7,25 @@ import { getStudentProfile, updateLessonPreferences, updateAboutMe, type Student
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './StudentProfilePage.css';
 
-interface LessonNote {
-  date: string;
-  time: string;
-  note: string;
-  rating: number;
-}
-
-interface Session {
+interface SessionWithNote {
   id: string;
   date: string;
   time: string;
   status: 'completed' | 'upcoming' | 'cancelled';
   topic: string;
   rating?: number;
+  material?: {
+    course: string;
+    lesson: string;
+    icon: string;
+  };
+  note?: string;
 }
 
 const StudentProfilePage = () => {
   const { user } = useAuthContext();
   const { route } = useLocation();
-  const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'materials'>('overview');
   const [showHeadsetModal, setShowHeadsetModal] = useState(false);
   
   // Materials tab state
@@ -480,24 +479,48 @@ const StudentProfilePage = () => {
   }, []);
 
   // Mock session data (TODO: fetch from API)
-  const pastSessions: Session[] = [
-    { id: '4', date: 'Dec 15, 2025', time: '7:00 PM', status: 'completed', topic: 'Job Interviews', rating: 5 },
-    { id: '5', date: 'Dec 14, 2025', time: '8:00 PM', status: 'completed', topic: 'Business Vocabulary', rating: 5 },
-    { id: '6', date: 'Dec 13, 2025', time: '7:30 PM', status: 'completed', topic: 'Presentation Skills', rating: 4 }
-  ];
-
-  const lessonNotes: LessonNote[] = [
-    {
-      date: 'Dec 15, 2025',
-      time: '7:00 PM',
-      note: 'Excellent progress with interview vocabulary. Focus on reducing filler words in next session.',
-      rating: 5
+  const sessionsWithNotes: SessionWithNote[] = [
+    { 
+      id: '4', 
+      date: 'Dec 15, 2025', 
+      time: '7:00 PM', 
+      status: 'completed', 
+      topic: 'Job Interviews', 
+      rating: 5,
+      material: {
+        course: 'Business English',
+        lesson: 'Lesson 3: Common Interview Questions',
+        icon: '💼'
+      },
+      note: 'Excellent progress with interview vocabulary. Focus on reducing filler words in next session.'
     },
-    {
-      date: 'Dec 14, 2025',
-      time: '8:00 PM',
-      note: 'Good understanding of business terminology. Recommend more practice with formal email writing.',
-      rating: 5
+    { 
+      id: '5', 
+      date: 'Dec 14, 2025', 
+      time: '8:00 PM', 
+      status: 'completed', 
+      topic: 'Business Vocabulary', 
+      rating: 5,
+      material: {
+        course: 'Business English',
+        lesson: 'Lesson 1: Professional Communication',
+        icon: '💼'
+      },
+      note: 'Good understanding of business terminology. Recommend more practice with formal email writing.'
+    },
+    { 
+      id: '6', 
+      date: 'Dec 13, 2025', 
+      time: '7:30 PM', 
+      status: 'completed', 
+      topic: 'Presentation Skills', 
+      rating: 4,
+      material: {
+        course: 'Business English',
+        lesson: 'Lesson 5: Effective Presentations',
+        icon: '💼'
+      },
+      note: 'Great confidence when presenting. Work on body language and eye contact for more natural delivery.
     }
   ];
 
@@ -610,13 +633,13 @@ const StudentProfilePage = () => {
 
           {/* Tabs */}
           <div className="tabs-container">
-            {(['overview', 'history', 'notes', 'materials'] as const).map((tab) => (
+            {(['overview', 'history', 'materials'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`tab-button ${activeTab === tab ? 'active' : ''}`}
               >
-                {tab}
+                {tab === 'history' ? 'History & Notes' : tab}
               </button>
             ))}
           </div>
@@ -783,62 +806,87 @@ const StudentProfilePage = () => {
           )}
 
           {activeTab === 'history' && (
-            <div className="content-card simple">
-              <h3 className="card-title blue">
-                <i className="fi fi-sr-time-past"></i>
-                Lesson History
-              </h3>
-              <div className="sessions-list">
-                {pastSessions.map((session) => (
-                  <div key={session.id} className="session-card completed">
-                    <div>
-                      <div className="session-topic">{session.topic}</div>
-                      <div className="session-meta-row">
-                        <span className="session-meta-item">
-                          <i className="fi fi-sr-calendar"></i>
-                          {session.date}
-                        </span>
-                        <span className="session-meta-item">
-                          <i className="fi fi-sr-clock"></i>
-                          {session.time}
-                        </span>
+            <div className="history-notes-container">
+              <div className="history-notes-header">
+                <h3 className="history-notes-title">
+                  <i className="fi fi-sr-time-past"></i>
+                  Lesson History & Notes
+                </h3>
+                <p className="history-notes-subtitle">
+                  View your completed lessons with notes and materials used
+                </p>
+              </div>
+              
+              <div className="sessions-timeline">
+                {sessionsWithNotes.map((session) => (
+                  <div key={session.id} className="session-timeline-item">
+                    {/* Session Header */}
+                    <div className="session-timeline-header">
+                      <div className="session-timeline-left">
+                        <div className="session-date-badge">
+                          <span className="date-day">{session.date.split(' ')[1].replace(',', '')}</span>
+                          <span className="date-month">{session.date.split(' ')[0]}</span>
+                        </div>
+                        <div className="session-info">
+                          <h4 className="session-topic-title">{session.topic}</h4>
+                          <div className="session-meta">
+                            <span className="meta-item">
+                              <i className="fi fi-sr-clock"></i>
+                              {session.time}
+                            </span>
+                            {session.rating && (
+                              <span className="meta-item rating">
+                                <i className="fi fi-sr-star"></i>
+                                {session.rating}/5
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="session-status-badge completed">
+                        <i className="fi fi-sr-check-circle"></i>
+                        Completed
                       </div>
                     </div>
-                    {session.rating && (
-                      <div className="rating-badge">
-                        <i className="fi fi-sr-star"></i>
-                        {session.rating}
+
+                    {/* Material Used */}
+                    {session.material && (
+                      <div className="session-material">
+                        <div className="material-label">
+                          <i className="fi fi-sr-book"></i>
+                          Material Used
+                        </div>
+                        <div className="material-card">
+                          <span className="material-icon">{session.material.icon}</span>
+                          <div className="material-details">
+                            <span className="material-course">{session.material.course}</span>
+                            <span className="material-lesson">{session.material.lesson}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lesson Notes */}
+                    {session.note && (
+                      <div className="session-note">
+                        <div className="note-label">
+                          <i className="fi fi-sr-edit"></i>
+                          Tutor Notes
+                        </div>
+                        <p className="note-text">{session.note}</p>
                       </div>
                     )}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          {activeTab === 'notes' && (
-            <div className="content-card simple">
-              <h3 className="card-title blue">
-                <i className="fi fi-sr-edit"></i>
-                Lesson Notes
-              </h3>
-              <div className="notes-list">
-                {lessonNotes.map((note, idx) => (
-                  <div key={idx} className="note-card">
-                    <div className="note-header">
-                      <div className="note-date-time">
-                        <span className="note-date">{note.date}</span>
-                        <span className="note-time">{note.time}</span>
-                      </div>
-                      <div className="rating-badge small">
-                        <i className="fi fi-sr-star"></i>
-                        {note.rating}
-                      </div>
-                    </div>
-                    <p className="note-content">{note.note}</p>
-                  </div>
-                ))}
-              </div>
+              {sessionsWithNotes.length === 0 && (
+                <div className="empty-history">
+                  <i className="fi fi-sr-time-past"></i>
+                  <h3>No lesson history yet</h3>
+                  <p>Your completed lessons will appear here</p>
+                </div>
+              )}
             </div>
           )}
 
