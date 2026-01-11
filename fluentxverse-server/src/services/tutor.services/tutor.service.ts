@@ -361,10 +361,23 @@ export class TutorService {
     const session = driver.session();
     
     try {
-      // Get next 7 days
+      // Get current date in Philippine Time (UTC+8) for accurate slot querying
       const now = new Date();
-      const startDate = now.toISOString().split('T')[0];
-      const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const phtNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+      
+      // Start from yesterday (PHT) to catch any late-night slots that convert to today in KST
+      const startDateObj = new Date(phtNow);
+      startDateObj.setDate(startDateObj.getDate() - 1);
+      const startDate = `${startDateObj.getFullYear()}-${String(startDateObj.getMonth() + 1).padStart(2, '0')}-${String(startDateObj.getDate()).padStart(2, '0')}`;
+      
+      // End date: 7 days from now in PHT
+      const endDateObj = new Date(phtNow);
+      endDateObj.setDate(endDateObj.getDate() + 7);
+      const endDate = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
+      
+      console.log('🔍 getAvailability - tutorId:', tutorId);
+      console.log('🔍 getAvailability - PHT now:', phtNow.toISOString());
+      console.log('🔍 getAvailability - Date range:', startDate, 'to', endDate);
       
       // Get time slots with optional booking info (to get studentId from Booking node)
       const result = await session.run(
@@ -408,29 +421,39 @@ export class TutorService {
       };
       
       // Convert Philippine time to KST (KST = PHT + 1 hour)
-      // IMPORTANT: Keep the tutor's original date, only convert the time
-      // So 11:00 PM PHT Dec 5 becomes 00:00 KST Dec 5 (not Dec 6)
+      // When PHT time + 1 hour >= 24, the date also advances to next day
       const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string } => {
         const { hour, minute } = parse12hTime(time12);
         
         // Add 1 hour for KST
         let kstHour = hour + 1;
+        let kstDate = dateStr;
         
-        // Handle hour overflow (wrap around to 00:00, 00:30, etc.)
+        // Handle hour overflow - date advances to next day
         if (kstHour >= 24) {
           kstHour -= 24;
+          // Advance date by 1 day
+          const nextDay = new Date(dateStr);
+          nextDay.setDate(nextDay.getDate() + 1);
+          kstDate = nextDay.toISOString().split('T')[0];
         }
         
-        // Keep the original date (tutor's schedule date)
         const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
         
-        return { date: dateStr, time: kstTime };
+        return { date: kstDate, time: kstTime };
       };
       
-      return result.records.map(record => {
+      console.log('🔍 getAvailability - Found', result.records.length, 'slots from DB');
+      
+      const slots = result.records.map(record => {
         const slot = record.get('s').properties;
         const bookingStudentId = record.get('bookingStudentId');
+        
+        console.log('🔍 Raw slot:', slot.slotDate, slot.slotTime, 'status:', slot.status);
+        
         const { date, time } = convertPHTtoKST(slot.slotDate, slot.slotTime);
+        
+        console.log('🔍 Converted to KST:', date, time);
         
         // Check if slot is in the past
         const isPast = isSlotInPast(slot.slotDate, slot.slotTime);
@@ -454,6 +477,10 @@ export class TutorService {
           studentId
         };
       });
+      
+      console.log('🔍 Returning slots:', slots.length, 'with AVAIL:', slots.filter(s => s.status === 'AVAIL').length);
+      
+      return slots;
     } finally {
       await session.close();
     }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { tutorApi } from '../api/tutor.api';
 import { favoritesApi } from '../api/favorites.api';
+import { scheduleApi, type AvailableSlot } from '../api/schedule.api';
 import type { TutorProfile } from '../types/tutor.types';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
@@ -34,13 +35,60 @@ export const TutorProfilePage = () => {
   const [hasTrialTickets, setHasTrialTickets] = useState(false);
   const [hasAnyTickets, setHasAnyTickets] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(true);
-  const [availability, setAvailability] = useState<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('morning');
+  const [rawSlots, setRawSlots] = useState<AvailableSlot[]>([]); // Raw PHT slots from API
+  const [availability, setAvailability] = useState<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string; slotId?: string }>>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('evening');
   const [preSelectedSlot, setPreSelectedSlot] = useState<{ date: string; time: string } | null>(null);
 
+  // Convert PHT time to KST (add 1 hour, handle date rollover)
+  const convertPHTtoKST = (phDateString: string, phTimeString: string): { date: string; time: string } => {
+    let hours: number;
+    let minutes: string;
+    
+    // Normalize time string
+    const normalizedTime = phTimeString.trim();
+    
+    // Try 12-hour format first (e.g., "6:00 PM")
+    const time12Match = normalizedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (time12Match) {
+      hours = parseInt(time12Match[1], 10);
+      minutes = time12Match[2];
+      const period = time12Match[3].toUpperCase();
+      
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+    } else {
+      // Try 24-hour format
+      const time24Match = normalizedTime.match(/^(\d{1,2}):(\d{2})$/);
+      if (time24Match) {
+        hours = parseInt(time24Match[1], 10);
+        minutes = time24Match[2];
+      } else {
+        return { date: phDateString, time: phTimeString };
+      }
+    }
+
+    // Add 1 hour for KST
+    hours += 1;
+
+    // Handle date rollover
+    let resultDate = phDateString;
+    if (hours >= 24) {
+      hours -= 24;
+      const [year, month, day] = phDateString.split('-').map(Number);
+      const nextDayDate = new Date(year, month - 1, day + 1);
+      resultDate = `${nextDayDate.getFullYear()}-${String(nextDayDate.getMonth() + 1).padStart(2, '0')}-${String(nextDayDate.getDate()).padStart(2, '0')}`;
+    }
+
+    return { date: resultDate, time: `${String(hours).padStart(2, '0')}:${minutes}` };
+  };
+
   // Generate 30-minute interval time slots for Asia/Seoul based on selected period
-  // Tutor opens Philippine time 05:00 - 23:30; student sees equivalent in Asia/Seoul (+1 hour).
-  // PHT 05:00-23:30 => KST 06:00-00:30 (next day)
+  // Tutor opens Philippine time 06:00 - 23:30; student sees equivalent in Asia/Seoul (+1 hour).
+  // PHT 06:00-23:30 => KST 07:00-00:30 (next day)
   const getPeriodTimeSlots = (period: 'morning' | 'afternoon' | 'evening') => {
     let slots: string[] = [];
     if (period === 'morning') {
@@ -56,12 +104,14 @@ export const TutorProfilePage = () => {
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
     } else if (period === 'evening') {
-      // KST 18:00 - 00:30 (next day shown as 24:00, 24:30)
-      for (let h = 18; h < 24; h++) {
+      // KST 18:00 - 00:30 (next day)
+      // PHT 6:00 PM (18:00) = KST 19:00
+      // PHT 11:30 PM (23:30) = KST 00:30 next day
+      for (let h = 19; h < 24; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
-      // Add next day times (00:00, 00:30 displayed as 24:00, 24:30 for continuity)
+      // Add next day times (00:00, 00:30)
       slots.push('00:00');
       slots.push('00:30');
     }
@@ -73,32 +123,29 @@ export const TutorProfilePage = () => {
   // Helper to format next 7 days with weekday and month abbreviation in Asia/Seoul time
   const getNextSevenDays = () => {
     const days: { key: string; label: string }[] = [];
-    const fmt = new Intl.DateTimeFormat('en-US', {
+    
+    // Format for display label
+    const labelFmt = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Seoul',
       weekday: 'short',
       month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      day: 'numeric'
     });
     
-    // Get current date in Asia/Seoul timezone
-    const now = new Date();
-    const kstNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    // Format for extracting date parts in KST
+    const dateFmt = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
     
     for (let i = 0; i < 7; i++) {
-      const date = new Date(kstNow);
-      date.setDate(kstNow.getDate() + i);
+      const date = new Date();
+      date.setDate(date.getDate() + i);
       
-      const parts = fmt.formatToParts(date);
-      const weekday = parts.find(p => p.type === 'weekday')?.value || '';
-      const month = parts.find(p => p.type === 'month')?.value || '';
-      const day = parts.find(p => p.type === 'day')?.value || '';
-      const year = parts.find(p => p.type === 'year')?.value || '';
-      
-      const label = `${weekday} ${month} ${day}`; // e.g., Mon Nov 29
-      
-      // Create date string in YYYY-MM-DD format to match stored slot dates
-      const key = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const label = labelFmt.format(date); // e.g., "Sun Jan 11"
+      const key = dateFmt.format(date); // YYYY-MM-DD format in KST timezone
       
       days.push({ key, label });
     }
@@ -128,8 +175,32 @@ export const TutorProfilePage = () => {
     const loadAvailability = async () => {
       try {
         if (!tutorId) return;
-        const data = await tutorApi.getAvailability(tutorId);
-        setAvailability(data);
+        
+        // Get next 7 days in PHT format for API query
+        const now = new Date();
+        const startDate = now.toISOString().split('T')[0];
+        const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        // Fetch raw PHT slots from the same API that BookingModal uses
+        const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
+        console.log('🗓️ Raw PHT slots from API:', slots);
+        setRawSlots(slots);
+        
+        // Convert each slot to KST for display in the grid
+        const convertedSlots = slots.map(slot => {
+          const { date, time } = convertPHTtoKST(slot.date, slot.time);
+          console.log(`🗓️ Converted: ${slot.date} ${slot.time} PHT -> ${date} ${time} KST`);
+          return {
+            date,
+            time,
+            status: 'AVAIL' as const,
+            slotId: slot.slotId // Keep slotId for booking
+          };
+        });
+        
+        console.log('🗓️ Converted KST slots:', convertedSlots);
+        console.log('🗓️ Next 7 days:', getNextSevenDays());
+        setAvailability(convertedSlots);
       } catch (err) {
         console.error('Failed to load availability', err);
       }
@@ -494,7 +565,7 @@ export const TutorProfilePage = () => {
                     <div className="timezone-note">
                       <img src="https://flagcdn.com/w40/kr.png" alt="KR" style={{ width: '24px', height: '16px', borderRadius: '3px' }} />
                       <span>Seoul Time (Asia/Seoul)</span>
-                      <span style={{ marginLeft: '8px', color: '#94a3b8' }}>(Tutor opens slots in Philippine Time 05:00–23:30)</span>
+                      <span style={{ marginLeft: '8px', color: '#94a3b8' }}>(Tutor opens slots in Philippine Time 06:00–23:30)</span>
                     </div>
                   </div>
                   <div className="schedule-grid">
@@ -512,7 +583,16 @@ export const TutorProfilePage = () => {
                           <tr key={time}>
                             <td className="time-col">{time}</td>
                             {getNextSevenDays().map((d, dayIdx) => {
-                              const dateStr = d.key;
+                              let dateStr = d.key;
+                              
+                              // For evening period: 00:00 and 00:30 slots belong to the NEXT day in KST
+                              // So when looking at column "Jan 11", we need to find slots with date "Jan 12" for 00:00/00:30
+                              if (selectedPeriod === 'evening' && (time === '00:00' || time === '00:30')) {
+                                const [year, month, day] = d.key.split('-').map(Number);
+                                const nextDay = new Date(year, month - 1, day + 1);
+                                dateStr = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+                              }
+                              
                               const slot = availability.find((s) => s.date === dateStr && s.time === time);
                               const status = slot?.status;
                               // Only show AVAIL or student's own BOOKED slots
