@@ -67,13 +67,20 @@ const SchedulePage = () => {
   // Generate current week dates
   const getWeekDates = (offset: number) => {
     const today = new Date();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - today.getDay() + 1 + (offset * 7));
+    
+    // If today is Sunday (day 0), start from the current week's Monday
+    // Otherwise, include today's date in the week view
+    const startDate = new Date(today);
+    const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // Calculate how many days back to Monday of current week
+    const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
+    startDate.setDate(today.getDate() - daysToMonday + (offset * 7));
     
     const week = [];
     for (let i = 0; i < 7; i++) {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + i);
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       week.push(date);
     }
     return week;

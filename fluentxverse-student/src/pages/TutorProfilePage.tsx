@@ -77,17 +77,29 @@ export const TutorProfilePage = () => {
       timeZone: 'Asia/Seoul',
       weekday: 'short',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      year: 'numeric'
     });
+    
+    // Get current date in Asia/Seoul timezone
+    const now = new Date();
+    const kstNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+    
     for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
+      const date = new Date(kstNow);
+      date.setDate(kstNow.getDate() + i);
+      
       const parts = fmt.formatToParts(date);
       const weekday = parts.find(p => p.type === 'weekday')?.value || '';
       const month = parts.find(p => p.type === 'month')?.value || '';
       const day = parts.find(p => p.type === 'day')?.value || '';
+      const year = parts.find(p => p.type === 'year')?.value || '';
+      
       const label = `${weekday} ${month} ${day}`; // e.g., Mon Nov 29
-      const key = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())).toISOString().split('T')[0];
+      
+      // Create date string in YYYY-MM-DD format to match stored slot dates
+      const key = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      
       days.push({ key, label });
     }
     return days;
