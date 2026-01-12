@@ -1079,7 +1079,7 @@ const StudentProfilePage = () => {
                           }}
                           title="Preview lesson"
                         >
-                          <i className="fi fi-sr-eye"></i>
+                          <i className="fi fi-sr-eye"></i>h
                         </button>
                         <i className="fi fi-sr-arrow-right"></i>
                       </button>

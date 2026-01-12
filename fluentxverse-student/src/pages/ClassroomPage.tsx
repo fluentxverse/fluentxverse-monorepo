@@ -6,6 +6,8 @@ import { initSocket, connectSocket, getSocket, destroySocket } from '../client/s
 import { useWebRTC } from '../hooks/useWebRTC';
 import PdfViewer from '../Components/PdfViewer/PdfViewer';
 import { toast, toastConfirm } from '../Components/Common/Toast';
+import { studentApi, type StudentProfile, type LessonPreferences } from '../api/student.api';
+import { lessonApi, type Lesson } from '../api/lesson.api';
 import type { ChatMessageData } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
 import './ClassroomPage.css';
@@ -271,11 +273,205 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [lessonEndedMessage, setLessonEndedMessage] = useState<string | null>(null);
   
+  // Material/Lesson state
+  const [chosenLesson, setChosenLesson] = useState<{
+    lessonId: string;
+    courseId: string;
+    title: string;
+    lessonNumber: number;
+    goal: string;
+  } | null>(null);
+  const [loadingLesson, setLoadingLesson] = useState(true);
+  
+  // Student profile state
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  
+  // Material selector state - hierarchical
+  const [availableLessons, setAvailableLessons] = useState<Lesson[]>([]);
+  const [loadingMaterials, setLoadingMaterials] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+  const [selectedLessonId, setSelectedLessonId] = useState<string>('');
+  const [showLessonRequest, setShowLessonRequest] = useState(true);
+  const [lessonViewUrl, setLessonViewUrl] = useState<string | null>(null);
+  const [loadingViewUrl, setLoadingViewUrl] = useState(false);
+  
+  // Course definitions
+  const courses = [
+    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬' },
+    { id: 'business-english', name: 'Business English', icon: '💼' },
+    { id: 'young-learners', name: 'Young Learners', icon: '🎨' },
+  ];
+  
   // File sharing state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper functions for lesson data extraction
+  const getLevelNumber = (lesson: Lesson): number => {
+    const levelBadge = lesson.lessonData?.header?.levelBadge || '';
+    const match = levelBadge.match(/\d+/);
+    return match ? parseInt(match[0], 10) : 1;
+  };
+  
+  const getChapterNumber = (lesson: Lesson): number => {
+    const chapterLabel = lesson.lessonData?.header?.chapterLabel || '';
+    const match = chapterLabel.match(/Chapter\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 1;
+  };
+  
+  const getLessonNumber = (lesson: Lesson): number => {
+    const lessonLabel = lesson.lessonData?.header?.lessonLabel || lesson.title || '';
+    const match = lessonLabel.match(/Lesson\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 1;
+  };
+
+  // Handle course selection - load lessons for that course
+  const handleCourseChange = async (courseId: string) => {
+    setSelectedCourse(courseId);
+    setSelectedLevel(null);
+    setSelectedChapter(null);
+    setSelectedLessonId('');
+    
+    if (!courseId) return;
+    
+    setLoadingMaterials(true);
+    try {
+      const result = await lessonApi.getPublishedLessons(courseId);
+      if (result.success && result.lessons) {
+        setAvailableLessons(result.lessons);
+      }
+    } catch (err) {
+      console.error('Failed to load lessons:', err);
+    } finally {
+      setLoadingMaterials(false);
+    }
+  };
+
+  // Get unique levels from available lessons
+  const availableLevels = [...new Set(availableLessons.map(l => getLevelNumber(l)))].sort((a, b) => a - b);
+  
+  // Get chapters for selected level
+  const availableChapters = selectedLevel !== null 
+    ? [...new Set(availableLessons.filter(l => getLevelNumber(l) === selectedLevel).map(l => getChapterNumber(l)))].sort((a, b) => a - b)
+    : [];
+  
+  // Get lessons for selected level and chapter
+  const filteredLessons = selectedLevel !== null && selectedChapter !== null
+    ? availableLessons.filter(l => getLevelNumber(l) === selectedLevel && getChapterNumber(l) === selectedChapter)
+    : [];
+
+  // Handle selecting a new material
+  const handleApplyMaterial = async () => {
+    if (!selectedLessonId) return;
+    
+    const selectedLesson = availableLessons.find(l => l.id === selectedLessonId);
+    if (selectedLesson) {
+      const newLesson = {
+        lessonId: selectedLesson.id,
+        courseId: selectedCourse,
+        title: selectedLesson.title,
+        lessonNumber: getLessonNumber(selectedLesson),
+        goal: selectedLesson.lessonData?.header?.goalText || ''
+      };
+      
+      setChosenLesson(newLesson);
+      
+      // Save to backend
+      try {
+        await studentApi.saveLastViewedLesson({
+          courseId: newLesson.courseId,
+          lessonId: newLesson.lessonId,
+          lessonNumber: newLesson.lessonNumber,
+          title: newLesson.title,
+          goal: newLesson.goal,
+          viewedAt: Date.now()
+        });
+      } catch (err) {
+        console.error('Failed to save lesson selection:', err);
+      }
+      
+      // Fetch the lesson viewUrl for iframe display
+      setLoadingViewUrl(true);
+      try {
+        console.log('🔍 [ClassroomPage] Fetching lesson data for ID:', selectedLesson.id);
+        console.log('🔍 [ClassroomPage] Selected lesson title:', selectedLesson.title);
+        const result = await lessonApi.getStudentLesson(selectedLesson.id);
+        console.log('🔍 [ClassroomPage] API Response:', result);
+        if (result.success && result.viewUrl) {
+          console.log('🔍 [ClassroomPage] Setting viewUrl:', result.viewUrl);
+          setLessonViewUrl(result.viewUrl);
+        }
+      } catch (err) {
+        console.error('Failed to get lesson view URL:', err);
+      } finally {
+        setLoadingViewUrl(false);
+      }
+      
+      // Reset selectors and hide lesson request to show material
+      setSelectedCourse('');
+      setSelectedLevel(null);
+      setSelectedChapter(null);
+      setSelectedLessonId('');
+      setAvailableLessons([]);
+      setShowLessonRequest(false);
+    }
+  };
+
+  // Fetch last viewed lesson and student profile on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingLesson(true);
+        
+        // Fetch both lesson and profile in parallel
+        const [lessonResponse, profileResponse] = await Promise.all([
+          studentApi.getLastViewedLesson(),
+          studentApi.getStudentProfile()
+        ]);
+        
+        if (lessonResponse.success && lessonResponse.data) {
+          const lessonData = lessonResponse.data;
+          setChosenLesson({
+            lessonId: lessonData.lessonId || '',
+            courseId: lessonData.courseId || '',
+            title: lessonData.title || '',
+            lessonNumber: lessonData.lessonNumber || 1,
+            goal: lessonData.goal || ''
+          });
+          
+          // Also fetch the lesson viewUrl for iframe display
+          if (lessonData.lessonId) {
+            try {
+              console.log('🔍 [ClassroomPage] Loading last viewed lesson ID:', lessonData.lessonId);
+              console.log('🔍 [ClassroomPage] Last viewed lesson title:', lessonData.title);
+              const lessonResult = await lessonApi.getStudentLesson(lessonData.lessonId);
+              console.log('🔍 [ClassroomPage] Last viewed API Response:', lessonResult);
+              if (lessonResult.success && lessonResult.viewUrl) {
+                console.log('🔍 [ClassroomPage] Setting viewUrl:', lessonResult.viewUrl);
+                setLessonViewUrl(lessonResult.viewUrl);
+              }
+            } catch (err) {
+              console.error('Failed to get lesson view URL:', err);
+            }
+          }
+        }
+        
+        if (profileResponse.success && profileResponse.data) {
+          setStudentProfile(profileResponse.data);
+        }
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      } finally {
+        setLoadingLesson(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   // Try to enable audio - will succeed if user has engagement history with the site
   useEffect(() => {
@@ -927,11 +1123,237 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         <div className="material-header">
           <i className="fi fi-sr-book-open-reader"></i>
           <span>Learning Material</span>
+          {chosenLesson && (
+            <button 
+              className="btn-toggle-lesson-request"
+              onClick={() => {
+                if (!showLessonRequest) {
+                  // If hidden, show the lesson request again
+                  setShowLessonRequest(true);
+                } else {
+                  // If showing, reset the dropdowns
+                  setSelectedCourse('');
+                  setSelectedLevel(null);
+                  setSelectedChapter(null);
+                  setSelectedLessonId('');
+                  setAvailableLessons([]);
+                }
+              }}
+              title="Lesson Material"
+            >
+              <i className="fi fi-sr-book-open-cover"></i>
+              Lesson Material
+            </button>
+          )}
         </div>
 
-        {/* PDF Viewer */}
-        <div className="pdf-viewer-container">
-          <PdfViewer socket={socketInstance} sessionId={currentSessionId} userType="student" />
+        {/* Chosen Material Display or PDF Viewer */}
+        <div className="material-content">
+          {loadingLesson ? (
+            <div className="material-loading">
+              <div className="spinner"></div>
+              <p>Loading your lesson...</p>
+            </div>
+          ) : chosenLesson && showLessonRequest ? (
+            <div className="lesson-request-container">
+              {/* Lesson Request Section */}
+              <div className="lesson-request-section">
+                <h2 className="lesson-request-title">Lesson Request</h2>
+                <p className="lesson-request-updated">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
+                
+                <div className="lesson-request-content">
+                  <div className="lesson-request-details">
+                    <p className="request-intro">Your lesson request details below.</p>
+                    
+                    <table className="request-table">
+                      <tbody>
+                        <tr className="request-row">
+                          <td className="request-label">Material:</td>
+                          <td className="request-value">
+                            <a 
+                              href={`/lesson/view?id=${chosenLesson.lessonId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="request-link"
+                            >
+                              {chosenLesson.title}
+                            </a>
+                          </td>
+                        </tr>
+                        <tr className="request-row">
+                          <td className="request-label">Lesson Number:</td>
+                          <td className="request-value">Lesson {chosenLesson.lessonNumber}</td>
+                        </tr>
+                        {chosenLesson.goal && (
+                          <tr className="request-row">
+                            <td className="request-label">Goal:</td>
+                            <td className="request-value">{chosenLesson.goal}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  {/* Student Preferences Sidebar */}
+                  <div className="student-preferences-sidebar">
+                    <div className="preference-section">
+                      <h4 className="preference-title">Student Preferences</h4>
+                      <p className="preference-item">Camera: {studentProfile?.lessonPreferences?.preferCameraOn !== false ? 'On' : 'Off'}</p>
+                      <p className="preference-item">Proficiency: {studentProfile?.currentProficiency || 'Not set'}</p>
+                    </div>
+                    
+                    <div className="preference-section">
+                      <h4 className="preference-title">Error Correction</h4>
+                      <p className="preference-item">
+                        {studentProfile?.lessonPreferences?.errorCorrection === 'proactively' 
+                          ? 'Please correct my errors proactively'
+                          : studentProfile?.lessonPreferences?.errorCorrection === 'during_feedback'
+                          ? 'Please correct errors during feedback time'
+                          : 'Tutor\'s choice'}
+                      </p>
+                    </div>
+                    
+                    {studentProfile?.lessonPreferences?.otherRequests && (
+                      <div className="preference-section">
+                        <h4 className="preference-title">Other Request</h4>
+                        <p className="preference-item">{studentProfile.lessonPreferences.otherRequests}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Hierarchical Material Selector */}
+              <div className="material-selector-section">
+                <label className="material-selector-label">Select a Material:</label>
+                
+                {/* Course Selector */}
+                <div className="material-selector-row">
+                  <select 
+                    className="material-selector-dropdown"
+                    value={selectedCourse}
+                    onChange={(e) => handleCourseChange((e.target as HTMLSelectElement).value)}
+                  >
+                    <option value="">-- Select Course --</option>
+                    {courses.map(course => (
+                      <option key={course.id} value={course.id}>{course.icon} {course.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Level Selector - shows when course is selected */}
+                {selectedCourse && availableLevels.length > 0 && (
+                  <div className="material-selector-row">
+                    <select 
+                      className="material-selector-dropdown"
+                      value={selectedLevel ?? ''}
+                      onChange={(e) => {
+                        const val = (e.target as HTMLSelectElement).value;
+                        setSelectedLevel(val ? parseInt(val) : null);
+                        setSelectedChapter(null);
+                        setSelectedLessonId('');
+                      }}
+                    >
+                      <option value="">-- Select Level --</option>
+                      {availableLevels.map(level => (
+                        <option key={level} value={level}>Level {level}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Chapter Selector - shows when level is selected */}
+                {selectedLevel !== null && availableChapters.length > 0 && (
+                  <div className="material-selector-row">
+                    <select 
+                      className="material-selector-dropdown"
+                      value={selectedChapter ?? ''}
+                      onChange={(e) => {
+                        const val = (e.target as HTMLSelectElement).value;
+                        setSelectedChapter(val ? parseInt(val) : null);
+                        setSelectedLessonId('');
+                      }}
+                    >
+                      <option value="">-- Select Chapter --</option>
+                      {availableChapters.map(chapter => (
+                        <option key={chapter} value={chapter}>Chapter {chapter}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Lesson Selector - shows when chapter is selected */}
+                {selectedChapter !== null && filteredLessons.length > 0 && (
+                  <div className="material-selector-row">
+                    <select 
+                      className="material-selector-dropdown"
+                      value={selectedLessonId}
+                      onChange={(e) => setSelectedLessonId((e.target as HTMLSelectElement).value)}
+                    >
+                      <option value="">-- Select Lesson --</option>
+                      {filteredLessons.map(lesson => (
+                        <option key={lesson.id} value={lesson.id}>
+                          Lesson {getLessonNumber(lesson)}: {lesson.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Loading indicator */}
+                {loadingMaterials && (
+                  <div className="material-loading-inline">
+                    <div className="spinner-small"></div>
+                    <span>Loading...</span>
+                  </div>
+                )}
+                
+                {/* Select Button - shows when a lesson is selected */}
+                {selectedLessonId && (
+                  <div className="material-selector-row">
+                    <button 
+                      className="btn-search-material"
+                      onClick={handleApplyMaterial}
+                    >
+                      <i className="fi fi-sr-check"></i>
+                      Select Material
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : chosenLesson && !showLessonRequest ? (
+            <div className="lesson-material-view">
+              {loadingViewUrl ? (
+                <div className="material-loading">
+                  <div className="spinner"></div>
+                  <p>Loading lesson...</p>
+                </div>
+              ) : lessonViewUrl ? (
+                <iframe 
+                  src={lessonViewUrl}
+                  className="lesson-material-iframe"
+                  title={chosenLesson.title}
+                />
+              ) : (
+                <div className="material-loading">
+                  <p>Unable to load lesson view</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="no-material-selected">
+              <div className="empty-material-icon">
+                <i className="fi fi-sr-book-open-cover"></i>
+              </div>
+              <h3>No Lesson Selected</h3>
+              <p>Choose a lesson from your profile to use during your class</p>
+              <a href="/profile" className="btn-select-material">
+                <i className="fi fi-sr-plus"></i>
+                Select a Lesson
+              </a>
+            </div>
+          )}
         </div>
       </div>
 

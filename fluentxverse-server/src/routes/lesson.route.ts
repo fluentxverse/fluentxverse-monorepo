@@ -98,6 +98,7 @@ function generateLessonHtml(lesson: LessonMaterial, imageUrl?: string): string {
         var viewer = new URL('${dashboardBase.replace(/'/g, "\\'")}');
         viewer.pathname = (viewer.pathname || '/').replace(/\/$/, '') + '/lesson-material-maker';
         viewer.searchParams.set('src', src);
+        viewer.searchParams.set('preview', '1');
         // Preserve print flow if present
         var print = new URLSearchParams(window.location.search).get('print');
         if (print === '1') viewer.searchParams.set('print', '1');
@@ -1747,7 +1748,7 @@ export default new Elysia({ prefix: '/lesson' })
         
         // Construct the student view URL for the dashboard
         const studentDataUrl = `${API_BASE}/lesson/files${dbLesson.storagePath}/student-data.json`;
-        const viewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(studentDataUrl)}&studentView=1`;
+        const viewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(studentDataUrl)}&studentView=1&preview=1`;
         
         if (studentData) {
           return {
@@ -1788,7 +1789,7 @@ export default new Elysia({ prefix: '/lesson' })
       
       // Legacy URL construction
       const legacyStudentDataUrl = `${API_BASE}/lesson/files/lessons/${lessonId}/student-data.json`;
-      const legacyViewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(legacyStudentDataUrl)}&studentView=1`;
+      const legacyViewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(legacyStudentDataUrl)}&studentView=1&preview=1`;
       
       if (res.ok) {
         const studentData = await res.json();
@@ -1846,7 +1847,7 @@ export default new Elysia({ prefix: '/lesson' })
       if (dbLesson) {
         // Construct the tutor view URL for the dashboard (no studentView param = tutor view)
         const tutorDataUrl = `${API_BASE}/lesson/files${dbLesson.storagePath}/tutor-data.json`;
-        const viewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(tutorDataUrl)}`;
+        const viewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(tutorDataUrl)}&preview=1`;
         
         // Try to get tutor data from SeaweedFS
         const tutorData = await fetchFromSeaweed(`${dbLesson.storagePath}/tutor-data.json`);
@@ -1888,7 +1889,7 @@ export default new Elysia({ prefix: '/lesson' })
       
       // Fallback to SeaweedFS only (for legacy lessons)
       const legacyTutorDataUrl = `${API_BASE}/lesson/files/lessons/${lessonId}/tutor-data.json`;
-      const legacyViewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(legacyTutorDataUrl)}`;
+      const legacyViewUrl = `${dashboardBase}/lesson-material-maker?src=${encodeURIComponent(legacyTutorDataUrl)}&preview=1`;
       
       const tutorJsonUrl = `${FILER_BASE}/lessons/${lessonId}/tutor-data.json`;
       let res = await fetch(tutorJsonUrl);
@@ -2539,6 +2540,7 @@ export default new Elysia({ prefix: '/lesson' })
         const viewer = new URL(dashboardBase);
         viewer.pathname = (viewer.pathname || '/').replace(/\/$/, '') + '/lesson-material-maker';
         viewer.searchParams.set('src', tutorDataUrl.toString());
+        viewer.searchParams.set('preview', '1');
         if (reqUrl.searchParams.get('print') === '1') {
           viewer.searchParams.set('print', '1');
         }

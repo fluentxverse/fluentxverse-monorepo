@@ -115,3 +115,12 @@ export const getLastViewedLesson = async (): Promise<{ success: boolean; data?: 
     return { success: false, error: error.message || 'Failed to get last viewed lesson' };
   }
 };
+
+// Export as a unified API object
+export const studentApi = {
+  getStudentProfile,
+  updateLessonPreferences,
+  updateAboutMe,
+  saveLastViewedLesson,
+  getLastViewedLesson,
+};

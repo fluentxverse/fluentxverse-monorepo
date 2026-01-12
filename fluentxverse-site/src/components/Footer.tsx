@@ -1,4 +1,4 @@
-interface FooterProps {
+hinterface FooterProps {
   navigateTo: (page: 'home' | 'about') => void;
 }
 

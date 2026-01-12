@@ -1,556 +1,981 @@
-import { useMemo } from 'preact/hooks';
+/**
+ * LessonRenderer - Unified component for rendering lesson materials
+ * Receives JSON data and renders all section types accordingly
+ */
+import { useMemo, useState } from 'preact/hooks';
+import type {
+  LessonMaterial,
+  LessonSection,
+  LessonRendererProps,
+  VocabCard,
+  PronunciationColumn,
+  GrammarRule,
+  DialogueLine,
+  TriviaExample,
+  PracticeItem,
+  ConversationLine,
+  ChallengeQuestion,
+  TopicBox,
+  FeedbackGuideRow,
+  ReadingDialogueLine,
+  DiscussionQuestion,
+  LessonGoalStep,
+} from '../../types/lesson.types';
 import './LessonRenderer.css';
 
-interface LessonHeader {
-  levelBadge: string;
-  chapterLabel: string;
-  lessonLabel: string;
-  goalText: string;
-  goalSubtext: string;
-  backgroundImage: string;
-  overlayColor: string;
-}
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
-interface DialogueLine {
-  id?: string;
-  speaker: string;
-  japanese: string;
-  romaji: string;
-  english: string;
-}
+export default function LessonRenderer({
+  data,
+  mode = 'student',
+  showTutorSidebar = false,
+  currentSectionIndex = 0,
+  onSectionChange,
+}: LessonRendererProps) {
+  const { header, sections } = data;
+  const [activeSection, setActiveSection] = useState(currentSectionIndex);
 
-interface PracticeQuestion {
-  id?: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-  explanationJp?: string;
-}
-
-interface VocabularyItem {
-  id?: string;
-  word: string;
-  reading?: string;
-  meaning: string;
-  example?: string;
-  exampleMeaning?: string;
-}
-
-interface GrammarItem {
-  id?: string;
-  pattern: string;
-  explanation: string;
-  explanationJp?: string;
-  examples: Array<{
-    japanese: string;
-    reading?: string;
-    english: string;
-  }>;
-}
-
-interface ExerciseItem {
-  id?: string;
-  type: 'fill-blank' | 'matching' | 'translation' | 'multiple-choice';
-  question: string;
-  answer?: string;
-  options?: string[];
-  correctAnswer?: number;
-  explanation?: string;
-}
-
-interface LessonSection {
-  id: string;
-  sectionNumber: number;
-  sectionTitle: string;
-  sectionType?: 'introduce' | 'dialogue' | 'question' | 'trivia' | 'practice' | 'feedback' | 'challenge2' | 'pronunciation' | 'grammar';
-  explanationEn?: string;
-  explanationJp?: string;
-  sectionImage?: string;
-  dialogueLines?: DialogueLine[];
-  questionText?: string;
-  questionTextJp?: string;
-  questionChoices?: string[];
-  questionAnswer?: string;
-  questionAnswerIndex?: number;
-  questionExplanation?: string;
-  questionExplanationJp?: string;
-  triviaTitle?: string;
-  triviaTitleJp?: string;
-  triviaFact?: string;
-  triviaFactJp?: string;
-  triviaImage?: string;
-  practiceQuestions?: PracticeQuestion[];
-  tutorTipTitle?: string;
-  tutorTip?: string;
-  feedbackText?: string;
-  feedbackTextJp?: string;
-  feedbackHighlight?: string;
-  challenge2Title?: string;
-  challenge2Explanation?: string;
-  challenge2ExplanationJp?: string;
-  pronunciationWord?: string;
-  pronunciationRomaji?: string;
-  pronunciationMeaning?: string;
-  pronunciationTip?: string;
-  pronunciationAudio?: string;
-  grammarPattern?: string;
-  grammarExplanation?: string;
-  grammarExplanationJp?: string;
-  grammarExamples?: Array<{ japanese: string; reading?: string; english: string }>;
-}
-
-interface LessonMaterial {
-  version?: number;
-  header: LessonHeader;
-  sections: LessonSection[];
-  vocabulary?: VocabularyItem[];
-  grammar?: GrammarItem[];
-  exercises?: ExerciseItem[];
-}
-
-interface LessonRendererProps {
-  lessonData: LessonMaterial;
-  viewMode?: 'student' | 'tutor';
-}
-
-export default function LessonRenderer({ lessonData, viewMode = 'tutor' }: LessonRendererProps) {
-  const { header, sections, vocabulary, grammar, exercises } = lessonData;
-
-  // Filter out feedback sections in student view
+  // Filter sections based on mode (hide feedback from students)
   const visibleSections = useMemo(() => {
-    if (viewMode === 'student') {
+    if (mode === 'student') {
       return sections.filter(s => s.sectionType !== 'feedback');
     }
     return sections;
-  }, [sections, viewMode]);
+  }, [sections, mode]);
 
-  // Render section content based on type
-  const renderSectionContent = (section: LessonSection) => {
-    const sectionType = section.sectionType || 'introduce';
+  const handleSectionClick = (index: number) => {
+    setActiveSection(index);
+    onSectionChange?.(index);
+  };
 
-    switch (sectionType) {
+  return (
+    <div className={`lr-container lr-mode-${mode}`}>
+      {/* Header */}
+      <LessonHeaderComponent header={header} />
+
+      {/* Navigation */}
+      <nav className="lr-nav">
+        {visibleSections.map((section, idx) => (
+          <button
+            key={section.id}
+            className={`lr-nav-item ${idx === activeSection ? 'active' : ''}`}
+            onClick={() => handleSectionClick(idx)}
+          >
+            <span className="lr-nav-num">{section.sectionNumber}</span>
+            <span className="lr-nav-title">{section.sectionTitle || section.stepTitle || `Section ${idx + 1}`}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* Content Area */}
+      <div className="lr-content-wrapper">
+        {/* Main Content */}
+        <main className="lr-main">
+          {visibleSections.map((section, idx) => (
+            <SectionRenderer
+              key={section.id}
+              section={section}
+              isActive={idx === activeSection}
+              mode={mode}
+            />
+          ))}
+        </main>
+
+        {/* Tutor Sidebar */}
+        {mode === 'tutor' && showTutorSidebar && visibleSections[activeSection] && (
+          <TutorSidebar section={visibleSections[activeSection]} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// HEADER COMPONENT
+// ============================================================================
+
+function LessonHeaderComponent({ header }: { header: LessonMaterial['header'] }) {
+  const bgStyle = header.backgroundImage
+    ? { backgroundImage: `url(${header.backgroundImage})` }
+    : {};
+
+  return (
+    <header className="lr-header" style={bgStyle}>
+      <div className="lr-header-overlay" style={{ backgroundColor: header.overlayColor }} />
+      <div className="lr-header-content">
+        <span className="lr-level-badge">{header.levelBadge}</span>
+        <p className="lr-chapter">{header.chapterLabel}</p>
+        <h1 className="lr-lesson-title">{header.lessonLabel}</h1>
+        <div className="lr-goal">
+          <p className="lr-goal-text">{header.goalText}</p>
+          <p className="lr-goal-subtext">{header.goalSubtext}</p>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ============================================================================
+// SECTION RENDERER - Routes to correct section type
+// ============================================================================
+
+function SectionRenderer({
+  section,
+  isActive,
+  mode,
+}: {
+  section: LessonSection;
+  isActive: boolean;
+  mode: 'student' | 'tutor';
+}) {
+  if (!isActive) return null;
+
+  const renderContent = () => {
+    switch (section.sectionType) {
       case 'introduce':
-        return (
-          <>
-            {section.explanationEn && (
-              <p className="lr-explanation">{section.explanationEn}</p>
-            )}
-            {section.explanationJp && (
-              <p className="lr-explanation-jp">{section.explanationJp}</p>
-            )}
-            {section.sectionImage && (
-              <div className="lr-section-image">
-                <img src={section.sectionImage} alt="Section visual" />
-              </div>
-            )}
-            {/* Tutor Tips - only in tutor view */}
-            {viewMode === 'tutor' && section.tutorTip && (
-              <div className="lr-tutor-tip">
-                <div className="lr-tutor-tip-header">
-                  <i className="fi-sr-lightbulb-on"></i>
-                  <span>{section.tutorTipTitle || 'Tutor Tip'}</span>
-                </div>
-                <p>{section.tutorTip}</p>
-              </div>
-            )}
-          </>
-        );
-
-      case 'dialogue':
-        return (
-          <div className="lr-dialogue-container">
-            {section.dialogueLines?.map((line, idx) => (
-              <div key={line.id || idx} className="lr-dialogue-line">
-                <div className="lr-dialogue-speaker">{line.speaker}</div>
-                <div className="lr-dialogue-content">
-                  <p className="lr-dialogue-japanese">{line.japanese}</p>
-                  {line.romaji && <p className="lr-dialogue-romaji">{line.romaji}</p>}
-                  <p className="lr-dialogue-english">{line.english}</p>
-                </div>
-              </div>
-            ))}
-            {/* Tutor Tips - only in tutor view */}
-            {viewMode === 'tutor' && section.tutorTip && (
-              <div className="lr-tutor-tip">
-                <div className="lr-tutor-tip-header">
-                  <i className="fi-sr-lightbulb-on"></i>
-                  <span>{section.tutorTipTitle || 'Tutor Tip'}</span>
-                </div>
-                <p>{section.tutorTip}</p>
-              </div>
-            )}
-          </div>
-        );
-
+        return <IntroduceSection section={section} />;
+      case 'vocabulary':
+        return <VocabularySection section={section} />;
       case 'question':
-        return (
-          <div className="lr-question-container">
-            {section.questionText && (
-              <p className="lr-question-text">{section.questionText}</p>
-            )}
-            {section.questionTextJp && (
-              <p className="lr-question-text-jp">{section.questionTextJp}</p>
-            )}
-            {section.questionChoices && section.questionChoices.length > 0 && (
-              <div className="lr-question-choices">
-                {section.questionChoices.map((choice, idx) => (
-                  <div key={idx} className={`lr-question-choice ${viewMode === 'tutor' && section.questionAnswerIndex === idx ? 'correct' : ''}`}>
-                    <span className="lr-choice-letter">{String.fromCharCode(65 + idx)}</span>
-                    <span className="lr-choice-text">{choice}</span>
-                    {viewMode === 'tutor' && section.questionAnswerIndex === idx && (
-                      <i className="fi-sr-check lr-correct-icon"></i>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            {section.questionAnswer && (
-              <div className="lr-question-answer">
-                <span className="lr-answer-label">Answer:</span>
-                <span className="lr-answer-text">{section.questionAnswer}</span>
-              </div>
-            )}
-            {(section.questionExplanation || section.questionExplanationJp) && (
-              <div className="lr-question-explanation">
-                {section.questionExplanation && <p>{section.questionExplanation}</p>}
-                {section.questionExplanationJp && <p className="lr-jp">{section.questionExplanationJp}</p>}
-              </div>
-            )}
-            {/* Tutor Tips - only in tutor view */}
-            {viewMode === 'tutor' && section.tutorTip && (
-              <div className="lr-tutor-tip">
-                <div className="lr-tutor-tip-header">
-                  <i className="fi-sr-lightbulb-on"></i>
-                  <span>{section.tutorTipTitle || 'Tutor Tip'}</span>
-                </div>
-                <p>{section.tutorTip}</p>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'trivia':
-        return (
-          <div className="lr-trivia-container">
-            <div className="lr-trivia-badge">
-              <i className="fi-sr-bulb"></i>
-              <span>Did You Know?</span>
-            </div>
-            {section.triviaTitle && (
-              <h4 className="lr-trivia-title">{section.triviaTitle}</h4>
-            )}
-            {section.triviaTitleJp && (
-              <h5 className="lr-trivia-title-jp">{section.triviaTitleJp}</h5>
-            )}
-            {section.triviaFact && (
-              <p className="lr-trivia-fact">{section.triviaFact}</p>
-            )}
-            {section.triviaFactJp && (
-              <p className="lr-trivia-fact-jp">{section.triviaFactJp}</p>
-            )}
-            {section.triviaImage && (
-              <div className="lr-trivia-image">
-                <img src={section.triviaImage} alt="Trivia illustration" />
-              </div>
-            )}
-          </div>
-        );
-
-      case 'practice':
-        return (
-          <div className="lr-practice-container">
-            {section.practiceQuestions?.map((q, idx) => (
-              <div key={q.id || idx} className="lr-practice-question">
-                <div className="lr-practice-number">Q{idx + 1}</div>
-                <div className="lr-practice-content">
-                  <p className="lr-practice-text">{q.question}</p>
-                  {q.options && q.options.length > 0 && (
-                    <div className="lr-practice-options">
-                      {q.options.map((opt, optIdx) => (
-                        <div key={optIdx} className={`lr-practice-option ${viewMode === 'tutor' && q.correctAnswer === optIdx ? 'correct' : ''}`}>
-                          <span className="lr-option-letter">{String.fromCharCode(65 + optIdx)}</span>
-                          <span className="lr-option-text">{opt}</span>
-                          {viewMode === 'tutor' && q.correctAnswer === optIdx && (
-                            <i className="fi-sr-check lr-correct-icon"></i>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {/* Show explanation in tutor view */}
-                  {viewMode === 'tutor' && (q.explanation || q.explanationJp) && (
-                    <div className="lr-practice-explanation">
-                      {q.explanation && <p>{q.explanation}</p>}
-                      {q.explanationJp && <p className="lr-jp">{q.explanationJp}</p>}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'feedback':
-        // Only show in tutor view
-        if (viewMode === 'student') return null;
-        return (
-          <div className="lr-feedback-container">
-            <div className="lr-feedback-badge">
-              <i className="fi-sr-comment-alt"></i>
-              <span>Tutor Feedback Guide</span>
-            </div>
-            {section.feedbackText && (
-              <p className="lr-feedback-text">{section.feedbackText}</p>
-            )}
-            {section.feedbackTextJp && (
-              <p className="lr-feedback-text-jp">{section.feedbackTextJp}</p>
-            )}
-            {section.feedbackHighlight && (
-              <div className="lr-feedback-highlight">{section.feedbackHighlight}</div>
-            )}
-          </div>
-        );
-
-      case 'challenge2':
-        return (
-          <div className="lr-challenge-container">
-            <div className="lr-challenge-badge">
-              <i className="fi-sr-trophy"></i>
-              <span>Challenge</span>
-            </div>
-            {section.challenge2Title && (
-              <h4 className="lr-challenge-title">{section.challenge2Title}</h4>
-            )}
-            {section.challenge2Explanation && (
-              <p className="lr-challenge-explanation">{section.challenge2Explanation}</p>
-            )}
-            {section.challenge2ExplanationJp && (
-              <p className="lr-challenge-explanation-jp">{section.challenge2ExplanationJp}</p>
-            )}
-          </div>
-        );
-
+        return <QuestionSection section={section} />;
       case 'pronunciation':
-        return (
-          <div className="lr-pronunciation-container">
-            <div className="lr-pronunciation-badge">
-              <i className="fi-sr-volume"></i>
-              <span>Pronunciation</span>
-            </div>
-            {section.pronunciationWord && (
-              <div className="lr-pronunciation-word">{section.pronunciationWord}</div>
-            )}
-            {section.pronunciationRomaji && (
-              <div className="lr-pronunciation-romaji">{section.pronunciationRomaji}</div>
-            )}
-            {section.pronunciationMeaning && (
-              <div className="lr-pronunciation-meaning">{section.pronunciationMeaning}</div>
-            )}
-            {section.pronunciationTip && (
-              <div className="lr-pronunciation-tip">
-                <i className="fi-sr-info"></i>
-                <span>{section.pronunciationTip}</span>
-              </div>
-            )}
-          </div>
-        );
-
+        return <PronunciationSection section={section} />;
       case 'grammar':
-        return (
-          <div className="lr-grammar-section">
-            {section.grammarPattern && (
-              <div className="lr-grammar-pattern">{section.grammarPattern}</div>
-            )}
-            {section.grammarExplanation && (
-              <p className="lr-grammar-explanation">{section.grammarExplanation}</p>
-            )}
-            {section.grammarExplanationJp && (
-              <p className="lr-grammar-explanation-jp">{section.grammarExplanationJp}</p>
-            )}
-            {section.grammarExamples && section.grammarExamples.length > 0 && (
-              <div className="lr-grammar-examples">
-                {section.grammarExamples.map((ex, idx) => (
-                  <div key={idx} className="lr-grammar-example">
-                    <p className="lr-example-jp">{ex.japanese}</p>
-                    {ex.reading && <p className="lr-example-romaji">{ex.reading}</p>}
-                    <p className="lr-example-en">{ex.english}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-
+        return <GrammarSection section={section} />;
+      case 'dialogue':
+        return <DialogueSection section={section} />;
+      case 'trivia':
+        return <TriviaSection section={section} />;
+      case 'practice':
+        return <PracticeSection section={section} />;
+      case 'produce':
+        return <ProduceSection section={section} />;
+      case 'challenge':
+        return <ChallengeSection section={section} />;
+      case 'challenge2':
+        return <Challenge2Section section={section} />;
+      case 'feedback':
+        return mode === 'tutor' ? <FeedbackSection section={section} /> : null;
+      case 'listening':
+        return <ListeningSection section={section} />;
+      case 'listeningChallenge':
+        return <ListeningChallengeSection section={section} />;
+      case 'reading':
+        return <ReadingSection section={section} />;
+      case 'discussion-questions':
+        return <DiscussionQuestionsSection section={section} />;
       default:
-        return (
-          <>
-            {section.explanationEn && <p className="lr-explanation">{section.explanationEn}</p>}
-            {section.explanationJp && <p className="lr-explanation-jp">{section.explanationJp}</p>}
-          </>
-        );
+        return <GenericSection section={section} />;
     }
   };
 
   return (
-    <div className="lr-container">
-      {/* View Mode Indicator for Tutor */}
-      {viewMode === 'tutor' && (
-        <div className="lr-view-mode-badge">
-          <i className="fi-sr-graduation-cap"></i>
-          <span>Tutor View</span>
+    <section className={`lr-section lr-section-${section.sectionType}`} id={section.id}>
+      {section.sectionTitle && (
+        <div className="lr-section-header">
+          <span className="lr-section-number">{section.sectionNumber}</span>
+          <h2 className="lr-section-title">{section.sectionTitle}</h2>
+        </div>
+      )}
+      {section.stepTitle && <h3 className="lr-step-title">{section.stepTitle}</h3>}
+      {renderContent()}
+    </section>
+  );
+}
+
+// ============================================================================
+// INTRODUCE SECTION
+// ============================================================================
+
+function IntroduceSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-introduce">
+      {section.explanationEn && <p className="lr-text-en">{section.explanationEn}</p>}
+      {section.explanationJp && <p className="lr-text-jp">{section.explanationJp}</p>}
+      {section.sectionImage && (
+        <div className="lr-image-wrapper">
+          <img src={section.sectionImage} alt="" />
+        </div>
+      )}
+      {section.importantNote && (
+        <div className="lr-important-note">
+          <i className="ri-information-line" />
+          <p>{section.importantNote}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// VOCABULARY SECTION
+// ============================================================================
+
+function VocabularySection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-vocabulary">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.vocabCards && section.vocabCards.length > 0 && (
+        <div className="lr-vocab-grid">
+          {section.vocabCards.map((card) => (
+            <VocabCardItem key={card.id} card={card} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VocabCardItem({ card }: { card: VocabCard }) {
+  return (
+    <div className="lr-vocab-card">
+      {card.image && (
+        <div className="lr-vocab-image">
+          <img src={card.image} alt={card.wordEn} />
+        </div>
+      )}
+      <div className="lr-vocab-text">
+        <span className="lr-vocab-en">{card.wordEn}</span>
+        <span className="lr-vocab-jp">{card.wordJp}</span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// QUESTION SECTION (Image cards with labels)
+// ============================================================================
+
+function QuestionSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-question">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.imageCards && section.imageCards.length > 0 && (
+        <div className="lr-image-cards-grid">
+          {section.imageCards.map((card) => (
+            <div key={card.id} className="lr-image-card">
+              {card.image && <img src={card.image} alt={card.label} />}
+              <span className="lr-image-label">{card.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// PRONUNCIATION SECTION
+// ============================================================================
+
+function PronunciationSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-pronunciation">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.pronunciationColumns && section.pronunciationColumns.length > 0 && (
+        <div className="lr-pronunciation-columns">
+          {section.pronunciationColumns.map((col) => (
+            <PronunciationColumnItem key={col.id} column={col} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PronunciationColumnItem({ column }: { column: PronunciationColumn }) {
+  return (
+    <div className="lr-pronunciation-col">
+      <div className="lr-sound-label">{column.soundLabel}</div>
+      {column.image && (
+        <div className="lr-mouth-image">
+          <img src={column.image} alt={column.soundLabel} />
+        </div>
+      )}
+      <ul className="lr-pronunciation-words">
+        {column.words.map((word) => (
+          <li key={word.id}>
+            <span className="lr-word-en">{word.wordEn}</span>
+            <span className="lr-word-jp">{word.wordJp}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ============================================================================
+// GRAMMAR SECTION
+// ============================================================================
+
+function GrammarSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-grammar">
+      {section.instructionEn && <p className="lr-instruction-en lr-grammar-tip">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.grammarRules && section.grammarRules.length > 0 && (
+        <div className="lr-grammar-rules">
+          {section.grammarRules.map((rule) => (
+            <GrammarRuleItem key={rule.id} rule={rule} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GrammarRuleItem({ rule }: { rule: GrammarRule }) {
+  return (
+    <div className="lr-grammar-rule">
+      <p className="lr-rule-en">{rule.ruleEn}</p>
+      <p className="lr-rule-jp">{rule.ruleJp}</p>
+      {rule.examples.length > 0 && (
+        <div className="lr-grammar-examples">
+          {rule.examples.map((ex) => (
+            <div key={ex.id} className="lr-grammar-example">
+              <p className="lr-example-en">
+                {highlightWords(ex.sentenceEn, ex.boldWords || [])}
+              </p>
+              <p className="lr-example-jp">{ex.sentenceJp}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper to bold specific words
+function highlightWords(text: string, words: string[]) {
+  if (!words.length) return <>{text}</>;
+
+  let result = text;
+  words.forEach((word) => {
+    const regex = new RegExp(`(${word})`, 'gi');
+    result = result.replace(regex, '|||$1|||');
+  });
+
+  const segments = result.split('|||');
+  return (
+    <>
+      {segments.map((seg, i) =>
+        words.some((w) => w.toLowerCase() === seg.toLowerCase()) ? (
+          <strong key={i}>{seg}</strong>
+        ) : (
+          seg
+        )
+      )}
+    </>
+  );
+}
+
+// ============================================================================
+// DIALOGUE SECTION
+// ============================================================================
+
+function DialogueSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-dialogue">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.dialogueImage && (
+        <div className="lr-dialogue-image">
+          <img src={section.dialogueImage} alt="Scene" />
         </div>
       )}
 
-      {/* Header */}
-      <div 
-        className="lr-header" 
-        style={{ 
-          backgroundImage: header.backgroundImage ? `url(${header.backgroundImage})` : undefined,
-          background: !header.backgroundImage ? 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)' : undefined
-        }}
-      >
-        <div className="lr-header-overlay" style={{ backgroundColor: header.overlayColor || 'rgba(0,0,0,0.45)' }} />
-        <div className="lr-header-content">
-          <div className="lr-header-top">
-            <span className="lr-level-badge">{header.levelBadge || 'Level 1'}</span>
-            <span className="lr-header-divider">|</span>
-            <span className="lr-chapter-label">{header.chapterLabel}</span>
-          </div>
-          <h1 className="lr-lesson-label">{header.lessonLabel}</h1>
-          <div className="lr-goal-row">
-            <span className="lr-goal-badge">Goal</span>
-            <span className="lr-goal-text">{header.goalText}</span>
-          </div>
-          {header.goalSubtext && (
-            <p className="lr-goal-subtext">{header.goalSubtext}</p>
-          )}
+      {section.dialogueLines && section.dialogueLines.length > 0 && (
+        <div className="lr-dialogue-lines">
+          {section.dialogueLines.map((line) => (
+            <DialogueLineItem key={line.id} line={line} />
+          ))}
         </div>
-      </div>
+      )}
+    </div>
+  );
+}
 
-      {/* Body - Sections */}
-      <div className="lr-body">
-        {visibleSections.map((section) => (
-          <div key={section.id} className={`lr-section lr-section-${section.sectionType || 'introduce'}`}>
-            {/* Section Title - hide for some section types */}
-            {section.sectionType !== 'question' && 
-             section.sectionType !== 'trivia' && 
-             section.sectionType !== 'challenge2' &&
-             section.sectionType !== 'pronunciation' &&
-             section.sectionType !== 'grammar' &&
-             !(section.sectionType === 'practice' && !section.sectionTitle) && (
-              <div className="lr-section-header">
-                <span className="lr-section-number">{section.sectionNumber}</span>
-                <h2 className="lr-section-title">{section.sectionTitle}</h2>
-              </div>
-            )}
-            <div className="lr-section-content">
-              {renderSectionContent(section)}
-            </div>
-          </div>
-        ))}
+function DialogueLineItem({ line }: { line: DialogueLine }) {
+  return (
+    <div className={`lr-dialogue-line ${line.isItalic ? 'italic' : ''}`}>
+      <span className="lr-speaker">{line.speaker}</span>
+      <span className="lr-line-text">{line.lineEn}</span>
+    </div>
+  );
+}
 
-        {/* Vocabulary Section */}
-        {vocabulary && vocabulary.length > 0 && (
-          <div className="lr-section lr-section-vocabulary">
-            <div className="lr-section-header">
-              <span className="lr-section-number">
-                <i className="fi-sr-book-alt"></i>
-              </span>
-              <h2 className="lr-section-title">Vocabulary</h2>
-            </div>
-            <div className="lr-vocabulary-grid">
-              {vocabulary.map((item, idx) => (
-                <div key={item.id || idx} className="lr-vocab-card">
-                  <div className="lr-vocab-word">{item.word}</div>
-                  {item.reading && <div className="lr-vocab-reading">{item.reading}</div>}
-                  <div className="lr-vocab-meaning">{item.meaning}</div>
-                  {item.example && (
-                    <div className="lr-vocab-example">
-                      <p className="lr-vocab-example-jp">{item.example}</p>
-                      {item.exampleMeaning && <p className="lr-vocab-example-en">{item.exampleMeaning}</p>}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+// ============================================================================
+// TRIVIA SECTION
+// ============================================================================
 
-        {/* Grammar Section */}
-        {grammar && grammar.length > 0 && (
-          <div className="lr-section lr-section-grammar-list">
-            <div className="lr-section-header">
-              <span className="lr-section-number">
-                <i className="fi-sr-pencil"></i>
-              </span>
-              <h2 className="lr-section-title">Grammar Points</h2>
-            </div>
-            <div className="lr-grammar-list">
-              {grammar.map((item, idx) => (
-                <div key={item.id || idx} className="lr-grammar-card">
-                  <div className="lr-grammar-pattern">{item.pattern}</div>
-                  <p className="lr-grammar-explanation">{item.explanation}</p>
-                  {item.explanationJp && <p className="lr-grammar-explanation-jp">{item.explanationJp}</p>}
-                  {item.examples && item.examples.length > 0 && (
-                    <div className="lr-grammar-examples">
-                      {item.examples.map((ex, exIdx) => (
-                        <div key={exIdx} className="lr-grammar-example">
-                          <p className="lr-example-jp">{ex.japanese}</p>
-                          {ex.reading && <p className="lr-example-romaji">{ex.reading}</p>}
-                          <p className="lr-example-en">{ex.english}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+function TriviaSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-trivia">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
 
-        {/* Exercises Section */}
-        {exercises && exercises.length > 0 && (
-          <div className="lr-section lr-section-exercises">
-            <div className="lr-section-header">
-              <span className="lr-section-number">
-                <i className="fi-sr-list-check"></i>
-              </span>
-              <h2 className="lr-section-title">Exercises</h2>
-            </div>
-            <div className="lr-exercises-list">
-              {exercises.map((item, idx) => (
-                <div key={item.id || idx} className="lr-exercise-card">
-                  <div className="lr-exercise-number">#{idx + 1}</div>
-                  <div className="lr-exercise-content">
-                    <p className="lr-exercise-question">{item.question}</p>
-                    {item.options && item.options.length > 0 && (
-                      <div className="lr-exercise-options">
-                        {item.options.map((opt, optIdx) => (
-                          <div key={optIdx} className={`lr-exercise-option ${viewMode === 'tutor' && item.correctAnswer === optIdx ? 'correct' : ''}`}>
-                            <span className="lr-option-letter">{String.fromCharCode(65 + optIdx)}</span>
-                            <span>{opt}</span>
-                            {viewMode === 'tutor' && item.correctAnswer === optIdx && (
-                              <i className="fi-sr-check lr-correct-icon"></i>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {/* Show answer in tutor view */}
-                    {viewMode === 'tutor' && item.answer && (
-                      <div className="lr-exercise-answer">
-                        <span className="lr-answer-label">Answer:</span>
-                        <span>{item.answer}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      {section.triviaImage && (
+        <div className="lr-trivia-image">
+          <img src={section.triviaImage} alt="" />
+        </div>
+      )}
+
+      {section.triviaExamples && section.triviaExamples.length > 0 && (
+        <div className="lr-trivia-examples">
+          {section.triviaExamples.map((ex) => (
+            <TriviaExampleItem key={ex.id} example={ex} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TriviaExampleItem({ example }: { example: TriviaExample }) {
+  return (
+    <div className={`lr-trivia-example ${example.isCorrect ? 'correct' : 'incorrect'}`}>
+      <div className="lr-trivia-marker">{example.isCorrect ? 'O' : 'X'}</div>
+      <div className="lr-trivia-content">
+        <p className="lr-trivia-line-a">
+          <span className="lr-speaker">{example.speakerA}:</span> {example.lineA}
+        </p>
+        {example.lineAJp && <p className="lr-trivia-jp">{example.lineAJp}</p>}
+        <p className="lr-trivia-line-b">
+          <span className="lr-speaker">{example.speakerB}:</span> {example.lineB}
+        </p>
+        {example.lineBJp && <p className="lr-trivia-jp">{example.lineBJp}</p>}
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// PRACTICE SECTION
+// ============================================================================
+
+function PracticeSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-practice">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {/* Word box */}
+      {section.wordBox && section.wordBox.length > 0 && (
+        <div className="lr-word-box">
+          {section.wordBox.map((word, i) => (
+            <span key={i} className="lr-word-chip">{word}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Example */}
+      {section.practiceExample && (
+        <div className="lr-practice-example">
+          <p className="lr-example-q">{section.practiceExample}</p>
+          {section.practiceExampleAnswer && (
+            <p className="lr-example-a">{section.practiceExampleAnswer}</p>
+          )}
+        </div>
+      )}
+
+      {/* Practice items */}
+      {section.practiceItems && section.practiceItems.length > 0 && (
+        <ol className="lr-practice-items">
+          {section.practiceItems.map((item, idx) => (
+            <PracticeItemRow key={item.id} item={item} number={idx + 1} />
+          ))}
+        </ol>
+      )}
+
+      {/* Conversation lines */}
+      {section.conversationLines && section.conversationLines.length > 0 && (
+        <div className="lr-conversation">
+          {section.conversationLines.map((line) => (
+            <ConversationLineItem key={line.id} line={line} />
+          ))}
+        </div>
+      )}
+
+      {section.practiceImage && (
+        <div className="lr-practice-image">
+          <img src={section.practiceImage} alt="" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PracticeItemRow({ item, number }: { item: PracticeItem; number: number }) {
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  return (
+    <li className="lr-practice-item">
+      <span className="lr-item-num">{number}.</span>
+      <div className="lr-item-content">
+        <p className="lr-item-question">{item.question}</p>
+        {item.questionJp && <p className="lr-item-jp">{item.questionJp}</p>}
+        <button className="lr-show-answer" onClick={() => setShowAnswer(!showAnswer)}>
+          {showAnswer ? 'Hide Answer' : 'Show Answer'}
+        </button>
+        {showAnswer && <p className="lr-item-answer">{item.answer}</p>}
+      </div>
+    </li>
+  );
+}
+
+function ConversationLineItem({ line }: { line: ConversationLine }) {
+  return (
+    <div className={`lr-conv-line lr-conv-${line.speaker.toLowerCase()}`}>
+      <span className="lr-conv-speaker">{line.speaker}:</span>
+      <span className="lr-conv-text">{line.text}</span>
+    </div>
+  );
+}
+
+// ============================================================================
+// PRODUCE SECTION
+// ============================================================================
+
+function ProduceSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-produce">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+      {section.sectionImage && (
+        <div className="lr-image-wrapper">
+          <img src={section.sectionImage} alt="" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// CHALLENGE SECTION
+// ============================================================================
+
+function ChallengeSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-challenge">
+      {section.challengeTitle && <h4 className="lr-challenge-title">{section.challengeTitle}</h4>}
+
+      {section.situationEn && (
+        <div className="lr-situation">
+          <p className="lr-situation-en">{section.situationEn}</p>
+          {section.situationJp && <p className="lr-situation-jp">{section.situationJp}</p>}
+        </div>
+      )}
+
+      {section.grammarTipTitle && section.grammarTipItems && (
+        <div className="lr-grammar-tip-box">
+          <h5>{section.grammarTipTitle}</h5>
+          <div className="lr-tip-items">
+            {section.grammarTipItems.map((item, i) => (
+              <span key={i} className="lr-tip-item">{item}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {section.challengeQuestions && section.challengeQuestions.length > 0 && (
+        <div className="lr-challenge-questions">
+          {section.challengeQuestions.map((q) => (
+            <ChallengeQuestionItem key={q.id} question={q} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChallengeQuestionItem({ question }: { question: ChallengeQuestion }) {
+  return (
+    <div className="lr-challenge-q">
+      <p className="lr-q-main">{question.question}</p>
+      {question.subQuestions && question.subQuestions.length > 0 && (
+        <ul className="lr-sub-questions">
+          {question.subQuestions.map((sq, i) => (
+            <li key={i} className="lr-sub-q">{sq}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// CHALLENGE 2 SECTION (Topics)
+// ============================================================================
+
+function Challenge2Section({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-challenge2">
+      {section.isOptional && <span className="lr-optional-badge">If Time Allows</span>}
+      {section.challengeTitle && <h4 className="lr-challenge-title">{section.challengeTitle}</h4>}
+
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.topicBoxes && section.topicBoxes.length > 0 && (
+        <div className="lr-topic-boxes">
+          {section.topicBoxes.map((box) => (
+            <TopicBoxItem key={box.id} box={box} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopicBoxItem({ box }: { box: TopicBox }) {
+  return (
+    <div className="lr-topic-box">
+      <div className="lr-topic-header">
+        <span className="lr-topic-num">Topic {box.topicNumber}</span>
+        <span className="lr-topic-title">{box.topicTitle}</span>
+      </div>
+      <ul className="lr-topic-questions">
+        {box.questions.map((q) => (
+          <li key={q.id}>{q.question}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ============================================================================
+// FEEDBACK SECTION (Tutor only)
+// ============================================================================
+
+function FeedbackSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-feedback">
+      <h4 className="lr-feedback-title">Lesson Goal Achievement</h4>
+
+      {section.feedbackRubric && section.feedbackRubric.length > 0 && (
+        <div className="lr-rubric">
+          {section.feedbackRubric.map((item) => (
+            <div key={item.score} className="lr-rubric-item">
+              <span className="lr-rubric-score">{item.score}</span>
+              <span className="lr-rubric-label">{item.label}</span>
+              <span className="lr-rubric-desc">{item.description}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {section.feedbackCategories && section.feedbackCategories.length > 0 && (
+        <div className="lr-feedback-categories">
+          <h5>Personalized Feedback Categories</h5>
+          {section.feedbackCategories.map((cat) => (
+            <div key={cat.id} className="lr-feedback-cat">
+              <span className="lr-cat-title">{cat.title}</span>
+              <span className="lr-cat-jp">{cat.titleJp}</span>
+              <span className="lr-cat-desc">{cat.descJp}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {section.feedbackGuide && section.feedbackGuide.length > 0 && (
+        <div className="lr-feedback-guide">
+          <h5>Personalized Feedback Guide</h5>
+          <table className="lr-guide-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Focus On</th>
+                <th>Example Feedback</th>
+              </tr>
+            </thead>
+            <tbody>
+              {section.feedbackGuide.map((row) => (
+                <FeedbackGuideRowItem key={row.id} row={row} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {section.feedbackTemplate && (
+        <div className="lr-feedback-template">
+          <h5>Copy Template</h5>
+          <pre className="lr-template-text">{section.feedbackTemplate}</pre>
+          <button
+            className="lr-copy-btn"
+            onClick={() => navigator.clipboard.writeText(section.feedbackTemplate || '')}
+          >
+            <i className="ri-file-copy-line" /> Copy
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeedbackGuideRowItem({ row }: { row: FeedbackGuideRow }) {
+  return (
+    <tr>
+      <td>
+        <strong>{row.category}</strong>
+        <br />
+        <small>{row.categoryDesc}</small>
+      </td>
+      <td dangerouslySetInnerHTML={{ __html: row.focusOn }} />
+      <td dangerouslySetInnerHTML={{ __html: row.exampleFeedback }} />
+    </tr>
+  );
+}
+
+// ============================================================================
+// LISTENING SECTION
+// ============================================================================
+
+function ListeningSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-listening">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.listeningScriptText && (
+        <div className="lr-listening-script">
+          <h5>Script</h5>
+          <pre className="lr-script-text">{section.listeningScriptText}</pre>
+        </div>
+      )}
+
+      {section.listeningQuestions && section.listeningQuestions.length > 0 && (
+        <div className="lr-listening-questions">
+          <h5>Questions</h5>
+          {section.listeningQuestions.map((q) => (
+            <div key={q.id} className="lr-listening-q">
+              <p className="lr-q-en">{q.questionEn}</p>
+              <p className="lr-q-jp">{q.questionJp}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// LISTENING CHALLENGE SECTION
+// ============================================================================
+
+function ListeningChallengeSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-listening-challenge">
+      {section.roleplaySetupLines && section.roleplaySetupLines.length > 0 && (
+        <div className="lr-roleplay-setup">
+          {section.roleplaySetupLines.map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
+        </div>
+      )}
+
+      {section.roleplayScript && (
+        <div className="lr-roleplay-script">
+          <pre>{section.roleplayScript}</pre>
+        </div>
+      )}
+
+      {section.roleplayTips && section.roleplayTips.length > 0 && (
+        <div className="lr-roleplay-tips">
+          {section.roleplayTips.map((tip, i) => (
+            <p key={i} className="lr-tip">◆ {tip}</p>
+          ))}
+        </div>
+      )}
+
+      {section.roleplayConversation && section.roleplayConversation.length > 0 && (
+        <div className="lr-roleplay-conversation">
+          {section.roleplayConversation.map((line) => (
+            <div key={line.id} className={`lr-roleplay-line ${line.isHeader ? 'header' : ''} ${line.isFooter ? 'footer' : ''}`}>
+              <span className="lr-line-num">{line.number}.</span>
+              <span className="lr-line-text">{line.text}</span>
+              {line.comment && <span className="lr-line-comment">{line.comment}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// READING SECTION
+// ============================================================================
+
+function ReadingSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-reading">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.readingImage && (
+        <div className="lr-reading-image">
+          <img src={section.readingImage} alt="" />
+        </div>
+      )}
+
+      {section.readingDialogueLines && section.readingDialogueLines.length > 0 && (
+        <div className="lr-reading-dialogue">
+          {section.readingDialogueLines.map((line) => (
+            <ReadingDialogueLineItem key={line.id} line={line} />
+          ))}
+        </div>
+      )}
+
+      {section.readingQuestions && section.readingQuestions.length > 0 && (
+        <div className="lr-reading-questions">
+          <h5>Questions</h5>
+          {section.readingQuestions.map((q) => (
+            <div key={q.id} className="lr-reading-q">
+              <p className="lr-q-text">{q.questionEn}</p>
+              <p className="lr-q-answer">{q.answer}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReadingDialogueLineItem({ line }: { line: ReadingDialogueLine }) {
+  const renderText = () => {
+    if (!line.underlineWords || line.underlineWords.length === 0) {
+      return line.lineEn;
+    }
+
+    let text = line.lineEn;
+    line.underlineWords.forEach((word) => {
+      text = text.replace(new RegExp(`(${word})`, 'gi'), '<u>$1</u>');
+    });
+
+    return <span dangerouslySetInnerHTML={{ __html: text }} />;
+  };
+
+  return (
+    <div className="lr-reading-line">
+      <span className="lr-reading-speaker">{line.speaker}:</span>
+      <span className="lr-reading-text">{renderText()}</span>
+    </div>
+  );
+}
+
+// ============================================================================
+// DISCUSSION QUESTIONS SECTION
+// ============================================================================
+
+function DiscussionQuestionsSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-discussion">
+      {section.instructionEn && <p className="lr-instruction-en">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lr-instruction-jp">{section.instructionJp}</p>}
+
+      {section.discussionQuestions && section.discussionQuestions.length > 0 && (
+        <div className="lr-discussion-list">
+          {section.discussionQuestions.map((q) => (
+            <DiscussionQuestionItem key={q.id} question={q} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DiscussionQuestionItem({ question }: { question: DiscussionQuestion }) {
+  return (
+    <div className="lr-discussion-q">
+      <span className="lr-q-num">{question.number}.</span>
+      <div className="lr-q-content">
+        <p className="lr-q-text">{question.question}</p>
+        <span className="lr-q-category">{question.category}</span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// GENERIC SECTION (Fallback)
+// ============================================================================
+
+function GenericSection({ section }: { section: LessonSection }) {
+  return (
+    <div className="lr-generic">
+      {section.explanationEn && <p className="lr-text-en">{section.explanationEn}</p>}
+      {section.explanationJp && <p className="lr-text-jp">{section.explanationJp}</p>}
+      {section.sectionImage && (
+        <div className="lr-image-wrapper">
+          <img src={section.sectionImage} alt="" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// TUTOR SIDEBAR
+// ============================================================================
+
+function TutorSidebar({ section }: { section: LessonSection }) {
+  return (
+    <aside className="lr-tutor-sidebar">
+      {section.sidebarTitle && (
+        <div className="lr-sidebar-header">
+          <h4>{section.sidebarTitle}</h4>
+          {section.sidebarSubtitle && <span>{section.sidebarSubtitle}</span>}
+        </div>
+      )}
+
+      {section.lessonGoalTitle && <h5 className="lr-goal-title">{section.lessonGoalTitle}</h5>}
+
+      {section.lessonGoalSteps && section.lessonGoalSteps.length > 0 && (
+        <ol className="lr-goal-steps">
+          {section.lessonGoalSteps.map((step, idx) => (
+            <LessonGoalStepItem key={step.id} step={step} number={idx + 1} />
+          ))}
+        </ol>
+      )}
+
+      {/* Answer box for practice sections */}
+      {section.answerItems && section.answerItems.length > 0 && (
+        <div className="lr-answer-box">
+          <h5>Answers</h5>
+          <ol>
+            {section.answerItems.map((ans, i) => (
+              <li key={i}>{ans}</li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function LessonGoalStepItem({ step, number }: { step: LessonGoalStep; number: number }) {
+  return (
+    <li className="lr-step-item">
+      <span className="lr-step-num">{number}.</span>
+      <div className="lr-step-content">
+        {step.instruction && <p className="lr-step-instruction">{step.instruction}</p>}
+        {step.scriptLine && <p className="lr-step-script">"{step.scriptLine}"</p>}
+        {step.scriptLines && step.scriptLines.map((line, i) => (
+          <p key={i} className="lr-step-script">"{line}"</p>
+        ))}
+        {step.tipText && <p className="lr-step-tip">💡 {step.tipText}</p>}
+      </div>
+    </li>
   );
 }
