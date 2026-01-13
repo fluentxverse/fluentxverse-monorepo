@@ -1,0 +1,3224 @@
+/**
+ * ConversationalSkillsVisualEditor.css
+ * WYSIWYG visual editor styles
+ */
+
+/* ============================================================================
+   FULLPAGE LAYOUT
+   ============================================================================ */
+
+.csve-fullpage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #1a1a2e;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   LOADING & ERROR STATES
+   ============================================================================ */
+
+.csve-fullpage.csve-loading,
+.csve-fullpage.csve-error {
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.csve-loader {
+  text-align: center;
+}
+
+.csve-loader i {
+  font-size: 3rem;
+  animation: csve-spin 1s linear infinite;
+  color: #4ade80;
+}
+
+.csve-loader p {
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  opacity: 0.8;
+}
+
+@keyframes csve-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.csve-error i {
+  font-size: 4rem;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.csve-error h2 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+}
+
+.csve-error button {
+  padding: 0.75rem 2rem;
+  background: #4ade80;
+  color: #1a1a2e;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   TOP TOOLBAR - Modern Dark Theme
+   ============================================================================ */
+
+.csve-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  height: 56px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.csve-toolbar-left,
+.csve-toolbar-center,
+.csve-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.csve-toolbar-left {
+  flex: 1;
+}
+
+.csve-toolbar-center {
+  flex: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.csve-toolbar-right {
+  flex: 1;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.csve-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.csve-toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.csve-toolbar-btn i {
+  font-size: 1.125rem;
+}
+
+/* Back button - Ghost style */
+.csve-back-btn {
+  background: transparent;
+  border-color: transparent;
+  padding: 0.5rem 0.75rem;
+}
+
+.csve-back-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: transparent;
+}
+
+/* Preview button */
+.csve-preview-btn {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+}
+
+.csve-preview-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #c7d2fe;
+}
+
+/* Save button - Accent */
+.csve-save-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.csve-save-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.csve-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.csve-toolbar-divider {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  margin: 0 0.25rem;
+}
+
+.csve-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #e2e8f0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.csve-badge {
+  padding: 0.25rem 0.625rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+}
+
+.csve-edit-mode {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 1rem;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.csve-edit-mode i {
+  font-size: 0.9375rem;
+  color: #a78bfa;
+}
+
+/* ============================================================================
+   MAIN CANVAS
+   ============================================================================ */
+
+.csve-canvas {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #f5f5f5;
+  position: relative;
+}
+
+/* ============================================================================
+   TOP BAR (matches preview)
+   ============================================================================ */
+
+.csve-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  padding: 0.375rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.csve-topbar-content {
+  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.csve-course-info {
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* ============================================================================
+   HERO HEADER (editable)
+   ============================================================================ */
+
+.csve-hero {
+  position: relative;
+  background-color: #134e4a;
+  background-size: cover;
+  background-position: center;
+  padding: 2rem 1.5rem 1rem;
+  padding-top: 2.5rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.csve-hero:hover {
+  box-shadow: inset 0 0 0 3px rgba(139, 92, 246, 0.5);
+}
+
+.csve-hero.csve-active {
+  box-shadow: inset 0 0 0 3px #8b5cf6;
+}
+
+.csve-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.csve-hero-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-align: center;
+}
+
+.csve-lesson-label {
+  font-size: 0.875rem;
+  font-weight: 400;
+  opacity: 0.9;
+  margin: 0 0 0.125rem;
+  line-height: 1.2;
+}
+
+.csve-lesson-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-style: italic;
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+.csve-goal-wrapper {
+  display: inline-block;
+  text-align: center;
+}
+
+.csve-goal-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.csve-goal-badge {
+  display: inline-block;
+  padding: 0.1875rem 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #134e4a;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: 2px;
+}
+
+.csve-goal-en {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1;
+}
+
+.csve-goal-jp {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  opacity: 0.85;
+  margin: 0.25rem 0 0 0;
+  line-height: 1.3;
+}
+
+/* Edit indicator */
+.csve-edit-indicator {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.6875rem;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.csve-hero:hover .csve-edit-indicator {
+  opacity: 1;
+}
+
+.csve-edit-indicator i {
+  font-size: 0.875rem;
+}
+
+/* ============================================================================
+   MAIN CONTENT AREA
+   ============================================================================ */
+
+.csve-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.csve-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ============================================================================
+   SECTION PLACEHOLDER
+   ============================================================================ */
+
+.csve-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.csve-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.csve-section-header i {
+  font-size: 1.25rem;
+  color: #0369a1;
+}
+
+.csve-section-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.csve-section-body {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.csve-section-placeholder .csve-section-body {
+  padding: 3rem 2rem;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.02) 10px,
+    rgba(0, 0, 0, 0.02) 20px
+  );
+}
+
+/* ============================================================================
+   SIDE PANEL
+   ============================================================================ */
+
+.csve-panel {
+  position: fixed;
+  top: 48px;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  background: #0f0f1a;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  animation: csve-slide-in 0.2s ease-out;
+}
+
+@keyframes csve-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.csve-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.csve-panel-header h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.csve-panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  color: #a0a0b0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-panel-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.csve-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ============================================================================
+   CONTROLS
+   ============================================================================ */
+
+.csve-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.csve-control > label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #a0a0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Image control */
+.csve-image-control {
+  /* Container */
+}
+
+.csve-image-thumb {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #1a1a2e;
+}
+
+.csve-image-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csve-image-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.csve-image-thumb:hover .csve-image-actions {
+  opacity: 1;
+}
+
+.csve-image-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.csve-image-actions button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.csve-upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #a0a0b0;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-upload-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.csve-upload-btn i {
+  font-size: 1.5rem;
+}
+
+.csve-upload-btn span {
+  font-size: 0.8125rem;
+}
+
+/* Color row */
+.csve-color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.csve-color-row input[type="color"] {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.csve-color-value {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 0.8125rem;
+  color: #a0a0b0;
+}
+
+/* Range slider */
+.csve-control input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.csve-control input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #8b5cf6;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Color presets */
+.csve-color-presets {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.csve-preset {
+  width: 32px;
+  height: 32px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-preset:hover {
+  transform: scale(1.1);
+}
+
+.csve-preset.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================================
+   PANEL DIVIDER & TEXT INPUTS
+   ============================================================================ */
+
+.csve-panel-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.5rem 0;
+}
+
+.csve-text-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.csve-text-input:focus {
+  border-color: #8b5cf6;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.csve-text-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================================
+   INLINE EDITING
+   ============================================================================ */
+
+.csve-editable-text {
+  cursor: text;
+  padding: 0.125rem 0.25rem;
+  margin: -0.125rem -0.25rem;
+  border-radius: 4px;
+  transition: all 0.15s;
+  display: inline;
+}
+
+.csve-editable-text:hover {
+  background: rgba(139, 92, 246, 0.2);
+  outline: 2px dashed rgba(139, 92, 246, 0.5);
+}
+
+.csve-editable-text.csve-placeholder {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.csve-inline-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #8b5cf6;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  padding: 0.125rem 0.375rem;
+  margin: -0.125rem -0.375rem;
+  outline: none;
+  min-width: 100px;
+}
+
+.csve-inline-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================================================
+   INTRODUCTION SECTION - EDITOR VERSION
+   ============================================================================ */
+
+.csve-intro-section {
+  margin-bottom: 2rem;
+}
+
+.csve-intro-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 3rem;
+}
+
+.csve-intro-left {
+  padding: 1.5rem 0;
+}
+
+.csve-section-number {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.csve-number-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.csve-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.csve-section-line {
+  flex: 1;
+  height: 2px;
+  background: var(--primary, #0245ae);
+  margin-left: 1rem;
+}
+
+.csve-intro-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 1.5rem;
+}
+
+.csve-intro-image {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.csve-intro-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.csve-intro-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+/* Lesson Issue Card */
+.csve-lesson-issue {
+  background: #e8eef6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.csve-issue-header {
+  background: var(--primary, #0245ae);
+  color: #fff;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.375rem;
+}
+
+.csve-issue-header > span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.csve-issue-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.csve-issue-badges small {
+  font-size: 0.6875rem;
+  opacity: 0.9;
+}
+
+.csve-issue-badges .csve-warning {
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+}
+
+.csve-issue-content {
+  padding: 1rem;
+}
+
+.csve-issue-content h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary, #0245ae);
+}
+
+.csve-issue-content ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.csve-issue-content li {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.csve-issue-content li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 6px;
+  height: 6px;
+  background: var(--primary, #0245ae);
+  border-radius: 50%;
+}
+
+.csve-issue-content li:last-child {
+  margin-bottom: 0;
+}
+
+/* Lesson Goal Card */
+.csve-lesson-goal-box {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #e8eef6;
+}
+
+.csve-goal-header {
+  padding: 1rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  text-decoration: underline;
+}
+
+.csve-goal-steps {
+  padding: 0 1rem 1rem;
+}
+
+.csve-goal-step {
+  display: flex;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.csve-goal-step:last-child {
+  margin-bottom: 0;
+}
+
+.csve-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.csve-step-content {
+  flex: 1;
+}
+
+.csve-step-instruction {
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.csve-step-script {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--success, #10b981);
+  font-style: italic;
+}
+
+.csve-step-question {
+  margin-top: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  border-left: 3px solid #cbd5e1;
+}
+
+.csve-step-question span {
+  margin-right: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .csve-intro-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .csve-intro-right {
+    order: -1;
+    padding: 0;
+  }
+  
+  .csve-intro-left {
+    padding: 0 0 1rem;
+  }
+}
+
+/* ============================================================================
+   EDITABLE INTRODUCTION SECTION STYLES
+   ============================================================================ */
+
+/* Editable block hover state */
+.csve-editable-block {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-editable-block:hover {
+  background: rgba(2, 69, 174, 0.05);
+  outline: 2px dashed rgba(2, 69, 174, 0.3);
+  outline-offset: 4px;
+}
+
+.csve-editable-card {
+  position: relative;
+}
+
+/* Intro Text Block */
+.csve-intro-texts {
+  margin-bottom: 1.5rem;
+}
+
+.csve-intro-text-block {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.csve-intro-text-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.csve-lang-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.csve-remove-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-intro-text-block:hover .csve-remove-btn {
+  opacity: 1;
+}
+
+.csve-intro-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 2px solid var(--primary, #0245ae);
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary, #1e293b);
+  resize: vertical;
+  font-family: inherit;
+}
+
+.csve-intro-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.2);
+}
+
+.csve-placeholder-text {
+  color: var(--text-tertiary, #94a3b8);
+  font-style: italic;
+}
+
+/* Add Language */
+.csve-add-language {
+  margin-top: 0.75rem;
+}
+
+.csve-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px dashed var(--primary, #0245ae);
+  background: transparent;
+  color: var(--primary, #0245ae);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-btn:hover:not(:disabled) {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.csve-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.csve-language-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-language-picker button {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #fff;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-language-picker button:hover {
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-color: var(--primary, #0245ae);
+}
+
+.csve-cancel-btn {
+  color: var(--text-secondary, #64748b) !important;
+}
+
+.csve-cancel-btn:hover {
+  background: #f1f5f9 !important;
+  color: var(--text-primary, #1e293b) !important;
+  border-color: var(--border-color, #e2e8f0) !important;
+}
+
+/* Image Wrapper */
+.csve-intro-image-wrapper {
+  margin-top: 1rem;
+}
+
+.csve-intro-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.csve-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.csve-intro-image:hover .csve-image-overlay {
+  opacity: 1;
+}
+
+.csve-image-overlay button {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-image-overlay button:hover {
+  background: var(--primary, #0245ae);
+  color: #fff;
+}
+
+.csve-add-image-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 2rem;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  background: #f8fafc;
+  border-radius: 14px;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-image-btn i {
+  font-size: 2rem;
+}
+
+.csve-add-image-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+  background: rgba(2, 69, 174, 0.05);
+}
+
+/* Add Card Button (for optional sections) */
+.csve-add-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 1.5rem;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  border-radius: 10px;
+  color: var(--primary, #0245ae);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-card-btn i {
+  font-size: 1.5rem;
+}
+
+.csve-add-card-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.csve-add-card-btn:hover {
+  border-color: var(--primary, #0245ae);
+  background: rgba(2, 69, 174, 0.05);
+}
+
+/* Card Remove Button */
+.csve-card-remove-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.csve-card-remove-btn:hover {
+  background: #ef4444;
+}
+
+/* Issue Content Editable - Seamless inputs */
+.csve-issue-title-input {
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary, #0245ae);
+  background: transparent;
+}
+
+.csve-issue-title-input:focus {
+  outline: none;
+}
+
+.csve-issue-title-input::placeholder {
+  color: var(--text-tertiary, #94a3b8);
+  font-weight: 400;
+}
+
+.csve-issue-points {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.csve-issue-point-item {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.csve-issue-point-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 6px;
+  height: 6px;
+  background: var(--primary, #0245ae);
+  border-radius: 50%;
+}
+
+.csve-issue-point-input {
+  flex: 1;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  resize: none;
+  font-family: inherit;
+  line-height: 1.6;
+  overflow: hidden;
+  min-height: 1.6em;
+  field-sizing: content;
+}
+
+.csve-issue-point-input:focus {
+  outline: none;
+}
+
+.csve-point-remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: #fee2e2;
+  color: #ef4444;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-issue-point-item:hover .csve-point-remove {
+  opacity: 1;
+}
+
+.csve-point-remove:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.csve-add-point-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 0.5rem;
+}
+
+.csve-add-point-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+/* Lesson Goal Editable - Seamless inputs */
+.csve-goal-header-edit {
+  padding: 1rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.csve-goal-title {
+  text-decoration: underline;
+}
+
+.csve-goal-duration-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  text-decoration: underline;
+}
+
+.csve-duration-input {
+  width: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  background: transparent;
+  /* Make input width fit content */
+  field-sizing: content;
+}
+
+.csve-duration-input:focus {
+  outline: none;
+}
+
+.csve-goal-step-editable {
+  position: relative;
+  padding-right: 2rem;
+}
+
+.csve-step-instruction-input {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csve-step-instruction-input:focus {
+  outline: none;
+}
+
+.csve-step-instruction-input::placeholder {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+/* Script Block - Green with quotes */
+.csve-step-script-block {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 0.375rem;
+}
+
+.csve-script-quote {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--success, #10b981);
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.csve-step-script-input {
+  width: auto;
+  field-sizing: content;
+  min-width: 60px;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: var(--success, #10b981);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.csve-step-script-input:hover,
+.csve-step-script-input:focus {
+  border-bottom-color: var(--success, #10b981);
+  outline: none;
+}
+
+.csve-step-script-input::placeholder {
+  color: rgba(16, 185, 129, 0.5);
+  font-weight: 400;
+}
+
+/* Tip Block - Orange */
+.csve-step-tip-block {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  background: #fff7ed;
+  border-radius: 6px;
+  border-left: 3px solid #f97316;
+}
+
+.csve-tip-label {
+  font-size: 0.875rem;
+}
+
+.csve-step-tip-input {
+  flex: 1;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: #ea580c;
+  font-weight: 500;
+}
+
+.csve-step-tip-input:focus {
+  outline: none;
+}
+
+.csve-step-tip-input::placeholder {
+  color: rgba(234, 88, 12, 0.5);
+  font-weight: 400;
+}
+
+/* Remove extra button (for script/tip) */
+.csve-remove-extra-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.csve-step-script-block:hover .csve-remove-extra-btn,
+.csve-step-tip-block:hover .csve-remove-extra-btn {
+  opacity: 1;
+}
+
+.csve-remove-extra-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* Add Script/Tip Buttons */
+.csve-step-add-btns {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.csve-add-script-btn,
+.csve-add-tip-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-script-btn {
+  color: var(--success, #10b981);
+}
+
+.csve-add-script-btn:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.csve-add-tip-btn {
+  color: #f97316;
+}
+
+.csve-add-tip-btn:hover {
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.csve-step-remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.csve-goal-step-editable:hover .csve-step-remove {
+  opacity: 1;
+}
+
+.csve-step-remove:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.csve-add-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 0.75rem;
+}
+
+.csve-add-step-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+/* ============================================================================
+   LEARN SECTION EDITOR
+   ============================================================================ */
+
+.csve-learn-section {
+  background: transparent;
+  border-radius: 0;
+  padding: 2rem 0;
+  margin-bottom: 1.5rem;
+  box-shadow: none;
+}
+
+.csve-learn-step {
+  margin-top: 1.5rem;
+}
+
+/* Step Type Switcher */
+.csve-step-type-switcher {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-switcher-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+}
+
+.csve-switcher-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.csve-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #fff;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-switcher-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+.csve-switcher-btn.active {
+  background: var(--primary, #0245ae);
+  border-color: var(--primary, #0245ae);
+  color: #fff;
+}
+
+.csve-switcher-btn i {
+  font-size: 1rem;
+}
+
+.csve-step-header-edit {
+  margin-bottom: 1rem;
+}
+
+.csve-step-name-input {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary, #0245ae);
+  border: none;
+  border-bottom: 2px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.csve-step-name-input:hover,
+.csve-step-name-input:focus {
+  border-bottom-color: var(--primary, #0245ae);
+  outline: none;
+}
+
+.csve-learn-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+}
+
+.csve-learn-left {
+  min-width: 0;
+}
+
+.csve-learn-right {
+  position: relative;
+}
+
+/* Part Label Editing */
+.csve-part-label-edit {
+  margin-bottom: 1.5rem;
+}
+
+.csve-part-english-input {
+  display: block;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  margin-bottom: 0.25rem;
+  transition: border-color 0.15s;
+}
+
+.csve-part-english-input:hover,
+.csve-part-english-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-part-translation-input {
+  display: block;
+  width: 100%;
+  font-size: 0.9375rem;
+  color: #64748b;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-part-translation-input:hover,
+.csve-part-translation-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+/* Vocabulary Grid */
+.csve-vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.csve-vocab-card {
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  transition: all 0.15s;
+}
+
+.csve-vocab-card:hover {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.csve-vocab-image {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-vocab-image:hover {
+  border-color: var(--primary, #0245ae);
+}
+
+.csve-vocab-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csve-vocab-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--text-tertiary, #94a3b8);
+  background: #f1f5f9;
+}
+
+.csve-vocab-image-placeholder i {
+  font-size: 1.5rem;
+}
+
+.csve-vocab-image-placeholder span {
+  font-size: 0.75rem;
+}
+
+/* Generic image placeholder with dimensions */
+.csve-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-image-placeholder:hover {
+  background: #e2e8f0;
+}
+
+.csve-placeholder-dims {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+
+.csve-placeholder-hint {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+}
+
+.csve-vocab-english-input {
+  display: block;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.csve-vocab-english-input:hover,
+.csve-vocab-english-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-vocab-highlight-input {
+  display: block;
+  width: 100%;
+  font-size: 0.75rem;
+  color: #10b981;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.csve-vocab-highlight-input::placeholder {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.csve-vocab-highlight-input:hover,
+.csve-vocab-highlight-input:focus {
+  border-bottom-color: #10b981;
+  outline: none;
+}
+
+.csve-vocab-translation-input {
+  display: block;
+  width: 100%;
+  font-size: 0.9375rem;
+  color: #64748b;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.csve-vocab-translation-input:hover,
+.csve-vocab-translation-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-vocab-remove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.csve-vocab-card:hover .csve-vocab-remove {
+  opacity: 1;
+}
+
+.csve-vocab-remove:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.csve-add-vocab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 200px;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-vocab-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+.csve-add-vocab-btn i {
+  font-size: 1.5rem;
+}
+
+/* ============================================================================
+   EXPRESSIONS TEMPLATE STYLES
+   ============================================================================ */
+
+.csve-expr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csve-expr-item {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.csve-expr-image {
+  width: 220px;
+  aspect-ratio: 4/3;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.csve-expr-image:hover {
+  border-color: var(--primary, #0245ae);
+}
+
+.csve-expr-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Image overlay for change hint */
+.csve-expr-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-expr-image {
+  position: relative;
+}
+
+.csve-expr-image:hover .csve-expr-image-overlay {
+  opacity: 1;
+}
+
+.csve-expr-image-overlay i {
+  font-size: 1.25rem;
+}
+
+.csve-expr-image-overlay span {
+  font-size: 0.6875rem;
+}
+
+.csve-expr-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  color: var(--text-tertiary, #94a3b8);
+  background: #f1f5f9;
+}
+
+.csve-expr-image-placeholder i {
+  font-size: 1.25rem;
+}
+
+.csve-expr-image-placeholder span {
+  font-size: 0.6875rem;
+}
+
+.csve-expr-content {
+  flex: 1;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  position: relative;
+}
+
+.csve-expr-number {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  flex-shrink: 0;
+  padding-top: 0.25rem;
+}
+
+.csve-expr-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.csve-expr-def-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.csve-expr-to {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csve-expr-expression-input {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-expr-expression-input:hover,
+.csve-expr-expression-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-expr-definition-input {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  flex: 1;
+  min-width: 150px;
+  transition: border-color 0.15s;
+}
+
+.csve-expr-definition-input:hover,
+.csve-expr-definition-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-expr-example-input {
+  width: 100%;
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-expr-example-input:hover,
+.csve-expr-example-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-expr-remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.csve-expr-content:hover .csve-expr-remove {
+  opacity: 1;
+}
+
+.csve-expr-remove:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.csve-add-expr-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-expr-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+/* ============================================================================
+   RICH TEXT INPUT - Supports Ctrl+B (bold) and Ctrl+I (italic)
+   ============================================================================ */
+
+.csve-rich-text-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.csve-rich-text-input {
+  width: 100%;
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.15s;
+  min-height: 1.5em;
+}
+
+.csve-rich-text-input:hover,
+.csve-rich-text-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+}
+
+.csve-rich-text-input:focus {
+  border-bottom-color: var(--primary, #0245ae);
+}
+
+/* Placeholder styling */
+.csve-rich-text-input.csve-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-tertiary, #94a3b8);
+  pointer-events: none;
+}
+
+/* Style the bold and italic within the contentEditable */
+.csve-rich-text-input strong,
+.csve-rich-text-input b {
+  font-weight: 700;
+  color: var(--primary, #0245ae);
+}
+
+.csve-rich-text-input em,
+.csve-rich-text-input i {
+  font-style: italic;
+  color: inherit;
+}
+
+/* Keyboard hint */
+.csve-rich-text-hint {
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary, #94a3b8);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-rich-text-wrapper:focus-within .csve-rich-text-hint {
+  opacity: 1;
+}
+
+.csve-rich-text-hint kbd {
+  display: inline-block;
+  padding: 0 0.25rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.625rem;
+}
+
+/* Expression-specific rich text styling */
+.csve-expr-definition-rich .csve-rich-text-input {
+  font-size: 1rem;
+}
+
+.csve-expr-example-rich .csve-rich-text-input {
+  font-size: 0.9375rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+/* Extra text field */
+.csve-expr-extra-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.csve-expr-extra-rich {
+  flex: 1;
+}
+
+.csve-expr-extra-rich .csve-rich-text-input {
+  font-size: 1rem;
+}
+
+.csve-expr-extra-remove {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.csve-expr-extra-remove:hover {
+  background: #fecaca;
+}
+
+.csve-add-extra-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.15s;
+}
+
+.csve-add-extra-text-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.csve-add-extra-text-btn i {
+  font-size: 0.875rem;
+}
+
+/* Discussion Part II */
+.csve-discuss-part {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-discuss-instruction-input {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s;
+}
+
+.csve-discuss-instruction-input:hover,
+.csve-discuss-instruction-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+/* Discussion Images Grid - Horizontal layout up to 3 images */
+.csve-discuss-images {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Scale images based on count */
+.csve-discuss-images-1 .csve-discuss-image-item {
+  flex: 0 1 100%;
+  max-width: 500px;
+}
+
+.csve-discuss-images-2 .csve-discuss-image-item {
+  flex: 0 1 calc(50% - 0.5rem);
+  max-width: 320px;
+}
+
+.csve-discuss-images-3 .csve-discuss-image-item {
+  flex: 0 1 calc(33.333% - 0.667rem);
+  max-width: 220px;
+}
+
+.csve-discuss-image-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.csve-discuss-image {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.csve-discuss-image:hover {
+  border-color: var(--primary, #0245ae);
+}
+
+.csve-discuss-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Image overlay for change hint */
+.csve-discuss-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-discuss-image:hover .csve-discuss-image-overlay {
+  opacity: 1;
+}
+
+.csve-discuss-image-overlay i {
+  font-size: 1.25rem;
+}
+
+.csve-discuss-image-overlay span {
+  font-size: 0.6875rem;
+}
+
+.csve-discuss-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  color: var(--text-tertiary, #94a3b8);
+  background: #f1f5f9;
+}
+
+.csve-discuss-image-placeholder i {
+  font-size: 1.5rem;
+}
+
+.csve-discuss-image-placeholder span {
+  font-size: 0.75rem;
+}
+
+/* Remove image button */
+.csve-discuss-image-remove {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-discuss-image:hover .csve-discuss-image-remove {
+  opacity: 1;
+}
+
+.csve-discuss-image-remove:hover {
+  background: #ef4444;
+}
+
+/* Label and translation inputs */
+.csve-discuss-label-row,
+.csve-discuss-translation-row {
+  width: 100%;
+}
+
+.csve-discuss-label-input,
+.csve-discuss-translation-input {
+  width: 100%;
+  font-size: 0.875rem;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  padding: 0.25rem 0;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.csve-discuss-label-input:focus,
+.csve-discuss-translation-input:focus {
+  border-bottom-color: var(--primary, #0245ae);
+  outline: none;
+}
+
+.csve-discuss-translation-input {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.8125rem;
+}
+
+/* Add label/translation buttons */
+.csve-add-label-btn,
+.csve-add-translation-btn {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #94a3b8);
+  background: transparent;
+  border: 1px dashed var(--border-color, #e2e8f0);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  transition: all 0.15s;
+}
+
+.csve-add-label-btn:hover,
+.csve-add-translation-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+/* Add image button */
+.csve-add-discuss-image-btn {
+  flex: 0 0 auto;
+  width: 120px;
+  aspect-ratio: 4/3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border: 2px dashed var(--border-color, #e2e8f0);
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-discuss-image-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+.csve-add-discuss-image-btn i {
+  font-size: 1.25rem;
+}
+
+/* Tutor Guide Editor (Right Column) */
+.csve-tutor-guide {
+  position: sticky;
+  top: 1rem;
+  background: #e8eef6;
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+}
+
+.csve-guide-header-edit {
+  padding: 1rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  text-decoration: underline;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.csve-guide-title {
+  font-weight: 700;
+}
+
+.csve-guide-duration-wrap {
+  font-weight: 400;
+}
+
+.csve-guide-duration-wrap .csve-duration-input {
+  width: auto;
+  field-sizing: content;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0;
+  transition: border-color 0.15s;
+}
+
+.csve-guide-duration-wrap .csve-duration-input:hover,
+.csve-guide-duration-wrap .csve-duration-input:focus {
+  border-bottom-color: var(--primary, #0245ae);
+  outline: none;
+}
+
+.csve-guide-steps {
+  padding: 0 1rem 1rem;
+}
+
+.csve-guide-step {
+  display: flex;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.csve-guide-step:last-child {
+  margin-bottom: 0;
+}
+
+.csve-guide-step-editable {
+  position: relative;
+}
+
+.csve-guide-number {
+  width: 22px;
+  height: 22px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.csve-guide-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.csve-guide-instruction-input {
+  width: 100%;
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+
+.csve-guide-instruction-input:hover,
+.csve-guide-instruction-input:focus {
+  border-bottom-color: var(--border-color, #cbd5e1);
+  outline: none;
+}
+
+.csve-guide-script-block {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 0.25rem;
+}
+
+.csve-guide-script-block .csve-script-quote {
+  color: var(--success, #10b981);
+  font-style: italic;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.csve-guide-script-input {
+  width: auto;
+  field-sizing: content;
+  min-width: 60px;
+  max-width: 100%;
+  font-size: 0.8125rem;
+  color: var(--success, #10b981);
+  font-style: italic;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-guide-script-input:hover,
+.csve-guide-script-input:focus {
+  border-bottom-color: var(--success, #10b981);
+  outline: none;
+}
+
+.csve-remove-script-btn {
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.csve-guide-script-block:hover .csve-remove-script-btn {
+  opacity: 1;
+}
+
+.csve-remove-script-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.csve-add-guide-script-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--success, #10b981);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 0.25rem;
+}
+
+.csve-add-guide-script-btn:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* Tip Block for Learn Section - Orange */
+.csve-guide-tip-block {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  background: #fff7ed;
+  border-radius: 4px;
+  border-left: 3px solid #f97316;
+}
+
+.csve-guide-tip-input {
+  flex: 1;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.8125rem;
+  color: #ea580c;
+  font-weight: 500;
+}
+
+.csve-guide-tip-input:focus {
+  outline: none;
+}
+
+.csve-guide-tip-input::placeholder {
+  color: rgba(234, 88, 12, 0.5);
+  font-weight: 400;
+}
+
+/* Add buttons row for Learn section */
+.csve-guide-add-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.csve-guide-step-remove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary, #94a3b8);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+}
+
+.csve-guide-step-editable:hover .csve-guide-step-remove {
+  opacity: 1;
+}
+
+.csve-guide-step-remove:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.csve-add-guide-step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px dashed var(--border-color, #cbd5e1);
+  background: transparent;
+  color: var(--text-secondary, #64748b);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 0.75rem;
+}
+
+.csve-add-guide-step-btn:hover {
+  border-color: var(--primary, #0245ae);
+  color: var(--primary, #0245ae);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .csve-learn-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .csve-learn-right {
+    order: -1;
+  }
+  
+  .csve-tutor-guide {
+    position: relative;
+    top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .csve-vocab-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================================
+   ADD PARTS ROW & PART HEADER
+   ============================================================================ */
+
+.csve-add-parts-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+
+.csve-add-part-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-add-part-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.csve-part-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.csve-part-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.csve-remove-part-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  color: #dc2626;
+  background: #fee2e2;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.csve-remove-part-btn:hover {
+  background: #fecaca;
+}
+
+/* ============================================================================
+   PRONUNCIATION PART
+   ============================================================================ */
+
+.csve-pronunciation-part {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-pronunciation-instruction {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.csve-pronunciation-numeral {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.csve-pronunciation-instr-input {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.csve-pronunciation-instr-trans {
+  width: 100%;
+}
+
+.csve-pronunciation-instr-input:hover,
+.csve-pronunciation-instr-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-pronunciation-instr-trans {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+}
+
+.csve-pronunciation-instr-trans:hover,
+.csve-pronunciation-instr-trans:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-pronunciation-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csve-pronunciation-column {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.csve-pronunciation-column:first-child {
+  border-right: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-pronunciation-sound {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  text-align: center;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  width: 80px;
+}
+
+.csve-pronunciation-sound:hover,
+.csve-pronunciation-sound:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-pronunciation-images {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.csve-pronunciation-img-slot {
+  width: 120px;
+  height: 90px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-pronunciation-img-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csve-pronunciation-placeholder {
+  font-size: 0.625rem;
+}
+
+.csve-pronunciation-words {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  padding-top: 0.75rem;
+}
+
+.csve-pronunciation-word-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.csve-pronunciation-word-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.csve-pronunciation-word-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.csve-pronunciation-word {
+  width: 100%;
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem;
+  text-align: center;
+}
+
+.csve-pronunciation-word.highlighted {
+  color: var(--success, #16a34a);
+  font-weight: 700;
+}
+
+.csve-pronunciation-word:hover,
+.csve-pronunciation-word:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-pronunciation-trans {
+  width: 100%;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem;
+  text-align: center;
+}
+
+.csve-pronunciation-trans:hover,
+.csve-pronunciation-trans:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-pronunciation-word-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.csve-pronunciation-word-remove:hover {
+  background: #fecaca;
+}
+
+.csve-add-pronunciation-word {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  align-self: center;
+}
+
+.csve-add-pronunciation-word:hover {
+  background: rgba(2, 69, 174, 0.05);
+}

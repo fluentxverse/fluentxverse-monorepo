@@ -1,0 +1,1227 @@
+/**
+ * ConversationalSkillsPreview.css
+ * Standalone full-page lesson preview styles
+ * Design inspired by rarejob.com.ph lesson materials
+ */
+
+/* ============================================================================
+   RESET & FULLPAGE LAYOUT
+   ============================================================================ */
+
+.csp-fullpage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================================================
+   LOADING & ERROR STATES
+   ============================================================================ */
+
+.csp-fullpage.csp-loading,
+.csp-fullpage.csp-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.csp-loader {
+  text-align: center;
+}
+
+.csp-loader i {
+  font-size: 3rem;
+  animation: csp-spin 1s linear infinite;
+  color: #4ade80;
+}
+
+.csp-loader p {
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  opacity: 0.8;
+}
+
+@keyframes csp-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.csp-error i {
+  font-size: 4rem;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+
+.csp-error h2 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+}
+
+.csp-error button {
+  padding: 0.75rem 2rem;
+  background: #4ade80;
+  color: #1a1a2e;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.csp-error button:hover {
+  transform: scale(1.05);
+}
+
+/* ============================================================================
+   TOP NAVIGATION BAR
+   ============================================================================ */
+
+.csp-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  padding: 0.375rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.csp-topbar-content {
+  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.csp-course-info {
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: left;
+  line-height: 1;
+}
+
+/* ============================================================================
+   HERO HEADER SECTION
+   ============================================================================ */
+
+.csp-hero {
+  position: relative;
+  background-color: #134e4a;
+  background-size: cover;
+  background-position: center;
+  padding: 2rem 1.5rem 1rem;
+  padding-top: 2.5rem; /* Account for top bar */
+}
+
+.csp-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.csp-hero-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-align: center;
+}
+
+.csp-lesson-label {
+  font-size: 0.875rem;
+  font-weight: 400;
+  opacity: 0.9;
+  margin: 0 0 0.125rem;
+  line-height: 1.2;
+}
+
+.csp-lesson-name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-style: italic;
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+/* Goal Section */
+.csp-goal-wrapper {
+  display: inline-block;
+  text-align: center;
+}
+
+.csp-goal-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.csp-goal-badge {
+  display: inline-block;
+  padding: 0.1875rem 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #134e4a;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: 2px;
+}
+
+.csp-goal-en {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1;
+}
+
+.csp-goal-jp {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  opacity: 0.85;
+  margin: 0.25rem 0 0 0;
+  line-height: 1.3;
+}
+
+/* ============================================================================
+   MAIN CONTENT AREA
+   ============================================================================ */
+
+.csp-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.csp-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-section {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.csp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.csp-section-header i {
+  font-size: 1.5rem;
+  color: #134e4a;
+}
+
+.csp-section-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.csp-section-body {
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.csp-placeholder-text {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0 0 0.5rem;
+}
+
+.csp-coming-soon {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ============================================================================
+   CLOSE BUTTON
+   ============================================================================ */
+
+.csp-close-btn {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 200;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.csp-close-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .csp-hero {
+    min-height: 180px;
+    padding: 1.75rem 1rem;
+  }
+
+  .csp-lesson-label {
+    font-size: 0.875rem;
+  }
+
+  .csp-lesson-name {
+    font-size: 1.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .csp-goal-box {
+    gap: 0.75rem;
+  }
+
+  .csp-goal-en {
+    font-size: 1.25rem;
+  }
+
+  .csp-goal-jp {
+    font-size: 0.8125rem;
+  }
+
+  .csp-main {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .csp-section-header {
+    padding: 0.875rem 1rem;
+  }
+
+  .csp-section-body {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .csp-topbar {
+    padding: 0.625rem 1rem;
+  }
+
+  .csp-course-info {
+    font-size: 0.6875rem;
+  }
+
+  .csp-hero {
+    min-height: 160px;
+    padding: 1.5rem 1rem;
+  }
+
+  .csp-lesson-label {
+    font-size: 0.8125rem;
+  }
+
+  .csp-lesson-name {
+    font-size: 1.125rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .csp-goal-en {
+    font-size: 1.125rem;
+  }
+
+  .csp-goal-jp {
+    font-size: 0.75rem;
+  }
+
+  .csp-goal-jp {
+    font-size: 0.8125rem;
+  }
+}
+
+/* ============================================================================
+   INTRODUCTION SECTION - FluentXverse Style
+   ============================================================================ */
+
+.csp-intro-section {
+  margin-bottom: 2rem;
+}
+
+.csp-intro-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 3rem;
+}
+
+/* Left Column */
+.csp-intro-left {
+  padding: 1.5rem 0;
+}
+
+.csp-section-number {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.csp-number-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.csp-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.csp-section-line {
+  flex: 1;
+  height: 2px;
+  background: var(--primary, #0245ae);
+  margin-left: 1rem;
+}
+
+.csp-intro-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 1.5rem;
+}
+
+.csp-intro-image {
+  border-radius: var(--radius-lg, 14px);
+  overflow: hidden;
+}
+
+.csp-intro-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Right Column - Tutor Guide */
+.csp-intro-right {
+  position: relative;
+  padding: 1.5rem 0;
+}
+
+.csp-intro-right-sticky {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Important Note Card */
+.csp-tutor-important {
+  background: var(--info-light, #dbeafe);
+  border-radius: var(--radius-md, 10px);
+  padding: 1.25rem;
+}
+
+.csp-tutor-important > p:first-child {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-tutor-important strong {
+  color: var(--primary, #0245ae);
+}
+
+.csp-tutor-note-details {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+
+.csp-copy-btn {
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast, 0.15s ease);
+}
+
+.csp-copy-btn:hover {
+  background: var(--primary-dark, #01337d);
+}
+
+/* Lesson Issue Card */
+.csp-lesson-issue {
+  background: #e8eef6;
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+}
+
+.csp-issue-header {
+  background: var(--primary, #0245ae);
+  color: #fff;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.375rem;
+}
+
+.csp-issue-header > span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.csp-issue-header > small {
+  font-size: 0.6875rem;
+  opacity: 0.9;
+}
+
+.csp-issue-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.csp-issue-badges .csp-warning {
+  background: var(--error, #ef4444);
+  color: #fff;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+}
+
+.csp-issue-header > small.csp-warning {
+  background: var(--error, #ef4444);
+  color: #fff;
+  font-weight: 600;
+}
+
+.csp-issue-content {
+  padding: 1rem;
+}
+
+.csp-issue-content h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary, #0245ae);
+}
+
+.csp-issue-content ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.csp-issue-content li {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.csp-issue-content li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 6px;
+  height: 6px;
+  background: var(--primary, #0245ae);
+  border-radius: 50%;
+}
+
+.csp-issue-content li:last-child {
+  margin-bottom: 0;
+}
+
+/* Lesson Goal Card */
+.csp-lesson-goal-box {
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+  background: #e8eef6;
+}
+
+.csp-goal-header {
+  padding: 1rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  text-decoration: underline;
+}
+
+.csp-goal-steps {
+  padding: 1rem;
+}
+
+.csp-goal-step {
+  display: flex;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.csp-goal-step:last-child {
+  margin-bottom: 0;
+}
+
+.csp-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.csp-step-content {
+  flex: 1;
+}
+
+.csp-step-instruction {
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.csp-step-script {
+  display: inline;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--success, #10b981);
+  font-style: italic;
+}
+
+.csp-script-dot {
+  display: none;
+}
+
+.csp-step-question {
+  margin-top: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  border-left: 3px solid var(--border-color, #cbd5e1);
+}
+
+.csp-step-question span {
+  margin-right: 0.25rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .csp-intro-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .csp-intro-right {
+    order: -1;
+    padding: 0;
+  }
+  
+  .csp-intro-right-sticky {
+    position: relative;
+    top: 0;
+  }
+  
+  .csp-intro-left {
+    padding: 0 0 1rem;
+  }
+}
+/* ============================================================================
+   LEARN SECTION (Section 2 - Vocabulary Template)
+   ============================================================================ */
+
+.csp-learn-section {
+  margin-bottom: 2rem;
+}
+
+.csp-learn-step {
+  margin-top: 0.5rem;
+}
+
+.csp-step-name {
+  font-size: 1.375rem;
+  font-weight: 300;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+  letter-spacing: 0.5px;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.csp-learn-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 3rem;
+}
+
+/* Left Column - Main Content */
+.csp-learn-left {
+  padding: 0 0 1.5rem;
+}
+
+.csp-part-label {
+  margin-bottom: 1.5rem;
+}
+
+.csp-part-english {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.25rem;
+}
+
+.csp-part-translation {
+  font-size: 0.9375rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Vocabulary Grid */
+.csp-vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.csp-vocab-card {
+  text-align: center;
+}
+
+.csp-vocab-image {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  margin-bottom: 0.75rem;
+}
+
+.csp-vocab-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csp-vocab-english {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.25rem;
+}
+
+.csp-highlight {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.csp-vocab-translation {
+  font-size: 0.9375rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ============================================================================
+   EXPRESSIONS TEMPLATE STYLES (Step A Expressions)
+   ============================================================================ */
+
+.csp-expr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-expr-item {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.csp-expr-image {
+  width: 200px;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
+  background: #f8fafc;
+}
+
+.csp-expr-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csp-expr-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  font-size: 2rem;
+}
+
+/* Generic image placeholder with dimensions */
+.csp-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  border-radius: 6px;
+}
+
+.csp-placeholder-dims {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.csp-expr-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.csp-expr-definition {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.375rem;
+  line-height: 1.5;
+}
+
+.csp-expr-definition strong {
+  color: var(--primary, #0245ae);
+  font-weight: 700;
+}
+
+.csp-expr-number {
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-expr-example {
+  font-size: 0.9375rem;
+  color: #64748b;
+  margin: 0.75rem 0 0 0;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.csp-expr-example strong {
+  color: var(--primary, #0245ae);
+  font-style: normal;
+}
+
+.csp-expr-extra {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0.75rem 0 0 0;
+  line-height: 1.5;
+}
+
+.csp-expr-extra strong {
+  color: var(--primary, #0245ae);
+  font-weight: 700;
+}
+
+/* Part II - Discussion */
+.csp-discuss-part {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.csp-discuss-instruction {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+
+/* Discussion Images Grid - Horizontal layout */
+.csp-discuss-images {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+/* Scale images based on count */
+.csp-discuss-images-1 .csp-discuss-image-item {
+  flex: 0 1 100%;
+  max-width: 400px;
+}
+
+.csp-discuss-images-2 .csp-discuss-image-item {
+  flex: 0 1 calc(50% - 0.625rem);
+  max-width: 280px;
+}
+
+.csp-discuss-images-3 .csp-discuss-image-item {
+  flex: 0 1 calc(33.333% - 0.833rem);
+  max-width: 200px;
+}
+
+.csp-discuss-image-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.csp-discuss-image {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.csp-discuss-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csp-discuss-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  font-size: 2.5rem;
+}
+
+.csp-discuss-img-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  text-align: center;
+}
+
+.csp-discuss-img-translation {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+  text-align: center;
+}
+
+/* Right Column - Tutor Guide (matches Lesson Goal box style) */
+.csp-learn-right {
+  position: relative;
+  padding: 0;
+}
+
+.csp-tutor-guide {
+  position: sticky;
+  top: 1rem;
+  background: #e8eef6;
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+}
+
+.csp-guide-header {
+  padding: 1rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  text-decoration: underline;
+}
+
+.csp-guide-subheader {
+  display: none; /* Hide subheader to match Lesson Goal style */
+}
+
+.csp-guide-steps {
+  padding: 0 1rem 1rem;
+}
+
+.csp-guide-step {
+  display: flex;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.csp-guide-step:last-child {
+  margin-bottom: 0;
+}
+
+.csp-guide-number {
+  width: 22px;
+  height: 22px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.csp-guide-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.csp-guide-instruction {
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.csp-guide-script {
+  display: block;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--success, #10b981);
+  font-style: italic;
+}
+
+.csp-guide-tip {
+  margin: 0.25rem 0 0;
+  padding: 0.375rem 0.5rem;
+  background: #fff7ed;
+  border-radius: 4px;
+  border-left: 3px solid #f97316;
+  font-size: 0.8125rem;
+  color: #ea580c;
+  font-weight: 500;
+}
+
+.csp-script-bullet {
+  display: none;
+}
+
+/* Responsive for Learn Section */
+@media (max-width: 1024px) {
+  .csp-learn-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .csp-learn-right {
+    order: -1;
+  }
+  
+  .csp-vocab-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .csp-vocab-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Expressions responsive */
+  .csp-expr-item {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .csp-expr-image {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .csp-discuss-content {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .csp-discuss-image {
+    width: 100px;
+    height: 75px;
+  }
+}
+
+/* ============================================================================
+   PRONUNCIATION PART
+   ============================================================================ */
+
+.csp-pronunciation-part {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.csp-pronunciation-instruction {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.25rem;
+}
+
+.csp-pronunciation-instruction-trans {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 1rem;
+}
+
+.csp-pronunciation-table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-pronunciation-column {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.csp-pronunciation-column:first-child {
+  border-right: 1px solid #e2e8f0;
+}
+
+.csp-pronunciation-images {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.csp-pronunciation-images img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.csp-pronunciation-img-placeholder {
+  width: 120px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.csp-pronunciation-sound {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0.5rem 0;
+}
+
+.csp-pronunciation-words {
+  width: 100%;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+
+.csp-pronunciation-word-item {
+  text-align: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.csp-pronunciation-word-item:last-child {
+  border-bottom: none;
+}
+
+.csp-pronunciation-word {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.125rem;
+}
+
+.csp-pronunciation-word.highlighted {
+  color: var(--success, #16a34a);
+  font-weight: 700;
+}
+
+.csp-pronunciation-trans {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+}
+
+.csp-discuss-instruction-trans {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 1rem;
+}

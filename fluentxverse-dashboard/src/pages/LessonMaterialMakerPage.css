@@ -1,6 +1,1147 @@
 /* Lesson Material Maker - WYSIWYG Page Builder */
 
 /* ========================================
+   NEW TEMPLATE SELECTOR STYLES
+   ======================================== */
+
+.lmm-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Page Header */
+.lmm-page-header {
+  margin-bottom: 24px;
+}
+
+.lmm-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.lmm-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lmm-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.lmm-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.lmm-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 4px 0 0 0;
+}
+
+/* Tabs */
+.lmm-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: #fff;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+  box-shadow: var(--shadow-sm);
+}
+
+.lmm-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-tab i {
+  font-size: 18px;
+}
+
+.lmm-tab:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.lmm-tab.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.3);
+}
+
+.lmm-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.lmm-tab:not(.active) .lmm-tab-badge {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Templates Grid */
+.lmm-templates-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lmm-template-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-template-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.12);
+  transform: translateY(-2px);
+}
+
+.lmm-template-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.lmm-template-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.lmm-template-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.lmm-template-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.lmm-template-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lmm-template-sections {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.lmm-template-sections i {
+  font-size: 14px;
+}
+
+.lmm-template-category {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lmm-template-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  color: var(--text-tertiary);
+  font-size: 20px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.lmm-template-card:hover .lmm-template-action {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Lessons Grid */
+.lmm-lessons-container {
+  min-height: 300px;
+}
+
+.lmm-lessons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.lmm-lesson-card {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-lesson-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.12);
+  transform: translateY(-2px);
+}
+
+.lmm-lesson-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.lmm-lesson-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lmm-lesson-status.draft {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.lmm-lesson-status.published {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.lmm-lesson-date {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.lmm-lesson-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+}
+
+.lmm-lesson-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px 0;
+}
+
+.lmm-lesson-footer {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.lmm-lesson-template {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.lmm-lesson-template i {
+  font-size: 14px;
+}
+
+/* Empty State */
+.lmm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.lmm-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: var(--bg-tertiary);
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.lmm-empty-icon i {
+  font-size: 40px;
+  color: var(--text-tertiary);
+}
+
+.lmm-empty-state h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.lmm-empty-state p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+}
+
+.lmm-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-empty-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+.lmm-empty-btn i {
+  font-size: 18px;
+}
+
+/* ========================================
+   EDITOR VIEW STYLES
+   ======================================== */
+
+.lmm-editor {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-height, 70px));
+  background: var(--bg-primary);
+}
+
+.lmm-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.lmm-btn-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-btn-back:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.lmm-btn-back i {
+  font-size: 18px;
+}
+
+.lmm-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+.lmm-toolbar-title h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.lmm-toolbar-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lmm-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lmm-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-btn i {
+  font-size: 18px;
+}
+
+.lmm-btn-secondary {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.lmm-btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+}
+
+.lmm-btn-primary {
+  background: var(--primary);
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.3);
+}
+
+.lmm-btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.lmm-editor-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.lmm-sidebar {
+  width: 280px;
+  background: #fff;
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.lmm-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.lmm-sidebar-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.lmm-sidebar-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.lmm-section-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.lmm-section-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+}
+
+.lmm-section-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.lmm-section-btn.active {
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  border-color: #93c5fd;
+}
+
+.lmm-section-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.lmm-section-btn.active .lmm-section-num {
+  background: var(--primary);
+  color: #fff;
+}
+
+.lmm-section-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lmm-section-type-badge {
+  display: none;
+  padding: 2px 6px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.lmm-section-btn.active .lmm-section-type-badge {
+  display: inline-block;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+}
+
+/* Main Editor Panel */
+.lmm-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-primary);
+}
+
+.lmm-card {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.lmm-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.lmm-card-header i {
+  font-size: 20px;
+  color: var(--primary);
+}
+
+.lmm-card-header h3 {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.lmm-type-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lmm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.lmm-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.lmm-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lmm-form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.lmm-form-field label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.lmm-form-field input,
+.lmm-form-field textarea,
+.lmm-form-field select {
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.lmm-form-field input:focus,
+.lmm-form-field textarea:focus,
+.lmm-form-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.lmm-form-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* ========================================
+   PREVIEW VIEW STYLES
+   ======================================== */
+
+.lmm-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--header-height, 70px));
+  background: var(--bg-primary);
+}
+
+.lmm-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.lmm-mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+}
+
+.lmm-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-mode-btn i {
+  font-size: 18px;
+}
+
+.lmm-mode-btn:hover {
+  color: var(--text-primary);
+}
+
+.lmm-mode-btn.active {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.lmm-preview-header {
+  padding: 40px 32px;
+  text-align: center;
+  color: #fff;
+}
+
+.lmm-preview-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.lmm-preview-chapter {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 0 0 8px 0;
+}
+
+.lmm-preview-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+}
+
+.lmm-preview-goal {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.lmm-preview-goal p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.lmm-preview-subtext {
+  opacity: 0.8;
+  font-size: 14px;
+  margin-top: 4px !important;
+}
+
+.lmm-preview-nav {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.lmm-nav-btn {
+  display: flex;
+  align-items: center;
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lmm-nav-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.lmm-nav-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.lmm-preview-content {
+  flex: 1;
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ========================================
+   PREVIEW SECTION CONTENT STYLES
+   ======================================== */
+
+.lmm-section {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.lmm-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+}
+
+.lmm-section-step {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0 0 16px 0;
+}
+
+.lmm-instruction {
+  font-size: 15px;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.lmm-instruction-jp {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+}
+
+.lmm-explanation {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  line-height: 1.6;
+}
+
+.lmm-explanation-jp {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+}
+
+/* Vocabulary Grid */
+.lmm-vocab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.lmm-vocab-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.lmm-vocab-en {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lmm-vocab-jp {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Dialogue */
+.lmm-dialogue {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+}
+
+.lmm-dialogue-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lmm-speaker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lmm-line-text {
+  flex: 1;
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  padding-top: 4px;
+}
+
+/* Practice List */
+.lmm-practice-list {
+  margin: 16px 0 0 0;
+  padding-left: 24px;
+  list-style: decimal;
+}
+
+.lmm-practice-item {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+}
+
+.lmm-practice-question {
+  font-size: 15px;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.lmm-practice-answer {
+  font-size: 14px;
+  color: var(--success);
+  font-weight: 500;
+  margin: 8px 0 0 0;
+}
+
+/* Situation / Challenge */
+.lmm-situation {
+  padding: 20px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 12px;
+  margin-top: 16px;
+}
+
+.lmm-situation p {
+  font-size: 15px;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.lmm-situation-jp {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: 8px !important;
+}
+
+/* Tutor Sidebar */
+.lmm-tutor-sidebar {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+}
+
+.lmm-tutor-sidebar h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lmm-step-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.lmm-step-item {
+  margin-bottom: 12px;
+}
+
+.lmm-step-instruction {
+  font-size: 14px;
+  color: #1e40af;
+  margin: 0;
+}
+
+.lmm-step-script {
+  font-size: 14px;
+  font-style: italic;
+  color: #2563eb;
+  margin: 4px 0 0 0;
+}
+
+.lmm-step-tip {
+  font-size: 13px;
+  color: #059669;
+  margin: 4px 0 0 0;
+  background: rgba(255, 255, 255, 0.5);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lmm-container {
+    padding: 16px;
+  }
+  
+  .lmm-title {
+    font-size: 22px;
+  }
+  
+  .lmm-template-card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  
+  .lmm-template-action {
+    display: none;
+  }
+  
+  .lmm-lessons-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .lmm-editor-layout {
+    flex-direction: column;
+  }
+  
+  .lmm-sidebar {
+    width: 100%;
+    max-height: 200px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .lmm-form-grid,
+  .lmm-form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .lmm-toolbar {
+    flex-wrap: wrap;
+  }
+  
+  .lmm-toolbar-title {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
+}
+
+/* ========================================
    TEMPLATE LIST VIEW STYLES
    ======================================== */
 

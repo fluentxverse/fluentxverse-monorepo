@@ -8,6 +8,10 @@ export default defineConfig({
     port: 5175,
     strictPort: true,
     host: '0.0.0.0',
+    // Increase header size limits to prevent 431 errors
+    headers: {
+      'Connection': 'keep-alive',
+    },
     hmr: {
       port: 5175,
     },

@@ -29,10 +29,10 @@ const COURSE_TEMPLATES: TemplateInfo[] = [
     course: 'Conversational Skills',
     category: 'Conversation',
     icon: '💬',
-    description: 'Speaking, Listening, and Reading combined template',
+    description: 'Speaking, Listening, and Reading - New No-Code Editor',
     sections: 12,
     lastUpdated: '2026-01-12',
-    status: 'draft',
+    status: 'published',
   },
   {
     id: 'young-learners',
@@ -199,50 +199,117 @@ function TemplateSelector({
   const [tab, setTab] = useState<'templates' | 'saved'>('templates');
 
   return (
-    <div className="lm-page">
-      <header className="lm-header">
-        <h1>Lesson Material Maker</h1>
-        <div className="lm-tabs">
-          <button className={tab === 'templates' ? 'active' : ''} onClick={() => setTab('templates')}>
-            Templates
-          </button>
-          <button className={tab === 'saved' ? 'active' : ''} onClick={() => setTab('saved')}>
-            My Lessons ({savedLessons.length})
-          </button>
+    <div className="lmm-container">
+      {/* Page Header */}
+      <div className="lmm-page-header">
+        <div className="lmm-header-content">
+          <div className="lmm-title-row">
+            <div className="lmm-title-icon">
+              <i className="ri-book-2-line" />
+            </div>
+            <div>
+              <h1 className="lmm-title">Lesson Material Maker</h1>
+              <p className="lmm-subtitle">Create and manage lesson templates</p>
+            </div>
+          </div>
         </div>
-      </header>
+      </div>
 
+      {/* Tabs */}
+      <div className="lmm-tabs">
+        <button
+          className={`lmm-tab ${tab === 'templates' ? 'active' : ''}`}
+          onClick={() => setTab('templates')}
+        >
+          <i className="ri-file-copy-line" />
+          Templates
+        </button>
+        <button
+          className={`lmm-tab ${tab === 'saved' ? 'active' : ''}`}
+          onClick={() => setTab('saved')}
+        >
+          <i className="ri-folder-line" />
+          My Lessons
+          {savedLessons.length > 0 && <span className="lmm-tab-badge">{savedLessons.length}</span>}
+        </button>
+      </div>
+
+      {/* Templates Grid */}
       {tab === 'templates' && (
-        <div className="lm-grid">
+        <div className="lmm-templates-grid">
           {templates.map((t) => (
-            <div key={t.id} className="lm-template-card" onClick={() => onSelect(t)}>
-              <span className="lm-icon">{t.icon}</span>
-              <h3>{t.name}</h3>
-              <p>{t.description}</p>
-              <div className="lm-meta">
-                <span>{t.sections} sections</span>
-                <span>{t.category}</span>
+            <div
+              key={t.id}
+              className="lmm-template-card"
+              onClick={() => {
+                if (t.id === 'conversational-skills') {
+                  window.location.href = '/conversational-skills-editor';
+                } else {
+                  onSelect(t);
+                }
+              }}
+            >
+              <div className="lmm-template-icon">{t.icon}</div>
+              <div className="lmm-template-content">
+                <h3 className="lmm-template-name">{t.name}</h3>
+                <p className="lmm-template-desc">{t.description}</p>
+                <div className="lmm-template-meta">
+                  <span className="lmm-template-sections">
+                    <i className="ri-stack-line" />
+                    {t.sections} sections
+                  </span>
+                  <span className="lmm-template-category">{t.category}</span>
+                </div>
+              </div>
+              <div className="lmm-template-action">
+                <i className="ri-arrow-right-line" />
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {/* Saved Lessons Grid */}
       {tab === 'saved' && (
-        <div className="lm-grid">
-          {savedLessons.length === 0 && (
-            <p className="lm-empty">No saved lessons yet. Select a template to create one.</p>
-          )}
-          {savedLessons.map((lesson) => (
-            <div key={lesson.id} className="lm-lesson-card" onClick={() => onLoadLesson(lesson)}>
-              <h3>{lesson.goalName || 'Untitled Lesson'}</h3>
-              <p>Level {lesson.level} • Chapter {lesson.chapter}</p>
-              <div className="lm-meta">
-                <span>{lesson.templateName}</span>
-                <span>{new Date(lesson.updatedAt).toLocaleDateString()}</span>
+        <div className="lmm-lessons-container">
+          {savedLessons.length === 0 ? (
+            <div className="lmm-empty-state">
+              <div className="lmm-empty-icon">
+                <i className="ri-folder-open-line" />
               </div>
+              <h3>No saved lessons yet</h3>
+              <p>Select a template to create your first lesson</p>
+              <button className="lmm-empty-btn" onClick={() => setTab('templates')}>
+                <i className="ri-add-line" />
+                Browse Templates
+              </button>
             </div>
-          ))}
+          ) : (
+            <div className="lmm-lessons-grid">
+              {savedLessons.map((lesson) => (
+                <div key={lesson.id} className="lmm-lesson-card" onClick={() => onLoadLesson(lesson)}>
+                  <div className="lmm-lesson-header">
+                    <span className={`lmm-lesson-status ${lesson.status}`}>
+                      {lesson.status === 'draft' ? 'Draft' : 'Published'}
+                    </span>
+                    <span className="lmm-lesson-date">
+                      {new Date(lesson.updatedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="lmm-lesson-title">{lesson.goalName || 'Untitled Lesson'}</h3>
+                  <p className="lmm-lesson-meta">
+                    Level {lesson.level} • Chapter {lesson.chapter} • Lesson {lesson.lessonNumber}
+                  </p>
+                  <div className="lmm-lesson-footer">
+                    <span className="lmm-lesson-template">
+                      <i className="ri-file-copy-line" />
+                      {lesson.templateName}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -275,35 +342,53 @@ function LessonEditor({
   const section = data.sections[activeSection];
 
   return (
-    <div className="lm-editor">
+    <div className="lmm-editor">
       {/* Toolbar */}
-      <div className="lm-toolbar">
-        <button className="lm-btn-back" onClick={onBack}>← Back</button>
-        <h2>{data.header.lessonLabel}</h2>
-        <div className="lm-toolbar-actions">
-          <button className="lm-btn" onClick={onPreview}>Preview</button>
-          <button className="lm-btn lm-btn-primary" onClick={onSave}>Save</button>
+      <div className="lmm-toolbar">
+        <button className="lmm-btn-back" onClick={onBack}>
+          <i className="ri-arrow-left-line" />
+          Back
+        </button>
+        <div className="lmm-toolbar-title">
+          <span className="lmm-toolbar-badge">{data.header.levelBadge}</span>
+          <h2>{data.header.lessonLabel}</h2>
+        </div>
+        <div className="lmm-toolbar-actions">
+          <button className="lmm-btn lmm-btn-secondary" onClick={onPreview}>
+            <i className="ri-eye-line" />
+            Preview
+          </button>
+          <button className="lmm-btn lmm-btn-primary" onClick={onSave}>
+            <i className="ri-save-line" />
+            Save
+          </button>
         </div>
       </div>
 
-      <div className="lm-editor-layout">
+      <div className="lmm-editor-layout">
         {/* Section Navigation */}
-        <aside className="lm-sidebar">
-          <h3>Sections</h3>
-          {data.sections.map((s, i) => (
-            <button
-              key={s.id}
-              className={`lm-section-btn ${i === activeSection ? 'active' : ''}`}
-              onClick={() => onSectionChange(i)}
-            >
-              <span className="lm-section-num">{s.sectionNumber}</span>
-              <span className="lm-section-name">{s.sectionTitle || s.stepTitle || s.sectionType}</span>
-            </button>
-          ))}
+        <aside className="lmm-sidebar">
+          <div className="lmm-sidebar-header">
+            <h3>Sections</h3>
+            <span className="lmm-sidebar-count">{data.sections.length}</span>
+          </div>
+          <div className="lmm-section-list">
+            {data.sections.map((s, i) => (
+              <button
+                key={s.id}
+                className={`lmm-section-btn ${i === activeSection ? 'active' : ''}`}
+                onClick={() => onSectionChange(i)}
+              >
+                <span className="lmm-section-num">{s.sectionNumber}</span>
+                <span className="lmm-section-name">{s.sectionTitle || s.stepTitle || s.sectionType}</span>
+                <span className="lmm-section-type-badge">{s.sectionType}</span>
+              </button>
+            ))}
+          </div>
         </aside>
 
         {/* Editor Panel */}
-        <main className="lm-main">
+        <main className="lmm-main">
           {/* Header Editor (only show for first section) */}
           {activeSection === 0 && (
             <HeaderEditor header={data.header} onUpdate={onUpdateHeader} />
@@ -332,29 +417,32 @@ function HeaderEditor({
   onUpdate: (u: Partial<LessonMaterial['header']>) => void;
 }) {
   return (
-    <div className="lm-card">
-      <h3>Lesson Header</h3>
-      <div className="lm-form-grid">
-        <label>
-          Level Badge
+    <div className="lmm-card">
+      <div className="lmm-card-header">
+        <i className="ri-layout-top-line" />
+        <h3>Lesson Header</h3>
+      </div>
+      <div className="lmm-form-grid">
+        <div className="lmm-form-field">
+          <label>Level Badge</label>
           <input value={header.levelBadge} onChange={(e) => onUpdate({ levelBadge: (e.target as HTMLInputElement).value })} />
-        </label>
-        <label>
-          Chapter Label
+        </div>
+        <div className="lmm-form-field">
+          <label>Chapter Label</label>
           <input value={header.chapterLabel} onChange={(e) => onUpdate({ chapterLabel: (e.target as HTMLInputElement).value })} />
-        </label>
-        <label>
-          Lesson Label
+        </div>
+        <div className="lmm-form-field">
+          <label>Lesson Label</label>
           <input value={header.lessonLabel} onChange={(e) => onUpdate({ lessonLabel: (e.target as HTMLInputElement).value })} />
-        </label>
-        <label>
-          Goal (English)
+        </div>
+        <div className="lmm-form-field">
+          <label>Goal (English)</label>
           <input value={header.goalText} onChange={(e) => onUpdate({ goalText: (e.target as HTMLInputElement).value })} />
-        </label>
-        <label>
-          Goal (Japanese)
+        </div>
+        <div className="lmm-form-field">
+          <label>Goal (Japanese)</label>
           <input value={header.goalSubtext} onChange={(e) => onUpdate({ goalSubtext: (e.target as HTMLInputElement).value })} />
-        </label>
+        </div>
       </div>
     </div>
   );
@@ -372,22 +460,23 @@ function SectionEditor({
   onUpdate: (u: Partial<LessonSection>) => void;
 }) {
   return (
-    <div className="lm-card">
-      <div className="lm-section-header">
-        <h3>{section.sectionTitle || section.stepTitle}</h3>
-        <span className="lm-section-type">{section.sectionType}</span>
+    <div className="lmm-card">
+      <div className="lmm-card-header">
+        <i className="ri-file-text-line" />
+        <h3>{section.sectionTitle || section.stepTitle || 'Section'}</h3>
+        <span className="lmm-type-badge">{section.sectionType}</span>
       </div>
 
       {/* Common fields */}
-      <div className="lm-form-group">
-        <label>
-          Section Title
+      <div className="lmm-form-row">
+        <div className="lmm-form-field">
+          <label>Section Title</label>
           <input value={section.sectionTitle || ''} onChange={(e) => onUpdate({ sectionTitle: (e.target as HTMLInputElement).value })} />
-        </label>
-        <label>
-          Step Title
+        </div>
+        <div className="lmm-form-field">
+          <label>Step Title</label>
           <input value={section.stepTitle || ''} onChange={(e) => onUpdate({ stepTitle: (e.target as HTMLInputElement).value })} />
-        </label>
+        </div>
       </div>
 
       {/* Type-specific editor */}
@@ -632,37 +721,46 @@ function LessonPreview({
   const section = sections[activeSection];
 
   return (
-    <div className="lm-preview">
-      <div className="lm-preview-toolbar">
-        <button onClick={onBack}>← Back to Editor</button>
-        <div className="lm-mode-toggle">
-          <button className={mode === 'tutor' ? 'active' : ''} onClick={() => onModeChange('tutor')}>Tutor View</button>
-          <button className={mode === 'student' ? 'active' : ''} onClick={() => onModeChange('student')}>Student View</button>
+    <div className="lmm-preview">
+      <div className="lmm-preview-toolbar">
+        <button className="lmm-btn-back" onClick={onBack}>
+          <i className="ri-arrow-left-line" />
+          Back to Editor
+        </button>
+        <div className="lmm-mode-toggle">
+          <button className={`lmm-mode-btn ${mode === 'tutor' ? 'active' : ''}`} onClick={() => onModeChange('tutor')}>
+            <i className="ri-user-voice-line" />
+            Tutor View
+          </button>
+          <button className={`lmm-mode-btn ${mode === 'student' ? 'active' : ''}`} onClick={() => onModeChange('student')}>
+            <i className="ri-user-line" />
+            Student View
+          </button>
         </div>
       </div>
 
       {/* Header Preview */}
-      <header className="lp-header" style={{ background: data.header.overlayColor }}>
-        <span className="lp-badge">{data.header.levelBadge}</span>
-        <p className="lp-chapter">{data.header.chapterLabel}</p>
-        <h1 className="lp-title">{data.header.lessonLabel}</h1>
-        <div className="lp-goal">
+      <header className="lmm-preview-header" style={{ background: data.header.overlayColor }}>
+        <span className="lmm-preview-badge">{data.header.levelBadge}</span>
+        <p className="lmm-preview-chapter">{data.header.chapterLabel}</p>
+        <h1 className="lmm-preview-title">{data.header.lessonLabel}</h1>
+        <div className="lmm-preview-goal">
           <p>{data.header.goalText}</p>
-          <p className="lp-subtext">{data.header.goalSubtext}</p>
+          <p className="lmm-preview-subtext">{data.header.goalSubtext}</p>
         </div>
       </header>
 
       {/* Navigation */}
-      <nav className="lp-nav">
+      <nav className="lmm-preview-nav">
         {sections.map((s, i) => (
-          <button key={s.id} className={i === activeSection ? 'active' : ''} onClick={() => setActiveSection(i)}>
+          <button key={s.id} className={`lmm-nav-btn ${i === activeSection ? 'active' : ''}`} onClick={() => setActiveSection(i)}>
             {s.sectionNumber}. {s.sectionTitle || s.stepTitle || s.sectionType}
           </button>
         ))}
       </nav>
 
       {/* Section Preview */}
-      <div className="lp-content">
+      <div className="lmm-preview-content">
         <PreviewSection section={section} mode={mode} />
       </div>
     </div>
@@ -671,21 +769,21 @@ function LessonPreview({
 
 function PreviewSection({ section, mode }: { section: LessonSection; mode: 'tutor' | 'student' }) {
   return (
-    <div className={`lp-section lp-${section.sectionType}`}>
-      {section.sectionTitle && <h2>{section.sectionTitle}</h2>}
-      {section.stepTitle && <h3>{section.stepTitle}</h3>}
-      {section.instructionEn && <p className="lp-instruction">{section.instructionEn}</p>}
-      {section.instructionJp && <p className="lp-instruction-jp">{section.instructionJp}</p>}
-      {section.explanationEn && <p>{section.explanationEn}</p>}
-      {section.explanationJp && <p className="lp-jp">{section.explanationJp}</p>}
+    <div className={`lmm-section lmm-section-${section.sectionType}`}>
+      {section.sectionTitle && <h2 className="lmm-section-title">{section.sectionTitle}</h2>}
+      {section.stepTitle && <h3 className="lmm-section-step">{section.stepTitle}</h3>}
+      {section.instructionEn && <p className="lmm-instruction">{section.instructionEn}</p>}
+      {section.instructionJp && <p className="lmm-instruction-jp">{section.instructionJp}</p>}
+      {section.explanationEn && <p className="lmm-explanation">{section.explanationEn}</p>}
+      {section.explanationJp && <p className="lmm-explanation-jp">{section.explanationJp}</p>}
 
       {/* Vocab cards */}
       {section.vocabCards && (
-        <div className="lp-vocab-grid">
+        <div className="lmm-vocab-grid">
           {section.vocabCards.map(c => (
-            <div key={c.id} className="lp-vocab-card">
-              <span className="lp-en">{c.wordEn}</span>
-              <span className="lp-jp">{c.wordJp}</span>
+            <div key={c.id} className="lmm-vocab-card">
+              <span className="lmm-vocab-en">{c.wordEn}</span>
+              <span className="lmm-vocab-jp">{c.wordJp}</span>
             </div>
           ))}
         </div>
@@ -693,11 +791,11 @@ function PreviewSection({ section, mode }: { section: LessonSection; mode: 'tuto
 
       {/* Dialogue */}
       {section.dialogueLines && (
-        <div className="lp-dialogue">
+        <div className="lmm-dialogue">
           {section.dialogueLines.map(l => (
-            <div key={l.id} className="lp-line">
-              <span className="lp-speaker">{l.speaker}</span>
-              <span>{l.lineEn}</span>
+            <div key={l.id} className="lmm-dialogue-line">
+              <span className="lmm-speaker">{l.speaker}</span>
+              <span className="lmm-line-text">{l.lineEn}</span>
             </div>
           ))}
         </div>
@@ -705,11 +803,11 @@ function PreviewSection({ section, mode }: { section: LessonSection; mode: 'tuto
 
       {/* Practice items */}
       {section.practiceItems && (
-        <ol className="lp-practice">
+        <ol className="lmm-practice-list">
           {section.practiceItems.map(p => (
-            <li key={p.id}>
-              <p>{p.question}</p>
-              {mode === 'tutor' && <p className="lp-answer">→ {p.answer}</p>}
+            <li key={p.id} className="lmm-practice-item">
+              <p className="lmm-practice-question">{p.question}</p>
+              {mode === 'tutor' && <p className="lmm-practice-answer">→ {p.answer}</p>}
             </li>
           ))}
         </ol>
@@ -717,22 +815,22 @@ function PreviewSection({ section, mode }: { section: LessonSection; mode: 'tuto
 
       {/* Challenge */}
       {section.situationEn && (
-        <div className="lp-situation">
+        <div className="lmm-situation">
           <p>{section.situationEn}</p>
-          {section.situationJp && <p className="lp-jp">{section.situationJp}</p>}
+          {section.situationJp && <p className="lmm-situation-jp">{section.situationJp}</p>}
         </div>
       )}
 
       {/* Tutor sidebar steps */}
       {mode === 'tutor' && section.lessonGoalSteps && (
-        <aside className="lp-sidebar">
+        <aside className="lmm-tutor-sidebar">
           <h4>{section.lessonGoalTitle || 'Tutor Steps'}</h4>
-          <ol>
+          <ol className="lmm-step-list">
             {section.lessonGoalSteps.map((step, i) => (
-              <li key={step.id}>
-                {step.instruction && <p>{step.instruction}</p>}
-                {step.scriptLine && <p className="lp-script">"{step.scriptLine}"</p>}
-                {step.tipText && <p className="lp-tip">💡 {step.tipText}</p>}
+              <li key={step.id} className="lmm-step-item">
+                {step.instruction && <p className="lmm-step-instruction">{step.instruction}</p>}
+                {step.scriptLine && <p className="lmm-step-script">"{step.scriptLine}"</p>}
+                {step.tipText && <p className="lmm-step-tip">💡 {step.tipText}</p>}
               </li>
             ))}
           </ol>

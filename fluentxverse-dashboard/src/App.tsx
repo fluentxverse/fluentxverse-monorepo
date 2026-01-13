@@ -21,6 +21,9 @@ import TicketsPage from './pages/TicketsPage';
 import SessionsPage from './pages/SessionsPage';
 import LessonMaterialMakerPage from './pages/LessonMaterialMakerPage';
 import LessonMaterialViewPage from './pages/LessonMaterialViewPage';
+import ConversationalSkillsEditorPage from './pages/ConversationalSkillsEditorPage';
+import ConversationalSkillsPreview from './pages/ConversationalSkillsPreview';
+import ConversationalSkillsVisualEditor from './pages/ConversationalSkillsVisualEditor';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -90,6 +93,27 @@ const AppContent = () => {
     );
   }
 
+  // Standalone preview page - no layout wrapper
+  if (path.startsWith('/conversational-skills-preview')) {
+    return (
+      <Router>
+        <Route path="/conversational-skills-preview/:id" component={ConversationalSkillsPreview} />
+      </Router>
+    );
+  }
+
+  // Standalone visual editor - no layout wrapper (fullscreen)
+  if (path.startsWith('/conversational-skills-visual-editor')) {
+    if (!isAuthenticated) {
+      return <LoginPage />;
+    }
+    return (
+      <Router>
+        <Route path="/conversational-skills-visual-editor/:id" component={ConversationalSkillsVisualEditor} />
+      </Router>
+    );
+  }
+
   if (path.startsWith('/interview-room')) {
     if (!isAuthenticated) {
       return <LoginPage />;
@@ -114,6 +138,8 @@ const AppContent = () => {
         <Route path="/inbox" component={InboxPage} />
         <Route path="/tickets" component={TicketsPage} />
         <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
+        <Route path="/conversational-skills-editor" component={ConversationalSkillsEditorPage} />
+        <Route path="/conversational-skills-preview/:id" component={ConversationalSkillsPreview} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />
