@@ -63,6 +63,7 @@ export interface DiscussionPart {
   instruction: string;
   instructionTranslation?: string;
   images: DiscussionImage[];
+  tutorSteps?: TutorStep[];
 }
 
 export interface PronunciationWord {
@@ -82,6 +83,7 @@ export interface PronunciationPart {
   instructionTranslation: string;
   leftColumn: PronunciationColumn;
   rightColumn: PronunciationColumn;
+  tutorSteps?: TutorStep[];
 }
 
 export interface TutorStep {
@@ -106,6 +108,111 @@ export interface LearnStepData {
 export interface LearnSectionData {
   sectionTitle: string;
   steps: LearnStepData[];
+}
+
+// Step B Section Types (Speak Your Mind / Grammar Tip / Pronunciation)
+export type StepBType = 'speak-your-mind' | 'grammar-tip' | 'pronunciation';
+
+export interface ConversationSpeaker {
+  image: string;
+  speechBubble: string; // Rich text HTML
+}
+
+export interface SpeakYourMindData {
+  stepName: string;
+  duration: string;
+  explanation: string;
+  speaker1: ConversationSpeaker;
+  speaker2: ConversationSpeaker;
+  question: string;
+  tutorSteps: TutorStep[];
+}
+
+// Grammar Tip types
+export interface GrammarExample {
+  sentence: string; // HTML with <strong> for highlighted word
+  translation: string;
+}
+
+export interface GrammarExplanation {
+  ruleText: string; // HTML - can have <em> for italics, <strong> for bold
+  ruleTranslation: string;
+  examplesTitle?: string; // e.g., "EXAMPLES" or "EXAMPLE"
+  examples?: GrammarExample[];
+}
+
+export interface GrammarTipData {
+  stepName: string;
+  duration: string;
+  explanations: GrammarExplanation[];
+  tutorSteps: TutorStep[];
+}
+
+// Pronunciation types
+export interface PronunciationPhrase {
+  phrase: string;
+  pronunciationGuide: string; // e.g., "/ cos-ta fortune /"
+  exampleSentence: string; // HTML with <strong> for pronunciation highlight
+}
+
+export interface StepBPronunciationData {
+  stepName: string;
+  duration: string;
+  tip: string; // HTML - can have bold for emphasis
+  phrases: PronunciationPhrase[];
+  tutorSteps: TutorStep[];
+}
+
+export interface StepBData {
+  stepType: StepBType;
+  speakYourMind?: SpeakYourMindData;
+  grammarTip?: GrammarTipData;
+  pronunciation?: StepBPronunciationData;
+}
+
+// ============================================================================
+// APPLY SECTION TYPES (Section 3 - Speaking/Understanding)
+// ============================================================================
+
+export interface DialogueLine {
+  speaker: string;
+  text: string;
+  isAction?: boolean;
+}
+
+export interface TutorScriptBullet {
+  text: string;
+}
+
+export interface TutorTipItem {
+  text: string;
+}
+
+export interface TutorQuestion {
+  question: string;
+  answer?: string;
+}
+
+export type ApplyActivityType = 'speaking' | 'listening';
+
+export interface ApplyTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  tips?: TutorTipItem[];
+  questions?: TutorQuestion[];
+  listeningScript?: string; // Rich text HTML for listening script
+}
+
+export interface ApplySectionData {
+  sectionNumber: number;
+  sectionTitle: string;
+  activityType: ApplyActivityType;
+  activityTitle: string;
+  activityDuration: string;
+  situationText: string;
+  situationImage: string;
+  dialogueLines: DialogueLine[];
+  tutorSteps: ApplyTutorStep[];
 }
 
 export interface CreateLessonInput {
@@ -135,6 +242,8 @@ export interface LessonMaterial {
   overlayColor: string;
   introductionData?: IntroductionData;
   learnData?: LearnSectionData;
+  stepBData?: StepBData;
+  applyData?: ApplySectionData;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -154,6 +263,8 @@ export interface UpdateHeaderInput {
   goalTextJp?: string;
   introductionData?: IntroductionData;
   learnData?: LearnSectionData;
+  stepBData?: StepBData;
+  applyData?: ApplySectionData;
 }
 
 export interface ChapterInfo {

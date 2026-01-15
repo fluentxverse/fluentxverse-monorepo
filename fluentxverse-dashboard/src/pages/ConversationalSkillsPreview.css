@@ -1225,3 +1225,547 @@
   color: var(--text-secondary, #64748b);
   margin: 0 0 1rem;
 }
+
+/* ============================================================================
+   STEP B SECTION STYLES (Speak Your Mind / Grammar Tip / Pronunciation)
+   ============================================================================ */
+
+.csp-stepb-section {
+  background: transparent;
+  border-radius: 0;
+  padding: 2rem 0;
+  box-shadow: none;
+}
+
+.csp-stepb-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+
+.csp-stepb-left {
+  min-width: 0;
+}
+
+.csp-stepb-right {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+/* Speak Your Mind Styles */
+.csp-stepb-explanation {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.csp-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.csp-conversation-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.csp-speaker-left {
+  flex-direction: row;
+}
+
+.csp-speaker-right {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.csp-speaker-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.csp-speaker-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csp-speech-bubble {
+  position: relative;
+  max-width: 350px;
+  background: #f8fafc;
+  border: 1px solid var(--text-primary, #1e293b);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.csp-speech-bubble p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-speech-bubble strong {
+  font-weight: 700;
+}
+
+.csp-speech-left {
+  border-radius: 0 8px 8px 8px;
+}
+
+.csp-speech-left::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 10px 10px 0;
+  border-color: transparent var(--text-primary, #1e293b) transparent transparent;
+}
+
+.csp-speech-left::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 1px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 9px 9px 0;
+  border-color: transparent #f8fafc transparent transparent;
+}
+
+.csp-speech-right {
+  border-radius: 8px 0 8px 8px;
+}
+
+.csp-speech-right::before {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 10px 10px 0 0;
+  border-color: var(--text-primary, #1e293b) transparent transparent transparent;
+}
+
+.csp-speech-right::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 1px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 9px 9px 0 0;
+  border-color: #f8fafc transparent transparent transparent;
+}
+
+.csp-stepb-question {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--success, #16a34a);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+}
+
+.csp-stepb-question .csp-question-bullet {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csp-stepb-question p {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+/* Grammar Tip Styles */
+.csp-grammar-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.csp-grammar-block {
+  position: relative;
+}
+
+.csp-grammar-rule {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+  margin: 0 0 0.5rem;
+}
+
+.csp-grammar-rule em {
+  font-style: italic;
+}
+
+.csp-grammar-rule strong {
+  font-weight: 700;
+}
+
+.csp-grammar-translation {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 1rem;
+}
+
+.csp-grammar-examples {
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.csp-examples-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 0.75rem;
+}
+
+.csp-examples-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csp-example-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.csp-example-item::before {
+  content: '•';
+  position: absolute;
+  left: 1rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-example-sentence {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.csp-example-sentence strong {
+  font-weight: 700;
+}
+
+.csp-example-translation {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+  padding-left: 1rem;
+}
+
+/* Step B Pronunciation Styles */
+.csp-pronunciation-tip {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.csp-pronunciation-tip strong {
+  font-weight: 700;
+}
+
+.csp-pronunciation-phrases-table {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-phrases-header {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  background: var(--primary, #0245ae);
+  color: white;
+}
+
+.csp-phrases-header .csp-phrases-col-phrase,
+.csp-phrases-header .csp-phrases-col-example {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.csp-phrases-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csp-phrases-row:last-child {
+  border-bottom: none;
+}
+
+.csp-phrases-col-phrase {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-right: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csp-phrases-col-example {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.csp-phrases-col-example p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csp-phrases-col-example strong {
+  font-weight: 700;
+}
+
+.csp-phrase-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+}
+
+.csp-phrase-guide {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary, #0245ae);
+  margin: 0;
+}
+
+/* ============================================================================
+   APPLY SECTION STYLES (Section 3 - Speaking/Understanding)
+   ============================================================================ */
+
+.csp-apply-section {
+  background: transparent;
+  border-radius: 0;
+  padding: 2rem 0;
+  box-shadow: none;
+}
+
+.csp-apply-activity-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0.5rem 0 1.5rem;
+}
+
+.csp-apply-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.csp-apply-left {
+  min-width: 0;
+}
+
+.csp-apply-right {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+.csp-apply-situation {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 1rem;
+}
+
+.csp-apply-image {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.csp-apply-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Dialogue Lines */
+.csp-dialogue-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csp-dialogue-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.csp-dialogue-speaker {
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  flex-shrink: 0;
+}
+
+.csp-dialogue-text {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-dialogue-text u {
+  text-decoration: underline;
+}
+
+.csp-dialogue-action .csp-dialogue-speaker {
+  font-weight: 700;
+}
+
+.csp-action-text {
+  font-style: italic;
+  color: var(--text-secondary, #64748b);
+}
+
+/* Apply Guide - no extra header styling, uses shared .csp-guide-header */
+
+/* Apply Guide Steps */
+.csp-apply-step {
+  position: relative;
+}
+
+.csp-apply-script {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: #16a34a;
+}
+
+.csp-apply-script .csp-script-bullet {
+  font-size: 0.5rem;
+  padding-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.csp-apply-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: #dc2626;
+}
+
+.csp-apply-tip .csp-tip-icon {
+  font-size: 0.625rem;
+  padding-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+/* Questions Box */
+.csp-apply-questions-box {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #16a34a;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csp-apply-question-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.csp-apply-question-item .csp-question-bullet {
+  color: var(--text-primary, #1e293b);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.csp-apply-question-item .csp-question-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.csp-question-text {
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.csp-answer-text {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #16a34a;
+  margin: 0.125rem 0 0;
+}
+
+/* Listening Script Box (green box for listening activity) */
+.csp-listening-script-box {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: rgba(22, 163, 74, 0.08);
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: #16a34a;
+  line-height: 1.7;
+}
+
+.csp-listening-script-box u {
+  text-decoration: underline;
+}
+
+.csp-listening-script-box em {
+  font-style: italic;
+}

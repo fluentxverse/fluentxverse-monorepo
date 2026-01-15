@@ -94,6 +94,7 @@ interface DiscussionPart {
   instruction: string;
   instructionTranslation?: string;
   images: DiscussionImage[]; // Up to 3 images
+  tutorSteps?: TutorStep[];
 }
 
 // Pronunciation Part III structure
@@ -114,6 +115,7 @@ interface PronunciationPart {
   instructionTranslation: string;
   leftColumn: PronunciationColumn;
   rightColumn: PronunciationColumn;
+  tutorSteps?: TutorStep[];
 }
 
 interface TutorStep {
@@ -204,6 +206,353 @@ const DEFAULT_EXPRESSIONS_STEP: LearnStepData = {
 const DEFAULT_LEARN_DATA: LearnSectionData = {
   sectionTitle: "LEARN",
   steps: [DEFAULT_VOCABULARY_STEP]
+};
+
+// ============================================================================
+// STEP B SECTION TYPES & DEFAULTS
+// ============================================================================
+
+// Step B can be different templates
+type StepBType = 'speak-your-mind' | 'grammar-tip' | 'pronunciation';
+
+// A conversation exchange (speaker + speech bubble)
+interface ConversationSpeaker {
+  image: string;
+  speechBubble: string; // Rich text HTML - can contain <strong> for highlighted phrase
+}
+
+// Speak Your Mind template structure
+interface SpeakYourMindData {
+  stepName: string; // "STEP B SPEAK YOUR MIND"
+  duration: string;
+  explanation: string; // Bold text at top explaining the grammar concept
+  speaker1: ConversationSpeaker; // Left speaker (asks question)
+  speaker2: ConversationSpeaker; // Right speaker (gives response with grammar phrase)
+  question: string; // Question at the bottom for student to answer
+  tutorSteps: TutorStep[];
+}
+
+// Grammar Tip example item (sentence + translation)
+interface GrammarExample {
+  sentence: string; // HTML with <strong> for highlighted word
+  translation: string;
+}
+
+// Grammar Tip explanation block (rule + translation + optional examples box)
+interface GrammarExplanation {
+  ruleText: string; // HTML - can have <em> for italics
+  ruleTranslation: string;
+  examplesTitle?: string; // e.g., "EXAMPLES" or "EXAMPLE"
+  examples?: GrammarExample[];
+}
+
+// Grammar Tip template structure
+interface GrammarTipData {
+  stepName: string; // "STEP B GRAMMAR TIP"
+  duration: string;
+  explanations: GrammarExplanation[];
+  tutorSteps: TutorStep[];
+}
+
+// Step B Pronunciation types
+interface PronunciationPhrase {
+  phrase: string; // e.g., "cost a fortune"
+  pronunciationGuide: string; // e.g., "/ cos-ta fortune /"
+  exampleSentence: string; // HTML with <strong> for pronunciation highlight
+}
+
+interface StepBPronunciationData {
+  stepName: string; // "STEP B PRONUNCIATION"
+  duration: string;
+  tip: string; // The bold pronunciation tip at the top
+  phrases: PronunciationPhrase[];
+  tutorSteps: TutorStep[];
+}
+
+interface StepBData {
+  stepType: StepBType;
+  speakYourMind?: SpeakYourMindData;
+  grammarTip?: GrammarTipData;
+  pronunciation?: StepBPronunciationData;
+}
+
+// ============================================================================
+// APPLY SECTION TYPES (Section 3 - Speaking/Listening)
+// ============================================================================
+
+type ApplyActivityType = 'speaking' | 'listening';
+
+// Dialogue line with speaker name and text (for SPEAKING)
+interface DialogueLine {
+  speaker: string; // e.g., "Heinz", "Naoki"
+  text: string; // HTML - can have underlined words for emphasis
+  isAction?: boolean; // e.g., "(laughs)" - shown in italics
+}
+
+// Script bullet point in tutor guide
+interface TutorScriptBullet {
+  text: string; // Script text (shown in green italic)
+}
+
+// Tip in tutor guide (shown in red)
+interface TutorTipItem {
+  text: string;
+}
+
+// Question in the questions box
+interface TutorQuestion {
+  question: string;
+  answer?: string; // Answer hint (shown in green)
+}
+
+// Complex tutor step for APPLY section
+interface ApplyTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[]; // Multiple script bullets
+  tips?: TutorTipItem[]; // Multiple tips (red text)
+  questions?: TutorQuestion[]; // Questions with answers
+  listeningScript?: string; // Rich text HTML for listening script (green box)
+}
+
+interface ApplySectionData {
+  sectionNumber: number; // Usually 3
+  sectionTitle: string; // "APPLY"
+  activityType: ApplyActivityType; // 'speaking' or 'listening'
+  activityTitle: string; // "SPEAKING" or "LISTENING"
+  activityDuration: string; // "3 minutes"
+  situationText: string; // Situation description (bold)
+  situationImage: string; // Main image
+  // Speaking-specific
+  dialogueLines: DialogueLine[];
+  // Listening-specific (script is in tutorSteps)
+  tutorSteps: ApplyTutorStep[];
+}
+
+// Default APPLY section template (Speaking)
+const DEFAULT_APPLY_SPEAKING: ApplySectionData = {
+  sectionNumber: 3,
+  sectionTitle: "APPLY",
+  activityType: "speaking",
+  activityTitle: "SPEAKING",
+  activityDuration: "3 minutes",
+  situationText: "Naoki is having coffee with a German coworker.",
+  situationImage: "",
+  dialogueLines: [
+    { speaker: "Heinz", text: "Ah, it's finally Friday! Do you have any plans for the weekend?" },
+    { speaker: "Naoki", text: "Hmm... No, not really. Back in Japan, I normally play golf on weekends, but I guess for now, I'll just take a look around the city." },
+    { speaker: "Heinz", text: "Oh, wow! You play golf?" },
+    { speaker: "Naoki", text: "Yeah! I'm actually a member of a golf club back home. Originally, I only signed up because my boss invited me, but I'm glad I did. There are so many benefits!" },
+    { speaker: "Heinz", text: "Really? Like what?" },
+    { speaker: "Naoki", text: "Like meeting a lot of people! I get to interact with a lot of big names in our club, and I've been able to build a good network through it. Now I <u>have connections</u> in several industries!" },
+    { speaker: "Heinz", text: "Oh, nice!" },
+    { speaker: "Naoki", text: "Yeah, it's really good for business. Like, if you <u>know the right person</u> in a company, it's as good as <u>getting your foot in the door</u> for future partnerships. By the way, are there clubs like that here in Germany?" },
+    { speaker: "Heinz", text: "Absolutely. Have you heard of hobby horsing clubs? They're pretty interesting." },
+    { speaker: "Naoki", text: "Really? Cool! Are you a member?" },
+    { speaker: "Heinz", text: "(laughs) No, I'm not. It's a club where people ride wooden stick horses.", isAction: true },
+    { speaker: "Naoki", text: "Really?!" },
+  ],
+  tutorSteps: [
+    {
+      instruction: "Introduce Understand.",
+      scripts: [
+        { text: "Okay, now let's do Understand." },
+        { text: "First we have a speaking activity." }
+      ]
+    },
+    {
+      instruction: "Set up the story.",
+      scripts: [
+        { text: "Do you remember Naoki from before?" }
+      ],
+      tips: [
+        { text: "If the student doesn't remember, say that Naoki is a hardworking employee of a trading company who is aiming for a promotion. He's on a business trip in Germany." }
+      ]
+    },
+    {
+      instruction: "Read the situation."
+    },
+    {
+      instruction: "Set up the dialogue.",
+      scripts: [
+        { text: "Let's read their dialogue." },
+        { text: "I'll be your coworker Heinz. Please be Naoki." },
+        { text: "Is it clear?" },
+        { text: "Okay, I'll start." }
+      ]
+    },
+    {
+      instruction: "Read the dialogue with the student."
+    },
+    {
+      instruction: "After you finish the dialogue, correct their pronunciation mistakes.",
+      tips: [
+        { text: "Limit this to 2-3 corrections." },
+        { text: "If the student made a lot of mistakes, focus on the biggest ones." }
+      ]
+    },
+    {
+      instruction: "Ask the questions below.",
+      questions: [
+        { question: "According to Naoki, what is one benefit of being part of a sports club?", answer: "One of the benefits of being in a sports club is getting to meet a lot of people." },
+        { question: "Would you also join a sports club to expand your social circle/network?", answer: "(student's own answer)" }
+      ]
+    },
+    {
+      instruction: "Transition to the next part.",
+      scripts: [
+        { text: "Great! Let's go to the next part!" }
+      ]
+    }
+  ]
+};
+
+// Default APPLY section template (Listening)
+const DEFAULT_APPLY_LISTENING: ApplySectionData = {
+  sectionNumber: 3,
+  sectionTitle: "APPLY",
+  activityType: "listening",
+  activityTitle: "LISTENING",
+  activityDuration: "3 minutes",
+  situationText: "Satoshi is doing a homestay in Italy. He's talking with Marco, a member of the family he's staying with.",
+  situationImage: "",
+  dialogueLines: [],
+  tutorSteps: [
+    {
+      instruction: "Introduce Understand.",
+      scripts: [
+        { text: "Okay, now let's do Understand." },
+        { text: "First we have a listening activity." }
+      ]
+    },
+    {
+      instruction: "Read the situation."
+    },
+    {
+      instruction: "Set up the listening.",
+      scripts: [
+        { text: "Let's listen to Marco." },
+        { text: "I'll be Marco." },
+        { text: "Is it clear?" },
+        { text: "Okay, I'll start." }
+      ]
+    },
+    {
+      instruction: "Read the listening script below, emphasizing the underlined words.",
+      listeningScript: "Hey, Satoshi, it's nice to see that you're getting used to life in Italy now, but there's one thing you should be careful about. While you were talking with Matteo earlier, I noticed <u>you were using some gestures that have negative connotations</u>. Like when <u>you pointed at the side of your head</u>. Do you know what that means? ... Well, it's like <u>you're saying that he's stupid</u>. Not so nice, eh? <em>(laugh)</em> I think you also moved your arm to your stomach like this... Be careful: It doesn't mean you're hungry. We only do that when we want to tell someone that they're really annoying. <em>(laugh)</em> <u>Matteo knows you and understands you aren't trying to say anything bad about him, but it's dangerous to make gestures you don't understand with strangers</u>. <u>They might assume that you know they're insults and want to start a fight</u>. <u>I know you're trying to act more Italian, but you could get into serious trouble with the gestures!</u> My advice? Just focus on improving your Italian. <u>Don't gesticulate too much and you'll be fine!</u>"
+    },
+    {
+      instruction: "Ask the questions below.",
+      questions: [
+        { question: "Why did Marco give Satoshi advice about gestures?", answer: "Because Marco noticed Satoshi was using gestures with negative connotations and is afraid that he could get in serious trouble." },
+        { question: "If you were Satoshi, would you follow Marco's advice?", answer: "(student's own answer)" }
+      ]
+    },
+    {
+      instruction: "Transition to the next part.",
+      scripts: [
+        { text: "Great! Let's go to the next part!" }
+      ]
+    }
+  ]
+};
+
+const DEFAULT_APPLY_DATA: ApplySectionData = DEFAULT_APPLY_SPEAKING;
+
+// Default Speak Your Mind template
+const DEFAULT_SPEAK_YOUR_MIND: SpeakYourMindData = {
+  stepName: "STEP B SPEAK YOUR MIND",
+  duration: "1 minute",
+  explanation: "Sometimes you want to say what you would do if you were in someone else's situation.",
+  speaker1: {
+    image: "",
+    speechBubble: "My coworker watches cat videos online at work all day. Do you think I should tell my boss?"
+  },
+  speaker2: {
+    image: "",
+    speechBubble: "<strong>If I were you, I would</strong> just ignore it. Don't you always text me while you're at work?"
+  },
+  question: "What advice would you give the man on the left?",
+  tutorSteps: [
+    { instruction: "Introduce Step B.", script: "Okay, now let's do Step B Speak Your Mind.", tip: null },
+    { instruction: "Read the bold explanation.", script: null, tip: null },
+    { instruction: "Do the conversation with the student.", script: null, tip: "The student should read the speech bubble with the bolded phrase." },
+    { instruction: "Highlight the bolded part as today's Speak Your Mind phrase.", script: "Okay, the bolded part is today's Speak Your Mind phrase.", tip: null },
+    { instruction: "Read just the bolded part one more time and have the student repeat.", script: null, tip: null },
+    { instruction: "Ask the question below.", script: null, tip: "The student doesn't have to talk a lot. We just want to test their understanding of the phrase." },
+    { instruction: "Transition to the next step.", script: "Fantastic! Let's go to the next step!", tip: null },
+  ]
+};
+
+const DEFAULT_STEP_B_DATA: StepBData = {
+  stepType: 'speak-your-mind',
+  speakYourMind: DEFAULT_SPEAK_YOUR_MIND
+};
+
+// Default Grammar Tip template
+const DEFAULT_GRAMMAR_TIP: GrammarTipData = {
+  stepName: "STEP B GRAMMAR TIP",
+  duration: "1 minute",
+  explanations: [
+    {
+      ruleText: "<strong>Use simple present tense to talk about facts or routine.</strong>",
+      ruleTranslation: "現在形を使って事実や日課について話すことができます。",
+      examplesTitle: undefined,
+      examples: undefined
+    },
+    {
+      ruleText: "Use the dictionary form of the verb with <em>I</em>, <em>you</em>, <em>we</em>, and <em>they</em>.",
+      ruleTranslation: "主語がI、you、we、theyのときには、動詞の原形を使いましょう。",
+      examplesTitle: "EXAMPLES",
+      examples: [
+        { sentence: "I <strong>wake up</strong> at 7 a.m.", translation: "私は午前7時に起きます。" },
+        { sentence: "You <strong>wash</strong> the dishes.", translation: "あなたは皿を洗います。" },
+        { sentence: "We <strong>make</strong> waffles.", translation: "私たちはワッフルを作ります。" },
+        { sentence: "They <strong>eat</strong> breakfast every day.", translation: "彼らは毎日朝ごはんを食べます。" }
+      ]
+    },
+    {
+      ruleText: "For negative sentences, add <em>don't</em> before the verb.",
+      ruleTranslation: "否定文では、動詞の前にdon't を置きます。",
+      examplesTitle: "EXAMPLE",
+      examples: [
+        { sentence: "I <strong>don't wake up</strong> at 7 a.m.", translation: "私は午前7時に起きません。" }
+      ]
+    }
+  ],
+  tutorSteps: [
+    { instruction: "Introduce Step B Grammar Tip.", script: "Okay, now let's do Step B Grammar Tip.", tip: null },
+    { instruction: "Read the bold grammar tip.", script: null, tip: null },
+    { instruction: "Read the unbolded explanation part(s). Have the student read the example sentences.", script: null, tip: null },
+    { instruction: "Confirm the student's understanding.", script: "Is it clear?", tip: null },
+    { instruction: "Transition to the next section.", script: "Very good! Let's go to the next section!", tip: null },
+  ]
+};
+
+// Default Pronunciation template
+const DEFAULT_STEPB_PRONUNCIATION: StepBPronunciationData = {
+  stepName: "STEP B PRONUNCIATION",
+  duration: "1-2 minutes",
+  tip: "When one word ends with a consonant sound and the next word starts with a vowel sound, they are often linked together.",
+  phrases: [
+    {
+      phrase: "cost a fortune",
+      pronunciationGuide: "/ cos-ta fortune /",
+      exampleSentence: "The taxi ride from the airport <strong>/ cos-ta fortune /</strong>!"
+    },
+    {
+      phrase: "cost an arm and a leg",
+      pronunciationGuide: "/ cos-ta-nar-man-da leg /",
+      exampleSentence: "Staying at a five-star hotel will <strong>/ cos-ta-nar-man-da leg /</strong>."
+    }
+  ],
+  tutorSteps: [
+    { instruction: "Introduce Step B.", script: "Okay, now let's do Step B.", tip: null },
+    { instruction: "Read the bold pronunciation tip.", script: null, tip: null },
+    { instruction: "Read the first phrase and have the student repeat.", script: null, tip: "Use the bold pronunciation guide under the phrase." },
+    { instruction: "Read the example sentence and have the student repeat.", script: null, tip: null },
+    { instruction: "Repeat Steps 3-4 with the remaining phrase(s) and example sentence(s).", script: null, tip: null },
+    { instruction: "Transition to the next step.", script: "Fantastic! Let's go to the next step!", tip: null },
+  ]
 };
 
 // ============================================================================
@@ -329,6 +678,12 @@ export default function ConversationalSkillsVisualEditor() {
   // Learn section state
   const [learnData, setLearnData] = useState<LearnSectionData>(DEFAULT_LEARN_DATA);
   
+  // Step B section state
+  const [stepBData, setStepBData] = useState<StepBData>(DEFAULT_STEP_B_DATA);
+  
+  // Apply section state (Section 3 - Understanding/Speaking)
+  const [applyData, setApplyData] = useState<ApplySectionData>(DEFAULT_APPLY_DATA);
+  
   // UI state
   const [activeElement, setActiveElement] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -363,6 +718,16 @@ export default function ConversationalSkillsVisualEditor() {
       if (data.learnData) {
         setLearnData(data.learnData);
       }
+      
+      // Load step B data from lesson if available
+      if (data.stepBData) {
+        setStepBData(data.stepBData);
+      }
+      
+      // Load apply data from lesson if available
+      if (data.applyData) {
+        setApplyData(data.applyData);
+      }
     } catch (err) {
       console.error('Failed to load lesson:', err);
       setError('Failed to load lesson');
@@ -385,6 +750,8 @@ export default function ConversationalSkillsVisualEditor() {
         goalTextJp,
         introductionData,
         learnData,
+        stepBData,
+        applyData,
       });
       setLesson(updated);
       toast.success('Changes saved!');
@@ -418,6 +785,8 @@ export default function ConversationalSkillsVisualEditor() {
       goalTextJp,
       introductionData,
       learnData,
+      stepBData,
+      applyData,
     }));
     window.open(`/conversational-skills-preview/${lesson.id}`, '_blank');
   };
@@ -605,8 +974,17 @@ export default function ConversationalSkillsVisualEditor() {
               data={learnData}
               onChange={setLearnData}
             />
-            <PlaceholderSection icon="ri-chat-voice-line" title="Dialogue" />
-            <PlaceholderSection icon="ri-file-text-line" title="Grammar" />
+            
+            <StepBSectionEditor 
+              data={stepBData}
+              onChange={setStepBData}
+            />
+            
+            <ApplySectionEditor 
+              data={applyData}
+              onChange={setApplyData}
+            />
+            
             <PlaceholderSection icon="ri-headphone-line" title="Listening" />
             <PlaceholderSection icon="ri-edit-line" title="Practice" />
           </div>
@@ -1450,12 +1828,17 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
   // Add/Remove Discussion Part
   const handleAddDiscussionPart = (stepIdx: number) => {
     const step = data.steps[stepIdx];
-    const partNum = step.discussionPart ? 'III' : 'II';
+    const partNum = step.pronunciationPart ? 'III' : 'II';
     updateStep(stepIdx, {
       discussionPart: {
         instruction: `${partNum}. Discussion question goes here.`,
         instructionTranslation: '',
-        images: [{ image: '', label: '', translation: '' }]
+        images: [{ image: '', label: '', translation: '' }],
+        tutorSteps: [
+          { instruction: 'Read the instructions.', script: null, tip: null },
+          { instruction: 'Ask the student to describe the pictures.', script: null, tip: null },
+          { instruction: 'Transition to the next part.', script: "Great! Let's go to the next part!", tip: null },
+        ]
       }
     });
   };
@@ -1489,7 +1872,13 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
             { word: 'jest', translation: '冗談' },
             { word: 'just', translation: 'ちょうど' },
           ]
-        }
+        },
+        tutorSteps: [
+          { instruction: 'Read the instructions.', script: null, tip: null },
+          { instruction: 'Read the words in the left column and ask the student to repeat.', script: null, tip: null },
+          { instruction: 'Read the words in the right column and ask the student to repeat.', script: null, tip: null },
+          { instruction: 'Transition to the next part.', script: "Great! Let's go to the next part!", tip: null },
+        ]
       }
     });
   };
@@ -1569,6 +1958,56 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
       return;
     }
     updateStep(stepIdx, { tutorSteps: step.tutorSteps.filter((_, i) => i !== tutorIdx) });
+  };
+
+  // Discussion Part Tutor Steps handlers
+  const handleDiscussionTutorStepChange = (stepIdx: number, tutorIdx: number, field: keyof TutorStep, value: string | null) => {
+    const step = data.steps[stepIdx];
+    if (!step.discussionPart || !step.discussionPart.tutorSteps) return;
+    const newTutorSteps = [...step.discussionPart.tutorSteps];
+    newTutorSteps[tutorIdx] = { ...newTutorSteps[tutorIdx], [field]: value };
+    updateStep(stepIdx, { discussionPart: { ...step.discussionPart, tutorSteps: newTutorSteps } });
+  };
+
+  const handleAddDiscussionTutorStep = (stepIdx: number) => {
+    const step = data.steps[stepIdx];
+    if (!step.discussionPart) return;
+    const currentSteps = step.discussionPart.tutorSteps || [];
+    updateStep(stepIdx, { discussionPart: { ...step.discussionPart, tutorSteps: [...currentSteps, { instruction: '', script: null, tip: null }] } });
+  };
+
+  const handleRemoveDiscussionTutorStep = (stepIdx: number, tutorIdx: number) => {
+    const step = data.steps[stepIdx];
+    if (!step.discussionPart || !step.discussionPart.tutorSteps || step.discussionPart.tutorSteps.length <= 1) {
+      toast.error('At least one tutor step is required');
+      return;
+    }
+    updateStep(stepIdx, { discussionPart: { ...step.discussionPart, tutorSteps: step.discussionPart.tutorSteps.filter((_, i) => i !== tutorIdx) } });
+  };
+
+  // Pronunciation Part Tutor Steps handlers
+  const handlePronunciationTutorStepChange = (stepIdx: number, tutorIdx: number, field: keyof TutorStep, value: string | null) => {
+    const step = data.steps[stepIdx];
+    if (!step.pronunciationPart || !step.pronunciationPart.tutorSteps) return;
+    const newTutorSteps = [...step.pronunciationPart.tutorSteps];
+    newTutorSteps[tutorIdx] = { ...newTutorSteps[tutorIdx], [field]: value };
+    updateStep(stepIdx, { pronunciationPart: { ...step.pronunciationPart, tutorSteps: newTutorSteps } });
+  };
+
+  const handleAddPronunciationTutorStep = (stepIdx: number) => {
+    const step = data.steps[stepIdx];
+    if (!step.pronunciationPart) return;
+    const currentSteps = step.pronunciationPart.tutorSteps || [];
+    updateStep(stepIdx, { pronunciationPart: { ...step.pronunciationPart, tutorSteps: [...currentSteps, { instruction: '', script: null, tip: null }] } });
+  };
+
+  const handleRemovePronunciationTutorStep = (stepIdx: number, tutorIdx: number) => {
+    const step = data.steps[stepIdx];
+    if (!step.pronunciationPart || !step.pronunciationPart.tutorSteps || step.pronunciationPart.tutorSteps.length <= 1) {
+      toast.error('At least one tutor step is required');
+      return;
+    }
+    updateStep(stepIdx, { pronunciationPart: { ...step.pronunciationPart, tutorSteps: step.pronunciationPart.tutorSteps.filter((_, i) => i !== tutorIdx) } });
   };
 
   return (
@@ -1773,11 +2212,130 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
                 </>
               )}
 
-              {/* PART II - Discussion (for both vocabulary and expressions) */}
-              {step.discussionPart ? (
+            </div>
+
+            {/* Right Column - Part I Tutor Guide */}
+            <div className="csve-learn-right">
+              <div className="csve-tutor-guide csve-editable-card">
+                <div className="csve-guide-header-edit">
+                  <span className="csve-guide-title">{data.sectionTitle} - {step.stepName.split(' ').slice(0, 2).join(' ')}</span>
+                  <span className="csve-guide-duration-wrap">
+                    (<input
+                      type="text"
+                      className="csve-duration-input"
+                      value={step.duration}
+                      onChange={e => updateStep(stepIdx, { duration: (e.target as HTMLInputElement).value })}
+                      placeholder="2 minutes"
+                    />)
+                  </span>
+                </div>
+                
+                <div className="csve-guide-steps">
+                  {step.tutorSteps.map((tutorStep, tutorIdx) => (
+                    <div key={tutorIdx} className="csve-guide-step csve-guide-step-editable">
+                      <span className="csve-guide-number">{tutorIdx + 1}</span>
+                      <div className="csve-guide-content">
+                        <input
+                          type="text"
+                          className="csve-guide-instruction-input"
+                          value={tutorStep.instruction}
+                          onChange={e => handleTutorStepChange(stepIdx, tutorIdx, 'instruction', (e.target as HTMLInputElement).value)}
+                          placeholder="Instruction..."
+                        />
+                        
+                        {tutorStep.script !== null && tutorStep.script !== undefined && (
+                          <div className="csve-guide-script-block">
+                            <span className="csve-script-quote">"</span>
+                            <input
+                              type="text"
+                              className="csve-guide-script-input"
+                              value={tutorStep.script || ''}
+                              onChange={e => handleTutorStepChange(stepIdx, tutorIdx, 'script', (e.target as HTMLInputElement).value)}
+                              placeholder="Say this..."
+                            />
+                            <span className="csve-script-quote">"</span>
+                            <button 
+                              className="csve-remove-extra-btn"
+                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'script', null)}
+                              title="Remove script"
+                            >
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        )}
+                        
+                        {tutorStep.tip !== null && tutorStep.tip !== undefined && (
+                          <div className="csve-guide-tip-block">
+                            <input
+                              type="text"
+                              className="csve-guide-tip-input"
+                              value={tutorStep.tip || ''}
+                              onChange={e => handleTutorStepChange(stepIdx, tutorIdx, 'tip', (e.target as HTMLInputElement).value)}
+                              placeholder="Add a tip..."
+                            />
+                            <button 
+                              className="csve-remove-extra-btn"
+                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'tip', null)}
+                              title="Remove tip"
+                            >
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        )}
+                        
+                        <div className="csve-guide-add-btns">
+                          {(tutorStep.script === null || tutorStep.script === undefined) && (
+                            <button 
+                              className="csve-add-script-btn"
+                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'script', '')}
+                            >
+                              <i className="ri-add-line" />
+                              Add Script
+                            </button>
+                          )}
+                          {(tutorStep.tip === null || tutorStep.tip === undefined) && (
+                            <button 
+                              className="csve-add-tip-btn"
+                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'tip', '')}
+                            >
+                              <i className="ri-add-line" />
+                              Add Tip
+                            </button>
+                          )}
+                        </div>
+                        
+                        {step.tutorSteps.length > 1 && (
+                          <button 
+                            className="csve-guide-step-remove"
+                            onClick={() => handleRemoveTutorStep(stepIdx, tutorIdx)}
+                          >
+                            <i className="ri-delete-bin-line" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <button 
+                    className="csve-add-guide-step-btn"
+                    onClick={() => handleAddTutorStep(stepIdx)}
+                  >
+                    <i className="ri-add-line" />
+                    Add Tutor Step
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PART II - Discussion (separate layout for alignment) */}
+          {step.discussionPart ? (
+            <div className="csve-learn-layout csve-part-layout">
+              {/* Left Column - Discussion Content */}
+              <div className="csve-learn-left">
                 <div className="csve-discuss-part">
                   <div className="csve-part-header">
-                    <span className="csve-part-label">Part {step.pronunciationPart ? 'II' : 'II'}</span>
+                    <span className="csve-part-label">Part II</span>
                     <button className="csve-remove-part-btn" onClick={() => handleRemoveDiscussionPart(stepIdx)}>
                       <i className="ri-close-line" /> Remove
                     </button>
@@ -1876,10 +2434,121 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
                     )}
                   </div>
                 </div>
-              ) : null}
+              </div>
+              
+              {/* Right Column - Discussion Tutor Guide */}
+              <div className="csve-learn-right">
+                {step.discussionPart.tutorSteps && (
+                <div className="csve-tutor-guide csve-editable-card csve-part-tutor-guide">
+                  <div className="csve-guide-header-edit">
+                    <span className="csve-guide-title">Part {step.pronunciationPart ? 'II' : 'II'} - Discussion</span>
+                  </div>
+                  
+                  <div className="csve-guide-steps">
+                    {step.discussionPart.tutorSteps.map((tutorStep, tutorIdx) => (
+                      <div key={tutorIdx} className="csve-guide-step csve-guide-step-editable">
+                        <span className="csve-guide-number">{tutorIdx + 1}</span>
+                        <div className="csve-guide-content">
+                          <input
+                            type="text"
+                            className="csve-guide-instruction-input"
+                            value={tutorStep.instruction}
+                            onChange={e => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'instruction', (e.target as HTMLInputElement).value)}
+                            placeholder="Instruction..."
+                          />
+                          
+                          {tutorStep.script !== null && tutorStep.script !== undefined && (
+                            <div className="csve-guide-script-block">
+                              <span className="csve-script-quote">"</span>
+                              <input
+                                type="text"
+                                className="csve-guide-script-input"
+                                value={tutorStep.script || ''}
+                                onChange={e => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'script', (e.target as HTMLInputElement).value)}
+                                placeholder="Say this..."
+                              />
+                              <span className="csve-script-quote">"</span>
+                              <button 
+                                className="csve-remove-extra-btn"
+                                onClick={() => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'script', null)}
+                                title="Remove script"
+                              >
+                                <i className="ri-close-line" />
+                              </button>
+                            </div>
+                          )}
+                          
+                          {tutorStep.tip !== null && tutorStep.tip !== undefined && (
+                            <div className="csve-guide-tip-block">
+                              <input
+                                type="text"
+                                className="csve-guide-tip-input"
+                                value={tutorStep.tip || ''}
+                                onChange={e => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'tip', (e.target as HTMLInputElement).value)}
+                                placeholder="Add a tip..."
+                              />
+                              <button 
+                                className="csve-remove-extra-btn"
+                                onClick={() => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'tip', null)}
+                                title="Remove tip"
+                              >
+                                <i className="ri-close-line" />
+                              </button>
+                            </div>
+                          )}
+                          
+                          <div className="csve-guide-add-btns">
+                            {(tutorStep.script === null || tutorStep.script === undefined) && (
+                              <button 
+                                className="csve-add-script-btn"
+                                onClick={() => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'script', '')}
+                              >
+                                <i className="ri-add-line" />
+                                Add Script
+                              </button>
+                            )}
+                            {(tutorStep.tip === null || tutorStep.tip === undefined) && (
+                              <button 
+                                className="csve-add-tip-btn"
+                                onClick={() => handleDiscussionTutorStepChange(stepIdx, tutorIdx, 'tip', '')}
+                              >
+                                <i className="ri-add-line" />
+                                Add Tip
+                              </button>
+                            )}
+                          </div>
+                          
+                          {(step.discussionPart!.tutorSteps?.length || 0) > 1 && (
+                            <button 
+                              className="csve-guide-step-remove"
+                              onClick={() => handleRemoveDiscussionTutorStep(stepIdx, tutorIdx)}
+                            >
+                              <i className="ri-delete-bin-line" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <button 
+                      className="csve-add-guide-step-btn"
+                      onClick={() => handleAddDiscussionTutorStep(stepIdx)}
+                    >
+                      <i className="ri-add-line" />
+                      Add Tutor Step
+                    </button>
+                  </div>
+                </div>
+              )}
+              </div>
+            </div>
+          ) : null}
 
-              {/* PART III - Pronunciation (for both vocabulary and expressions) */}
-              {step.pronunciationPart ? (
+          {/* PART III - Pronunciation (separate layout for alignment) */}
+          {step.pronunciationPart ? (
+            <div className="csve-learn-layout csve-part-layout">
+              {/* Left Column - Pronunciation Content */}
+              <div className="csve-learn-left">
                 <div className="csve-pronunciation-part">
                   <div className="csve-part-header">
                     <span className="csve-part-label">Part {step.discussionPart ? 'III' : 'II'} - Pronunciation</span>
@@ -2038,135 +2707,128 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
                     </div>
                   </div>
                 </div>
-              ) : null}
-
-              {/* Add Part Buttons */}
-              <div className="csve-add-parts-row">
-                {!step.discussionPart && (
-                  <button className="csve-add-part-btn" onClick={() => handleAddDiscussionPart(stepIdx)}>
-                    <i className="ri-add-line" /> Add Part {step.pronunciationPart ? 'II' : 'II'} (Discussion)
-                  </button>
-                )}
-                {!step.pronunciationPart && (
-                  <button className="csve-add-part-btn" onClick={() => handleAddPronunciationPart(stepIdx)}>
-                    <i className="ri-add-line" /> Add Part {step.discussionPart ? 'III' : 'II'} (Pronunciation)
-                  </button>
-                )}
               </div>
-            </div>
 
-            {/* Right Column - Tutor Guide */}
-            <div className="csve-learn-right">
-              <div className="csve-tutor-guide csve-editable-card">
-                <div className="csve-guide-header-edit">
-                  <span className="csve-guide-title">{data.sectionTitle} - {step.stepName.split(' ').slice(0, 2).join(' ')}</span>
-                  <span className="csve-guide-duration-wrap">
-                    (<input
-                      type="text"
-                      className="csve-duration-input"
-                      value={step.duration}
-                      onChange={e => updateStep(stepIdx, { duration: (e.target as HTMLInputElement).value })}
-                      placeholder="2 minutes"
-                    />)
-                  </span>
-                </div>
-                
-                <div className="csve-guide-steps">
-                  {step.tutorSteps.map((tutorStep, tutorIdx) => (
-                    <div key={tutorIdx} className="csve-guide-step csve-guide-step-editable">
-                      <span className="csve-guide-number">{tutorIdx + 1}</span>
-                      <div className="csve-guide-content">
-                        <input
-                          type="text"
-                          className="csve-guide-instruction-input"
-                          value={tutorStep.instruction}
-                          onChange={e => handleTutorStepChange(stepIdx, tutorIdx, 'instruction', (e.target as HTMLInputElement).value)}
-                          placeholder="Instruction..."
-                        />
-                        
-                        {tutorStep.script !== null && tutorStep.script !== undefined && (
-                          <div className="csve-guide-script-block">
-                            <span className="csve-script-quote">"</span>
-                            <input
-                              type="text"
-                              className="csve-guide-script-input"
-                              value={tutorStep.script || ''}
-                              onChange={e => handleTutorStepChange(stepIdx, tutorIdx, 'script', (e.target as HTMLInputElement).value)}
-                              placeholder="Say this..."
-                            />
-                            <span className="csve-script-quote">"</span>
-                            <button 
-                              className="csve-remove-extra-btn"
-                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'script', null)}
-                              title="Remove script"
-                            >
-                              <i className="ri-close-line" />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {tutorStep.tip !== null && tutorStep.tip !== undefined && (
-                          <div className="csve-guide-tip-block">
-                            <input
-                              type="text"
-                              className="csve-guide-tip-input"
-                              value={tutorStep.tip || ''}
-                              onChange={e => handleTutorStepChange(stepIdx, tutorIdx, 'tip', (e.target as HTMLInputElement).value)}
-                              placeholder="Add a tip..."
-                            />
-                            <button 
-                              className="csve-remove-extra-btn"
-                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'tip', null)}
-                              title="Remove tip"
-                            >
-                              <i className="ri-close-line" />
-                            </button>
-                          </div>
-                        )}
-                        
-                        <div className="csve-guide-add-btns">
-                          {(tutorStep.script === null || tutorStep.script === undefined) && (
-                            <button 
-                              className="csve-add-script-btn"
-                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'script', '')}
-                            >
-                              <i className="ri-add-line" />
-                              Add Script
-                            </button>
+              {/* Right Column - Pronunciation Tutor Guide */}
+              <div className="csve-learn-right">
+                {step.pronunciationPart.tutorSteps && (
+                <div className="csve-tutor-guide csve-editable-card csve-part-tutor-guide">
+                  <div className="csve-guide-header-edit">
+                    <span className="csve-guide-title">Part {step.discussionPart ? 'III' : 'II'} - Pronunciation</span>
+                  </div>
+                  
+                  <div className="csve-guide-steps">
+                    {step.pronunciationPart.tutorSteps.map((tutorStep, tutorIdx) => (
+                      <div key={tutorIdx} className="csve-guide-step csve-guide-step-editable">
+                        <span className="csve-guide-number">{tutorIdx + 1}</span>
+                        <div className="csve-guide-content">
+                          <input
+                            type="text"
+                            className="csve-guide-instruction-input"
+                            value={tutorStep.instruction}
+                            onChange={e => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'instruction', (e.target as HTMLInputElement).value)}
+                            placeholder="Instruction..."
+                          />
+                          
+                          {tutorStep.script !== null && tutorStep.script !== undefined && (
+                            <div className="csve-guide-script-block">
+                              <span className="csve-script-quote">"</span>
+                              <input
+                                type="text"
+                                className="csve-guide-script-input"
+                                value={tutorStep.script || ''}
+                                onChange={e => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'script', (e.target as HTMLInputElement).value)}
+                                placeholder="Say this..."
+                              />
+                              <span className="csve-script-quote">"</span>
+                              <button 
+                                className="csve-remove-extra-btn"
+                                onClick={() => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'script', null)}
+                                title="Remove script"
+                              >
+                                <i className="ri-close-line" />
+                              </button>
+                            </div>
                           )}
-                          {(tutorStep.tip === null || tutorStep.tip === undefined) && (
+                          
+                          {tutorStep.tip !== null && tutorStep.tip !== undefined && (
+                            <div className="csve-guide-tip-block">
+                              <input
+                                type="text"
+                                className="csve-guide-tip-input"
+                                value={tutorStep.tip || ''}
+                                onChange={e => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'tip', (e.target as HTMLInputElement).value)}
+                                placeholder="Add a tip..."
+                              />
+                              <button 
+                                className="csve-remove-extra-btn"
+                                onClick={() => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'tip', null)}
+                                title="Remove tip"
+                              >
+                                <i className="ri-close-line" />
+                              </button>
+                            </div>
+                          )}
+                          
+                          <div className="csve-guide-add-btns">
+                            {(tutorStep.script === null || tutorStep.script === undefined) && (
+                              <button 
+                                className="csve-add-script-btn"
+                                onClick={() => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'script', '')}
+                              >
+                                <i className="ri-add-line" />
+                                Add Script
+                              </button>
+                            )}
+                            {(tutorStep.tip === null || tutorStep.tip === undefined) && (
+                              <button 
+                                className="csve-add-tip-btn"
+                                onClick={() => handlePronunciationTutorStepChange(stepIdx, tutorIdx, 'tip', '')}
+                              >
+                                <i className="ri-add-line" />
+                                Add Tip
+                              </button>
+                            )}
+                          </div>
+                          
+                          {(step.pronunciationPart!.tutorSteps?.length || 0) > 1 && (
                             <button 
-                              className="csve-add-tip-btn"
-                              onClick={() => handleTutorStepChange(stepIdx, tutorIdx, 'tip', '')}
+                              className="csve-guide-step-remove"
+                              onClick={() => handleRemovePronunciationTutorStep(stepIdx, tutorIdx)}
                             >
-                              <i className="ri-add-line" />
-                              Add Tip
+                              <i className="ri-delete-bin-line" />
                             </button>
                           )}
                         </div>
-                        
-                        {step.tutorSteps.length > 1 && (
-                          <button 
-                            className="csve-guide-step-remove"
-                            onClick={() => handleRemoveTutorStep(stepIdx, tutorIdx)}
-                          >
-                            <i className="ri-delete-bin-line" />
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  ))}
-                  
-                  <button 
-                    className="csve-add-guide-step-btn"
-                    onClick={() => handleAddTutorStep(stepIdx)}
-                  >
-                    <i className="ri-add-line" />
-                    Add Tutor Step
-                  </button>
+                    ))}
+                    
+                    <button 
+                      className="csve-add-guide-step-btn"
+                      onClick={() => handleAddPronunciationTutorStep(stepIdx)}
+                    >
+                      <i className="ri-add-line" />
+                      Add Tutor Step
+                    </button>
+                  </div>
                 </div>
+              )}
               </div>
             </div>
+          ) : null}
+
+          {/* Add Part Buttons */}
+          <div className="csve-add-parts-row">
+            {!step.discussionPart && (
+              <button className="csve-add-part-btn" onClick={() => handleAddDiscussionPart(stepIdx)}>
+                <i className="ri-add-line" /> Add Part II (Discussion)
+              </button>
+            )}
+            {!step.pronunciationPart && (
+              <button className="csve-add-part-btn" onClick={() => handleAddPronunciationPart(stepIdx)}>
+                <i className="ri-add-line" /> Add Part {step.discussionPart ? 'III' : 'II'} (Pronunciation)
+              </button>
+            )}
           </div>
         </div>
       ))}
@@ -2175,6 +2837,1227 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
       <input ref={vocabImageInputRef} type="file" accept="image/*" onChange={handleVocabImageUpload} style={{ display: 'none' }} />
       <input ref={exprImageInputRef} type="file" accept="image/*" onChange={handleExprImageUpload} style={{ display: 'none' }} />
       <input ref={discussImageInputRef} type="file" accept="image/*" onChange={handleDiscussImageUpload} style={{ display: 'none' }} />
+    </section>
+  );
+}
+
+// ============================================================================
+// STEP B SECTION EDITOR
+// ============================================================================
+
+interface StepBSectionEditorProps {
+  data: StepBData;
+  onChange: (data: StepBData) => void;
+}
+
+function StepBSectionEditor({ data, onChange }: StepBSectionEditorProps) {
+  const speaker1ImageInputRef = useRef<HTMLInputElement>(null);
+  const speaker2ImageInputRef = useRef<HTMLInputElement>(null);
+  const [activeSpeaker, setActiveSpeaker] = useState<1 | 2 | null>(null);
+
+  // Switch step type handler
+  const handleSwitchStepBType = (newType: StepBType) => {
+    if (newType === data.stepType) return;
+    
+    if (newType === 'speak-your-mind') {
+      onChange({
+        stepType: 'speak-your-mind',
+        speakYourMind: data.speakYourMind || DEFAULT_SPEAK_YOUR_MIND,
+        grammarTip: data.grammarTip,
+        pronunciation: data.pronunciation
+      });
+    } else if (newType === 'grammar-tip') {
+      onChange({
+        stepType: 'grammar-tip',
+        speakYourMind: data.speakYourMind,
+        grammarTip: data.grammarTip || DEFAULT_GRAMMAR_TIP,
+        pronunciation: data.pronunciation
+      });
+    } else {
+      onChange({
+        stepType: 'pronunciation',
+        speakYourMind: data.speakYourMind,
+        grammarTip: data.grammarTip,
+        pronunciation: data.pronunciation || DEFAULT_STEPB_PRONUNCIATION
+      });
+    }
+  };
+
+  // Update the speak your mind data
+  const updateSpeakYourMind = (updates: Partial<SpeakYourMindData>) => {
+    if (!data.speakYourMind) return;
+    onChange({
+      ...data,
+      speakYourMind: { ...data.speakYourMind, ...updates }
+    });
+  };
+
+  // Update the grammar tip data
+  const updateGrammarTip = (updates: Partial<GrammarTipData>) => {
+    if (!data.grammarTip) return;
+    onChange({
+      ...data,
+      grammarTip: { ...data.grammarTip, ...updates }
+    });
+  };
+
+  // Update speaker data
+  const updateSpeaker = (speakerNum: 1 | 2, updates: Partial<ConversationSpeaker>) => {
+    if (!data.speakYourMind) return;
+    const key = speakerNum === 1 ? 'speaker1' : 'speaker2';
+    onChange({
+      ...data,
+      speakYourMind: {
+        ...data.speakYourMind,
+        [key]: { ...data.speakYourMind[key], ...updates }
+      }
+    });
+  };
+
+  // Tutor step handlers for Speak Your Mind
+  const handleTutorStepChange = (idx: number, field: string, value: any) => {
+    if (!data.speakYourMind) return;
+    const newSteps = [...data.speakYourMind.tutorSteps];
+    newSteps[idx] = { ...newSteps[idx], [field]: value };
+    updateSpeakYourMind({ tutorSteps: newSteps });
+  };
+
+  const handleAddTutorStep = () => {
+    if (!data.speakYourMind) return;
+    updateSpeakYourMind({
+      tutorSteps: [...data.speakYourMind.tutorSteps, { instruction: '', script: null, tip: null }]
+    });
+  };
+
+  const handleRemoveTutorStep = (idx: number) => {
+    if (!data.speakYourMind) return;
+    updateSpeakYourMind({
+      tutorSteps: data.speakYourMind.tutorSteps.filter((_, i) => i !== idx)
+    });
+  };
+
+  // Tutor step handlers for Grammar Tip
+  const handleGrammarTutorStepChange = (idx: number, field: string, value: any) => {
+    if (!data.grammarTip) return;
+    const newSteps = [...data.grammarTip.tutorSteps];
+    newSteps[idx] = { ...newSteps[idx], [field]: value };
+    updateGrammarTip({ tutorSteps: newSteps });
+  };
+
+  const handleAddGrammarTutorStep = () => {
+    if (!data.grammarTip) return;
+    updateGrammarTip({
+      tutorSteps: [...data.grammarTip.tutorSteps, { instruction: '', script: null, tip: null }]
+    });
+  };
+
+  const handleRemoveGrammarTutorStep = (idx: number) => {
+    if (!data.grammarTip) return;
+    updateGrammarTip({
+      tutorSteps: data.grammarTip.tutorSteps.filter((_, i) => i !== idx)
+    });
+  };
+
+  // Grammar explanation handlers
+  const handleExplanationChange = (idx: number, field: keyof GrammarExplanation, value: any) => {
+    if (!data.grammarTip) return;
+    const newExplanations = [...data.grammarTip.explanations];
+    newExplanations[idx] = { ...newExplanations[idx], [field]: value };
+    updateGrammarTip({ explanations: newExplanations });
+  };
+
+  const handleAddExplanation = () => {
+    if (!data.grammarTip) return;
+    updateGrammarTip({
+      explanations: [...data.grammarTip.explanations, { ruleText: '', ruleTranslation: '' }]
+    });
+  };
+
+  const handleRemoveExplanation = (idx: number) => {
+    if (!data.grammarTip) return;
+    updateGrammarTip({
+      explanations: data.grammarTip.explanations.filter((_, i) => i !== idx)
+    });
+  };
+
+  // Grammar example handlers
+  const handleExampleChange = (explIdx: number, exIdx: number, field: keyof GrammarExample, value: string) => {
+    if (!data.grammarTip) return;
+    const newExplanations = [...data.grammarTip.explanations];
+    const newExamples = [...(newExplanations[explIdx].examples || [])];
+    newExamples[exIdx] = { ...newExamples[exIdx], [field]: value };
+    newExplanations[explIdx] = { ...newExplanations[explIdx], examples: newExamples };
+    updateGrammarTip({ explanations: newExplanations });
+  };
+
+  const handleAddExample = (explIdx: number) => {
+    if (!data.grammarTip) return;
+    const newExplanations = [...data.grammarTip.explanations];
+    const currentExamples = newExplanations[explIdx].examples || [];
+    newExplanations[explIdx] = {
+      ...newExplanations[explIdx],
+      examplesTitle: newExplanations[explIdx].examplesTitle || 'EXAMPLES',
+      examples: [...currentExamples, { sentence: '', translation: '' }]
+    };
+    updateGrammarTip({ explanations: newExplanations });
+  };
+
+  const handleRemoveExample = (explIdx: number, exIdx: number) => {
+    if (!data.grammarTip) return;
+    const newExplanations = [...data.grammarTip.explanations];
+    const newExamples = (newExplanations[explIdx].examples || []).filter((_, i) => i !== exIdx);
+    newExplanations[explIdx] = { 
+      ...newExplanations[explIdx], 
+      examples: newExamples.length > 0 ? newExamples : undefined,
+      examplesTitle: newExamples.length > 0 ? newExplanations[explIdx].examplesTitle : undefined
+    };
+    updateGrammarTip({ explanations: newExplanations });
+  };
+
+  // ========== PRONUNCIATION HANDLERS ==========
+  
+  // Update the pronunciation data
+  const updatePronunciation = (updates: Partial<StepBPronunciationData>) => {
+    if (!data.pronunciation) return;
+    onChange({
+      ...data,
+      pronunciation: { ...data.pronunciation, ...updates }
+    });
+  };
+
+  // Tutor step handlers for Pronunciation
+  const handlePronunciationTutorStepChange = (idx: number, field: string, value: any) => {
+    if (!data.pronunciation) return;
+    const newSteps = [...data.pronunciation.tutorSteps];
+    newSteps[idx] = { ...newSteps[idx], [field]: value };
+    updatePronunciation({ tutorSteps: newSteps });
+  };
+
+  const handleAddPronunciationTutorStep = () => {
+    if (!data.pronunciation) return;
+    updatePronunciation({
+      tutorSteps: [...data.pronunciation.tutorSteps, { instruction: '', script: null, tip: null }]
+    });
+  };
+
+  const handleRemovePronunciationTutorStep = (idx: number) => {
+    if (!data.pronunciation) return;
+    updatePronunciation({
+      tutorSteps: data.pronunciation.tutorSteps.filter((_, i) => i !== idx)
+    });
+  };
+
+  // Pronunciation phrase handlers
+  const handlePhraseChange = (idx: number, field: keyof PronunciationPhrase, value: string) => {
+    if (!data.pronunciation) return;
+    const newPhrases = [...data.pronunciation.phrases];
+    newPhrases[idx] = { ...newPhrases[idx], [field]: value };
+    updatePronunciation({ phrases: newPhrases });
+  };
+
+  const handleAddPhrase = () => {
+    if (!data.pronunciation) return;
+    updatePronunciation({
+      phrases: [...data.pronunciation.phrases, { phrase: '', pronunciationGuide: '', exampleSentence: '' }]
+    });
+  };
+
+  const handleRemovePhrase = (idx: number) => {
+    if (!data.pronunciation) return;
+    updatePronunciation({
+      phrases: data.pronunciation.phrases.filter((_, i) => i !== idx)
+    });
+  };
+
+  // Image upload handlers
+  const handleSpeakerImageClick = (speakerNum: 1 | 2) => {
+    setActiveSpeaker(speakerNum);
+    if (speakerNum === 1) {
+      speaker1ImageInputRef.current?.click();
+    } else {
+      speaker2ImageInputRef.current?.click();
+    }
+  };
+
+  const handleSpeakerImageUpload = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file || !activeSpeaker) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateSpeaker(activeSpeaker, { image: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+    (e.target as HTMLInputElement).value = '';
+  };
+
+  // Get current tutor steps based on type
+  const getCurrentTutorSteps = () => {
+    if (data.stepType === 'speak-your-mind' && data.speakYourMind) {
+      return data.speakYourMind.tutorSteps;
+    }
+    if (data.stepType === 'grammar-tip' && data.grammarTip) {
+      return data.grammarTip.tutorSteps;
+    }
+    if (data.stepType === 'pronunciation' && data.pronunciation) {
+      return data.pronunciation.tutorSteps;
+    }
+    return [];
+  };
+
+  const getCurrentStepName = () => {
+    if (data.stepType === 'speak-your-mind' && data.speakYourMind) {
+      return data.speakYourMind.stepName;
+    }
+    if (data.stepType === 'grammar-tip' && data.grammarTip) {
+      return data.grammarTip.stepName;
+    }
+    if (data.stepType === 'pronunciation' && data.pronunciation) {
+      return data.pronunciation.stepName;
+    }
+    return 'STEP B';
+  };
+
+  const getCurrentDuration = () => {
+    if (data.stepType === 'speak-your-mind' && data.speakYourMind) {
+      return data.speakYourMind.duration;
+    }
+    if (data.stepType === 'grammar-tip' && data.grammarTip) {
+      return data.grammarTip.duration;
+    }
+    if (data.stepType === 'pronunciation' && data.pronunciation) {
+      return data.pronunciation.duration;
+    }
+    return '1 minute';
+  };
+
+  const setCurrentDuration = (duration: string) => {
+    if (data.stepType === 'speak-your-mind') {
+      updateSpeakYourMind({ duration });
+    } else if (data.stepType === 'grammar-tip') {
+      updateGrammarTip({ duration });
+    } else if (data.stepType === 'pronunciation') {
+      updatePronunciation({ duration });
+    }
+  };
+
+  const tutorSteps = getCurrentTutorSteps();
+  const handleCurrentTutorStepChange = 
+    data.stepType === 'speak-your-mind' ? handleTutorStepChange : 
+    data.stepType === 'grammar-tip' ? handleGrammarTutorStepChange :
+    handlePronunciationTutorStepChange;
+  const handleCurrentAddTutorStep = 
+    data.stepType === 'speak-your-mind' ? handleAddTutorStep : 
+    data.stepType === 'grammar-tip' ? handleAddGrammarTutorStep :
+    handleAddPronunciationTutorStep;
+  const handleCurrentRemoveTutorStep = 
+    data.stepType === 'speak-your-mind' ? handleRemoveTutorStep : 
+    data.stepType === 'grammar-tip' ? handleRemoveGrammarTutorStep :
+    handleRemovePronunciationTutorStep;
+
+  return (
+    <section className="csve-section csve-stepb-section">
+      {/* Step Type Switcher */}
+      <div className="csve-step-type-switcher">
+        <span className="csve-switcher-label">Step B Type:</span>
+        <div className="csve-switcher-buttons">
+          <button
+            className={`csve-switcher-btn ${data.stepType === 'speak-your-mind' ? 'active' : ''}`}
+            onClick={() => handleSwitchStepBType('speak-your-mind')}
+          >
+            <i className="ri-chat-smile-2-line" />
+            Speak Your Mind
+          </button>
+          <button
+            className={`csve-switcher-btn ${data.stepType === 'grammar-tip' ? 'active' : ''}`}
+            onClick={() => handleSwitchStepBType('grammar-tip')}
+          >
+            <i className="ri-lightbulb-line" />
+            Grammar Tip
+          </button>
+          <button
+            className={`csve-switcher-btn ${data.stepType === 'pronunciation' ? 'active' : ''}`}
+            onClick={() => handleSwitchStepBType('pronunciation')}
+          >
+            <i className="ri-speak-line" />
+            Pronunciation
+          </button>
+        </div>
+      </div>
+
+      <div className="csve-stepb-content">
+        {/* Left Column - Content */}
+        <div className="csve-stepb-left">
+          {/* SPEAK YOUR MIND CONTENT */}
+          {data.stepType === 'speak-your-mind' && data.speakYourMind && (
+            <>
+              {/* Step Name Header */}
+              <input
+                type="text"
+                className="csve-stepb-name"
+                value={data.speakYourMind.stepName}
+                onChange={e => updateSpeakYourMind({ stepName: (e.target as HTMLInputElement).value })}
+                placeholder="STEP B SPEAK YOUR MIND"
+              />
+
+              {/* Explanation */}
+              <input
+                type="text"
+                className="csve-stepb-explanation"
+                value={data.speakYourMind.explanation}
+                onChange={e => updateSpeakYourMind({ explanation: (e.target as HTMLInputElement).value })}
+                placeholder="Enter the grammar/phrase explanation..."
+              />
+
+              {/* Conversation */}
+              <div className="csve-conversation">
+                {/* Speaker 1 - Left side (asks question) */}
+                <div className="csve-conversation-row csve-speaker-left">
+                  <div 
+                    className="csve-speaker-image"
+                    onClick={() => handleSpeakerImageClick(1)}
+                  >
+                    {data.speakYourMind.speaker1.image ? (
+                      <img src={data.speakYourMind.speaker1.image} alt="Speaker 1" />
+                    ) : (
+                      <div className="csve-image-placeholder csve-speaker-placeholder">
+                        <span className="csve-placeholder-dims">150 × 150</span>
+                        <span className="csve-placeholder-text">Click to add</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="csve-speech-bubble csve-speech-left">
+                    <RichTextInput
+                      value={data.speakYourMind.speaker1.speechBubble}
+                      onChange={html => updateSpeaker(1, { speechBubble: html })}
+                      placeholder="Enter the question/prompt..."
+                      className="csve-speech-input"
+                      singleLine={false}
+                    />
+                  </div>
+                </div>
+
+                {/* Speaker 2 - Right side (gives response with grammar phrase) */}
+                <div className="csve-conversation-row csve-speaker-right">
+                  <div className="csve-speech-bubble csve-speech-right">
+                    <RichTextInput
+                      value={data.speakYourMind.speaker2.speechBubble}
+                      onChange={html => updateSpeaker(2, { speechBubble: html })}
+                      placeholder="Enter the response (use Ctrl+B to bold the key phrase)..."
+                      className="csve-speech-input"
+                      singleLine={false}
+                    />
+                  </div>
+                  <div 
+                    className="csve-speaker-image"
+                    onClick={() => handleSpeakerImageClick(2)}
+                  >
+                    {data.speakYourMind.speaker2.image ? (
+                      <img src={data.speakYourMind.speaker2.image} alt="Speaker 2" />
+                    ) : (
+                      <div className="csve-image-placeholder csve-speaker-placeholder">
+                        <span className="csve-placeholder-dims">150 × 150</span>
+                        <span className="csve-placeholder-text">Click to add</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Question */}
+              <div className="csve-stepb-question-section">
+                <span className="csve-question-bullet">•</span>
+                <input
+                  type="text"
+                  className="csve-stepb-question"
+                  value={data.speakYourMind.question}
+                  onChange={e => updateSpeakYourMind({ question: (e.target as HTMLInputElement).value })}
+                  placeholder="Enter the question for the student..."
+                />
+              </div>
+            </>
+          )}
+
+          {/* GRAMMAR TIP CONTENT */}
+          {data.stepType === 'grammar-tip' && data.grammarTip && (
+            <>
+              {/* Step Name Header */}
+              <input
+                type="text"
+                className="csve-stepb-name"
+                value={data.grammarTip.stepName}
+                onChange={e => updateGrammarTip({ stepName: (e.target as HTMLInputElement).value })}
+                placeholder="STEP B GRAMMAR TIP"
+              />
+
+              {/* Grammar Explanations */}
+              <div className="csve-grammar-explanations">
+                {data.grammarTip.explanations.map((expl, explIdx) => (
+                  <div key={explIdx} className="csve-grammar-block">
+                    {/* Rule text - Rich text for bold/italic */}
+                    <div className="csve-grammar-rule">
+                      <RichTextInput
+                        value={expl.ruleText}
+                        onChange={html => handleExplanationChange(explIdx, 'ruleText', html)}
+                        placeholder="Enter grammar rule (use Ctrl+B for bold, Ctrl+I for italic)..."
+                        className="csve-grammar-rule-input"
+                        singleLine={false}
+                      />
+                    </div>
+                    
+                    {/* Rule translation */}
+                    <input
+                      type="text"
+                      className="csve-grammar-translation"
+                      value={expl.ruleTranslation}
+                      onChange={e => handleExplanationChange(explIdx, 'ruleTranslation', (e.target as HTMLInputElement).value)}
+                      placeholder="Translation..."
+                    />
+
+                    {/* Examples Box (optional) */}
+                    {expl.examples && expl.examples.length > 0 ? (
+                      <div className="csve-grammar-examples-box">
+                        <input
+                          type="text"
+                          className="csve-examples-title"
+                          value={expl.examplesTitle || 'EXAMPLES'}
+                          onChange={e => handleExplanationChange(explIdx, 'examplesTitle', (e.target as HTMLInputElement).value)}
+                          placeholder="EXAMPLES"
+                        />
+                        <div className="csve-examples-list">
+                          {expl.examples.map((ex, exIdx) => (
+                            <div key={exIdx} className="csve-example-item">
+                              <span className="csve-example-bullet">•</span>
+                              <div className="csve-example-content">
+                                <RichTextInput
+                                  value={ex.sentence}
+                                  onChange={html => handleExampleChange(explIdx, exIdx, 'sentence', html)}
+                                  placeholder="Example sentence (use Ctrl+B for bold)..."
+                                  className="csve-example-sentence"
+                                  singleLine={true}
+                                />
+                                <input
+                                  type="text"
+                                  className="csve-example-translation"
+                                  value={ex.translation}
+                                  onChange={e => handleExampleChange(explIdx, exIdx, 'translation', (e.target as HTMLInputElement).value)}
+                                  placeholder="Translation..."
+                                />
+                              </div>
+                              {expl.examples!.length > 1 && (
+                                <button 
+                                  className="csve-example-remove"
+                                  onClick={() => handleRemoveExample(explIdx, exIdx)}
+                                >
+                                  <i className="ri-close-line" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <button className="csve-add-example-btn" onClick={() => handleAddExample(explIdx)}>
+                          <i className="ri-add-line" /> Add Example
+                        </button>
+                      </div>
+                    ) : (
+                      <button className="csve-add-examples-btn" onClick={() => handleAddExample(explIdx)}>
+                        <i className="ri-add-line" /> Add Examples Box
+                      </button>
+                    )}
+
+                    {/* Remove explanation button */}
+                    {data.grammarTip!.explanations.length > 1 && (
+                      <button 
+                        className="csve-remove-explanation-btn"
+                        onClick={() => handleRemoveExplanation(explIdx)}
+                      >
+                        <i className="ri-delete-bin-line" /> Remove Block
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                <button className="csve-add-explanation-btn" onClick={handleAddExplanation}>
+                  <i className="ri-add-line" /> Add Grammar Block
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* PRONUNCIATION CONTENT */}
+          {data.stepType === 'pronunciation' && data.pronunciation && (
+            <>
+              {/* Step Name Header */}
+              <input
+                type="text"
+                className="csve-stepb-name"
+                value={data.pronunciation.stepName}
+                onChange={e => updatePronunciation({ stepName: (e.target as HTMLInputElement).value })}
+                placeholder="STEP B PRONUNCIATION"
+              />
+
+              {/* Pronunciation Tip */}
+              <div className="csve-pronunciation-tip">
+                <RichTextInput
+                  value={data.pronunciation.tip}
+                  onChange={html => updatePronunciation({ tip: html })}
+                  placeholder="Enter pronunciation tip (e.g., When one word ends with a consonant sound and the next word starts with a vowel sound, they are often linked together.)"
+                  className="csve-pronunciation-tip-input"
+                  singleLine={false}
+                />
+              </div>
+
+              {/* Phrases Table */}
+              <div className="csve-pronunciation-table">
+                <div className="csve-pronunciation-header">
+                  <div className="csve-pronunciation-col-phrase">Phrase</div>
+                  <div className="csve-pronunciation-col-example">Example</div>
+                </div>
+                
+                {data.pronunciation.phrases.map((phrase, phraseIdx) => (
+                  <div key={phraseIdx} className="csve-pronunciation-row">
+                    <div className="csve-pronunciation-col-phrase">
+                      <input
+                        type="text"
+                        className="csve-phrase-text"
+                        value={phrase.phrase}
+                        onChange={e => handlePhraseChange(phraseIdx, 'phrase', (e.target as HTMLInputElement).value)}
+                        placeholder="cost a fortune"
+                      />
+                      <input
+                        type="text"
+                        className="csve-phrase-guide"
+                        value={phrase.pronunciationGuide}
+                        onChange={e => handlePhraseChange(phraseIdx, 'pronunciationGuide', (e.target as HTMLInputElement).value)}
+                        placeholder="/ cos-ta fortune /"
+                      />
+                    </div>
+                    <div className="csve-pronunciation-col-example">
+                      <RichTextInput
+                        value={phrase.exampleSentence}
+                        onChange={html => handlePhraseChange(phraseIdx, 'exampleSentence', html)}
+                        placeholder="That vacation must have cost a fortune!"
+                        className="csve-phrase-example"
+                        singleLine={true}
+                      />
+                      {data.pronunciation!.phrases.length > 1 && (
+                        <button 
+                          className="csve-phrase-remove"
+                          onClick={() => handleRemovePhrase(phraseIdx)}
+                        >
+                          <i className="ri-close-line" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                <button className="csve-add-phrase-btn" onClick={handleAddPhrase}>
+                  <i className="ri-add-line" /> Add Phrase
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Right Column - Tutor Guide */}
+        <div className="csve-stepb-right">
+          <div className="csve-tutor-guide csve-editable-card">
+            <div className="csve-guide-header-edit">
+              <span className="csve-guide-title">PRESENT</span>
+              <span className="csve-guide-duration-wrap">
+                {getCurrentStepName().split(' ').slice(0, 2).join(' ')} (<input
+                  type="text"
+                  className="csve-duration-input"
+                  value={getCurrentDuration()}
+                  onChange={e => setCurrentDuration((e.target as HTMLInputElement).value)}
+                  placeholder="1 minute"
+                />)
+              </span>
+            </div>
+            
+            <div className="csve-guide-steps">
+              {tutorSteps.map((tutorStep, tutorIdx) => (
+                <div key={tutorIdx} className="csve-guide-step csve-guide-step-editable">
+                  <span className="csve-guide-number">{tutorIdx + 1}</span>
+                  <div className="csve-guide-content">
+                    <input
+                      type="text"
+                      className="csve-guide-instruction-input"
+                      value={tutorStep.instruction}
+                      onChange={e => handleCurrentTutorStepChange(tutorIdx, 'instruction', (e.target as HTMLInputElement).value)}
+                      placeholder="Instruction..."
+                    />
+                    
+                    {tutorStep.script !== null && tutorStep.script !== undefined && (
+                      <div className="csve-guide-script-block">
+                        <span className="csve-script-quote">"</span>
+                        <input
+                          type="text"
+                          className="csve-guide-script-input"
+                          value={tutorStep.script || ''}
+                          onChange={e => handleCurrentTutorStepChange(tutorIdx, 'script', (e.target as HTMLInputElement).value)}
+                          placeholder="Say this..."
+                        />
+                        <span className="csve-script-quote">"</span>
+                        <button 
+                          className="csve-remove-extra-btn"
+                          onClick={() => handleCurrentTutorStepChange(tutorIdx, 'script', null)}
+                          title="Remove script"
+                        >
+                          <i className="ri-close-line" />
+                        </button>
+                      </div>
+                    )}
+                    
+                    {tutorStep.tip !== null && tutorStep.tip !== undefined && (
+                      <div className="csve-guide-tip-block">
+                        <input
+                          type="text"
+                          className="csve-guide-tip-input"
+                          value={tutorStep.tip || ''}
+                          onChange={e => handleCurrentTutorStepChange(tutorIdx, 'tip', (e.target as HTMLInputElement).value)}
+                          placeholder="Add a tip..."
+                        />
+                        <button 
+                          className="csve-remove-extra-btn"
+                          onClick={() => handleCurrentTutorStepChange(tutorIdx, 'tip', null)}
+                          title="Remove tip"
+                        >
+                          <i className="ri-close-line" />
+                        </button>
+                      </div>
+                    )}
+                    
+                    <div className="csve-guide-add-btns">
+                      {(tutorStep.script === null || tutorStep.script === undefined) && (
+                        <button 
+                          className="csve-add-script-btn"
+                          onClick={() => handleCurrentTutorStepChange(tutorIdx, 'script', '')}
+                        >
+                          <i className="ri-add-line" />
+                          Add Script
+                        </button>
+                      )}
+                      {(tutorStep.tip === null || tutorStep.tip === undefined) && (
+                        <button 
+                          className="csve-add-tip-btn"
+                          onClick={() => handleCurrentTutorStepChange(tutorIdx, 'tip', '')}
+                        >
+                          <i className="ri-add-line" />
+                          Add Tip
+                        </button>
+                      )}
+                    </div>
+                    
+                    {tutorSteps.length > 1 && (
+                      <button 
+                        className="csve-guide-step-remove"
+                        onClick={() => handleCurrentRemoveTutorStep(tutorIdx)}
+                      >
+                        <i className="ri-delete-bin-line" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              <button 
+                className="csve-add-guide-step-btn"
+                onClick={handleCurrentAddTutorStep}
+              >
+                <i className="ri-add-line" />
+                Add Tutor Step
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden file inputs */}
+      <input ref={speaker1ImageInputRef} type="file" accept="image/*" onChange={handleSpeakerImageUpload} style={{ display: 'none' }} />
+      <input ref={speaker2ImageInputRef} type="file" accept="image/*" onChange={handleSpeakerImageUpload} style={{ display: 'none' }} />
+    </section>
+  );
+}
+
+// ============================================================================
+// APPLY SECTION EDITOR (Section 3 - Speaking/Understanding)
+// ============================================================================
+
+interface ApplySectionEditorProps {
+  data: ApplySectionData;
+  onChange: (data: ApplySectionData) => void;
+}
+
+function ApplySectionEditor({ data, onChange }: ApplySectionEditorProps) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Update main data
+  const updateData = (updates: Partial<ApplySectionData>) => {
+    onChange({ ...data, ...updates });
+  };
+
+  // Switch activity type handler
+  const handleSwitchActivityType = (newType: ApplyActivityType) => {
+    if (newType === data.activityType) return;
+    
+    if (newType === 'speaking') {
+      onChange({
+        ...DEFAULT_APPLY_SPEAKING,
+        sectionNumber: data.sectionNumber,
+        sectionTitle: data.sectionTitle,
+        situationImage: data.situationImage,
+      });
+    } else {
+      onChange({
+        ...DEFAULT_APPLY_LISTENING,
+        sectionNumber: data.sectionNumber,
+        sectionTitle: data.sectionTitle,
+        situationImage: data.situationImage,
+      });
+    }
+  };
+
+  // Listening script handler
+  const handleListeningScriptChange = (stepIndex: number, value: string) => {
+    const newSteps = [...data.tutorSteps];
+    newSteps[stepIndex] = { ...newSteps[stepIndex], listeningScript: value };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleAddListeningScript = (stepIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    newSteps[stepIndex] = { ...newSteps[stepIndex], listeningScript: "" };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleRemoveListeningScript = (stepIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    newSteps[stepIndex] = { ...newSteps[stepIndex], listeningScript: undefined };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  // Dialogue line handlers
+  const handleDialogueChange = (index: number, field: keyof DialogueLine, value: string | boolean) => {
+    const newLines = [...data.dialogueLines];
+    newLines[index] = { ...newLines[index], [field]: value };
+    updateData({ dialogueLines: newLines });
+  };
+
+  const handleAddDialogueLine = () => {
+    const lastSpeaker = data.dialogueLines.length > 0 
+      ? data.dialogueLines[data.dialogueLines.length - 1].speaker 
+      : "Speaker";
+    updateData({
+      dialogueLines: [...data.dialogueLines, { speaker: lastSpeaker, text: "" }]
+    });
+  };
+
+  const handleRemoveDialogueLine = (index: number) => {
+    updateData({
+      dialogueLines: data.dialogueLines.filter((_, i) => i !== index)
+    });
+  };
+
+  // Tutor step handlers
+  const handleTutorStepChange = (index: number, field: keyof ApplyTutorStep, value: any) => {
+    const newSteps = [...data.tutorSteps];
+    newSteps[index] = { ...newSteps[index], [field]: value };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleAddTutorStep = () => {
+    updateData({
+      tutorSteps: [...data.tutorSteps, { instruction: "" }]
+    });
+  };
+
+  const handleRemoveTutorStep = (index: number) => {
+    updateData({
+      tutorSteps: data.tutorSteps.filter((_, i) => i !== index)
+    });
+  };
+
+  // Script bullet handlers
+  const handleAddScript = (stepIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    const currentScripts = newSteps[stepIndex].scripts || [];
+    newSteps[stepIndex] = { ...newSteps[stepIndex], scripts: [...currentScripts, { text: "" }] };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleScriptChange = (stepIndex: number, scriptIndex: number, value: string) => {
+    const newSteps = [...data.tutorSteps];
+    const scripts = [...(newSteps[stepIndex].scripts || [])];
+    scripts[scriptIndex] = { text: value };
+    newSteps[stepIndex] = { ...newSteps[stepIndex], scripts };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleRemoveScript = (stepIndex: number, scriptIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    const scripts = (newSteps[stepIndex].scripts || []).filter((_, i) => i !== scriptIndex);
+    newSteps[stepIndex] = { ...newSteps[stepIndex], scripts: scripts.length > 0 ? scripts : undefined };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  // Tip handlers
+  const handleAddTip = (stepIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    const currentTips = newSteps[stepIndex].tips || [];
+    newSteps[stepIndex] = { ...newSteps[stepIndex], tips: [...currentTips, { text: "" }] };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleTipChange = (stepIndex: number, tipIndex: number, value: string) => {
+    const newSteps = [...data.tutorSteps];
+    const tips = [...(newSteps[stepIndex].tips || [])];
+    tips[tipIndex] = { text: value };
+    newSteps[stepIndex] = { ...newSteps[stepIndex], tips };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleRemoveTip = (stepIndex: number, tipIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    const tips = (newSteps[stepIndex].tips || []).filter((_, i) => i !== tipIndex);
+    newSteps[stepIndex] = { ...newSteps[stepIndex], tips: tips.length > 0 ? tips : undefined };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  // Question handlers
+  const handleAddQuestion = (stepIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    const currentQuestions = newSteps[stepIndex].questions || [];
+    newSteps[stepIndex] = { ...newSteps[stepIndex], questions: [...currentQuestions, { question: "", answer: "" }] };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleQuestionChange = (stepIndex: number, qIndex: number, field: 'question' | 'answer', value: string) => {
+    const newSteps = [...data.tutorSteps];
+    const questions = [...(newSteps[stepIndex].questions || [])];
+    questions[qIndex] = { ...questions[qIndex], [field]: value };
+    newSteps[stepIndex] = { ...newSteps[stepIndex], questions };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  const handleRemoveQuestion = (stepIndex: number, qIndex: number) => {
+    const newSteps = [...data.tutorSteps];
+    const questions = (newSteps[stepIndex].questions || []).filter((_, i) => i !== qIndex);
+    newSteps[stepIndex] = { ...newSteps[stepIndex], questions: questions.length > 0 ? questions : undefined };
+    updateData({ tutorSteps: newSteps });
+  };
+
+  // Image upload handler
+  const handleImageClick = () => {
+    imageInputRef.current?.click();
+  };
+
+  const handleImageUpload = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateData({ situationImage: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <section className="csve-section csve-apply-section">
+      {/* Section Header - matches Section 2 */}
+      <div className="csve-section-number">
+        <span className="csve-number-badge">{data.sectionNumber}</span>
+        <h2 className="csve-section-title">{data.sectionTitle}</h2>
+        <div className="csve-section-line" />
+      </div>
+
+      {/* Activity Type Switcher */}
+      <div className="csve-step-type-switcher">
+        <span className="csve-switcher-label">Activity Type:</span>
+        <div className="csve-switcher-buttons">
+          <button
+            className={`csve-switcher-btn ${data.activityType === 'speaking' ? 'active' : ''}`}
+            onClick={() => handleSwitchActivityType('speaking')}
+          >
+            <i className="ri-speak-line" />
+            Speaking
+          </button>
+          <button
+            className={`csve-switcher-btn ${data.activityType === 'listening' ? 'active' : ''}`}
+            onClick={() => handleSwitchActivityType('listening')}
+          >
+            <i className="ri-headphone-line" />
+            Listening
+          </button>
+        </div>
+      </div>
+
+      {/* Activity Title */}
+      <h3 className="csve-step-name">{data.activityTitle}</h3>
+
+      <div className="csve-apply-content">
+        {/* Left Column - Main Content */}
+        <div className="csve-apply-left">
+          {/* Situation Text */}
+          <input
+            type="text"
+            className="csve-apply-situation"
+            value={data.situationText}
+            onChange={e => updateData({ situationText: (e.target as HTMLInputElement).value })}
+            placeholder="Describe the situation..."
+          />
+
+          {/* Situation Image */}
+          <div 
+            className="csve-apply-image"
+            onClick={handleImageClick}
+          >
+            {data.situationImage ? (
+              <img src={data.situationImage} alt="Situation" />
+            ) : (
+              <div className="csve-image-placeholder csve-apply-img-placeholder">
+                <span className="csve-placeholder-dims">600 × 300</span>
+                <span className="csve-placeholder-text">Click to add image</span>
+              </div>
+            )}
+          </div>
+
+          {/* Dialogue Lines (SPEAKING only) */}
+          {data.activityType === 'speaking' && (
+          <div className="csve-dialogue-lines">
+            {data.dialogueLines.map((line, lineIdx) => (
+              <div key={lineIdx} className="csve-dialogue-line">
+                <input
+                  type="text"
+                  className="csve-dialogue-speaker"
+                  value={line.speaker}
+                  onChange={e => handleDialogueChange(lineIdx, 'speaker', (e.target as HTMLInputElement).value)}
+                  placeholder="Speaker"
+                />
+                <span className="csve-dialogue-colon">:</span>
+                {line.isAction ? (
+                  <input
+                    type="text"
+                    className="csve-dialogue-text csve-dialogue-action"
+                    value={line.text}
+                    onChange={e => handleDialogueChange(lineIdx, 'text', (e.target as HTMLInputElement).value)}
+                    placeholder="(action)"
+                  />
+                ) : (
+                  <RichTextInput
+                    value={line.text}
+                    onChange={html => handleDialogueChange(lineIdx, 'text', html)}
+                    placeholder="Dialogue text (Ctrl+U for underline)..."
+                    className="csve-dialogue-text"
+                    singleLine={false}
+                  />
+                )}
+                <label className="csve-dialogue-action-toggle">
+                  <input
+                    type="checkbox"
+                    checked={line.isAction || false}
+                    onChange={e => handleDialogueChange(lineIdx, 'isAction', (e.target as HTMLInputElement).checked)}
+                  />
+                  <span>Action</span>
+                </label>
+                {data.dialogueLines.length > 1 && (
+                  <button 
+                    className="csve-dialogue-remove"
+                    onClick={() => handleRemoveDialogueLine(lineIdx)}
+                  >
+                    <i className="ri-close-line" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button className="csve-add-dialogue-btn" onClick={handleAddDialogueLine}>
+              <i className="ri-add-line" /> Add Dialogue Line
+            </button>
+          </div>
+          )}
+        </div>
+
+        {/* Right Column - Tutor Guide */}
+        <div className="csve-apply-right">
+          <div className="csve-tutor-guide csve-editable-card">
+            <div className="csve-guide-header-edit">
+              <span className="csve-guide-title">{data.sectionTitle} - {data.activityTitle}</span>
+              <span className="csve-guide-duration-wrap">
+                (<input
+                  type="text"
+                  className="csve-duration-input"
+                  value={data.activityDuration}
+                  onChange={e => updateData({ activityDuration: (e.target as HTMLInputElement).value })}
+                  placeholder="3 minutes"
+                />)
+              </span>
+            </div>
+
+            <div className="csve-guide-steps">
+              {data.tutorSteps.map((step, stepIdx) => (
+                <div key={stepIdx} className="csve-guide-step csve-guide-step-editable csve-apply-step">
+                  <span className="csve-guide-number">{stepIdx + 1}</span>
+                  <div className="csve-guide-content">
+                    {/* Instruction */}
+                    <input
+                      type="text"
+                      className="csve-guide-instruction-input"
+                      value={step.instruction}
+                      onChange={e => handleTutorStepChange(stepIdx, 'instruction', (e.target as HTMLInputElement).value)}
+                      placeholder="Instruction..."
+                    />
+
+                    {/* Scripts (green bullets) */}
+                    {step.scripts && step.scripts.map((script, scriptIdx) => (
+                      <div key={scriptIdx} className="csve-apply-script-item">
+                        <span className="csve-script-bullet">●</span>
+                        <input
+                          type="text"
+                          className="csve-apply-script-input"
+                          value={script.text}
+                          onChange={e => handleScriptChange(stepIdx, scriptIdx, (e.target as HTMLInputElement).value)}
+                          placeholder="Script text..."
+                        />
+                        <button 
+                          className="csve-remove-extra-btn"
+                          onClick={() => handleRemoveScript(stepIdx, scriptIdx)}
+                        >
+                          <i className="ri-close-line" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Tips (red text) */}
+                    {step.tips && step.tips.map((tip, tipIdx) => (
+                      <div key={tipIdx} className="csve-apply-tip-item">
+                        <span className="csve-tip-icon">◆</span>
+                        <input
+                          type="text"
+                          className="csve-apply-tip-input"
+                          value={tip.text}
+                          onChange={e => handleTipChange(stepIdx, tipIdx, (e.target as HTMLInputElement).value)}
+                          placeholder="Tip text..."
+                        />
+                        <button 
+                          className="csve-remove-extra-btn"
+                          onClick={() => handleRemoveTip(stepIdx, tipIdx)}
+                        >
+                          <i className="ri-close-line" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Questions box */}
+                    {step.questions && step.questions.length > 0 && (
+                      <div className="csve-apply-questions-box">
+                        {step.questions.map((q, qIdx) => (
+                          <div key={qIdx} className="csve-apply-question-item">
+                            <span className="csve-question-bullet">•</span>
+                            <div className="csve-question-content">
+                              <input
+                                type="text"
+                                className="csve-question-input"
+                                value={q.question}
+                                onChange={e => handleQuestionChange(stepIdx, qIdx, 'question', (e.target as HTMLInputElement).value)}
+                                placeholder="Question..."
+                              />
+                              <input
+                                type="text"
+                                className="csve-answer-input"
+                                value={q.answer || ''}
+                                onChange={e => handleQuestionChange(stepIdx, qIdx, 'answer', (e.target as HTMLInputElement).value)}
+                                placeholder="Answer hint..."
+                              />
+                            </div>
+                            <button 
+                              className="csve-remove-extra-btn"
+                              onClick={() => handleRemoveQuestion(stepIdx, qIdx)}
+                            >
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Listening Script (LISTENING only - green box) */}
+                    {step.listeningScript !== undefined && (
+                      <div className="csve-listening-script-box">
+                        <div className="csve-listening-script-header">
+                          <span>Listening Script</span>
+                          <button 
+                            className="csve-remove-extra-btn"
+                            onClick={() => handleRemoveListeningScript(stepIdx)}
+                          >
+                            <i className="ri-close-line" />
+                          </button>
+                        </div>
+                        <RichTextInput
+                          value={step.listeningScript}
+                          onChange={html => handleListeningScriptChange(stepIdx, html)}
+                          placeholder="Enter the listening script... (Ctrl+U for underline, Ctrl+I for italic)"
+                          className="csve-listening-script-input"
+                          singleLine={false}
+                        />
+                      </div>
+                    )}
+
+                    {/* Add buttons */}
+                    <div className="csve-step-add-buttons">
+                      <button 
+                        className="csve-add-script-btn"
+                        onClick={() => handleAddScript(stepIdx)}
+                      >
+                        <i className="ri-add-line" /> Script
+                      </button>
+                      <button 
+                        className="csve-add-tip-btn"
+                        onClick={() => handleAddTip(stepIdx)}
+                      >
+                        <i className="ri-add-line" /> Tip
+                      </button>
+                      <button 
+                        className="csve-add-question-btn"
+                        onClick={() => handleAddQuestion(stepIdx)}
+                      >
+                        <i className="ri-add-line" /> Question
+                      </button>
+                      {data.activityType === 'listening' && step.listeningScript === undefined && (
+                        <button 
+                          className="csve-add-listening-script-btn"
+                          onClick={() => handleAddListeningScript(stepIdx)}
+                        >
+                          <i className="ri-file-text-line" /> Listening Script
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {data.tutorSteps.length > 1 && (
+                    <button 
+                      className="csve-guide-step-remove"
+                      onClick={() => handleRemoveTutorStep(stepIdx)}
+                    >
+                      <i className="ri-delete-bin-line" />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              <button 
+                className="csve-add-guide-step-btn"
+                onClick={handleAddTutorStep}
+              >
+                <i className="ri-add-line" /> Add Tutor Step
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden file input */}
+      <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
     </section>
   );
 }

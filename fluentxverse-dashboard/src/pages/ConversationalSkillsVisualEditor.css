@@ -1777,12 +1777,22 @@
   gap: 2rem;
 }
 
+/* Additional part layouts (Discussion, Pronunciation) */
+.csve-learn-layout.csve-part-layout {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+
 .csve-learn-left {
   min-width: 0;
 }
 
 .csve-learn-right {
-  position: relative;
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
 }
 
 /* Part Label Editing */
@@ -2637,11 +2647,11 @@
 
 /* Tutor Guide Editor (Right Column) */
 .csve-tutor-guide {
-  position: sticky;
-  top: 1rem;
   background: #e8eef6;
   border-radius: var(--radius-md, 10px);
   overflow: hidden;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
 }
 
 .csve-guide-header-edit {
@@ -2682,6 +2692,8 @@
   border-bottom-color: var(--primary, #0245ae);
   outline: none;
 }
+
+/* Part-specific tutor guides (Discussion, Pronunciation) - inherits sticky from parent .csve-learn-right */
 
 .csve-guide-steps {
   padding: 0 1rem 1rem;
@@ -3221,4 +3233,1096 @@
 
 .csve-add-pronunciation-word:hover {
   background: rgba(2, 69, 174, 0.05);
+}
+
+/* ============================================================================
+   STEP B SECTION - SPEAK YOUR MIND / GRAMMAR TIP
+   ============================================================================ */
+
+.csve-stepb-section {
+  background: transparent;
+  border-radius: 0;
+  padding: 2rem 0;
+  margin-bottom: 1.5rem;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.csve-stepb-content {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  margin-top: 1rem;
+  align-items: start;
+}
+
+.csve-stepb-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+  min-height: calc(100vh - 200px);
+}
+
+.csve-stepb-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary, #0245ae);
+  letter-spacing: 0.05em;
+  border: none;
+  border-bottom: 2px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.csve-stepb-name:hover,
+.csve-stepb-name:focus {
+  border-bottom-color: var(--primary, #0245ae);
+  outline: none;
+}
+
+.csve-stepb-explanation {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  width: 100%;
+}
+
+.csve-stepb-explanation:hover,
+.csve-stepb-explanation:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+/* Conversation Layout */
+.csve-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csve-conversation-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.csve-speaker-left {
+  flex-direction: row;
+}
+
+.csve-speaker-right {
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.csve-speaker-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.csve-speaker-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.csve-speaker-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csve-speaker-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background: #f8fafc;
+  border: 1px dashed var(--border-color, #cbd5e1);
+  height: 100%;
+}
+
+.csve-speaker-placeholder .csve-placeholder-text {
+  font-size: 0.625rem;
+  color: #94a3b8;
+}
+
+/* Speech Bubbles */
+.csve-speech-bubble {
+  position: relative;
+  max-width: 350px;
+  background: transparent;
+  border: 1px solid var(--text-primary, #1e293b);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.csve-speech-left {
+  border-radius: 0 8px 8px 8px;
+}
+
+.csve-speech-left::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 10px 10px 0;
+  border-color: transparent var(--text-primary, #1e293b) transparent transparent;
+}
+
+.csve-speech-left::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 1px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 9px 9px 0;
+  border-color: transparent #f8fafc transparent transparent;
+}
+
+.csve-speech-right {
+  border-radius: 8px 0 8px 8px;
+}
+
+.csve-speech-right::before {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 10px 10px 0 0;
+  border-color: var(--text-primary, #1e293b) transparent transparent transparent;
+}
+
+.csve-speech-right::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 1px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 9px 9px 0 0;
+  border-color: #f8fafc transparent transparent transparent;
+}
+
+.csve-speech-input {
+  min-height: 40px;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-primary, #1e293b);
+}
+
+.csve-speech-input strong {
+  font-weight: 700;
+}
+
+/* Question Section */
+.csve-stepb-question-section {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--success, #16a34a);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+.csve-question-bullet {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csve-stepb-question {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.csve-stepb-question:focus {
+  outline: none;
+}
+
+/* Step B Right Panel */
+.csve-stepb-right {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+}
+
+.csve-stepb-right .csve-tutor-guide {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+/* ============================================================================
+   GRAMMAR TIP EDITOR STYLES
+   ============================================================================ */
+
+.csve-grammar-explanations {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.csve-grammar-block {
+  position: relative;
+}
+
+.csve-grammar-rule {
+  margin-bottom: 0.5rem;
+}
+
+.csve-grammar-rule-input {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csve-grammar-rule-input:focus {
+  outline: none;
+}
+
+.csve-grammar-translation {
+  width: 100%;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  margin-bottom: 1rem;
+  transition: border-color 0.15s;
+}
+
+.csve-grammar-translation:hover,
+.csve-grammar-translation:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+/* Examples Box */
+.csve-grammar-examples-box {
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.csve-examples-title {
+  display: block;
+  width: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #64748b);
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 0.75rem;
+}
+
+.csve-examples-title:focus {
+  outline: none;
+}
+
+.csve-examples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csve-example-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.csve-example-bullet {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.csve-example-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.csve-example-sentence {
+  width: 100%;
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csve-example-sentence:focus {
+  outline: none;
+}
+
+.csve-example-translation {
+  width: 100%;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-example-translation:hover,
+.csve-example-translation:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-example-remove {
+  position: absolute;
+  right: -0.5rem;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.csve-example-item:hover .csve-example-remove {
+  opacity: 1;
+}
+
+.csve-add-example-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.75rem;
+  transition: background 0.15s;
+}
+
+.csve-add-example-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.csve-add-examples-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.csve-add-examples-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.csve-remove-explanation-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  color: #dc2626;
+  background: transparent;
+  border: 1px dashed #dc2626;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.75rem;
+  transition: background 0.15s;
+}
+
+.csve-remove-explanation-btn:hover {
+  background: #fee2e2;
+}
+
+.csve-add-explanation-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.csve-add-explanation-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+/* ============================================================================
+   PRONUNCIATION EDITOR STYLES
+   ============================================================================ */
+
+.csve-pronunciation-tip {
+  margin-bottom: 1.5rem;
+}
+
+.csve-pronunciation-tip-input {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.6;
+}
+
+.csve-pronunciation-tip-input:focus {
+  outline: none;
+}
+
+.csve-pronunciation-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csve-pronunciation-header {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  background: var(--primary, #0245ae);
+  color: white;
+}
+
+.csve-pronunciation-header .csve-pronunciation-col-phrase,
+.csve-pronunciation-header .csve-pronunciation-col-example {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.csve-pronunciation-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-pronunciation-row:last-of-type {
+  border-bottom: none;
+}
+
+.csve-pronunciation-col-phrase {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-right: 1px solid var(--border-color, #e2e8f0);
+}
+
+.csve-pronunciation-col-example {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.csve-phrase-text {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-phrase-text:hover,
+.csve-phrase-text:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-phrase-guide {
+  width: 100%;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary, #0245ae);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-phrase-guide:hover,
+.csve-phrase-guide:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-phrase-example {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+}
+
+.csve-phrase-example:focus {
+  outline: none;
+}
+
+.csve-phrase-remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.csve-pronunciation-row:hover .csve-phrase-remove {
+  opacity: 1;
+}
+
+.csve-add-phrase-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--primary, #0245ae);
+  background: #f8fafc;
+  border: none;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.csve-add-phrase-btn:hover {
+  background: #f1f5f9;
+}
+
+/* ============================================================================
+   APPLY SECTION EDITOR (Section 3 - Speaking/Understanding)
+   ============================================================================ */
+
+.csve-apply-section {
+  background: transparent;
+  border-radius: 0;
+  padding: 2rem 0;
+  margin-bottom: 1.5rem;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* Activity title now uses .csve-step-name class from shared styles */
+
+.csve-step-name {
+  font-size: 1.375rem;
+  font-weight: 300;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+  letter-spacing: 0.5px;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.csve-apply-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.csve-apply-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+  min-height: calc(100vh - 200px);
+}
+
+.csve-apply-situation {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.csve-apply-situation:hover,
+.csve-apply-situation:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-apply-image {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 2 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.csve-apply-image:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.csve-apply-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csve-apply-img-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  background: #f8fafc;
+  border: 1px dashed var(--border-color, #cbd5e1);
+  height: 100%;
+}
+
+/* Dialogue Lines */
+.csve-dialogue-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csve-dialogue-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.csve-dialogue-line:hover {
+  background: #f8fafc;
+}
+
+.csve-dialogue-speaker {
+  width: 70px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.csve-dialogue-speaker:hover,
+.csve-dialogue-speaker:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-dialogue-colon {
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  flex-shrink: 0;
+  padding-top: 0.25rem;
+}
+
+.csve-dialogue-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary, #1e293b);
+}
+
+.csve-dialogue-text u {
+  text-decoration: underline;
+}
+
+.csve-dialogue-action {
+  font-style: italic;
+  color: var(--text-secondary, #64748b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-dialogue-action:hover,
+.csve-dialogue-action:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-dialogue-action-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.csve-dialogue-action-toggle input {
+  width: 14px;
+  height: 14px;
+}
+
+.csve-dialogue-remove {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.csve-dialogue-line:hover .csve-dialogue-remove {
+  opacity: 1;
+}
+
+.csve-add-dialogue-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--primary, #0245ae);
+  background: transparent;
+  border: 1px dashed var(--primary, #0245ae);
+  border-radius: 6px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s;
+}
+
+.csve-add-dialogue-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+/* Apply Section - Right Panel (Tutor Guide) */
+.csve-apply-right {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+}
+
+/* Apply section tutor guide - uses shared styles from .csve-guide-header-edit */
+
+/* Apply Section - Script Items */
+.csve-apply-script-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.csve-script-bullet {
+  color: #16a34a;
+  font-size: 0.5rem;
+  padding-top: 0.375rem;
+  flex-shrink: 0;
+}
+
+.csve-apply-script-input {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: #16a34a;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-apply-script-input:hover,
+.csve-apply-script-input:focus {
+  border-bottom-color: rgba(22, 163, 74, 0.5);
+  outline: none;
+}
+
+/* Apply Section - Tip Items */
+.csve-apply-tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.csve-tip-icon {
+  color: #dc2626;
+  font-size: 0.625rem;
+  padding-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.csve-apply-tip-input {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: #dc2626;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.25rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-apply-tip-input:hover,
+.csve-apply-tip-input:focus {
+  border-bottom-color: rgba(220, 38, 38, 0.5);
+  outline: none;
+}
+
+/* Apply Section - Questions Box */
+.csve-apply-questions-box {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #16a34a;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csve-apply-question-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.csve-question-bullet {
+  color: var(--text-primary, #1e293b);
+  font-size: 0.875rem;
+  padding-top: 0.125rem;
+  flex-shrink: 0;
+}
+
+.csve-question-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.csve-question-input {
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-question-input:hover,
+.csve-question-input:focus {
+  border-bottom-color: var(--border-color, #e2e8f0);
+  outline: none;
+}
+
+.csve-answer-input {
+  font-size: 0.75rem;
+  font-style: italic;
+  color: #16a34a;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  padding: 0.125rem 0;
+  transition: border-color 0.15s;
+}
+
+.csve-answer-input:hover,
+.csve-answer-input:focus {
+  border-bottom-color: rgba(22, 163, 74, 0.5);
+  outline: none;
+}
+
+/* Apply Section - Add Buttons */
+.csve-step-add-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.csve-add-script-btn,
+.csve-add-tip-btn,
+.csve-add-question-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  border: 1px dashed;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.csve-add-script-btn {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.csve-add-script-btn:hover {
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.csve-add-tip-btn {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.csve-add-tip-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.csve-add-question-btn {
+  color: var(--primary, #0245ae);
+  border-color: var(--primary, #0245ae);
+}
+
+.csve-add-question-btn:hover {
+  background: rgba(2, 69, 174, 0.05);
+}
+
+.csve-add-listening-script-btn {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.csve-add-listening-script-btn:hover {
+  background: rgba(22, 163, 74, 0.1);
+}
+
+/* Listening Script Box (green box in tutor guide) */
+.csve-listening-script-box {
+  margin-top: 0.75rem;
+  border: 1px solid #16a34a;
+  border-radius: 4px;
+  background: rgba(22, 163, 74, 0.05);
+  overflow: hidden;
+}
+
+.csve-listening-script-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.5rem;
+  background: rgba(22, 163, 74, 0.1);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #16a34a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.csve-listening-script-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: #16a34a;
+  line-height: 1.6;
+  border: none;
+  background: transparent;
+  resize: vertical;
+}
+
+.csve-listening-script-input:focus {
+  outline: none;
+}
+
+.csve-listening-script-input u {
+  text-decoration: underline;
 }
