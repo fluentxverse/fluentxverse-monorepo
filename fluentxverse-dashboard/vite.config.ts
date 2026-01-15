@@ -12,9 +12,7 @@ export default defineConfig({
     headers: {
       'Connection': 'keep-alive',
     },
-    hmr: {
-      port: 5175,
-    },
+    hmr: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8765',

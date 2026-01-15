@@ -87,6 +87,7 @@ interface DiscussionPart {
   instruction: string;
   instructionTranslation?: string;
   images: DiscussionImage[]; // Up to 3 images with optional labels
+  tutorSteps?: TutorStep[];
 }
 
 // Pronunciation Part structure
@@ -107,6 +108,7 @@ interface PronunciationPart {
   instructionTranslation: string;
   leftColumn: PronunciationColumn;
   rightColumn: PronunciationColumn;
+  tutorSteps?: TutorStep[];
 }
 
 interface TutorStep {
@@ -120,7 +122,7 @@ interface LearnStepData {
   stepName: string;
   duration: string;
   partLabel: string;
-  partTranslation: string;
+  partTranslation?: string;
   vocabularyItems?: VocabularyItem[];
   expressionItems?: ExpressionItem[];
   discussionPart?: DiscussionPart;
@@ -134,10 +136,10 @@ interface LearnSectionData {
 }
 
 // ============================================================================
-// STEP B SECTION TYPES (Speak Your Mind / Grammar Tip / Pronunciation)
+// STEP B SECTION TYPES (Speak Your Mind / Grammar Tip / Pronunciation / Exercise)
 // ============================================================================
 
-type StepBType = 'speak-your-mind' | 'grammar-tip' | 'pronunciation';
+type StepBType = 'speak-your-mind' | 'grammar-tip' | 'pronunciation' | 'exercise';
 
 interface ConversationSpeaker {
   image: string;
@@ -148,6 +150,7 @@ interface SpeakYourMindData {
   stepName: string;
   duration: string;
   explanation: string;
+  explanationTranslation?: string;
   speaker1: ConversationSpeaker;
   speaker2: ConversationSpeaker;
   question: string;
@@ -187,18 +190,34 @@ interface StepBPronunciationData {
   tutorSteps: TutorStep[];
 }
 
+interface StepBExerciseConversation {
+  speakerImage: string;
+  speechBubble: string;
+  position: 'left' | 'right';
+}
+
+interface StepBExerciseData {
+  stepName: string;
+  duration: string;
+  instruction: string;
+  instructionTranslation?: string;
+  conversations: StepBExerciseConversation[];
+  tutorSteps: TutorStep[];
+}
+
 interface StepBData {
   stepType: StepBType;
   speakYourMind?: SpeakYourMindData;
   grammarTip?: GrammarTipData;
   pronunciation?: StepBPronunciationData;
+  exercise?: StepBExerciseData;
 }
 
 // ============================================================================
-// APPLY SECTION TYPES (Section 3 - Speaking/Listening)
+// APPLY SECTION TYPES (Section 3 - Speaking/Listening/Reading)
 // ============================================================================
 
-type ApplyActivityType = 'speaking' | 'listening';
+type ApplyActivityType = 'speaking' | 'listening' | 'reading';
 
 interface DialogueLine {
   speaker: string;
@@ -227,6 +246,12 @@ interface ApplyTutorStep {
   listeningScript?: string; // Rich text HTML for listening script
 }
 
+interface TriviaTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  questions?: TutorQuestion[];
+}
+
 interface ApplySectionData {
   sectionNumber: number;
   sectionTitle: string;
@@ -236,7 +261,219 @@ interface ApplySectionData {
   situationText: string;
   situationImage: string;
   dialogueLines: DialogueLine[];
+  readingText?: string; // Rich text HTML for reading passage
+  readingImage?: string; // Optional image inside reading card
+  readingImageLabel?: string; // Rich text label under reading image
   tutorSteps: ApplyTutorStep[];
+  // Trivia Time (optional)
+  triviaEnabled?: boolean;
+  triviaText?: string;
+  triviaTranslation?: string;
+  triviaImage?: string;
+  triviaDuration?: string;
+  triviaTutorSteps?: TriviaTutorStep[];
+}
+
+// Exercise Section Types (Section 4)
+interface ExerciseItem {
+  image: string;
+  sentence: string;
+}
+
+interface ExerciseAnswer {
+  text: string;
+}
+
+interface TutorAnswerKeyItem {
+  text: string;
+}
+
+interface ExerciseTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  tips?: TutorTipItem[];
+  answerKey?: TutorAnswerKeyItem[];
+}
+
+interface ExerciseConversation {
+  speakerImage: string;
+  speechBubble: string;
+  position: 'left' | 'right';
+}
+
+interface ChooseExerciseItem {
+  sentence: string;
+}
+
+interface ChangeExerciseItem {
+  contextSentence: string;
+  underlinedText: string;
+}
+
+interface InfoBoxColumn {
+  header: string;
+  rows: string[];
+}
+
+interface InfoBoxData {
+  title: string;
+  rowLabels: string[];
+  columns: InfoBoxColumn[];
+}
+
+type ExerciseStepAType = 'rephrase' | 'choose' | 'change';
+
+interface ExerciseSectionData {
+  sectionNumber: number;
+  sectionTitle: string;
+  duration: string;
+  // Step A type
+  stepAType?: ExerciseStepAType;
+  // Step A - Common
+  stepAName?: string;
+  instructions: string;
+  instructionsTranslation?: string;
+  // Step A - Rephrase type
+  showExpressions?: boolean;
+  expressions: string[];
+  showExample?: boolean;
+  exampleSentence: string;
+  exampleAnswer: string;
+  exerciseItems: ExerciseItem[];
+  // Step A - Choose type
+  chooseItems?: ChooseExerciseItem[];
+  chooseImage?: string;
+  // Step A - Change type
+  changeItems?: ChangeExerciseItem[];
+  changeImage?: string;
+  // Step A - Info Box (optional)
+  showInfoBox?: boolean;
+  infoBox?: InfoBoxData;
+  // Common
+  answers: ExerciseAnswer[];
+  tutorSteps: ExerciseTutorStep[];
+  // Step B (optional)
+  hasStepB?: boolean;
+  stepBType?: 'conversation' | 'multiple-choice' | 'speech';
+  stepBName?: string;
+  stepBInstruction?: string;
+  stepBInstructionTranslation?: string;
+  // Step B - Conversation type
+  conversations?: ExerciseConversation[];
+  // Step B - Multiple Choice type
+  multipleChoiceItems?: { boldSentence: string; optionA: string; optionB: string; }[];
+  multipleChoiceImage?: string;
+  // Step B - Speech type
+  speechSpeakerImage?: string;
+  speechContent?: string;
+  // Step B - Tutor steps
+  stepBTutorSteps?: ExerciseTutorStep[];
+}
+
+// ============================================================================
+// MISSION SECTION TYPES (Section 5)
+// ============================================================================
+
+type MissionType = 'speaking' | 'discussion' | 'reading' | 'listening';
+
+interface MissionQuestion {
+  question: string;
+  hints?: string[];
+}
+
+interface MissionTutorStep {
+  instruction: string;
+  scripts?: { text: string }[];
+  tips?: { text: string }[];
+  questions?: { question: string; answer?: string }[];
+}
+
+interface MissionTopic {
+  title: string;
+  questions: string[];
+}
+
+interface ReadingPassageItem {
+  image?: string;
+  title: string;
+  content: string;
+}
+
+interface ReadingPassage {
+  instruction: string;
+  instructionTranslation?: string;
+  items: ReadingPassageItem[];
+}
+
+interface MissionSectionData {
+  sectionNumber: number;
+  sectionTitle: string;
+  missionType: MissionType;
+  challengeNumber: number;
+  challengeName: string;
+  duration: string;
+  situation: string;
+  situationTranslation?: string;
+  instruction: string;
+  instructionTranslation?: string;
+  showGrammarTip: boolean;
+  grammarTipTitle: string;
+  grammarTipItems: string[];
+  image?: string;
+  tutorSteps: MissionTutorStep[];
+  questionsIntro?: string;
+  questions: MissionQuestion[];
+  isOptional?: boolean;
+  topics?: MissionTopic[];
+  readingPassage?: ReadingPassage;
+  listeningScript?: string;
+}
+
+// ============================================================================
+// FEEDBACK SECTION TYPES (Section 6)
+// ============================================================================
+
+interface FeedbackExample {
+  youSaid: string;
+  correction: string;
+  correctionLabel: string;
+}
+
+interface FeedbackCategory {
+  id: string;
+  title: string;
+  titleJp: string;
+  focusOn: string;
+  exampleFeedbackItems: string[];
+  vocabularyExample?: string;
+  examples: FeedbackExample[];
+}
+
+interface RubricLevel {
+  score: number;
+  label: string;
+  description: string;
+}
+
+interface FeedbackTutorStep {
+  instruction: string;
+  scripts?: { text: string }[];
+  tips?: { text: string }[];
+}
+
+interface FeedbackSectionData {
+  sectionNumber: number;
+  sectionTitle: string;
+  duration: string;
+  goal: string;
+  goalJp: string;
+  rubricTitle: string;
+  rubricLevels: RubricLevel[];
+  personalizedFeedbackTitle: string;
+  tutorSteps: FeedbackTutorStep[];
+  rememberNote: string;
+  feedbackGuideTitle: string;
+  categories: FeedbackCategory[];
 }
 
 // Default LEARN section data
@@ -286,6 +523,10 @@ export default function ConversationalSkillsPreview() {
     learnData?: LearnSectionData;
     stepBData?: StepBData;
     applyData?: ApplySectionData;
+    exerciseData?: ExerciseSectionData;
+    missionData?: MissionSectionData;
+    missionData2?: MissionSectionData;
+    feedbackData?: FeedbackSectionData;
   } | null>(null);
 
   const id = params?.id;
@@ -369,6 +610,26 @@ export default function ConversationalSkillsPreview() {
     previewOverrides?.applyData ?? 
     lesson.applyData;
 
+  // Exercise data: prioritize sessionStorage > saved lesson
+  const exerciseData: ExerciseSectionData | undefined = 
+    previewOverrides?.exerciseData ?? 
+    (lesson as any).exerciseData;
+
+  // Mission data: prioritize sessionStorage > saved lesson
+  const missionData: MissionSectionData | undefined = 
+    previewOverrides?.missionData ?? 
+    (lesson as any).missionData;
+
+  // Mission data 2 (Challenge 2 / Discussion): prioritize sessionStorage > saved lesson
+  const missionData2: MissionSectionData | undefined = 
+    previewOverrides?.missionData2 ?? 
+    (lesson as any).missionData2;
+
+  // Feedback data: prioritize sessionStorage > saved lesson
+  const feedbackData: FeedbackSectionData | undefined = 
+    previewOverrides?.feedbackData ?? 
+    (lesson as any).feedbackData;
+
   return (
     <div className="csp-fullpage">
       {/* Top Navigation Bar */}
@@ -417,16 +678,17 @@ export default function ConversationalSkillsPreview() {
           {/* Apply Section - Speaking/Understanding */}
           {applyData && <ApplySection data={applyData} />}
 
-          <PlaceholderSection 
-            icon="ri-headphone-line" 
-            title="Listening" 
-            description="Comprehension exercises"
-          />
-          <PlaceholderSection 
-            icon="ri-edit-line" 
-            title="Practice" 
-            description="Apply what you've learned"
-          />
+          {/* Exercise Section */}
+          {exerciseData && <ExerciseSection data={exerciseData} />}
+
+          {/* Mission Section (Challenge 1) */}
+          {missionData && <MissionSection data={missionData} />}
+
+          {/* Mission Section 2 (Challenge 2 / Discussion) */}
+          {missionData2 && <MissionSection data={missionData2} hideHeader />}
+
+          {/* Feedback Section */}
+          {feedbackData && <FeedbackSection data={feedbackData} />}
         </div>
       </main>
 
@@ -760,8 +1022,9 @@ function LearnSection({ data }: LearnSectionProps) {
               }
             </div>
 
-            {/* Right Column - Tutor Guide */}
+            {/* Right Column - Tutor Guides */}
             <div className="csp-learn-right">
+              {/* Part I Tutor Guide */}
               <div className="csp-tutor-guide">
                 {/* Header - matches Lesson Goal style */}
                 <div className="csp-guide-header">
@@ -789,6 +1052,64 @@ function LearnSection({ data }: LearnSectionProps) {
                   ))}
                 </div>
               </div>
+
+              {/* Part II - Discussion Tutor Guide */}
+              {step.discussionPart?.tutorSteps && step.discussionPart.tutorSteps.length > 0 && (
+                <div className="csp-tutor-guide csp-part-tutor-guide">
+                  <div className="csp-guide-header">
+                    Part II - Discussion
+                  </div>
+                  <div className="csp-guide-steps">
+                    {step.discussionPart.tutorSteps.map((tutorStep, i) => (
+                      <div key={i} className="csp-guide-step">
+                        <span className="csp-guide-number">{i + 1}</span>
+                        <div className="csp-guide-content">
+                          <p className="csp-guide-instruction">{tutorStep.instruction}</p>
+                          {tutorStep.script && (
+                            <p className="csp-guide-script">
+                              "{tutorStep.script}"
+                            </p>
+                          )}
+                          {tutorStep.tip && (
+                            <div className="csp-guide-tip">
+                              {tutorStep.tip}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Part III - Pronunciation Tutor Guide */}
+              {step.pronunciationPart?.tutorSteps && step.pronunciationPart.tutorSteps.length > 0 && (
+                <div className="csp-tutor-guide csp-part-tutor-guide">
+                  <div className="csp-guide-header">
+                    Part {step.discussionPart ? 'III' : 'II'} - Pronunciation
+                  </div>
+                  <div className="csp-guide-steps">
+                    {step.pronunciationPart.tutorSteps.map((tutorStep, i) => (
+                      <div key={i} className="csp-guide-step">
+                        <span className="csp-guide-number">{i + 1}</span>
+                        <div className="csp-guide-content">
+                          <p className="csp-guide-instruction">{tutorStep.instruction}</p>
+                          {tutorStep.script && (
+                            <p className="csp-guide-script">
+                              "{tutorStep.script}"
+                            </p>
+                          )}
+                          {tutorStep.tip && (
+                            <div className="csp-guide-tip">
+                              {tutorStep.tip}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -846,6 +1167,11 @@ function StepBSection({ data }: StepBSectionProps) {
     return [];
   };
 
+  // Get tutor guide header based on type
+  const getTutorGuideHeader = () => {
+    return 'PRESENT';
+  };
+
   // Render Speak Your Mind content
   const renderSpeakYourMindContent = () => {
     const speakData = data.speakYourMind!;
@@ -853,6 +1179,9 @@ function StepBSection({ data }: StepBSectionProps) {
       <>
         {/* Explanation */}
         <p className="csp-stepb-explanation">{speakData.explanation}</p>
+        {speakData.explanationTranslation && (
+          <p className="csp-stepb-explanation-trans">{speakData.explanationTranslation}</p>
+        )}
 
         {/* Conversation */}
         <div className="csp-conversation">
@@ -990,7 +1319,7 @@ function StepBSection({ data }: StepBSectionProps) {
         <div className="csp-stepb-right">
           <div className="csp-tutor-guide">
             <div className="csp-guide-header">
-              PRESENT - {getStepName().split(' ').slice(0, 2).join(' ')} ({getDuration()})
+              {getTutorGuideHeader()} - {getStepName().split(' ').slice(0, 2).join(' ')} ({getDuration()})
             </div>
             <div className="csp-guide-steps">
               {tutorSteps.map((tutorStep, i) => (
@@ -1071,6 +1400,29 @@ function ApplySection({ data }: ApplySectionProps) {
             ))}
           </div>
           )}
+
+          {/* Reading Text (READING only) */}
+          {data.activityType === 'reading' && (data.readingText || data.readingImage) && (
+            <div className="csp-reading-text-box">
+              {data.readingImage && (
+                <div className="csp-reading-image">
+                  <img src={data.readingImage} alt="Reading" />
+                  {data.readingImageLabel && (
+                    <div 
+                      className="csp-reading-image-label"
+                      dangerouslySetInnerHTML={{ __html: data.readingImageLabel }}
+                    />
+                  )}
+                </div>
+              )}
+              {data.readingText && (
+                <div 
+                  className="csp-reading-text-content"
+                  dangerouslySetInnerHTML={{ __html: data.readingText }}
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Column - Tutor Guide */}
@@ -1127,6 +1479,908 @@ function ApplySection({ data }: ApplySectionProps) {
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Trivia Time Section - Always Enabled */}
+      {(data.triviaText || data.triviaImage || (data.triviaTutorSteps && data.triviaTutorSteps.length > 0)) && (
+        <div className="csp-trivia-row">
+          {/* Left - Trivia Box */}
+          <div className="csp-trivia-left">
+            <div className="csp-trivia-box-inner">
+              <div className="csp-trivia-header">
+                <i className="ri-lightbulb-line" />
+                <span>TRIVIA TIME</span>
+              </div>
+              <div className="csp-trivia-body">
+                {data.triviaImage && (
+                  <div className="csp-trivia-image">
+                    <img src={data.triviaImage} alt="Trivia" />
+                  </div>
+                )}
+                {data.triviaText && (
+                  <div 
+                    className="csp-trivia-content"
+                    dangerouslySetInnerHTML={{ __html: data.triviaText }}
+                  />
+                )}
+                {data.triviaTranslation && (
+                  <div className="csp-trivia-translation">
+                    {data.triviaTranslation}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right - Trivia Tutor Guide */}
+          {data.triviaTutorSteps && data.triviaTutorSteps.length > 0 && (
+            <div className="csp-trivia-right">
+              <div className="csp-tutor-guide csp-trivia-guide">
+                <div className="csp-guide-header csp-trivia-guide-header">
+                  TRIVIA TIME ({data.triviaDuration || '1 minute'})
+                </div>
+                <div className="csp-guide-steps">
+                  {data.triviaTutorSteps.map((step, stepIdx) => (
+                    <div key={stepIdx} className="csp-guide-step csp-apply-step">
+                      <span className="csp-guide-number">{stepIdx + 1}</span>
+                      <div className="csp-guide-content">
+                        <p className="csp-guide-instruction">{step.instruction}</p>
+
+                        {/* Scripts (green bullets) */}
+                        {step.scripts && step.scripts.map((script, scriptIdx) => (
+                          <p key={scriptIdx} className="csp-apply-script">
+                            <span className="csp-script-bullet">●</span>
+                            <span>"{script.text}"</span>
+                          </p>
+                        ))}
+
+                        {/* Questions Box */}
+                        {step.questions && step.questions.length > 0 && (
+                          <div className="csp-apply-questions-box">
+                            {step.questions.map((q, qIdx) => (
+                              <div key={qIdx} className="csp-apply-question-item">
+                                <span className="csp-question-bullet">•</span>
+                                <div className="csp-question-content">
+                                  <p className="csp-question-text">{q.question}</p>
+                                  {q.answer && <p className="csp-answer-text">{q.answer}</p>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ============================================================================
+// EXERCISE SECTION COMPONENT (Section 4)
+// ============================================================================
+
+function ExerciseSection({ data }: { data: ExerciseSectionData }) {
+  const stepAType = data.stepAType || 'rephrase';
+  
+  return (
+    <section className="csp-section csp-exercise-section">
+      <div className="csp-section-header">
+        <span className="csp-section-number">{data.sectionNumber}</span>
+        <h2 className="csp-section-title">{data.sectionTitle}</h2>
+        <span className="csp-section-line" />
+      </div>
+
+      <div className="csp-exercise-layout">
+        {/* Left Column - Content */}
+        <div className="csp-exercise-left">
+          {/* STEP A Header - Only show if Step B is enabled */}
+          {data.hasStepB && (
+            <h3 className="csp-step-name">{data.stepAName || 'STEP A'}</h3>
+          )}
+
+          {/* Instructions */}
+          <p className="csp-exercise-instructions">{data.instructions}</p>
+          {data.instructionsTranslation && (
+            <p className="csp-exercise-instructions-translation">{data.instructionsTranslation}</p>
+          )}
+
+          {/* REPHRASE TYPE CONTENT */}
+          {stepAType === 'rephrase' && (
+            <>
+          {/* Expression Box */}
+          {data.showExpressions && data.expressions && data.expressions.length > 0 && (
+            <div className="csp-expression-box">
+              {data.expressions.map((expr, idx) => (
+                <span key={idx} className="csp-expression-item">{expr}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Info Box (Comparison Table) */}
+          {data.showInfoBox && data.infoBox && (
+            <div className="csp-info-box">
+              <h4 className="csp-info-box-title">{data.infoBox.title}</h4>
+              <table className="csp-info-box-table">
+                <thead>
+                  <tr>
+                    <th className="csp-info-box-row-label"></th>
+                    {data.infoBox.columns.map((col, colIdx) => (
+                      <th key={colIdx} className="csp-info-box-header">{col.header}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.infoBox.rowLabels.map((rowLabel, rowIdx) => (
+                    <tr key={rowIdx}>
+                      <td className="csp-info-box-row-label">{rowLabel}</td>
+                      {data.infoBox!.columns.map((col, colIdx) => (
+                        <td key={colIdx} className="csp-info-box-cell">{col.rows?.[rowIdx] || ''}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Example */}
+          {data.showExample && (
+            <div className="csp-exercise-example">
+              <p className="csp-example-sentence">{data.exampleSentence}</p>
+              <p className="csp-example-answer">
+                <span className="csp-arrow">→</span>
+                <span className="csp-answer-underline">{data.exampleAnswer}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Exercise Items */}
+          <div className="csp-exercise-items">
+            {data.exerciseItems.map((item, idx) => (
+              <div key={idx} className="csp-exercise-item">
+                {item.image && (
+                  <div className="csp-exercise-item-image">
+                    <img src={item.image} alt={`Exercise ${idx + 1}`} />
+                  </div>
+                )}
+                <div className="csp-exercise-item-text">
+                  <span className="csp-item-number">{idx + 1}.</span>
+                  <span className="csp-item-sentence">{item.sentence}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+            </>
+          )}
+
+          {/* CHOOSE TYPE CONTENT */}
+          {stepAType === 'choose' && (
+            <>
+              {/* Choose Items List */}
+              <div className="csp-choose-items">
+                {(data.chooseItems || []).map((item, idx) => (
+                  <div key={idx} className="csp-choose-item">
+                    <span className="csp-item-number">{idx + 1}.</span>
+                    <span className="csp-item-sentence">{item.sentence}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Info Box (Comparison Table) */}
+              {data.showInfoBox && data.infoBox && (
+                <div className="csp-info-box">
+                  <h4 className="csp-info-box-title">{data.infoBox.title}</h4>
+                  <table className="csp-info-box-table">
+                    <thead>
+                      <tr>
+                        <th className="csp-info-box-row-label"></th>
+                        {data.infoBox.columns.map((col, colIdx) => (
+                          <th key={colIdx} className="csp-info-box-header">{col.header}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.infoBox.rowLabels.map((rowLabel, rowIdx) => (
+                        <tr key={rowIdx}>
+                          <td className="csp-info-box-row-label">{rowLabel}</td>
+                          {data.infoBox!.columns.map((col, colIdx) => (
+                            <td key={colIdx} className="csp-info-box-cell">{col.rows?.[rowIdx] || ''}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Optional Image */}
+              {data.chooseImage && (
+                <div className="csp-choose-image">
+                  <img src={data.chooseImage} alt="Exercise" />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* CHANGE TYPE CONTENT */}
+          {stepAType === 'change' && (
+            <>
+              {/* Expression Box */}
+              {data.showExpressions && data.expressions && data.expressions.length > 0 && (
+                <div className="csp-expression-box">
+                  {data.expressions.map((expr, idx) => (
+                    <span key={idx} className="csp-expression-item">{expr}</span>
+                  ))}
+                </div>
+              )}
+
+              {/* Change Items List */}
+              <div className="csp-change-items">
+                {(data.changeItems || []).map((item, idx) => (
+                  <div key={idx} className="csp-change-item">
+                    <span className="csp-item-number">{idx + 1}.</span>
+                    <span className="csp-change-text">
+                      <span className="csp-change-context">{item.contextSentence}</span>
+                      {' '}
+                      <span className="csp-change-underlined">{item.underlinedText}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Optional Image */}
+              {data.changeImage && (
+                <div className="csp-choose-image">
+                  <img src={data.changeImage} alt="Exercise" />
+                </div>
+              )}
+            </>
+          )}
+
+          {/* STEP B CONTENT - Only if enabled */}
+          {data.hasStepB && (
+            <>
+              <h3 className="csp-step-name csp-stepb-name">{data.stepBName || 'STEP B'}</h3>
+              
+              {/* Step B Instruction */}
+              <p className="csp-exercise-instructions">{data.stepBInstruction}</p>
+              {data.stepBInstructionTranslation && (
+                <p className="csp-exercise-instructions-translation">{data.stepBInstructionTranslation}</p>
+              )}
+
+              {/* Conversation Type */}
+              {(!data.stepBType || data.stepBType === 'conversation') && (
+                <div className="csp-exercise-conversations">
+                  {(data.conversations || []).map((conv, convIdx) => (
+                    <div 
+                      key={convIdx} 
+                      className={`csp-exercise-conv-row csp-exercise-conv-${conv.position}`}
+                    >
+                      {conv.position === 'left' && (
+                        <div className="csp-exercise-speaker-image">
+                          {conv.speakerImage ? (
+                            <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} />
+                          ) : (
+                            <div className="csp-image-placeholder">
+                              <span className="csp-placeholder-dims">150 × 150</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <div className="csp-exercise-speech-bubble">
+                        <p dangerouslySetInnerHTML={{ __html: conv.speechBubble }} />
+                      </div>
+                      
+                      {conv.position === 'right' && (
+                        <div className="csp-exercise-speaker-image">
+                          {conv.speakerImage ? (
+                            <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} />
+                          ) : (
+                            <div className="csp-image-placeholder">
+                              <span className="csp-placeholder-dims">150 × 150</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Multiple Choice Type */}
+              {data.stepBType === 'multiple-choice' && (
+                <div className="csp-stepb-multiple-choice">
+                  {(data.multipleChoiceItems || []).map((item, mcIdx) => (
+                    <div key={mcIdx} className="csp-mc-item">
+                      <p className="csp-mc-sentence">
+                        <span className="csp-mc-number">{mcIdx + 1}.</span>
+                        <strong>{item.boldSentence}</strong>
+                      </p>
+                      <div className="csp-mc-options">
+                        <p className="csp-mc-option"><span className="csp-mc-label">a.</span> {item.optionA}</p>
+                        <p className="csp-mc-option"><span className="csp-mc-label">b.</span> {item.optionB}</p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Optional Image */}
+                  {data.multipleChoiceImage && (
+                    <div className="csp-mc-image">
+                      <img src={data.multipleChoiceImage} alt="Multiple choice" />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Speech Type - Single speaker with speech bubble */}
+              {data.stepBType === 'speech' && (
+                <div className="csp-stepb-speech">
+                  <div className="csp-speech-layout">
+                    <div className="csp-speech-speaker-image">
+                      {data.speechSpeakerImage ? (
+                        <img src={data.speechSpeakerImage} alt="Speaker" />
+                      ) : (
+                        <div className="csp-image-placeholder">
+                          <span className="csp-placeholder-dims">150 × 200</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="csp-speech-bubble">
+                      <p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Right Column - Tutor Guide */}
+        <div className="csp-exercise-right">
+          {/* Step A Tutor Guide */}
+          <div className="csp-tutor-guide">
+            <div className="csp-guide-header">
+              {data.hasStepB ? (data.stepAName || 'STEP A') : data.sectionTitle} ({data.duration})
+            </div>
+            <div className="csp-guide-steps">
+              {data.tutorSteps.map((step, stepIdx) => (
+                <div key={stepIdx} className="csp-guide-step csp-apply-step">
+                  <span className="csp-guide-number">{stepIdx + 1}</span>
+                  <div className="csp-guide-content">
+                    <p className="csp-guide-instruction">{step.instruction}</p>
+
+                    {/* Scripts (green bullets) */}
+                    {step.scripts && step.scripts.map((script, scriptIdx) => (
+                      <p key={scriptIdx} className="csp-apply-script">
+                        <span className="csp-script-bullet">●</span>
+                        <span>"{script.text}"</span>
+                      </p>
+                    ))}
+
+                    {/* Tips (red text) */}
+                    {step.tips && step.tips.map((tip, tipIdx) => (
+                      <p key={tipIdx} className="csp-apply-tip">
+                        <span className="csp-tip-icon">◆</span>
+                        <span>{tip.text}</span>
+                      </p>
+                    ))}
+
+                    {/* Answer Key Box */}
+                    {step.answerKey && step.answerKey.length > 0 && (
+                      <div className="csp-tutor-answer-key-box">
+                        <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
+                        <div className="csp-tutor-answer-key-items">
+                          {step.answerKey.map((answer, answerIdx) => (
+                            <p key={answerIdx} className="csp-tutor-answer-key-item">
+                              <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
+                              <span>{answer.text}</span>
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Answer Key Box */}
+            {data.answers && data.answers.length > 0 && (
+              <div className="csp-answer-key-box">
+                <div className="csp-answer-key-items">
+                  {data.answers.map((answer, idx) => (
+                    <p key={idx} className="csp-answer-key-item">
+                      <span className="csp-answer-number">{idx + 1}.</span>
+                      <span className="csp-answer-text">{answer.text}</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Step B Tutor Guide - Only if Step B is enabled */}
+          {data.hasStepB && data.stepBTutorSteps && (
+            <div className="csp-tutor-guide csp-stepb-tutor-guide">
+              <div className="csp-guide-header">
+                {data.stepBName || 'STEP B'}
+              </div>
+              <div className="csp-guide-steps">
+                {data.stepBTutorSteps.map((step, stepIdx) => (
+                  <div key={stepIdx} className="csp-guide-step csp-apply-step">
+                    <span className="csp-guide-number">{stepIdx + 1}</span>
+                    <div className="csp-guide-content">
+                      <p className="csp-guide-instruction">{step.instruction}</p>
+
+                      {/* Scripts (green bullets) */}
+                      {step.scripts && step.scripts.map((script, scriptIdx) => (
+                        <p key={scriptIdx} className="csp-apply-script">
+                          <span className="csp-script-bullet">●</span>
+                          <span>"{script.text}"</span>
+                        </p>
+                      ))}
+
+                      {/* Tips (red text) */}
+                      {step.tips && step.tips.map((tip, tipIdx) => (
+                        <p key={tipIdx} className="csp-apply-tip">
+                          <span className="csp-tip-icon">◆</span>
+                          <span>{tip.text}</span>
+                        </p>
+                      ))}
+
+                      {/* Answer Key Box */}
+                      {step.answerKey && step.answerKey.length > 0 && (
+                        <div className="csp-tutor-answer-key-box">
+                          <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
+                          <div className="csp-tutor-answer-key-items">
+                            {step.answerKey.map((answer, answerIdx) => (
+                              <p key={answerIdx} className="csp-tutor-answer-key-item">
+                                <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
+                                <span>{answer.text}</span>
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// MISSION SECTION COMPONENT (Section 5)
+// ============================================================================
+
+interface MissionSectionProps {
+  data: MissionSectionData;
+  hideHeader?: boolean;
+}
+
+function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
+  // Render speaking type content
+  const renderSpeakingContent = () => (
+    <>
+      {/* Situation Box */}
+      <div className="csp-mission-situation-box">
+        <p className="csp-mission-situation" dangerouslySetInnerHTML={{ __html: data.situation }} />
+        {data.situationTranslation && (
+          <p className="csp-mission-translation">{data.situationTranslation}</p>
+        )}
+      </div>
+
+      {/* Instruction */}
+      <div className="csp-mission-instruction-box">
+        <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
+        {data.instructionTranslation && (
+          <p className="csp-mission-translation">{data.instructionTranslation}</p>
+        )}
+      </div>
+
+      {/* Grammar Tip */}
+      {data.showGrammarTip && data.grammarTipItems.length > 0 && (
+        <div className="csp-mission-grammar-tip">
+          <div className="csp-grammar-tip-header">
+            <i className="ri-lightbulb-line" />
+            <span>{data.grammarTipTitle}</span>
+          </div>
+          <ul className="csp-grammar-tip-items">
+            {data.grammarTipItems.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Image */}
+      {data.image && (
+        <div className="csp-mission-image">
+          <img src={data.image} alt="Mission" />
+        </div>
+      )}
+    </>
+  );
+
+  // Render reading type content
+  const renderReadingContent = () => (
+    <>
+      {/* Situation Box */}
+      <div className="csp-mission-situation-box">
+        <p className="csp-mission-situation" dangerouslySetInnerHTML={{ __html: data.situation }} />
+        {data.situationTranslation && (
+          <p className="csp-mission-translation">{data.situationTranslation}</p>
+        )}
+      </div>
+
+      {/* Instruction */}
+      <div className="csp-mission-instruction-box">
+        <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
+        {data.instructionTranslation && (
+          <p className="csp-mission-translation">{data.instructionTranslation}</p>
+        )}
+      </div>
+
+      {/* Reading Passage */}
+      {data.readingPassage && (
+        <div className="csp-mission-reading-passage">
+          <p className="csp-reading-instruction">{data.readingPassage.instruction}</p>
+          {data.readingPassage.instructionTranslation && (
+            <p className="csp-reading-instruction-trans">{data.readingPassage.instructionTranslation}</p>
+          )}
+          <div className="csp-reading-items">
+            {data.readingPassage.items.map((item, idx) => (
+              <div key={idx} className="csp-reading-item">
+                {item.image && (
+                  <div className="csp-reading-item-image">
+                    <img src={item.image} alt={item.title} />
+                  </div>
+                )}
+                <h4 className="csp-reading-item-title">{item.title}</h4>
+                <p className="csp-reading-item-content" dangerouslySetInnerHTML={{ __html: item.content }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Grammar Tip */}
+      {data.showGrammarTip && data.grammarTipItems.length > 0 && (
+        <div className="csp-mission-grammar-tip">
+          <div className="csp-grammar-tip-header">
+            <i className="ri-lightbulb-line" />
+            <span>{data.grammarTipTitle}</span>
+          </div>
+          <ul className="csp-grammar-tip-items">
+            {data.grammarTipItems.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+
+  // Render listening type content
+  const renderListeningContent = () => (
+    <>
+      {/* Situation Box */}
+      <div className="csp-mission-situation-box">
+        <p className="csp-mission-situation" dangerouslySetInnerHTML={{ __html: data.situation }} />
+        {data.situationTranslation && (
+          <p className="csp-mission-translation">{data.situationTranslation}</p>
+        )}
+      </div>
+
+      {/* Instruction */}
+      <div className="csp-mission-instruction-box">
+        <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
+        {data.instructionTranslation && (
+          <p className="csp-mission-translation">{data.instructionTranslation}</p>
+        )}
+      </div>
+
+      {/* Image */}
+      {data.image && (
+        <div className="csp-mission-image">
+          <img src={data.image} alt="Mission" />
+        </div>
+      )}
+    </>
+  );
+
+  // Render discussion type content
+  const renderDiscussionContent = () => (
+    <>
+      {/* Situation Box */}
+      <div className="csp-mission-situation-box">
+        <p className="csp-mission-situation" dangerouslySetInnerHTML={{ __html: data.situation }} />
+        {data.situationTranslation && (
+          <p className="csp-mission-translation">{data.situationTranslation}</p>
+        )}
+      </div>
+
+      {/* Instruction */}
+      <div className="csp-mission-instruction-box">
+        <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
+        {data.instructionTranslation && (
+          <p className="csp-mission-translation">{data.instructionTranslation}</p>
+        )}
+      </div>
+
+      {/* Topics Grid */}
+      {data.topics && data.topics.length > 0 && (
+        <div className="csp-mission-topics">
+          {data.topics.map((topic, topicIdx) => (
+            <div key={topicIdx} className="csp-mission-topic-card">
+              <div className="csp-mission-topic-header">
+                <span className="csp-topic-label">TOPIC {topicIdx + 1}</span>
+                <span className="csp-topic-title">{topic.title}</span>
+              </div>
+              <ol className="csp-mission-topic-questions">
+                {topic.questions.map((q, qIdx) => (
+                  <li key={qIdx}>{q}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <section className="csp-mission-section">
+      {/* Section Header */}
+      {!hideHeader && (
+        <div className="csp-section-number">
+          <span className="csp-number-badge">{data.sectionNumber}</span>
+          <h2 className="csp-section-title">{data.sectionTitle}</h2>
+          <div className="csp-section-line" />
+        </div>
+      )}
+
+      {/* Challenge Name */}
+      <h3 className="csp-challenge-name">
+        {data.isOptional && <span className="csp-optional-badge">If Time Allows</span>}
+        {data.challengeName}
+      </h3>
+
+      <div className="csp-mission-layout">
+        {/* Left Column - Student Content */}
+        <div className="csp-mission-left">
+          {data.missionType === 'speaking' && renderSpeakingContent()}
+          {data.missionType === 'reading' && renderReadingContent()}
+          {data.missionType === 'listening' && renderListeningContent()}
+          {data.missionType === 'discussion' && renderDiscussionContent()}
+
+          {/* Questions Section (speaking/reading types) */}
+          {(data.missionType === 'speaking' || data.missionType === 'reading') && data.questions.length > 0 && (
+            <div className="csp-mission-questions">
+              {data.questionsIntro && (
+                <div className="csp-questions-intro">{data.questionsIntro}</div>
+              )}
+              <ol className="csp-questions-list">
+                {data.questions.map((q, idx) => (
+                  <li key={idx} className="csp-question-item">
+                    <span className="csp-question-text">{q.question}</span>
+                    {q.hints && q.hints.length > 0 && (
+                      <div className="csp-question-hints">
+                        {q.hints.map((hint, hIdx) => (
+                          <span key={hIdx} className="csp-hint">{hint}</span>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Tutor Guide */}
+        <div className="csp-mission-right">
+          <div className="csp-tutor-guide">
+            <div className="csp-guide-header">
+              {data.sectionTitle} - {data.challengeName} ({data.duration})
+            </div>
+            <div className="csp-guide-steps">
+              {data.tutorSteps.map((step, stepIdx) => (
+                <div key={stepIdx} className="csp-guide-step">
+                  <span className="csp-guide-number">{stepIdx + 1}</span>
+                  <div className="csp-guide-content">
+                    <p className="csp-guide-instruction">{step.instruction}</p>
+
+                    {/* Scripts */}
+                    {step.scripts && step.scripts.map((script, scriptIdx) => (
+                      <p key={scriptIdx} className="csp-apply-script">
+                        <span className="csp-script-bullet">●</span>
+                        <span>"{script.text}"</span>
+                      </p>
+                    ))}
+
+                    {/* Tips */}
+                    {step.tips && step.tips.map((tip, tipIdx) => (
+                      <p key={tipIdx} className="csp-apply-tip">
+                        <span className="csp-tip-icon">◆</span>
+                        <span>{tip.text}</span>
+                      </p>
+                    ))}
+
+                    {/* Questions */}
+                    {step.questions && step.questions.length > 0 && (
+                      <div className="csp-apply-questions-box">
+                        {step.questions.map((q, qIdx) => (
+                          <div key={qIdx} className="csp-apply-question-item">
+                            <span className="csp-question-bullet">•</span>
+                            <div className="csp-question-content">
+                              <p className="csp-question-text">{q.question}</p>
+                              {q.answer && <p className="csp-answer-text">({q.answer})</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// FEEDBACK SECTION COMPONENT (Section 6)
+// ============================================================================
+
+interface FeedbackSectionProps {
+  data: FeedbackSectionData;
+}
+
+function FeedbackSection({ data }: FeedbackSectionProps) {
+  return (
+    <section className="csp-feedback-section">
+      {/* Section Header */}
+      <div className="csp-section-number">
+        <span className="csp-number-badge">{data.sectionNumber}</span>
+        <h2 className="csp-section-title">{data.sectionTitle}</h2>
+        <div className="csp-section-line" />
+      </div>
+
+      <div className="csp-feedback-layout">
+        {/* Left Column - Student View */}
+        <div className="csp-feedback-left">
+          {/* Goal Box */}
+          <div className="csp-feedback-goal">
+            <div className="csp-feedback-goal-header">
+              <span className="csp-goal-badge">GOAL</span>
+            </div>
+            <p className="csp-feedback-goal-text">{data.goal}</p>
+            <p className="csp-feedback-goal-jp">{data.goalJp}</p>
+          </div>
+
+          {/* Rubric */}
+          <div className="csp-feedback-rubric">
+            <div className="csp-feedback-rubric-header">{data.rubricTitle}</div>
+            <div className="csp-feedback-rubric-grid">
+              {data.rubricLevels.map((level, idx) => (
+                <div key={idx} className={`csp-rubric-level csp-rubric-level-${level.score}`}>
+                  <div className="csp-rubric-score">{level.score}</div>
+                  <div className="csp-rubric-label">{level.label}</div>
+                  <div className="csp-rubric-desc">{level.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Personalized Feedback Header */}
+          <div className="csp-feedback-pf">
+            <div className="csp-feedback-pf-header">{data.personalizedFeedbackTitle}</div>
+            <div className="csp-feedback-pf-categories">
+              {data.categories.map((cat) => (
+                <div key={cat.id} className={`csp-feedback-pf-cat csp-feedback-pf-${cat.id}`}>
+                  <div className="csp-feedback-pf-cat-title">{cat.title}</div>
+                  <div className="csp-feedback-pf-cat-jp">{cat.titleJp}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Feedback Guide Table */}
+          <div className="csp-feedback-guide">
+            <div className="csp-feedback-guide-header">{data.feedbackGuideTitle}</div>
+            <div className="csp-feedback-guide-content">
+              {data.categories.map((cat) => (
+                <div key={cat.id} className="csp-feedback-guide-category">
+                  <div className={`csp-feedback-guide-cat-header csp-feedback-cat-${cat.id}`}>
+                    <span className="csp-cat-title">{cat.title}</span>
+                    <span className="csp-cat-jp">{cat.titleJp.split('\n')[0]}</span>
+                  </div>
+                  <div className="csp-feedback-guide-cat-body">
+                    <div className="csp-feedback-focus">
+                      <strong>Focus on:</strong> {cat.focusOn}
+                    </div>
+                    <div className="csp-feedback-items">
+                      <strong>Example Feedback:</strong>
+                      <ul>
+                        {cat.exampleFeedbackItems.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    {cat.vocabularyExample && (
+                      <div className="csp-feedback-vocab">
+                        <strong>Vocabulary Example:</strong> {cat.vocabularyExample}
+                      </div>
+                    )}
+                    <div className="csp-feedback-examples">
+                      {cat.examples.map((ex, exIdx) => (
+                        <div key={exIdx} className="csp-feedback-example">
+                          <p className="csp-example-you-said">
+                            <span className="csp-label">You said:</span> "{ex.youSaid}"
+                          </p>
+                          <p className="csp-example-correction">
+                            <span className="csp-label">{ex.correctionLabel}</span> "{ex.correction}"
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Tutor Guide */}
+        <div className="csp-feedback-right">
+          <div className="csp-tutor-guide">
+            <div className="csp-guide-header">
+              {data.sectionTitle} ({data.duration})
+            </div>
+            <div className="csp-guide-steps">
+              {data.tutorSteps.map((step, stepIdx) => (
+                <div key={stepIdx} className="csp-guide-step">
+                  <span className="csp-guide-number">{stepIdx + 1}</span>
+                  <div className="csp-guide-content">
+                    <p className="csp-guide-instruction">{step.instruction}</p>
+
+                    {/* Scripts */}
+                    {step.scripts && step.scripts.map((script, scriptIdx) => (
+                      <p key={scriptIdx} className="csp-apply-script">
+                        <span className="csp-script-bullet">●</span>
+                        <span>"{script.text}"</span>
+                      </p>
+                    ))}
+
+                    {/* Tips */}
+                    {step.tips && step.tips.map((tip, tipIdx) => (
+                      <p key={tipIdx} className="csp-apply-tip">
+                        <span className="csp-tip-icon">◆</span>
+                        <span>{tip.text}</span>
+                      </p>
+                    ))}
                   </div>
                 </div>
               ))}

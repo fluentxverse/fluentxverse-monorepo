@@ -194,7 +194,7 @@ export interface TutorQuestion {
   answer?: string;
 }
 
-export type ApplyActivityType = 'speaking' | 'listening';
+export type ApplyActivityType = 'speaking' | 'listening' | 'reading';
 
 export interface ApplyTutorStep {
   instruction: string;
@@ -202,6 +202,12 @@ export interface ApplyTutorStep {
   tips?: TutorTipItem[];
   questions?: TutorQuestion[];
   listeningScript?: string; // Rich text HTML for listening script
+}
+
+export interface TriviaTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  questions?: TutorQuestion[];
 }
 
 export interface ApplySectionData {
@@ -213,7 +219,45 @@ export interface ApplySectionData {
   situationText: string;
   situationImage: string;
   dialogueLines: DialogueLine[];
+  readingText?: string; // Rich text HTML for reading passage
+  readingImage?: string; // Optional image inside reading card
+  readingImageLabel?: string; // Rich text label under reading image
   tutorSteps: ApplyTutorStep[];
+  // Trivia Time (optional)
+  triviaEnabled?: boolean;
+  triviaText?: string;
+  triviaImage?: string;
+  triviaDuration?: string;
+  triviaTutorSteps?: TriviaTutorStep[];
+}
+
+// Exercise Section Types (Section 4)
+export interface ExerciseItem {
+  image: string;
+  sentence: string;
+}
+
+export interface ExerciseAnswer {
+  text: string;
+}
+
+export interface ExerciseTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  tips?: TutorTipItem[];
+}
+
+export interface ExerciseSectionData {
+  sectionNumber: number;
+  sectionTitle: string;
+  duration: string;
+  instructions: string;
+  expressions: string[];
+  exampleSentence: string;
+  exampleAnswer: string;
+  exerciseItems: ExerciseItem[];
+  answers: ExerciseAnswer[];
+  tutorSteps: ExerciseTutorStep[];
 }
 
 export interface CreateLessonInput {
@@ -247,6 +291,7 @@ export interface LessonMaterial {
   learnData?: LearnSectionData;
   stepBData?: StepBData;
   applyData?: ApplySectionData;
+  exerciseData?: ExerciseSectionData;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -268,6 +313,7 @@ export interface UpdateHeaderInput {
   learnData?: LearnSectionData;
   stepBData?: StepBData;
   applyData?: ApplySectionData;
+  exerciseData?: ExerciseSectionData;
 }
 
 // ============================================================================
@@ -352,6 +398,18 @@ function transformLesson(record: any): LessonMaterial {
       console.error('Failed to parse applyData:', e);
     }
   }
+
+  // Parse exerciseData from JSON string if present
+  let exerciseData: ExerciseSectionData | undefined;
+  if (props.exerciseData) {
+    try {
+      exerciseData = typeof props.exerciseData === 'string' 
+        ? JSON.parse(props.exerciseData) 
+        : props.exerciseData;
+    } catch (e) {
+      console.error('Failed to parse exerciseData:', e);
+    }
+  }
   
   return {
     id: props.id,
@@ -370,6 +428,7 @@ function transformLesson(record: any): LessonMaterial {
     learnData,
     stepBData,
     applyData,
+    exerciseData,
     createdBy: props.createdBy,
     createdByName: props.createdByName || '',
     createdAt: props.createdAt,
@@ -636,6 +695,12 @@ export const lessonMaterialService = {
         setClauses.push('l.applyData = $applyData');
         // Store as JSON string
         params.applyData = JSON.stringify(input.applyData);
+      }
+
+      if (input.exerciseData !== undefined) {
+        setClauses.push('l.exerciseData = $exerciseData');
+        // Store as JSON string
+        params.exerciseData = JSON.stringify(input.exerciseData);
       }
       
       const result = await session.run(

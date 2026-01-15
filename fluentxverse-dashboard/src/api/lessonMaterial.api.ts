@@ -97,7 +97,7 @@ export interface LearnStepData {
   stepName: string;
   duration: string;
   partLabel: string;
-  partTranslation: string;
+  partTranslation?: string; // Optional translation
   vocabularyItems?: VocabularyItem[];
   expressionItems?: ExpressionItem[];
   discussionPart?: DiscussionPart;
@@ -122,6 +122,7 @@ export interface SpeakYourMindData {
   stepName: string;
   duration: string;
   explanation: string;
+  explanationTranslation?: string;
   speaker1: ConversationSpeaker;
   speaker2: ConversationSpeaker;
   question: string;
@@ -193,7 +194,7 @@ export interface TutorQuestion {
   answer?: string;
 }
 
-export type ApplyActivityType = 'speaking' | 'listening';
+export type ApplyActivityType = 'speaking' | 'listening' | 'reading';
 
 export interface ApplyTutorStep {
   instruction: string;
@@ -203,6 +204,12 @@ export interface ApplyTutorStep {
   listeningScript?: string; // Rich text HTML for listening script
 }
 
+export interface TriviaTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  questions?: TutorQuestion[];
+}
+
 export interface ApplySectionData {
   sectionNumber: number;
   sectionTitle: string;
@@ -210,9 +217,130 @@ export interface ApplySectionData {
   activityTitle: string;
   activityDuration: string;
   situationText: string;
+  situationTranslation?: string; // Optional translation
   situationImage: string;
   dialogueLines: DialogueLine[];
+  readingText?: string; // Rich text HTML for reading passage
+  readingImage?: string; // Optional image inside reading card
+  readingImageLabel?: string; // Rich text label under reading image
   tutorSteps: ApplyTutorStep[];
+  // Trivia Time (optional)
+  triviaEnabled?: boolean;
+  triviaText?: string;
+  triviaTranslation?: string; // Optional translation
+  triviaImage?: string;
+  triviaDuration?: string;
+  triviaTutorSteps?: TriviaTutorStep[];
+}
+
+// Exercise Section Types (Section 4)
+export interface ExerciseItem {
+  image: string;
+  sentence: string;
+}
+
+export interface ExerciseAnswer {
+  text: string;
+}
+
+export interface TutorAnswerKeyItem {
+  text: string;
+}
+
+export interface ExerciseTutorStep {
+  instruction: string;
+  scripts?: TutorScriptBullet[];
+  tips?: TutorTipItem[];
+  answerKey?: TutorAnswerKeyItem[];
+}
+
+// Conversation-style exercise types
+export interface ExerciseConversation {
+  speakerImage: string;
+  speechBubble: string; // Rich text HTML with blanks shown as _____
+  position: 'left' | 'right';
+}
+
+// Choose exercise item
+export interface ChooseExerciseItem {
+  sentence: string; // Sentence with parenthetical choices like "(doesn't / don't)"
+}
+
+export interface ChangeExerciseItem {
+  sentence: string; // Full sentence with underlined portion formatted with <u> tags
+}
+
+// Exercise Step A types
+export type ExerciseStepAType = 'rephrase' | 'choose' | 'change';
+
+// Exercise Step B types
+export type ExerciseStepBType = 'conversation' | 'multiple-choice' | 'speech' | 'compare';
+
+export interface MultipleChoiceItem {
+  boldSentence: string;
+  optionA: string;
+  optionB: string;
+}
+
+// Compare exercise item for Step B (e.g., "(Restaurant B and C: romantic)")
+export interface CompareExerciseItem {
+  sentence: string; // The clue sentence like "(Restaurant B and C: romantic)"
+}
+
+// Compare image item for Step B
+export interface CompareImageItem {
+  image: string; // Image URL/base64
+  label: string; // Label like "Restaurant A"
+}
+
+export interface ExerciseSectionData {
+  sectionNumber: number;
+  sectionTitle: string;
+  duration: string;
+  // Step A type
+  stepAType: ExerciseStepAType;
+  // Step A - Common
+  stepAName: string;
+  instructions: string;
+  instructionsTranslation?: string; // Optional translation
+  // Step A - Rephrase type
+  showExpressions?: boolean;
+  expressions: string[];
+  showExample?: boolean;
+  exampleSentence: string;
+  exampleAnswer: string;
+  exampleImage?: string;
+  exerciseItems: ExerciseItem[];
+  // Step A - Choose type
+  chooseItems?: ChooseExerciseItem[];
+  chooseImage?: string;
+  // Step A - Change type
+  changeItems?: ChangeExerciseItem[];
+  changeImage?: string;
+  // Common
+  answers: ExerciseAnswer[];
+  tutorSteps: ExerciseTutorStep[];
+  // Step B (optional)
+  hasStepB: boolean;
+  stepBType: ExerciseStepBType;
+  stepBName: string;
+  stepBInstruction: string;
+  stepBInstructionTranslation?: string;
+  // Step B - Conversation type
+  conversations: ExerciseConversation[];
+  // Step B - Multiple Choice type
+  multipleChoiceItems?: MultipleChoiceItem[];
+  multipleChoiceImage?: string;
+  // Step B - Speech type
+  speechSpeakerImage?: string;
+  speechContent?: string;
+  // Step B - Compare type
+  compareWordBox?: string[]; // Words like "a little", "far", "a lot", "easily"
+  compareImages?: CompareImageItem[]; // Array of images with labels
+  compareExample?: string; // Example sentence with formatted answer
+  compareItems?: CompareExerciseItem[]; // Exercise items like "(Restaurant B and C: romantic)"
+  // Step B - Tutor steps
+  stepBTutorSteps: ExerciseTutorStep[];
 }
 
 export interface CreateLessonInput {
@@ -244,6 +372,7 @@ export interface LessonMaterial {
   learnData?: LearnSectionData;
   stepBData?: StepBData;
   applyData?: ApplySectionData;
+  exerciseData?: ExerciseSectionData;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -265,6 +394,7 @@ export interface UpdateHeaderInput {
   learnData?: LearnSectionData;
   stepBData?: StepBData;
   applyData?: ApplySectionData;
+  exerciseData?: ExerciseSectionData;
 }
 
 export interface ChapterInfo {

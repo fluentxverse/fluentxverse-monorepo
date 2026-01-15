@@ -199,9 +199,9 @@
    ============================================================================ */
 
 .csp-main {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 2rem 1rem 4rem;
 }
 
 .csp-sections {
@@ -374,7 +374,7 @@
 
 .csp-intro-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 380px;
   gap: 3rem;
 }
 
@@ -494,8 +494,9 @@
 
 /* Lesson Issue Card */
 .csp-lesson-issue {
-  background: #e8eef6;
-  border-radius: var(--radius-md, 10px);
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
   overflow: hidden;
 }
 
@@ -590,27 +591,39 @@
 
 /* Lesson Goal Card */
 .csp-lesson-goal-box {
-  border-radius: var(--radius-md, 10px);
+  border-radius: 12px;
   overflow: hidden;
-  background: #e8eef6;
+  background: #fff;
+  border: 1px solid var(--border-color, #e2e8f0);
 }
 
 .csp-goal-header {
-  padding: 1rem 1rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary, #0245ae);
+  color: white;
+  font-weight: 600;
   font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-primary, #1e293b);
   text-decoration: underline;
 }
 
 .csp-goal-steps {
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .csp-goal-step {
   display: flex;
-  gap: 0.875rem;
-  margin-bottom: 1rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .csp-goal-step:last-child {
@@ -621,48 +634,57 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
   background: var(--primary, #0245ae);
   color: #fff;
   border-radius: 50%;
   font-size: 0.75rem;
-  font-weight: 700;
-  flex-shrink: 0;
+  font-weight: 600;
 }
 
 .csp-step-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .csp-step-instruction {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-primary, #1e293b);
   margin: 0;
   line-height: 1.5;
 }
 
 .csp-step-script {
-  display: inline;
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
-  color: var(--success, #10b981);
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: #16a34a;
+  font-style: normal;
+  padding-left: 0.5rem;
 }
 
 .csp-script-dot {
-  display: none;
+  display: inline-block;
+  color: #16a34a;
+  font-size: 0.625rem;
+  flex-shrink: 0;
 }
 
 .csp-step-question {
-  margin-top: 0.625rem;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border-radius: var(--radius-sm, 6px);
+  margin-top: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #16a34a;
+  border-radius: 4px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary, #1e293b);
-  border-left: 3px solid var(--border-color, #cbd5e1);
 }
 
 .csp-step-question span {
@@ -714,7 +736,7 @@
 
 .csp-learn-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 380px;
   gap: 3rem;
 }
 
@@ -983,21 +1005,36 @@
 .csp-learn-right {
   position: relative;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .csp-tutor-guide {
-  position: sticky;
-  top: 1rem;
-  background: #e8eef6;
-  border-radius: var(--radius-md, 10px);
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
   overflow: hidden;
 }
 
+.csp-learn-right .csp-tutor-guide:first-child {
+  position: sticky;
+  top: 1rem;
+}
+
+.csp-part-tutor-guide {
+  margin-top: 0;
+}
+
 .csp-guide-header {
-  padding: 1rem 1rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary, #0245ae);
+  color: white;
+  font-weight: 600;
   font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--text-primary, #1e293b);
   text-decoration: underline;
 }
 
@@ -1006,13 +1043,20 @@
 }
 
 .csp-guide-steps {
-  padding: 0 1rem 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .csp-guide-step {
   display: flex;
-  gap: 0.875rem;
-  margin-bottom: 1rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .csp-guide-step:last-child {
@@ -1020,52 +1064,87 @@
 }
 
 .csp-guide-number {
-  width: 22px;
-  height: 22px;
-  background: var(--primary, #0245ae);
-  color: #fff;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: 700;
+  background: var(--primary, #0245ae);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .csp-guide-content {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .csp-guide-instruction {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--text-primary, #1e293b);
   margin: 0;
   line-height: 1.5;
 }
 
 .csp-guide-script {
-  display: block;
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
-  color: var(--success, #10b981);
-  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: #16a34a;
+  font-style: normal;
+  padding-left: 0.5rem;
 }
 
 .csp-guide-tip {
-  margin: 0.25rem 0 0;
-  padding: 0.375rem 0.5rem;
-  background: #fff7ed;
-  border-radius: 4px;
-  border-left: 3px solid #f97316;
-  font-size: 0.8125rem;
-  color: #ea580c;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+  font-weight: 400;
+}
+
+/* Script and tip bullets */
+.csp-apply-script {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: #16a34a;
+  padding-left: 0.5rem;
 }
 
 .csp-script-bullet {
   display: none;
+}
+
+.csp-apply-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding-left: 0.5rem;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+.csp-tip-icon {
+  color: #dc2626;
+  font-size: 0.625rem;
+  flex-shrink: 0;
+  margin-top: 0.35rem;
 }
 
 /* Responsive for Learn Section */
@@ -1239,7 +1318,7 @@
 
 .csp-stepb-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr 380px;
   gap: 2rem;
   margin-top: 1.5rem;
   align-items: start;
@@ -1260,6 +1339,13 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, #1e293b);
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.csp-stepb-explanation-trans {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
   margin: 0 0 1.5rem;
   line-height: 1.5;
 }
@@ -1576,6 +1662,133 @@
 }
 
 /* ============================================================================
+   STEP B EXERCISE STYLES
+   ============================================================================ */
+
+.csp-exercise-instruction {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.5rem;
+}
+
+.csp-exercise-instruction-translation {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+}
+
+.csp-exercise-conversations {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-exercise-conv-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.csp-exercise-conv-left {
+  flex-direction: row;
+}
+
+.csp-exercise-conv-right {
+  flex-direction: row-reverse;
+}
+
+.csp-exercise-speaker-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #f1f5f9;
+}
+
+.csp-exercise-speaker-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csp-exercise-speech-bubble {
+  flex: 1;
+  position: relative;
+  background: #f8fafc;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  min-height: 80px;
+}
+
+/* Speech bubble pointer - left side */
+.csp-exercise-conv-left .csp-exercise-speech-bubble {
+  border-bottom-left-radius: 4px;
+}
+
+.csp-exercise-conv-left .csp-exercise-speech-bubble::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 20px;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-right-color: var(--border-color, #e2e8f0);
+  border-left: 0;
+}
+
+.csp-exercise-conv-left .csp-exercise-speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 21px;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+  border-right-color: #f8fafc;
+  border-left: 0;
+}
+
+/* Speech bubble pointer - right side */
+.csp-exercise-conv-right .csp-exercise-speech-bubble {
+  border-bottom-right-radius: 4px;
+}
+
+.csp-exercise-conv-right .csp-exercise-speech-bubble::before {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 20px;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-left-color: var(--border-color, #e2e8f0);
+  border-right: 0;
+}
+
+.csp-exercise-conv-right .csp-exercise-speech-bubble::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 21px;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+  border-left-color: #f8fafc;
+  border-right: 0;
+}
+
+.csp-exercise-speech-bubble p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary, #1e293b);
+}
+
+/* ============================================================================
    APPLY SECTION STYLES (Section 3 - Speaking/Understanding)
    ============================================================================ */
 
@@ -1605,9 +1818,9 @@
 }
 
 .csp-apply-right {
-  position: sticky;
-  top: 1rem;
-  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .csp-apply-situation {
@@ -1619,7 +1832,8 @@
 
 .csp-apply-image {
   width: 100%;
-  max-width: 500px;
+  max-width: 800px;
+  aspect-ratio: 5 / 3;
   margin-bottom: 1.5rem;
   border-radius: 4px;
   overflow: hidden;
@@ -1627,7 +1841,8 @@
 
 .csp-apply-image img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -1768,4 +1983,1349 @@
 
 .csp-listening-script-box em {
   font-style: italic;
+}
+
+/* Reading Text Box (for READING activity) */
+.csp-reading-text-box {
+  background: #f8fafc;
+  padding: 1.5rem 6rem 1.5rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.8;
+}
+
+.csp-reading-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--border-color, #e2e8f0);
+}
+
+.csp-reading-image img {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.csp-reading-image-label {
+  text-align: center;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.4;
+}
+
+.csp-reading-image-label b,
+.csp-reading-image-label strong {
+  font-weight: 700;
+}
+
+.csp-reading-image-label i,
+.csp-reading-image-label em {
+  font-style: italic;
+}
+
+.csp-reading-text-content {
+  white-space: pre-wrap;
+}
+
+.csp-reading-text-box u,
+.csp-reading-text-content u {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   TRIVIA TIME SECTION
+   ============================================================================ */
+
+/* Trivia Row - Two Column Layout */
+.csp-trivia-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 2px dashed var(--border-color, #e2e8f0);
+  align-items: start;
+}
+
+.csp-trivia-left {
+  min-width: 0;
+}
+
+.csp-trivia-right {
+  min-width: 0;
+}
+
+/* Trivia Box (Left side) */
+.csp-trivia-box-inner {
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+  background: #c7d5ea;
+}
+
+.csp-trivia-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #a8bdd8;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.csp-trivia-header i {
+  font-size: 1.125rem;
+}
+
+.csp-trivia-body {
+  padding: 1rem;
+}
+
+.csp-trivia-image {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed #a8bdd8;
+}
+
+.csp-trivia-image img {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.csp-trivia-content {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.6;
+}
+
+.csp-trivia-translation {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.5;
+  margin-top: 0.5rem;
+}
+
+/* Trivia Tutor Guide (Right side) - matches regular tutor guide */
+.csp-trivia-guide {
+  position: relative;
+  top: 0;
+  background: #e8eef6;
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+}
+
+.csp-trivia-guide .csp-guide-header {
+  padding: 1rem 1rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  text-decoration: underline;
+}
+
+.csp-trivia-guide .csp-guide-steps {
+  padding: 0 1rem 1rem;
+}
+
+.csp-trivia-guide .csp-guide-step {
+  display: flex;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.csp-trivia-guide .csp-guide-step:last-child {
+  margin-bottom: 0;
+}
+
+.csp-trivia-guide .csp-guide-number {
+  width: 22px;
+  height: 22px;
+  background: var(--primary, #0245ae);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.csp-trivia-guide .csp-guide-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.csp-trivia-guide .csp-guide-instruction {
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Trivia Scripts */
+.csp-trivia-guide .csp-apply-script {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--success, #10b981);
+}
+
+.csp-trivia-guide .csp-script-bullet {
+  display: inline-block;
+  color: var(--success, #10b981);
+  font-size: 0.625rem;
+  line-height: 1.6;
+}
+
+/* Trivia Questions Box */
+.csp-trivia-guide .csp-apply-questions-box {
+  margin-top: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px dashed var(--border-color, #cbd5e1);
+  border-radius: 6px;
+}
+
+.csp-trivia-guide .csp-apply-question-item {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.csp-trivia-guide .csp-apply-question-item:last-child {
+  margin-bottom: 0;
+}
+
+.csp-trivia-guide .csp-question-bullet {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.csp-trivia-guide .csp-question-content {
+  flex: 1;
+}
+
+.csp-trivia-guide .csp-question-text {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+  font-style: italic;
+}
+
+.csp-trivia-guide .csp-answer-text {
+  font-size: 0.75rem;
+  color: var(--success, #10b981);
+  margin: 0.125rem 0 0;
+  font-style: italic;
+}
+
+/* ============================================================================
+   EXERCISE SECTION (Section 4)
+   ============================================================================ */
+
+.csp-exercise-section {
+  margin-top: 3rem;
+}
+
+.csp-exercise-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 1.5rem 0;
+}
+
+.csp-exercise-left {
+  min-width: 0;
+}
+
+.csp-exercise-right {
+  min-width: 0;
+}
+
+/* Instructions */
+.csp-exercise-instructions {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+/* Expression Box */
+.csp-expression-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.csp-expression-item {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+}
+
+/* Info Box (Comparison Table) */
+.csp-info-box {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  border: 2px solid var(--border-color, #cbd5e1);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.csp-info-box-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  text-align: center;
+  margin: 0 0 1rem;
+}
+
+.csp-info-box-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.csp-info-box-table th,
+.csp-info-box-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  font-size: 0.9375rem;
+}
+
+.csp-info-box-table thead tr {
+  border-bottom: 2px solid var(--border-color, #cbd5e1);
+}
+
+.csp-info-box-header {
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  background: #e0f2fe;
+  border-radius: 6px;
+}
+
+.csp-info-box-row-label {
+  font-size: 1.125rem;
+  width: 50px;
+  min-width: 50px;
+}
+
+.csp-info-box-cell {
+  color: var(--text-primary, #1e293b);
+  background: #fff;
+  border-radius: 4px;
+}
+
+/* Example */
+.csp-exercise-example {
+  margin-bottom: 2rem;
+  padding-left: 0.5rem;
+}
+
+.csp-example-sentence {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.5rem;
+}
+
+.csp-example-answer {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-left: 1rem;
+  margin: 0;
+}
+
+.csp-arrow {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.875rem;
+}
+
+.csp-answer-underline {
+  font-size: 0.9375rem;
+  font-style: italic;
+  color: var(--text-primary, #1e293b);
+  text-decoration: underline;
+}
+
+/* Exercise Items */
+.csp-exercise-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-exercise-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.csp-exercise-item-image {
+  width: 140px;
+  height: 100px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.csp-exercise-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.csp-exercise-item-text {
+  flex: 1;
+  display: flex;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.csp-item-number {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-item-sentence {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+}
+
+/* Answer Key Box */
+.csp-answer-key-box {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #dcfce7;
+}
+
+.csp-answer-key-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.csp-answer-key-item {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #15803d;
+}
+
+.csp-answer-number {
+  font-weight: 500;
+  min-width: 1.25rem;
+}
+
+.csp-answer-key-item .csp-answer-text {
+  flex: 1;
+}
+
+/* Step A/B Labels */
+.csp-step-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Step B Section */
+.csp-stepb-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px dashed #e2e8f0;
+}
+
+.csp-stepb-instruction {
+  margin-bottom: 1rem;
+}
+
+.csp-stepb-instruction-text {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-stepb-instruction-translation {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.csp-stepb-tutor-guide {
+  margin-top: 1.5rem;
+}
+
+/* Choose Exercise Type Styles */
+.csp-choose-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.csp-choose-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.csp-choose-item .csp-item-number {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  min-width: 1.5rem;
+}
+
+.csp-choose-item .csp-item-sentence {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-choose-image {
+  margin-top: 1.5rem;
+  max-width: 400px;
+}
+
+.csp-choose-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* Change Exercise Type Styles */
+.csp-change-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.csp-change-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.csp-change-item .csp-item-number {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+  min-width: 1.5rem;
+}
+
+.csp-change-text {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.6;
+}
+
+.csp-change-context {
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-change-underlined {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Step B Multiple Choice Styles */
+.csp-stepb-multiple-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.csp-mc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.csp-mc-sentence {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.csp-mc-number {
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-mc-sentence strong {
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 1.5rem;
+}
+
+.csp-mc-option {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+}
+
+.csp-mc-label {
+  font-weight: 500;
+  color: var(--text-secondary, #64748b);
+  min-width: 1rem;
+}
+
+.csp-mc-image {
+  margin-top: 1rem;
+  max-width: 400px;
+}
+
+.csp-mc-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* Step B Speech Type Styles */
+.csp-stepb-speech {
+  margin-top: 1rem;
+}
+
+.csp-speech-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.csp-speech-speaker-image {
+  width: 150px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #f1f5f9;
+}
+
+.csp-speech-speaker-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.csp-speech-bubble {
+  flex: 1;
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  padding: 1rem 1.25rem;
+  min-height: 150px;
+}
+
+/* Speech bubble pointer */
+.csp-speech-bubble::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 30px;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-right-color: var(--border-color, #e2e8f0);
+  border-left: 0;
+}
+
+.csp-speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 31px;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+  border-right-color: #fff;
+  border-left: 0;
+}
+
+.csp-speech-bubble p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary, #1e293b);
+}
+
+/* Tutor Answer Key Box (inline in steps) */
+.csp-tutor-answer-key-box {
+  margin-top: 0.75rem;
+  background: #16a34a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-tutor-answer-key-header {
+  padding: 0.5rem 0.75rem;
+  background: #16a34a;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.csp-tutor-answer-key-items {
+  padding: 0.75rem;
+  background: #f0fdf4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.csp-tutor-answer-key-item {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+}
+
+.csp-tutor-answer-number {
+  font-weight: 500;
+  min-width: 1.25rem;
+}
+
+/* ============================================================================
+   MISSION SECTION (Section 5)
+   ============================================================================ */
+
+.csp-mission-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.csp-challenge-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary, #0245ae);
+  margin: 0 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.csp-optional-badge {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.csp-mission-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+}
+
+.csp-mission-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-mission-right {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+/* Situation Box */
+.csp-mission-situation-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.csp-mission-situation {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+}
+
+.csp-mission-translation {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0.5rem 0 0;
+  font-style: italic;
+}
+
+/* Instruction Box */
+.csp-mission-instruction-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.csp-mission-instruction {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary, #0245ae);
+  margin: 0;
+}
+
+/* Grammar Tip */
+.csp-mission-grammar-tip {
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-grammar-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fef08a;
+  font-weight: 600;
+  color: #854d0e;
+}
+
+.csp-grammar-tip-header i {
+  font-size: 1.125rem;
+}
+
+.csp-grammar-tip-items {
+  margin: 0;
+  padding: 1rem 1rem 1rem 2rem;
+  list-style: disc;
+}
+
+.csp-grammar-tip-items li {
+  font-size: 0.9375rem;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+/* Mission Image */
+.csp-mission-image {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-mission-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Reading Passage */
+.csp-mission-reading-passage {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.csp-reading-instruction {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.25rem;
+}
+
+.csp-reading-instruction-trans {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+}
+
+.csp-reading-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-reading-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.csp-reading-item-image {
+  width: 100%;
+  max-width: 200px;
+  margin-bottom: 0.75rem;
+}
+
+.csp-reading-item-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.csp-reading-item-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary, #0245ae);
+  margin: 0 0 0.5rem;
+}
+
+.csp-reading-item-content {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+}
+
+/* Topics Grid (Discussion type) */
+.csp-mission-topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.csp-mission-topic-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-mission-topic-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary, #0245ae);
+  color: #fff;
+}
+
+.csp-topic-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.2);
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.csp-topic-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.csp-mission-topic-questions {
+  list-style: none;
+  padding: 1rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  counter-reset: topic-q;
+}
+
+.csp-mission-topic-questions li {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  counter-increment: topic-q;
+}
+
+.csp-mission-topic-questions li::before {
+  content: counter(topic-q) ".";
+  font-weight: 500;
+  min-width: 1.25rem;
+}
+
+/* Questions Section */
+.csp-mission-questions {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-questions-intro {
+  background: #fef08a;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #854d0e;
+}
+
+.csp-questions-list {
+  list-style: none;
+  padding: 1rem;
+  margin: 0;
+  counter-reset: mission-q;
+}
+
+.csp-questions-list .csp-question-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  counter-increment: mission-q;
+}
+
+.csp-questions-list .csp-question-item::before {
+  content: counter(mission-q) ".";
+  font-weight: 600;
+  color: var(--primary, #0245ae);
+}
+
+.csp-questions-list .csp-question-text {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  margin-left: 1.5rem;
+}
+
+.csp-question-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.csp-hint {
+  background: #f1f5f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* ============================================================================
+   FEEDBACK SECTION (Section 6)
+   ============================================================================ */
+
+.csp-feedback-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.csp-feedback-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.csp-feedback-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.csp-feedback-right {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+}
+
+/* Goal Box */
+.csp-feedback-goal {
+  background: #eff6ff;
+  border: 2px solid var(--primary, #0245ae);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.csp-feedback-goal-header {
+  margin-bottom: 0.5rem;
+}
+
+.csp-feedback-goal .csp-goal-badge {
+  background: var(--primary, #0245ae);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+}
+
+.csp-feedback-goal-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0.5rem 0 0.25rem;
+}
+
+.csp-feedback-goal-jp {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Rubric */
+.csp-feedback-rubric {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-feedback-rubric-header {
+  background: linear-gradient(135deg, var(--primary, #0245ae), #1e40af);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.csp-feedback-rubric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.csp-rubric-level {
+  padding: 1rem;
+  text-align: center;
+  border-right: 1px solid #e2e8f0;
+}
+
+.csp-rubric-level:last-child {
+  border-right: none;
+}
+
+.csp-rubric-level-4 { background: #dcfce7; }
+.csp-rubric-level-3 { background: #d1fae5; }
+.csp-rubric-level-2 { background: #fef3c7; }
+.csp-rubric-level-1 { background: #fee2e2; }
+
+.csp-rubric-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.25rem;
+}
+
+.csp-rubric-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.25rem;
+}
+
+.csp-rubric-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Personalized Feedback Header */
+.csp-feedback-pf {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-feedback-pf-header {
+  background: linear-gradient(135deg, var(--primary, #0245ae), #1e40af);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.csp-feedback-pf-categories {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid #e2e8f0;
+}
+
+.csp-feedback-pf-cat {
+  padding: 1rem;
+  text-align: center;
+  border-right: 1px solid #e2e8f0;
+}
+
+.csp-feedback-pf-cat:last-child {
+  border-right: none;
+}
+
+.csp-feedback-pf-cat-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.csp-feedback-pf-range .csp-feedback-pf-cat-title { color: #0369a1; }
+.csp-feedback-pf-accuracy .csp-feedback-pf-cat-title { color: #dc2626; }
+.csp-feedback-pf-fluency .csp-feedback-pf-cat-title { color: #16a34a; }
+
+.csp-feedback-pf-cat-jp {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: pre-line;
+  line-height: 1.4;
+}
+
+/* Feedback Guide */
+.csp-feedback-guide {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.csp-feedback-guide-header {
+  background: linear-gradient(135deg, var(--primary, #0245ae), #1e40af);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.csp-feedback-guide-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.csp-feedback-guide-category {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.csp-feedback-guide-category:last-child {
+  border-bottom: none;
+}
+
+.csp-feedback-guide-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.csp-feedback-cat-range .csp-cat-title { color: #0369a1; }
+.csp-feedback-cat-accuracy .csp-cat-title { color: #dc2626; }
+.csp-feedback-cat-fluency .csp-cat-title { color: #16a34a; }
+
+.csp-cat-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.csp-cat-jp {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.csp-feedback-guide-cat-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csp-feedback-focus {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-feedback-items ul {
+  margin: 0.25rem 0 0 1.25rem;
+  padding: 0;
+}
+
+.csp-feedback-items li {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 0.125rem;
+}
+
+.csp-feedback-vocab {
+  font-size: 0.9375rem;
+  color: var(--text-primary, #1e293b);
+  background: #f0fdf4;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+
+.csp-feedback-examples {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.csp-feedback-example {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.csp-example-you-said {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 0.25rem;
+}
+
+.csp-example-you-said .csp-label {
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+}
+
+.csp-example-correction {
+  font-size: 0.875rem;
+  color: #16a34a;
+  margin: 0;
+}
+
+.csp-example-correction .csp-label {
+  font-weight: 600;
 }
