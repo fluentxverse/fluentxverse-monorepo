@@ -743,6 +743,110 @@ export const lessonMaterialService = {
   },
 
   /**
+   * Duplicate a lesson - creates a copy with a new ID and incremented lesson number
+   */
+  async duplicate(
+    id: string, 
+    createdBy: string, 
+    createdByName: string
+  ): Promise<LessonMaterial | null> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      // First, get the original lesson
+      const original = await this.getById(id);
+      if (!original) {
+        return null;
+      }
+
+      // Find the next available lesson number in the same level/chapter
+      const existingResult = await session.run(
+        `MATCH (l:LessonMaterial {
+          course: $course, 
+          level: $level, 
+          chapter: $chapter
+        })
+        RETURN max(l.lessonNumber) as maxLesson`,
+        { 
+          course: original.course, 
+          level: neo4j.int(original.level), 
+          chapter: neo4j.int(original.chapter) 
+        }
+      );
+      
+      const maxLesson = existingResult.records[0]?.get('maxLesson');
+      let nextLessonNumber = (neo4j.isInt(maxLesson) ? maxLesson.toNumber() : (maxLesson || 0)) + 1;
+      
+      // If we're at max 10 lessons, find a gap or place in next chapter
+      if (nextLessonNumber > 10) {
+        throw new Error('Maximum lessons (10) reached for this chapter. Please use a different chapter.');
+      }
+
+      const newId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      
+      // Create duplicate with new ID, lesson number, and timestamps
+      const result = await session.run(
+        `CREATE (l:LessonMaterial {
+          id: $id,
+          course: $course,
+          level: $level,
+          chapter: $chapter,
+          lessonNumber: $lessonNumber,
+          skill: $skill,
+          chapterName: $chapterName,
+          lessonName: $lessonName,
+          goalTextEn: $goalTextEn,
+          goalTextJp: $goalTextJp,
+          backgroundImage: $backgroundImage,
+          overlayColor: $overlayColor,
+          introductionData: $introductionData,
+          learnData: $learnData,
+          stepBData: $stepBData,
+          applyData: $applyData,
+          exerciseData: $exerciseData,
+          createdAt: $createdAt,
+          updatedAt: $updatedAt,
+          createdBy: $createdBy,
+          createdByName: $createdByName
+        })
+        RETURN l`,
+        {
+          id: newId,
+          course: original.course,
+          level: neo4j.int(original.level),
+          chapter: neo4j.int(original.chapter),
+          lessonNumber: neo4j.int(nextLessonNumber),
+          skill: original.skill,
+          chapterName: original.chapterName || '',
+          lessonName: `${original.lessonName || ''} (Copy)`,
+          goalTextEn: original.goalTextEn,
+          goalTextJp: original.goalTextJp,
+          backgroundImage: original.backgroundImage || '',
+          overlayColor: original.overlayColor || '#0369a1cc',
+          introductionData: original.introductionData ? JSON.stringify(original.introductionData) : '',
+          learnData: original.learnData ? JSON.stringify(original.learnData) : '',
+          stepBData: original.stepBData ? JSON.stringify(original.stepBData) : '',
+          applyData: original.applyData ? JSON.stringify(original.applyData) : '',
+          exerciseData: original.exerciseData ? JSON.stringify(original.exerciseData) : '',
+          createdAt: now,
+          updatedAt: now,
+          createdBy,
+          createdByName,
+        }
+      );
+
+      const record = result.records[0];
+      if (!record) return null;
+
+      return transformLesson(record.get('l'));
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
    * Get all unique chapters for a course/level (for dropdown auto-fill)
    */
   async getChapters(course: string, level: number): Promise<{ chapter: number; chapterName: string }[]> {

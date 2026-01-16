@@ -1,8 +1,9 @@
 /**
  * ConversationalSkillsEditorPage
  * No-code editor for creating Conversational Skills lesson materials
+ * Hierarchical view: 10 Levels → 10 Chapters → 10 Lessons per chapter
  */
-import { useState, useEffect, useCallback } from 'preact/hooks';
+import { useState, useEffect, useCallback, useMemo } from 'preact/hooks';
 import {
   createLesson,
   getLessonById,
@@ -11,6 +12,7 @@ import {
   checkDuplicate,
   updateLessonHeader,
   deleteLesson,
+  duplicateLesson,
   type LessonMaterial,
   type Skill,
   type CreateLessonInput,
@@ -40,6 +42,14 @@ const LEVEL_BADGES: Record<number, string> = {
   9: 'ADVANCED', 10: 'ADVANCED',
 };
 
+const LEVEL_COLORS: Record<number, string> = {
+  1: '#10b981', 2: '#10b981',  // Green - Starter
+  3: '#3b82f6', 4: '#3b82f6',  // Blue - Beginner
+  5: '#8b5cf6', 6: '#8b5cf6',  // Purple - Elementary
+  7: '#f59e0b', 8: '#f59e0b',  // Amber - Intermediate
+  9: '#ef4444', 10: '#ef4444', // Red - Advanced
+};
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -48,8 +58,9 @@ export default function ConversationalSkillsEditorPage() {
   const [lessons, setLessons] = useState<LessonMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [expandedLevels, setExpandedLevels] = useState<Set<number>>(new Set());
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [selectedLesson, setSelectedLesson] = useState<LessonMaterial | null>(null);
-  const [view, setView] = useState<'list' | 'editor'>('list');
 
   // Load lessons on mount
   useEffect(() => {
@@ -69,28 +80,81 @@ export default function ConversationalSkillsEditorPage() {
     }
   };
 
+  // Group lessons by level and chapter
+  const lessonsByLevelChapter = useMemo(() => {
+    const map: Record<string, LessonMaterial[]> = {};
+    lessons.forEach(lesson => {
+      const key = `${lesson.level}-${lesson.chapter}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(lesson);
+    });
+    // Sort lessons within each chapter
+    Object.keys(map).forEach(key => {
+      map[key].sort((a, b) => a.lessonNumber - b.lessonNumber);
+    });
+    return map;
+  }, [lessons]);
+
+  // Get chapter name from first lesson in that chapter
+  const getChapterName = (level: number, chapter: number): string => {
+    const key = `${level}-${chapter}`;
+    const chapterLessons = lessonsByLevelChapter[key];
+    if (chapterLessons && chapterLessons.length > 0) {
+      // Extract chapter name from chapterLabel (e.g., "Chapter 1: All About Me")
+      const match = chapterLessons[0].chapterLabel.match(/Chapter \d+:\s*(.*)/);
+      return match ? match[1] : '';
+    }
+    return '';
+  };
+
+  // Count lessons in a level
+  const getLevelLessonCount = (level: number): number => {
+    return lessons.filter(l => l.level === level).length;
+  };
+
+  // Count lessons in a chapter
+  const getChapterLessonCount = (level: number, chapter: number): number => {
+    const key = `${level}-${chapter}`;
+    return lessonsByLevelChapter[key]?.length || 0;
+  };
+
+  const toggleLevel = (level: number) => {
+    setExpandedLevels(prev => {
+      const next = new Set(prev);
+      if (next.has(level)) {
+        next.delete(level);
+      } else {
+        next.add(level);
+      }
+      return next;
+    });
+  };
+
+  const toggleChapter = (level: number, chapter: number) => {
+    const key = `${level}-${chapter}`;
+    setExpandedChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
   const handleCreateLesson = async (input: CreateLessonInput) => {
     try {
       const lesson = await createLesson(input);
       setLessons([...lessons, lesson]);
       setShowCreateModal(false);
-      setSelectedLesson(lesson);
-      setView('editor');
+      // Expand to show the newly created lesson
+      setExpandedLevels(prev => new Set([...prev, lesson.level]));
+      setExpandedChapters(prev => new Set([...prev, `${lesson.level}-${lesson.chapter}`]));
       toast.success('Lesson created successfully!');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to create lesson');
     }
-  };
-
-  const handleSelectLesson = (lesson: LessonMaterial) => {
-    setSelectedLesson(lesson);
-    setView('editor');
-  };
-
-  const handleBackToList = () => {
-    setView('list');
-    setSelectedLesson(null);
-    loadLessons(); // Refresh list
   };
 
   const handleDeleteLesson = async (id: string) => {
@@ -99,32 +163,61 @@ export default function ConversationalSkillsEditorPage() {
     try {
       await deleteLesson(id);
       setLessons(lessons.filter(l => l.id !== id));
-      if (selectedLesson?.id === id) {
-        setView('list');
-        setSelectedLesson(null);
-      }
       toast.success('Lesson deleted');
     } catch (error) {
       toast.error('Failed to delete lesson');
     }
   };
 
+  const handleDuplicateLesson = async (lesson: LessonMaterial) => {
+    try {
+      const duplicated = await duplicateLesson(lesson.id);
+      setLessons([...lessons, duplicated]);
+      // Expand to show the duplicated lesson
+      setExpandedLevels(prev => new Set([...prev, duplicated.level]));
+      setExpandedChapters(prev => new Set([...prev, `${duplicated.level}-${duplicated.chapter}`]));
+      toast.success('Lesson duplicated!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to duplicate lesson');
+    }
+  };
+
+  const handleEditLesson = (lesson: LessonMaterial) => {
+    window.open(`/conversational-skills-visual-editor/${lesson.id}`, '_blank');
+  };
+
+  const handlePreviewLesson = (lesson: LessonMaterial) => {
+    window.open(`/conversational-skills-preview/${lesson.id}`, '_blank');
+  };
+
+  const handleSelectLesson = (lesson: LessonMaterial) => {
+    setSelectedLesson(prev => prev?.id === lesson.id ? null : lesson);
+  };
+
+  // Computed stats for analytics
+  const courseStats = useMemo(() => {
+    const totalLessons = lessons.length;
+    const speakingCount = lessons.filter(l => l.skill === 'speaking').length;
+    const listeningCount = lessons.filter(l => l.skill === 'listening').length;
+    const readingCount = lessons.filter(l => l.skill === 'reading').length;
+    const completedLevels = LEVELS.filter(level => 
+      getLevelLessonCount(level) >= 50 // 5 chapters × 10 lessons
+    ).length;
+    
+    return {
+      totalLessons,
+      speakingCount,
+      listeningCount,
+      readingCount,
+      completedLevels,
+      totalCapacity: 500, // 10 levels × 5 chapters × 10 lessons
+      progressPercent: Math.round((totalLessons / 500) * 100),
+    };
+  }, [lessons]);
+
   // ============================================================================
   // RENDER
   // ============================================================================
-
-  if (view === 'editor' && selectedLesson) {
-    return (
-      <HeaderEditor
-        lesson={selectedLesson}
-        onBack={handleBackToList}
-        onUpdate={(updated) => {
-          setSelectedLesson(updated);
-          setLessons(lessons.map(l => l.id === updated.id ? updated : l));
-        }}
-      />
-    );
-  }
 
   return (
     <div className="cse-page">
@@ -137,7 +230,7 @@ export default function ConversationalSkillsEditorPage() {
             </div>
             <div>
               <h1>Conversational Skills</h1>
-              <p>Create and manage lesson materials</p>
+              <p>{lessons.length} lessons across 10 levels</p>
             </div>
           </div>
           <button className="cse-create-btn" onClick={() => setShowCreateModal(true)}>
@@ -147,57 +240,147 @@ export default function ConversationalSkillsEditorPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="cse-stats">
-        <div className="cse-stat">
-          <span className="cse-stat-value">{lessons.length}</span>
-          <span className="cse-stat-label">Total Lessons</span>
-        </div>
-        <div className="cse-stat">
-          <span className="cse-stat-value">{lessons.filter(l => l.skill === 'speaking').length}</span>
-          <span className="cse-stat-label">Speaking</span>
-        </div>
-        <div className="cse-stat">
-          <span className="cse-stat-value">{lessons.filter(l => l.skill === 'listening').length}</span>
-          <span className="cse-stat-label">Listening</span>
-        </div>
-        <div className="cse-stat">
-          <span className="cse-stat-value">{lessons.filter(l => l.skill === 'reading').length}</span>
-          <span className="cse-stat-label">Reading</span>
-        </div>
-      </div>
+      {/* Main Content Layout */}
+      <div className="cse-main-layout">
+        {/* Left: Accordion Container */}
+        <div className="cse-accordion-container">
+          <div className="cse-accordion">
+            {loading ? (
+              <div className="cse-loading">
+                <i className="ri-loader-4-line" />
+                Loading lessons...
+              </div>
+            ) : (
+              LEVELS.map(level => (
+                <div className="cse-level" key={level}>
+                  {/* Level Header */}
+                  <button 
+                    className={`cse-level-header ${expandedLevels.has(level) ? 'expanded' : ''}`}
+                    onClick={() => toggleLevel(level)}
+                    style={{ '--level-color': LEVEL_COLORS[level] } as any}
+                  >
+                    <div className="cse-level-info">
+                      <i className={`ri-arrow-${expandedLevels.has(level) ? 'down' : 'right'}-s-line`} />
+                      <span className="cse-level-badge" style={{ backgroundColor: LEVEL_COLORS[level] }}>
+                        {LEVEL_BADGES[level]}
+                      </span>
+                      <span className="cse-level-name">Level {level}</span>
+                    </div>
+                    <span className="cse-level-count">
+                      {getLevelLessonCount(level)} lesson{getLevelLessonCount(level) !== 1 ? 's' : ''}
+                    </span>
+                  </button>
 
-      {/* Lessons List */}
-      <div className="cse-lessons">
-        {loading ? (
-          <div className="cse-loading">
-            <i className="ri-loader-4-line" />
-            Loading lessons...
+                  {/* Chapters */}
+                  {expandedLevels.has(level) && (
+                    <div className="cse-chapters">
+                      {CHAPTERS.map(chapter => {
+                        const chapterKey = `${level}-${chapter}`;
+                        const chapterName = getChapterName(level, chapter);
+                        const chapterLessons = lessonsByLevelChapter[chapterKey] || [];
+                        const hasLessons = chapterLessons.length > 0;
+
+                        return (
+                          <div className="cse-chapter" key={chapterKey}>
+                            {/* Chapter Header */}
+                            <button 
+                              className={`cse-chapter-header ${expandedChapters.has(chapterKey) ? 'expanded' : ''} ${!hasLessons ? 'empty' : ''}`}
+                              onClick={() => toggleChapter(level, chapter)}
+                            >
+                              <div className="cse-chapter-info">
+                                <i className={`ri-arrow-${expandedChapters.has(chapterKey) ? 'down' : 'right'}-s-line`} />
+                                <span className="cse-chapter-number">Chapter {chapter}</span>
+                                {chapterName && (
+                                  <span className="cse-chapter-name">{chapterName}</span>
+                                )}
+                              </div>
+                              <span className="cse-chapter-count">
+                                {getChapterLessonCount(level, chapter)}/10
+                              </span>
+                            </button>
+
+                            {/* Lessons */}
+                            {expandedChapters.has(chapterKey) && (
+                              <div className="cse-lessons-list">
+                                {chapterLessons.length > 0 ? (
+                                  chapterLessons.map(lesson => (
+                                    <div 
+                                      className={`cse-lesson-row ${selectedLesson?.id === lesson.id ? 'selected' : ''}`} 
+                                      key={lesson.id}
+                                      onClick={() => handleSelectLesson(lesson)}
+                                    >
+                                      <div className="cse-lesson-main">
+                                        <span className={`cse-skill-dot cse-skill-${lesson.skill}`} />
+                                        <span className="cse-lesson-number">L{lesson.lessonNumber}</span>
+                                        <span className="cse-lesson-title">{lesson.lessonTitle}</span>
+                                      </div>
+                                      <div className="cse-lesson-actions">
+                                        <button 
+                                          className="cse-action-btn"
+                                          onClick={(e) => { e.stopPropagation(); handleEditLesson(lesson); }}
+                                          title="Edit"
+                                        >
+                                          <i className="ri-edit-line" />
+                                        </button>
+                                        <button 
+                                          className="cse-action-btn"
+                                          onClick={(e) => { e.stopPropagation(); handlePreviewLesson(lesson); }}
+                                          title="Preview"
+                                        >
+                                          <i className="ri-eye-line" />
+                                        </button>
+                                        <button 
+                                          className="cse-action-btn"
+                                          onClick={(e) => { e.stopPropagation(); handleDuplicateLesson(lesson); }}
+                                          title="Duplicate"
+                                        >
+                                          <i className="ri-file-copy-line" />
+                                        </button>
+                                        <button 
+                                          className="cse-action-btn cse-action-delete"
+                                          onClick={(e) => { e.stopPropagation(); handleDeleteLesson(lesson.id); }}
+                                          title="Delete"
+                                        >
+                                          <i className="ri-delete-bin-line" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="cse-empty-chapter">
+                                    <span>No lessons yet</span>
+                                    <button 
+                                      className="cse-add-lesson-btn"
+                                      onClick={() => setShowCreateModal(true)}
+                                    >
+                                      <i className="ri-add-line" />
+                                      Add Lesson
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
-        ) : lessons.length === 0 ? (
-          <div className="cse-empty">
-            <div className="cse-empty-icon">
-              <i className="ri-book-open-line" />
-            </div>
-            <h3>No lessons yet</h3>
-            <p>Create your first Conversational Skills lesson</p>
-            <button className="cse-create-btn" onClick={() => setShowCreateModal(true)}>
-              <i className="ri-add-line" />
-              Create Lesson
-            </button>
-          </div>
-        ) : (
-          <div className="cse-lessons-grid">
-            {lessons.map(lesson => (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                onSelect={() => handleSelectLesson(lesson)}
-                onDelete={() => handleDeleteLesson(lesson.id)}
-              />
-            ))}
-          </div>
-        )}
+        </div>
+
+        {/* Right: Analytics Panel */}
+        <div className="cse-analytics-panel">
+          {selectedLesson ? (
+            // Lesson-specific analytics
+            <LessonAnalytics lesson={selectedLesson} onClose={() => setSelectedLesson(null)} />
+          ) : (
+            // Course-wide analytics
+            <CourseAnalytics stats={courseStats} lessons={lessons} />
+          )}
+        </div>
       </div>
 
       {/* Create Modal */}
@@ -207,67 +390,6 @@ export default function ConversationalSkillsEditorPage() {
           onCreate={handleCreateLesson}
         />
       )}
-    </div>
-  );
-}
-
-// ============================================================================
-// LESSON CARD
-// ============================================================================
-
-function LessonCard({
-  lesson,
-  onSelect,
-  onDelete,
-}: {
-  lesson: LessonMaterial;
-  onSelect: () => void;
-  onDelete: () => void;
-}) {
-  const skillColors: Record<Skill, string> = {
-    speaking: '#3b82f6',
-    listening: '#8b5cf6',
-    reading: '#10b981',
-  };
-
-  return (
-    <div className="cse-lesson-card" onClick={onSelect}>
-      <div 
-        className="cse-lesson-preview"
-        style={{
-          backgroundImage: lesson.backgroundImage ? `url(${lesson.backgroundImage})` : undefined,
-          backgroundColor: lesson.overlayColor?.replace(/[0-9a-f]{2}$/i, '') || '#0369a1',
-        }}
-      >
-        <span className="cse-lesson-badge">{lesson.levelBadge}</span>
-        <div className="cse-lesson-preview-content">
-          <p className="cse-lesson-chapter">{lesson.chapterLabel}</p>
-          <h3 className="cse-lesson-title">{lesson.lessonTitle}</h3>
-        </div>
-      </div>
-      <div className="cse-lesson-info">
-        <div className="cse-lesson-meta">
-          <span 
-            className="cse-skill-badge"
-            style={{ backgroundColor: skillColors[lesson.skill] }}
-          >
-            {lesson.skill}
-          </span>
-          <span className="cse-lesson-date">
-            {new Date(lesson.updatedAt).toLocaleDateString()}
-          </span>
-        </div>
-        <p className="cse-lesson-goal">{lesson.goalTextEn}</p>
-        <button
-          className="cse-delete-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          <i className="ri-delete-bin-line" />
-        </button>
-      </div>
     </div>
   );
 }
@@ -502,250 +624,296 @@ function CreateLessonModal({
 }
 
 // ============================================================================
-// HEADER EDITOR
+// COURSE ANALYTICS (Default View)
 // ============================================================================
 
-function HeaderEditor({
-  lesson,
-  onBack,
-  onUpdate,
-}: {
-  lesson: LessonMaterial;
-  onBack: () => void;
-  onUpdate: (lesson: LessonMaterial) => void;
+function CourseAnalytics({ 
+  stats, 
+  lessons 
+}: { 
+  stats: {
+    totalLessons: number;
+    speakingCount: number;
+    listeningCount: number;
+    readingCount: number;
+    completedLevels: number;
+    totalCapacity: number;
+    progressPercent: number;
+  };
+  lessons: LessonMaterial[];
 }) {
-  const [backgroundImage, setBackgroundImage] = useState(lesson.backgroundImage);
-  const [overlayColor, setOverlayColor] = useState(lesson.overlayColor || '#0369a1cc');
-  const [saving, setSaving] = useState(false);
-
-  // Parse overlay color into color and opacity
-  const baseColor = overlayColor.slice(0, 7);
-  const opacity = overlayColor.length === 9 
-    ? parseInt(overlayColor.slice(7, 9), 16) / 255 
-    : 0.8;
-
-  const handleColorChange = (color: string) => {
-    const opacityHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
-    setOverlayColor(color + opacityHex);
-  };
-
-  const handleOpacityChange = (newOpacity: number) => {
-    const opacityHex = Math.round(newOpacity * 255).toString(16).padStart(2, '0');
-    setOverlayColor(baseColor + opacityHex);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const updated = await updateLessonHeader(lesson.id, {
-        backgroundImage,
-        overlayColor,
-      });
-      onUpdate(updated);
-      toast.success('Header saved!');
-    } catch (error) {
-      toast.error('Failed to save header');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleImageUpload = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-
-    // Convert to base64 for now (in production, upload to SeaweedFS)
-    const reader = new FileReader();
-    reader.onload = () => {
-      setBackgroundImage(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleOpenPreview = () => {
-    // Store unsaved preview data in sessionStorage to avoid URL size limits
-    const previewData = {
-      backgroundImage,
-      overlayColor,
-    };
-    sessionStorage.setItem(`preview-${lesson.id}`, JSON.stringify(previewData));
-    window.open(`/conversational-skills-preview/${lesson.id}`, '_blank');
-  };
-
-  const handleOpenVisualEditor = () => {
-    // Open the visual/WYSIWYG editor in a new tab
-    window.open(`/conversational-skills-visual-editor/${lesson.id}`, '_blank');
-  };
-
   return (
-    <div className="cse-editor">
-      {/* Toolbar */}
-      <div className="cse-editor-toolbar">
-        <button className="cse-btn-back" onClick={onBack}>
-          <i className="ri-arrow-left-line" />
-          Back
-        </button>
-        <div className="cse-editor-title">
-          <span className="cse-editor-badge">{lesson.levelBadge}</span>
-          <h2>{lesson.lessonTitle}</h2>
+    <div className="cse-analytics">
+      <div className="cse-analytics-header">
+        <i className="ri-bar-chart-box-line" />
+        <h3>Course Overview</h3>
+      </div>
+
+      {/* Progress Circle */}
+      <div className="cse-progress-section">
+        <div className="cse-progress-circle">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" className="cse-progress-bg" />
+            <circle 
+              cx="50" cy="50" r="42" 
+              className="cse-progress-fill"
+              style={{ 
+                strokeDasharray: `${stats.progressPercent * 2.64} 264` 
+              }}
+            />
+          </svg>
+          <div className="cse-progress-text">
+            <span className="cse-progress-value">{stats.progressPercent}%</span>
+            <span className="cse-progress-label">Complete</span>
+          </div>
         </div>
-        <div className="cse-toolbar-actions">
-          <button className="cse-btn-visual" onClick={handleOpenVisualEditor}>
-            <i className="ri-layout-masonry-line" />
-            Visual Editor
-          </button>
-          <button className="cse-btn-secondary" onClick={handleOpenPreview}>
-            <i className="ri-external-link-line" />
-            Preview
-          </button>
-          <button className="cse-btn-primary" onClick={handleSave} disabled={saving}>
-            <i className="ri-save-line" />
-            {saving ? 'Saving...' : 'Save'}
-          </button>
+        <p className="cse-progress-detail">
+          {stats.totalLessons} of {stats.totalCapacity} lessons created
+        </p>
+      </div>
+
+      {/* Skill Distribution */}
+      <div className="cse-stats-section">
+        <h4>Skill Distribution</h4>
+        <div className="cse-skill-bars">
+          <div className="cse-skill-bar-item">
+            <div className="cse-skill-bar-header">
+              <span className="cse-skill-bar-label">
+                <span className="cse-skill-dot cse-skill-speaking" />
+                Speaking
+              </span>
+              <span className="cse-skill-bar-value">{stats.speakingCount}</span>
+            </div>
+            <div className="cse-skill-bar-track">
+              <div 
+                className="cse-skill-bar-fill speaking" 
+                style={{ width: `${stats.totalLessons ? (stats.speakingCount / stats.totalLessons) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+          <div className="cse-skill-bar-item">
+            <div className="cse-skill-bar-header">
+              <span className="cse-skill-bar-label">
+                <span className="cse-skill-dot cse-skill-listening" />
+                Listening
+              </span>
+              <span className="cse-skill-bar-value">{stats.listeningCount}</span>
+            </div>
+            <div className="cse-skill-bar-track">
+              <div 
+                className="cse-skill-bar-fill listening" 
+                style={{ width: `${stats.totalLessons ? (stats.listeningCount / stats.totalLessons) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+          <div className="cse-skill-bar-item">
+            <div className="cse-skill-bar-header">
+              <span className="cse-skill-bar-label">
+                <span className="cse-skill-dot cse-skill-reading" />
+                Reading
+              </span>
+              <span className="cse-skill-bar-value">{stats.readingCount}</span>
+            </div>
+            <div className="cse-skill-bar-track">
+              <div 
+                className="cse-skill-bar-fill reading" 
+                style={{ width: `${stats.totalLessons ? (stats.readingCount / stats.totalLessons) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="cse-editor-layout">
-        {/* Controls Panel */}
-        <aside className="cse-editor-controls">
-          <h3>Header Settings</h3>
-
-          {/* Background Image */}
-          <div className="cse-control-group">
-            <label>Background Image</label>
-            <div className="cse-image-upload">
-              {backgroundImage ? (
-                <div className="cse-image-preview">
-                  <img src={backgroundImage} alt="Background" />
-                  <button onClick={() => setBackgroundImage('')}>
-                    <i className="ri-delete-bin-line" />
-                  </button>
-                </div>
-              ) : (
-                <label className="cse-upload-btn">
-                  <i className="ri-image-add-line" />
-                  <span>Upload Image</span>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} />
-                </label>
-              )}
+      {/* Quick Stats */}
+      <div className="cse-stats-section">
+        <h4>Quick Stats</h4>
+        <div className="cse-quick-stats">
+          <div className="cse-quick-stat">
+            <i className="ri-stack-line" />
+            <div>
+              <span className="cse-quick-stat-value">10</span>
+              <span className="cse-quick-stat-label">Levels</span>
             </div>
           </div>
-
-          {/* Overlay Color */}
-          <div className="cse-control-group">
-            <label>Overlay Color</label>
-            <div className="cse-color-picker">
-              <input
-                type="color"
-                value={baseColor}
-                onChange={e => handleColorChange((e.target as HTMLInputElement).value)}
-              />
-              <span>{baseColor}</span>
+          <div className="cse-quick-stat">
+            <i className="ri-book-2-line" />
+            <div>
+              <span className="cse-quick-stat-value">50</span>
+              <span className="cse-quick-stat-label">Chapters</span>
             </div>
           </div>
-
-          {/* Overlay Opacity */}
-          <div className="cse-control-group">
-            <label>Overlay Opacity: {Math.round(opacity * 100)}%</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={opacity}
-              onChange={e => handleOpacityChange(parseFloat((e.target as HTMLInputElement).value))}
-            />
-          </div>
-
-          {/* Preset Colors */}
-          <div className="cse-control-group">
-            <label>Preset Colors</label>
-            <div className="cse-color-presets">
-              {['#0369a1', '#1e3a5f', '#134e4a', '#4c1d95', '#9f1239', '#1f2937'].map(color => (
-                <button
-                  key={color}
-                  className={`cse-color-preset ${baseColor === color ? 'active' : ''}`}
-                  style={{ backgroundColor: color }}
-                  onClick={() => handleColorChange(color)}
-                />
-              ))}
+          <div className="cse-quick-stat">
+            <i className="ri-file-list-3-line" />
+            <div>
+              <span className="cse-quick-stat-value">{stats.totalLessons}</span>
+              <span className="cse-quick-stat-label">Lessons</span>
             </div>
           </div>
-        </aside>
+        </div>
+      </div>
 
-        {/* Lesson Info Panel - replaces preview */}
-        <main className="cse-editor-main">
-          <div className="cse-lesson-info-panel">
-            <h3>Lesson Information</h3>
-            
-            <div className="cse-info-grid">
-              <div className="cse-info-item">
-                <label>Level</label>
-                <span>{lesson.levelBadge} (Level {lesson.level})</span>
-              </div>
-              <div className="cse-info-item">
-                <label>Skill</label>
-                <span className="cse-skill-tag" data-skill={lesson.skill}>{lesson.skill}</span>
-              </div>
-              <div className="cse-info-item">
-                <label>Chapter</label>
-                <span>{lesson.chapterLabel}</span>
-              </div>
-              <div className="cse-info-item">
-                <label>Lesson</label>
-                <span>{lesson.lessonTitle}</span>
-              </div>
+      {/* Recent Activity */}
+      <div className="cse-stats-section">
+        <h4>Recently Updated</h4>
+        <div className="cse-recent-list">
+          {lessons.slice(0, 5).map(lesson => (
+            <div className="cse-recent-item" key={lesson.id}>
+              <span className={`cse-skill-dot cse-skill-${lesson.skill}`} />
+              <span className="cse-recent-title">{lesson.lessonTitle}</span>
+              <span className="cse-recent-date">
+                {new Date(lesson.updatedAt).toLocaleDateString()}
+              </span>
             </div>
+          ))}
+          {lessons.length === 0 && (
+            <p className="cse-empty-recent">No lessons yet</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            <div className="cse-info-section">
-              <label>Lesson Goal (English)</label>
-              <p>{lesson.goalTextEn}</p>
+// ============================================================================
+// LESSON ANALYTICS (Selected Lesson View)
+// ============================================================================
+
+function LessonAnalytics({ 
+  lesson, 
+  onClose 
+}: { 
+  lesson: LessonMaterial; 
+  onClose: () => void;
+}) {
+  const skillColors: Record<Skill, string> = {
+    speaking: '#3b82f6',
+    listening: '#8b5cf6',
+    reading: '#10b981',
+  };
+
+  return (
+    <div className="cse-analytics">
+      <div className="cse-analytics-header">
+        <i className="ri-line-chart-line" />
+        <h3>Lesson Analytics</h3>
+        <button className="cse-analytics-close" onClick={onClose}>
+          <i className="ri-close-line" />
+        </button>
+      </div>
+
+      {/* Lesson Info Card */}
+      <div className="cse-lesson-info-card">
+        <div className="cse-lesson-info-badge" style={{ backgroundColor: skillColors[lesson.skill] }}>
+          {lesson.skill}
+        </div>
+        <h4>{lesson.lessonTitle}</h4>
+        <p className="cse-lesson-info-chapter">{lesson.chapterLabel}</p>
+        <div className="cse-lesson-info-meta">
+          <span className="cse-lesson-info-level">{lesson.levelBadge}</span>
+          <span>Level {lesson.level}</span>
+        </div>
+      </div>
+
+      {/* Mock Stats - Engagement */}
+      <div className="cse-stats-section">
+        <h4>Student Engagement</h4>
+        <div className="cse-engagement-stats">
+          <div className="cse-engagement-stat">
+            <span className="cse-engagement-value">1,247</span>
+            <span className="cse-engagement-label">Total Views</span>
+          </div>
+          <div className="cse-engagement-stat">
+            <span className="cse-engagement-value">892</span>
+            <span className="cse-engagement-label">Completions</span>
+          </div>
+          <div className="cse-engagement-stat">
+            <span className="cse-engagement-value">71%</span>
+            <span className="cse-engagement-label">Completion Rate</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mock Stats - Performance */}
+      <div className="cse-stats-section">
+        <h4>Average Performance</h4>
+        <div className="cse-performance-bars">
+          <div className="cse-performance-item">
+            <span className="cse-performance-label">Accuracy</span>
+            <div className="cse-performance-bar">
+              <div className="cse-performance-fill" style={{ width: '78%' }} />
             </div>
-
-            <div className="cse-info-section">
-              <label>Lesson Goal (Japanese)</label>
-              <p>{lesson.goalTextJp}</p>
+            <span className="cse-performance-value">78%</span>
+          </div>
+          <div className="cse-performance-item">
+            <span className="cse-performance-label">Fluency</span>
+            <div className="cse-performance-bar">
+              <div className="cse-performance-fill" style={{ width: '65%' }} />
             </div>
+            <span className="cse-performance-value">65%</span>
+          </div>
+          <div className="cse-performance-item">
+            <span className="cse-performance-label">Pronunciation</span>
+            <div className="cse-performance-bar">
+              <div className="cse-performance-fill" style={{ width: '82%' }} />
+            </div>
+            <span className="cse-performance-value">82%</span>
+          </div>
+        </div>
+      </div>
 
-            <div className="cse-info-meta">
-              <span>Created: {new Date(lesson.createdAt).toLocaleDateString()}</span>
-              <span>Updated: {new Date(lesson.updatedAt).toLocaleDateString()}</span>
+      {/* Time Stats */}
+      <div className="cse-stats-section">
+        <h4>Time Metrics</h4>
+        <div className="cse-time-stats">
+          <div className="cse-time-stat">
+            <i className="ri-time-line" />
+            <div>
+              <span className="cse-time-value">12:34</span>
+              <span className="cse-time-label">Avg. Duration</span>
             </div>
           </div>
-
-          {/* Section Editors - Coming Soon */}
-          <div className="cse-sections-placeholder">
-            <h3>Lesson Sections</h3>
-            <p>Section editors coming soon...</p>
-            <div className="cse-section-list">
-              <div className="cse-section-item">
-                <i className="ri-mic-line" />
-                <span>Vocabulary</span>
-                <span className="cse-section-status">Not configured</span>
-              </div>
-              <div className="cse-section-item">
-                <i className="ri-chat-3-line" />
-                <span>Dialogue</span>
-                <span className="cse-section-status">Not configured</span>
-              </div>
-              <div className="cse-section-item">
-                <i className="ri-book-read-line" />
-                <span>Grammar</span>
-                <span className="cse-section-status">Not configured</span>
-              </div>
-              <div className="cse-section-item">
-                <i className="ri-headphone-line" />
-                <span>Listening</span>
-                <span className="cse-section-status">Not configured</span>
-              </div>
-              <div className="cse-section-item">
-                <i className="ri-pencil-line" />
-                <span>Practice</span>
-                <span className="cse-section-status">Not configured</span>
-              </div>
+          <div className="cse-time-stat">
+            <i className="ri-calendar-line" />
+            <div>
+              <span className="cse-time-value">{new Date(lesson.createdAt).toLocaleDateString()}</span>
+              <span className="cse-time-label">Created</span>
             </div>
           </div>
-        </main>
+          <div className="cse-time-stat">
+            <i className="ri-refresh-line" />
+            <div>
+              <span className="cse-time-value">{new Date(lesson.updatedAt).toLocaleDateString()}</span>
+              <span className="cse-time-label">Last Updated</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Status */}
+      <div className="cse-stats-section">
+        <h4>Content Status</h4>
+        <div className="cse-content-status">
+          <div className={`cse-status-item ${lesson.introductionData ? 'complete' : 'incomplete'}`}>
+            <i className={lesson.introductionData ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
+            <span>Introduction</span>
+          </div>
+          <div className={`cse-status-item ${lesson.learnData ? 'complete' : 'incomplete'}`}>
+            <i className={lesson.learnData ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
+            <span>Learn Section</span>
+          </div>
+          <div className={`cse-status-item ${lesson.stepBData ? 'complete' : 'incomplete'}`}>
+            <i className={lesson.stepBData ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
+            <span>Step B</span>
+          </div>
+          <div className={`cse-status-item ${lesson.applyData ? 'complete' : 'incomplete'}`}>
+            <i className={lesson.applyData ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
+            <span>Apply Section</span>
+          </div>
+          <div className={`cse-status-item ${lesson.exerciseData ? 'complete' : 'incomplete'}`}>
+            <i className={lesson.exerciseData ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
+            <span>Exercise/Mission</span>
+          </div>
+        </div>
       </div>
     </div>
   );

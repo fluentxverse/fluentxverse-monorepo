@@ -319,4 +319,44 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         summary: 'Delete a lesson',
       },
     }
+  )
+  
+  // ============================================================================
+  // DUPLICATE LESSON
+  // ============================================================================
+  .post(
+    '/:id/duplicate',
+    async ({ params, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+      
+      try {
+        const lesson = await lessonMaterialService.duplicate(
+          params.id,
+          adminPayload.userId,
+          adminPayload.firstName || adminPayload.email
+        );
+        
+        if (!lesson) {
+          set.status = 404;
+          return { success: false, error: 'Original lesson not found' };
+        }
+        
+        return { success: true, lesson };
+      } catch (error: any) {
+        console.error('Error duplicating lesson:', error);
+        return { success: false, error: error.message || 'Failed to duplicate lesson' };
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Duplicate an existing lesson',
+      },
+    }
   );

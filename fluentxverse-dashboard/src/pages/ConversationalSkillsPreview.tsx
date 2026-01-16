@@ -306,8 +306,7 @@ interface ChooseExerciseItem {
 }
 
 interface ChangeExerciseItem {
-  contextSentence: string;
-  underlinedText: string;
+  sentence: string;
 }
 
 interface InfoBoxColumn {
@@ -393,16 +392,21 @@ interface MissionTopic {
   questions: string[];
 }
 
-interface ReadingPassageItem {
-  image?: string;
-  title: string;
-  content: string;
+// Reading passage block (text or image)
+interface ReadingBlock {
+  type: 'paragraph' | 'images';
+  content?: string; // For paragraph
+  images?: string[]; // For images (array of URLs)
 }
 
+// Reading passage data
 interface ReadingPassage {
-  instruction: string;
-  instructionTranslation?: string;
-  items: ReadingPassageItem[];
+  title: string;
+  showAuthor?: boolean;
+  author?: string;
+  headerAlignment?: 'left' | 'center' | 'right';
+  blocks: ReadingBlock[];
+  closingQuestion?: string;
 }
 
 interface MissionSectionData {
@@ -1218,11 +1222,13 @@ function StepBSection({ data }: StepBSectionProps) {
           </div>
         </div>
 
-        {/* Question */}
-        <div className="csp-stepb-question">
-          <span className="csp-question-bullet">•</span>
-          <p>{speakData.question}</p>
-        </div>
+        {/* Question - only show if there is one */}
+        {speakData.question && (
+          <div className="csp-stepb-question">
+            <span className="csp-question-bullet">•</span>
+            <p>{speakData.question}</p>
+          </div>
+        )}
       </>
     );
   };
@@ -1576,8 +1582,8 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
   
   return (
     <section className="csp-section csp-exercise-section">
-      <div className="csp-section-header">
-        <span className="csp-section-number">{data.sectionNumber}</span>
+      <div className="csp-section-number">
+        <span className="csp-number-badge">{data.sectionNumber}</span>
         <h2 className="csp-section-title">{data.sectionTitle}</h2>
         <span className="csp-section-line" />
       </div>
@@ -1591,9 +1597,9 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
           )}
 
           {/* Instructions */}
-          <p className="csp-exercise-instructions">{data.instructions}</p>
+          <p className="csp-exercise-instructions" dangerouslySetInnerHTML={{ __html: data.instructions }} />
           {data.instructionsTranslation && (
-            <p className="csp-exercise-instructions-translation">{data.instructionsTranslation}</p>
+            <p className="csp-exercise-instructions-translation" dangerouslySetInnerHTML={{ __html: data.instructionsTranslation }} />
           )}
 
           {/* REPHRASE TYPE CONTENT */}
@@ -1638,11 +1644,22 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
           {/* Example */}
           {data.showExample && (
             <div className="csp-exercise-example">
-              <p className="csp-example-sentence">{data.exampleSentence}</p>
-              <p className="csp-example-answer">
-                <span className="csp-arrow">→</span>
-                <span className="csp-answer-underline">{data.exampleAnswer}</span>
-              </p>
+              <div className="csp-exercise-example-image">
+                {data.exampleImage ? (
+                  <img src={data.exampleImage} alt="Example" />
+                ) : (
+                  <div className="csp-image-placeholder">
+                    <span className="csp-placeholder-dims">120 × 80</span>
+                  </div>
+                )}
+              </div>
+              <div className="csp-example-content">
+                <p className="csp-example-sentence" dangerouslySetInnerHTML={{ __html: data.exampleSentence }} />
+                <p className="csp-example-answer">
+                  <span className="csp-arrow">→</span>
+                  <span className="csp-answer-underline" dangerouslySetInnerHTML={{ __html: data.exampleAnswer }} />
+                </p>
+              </div>
             </div>
           )}
 
@@ -1650,14 +1667,18 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
           <div className="csp-exercise-items">
             {data.exerciseItems.map((item, idx) => (
               <div key={idx} className="csp-exercise-item">
-                {item.image && (
-                  <div className="csp-exercise-item-image">
+                <div className="csp-exercise-item-image">
+                  {item.image ? (
                     <img src={item.image} alt={`Exercise ${idx + 1}`} />
-                  </div>
-                )}
+                  ) : (
+                    <div className="csp-image-placeholder">
+                      <span className="csp-placeholder-dims">120 × 80</span>
+                    </div>
+                  )}
+                </div>
                 <div className="csp-exercise-item-text">
                   <span className="csp-item-number">{idx + 1}.</span>
-                  <span className="csp-item-sentence">{item.sentence}</span>
+                  <span className="csp-item-sentence" dangerouslySetInnerHTML={{ __html: item.sentence }} />
                 </div>
               </div>
             ))}
@@ -1673,7 +1694,7 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                 {(data.chooseItems || []).map((item, idx) => (
                   <div key={idx} className="csp-choose-item">
                     <span className="csp-item-number">{idx + 1}.</span>
-                    <span className="csp-item-sentence">{item.sentence}</span>
+                    <span className="csp-item-sentence" dangerouslySetInnerHTML={{ __html: item.sentence }} />
                   </div>
                 ))}
               </div>
@@ -1731,11 +1752,7 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                 {(data.changeItems || []).map((item, idx) => (
                   <div key={idx} className="csp-change-item">
                     <span className="csp-item-number">{idx + 1}.</span>
-                    <span className="csp-change-text">
-                      <span className="csp-change-context">{item.contextSentence}</span>
-                      {' '}
-                      <span className="csp-change-underlined">{item.underlinedText}</span>
-                    </span>
+                    <span className="csp-change-text" dangerouslySetInnerHTML={{ __html: item.sentence }} />
                   </div>
                 ))}
               </div>
@@ -1896,20 +1913,6 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                 </div>
               ))}
             </div>
-
-            {/* Answer Key Box */}
-            {data.answers && data.answers.length > 0 && (
-              <div className="csp-answer-key-box">
-                <div className="csp-answer-key-items">
-                  {data.answers.map((answer, idx) => (
-                    <p key={idx} className="csp-answer-key-item">
-                      <span className="csp-answer-number">{idx + 1}.</span>
-                      <span className="csp-answer-text">{answer.text}</span>
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Step B Tutor Guide - Only if Step B is enabled */}
@@ -2042,23 +2045,31 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
       {/* Reading Passage */}
       {data.readingPassage && (
         <div className="csp-mission-reading-passage">
-          <p className="csp-reading-instruction">{data.readingPassage.instruction}</p>
-          {data.readingPassage.instructionTranslation && (
-            <p className="csp-reading-instruction-trans">{data.readingPassage.instructionTranslation}</p>
-          )}
-          <div className="csp-reading-items">
-            {data.readingPassage.items.map((item, idx) => (
-              <div key={idx} className="csp-reading-item">
-                {item.image && (
-                  <div className="csp-reading-item-image">
-                    <img src={item.image} alt={item.title} />
+          <div className="csp-reading-header" style={{ textAlign: data.readingPassage.headerAlignment || 'center' }}>
+            <h4 className="csp-reading-title">{data.readingPassage.title}</h4>
+            {data.readingPassage.showAuthor !== false && data.readingPassage.author && (
+              <p className="csp-reading-author">by {data.readingPassage.author}</p>
+            )}
+          </div>
+          <div className="csp-reading-blocks">
+            {(data.readingPassage.blocks || []).map((block, idx) => (
+              <div key={idx} className="csp-reading-block">
+                {block.type === 'paragraph' && block.content && (
+                  <p className="csp-reading-paragraph">{block.content}</p>
+                )}
+                {block.type === 'images' && block.images && block.images.length > 0 && (
+                  <div className="csp-reading-images">
+                    {block.images.map((img, imgIdx) => (
+                      <img key={imgIdx} src={img} alt="" className="csp-reading-image" />
+                    ))}
                   </div>
                 )}
-                <h4 className="csp-reading-item-title">{item.title}</h4>
-                <p className="csp-reading-item-content" dangerouslySetInnerHTML={{ __html: item.content }} />
               </div>
             ))}
           </div>
+          {data.readingPassage.closingQuestion && (
+            <p className="csp-reading-closing-question">{data.readingPassage.closingQuestion}</p>
+          )}
         </div>
       )}
 
@@ -2160,7 +2171,6 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
 
       {/* Challenge Name */}
       <h3 className="csp-challenge-name">
-        {data.isOptional && <span className="csp-optional-badge">If Time Allows</span>}
         {data.challengeName}
       </h3>
 
@@ -2171,36 +2181,17 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
           {data.missionType === 'reading' && renderReadingContent()}
           {data.missionType === 'listening' && renderListeningContent()}
           {data.missionType === 'discussion' && renderDiscussionContent()}
-
-          {/* Questions Section (speaking/reading types) */}
-          {(data.missionType === 'speaking' || data.missionType === 'reading') && data.questions.length > 0 && (
-            <div className="csp-mission-questions">
-              {data.questionsIntro && (
-                <div className="csp-questions-intro">{data.questionsIntro}</div>
-              )}
-              <ol className="csp-questions-list">
-                {data.questions.map((q, idx) => (
-                  <li key={idx} className="csp-question-item">
-                    <span className="csp-question-text">{q.question}</span>
-                    {q.hints && q.hints.length > 0 && (
-                      <div className="csp-question-hints">
-                        {q.hints.map((hint, hIdx) => (
-                          <span key={hIdx} className="csp-hint">{hint}</span>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
         </div>
 
         {/* Right Column - Tutor Guide */}
         <div className="csp-mission-right">
           <div className="csp-tutor-guide">
             <div className="csp-guide-header">
-              {data.sectionTitle} - {data.challengeName} ({data.duration})
+              {data.sectionTitle}
+            </div>
+            <div className="csp-mission-challenge-header">
+              <span className="csp-mission-challenge-name">{data.challengeName}</span>
+              <span className="csp-mission-challenge-duration">({data.duration})</span>
             </div>
             <div className="csp-guide-steps">
               {data.tutorSteps.map((step, stepIdx) => (
@@ -2271,13 +2262,15 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
       <div className="csp-feedback-layout">
         {/* Left Column - Student View */}
         <div className="csp-feedback-left">
-          {/* Goal Box */}
+          {/* Goal Box - Horizontal layout like editor */}
           <div className="csp-feedback-goal">
             <div className="csp-feedback-goal-header">
               <span className="csp-goal-badge">GOAL</span>
             </div>
-            <p className="csp-feedback-goal-text">{data.goal}</p>
-            <p className="csp-feedback-goal-jp">{data.goalJp}</p>
+            <div className="csp-feedback-goal-content">
+              <p className="csp-feedback-goal-text">{data.goal}</p>
+              <p className="csp-feedback-goal-jp">{data.goalJp}</p>
+            </div>
           </div>
 
           {/* Rubric */}
@@ -2307,49 +2300,53 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
             </div>
           </div>
 
-          {/* Feedback Guide Table */}
+          {/* Feedback Guide Table - 3-column layout like editor */}
           <div className="csp-feedback-guide">
             <div className="csp-feedback-guide-header">{data.feedbackGuideTitle}</div>
-            <div className="csp-feedback-guide-content">
-              {data.categories.map((cat) => (
-                <div key={cat.id} className="csp-feedback-guide-category">
-                  <div className={`csp-feedback-guide-cat-header csp-feedback-cat-${cat.id}`}>
-                    <span className="csp-cat-title">{cat.title}</span>
-                    <span className="csp-cat-jp">{cat.titleJp.split('\n')[0]}</span>
-                  </div>
-                  <div className="csp-feedback-guide-cat-body">
-                    <div className="csp-feedback-focus">
-                      <strong>Focus on:</strong> {cat.focusOn}
-                    </div>
-                    <div className="csp-feedback-items">
-                      <strong>Example Feedback:</strong>
-                      <ul>
-                        {cat.exampleFeedbackItems.map((item, idx) => (
-                          <li key={idx}>{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    {cat.vocabularyExample && (
-                      <div className="csp-feedback-vocab">
-                        <strong>Vocabulary Example:</strong> {cat.vocabularyExample}
-                      </div>
-                    )}
-                    <div className="csp-feedback-examples">
-                      {cat.examples.map((ex, exIdx) => (
-                        <div key={exIdx} className="csp-feedback-example">
-                          <p className="csp-example-you-said">
-                            <span className="csp-label">You said:</span> "{ex.youSaid}"
-                          </p>
-                          <p className="csp-example-correction">
-                            <span className="csp-label">{ex.correctionLabel}</span> "{ex.correction}"
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            
+            {/* Column Headers */}
+            <div className="csp-feedback-table-columns">
+              <div className="csp-feedback-col-header"></div>
+              <div className="csp-feedback-col-header">Focus on...</div>
+              <div className="csp-feedback-col-header">example feedback</div>
             </div>
+
+            {/* Table Rows */}
+            {data.categories.map((cat) => (
+              <div key={cat.id} className={`csp-feedback-table-row csp-feedback-row-${cat.id}`}>
+                {/* Column 1: Category */}
+                <div className="csp-feedback-col-category">
+                  <span className={`csp-feedback-category-title csp-cat-${cat.id}`}>{cat.title}</span>
+                  <span className="csp-feedback-focus-on">{cat.focusOn}</span>
+                </div>
+
+                {/* Column 2: Focus Items */}
+                <div className="csp-feedback-col-focus">
+                  {cat.exampleFeedbackItems.map((item, idx) => (
+                    <span key={idx} className="csp-feedback-focus-item">{item}</span>
+                  ))}
+                </div>
+
+                {/* Column 3: Example Feedback */}
+                <div className="csp-feedback-col-examples">
+                  {cat.id === 'range' && cat.vocabularyExample && (
+                    <div className="csp-feedback-vocab-line">{cat.vocabularyExample}</div>
+                  )}
+                  {cat.examples.map((ex, exIdx) => (
+                    <div key={exIdx} className="csp-feedback-example-block">
+                      <div className="csp-feedback-example-row">
+                        <span className="csp-feedback-label">You said:</span>
+                        <span className="csp-feedback-wrong">"{ex.youSaid}"</span>
+                      </div>
+                      <div className="csp-feedback-example-row">
+                        <span className="csp-feedback-label">{ex.correctionLabel}</span>
+                        <span className="csp-feedback-correct">"{ex.correction}"</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

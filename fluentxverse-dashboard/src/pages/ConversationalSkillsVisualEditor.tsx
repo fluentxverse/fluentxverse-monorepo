@@ -787,6 +787,7 @@ interface ReadingPassage {
   title: string;
   showAuthor?: boolean;
   author?: string;
+  headerAlignment?: 'left' | 'center' | 'right';
   blocks: ReadingBlock[];
   closingQuestion?: string;
 }
@@ -6748,7 +6749,49 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
 
               {/* Reading Passage */}
               <div className="csve-reading-passage">
-                <div className="csve-reading-passage-header">
+                {/* Alignment Options */}
+                <div className="csve-reading-alignment-options">
+                  <span className="csve-alignment-label">Header Alignment:</span>
+                  <div className="csve-alignment-buttons">
+                    <button
+                      className={`csve-alignment-btn ${(data.readingPassage?.headerAlignment || 'center') === 'left' ? 'active' : ''}`}
+                      onClick={() => updateData({
+                        readingPassage: {
+                          ...data.readingPassage!,
+                          headerAlignment: 'left'
+                        }
+                      })}
+                      title="Align Left"
+                    >
+                      <i className="ri-align-left" />
+                    </button>
+                    <button
+                      className={`csve-alignment-btn ${(data.readingPassage?.headerAlignment || 'center') === 'center' ? 'active' : ''}`}
+                      onClick={() => updateData({
+                        readingPassage: {
+                          ...data.readingPassage!,
+                          headerAlignment: 'center'
+                        }
+                      })}
+                      title="Align Center"
+                    >
+                      <i className="ri-align-center" />
+                    </button>
+                    <button
+                      className={`csve-alignment-btn ${(data.readingPassage?.headerAlignment || 'center') === 'right' ? 'active' : ''}`}
+                      onClick={() => updateData({
+                        readingPassage: {
+                          ...data.readingPassage!,
+                          headerAlignment: 'right'
+                        }
+                      })}
+                      title="Align Right"
+                    >
+                      <i className="ri-align-right" />
+                    </button>
+                  </div>
+                </div>
+                <div className="csve-reading-passage-header" style={{ textAlign: data.readingPassage?.headerAlignment || 'center' }}>
                   <input
                     type="text"
                     className="csve-reading-title"
@@ -6760,6 +6803,7 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                       }
                     })}
                     placeholder="Article Title"
+                    style={{ textAlign: data.readingPassage?.headerAlignment || 'center' }}
                   />
                   {data.readingPassage?.showAuthor !== false ? (
                     <div className="csve-reading-author">
@@ -7111,21 +7155,6 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                 )}
               </div>
 
-              {/* If Time Allows Badge */}
-              <div className="csve-mission-optional-row">
-                <label className="csve-mission-optional-toggle">
-                  <input
-                    type="checkbox"
-                    checked={data.isOptional || false}
-                    onChange={e => updateData({ isOptional: (e.target as HTMLInputElement).checked })}
-                  />
-                  <span className="csve-mission-optional-badge">
-                    <i className="ri-hourglass-line" />
-                    If Time Allows
-                  </span>
-                </label>
-              </div>
-
               {/* Topic Cards */}
               <div className="csve-mission-topics">
                 {(data.topics || []).map((topic, topicIdx) => (
@@ -7349,60 +7378,6 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
               ))}
               <button className="tgs-add-step-btn" onClick={handleAddTutorStep}>
                 <i className="ri-add-line" /> Add Step
-              </button>
-            </div>
-
-            {/* Questions */}
-            <div className="tgs-steps" style={{ borderTop: '1px solid #e2e8f0' }}>
-              {data.questions.map((q, qIdx) => (
-                <div key={qIdx} className="tgs-step">
-                  <span className="tgs-number">{qIdx + 1}</span>
-                  <div className="tgs-content">
-                    <input
-                      type="text"
-                      className="tgs-instruction-input"
-                      value={q.question}
-                      onChange={e => handleQuestionUpdate(qIdx, 'question', (e.target as HTMLInputElement).value)}
-                      placeholder="Question..."
-                    />
-                    {/* Hints */}
-                    {(q.hints || []).map((hint, hIdx) => (
-                      <div key={hIdx} className="tgs-script-item">
-                        <span className="tgs-script-bullet">●</span>
-                        <input
-                          type="text"
-                          className="tgs-script-input"
-                          value={hint}
-                          onChange={e => handleHintUpdate(qIdx, hIdx, (e.target as HTMLInputElement).value)}
-                          placeholder="Hint..."
-                        />
-                        <button
-                          className="tgs-remove-btn"
-                          onClick={() => handleRemoveHint(qIdx, hIdx)}
-                        >
-                          <i className="ri-close-line" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      className="tgs-add-script-btn"
-                      onClick={() => handleAddHint(qIdx)}
-                    >
-                      <i className="ri-add-line" /> Add Hint
-                    </button>
-                  </div>
-                  {data.questions.length > 1 && (
-                    <button
-                      className="tgs-step-remove"
-                      onClick={() => handleRemoveQuestion(qIdx)}
-                    >
-                      <i className="ri-delete-bin-line" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button className="tgs-add-step-btn" onClick={handleAddQuestion}>
-                <i className="ri-add-line" /> Add Question
               </button>
             </div>
           </div>

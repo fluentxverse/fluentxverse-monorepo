@@ -471,6 +471,14 @@ export async function updateLessonHeader(id: string, input: UpdateHeaderInput): 
 }
 
 /**
+ * Duplicate a lesson
+ */
+export async function duplicateLesson(id: string): Promise<LessonMaterial> {
+  const response = await apiClient.post<{ lesson: LessonMaterial }>(`/lesson-materials/${id}/duplicate`);
+  return response.data.lesson;
+}
+
+/**
  * Delete a lesson
  */
 export async function deleteLesson(id: string): Promise<void> {
