@@ -13,6 +13,7 @@ import InterviewBookingPage from './pages/InterviewBookingPage';
 import InterviewRoomPage from './pages/InterviewRoomPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MaterialsPage from './pages/MaterialsPage';
+import DailyDispatchPage from './pages/DailyDispatchPage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import LessonViewPage from './pages/LessonViewPage';
 import InboxPage from './pages/InboxPage';
@@ -112,6 +113,7 @@ export function AppInner() {
 							<Route path="/interview/room/:interviewId?" component={withProtected(InterviewRoomPage)} />
 							<Route path="/notifications" component={withProtected(NotificationsPage)} />
 							<Route path="/materials" component={withProtected(MaterialsPage)} />
+							<Route path="/materials/daily-dispatch" component={withProtected(DailyDispatchPage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />

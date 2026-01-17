@@ -35,6 +35,17 @@ const COURSE_TEMPLATES: TemplateInfo[] = [
     status: 'published',
   },
   {
+    id: 'daily-dispatch',
+    name: 'Daily Dispatch',
+    course: 'Daily Dispatch',
+    category: 'Reading',
+    icon: '📰',
+    description: 'News articles with vocabulary, comprehension questions, and discussion topics',
+    sections: 6,
+    lastUpdated: '2026-01-17',
+    status: 'published',
+  },
+  {
     id: 'young-learners',
     name: 'Young Learners',
     course: 'Young Learners',
@@ -244,6 +255,8 @@ function TemplateSelector({
               onClick={() => {
                 if (t.id === 'conversational-skills') {
                   window.location.href = '/conversational-skills-editor';
+                } else if (t.id === 'daily-dispatch') {
+                  window.location.href = '/daily-dispatch';
                 } else {
                   onSelect(t);
                 }

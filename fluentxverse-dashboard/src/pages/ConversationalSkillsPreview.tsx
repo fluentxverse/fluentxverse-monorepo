@@ -367,6 +367,8 @@ interface ExerciseSectionData {
   speechContent?: string;
   // Step B - Tutor steps
   stepBTutorSteps?: ExerciseTutorStep[];
+
+  exampleImage: any
 }
 
 // ============================================================================

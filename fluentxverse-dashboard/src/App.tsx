@@ -24,6 +24,10 @@ import LessonMaterialViewPage from './pages/LessonMaterialViewPage';
 import ConversationalSkillsEditorPage from './pages/ConversationalSkillsEditorPage';
 import ConversationalSkillsPreview from './pages/ConversationalSkillsPreview';
 import ConversationalSkillsVisualEditor from './pages/ConversationalSkillsVisualEditor';
+import DailyDispatchEditorPage from './pages/DailyDispatchEditorPage';
+import DailyDispatchPreviewPage from './pages/DailyDispatchPreviewPage';
+import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
+import DailyDispatchStudentPage from './pages/DailyDispatchStudentPage';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -114,6 +118,34 @@ const AppContent = () => {
     );
   }
 
+  // Daily Dispatch preview page - standalone (new tab)
+  if (path.startsWith('/daily-dispatch-preview') || path.startsWith('/daily-dispatch/preview')) {
+    return (
+      <Router>
+        <Route path="/daily-dispatch-preview/:id" component={DailyDispatchPreviewPage} />
+        <Route path="/daily-dispatch/preview/:id" component={DailyDispatchPreviewPage} />
+      </Router>
+    );
+  }
+
+  // Daily Dispatch archive page - standalone
+  if (path.startsWith('/daily-dispatch/archives')) {
+    return (
+      <Router>
+        <Route path="/daily-dispatch/archives/:month" component={DailyDispatchArchivePage} />
+      </Router>
+    );
+  }
+
+  // Daily Dispatch student view - standalone (no tutor guides/answers)
+  if (path.startsWith('/daily-dispatch/student')) {
+    return (
+      <Router>
+        <Route path="/daily-dispatch/student/:id" component={DailyDispatchStudentPage} />
+      </Router>
+    );
+  }
+
   if (path.startsWith('/interview-room')) {
     if (!isAuthenticated) {
       return <LoginPage />;
@@ -140,6 +172,8 @@ const AppContent = () => {
         <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
         <Route path="/conversational-skills-editor" component={ConversationalSkillsEditorPage} />
         <Route path="/conversational-skills-preview/:id" component={ConversationalSkillsPreview} />
+        <Route path="/daily-dispatch" component={DailyDispatchEditorPage} />
+        <Route path="/daily-dispatch-preview/:id" component={DailyDispatchPreviewPage} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />

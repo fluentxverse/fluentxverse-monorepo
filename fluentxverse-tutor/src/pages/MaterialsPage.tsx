@@ -86,10 +86,19 @@ const COURSES: Course[] = [
     category: 'Vocabulary',
     lessons: 25,
     rating: 4.8,
+  },
+  {
+    id: 'daily-dispatch',
+    title: 'Daily Dispatch',
+    description: 'Current news articles with vocabulary, comprehension questions, and discussion topics.',
+    icon: '📰',
+    category: 'News',
+    lessons: 0,
+    rating: 4.9,
   }
 ];
 
-const categories = ['All', 'Business', 'Conversation', 'Career', 'Travel', 'Academic', 'Speaking', 'Grammar', 'Vocabulary'];
+const categories = ['All', 'Business', 'Conversation', 'Career', 'Travel', 'Academic', 'Speaking', 'Grammar', 'Vocabulary', 'News'];
 
 const MaterialsPage = () => {
   useEffect(() => {
@@ -108,7 +117,11 @@ const MaterialsPage = () => {
   });
 
   const handleCourseClick = (courseId: string) => {
-    window.location.href = `/materials/${courseId}`;
+    if (courseId === 'daily-dispatch') {
+      window.location.href = '/materials/daily-dispatch';
+    } else {
+      window.location.href = `/materials/${courseId}`;
+    }
   };
 
   return (

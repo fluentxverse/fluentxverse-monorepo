@@ -11,6 +11,7 @@ import LessonPage from './pages/LessonPage';
 import { BrowseTutorsPage } from './pages/BrowseTutorsPage';
 import { TutorProfilePage } from './pages/TutorProfilePage';
 import MaterialsPage from './pages/MaterialsPage';
+import DailyDispatchPage from './pages/DailyDispatchPage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import LessonViewPage from './pages/LessonViewPage';
 import TicketsPage from './pages/TicketsPage';
@@ -117,6 +118,7 @@ export function AppInner() {
 					<Route path="/tutor/:tutorId" component={TutorProfilePage} />
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
+						<Route path="/materials/daily-dispatch" component={withProtected(DailyDispatchPage)} />
 						<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 						{/* LessonViewPage handles its own loading - not wrapped in ProtectedRoute to avoid triple spinner */}
 						<Route path="/lesson/view" component={LessonViewPage} />
