@@ -217,6 +217,11 @@
   width: 260px;
   flex-shrink: 0;
   padding-top: 1rem;
+  position: sticky;
+  top: 4rem;
+  height: fit-content;
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
 }
 
 .ddp-sidebar-section {
@@ -435,89 +440,89 @@
 /* Font size variations - affects body text, vocabulary, instructions, questions */
 /* Small */
 .ddp-font-s .ddp-article {
-  font-size: 1rem;
+  font-size: 1.35rem;
 }
 .ddp-font-s .ddp-instruction {
-  font-size: 0.8125rem;
-}
-.ddp-font-s .ddp-list li {
   font-size: 0.875rem;
 }
+.ddp-font-s .ddp-list li {
+  font-size: 1rem;
+}
 .ddp-font-s .ddp-vocab-word {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
 }
 .ddp-font-s .ddp-vocab-body p {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
 }
 .ddp-font-s .ddp-vocab-pronunciation {
-  font-size: 0.5625rem;
+  font-size: 0.6875rem;
 }
 .ddp-font-s .ddp-discussion-list li {
-  font-size: 0.8125rem;
+  font-size: 1rem;
 }
 .ddp-font-s .ddp-qa {
-  font-size: 0.8125rem;
+  font-size: 1rem;
 }
 .ddp-font-s .ddp-summary-question {
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
 }
 
 /* Medium (default) */
 .ddp-font-m .ddp-article {
-  font-size: 1.125rem;
+  font-size: 1.65rem;
 }
 .ddp-font-m .ddp-instruction {
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 .ddp-font-m .ddp-list li {
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
 }
 .ddp-font-m .ddp-vocab-word {
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
 }
 .ddp-font-m .ddp-vocab-body p {
-  font-size: 0.75rem;
-}
-.ddp-font-m .ddp-vocab-pronunciation {
-  font-size: 0.6875rem;
-}
-.ddp-font-m .ddp-discussion-list li {
-  font-size: 0.9375rem;
-}
-.ddp-font-m .ddp-qa {
   font-size: 0.875rem;
 }
+.ddp-font-m .ddp-vocab-pronunciation {
+  font-size: 0.75rem;
+}
+.ddp-font-m .ddp-discussion-list li {
+  font-size: 1.125rem;
+}
+.ddp-font-m .ddp-qa {
+  font-size: 1.125rem;
+}
 .ddp-font-m .ddp-summary-question {
-  font-size: 1.0625rem;
+  font-size: 1.25rem;
 }
 
 /* Large */
 .ddp-font-l .ddp-article {
-  font-size: 1.3125rem;
+  font-size: 1.95rem;
 }
 .ddp-font-l .ddp-instruction {
-  font-size: 1rem;
+  font-size: 1.125rem;
 }
 .ddp-font-l .ddp-list li {
-  font-size: 1.0625rem;
+  font-size: 1.25rem;
 }
 .ddp-font-l .ddp-vocab-word {
-  font-size: 1.0625rem;
+  font-size: 1.1875rem;
 }
 .ddp-font-l .ddp-vocab-body p {
-  font-size: 0.875rem;
-}
-.ddp-font-l .ddp-vocab-pronunciation {
-  font-size: 0.75rem;
-}
-.ddp-font-l .ddp-discussion-list li {
-  font-size: 1.0625rem;
-}
-.ddp-font-l .ddp-qa {
   font-size: 1rem;
 }
+.ddp-font-l .ddp-vocab-pronunciation {
+  font-size: 0.875rem;
+}
+.ddp-font-l .ddp-discussion-list li {
+  font-size: 1.25rem;
+}
+.ddp-font-l .ddp-qa {
+  font-size: 1.25rem;
+}
 .ddp-font-l .ddp-summary-question {
-  font-size: 1.1875rem;
+  font-size: 1.5rem;
 }
 
 /* Responsive - hide sidebar on smaller screens */
@@ -768,7 +773,6 @@
 
 .ddp-article {
   font-family: 'Source Serif Pro', 'Georgia', serif;
-  font-size: 1.1875rem;
   line-height: 1.85;
   color: var(--ddp-gray-800);
 }
@@ -780,6 +784,7 @@
 .ddp-paragraph > p {
   margin: 0;
   text-align: left;
+  font-size: inherit;
 }
 
 .ddp-paragraph > p::first-letter {
@@ -1074,10 +1079,6 @@
 
   .ddp-divider {
     display: none;
-  }
-
-  .ddp-article {
-    font-size: 1.0625rem;
   }
 
   .ddp-paragraph:first-child > p::first-letter {

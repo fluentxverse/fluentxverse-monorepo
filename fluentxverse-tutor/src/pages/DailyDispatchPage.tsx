@@ -17,8 +17,6 @@ interface DispatchArticle {
   createdAt: string;
 }
 
-const DASHBOARD_URL = import.meta.env.VITE_DASHBOARD_URL || '';
-
 export default function DailyDispatchPage() {
   const { user } = useAuthContext();
   const [articles, setArticles] = useState<DispatchArticle[]>([]);
@@ -79,11 +77,12 @@ export default function DailyDispatchPage() {
   };
 
   const handleTutorPreview = (articleId: string) => {
-    window.open(`${DASHBOARD_URL}/daily-dispatch/preview/${articleId}`, '_blank');
+    window.location.href = `/materials/daily-dispatch/${articleId}`;
   };
 
   const handleStudentPreview = (articleId: string) => {
-    window.open(`${DASHBOARD_URL}/daily-dispatch/student/${articleId}`, '_blank');
+    // Open in new tab to show what student sees (without answers)
+    window.open(`/materials/daily-dispatch/${articleId}?mode=student`, '_blank');
   };
 
   return (

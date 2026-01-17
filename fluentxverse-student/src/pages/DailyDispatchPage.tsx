@@ -16,8 +16,6 @@ interface DispatchArticle {
   createdAt: string;
 }
 
-const DASHBOARD_URL = import.meta.env.VITE_DASHBOARD_URL || '';
-
 export default function DailyDispatchPage() {
   const [articles, setArticles] = useState<DispatchArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +75,7 @@ export default function DailyDispatchPage() {
   };
 
   const handleArticleClick = (articleId: string) => {
-    window.open(`${DASHBOARD_URL}/daily-dispatch/student/${articleId}`, '_blank');
+    window.open(`/materials/daily-dispatch/${articleId}`, '_blank');
   };
 
   return (

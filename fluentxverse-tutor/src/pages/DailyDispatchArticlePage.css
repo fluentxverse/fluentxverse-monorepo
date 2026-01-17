@@ -1,6 +1,6 @@
 /**
- * DailyDispatchArticlePage styles - Student App
- * Wired-inspired modern article layout + Student-specific overrides
+ * DailyDispatchArticlePage styles - Tutor App
+ * Wired-inspired modern article layout with Tutor/Student view toggle
  */
 
 /* ============================================================================
@@ -79,7 +79,7 @@
 }
 
 /* ============================================================================
-   HEADER BAR - Logo + Categories in one row
+   HEADER BAR - Logo + Categories + View Toggle
    ============================================================================ */
 
 .ddp-header-bar {
@@ -152,6 +152,59 @@
 .ddp-category-item.active {
   color: var(--ddp-accent);
   border-bottom-color: var(--ddp-accent);
+}
+
+/* View Toggle Button */
+.ddp-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--ddp-accent);
+  color: var(--ddp-black);
+  border: none;
+  border-radius: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ddp-view-toggle:hover {
+  background: var(--ddp-white);
+}
+
+.ddp-view-toggle.student-toggle {
+  background: #4ade80;
+}
+
+.ddp-view-toggle.student-toggle:hover {
+  background: #22c55e;
+}
+
+/* View Badge */
+.ddp-view-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.ddp-view-badge.tutor {
+  background: var(--ddp-accent);
+  color: var(--ddp-black);
+}
+
+.ddp-view-badge.student {
+  background: #4ade80;
+  color: var(--ddp-black);
 }
 
 /* Buttons */
@@ -395,7 +448,7 @@
   margin: 0;
 }
 
-/* Global yellow scrollbar for Daily Dispatch */
+/* Global yellow scrollbar */
 .ddp-container::-webkit-scrollbar {
   width: 10px;
 }
@@ -995,8 +1048,12 @@
 }
 
 /* ============================================================================
-   STUDENT-SPECIFIC STYLES - Question Only (No Answers)
+   STUDENT VIEW STYLES - Question Only (No Answers)
    ============================================================================ */
+
+.dds-container .ddp-view-badge.student {
+  background: #4ade80;
+}
 
 .dds-question-only {
   background: #f8f9fa;
@@ -1101,6 +1158,15 @@
   }
 
   .ddp-toolbar-brand span {
+    display: none;
+  }
+
+  .ddp-view-toggle {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.5625rem;
+  }
+
+  .ddp-view-toggle span {
     display: none;
   }
 
