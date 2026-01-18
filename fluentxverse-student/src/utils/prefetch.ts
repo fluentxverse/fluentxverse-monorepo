@@ -34,7 +34,9 @@ const prefetchUrl = (url: string) => {
  * Handle mouse enter on links - start prefetch after short delay
  */
 const handleMouseEnter = (event: MouseEvent) => {
-  const target = event.target as HTMLElement;
+  const target = event.target;
+  // Ensure target is an Element before calling closest
+  if (!(target instanceof Element)) return;
   const anchor = target.closest('a');
   
   if (!anchor) return;

@@ -4,7 +4,7 @@
  */
 import { Elysia, t } from 'elysia';
 import { dispatchService } from '../services/dispatch.services/dispatch.service';
-import { createAdminGuard } from '../middleware/auth.middleware';
+import { createAdminGuard, createAnyAuthGuard } from '../middleware/auth.middleware';
 
 export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
   
@@ -14,8 +14,8 @@ export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
   .get(
     '/',
     async ({ query, cookie, set }) => {
-      const adminPayload = await createAdminGuard(cookie, set);
-      if (!adminPayload) {
+      const authPayload = await createAnyAuthGuard(cookie, set);
+      if (!authPayload) {
         set.status = 401;
         return { success: false, error: 'Unauthorized' };
       }
@@ -57,8 +57,8 @@ export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
   .get(
     '/archives',
     async ({ cookie, set }) => {
-      const adminPayload = await createAdminGuard(cookie, set);
-      if (!adminPayload) {
+      const authPayload = await createAnyAuthGuard(cookie, set);
+      if (!authPayload) {
         set.status = 401;
         return { success: false, error: 'Unauthorized' };
       }
@@ -86,8 +86,8 @@ export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
   .get(
     '/archives/:month',
     async ({ params, cookie, set }) => {
-      const adminPayload = await createAdminGuard(cookie, set);
-      if (!adminPayload) {
+      const authPayload = await createAnyAuthGuard(cookie, set);
+      if (!authPayload) {
         set.status = 401;
         return { success: false, error: 'Unauthorized' };
       }
@@ -120,8 +120,8 @@ export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
   .get(
     '/:id',
     async ({ params, cookie, set }) => {
-      const adminPayload = await createAdminGuard(cookie, set);
-      if (!adminPayload) {
+      const authPayload = await createAnyAuthGuard(cookie, set);
+      if (!authPayload) {
         set.status = 401;
         return { success: false, error: 'Unauthorized' };
       }
