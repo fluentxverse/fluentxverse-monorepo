@@ -10,7 +10,17 @@ import { studentApi, type StudentProfile, type LessonPreferences } from '../api/
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import type { ChatMessageData } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
+import { API_BASE_URL } from '../config/api';
 import './ClassroomPage.css';
+
+// Daily Dispatch article interface
+interface DispatchArticle {
+  id: string;
+  title: string;
+  topic: string;
+  category: string;
+  createdAt: string;
+}
 
 interface ClassroomPageProps {
   sessionId?: string;
@@ -302,7 +312,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬' },
     { id: 'business-english', name: 'Business English', icon: '💼' },
     { id: 'young-learners', name: 'Young Learners', icon: '🎨' },
+    { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰' },
   ];
+  
+  // Daily Dispatch state
+  const [dispatchArticles, setDispatchArticles] = useState<DispatchArticle[]>([]);
+  const [loadingDispatch, setLoadingDispatch] = useState(false);
+  const [viewingDispatchArticle, setViewingDispatchArticle] = useState<DispatchArticle | null>(null);
   
   // File sharing state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -335,8 +351,34 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     setSelectedLevel(null);
     setSelectedChapter(null);
     setSelectedLessonId('');
+    setDispatchArticles([]);
     
     if (!courseId) return;
+    
+    // Handle Daily Dispatch separately
+    if (courseId === 'daily-dispatch') {
+      setLoadingDispatch(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/dispatch`, {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Handle both array response and wrapped response
+          const articles: DispatchArticle[] = Array.isArray(data) ? data : (data.articles || data.data || []);
+          // Sort articles by date (most recent first)
+          const sortedArticles = articles.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setDispatchArticles(sortedArticles);
+        }
+      } catch (err) {
+        console.error('Failed to load dispatch articles:', err);
+      } finally {
+        setLoadingDispatch(false);
+      }
+      return;
+    }
     
     setLoadingMaterials(true);
     try {
@@ -1119,33 +1161,33 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       {/* Right Panel - Learning Materials */}
       <div className="classroom-right">
-        {/* Material Header */}
-        <div className="material-header">
-          <i className="fi fi-sr-book-open-reader"></i>
-          <span>Learning Material</span>
-          {chosenLesson && (
+        {/* Material Header - conditionally show dispatch header or regular header */}
+        {viewingDispatchArticle ? (
+          <div className="dispatch-view-header">
             <button 
-              className="btn-toggle-lesson-request"
-              onClick={() => {
-                if (!showLessonRequest) {
-                  // If hidden, show the lesson request again
-                  setShowLessonRequest(true);
-                } else {
-                  // If showing, reset the dropdowns
-                  setSelectedCourse('');
-                  setSelectedLevel(null);
-                  setSelectedChapter(null);
-                  setSelectedLessonId('');
-                  setAvailableLessons([]);
-                }
-              }}
-              title="Lesson Material"
+              className="btn-back-to-request"
+              onClick={() => setViewingDispatchArticle(null)}
             >
-              <i className="fi fi-sr-book-open-cover"></i>
-              Lesson Material
+              <i className="fi fi-sr-arrow-left"></i>
+              Back to Selection
             </button>
-          )}
-        </div>
+            <div className="dispatch-view-meta">
+              <span className="dispatch-view-category">{viewingDispatchArticle.category}</span>
+              <span className="dispatch-view-date">
+                {new Date(viewingDispatchArticle.createdAt).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="material-header">
+            <i className="fi fi-sr-book-open-reader"></i>
+            <span>Learning Material</span>
+          </div>
+        )}
 
         {/* Chosen Material Display or PDF Viewer */}
         <div className="material-content">
@@ -1154,71 +1196,88 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               <div className="spinner"></div>
               <p>Loading your lesson...</p>
             </div>
-          ) : chosenLesson && showLessonRequest ? (
+          ) : viewingDispatchArticle ? (
+            <iframe 
+              src={`/materials/daily-dispatch/${viewingDispatchArticle.id}`}
+              className="dispatch-article-iframe"
+              title={viewingDispatchArticle.title}
+            />
+          ) : showLessonRequest ? (
             <div className="lesson-request-container">
-              {/* Lesson Request Section */}
+              {/* Lesson Request Section - always show */}
               <div className="lesson-request-section">
-                <h2 className="lesson-request-title">Lesson Request</h2>
-                <p className="lesson-request-updated">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
+                <div className="lesson-request-header">
+                  <h2 className="lesson-request-title">
+                    <i className="ri-file-list-3-line" />
+                    Lesson Request
+                  </h2>
+                  <p className="lesson-request-updated">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
+                </div>
                 
-                <div className="lesson-request-content">
-                  <div className="lesson-request-details">
-                    <p className="request-intro">Your lesson request details below.</p>
-                    
-                    <table className="request-table">
-                      <tbody>
-                        <tr className="request-row">
-                          <td className="request-label">Material:</td>
-                          <td className="request-value">
-                            <a 
-                              href={`/lesson/view?id=${chosenLesson.lessonId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="request-link"
-                            >
-                              {chosenLesson.title}
-                            </a>
-                          </td>
-                        </tr>
-                        <tr className="request-row">
-                          <td className="request-label">Lesson Number:</td>
-                          <td className="request-value">Lesson {chosenLesson.lessonNumber}</td>
-                        </tr>
-                        {chosenLesson.goal && (
-                          <tr className="request-row">
-                            <td className="request-label">Goal:</td>
-                            <td className="request-value">{chosenLesson.goal}</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {/* Student Preferences Sidebar */}
-                  <div className="student-preferences-sidebar">
-                    <div className="preference-section">
-                      <h4 className="preference-title">Student Preferences</h4>
-                      <p className="preference-item">Camera: {studentProfile?.lessonPreferences?.preferCameraOn !== false ? 'On' : 'Off'}</p>
-                      <p className="preference-item">Proficiency: {studentProfile?.currentProficiency || 'Not set'}</p>
+                <div className="lesson-request-body">
+                  <div className="lesson-request-content">
+                    <div className="lesson-request-details">
+                      <p className="request-intro">Your lesson request details below.</p>
+                      
+                      {chosenLesson ? (
+                        <table className="request-table">
+                          <tbody>
+                            <tr className="request-row">
+                              <td className="request-label">Material:</td>
+                              <td className="request-value">
+                                <a 
+                                  href={`/lesson/view?id=${chosenLesson.lessonId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="request-link"
+                                >
+                                  {chosenLesson.title}
+                                </a>
+                              </td>
+                            </tr>
+                            <tr className="request-row">
+                              <td className="request-label">Lesson Number:</td>
+                              <td className="request-value">Lesson {chosenLesson.lessonNumber}</td>
+                            </tr>
+                            {chosenLesson.goal && (
+                              <tr className="request-row">
+                                <td className="request-label">Goal:</td>
+                                <td className="request-value">{chosenLesson.goal}</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      ) : (
+                        <p className="no-material-selected">No material selected yet. Choose a material below.</p>
+                      )}
                     </div>
                     
-                    <div className="preference-section">
-                      <h4 className="preference-title">Error Correction</h4>
-                      <p className="preference-item">
-                        {studentProfile?.lessonPreferences?.errorCorrection === 'proactively' 
-                          ? 'Please correct my errors proactively'
-                          : studentProfile?.lessonPreferences?.errorCorrection === 'during_feedback'
-                          ? 'Please correct errors during feedback time'
-                          : 'Tutor\'s choice'}
-                      </p>
-                    </div>
-                    
-                    {studentProfile?.lessonPreferences?.otherRequests && (
+                    {/* Student Preferences Sidebar */}
+                    <div className="student-preferences-sidebar">
                       <div className="preference-section">
-                        <h4 className="preference-title">Other Request</h4>
-                        <p className="preference-item">{studentProfile.lessonPreferences.otherRequests}</p>
+                        <h4 className="preference-title">Student Preferences</h4>
+                        <p className="preference-item">Camera: {studentProfile?.lessonPreferences?.preferCameraOn !== false ? 'On' : 'Off'}</p>
+                        <p className="preference-item">Proficiency: {studentProfile?.currentProficiency || 'Not set'}</p>
                       </div>
-                    )}
+                      
+                      <div className="preference-section">
+                        <h4 className="preference-title">Error Correction</h4>
+                        <p className="preference-item">
+                          {studentProfile?.lessonPreferences?.errorCorrection === 'proactively' 
+                            ? 'Please correct my errors proactively'
+                            : studentProfile?.lessonPreferences?.errorCorrection === 'during_feedback'
+                            ? 'Please correct errors during feedback time'
+                            : 'Tutor\'s choice'}
+                        </p>
+                      </div>
+                      
+                      {studentProfile?.lessonPreferences?.otherRequests && (
+                        <div className="preference-section">
+                          <h4 className="preference-title">Other Request</h4>
+                          <p className="preference-item">{studentProfile.lessonPreferences.otherRequests}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1236,10 +1295,88 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   >
                     <option value="">-- Select Course --</option>
                     {courses.map(course => (
-                      <option key={course.id} value={course.id}>{course.icon} {course.name}</option>
+                      <option key={course.id} value={course.id}>{course.name}</option>
                     ))}
                   </select>
                 </div>
+                
+                {/* Daily Dispatch Card - shows when Daily Dispatch is selected */}
+                {selectedCourse === 'daily-dispatch' && (
+                  <>
+                    {/* Latest Article Card */}
+                    <div className="dispatch-article-card">
+                      <div className="dispatch-card-label">Latest Article</div>
+                      {loadingDispatch ? (
+                        <div className="dispatch-loading">
+                          <div className="spinner-small"></div>
+                          <span>Loading...</span>
+                        </div>
+                      ) : dispatchArticles.length > 0 ? (
+                        <>
+                          <div className="dispatch-table-header">
+                            <span className="dispatch-col-date">Post Date</span>
+                            <span className="dispatch-col-title">Title</span>
+                            <span className="dispatch-col-category">Category</span>
+                            <span className="dispatch-col-action">Action</span>
+                          </div>
+                          <div className="dispatch-table-row">
+                            <span className="dispatch-col-date">
+                              {new Date(dispatchArticles[0].createdAt).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                            <span className="dispatch-col-title">{dispatchArticles[0].title}</span>
+                            <span className="dispatch-col-category">{dispatchArticles[0].category}</span>
+                            <button 
+                              className="dispatch-col-action dispatch-open-link"
+                              onClick={() => setViewingDispatchArticle(dispatchArticles[0])}
+                            >
+                              Open Article
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="dispatch-empty">
+                          <p>No articles available</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Previous Articles Card */}
+                    {dispatchArticles.length > 1 && (
+                      <div className="dispatch-article-card dispatch-previous-card">
+                        <div className="dispatch-card-label">Previous Articles</div>
+                        <div className="dispatch-table-header">
+                          <span className="dispatch-col-date">Post Date</span>
+                          <span className="dispatch-col-title">Title</span>
+                          <span className="dispatch-col-category">Category</span>
+                          <span className="dispatch-col-action">Action</span>
+                        </div>
+                        {dispatchArticles.slice(1).map((article) => (
+                          <div className="dispatch-table-row" key={article.id}>
+                            <span className="dispatch-col-date">
+                              {new Date(article.createdAt).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                            <span className="dispatch-col-title">{article.title}</span>
+                            <span className="dispatch-col-category">{article.category}</span>
+                            <button 
+                              className="dispatch-col-action dispatch-open-link"
+                              onClick={() => setViewingDispatchArticle(article)}
+                            >
+                              Open Article
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
                 
                 {/* Level Selector - shows when course is selected */}
                 {selectedCourse && availableLevels.length > 0 && (

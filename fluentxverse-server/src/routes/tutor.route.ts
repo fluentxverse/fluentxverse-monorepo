@@ -1,5 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { TutorService } from '../services/tutor.services/tutor.service';
+import StudentService from '../services/auth.services/student.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
@@ -484,6 +485,69 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       console.error('[TutorRoute] Error in /tutor/student/:studentId:', error);
       set.status = error.message === 'Student not found' ? 404 : 500;
       return { success: false, error: error.message || 'Failed to get student profile' };
+    }
+  })
+
+  /**
+   * Get student's lesson request (last viewed lesson + preferences)
+   * GET /tutor/student/:studentId/lesson-request
+   */
+  .get('/student/:studentId/lesson-request', async ({ params, cookie, set }) => {
+    console.log('[TutorRoute] GET /tutor/student/:studentId/lesson-request - Request received');
+    
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid token' };
+      }
+
+      // Refresh JWT cookie on every request
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
+      const { studentId } = params;
+      if (!studentId) {
+        set.status = 400;
+        return { success: false, error: 'Student ID is required' };
+      }
+
+      // Get student's last viewed lesson and profile
+      const studentService = new StudentService();
+      const [lessonResult, profileResult] = await Promise.all([
+        studentService.getLastViewedLesson(studentId),
+        tutorService.getStudentProfile(studentId, payload.userId)
+      ]);
+
+      if (!lessonResult.success || !lessonResult.data) {
+        return { success: true, data: null };
+      }
+
+      // Combine lesson data with student preferences
+      const lessonRequest = {
+        lessonId: lessonResult.data.lessonId,
+        courseId: lessonResult.data.courseId,
+        title: lessonResult.data.title,
+        lessonNumber: lessonResult.data.lessonNumber,
+        goal: lessonResult.data.goal,
+        studentPreferences: profileResult ? {
+          cameraOn: profileResult.lessonPreferences?.preferCameraOn !== false,
+          proficiency: profileResult.currentProficiency || 'Not set',
+          errorCorrection: profileResult.lessonPreferences?.errorCorrection || 'tutor_choice',
+          otherRequests: profileResult.lessonPreferences?.otherRequests || ''
+        } : null
+      };
+
+      return { success: true, data: lessonRequest };
+    } catch (error: any) {
+      console.error('[TutorRoute] Error in /tutor/student/:studentId/lesson-request:', error);
+      set.status = 500;
+      return { success: false, error: error.message || 'Failed to get student lesson request' };
     }
   })
 

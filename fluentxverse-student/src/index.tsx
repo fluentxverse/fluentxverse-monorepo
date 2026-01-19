@@ -13,6 +13,7 @@ import { TutorProfilePage } from './pages/TutorProfilePage';
 import MaterialsPage from './pages/MaterialsPage';
 import DailyDispatchPage from './pages/DailyDispatchPage';
 import DailyDispatchArticlePage from './pages/DailyDispatchArticlePage';
+import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import LessonViewPage from './pages/LessonViewPage';
 import TicketsPage from './pages/TicketsPage';
@@ -120,6 +121,7 @@ export function AppInner() {
 					<Route path="/schedule" component={withProtected(SchedulePage)} />
 						<Route path="/materials" component={withProtected(MaterialsPage)} />
 						<Route path="/materials/daily-dispatch" component={withProtected(DailyDispatchPage)} />
+						<Route path="/materials/daily-dispatch/archives/:month" component={withProtected(DailyDispatchArchivePage)} />
 						<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)} />
 						<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 						{/* LessonViewPage handles its own loading - not wrapped in ProtectedRoute to avoid triple spinner */}

@@ -108,5 +108,30 @@ export const tutorApi = {
     );
 
     return response.data;
+  },
+
+  /**
+   * Get student's lesson request (for tutor's classroom view)
+   */
+  getStudentLessonRequest: async (studentId: string): Promise<{
+    lessonId: string;
+    courseId: string;
+    title: string;
+    lessonNumber: number;
+    goal: string;
+    studentPreferences?: {
+      cameraOn?: boolean;
+      proficiency?: string;
+      errorCorrection?: string;
+      otherRequests?: string;
+    };
+  } | null> => {
+    const response = await api.get<{ success: boolean; data: any }>(`/tutor/student/${studentId}/lesson-request`);
+
+    if (!response.data.success) {
+      return null;
+    }
+
+    return response.data.data;
   }
 };

@@ -1988,14 +1988,25 @@ export class ScheduleService {
         throw new Error('Booking missing schedule information');
       }
 
-      // Extract date/time components - stored in Philippine time
-      const year = slotDateTime.year.toInt();
-      const month = String(slotDateTime.month.toInt()).padStart(2, '0');
-      const day = String(slotDateTime.day.toInt()).padStart(2, '0');
-      const hour = slotDateTime.hour.toInt();
-      const minute = String(slotDateTime.minute.toInt()).padStart(2, '0');
+      // Neo4j stores DateTime in UTC, but we stored it with +08:00 (PHT) offset
+      // So we need to add 8 hours to get back to PHT time
+      let hour = slotDateTime.hour.toInt() + 8; // Convert UTC to PHT
+      let day = slotDateTime.day.toInt();
+      let month = slotDateTime.month.toInt();
+      let year = slotDateTime.year.toInt();
       
-      const slotDate = `${year}-${month}-${day}`;
+      // Handle day/month/year rollover
+      if (hour >= 24) {
+        hour -= 24;
+        // Create a date and add 1 day
+        const tempDate = new Date(year, month - 1, day + 1);
+        year = tempDate.getFullYear();
+        month = tempDate.getMonth() + 1;
+        day = tempDate.getDate();
+      }
+      
+      const minute = String(slotDateTime.minute.toInt()).padStart(2, '0');
+      const slotDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
       // Format as 12-hour time string (H:MM AM/PM) in Philippine time
       const period = hour >= 12 ? 'PM' : 'AM';

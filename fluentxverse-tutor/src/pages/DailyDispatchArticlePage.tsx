@@ -87,8 +87,14 @@ export default function DailyDispatchArticlePage() {
         credentials: 'include',
       });
       if (response.ok) {
-        const archivesData = await response.json();
-        setArchives(archivesData);
+        const data = await response.json();
+        // API returns { success: true, archives: [...] }
+        if (data.success && Array.isArray(data.archives)) {
+          setArchives(data.archives);
+        } else if (Array.isArray(data)) {
+          // Fallback if API returns array directly
+          setArchives(data);
+        }
       }
     } catch (err) {
       console.error('Failed to load archives:', err);
@@ -413,13 +419,6 @@ export default function DailyDispatchArticlePage() {
               </span>
             ))}
           </div>
-          <button 
-            className="ddp-view-toggle student-toggle"
-            onClick={() => setIsStudentView(true)}
-          >
-            <i className="ri-user-line" />
-            Switch to Student View
-          </button>
         </div>
       </nav>
 

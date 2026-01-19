@@ -121,9 +121,9 @@ const HomePage = () => {
     fetchFavorites();
   }, [user]);
 
-  // Parse slot time (12-hour or 24-hour format) and create Date in Philippine time, then convert to Korean time (+1 hour)
+  // Parse slot time (12-hour or 24-hour format) and convert to KST for accurate countdown
   // Parse slot time and return the actual moment in time (for comparisons)
-  // Slot times are stored in PHT (UTC+8)
+  // Slot times are stored in PHT (UTC+8) - the Date object handles timezone conversion internally
   const parseSlotDateTime = (slotDate: string, slotTime: string): Date => {
     let hours: number;
     let minutes: number;
@@ -153,9 +153,8 @@ const HomePage = () => {
       }
     }
     
-    // Create date in Philippine time (UTC+8) - this is the actual moment in time
-    // Don't add 1 hour! That would shift to a different moment.
-    // The Date object stores UTC internally, so comparisons will work correctly.
+    // Create date in PHT (UTC+8) - JavaScript Date stores UTC internally
+    // so comparisons will work correctly regardless of user's timezone
     return new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
   };
 
@@ -231,11 +230,19 @@ const HomePage = () => {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
     if (hours < 1) {
-      return `${minutes} minutes`;
+      return `${minutes} min${minutes !== 1 ? 's' : ''}`;
     } else if (hours < 24) {
+      // Show hours and minutes for better accuracy
+      if (minutes > 0) {
+        return `${hours}h ${minutes}m`;
+      }
       return `${hours} hour${hours > 1 ? 's' : ''}`;
     } else {
       const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      if (remainingHours > 0) {
+        return `${days}d ${remainingHours}h`;
+      }
       return `${days} day${days > 1 ? 's' : ''}`;
     }
   };
