@@ -1253,23 +1253,36 @@
   flex: 1;
   background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 16px 20px;
   border: 1px solid rgba(2, 69, 174, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.lesson-request-details::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #0245ae 0%, #4a9eff 100%);
+  border-radius: 4px 0 0 4px;
 }
 
 .request-intro {
   font-size: 12px;
   color: #64748b;
-  margin: 0 0 12px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed rgba(2, 69, 174, 0.12);
+  margin: 0 0 14px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed rgba(2, 69, 174, 0.15);
 }
 
 /* Request Table for better alignment */
 .request-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 6px;
+  border-spacing: 0 8px;
 }
 
 .request-table .request-row {
@@ -1277,7 +1290,7 @@
 }
 
 .request-table .request-row td {
-  padding: 0;
+  padding: 8px 0;
   vertical-align: middle;
 }
 
@@ -1287,12 +1300,23 @@
   font-weight: 600;
   color: #64748b;
   padding-right: 16px;
+  position: relative;
+}
+
+.request-table .request-label::before {
+  content: '•';
+  color: #0245ae;
+  margin-right: 8px;
+  font-weight: bold;
 }
 
 .request-table .request-value {
   font-size: 14px;
   color: #0f172a;
   font-weight: 500;
+  background: rgba(2, 69, 174, 0.04);
+  padding: 6px 12px;
+  border-radius: 6px;
 }
 
 .request-link {
@@ -1317,29 +1341,44 @@
 /* Student Preferences Sidebar */
 .student-preferences-sidebar {
   width: 220px;
-  background: #fff;
+  background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
   border-radius: 12px;
   padding: 0;
   border: 1px solid rgba(2, 69, 174, 0.1);
-  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.06);
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.08);
   overflow: hidden;
   align-self: flex-start;
 }
 
 .preference-section {
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid rgba(2, 69, 174, 0.08);
+  position: relative;
+}
+
+.preference-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
 }
 
 .preference-section:last-child {
   border-bottom: none;
 }
 
+.preference-section:last-child::before {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+
 .preference-title {
   font-size: 11px;
   font-weight: 700;
   color: #0245ae;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1347,9 +1386,18 @@
 .preference-item {
   font-size: 12px;
   color: #475569;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0 0 4px 0;
-  padding-left: 0;
+  padding-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.preference-item::before {
+  content: '›';
+  color: #0245ae;
+  font-weight: bold;
 }
 
 .preference-item:last-child {
@@ -1358,20 +1406,46 @@
 
 /* Material Selector Section */
 .material-selector-section {
-  padding: 24px 28px;
+  padding: 0;
   background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(2, 69, 174, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(2, 69, 174, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(2, 69, 174, 0.06);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.material-selector-header {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+  border-bottom: 1px solid rgba(2, 69, 174, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.material-selector-header-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #0245ae 0%, #0366d6 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
 }
 
 .material-selector-label {
   display: block;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #0f172a;
-  margin-bottom: 16px;
+  margin: 0;
+}
+
+.material-selector-body {
+  padding: 20px;
 }
 
 .material-selector-row {
@@ -1387,19 +1461,19 @@
 
 .material-selector-dropdown {
   flex: 1;
-  padding: 14px 18px;
+  padding: 12px 16px;
   font-size: 14px;
   color: #0f172a;
   background: #f8fafc;
   border: 2px solid rgba(2, 69, 174, 0.12);
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230245ae' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 18px center;
-  padding-right: 44px;
+  background-position: right 16px center;
+  padding-right: 40px;
 }
 
 .material-selector-dropdown:focus {
@@ -1442,54 +1516,60 @@
 /* Daily Dispatch Article Card - Table Style */
 .dispatch-article-card {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-top: 10px;
+  border: 1px solid rgba(2, 69, 174, 0.1);
+  border-radius: 12px;
+  margin-top: 12px;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.06);
 }
 
 .dispatch-card-label {
-  padding: 10px 16px;
+  padding: 12px 16px;
   font-size: 12px;
-  font-weight: 600;
-  color: #0245ae;
-  background: #f0f7ff;
-  border-bottom: 1px solid #e5e7eb;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #0245ae 0%, #0366d6 100%);
+  border-bottom: none;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .dispatch-previous-card {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .dispatch-previous-card .dispatch-card-label {
-  color: #6b7280;
-  background: #f9fafb;
+  color: #fff;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
 }
 
 .dispatch-table-header {
   display: grid;
   grid-template-columns: 140px 1fr 100px 100px;
   gap: 12px;
-  padding: 10px 16px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid rgba(2, 69, 174, 0.08);
   font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
+  font-weight: 700;
+  color: #0245ae;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .dispatch-table-row {
   display: grid;
   grid-template-columns: 140px 1fr 100px 100px;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   align-items: center;
   border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.dispatch-table-row:hover {
+  background-color: rgba(2, 69, 174, 0.03);
 }
 
 .dispatch-table-row:last-child {
@@ -1503,13 +1583,18 @@
 
 .dispatch-col-title {
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
   color: #111827;
 }
 
 .dispatch-col-category {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 11px;
+  color: #fff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .dispatch-col-action {
@@ -1519,31 +1604,40 @@
 
 .dispatch-open-link {
   font-weight: 600;
-  color: #0245ae;
+  color: #fff;
   text-decoration: none;
-  background: none;
+  background: linear-gradient(135deg, #0245ae 0%, #0366d6 100%);
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .dispatch-open-link:hover {
-  text-decoration: underline;
-  color: #0366d6;
+  text-decoration: none;
+  background: linear-gradient(135deg, #023d9a 0%, #0255b5 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.3);
 }
 
 .dispatch-loading {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 16px;
   font-size: 13px;
   color: #6b7280;
 }
 
 .dispatch-empty {
   text-align: center;
-  padding: 12px 16px;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
 }
 
 .dispatch-empty p {

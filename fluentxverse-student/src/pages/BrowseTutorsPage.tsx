@@ -1,5 +1,5 @@
 import { h, Fragment } from 'preact';
-import { useState, useEffect, useCallback } from 'preact/hooks';
+import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
 import { tutorApi } from '../api/tutor.api';
 import type { Tutor, TutorSearchParams } from '../types/tutor.types.ts';
 import Header from '../Components/Header/Header';
@@ -353,12 +353,17 @@ export const BrowseTutorsPage = () => {
   const [activeQuickFilter, setActiveQuickFilter] = useState(getTodayDate());
 
 
+  // Use a ref to track current page for load-more without affecting callback identity
+  const pageRef = useRef(page);
+  pageRef.current = page;
+
   // Search tutors
   const searchTutors = useCallback(async (resetPage = false) => {
     try {
       setLoading(true);
       setError(null);
 
+      const currentPage = resetPage ? 1 : pageRef.current;
       const params: TutorSearchParams = {
         query: searchQuery || undefined,
         specializations: selectedSpecs.length > 0 ? selectedSpecs : undefined,
@@ -366,7 +371,7 @@ export const BrowseTutorsPage = () => {
         startTime: startTime !== '05:00' ? startTime : undefined,
         endTime: endTime !== '24:30' ? endTime : undefined,
         sortBy,
-        page: resetPage ? 1 : page,
+        page: currentPage,
         limit: 12
       };
 
@@ -388,11 +393,13 @@ export const BrowseTutorsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedSpecs, selectedDate, startTime, endTime, sortBy, page]);
+  }, [searchQuery, selectedSpecs, selectedDate, startTime, endTime, sortBy]);
 
   // Initial load and when filters change
+  // Using explicit dependencies ensures the effect runs on mount and when any filter changes
   useEffect(() => {
     searchTutors(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSpecs, selectedDate, startTime, endTime, sortBy]);
 
   // Handle search submit
@@ -401,10 +408,34 @@ export const BrowseTutorsPage = () => {
     searchTutors(true);
   };
 
-  // Load more
+  // Load more - increment page and fetch next batch
   const handleLoadMore = () => {
-    setPage(prev => prev + 1);
-    searchTutors(false);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    // Use the incremented page directly since pageRef won't be updated until next render
+    (async () => {
+      try {
+        setLoading(true);
+        const params: TutorSearchParams = {
+          query: searchQuery || undefined,
+          specializations: selectedSpecs.length > 0 ? selectedSpecs : undefined,
+          dateFilter: selectedDate,
+          startTime: startTime !== '05:00' ? startTime : undefined,
+          endTime: endTime !== '24:30' ? endTime : undefined,
+          sortBy,
+          page: nextPage,
+          limit: 12
+        };
+        const result = await tutorApi.searchTutors(params);
+        setTutors(prev => [...prev, ...result.tutors]);
+        setTotal(result.total);
+        setHasMore(result.hasMore);
+      } catch (err) {
+        console.error('Failed to load more tutors:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   // Toggle specialization filter

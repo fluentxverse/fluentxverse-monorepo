@@ -40,6 +40,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         slots: body.slots
       });
 
+      // Invalidate tutor search cache since availability changed
+      await invalidateCache('tutor:search:*');
+
       return {
         success: true,
         message: 'Slots opened successfully'
@@ -87,6 +90,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         tutorId,
         slotIds: body.slotIds
       });
+
+      // Invalidate tutor search cache since availability changed
+      await invalidateCache('tutor:search:*');
 
       return {
         success: true,
@@ -459,6 +465,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       console.log('Booking successful:', JSON.stringify(booking, null, 2));
       console.log('=== BOOKING REQUEST COMPLETED ===');
 
+      // Invalidate tutor search cache since slot is no longer available
+      await invalidateCache('tutor:search:*');
+
       return {
         success: true,
         data: booking,
@@ -519,6 +528,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       });
 
       console.log('Cancellation result:', result);
+
+      // Invalidate tutor search cache since slot may be available again
+      await invalidateCache('tutor:search:*');
 
       return {
         success: result.success,

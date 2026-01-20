@@ -120,34 +120,33 @@ export const TutorProfilePage = () => {
 
   const timeSlots = getPeriodTimeSlots(selectedPeriod);
 
-  // Helper to format next 7 days with weekday and month abbreviation in Asia/Seoul time
+  // Helper to format next 7 days with weekday and month abbreviation
+  // We use PHT dates for the columns since tutors schedule in PHT
+  // Times are converted to KST for display, but slots are grouped by PHT date
   const getNextSevenDays = () => {
-    const days: { key: string; label: string }[] = [];
+    const days: { key: string; label: string; phtDate: string }[] = [];
     
-    // Format for display label
-    const labelFmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Seoul',
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
-    
-    // Format for extracting date parts in KST
-    const dateFmt = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
+    // Get current date in PHT (UTC+8)
+    const now = new Date();
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const phtNow = new Date(utcTime + (8 * 60 * 60000)); // UTC+8
     
     for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
+      const phtDate = new Date(phtNow);
+      phtDate.setDate(phtDate.getDate() + i);
       
-      const label = labelFmt.format(date); // e.g., "Sun Jan 11"
-      const key = dateFmt.format(date); // YYYY-MM-DD format in KST timezone
+      // Format PHT date for key (YYYY-MM-DD)
+      const year = phtDate.getFullYear();
+      const month = String(phtDate.getMonth() + 1).padStart(2, '0');
+      const day = String(phtDate.getDate()).padStart(2, '0');
+      const phtDateStr = `${year}-${month}-${day}`;
       
-      days.push({ key, label });
+      // Format label for display
+      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const label = `${weekdays[phtDate.getDay()]} ${months[phtDate.getMonth()]} ${phtDate.getDate()}`;
+      
+      days.push({ key: phtDateStr, label, phtDate: phtDateStr });
     }
     return days;
   };
@@ -186,19 +185,22 @@ export const TutorProfilePage = () => {
         console.log('🗓️ Raw PHT slots from API:', slots);
         setRawSlots(slots);
         
-        // Convert each slot to KST for display in the grid
+        // Keep PHT dates, but convert times to KST for display
+        // This way slots are grouped by PHT date (tutor's schedule date)
+        // but times shown to student are in KST
         const convertedSlots = slots.map(slot => {
-          const { date, time } = convertPHTtoKST(slot.date, slot.time);
-          console.log(`🗓️ Converted: ${slot.date} ${slot.time} PHT -> ${date} ${time} KST`);
+          // Convert time only (PHT to KST is +1 hour)
+          const { time: kstTime } = convertPHTtoKST(slot.date, slot.time);
+          console.log(`🗓️ Keeping PHT date, converting time: ${slot.date} ${slot.time} PHT -> ${slot.date} ${kstTime} KST`);
           return {
-            date,
-            time,
+            date: slot.date, // Keep PHT date for grouping by tutor's schedule date
+            time: kstTime,   // Convert time to KST for display
             status: 'AVAIL' as const,
             slotId: slot.slotId // Keep slotId for booking
           };
         });
         
-        console.log('🗓️ Converted KST slots:', convertedSlots);
+        console.log('🗓️ Converted slots (PHT dates, KST times):', convertedSlots);
         console.log('🗓️ Next 7 days:', getNextSevenDays());
         setAvailability(convertedSlots);
       } catch (err) {
@@ -572,7 +574,7 @@ export const TutorProfilePage = () => {
                     <table className="schedule-table">
                       <thead>
                         <tr>
-                          <th>Time</th>
+                          <th>Time (KST)</th>
                           {getNextSevenDays().map((d, i) => (
                             <th key={i}>{d.label}</th>
                           ))}
@@ -583,15 +585,10 @@ export const TutorProfilePage = () => {
                           <tr key={time}>
                             <td className="time-col">{time}</td>
                             {getNextSevenDays().map((d, dayIdx) => {
-                              let dateStr = d.key;
-                              
-                              // For evening period: 00:00 and 00:30 slots belong to the NEXT day in KST
-                              // So when looking at column "Jan 11", we need to find slots with date "Jan 12" for 00:00/00:30
-                              if (selectedPeriod === 'evening' && (time === '00:00' || time === '00:30')) {
-                                const [year, month, day] = d.key.split('-').map(Number);
-                                const nextDay = new Date(year, month - 1, day + 1);
-                                dateStr = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
-                              }
+                              // Use PHT date directly - slots are now grouped by PHT date
+                              // This ensures 00:00 and 00:30 KST times (which are 11:00 PM and 11:30 PM PHT)
+                              // appear in the same column as other evening slots for that PHT date
+                              const dateStr = d.key;
                               
                               const slot = availability.find((s) => s.date === dateStr && s.time === time);
                               const status = slot?.status;

@@ -134,13 +134,15 @@ export const BookingModal = ({
   }, [isOpen, tutorId]);
 
   // Auto-select slot when preSelectedDate/Time are provided
-  // preSelectedDate and preSelectedTime are in KST format, slots are in PHT format
+  // preSelectedDate is now PHT date, preSelectedTime is KST time
+  // We need to find the PHT slot that matches
   useEffect(() => {
     if (preSelectedDate && preSelectedTime && availableSlots.length > 0) {
       const matchingSlot = availableSlots.find(slot => {
-        // Convert slot's PHT date+time to KST for comparison
-        const { date: kstDate, time: kstTime } = convertToKoreanTimeWithDate(slot.date, slot.time);
-        return kstDate === preSelectedDate && kstTime === preSelectedTime;
+        // Convert slot's PHT time to KST time for comparison
+        const kstTime = convertToKoreanTime(slot.time);
+        // Compare PHT date directly and KST time
+        return slot.date === preSelectedDate && kstTime === preSelectedTime;
       });
       if (matchingSlot) {
         setSelectedSlot(matchingSlot);
@@ -334,6 +336,7 @@ export const BookingModal = ({
   }, {} as Record<string, AvailableSlot[]>);
 
   const formatDate = (dateString: string) => {
+    // dateString is a PHT date (tutor's schedule date)
     const date = new Date(dateString + 'T00:00:00');
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

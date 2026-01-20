@@ -1284,21 +1284,26 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               
               {/* Hierarchical Material Selector */}
               <div className="material-selector-section">
-                <label className="material-selector-label">Select a Material:</label>
-                
-                {/* Course Selector */}
-                <div className="material-selector-row">
-                  <select 
-                    className="material-selector-dropdown"
-                    value={selectedCourse}
-                    onChange={(e) => handleCourseChange((e.target as HTMLSelectElement).value)}
-                  >
-                    <option value="">-- Select Course --</option>
-                    {courses.map(course => (
-                      <option key={course.id} value={course.id}>{course.name}</option>
-                    ))}
-                  </select>
+                <div className="material-selector-header">
+                  <div className="material-selector-header-icon">
+                    <i className="fas fa-book-open"></i>
+                  </div>
+                  <label className="material-selector-label">Select a Material</label>
                 </div>
+                <div className="material-selector-body">
+                  {/* Course Selector */}
+                  <div className="material-selector-row">
+                    <select 
+                      className="material-selector-dropdown"
+                      value={selectedCourse}
+                      onChange={(e) => handleCourseChange((e.target as HTMLSelectElement).value)}
+                    >
+                      <option value="">-- Select Course --</option>
+                      {courses.map(course => (
+                        <option key={course.id} value={course.id}>{course.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 
                 {/* Daily Dispatch Card - shows when Daily Dispatch is selected */}
                 {selectedCourse === 'daily-dispatch' && (
@@ -1457,6 +1462,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             </div>
           ) : chosenLesson && !showLessonRequest ? (

@@ -1251,8 +1251,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               
               {/* Hierarchical Material Selector */}
               <div className="material-selector-section">
-                <label className="material-selector-label">Select a Material:</label>
-                
+                <div className="material-selector-header">
+                  <div className="material-selector-header-icon">
+                    <i className="fas fa-book-open"></i>
+                  </div>
+                  <label className="material-selector-label">Select a Material</label>
+                </div>
+                <div className="material-selector-body">
                 {/* Course Selector */}
                 <div className="material-selector-row">
                   <select 
@@ -1424,6 +1429,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             </div>
           ) : !showLessonRequest && lessonViewUrl ? (
