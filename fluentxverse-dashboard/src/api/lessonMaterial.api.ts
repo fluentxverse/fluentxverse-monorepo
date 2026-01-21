@@ -368,6 +368,7 @@ export interface LessonMaterial {
   goalTextJp: string;
   backgroundImage: string;
   overlayColor: string;
+  status: 'draft' | 'published';
   introductionData?: IntroductionData;
   learnData?: LearnSectionData;
   stepBData?: StepBData;
@@ -419,6 +420,15 @@ export async function createLesson(input: CreateLessonInput): Promise<LessonMate
  */
 export async function getLessonById(id: string): Promise<LessonMaterial> {
   const response = await apiClient.get(`/lesson-materials/${id}`);
+  return response.data.lesson;
+}
+
+/**
+ * Get a published lesson by ID (public, no auth required)
+ * Used for preview pages that may be viewed from student/tutor apps
+ */
+export async function getPublicLessonById(id: string): Promise<LessonMaterial> {
+  const response = await apiClient.get(`/lesson-materials/public/${id}`);
   return response.data.lesson;
 }
 
@@ -483,4 +493,20 @@ export async function duplicateLesson(id: string): Promise<LessonMaterial> {
  */
 export async function deleteLesson(id: string): Promise<void> {
   await apiClient.delete(`/lesson-materials/${id}`);
+}
+
+/**
+ * Publish a lesson
+ */
+export async function publishLesson(id: string): Promise<LessonMaterial> {
+  const response = await apiClient.post<{ lesson: LessonMaterial }>(`/lesson-materials/${id}/publish`);
+  return response.data.lesson;
+}
+
+/**
+ * Unpublish a lesson (set back to draft)
+ */
+export async function unpublishLesson(id: string): Promise<LessonMaterial> {
+  const response = await apiClient.post<{ lesson: LessonMaterial }>(`/lesson-materials/${id}/unpublish`);
+  return response.data.lesson;
 }

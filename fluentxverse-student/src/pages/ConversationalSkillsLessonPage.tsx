@@ -1,12 +1,12 @@
 /**
- * ConversationalSkillsPreview
- * Full-page standalone preview renderer for Conversational Skills lessons
+ * ConversationalSkillsLessonPage
+ * Full-page standalone renderer for Conversational Skills lessons
  * Matches the rarejob.com.ph lesson material design
  */
 import { useState, useEffect } from 'preact/hooks';
-import { useRoute } from 'preact-iso';
-import { getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
-import './ConversationalSkillsPreview.css';
+import { useRoute, useLocation } from 'preact-iso';
+import { lessonApi } from '../api/lesson.api';
+import './ConversationalSkillsLessonPage.css';
 
 // ============================================================================
 // SHARED TYPES (same as Visual Editor)
@@ -513,56 +513,74 @@ const DEFAULT_LEARN_DATA: LearnSectionData = {
 // MAIN COMPONENT
 // ============================================================================
 
-export default function ConversationalSkillsPreview() {
-  const { params } = useRoute();
-  const [lesson, setLesson] = useState<LessonMaterial | null>(null);
+// Lesson Material type for Memgraph data
+interface LessonMaterialData {
+  id: string;
+  course: string;
+  level: number;
+  chapter: number;
+  lessonNumber: number;
+  skill: string;
+  chapterName: string;
+  lessonName: string;
+  goalTextEn: string;
+  goalTextJp: string;
+  backgroundImage?: string;
+  overlayColor?: string;
+  status: string;
+  levelBadge?: string;
+  introductionData?: IntroductionData;
+  learnData?: LearnSectionData;
+  stepBData?: StepBData;
+  applyData?: ApplySectionData;
+  exerciseData?: ExerciseSectionData;
+  missionData?: MissionSectionData;
+  missionData2?: MissionSectionData;
+  feedbackData?: FeedbackSectionData;
+}
+
+export default function ConversationalSkillsLessonPage() {
+  const { params, query } = useRoute();
+  const { route } = useLocation();
+  const [lesson, setLesson] = useState<LessonMaterialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [previewOverrides, setPreviewOverrides] = useState<{
-    backgroundImage?: string;
-    overlayColor?: string;
-    chapterName?: string;
-    lessonName?: string;
-    goalTextEn?: string;
-    goalTextJp?: string;
-    introductionData?: IntroductionData;
-    learnData?: LearnSectionData;
-    stepBData?: StepBData;
-    applyData?: ApplySectionData;
-    exerciseData?: ExerciseSectionData;
-    missionData?: MissionSectionData;
-    missionData2?: MissionSectionData;
-    feedbackData?: FeedbackSectionData;
-  } | null>(null);
 
-  const id = params?.id;
+  // Get lesson ID from params or query string
+  const id = params?.id || (query?.id as string);
 
   useEffect(() => {
     if (id) {
-      // Check sessionStorage for unsaved preview data
-      const storedData = sessionStorage.getItem(`preview-${id}`);
-      if (storedData) {
-        try {
-          setPreviewOverrides(JSON.parse(storedData));
-        } catch (e) {
-          console.error('Failed to parse preview data:', e);
-        }
-      }
       loadLesson(id);
+    } else {
+      setError('No lesson ID provided');
+      setLoading(false);
     }
   }, [id]);
 
   const loadLesson = async (lessonId: string) => {
     try {
       setLoading(true);
-      // Use public endpoint so it works from student/tutor apps (iframe)
-      const data = await getPublicLessonById(lessonId);
-      setLesson(data);
+      setError('');
+      const result = await lessonApi.getPublicLessonMaterial(lessonId);
+      if (result.success && result.lesson) {
+        setLesson(result.lesson);
+      } else {
+        setError(result.error || 'Failed to load lesson');
+      }
     } catch (err) {
       console.error('Failed to load lesson:', err);
-      setError('Failed to load lesson preview');
+      setError('Failed to load lesson');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    if (window.opener) {
+      window.close();
+    } else {
+      route('/materials/conversational-skills');
     }
   };
 
@@ -571,7 +589,7 @@ export default function ConversationalSkillsPreview() {
       <div className="csp-fullpage csp-loading">
         <div className="csp-loader">
           <i className="ri-loader-4-line" />
-          <p>Loading preview...</p>
+          <p>Loading lesson...</p>
         </div>
       </div>
     );
@@ -582,60 +600,46 @@ export default function ConversationalSkillsPreview() {
       <div className="csp-fullpage csp-error">
         <i className="ri-error-warning-line" />
         <h2>{error || 'Lesson not found'}</h2>
-        <button onClick={() => window.close()}>Close Preview</button>
+        <button onClick={handleBack}>Back to Materials</button>
       </div>
     );
   }
 
-  // Apply overrides from sessionStorage if present, otherwise use saved lesson data
-  const backgroundImage = previewOverrides?.backgroundImage ?? lesson.backgroundImage;
-  const overlayColor = previewOverrides?.overlayColor ?? (lesson.overlayColor || '#134e4acc');
-  const chapterName = previewOverrides?.chapterName ?? lesson.chapterName;
-  const lessonName = previewOverrides?.lessonName ?? lesson.lessonName;
-  const goalTextEn = previewOverrides?.goalTextEn ?? lesson.goalTextEn;
-  const goalTextJp = previewOverrides?.goalTextJp ?? lesson.goalTextJp;
+  // Use saved lesson data directly (no overrides for student view)
+  const backgroundImage = lesson.backgroundImage;
+  const overlayColor = lesson.overlayColor || '#134e4acc';
+  const chapterName = lesson.chapterName;
+  const lessonName = lesson.lessonName;
+  const goalTextEn = lesson.goalTextEn;
+  const goalTextJp = lesson.goalTextJp;
   
-  // Introduction data: prioritize sessionStorage > saved lesson > default
+  // Introduction data: use saved lesson > default
   const introductionData: IntroductionData = 
-    previewOverrides?.introductionData ?? 
     lesson.introductionData ?? 
     DEFAULT_INTRODUCTION_DATA;
 
-  // Learn data: prioritize sessionStorage > saved lesson > default
+  // Learn data: use saved lesson > default
   const learnData: LearnSectionData = 
-    previewOverrides?.learnData ?? 
     lesson.learnData ?? 
     DEFAULT_LEARN_DATA;
 
-  // Step B data: prioritize sessionStorage > saved lesson
-  const stepBData: StepBData | undefined = 
-    previewOverrides?.stepBData ?? 
-    lesson.stepBData;
+  // Step B data: use saved lesson
+  const stepBData: StepBData | undefined = lesson.stepBData;
 
-  // Apply data: prioritize sessionStorage > saved lesson
-  const applyData: ApplySectionData | undefined = 
-    previewOverrides?.applyData ?? 
-    lesson.applyData;
+  // Apply data: use saved lesson
+  const applyData: ApplySectionData | undefined = lesson.applyData;
 
-  // Exercise data: prioritize sessionStorage > saved lesson
-  const exerciseData: ExerciseSectionData | undefined = 
-    previewOverrides?.exerciseData ?? 
-    (lesson as any).exerciseData;
+  // Exercise data: use saved lesson
+  const exerciseData: ExerciseSectionData | undefined = (lesson as any).exerciseData;
 
-  // Mission data: prioritize sessionStorage > saved lesson
-  const missionData: MissionSectionData | undefined = 
-    previewOverrides?.missionData ?? 
-    (lesson as any).missionData;
+  // Mission data: use saved lesson
+  const missionData: MissionSectionData | undefined = (lesson as any).missionData;
 
-  // Mission data 2 (Challenge 2 / Discussion): prioritize sessionStorage > saved lesson
-  const missionData2: MissionSectionData | undefined = 
-    previewOverrides?.missionData2 ?? 
-    (lesson as any).missionData2;
+  // Mission data 2 (Challenge 2 / Discussion): use saved lesson
+  const missionData2: MissionSectionData | undefined = (lesson as any).missionData2;
 
-  // Feedback data: prioritize sessionStorage > saved lesson
-  const feedbackData: FeedbackSectionData | undefined = 
-    previewOverrides?.feedbackData ?? 
-    (lesson as any).feedbackData;
+  // Feedback data: use saved lesson
+  const feedbackData: FeedbackSectionData | undefined = (lesson as any).feedbackData;
 
   return (
     <div className="csp-fullpage">
@@ -699,10 +703,6 @@ export default function ConversationalSkillsPreview() {
         </div>
       </main>
 
-      {/* Close Button */}
-      <button className="csp-close-btn" onClick={() => window.close()} title="Close Preview">
-        <i className="ri-close-line" />
-      </button>
     </div>
   );
 }

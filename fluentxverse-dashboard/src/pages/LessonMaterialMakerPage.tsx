@@ -3,6 +3,7 @@
  * Uses JSON data structure that LessonRenderer can display
  */
 import { useState, useCallback } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import type {
   LessonMaterial,
   LessonSection,
@@ -98,9 +99,24 @@ export default function LessonMaterialMakerPage() {
   });
   const [activeSection, setActiveSection] = useState(0);
   const [previewMode, setPreviewMode] = useState<'tutor' | 'student'>('tutor');
+  const location = useLocation();
 
   // Load template and create lesson data
   const handleSelectTemplate = useCallback((template: TemplateInfo) => {
+    // Redirect to specialized editors
+    if (template.id === 'conversational-skills') {
+      location.route('/conversational-skills-editor');
+      return;
+    }
+    if (template.id === 'daily-dispatch') {
+      location.route('/daily-dispatch');
+      return;
+    }
+    if (template.id === 'young-learners') {
+      location.route('/young-learners-editor');
+      return;
+    }
+    
     setSelectedTemplate(template);
     const data = createConversationalTemplate(); // For now, use conversational for all
     setLessonData(data);

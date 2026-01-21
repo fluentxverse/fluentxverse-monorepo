@@ -28,6 +28,9 @@ import DailyDispatchEditorPage from './pages/DailyDispatchEditorPage';
 import DailyDispatchPreviewPage from './pages/DailyDispatchPreviewPage';
 import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import DailyDispatchStudentPage from './pages/DailyDispatchStudentPage';
+import YoungLearnersEditorPage from './pages/YoungLearnersEditorPage';
+import YoungLearnersVisualEditor from './pages/YoungLearnersVisualEditor';
+import YoungLearnersPreview from './pages/YoungLearnersPreview';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -146,6 +149,27 @@ const AppContent = () => {
     );
   }
 
+  // Young Learners preview page - standalone (kid-friendly view)
+  if (path.startsWith('/young-learners-preview')) {
+    return (
+      <Router>
+        <Route path="/young-learners-preview/:id" component={YoungLearnersPreview} />
+      </Router>
+    );
+  }
+
+  // Young Learners visual editor - standalone (fullscreen)
+  if (path.startsWith('/young-learners-visual-editor')) {
+    if (!isAuthenticated) {
+      return <LoginPage />;
+    }
+    return (
+      <Router>
+        <Route path="/young-learners-visual-editor/:id" component={YoungLearnersVisualEditor} />
+      </Router>
+    );
+  }
+
   if (path.startsWith('/interview-room')) {
     if (!isAuthenticated) {
       return <LoginPage />;
@@ -174,6 +198,7 @@ const AppContent = () => {
         <Route path="/conversational-skills-preview/:id" component={ConversationalSkillsPreview} />
         <Route path="/daily-dispatch" component={DailyDispatchEditorPage} />
         <Route path="/daily-dispatch-preview/:id" component={DailyDispatchPreviewPage} />
+        <Route path="/young-learners-editor" component={YoungLearnersEditorPage} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />

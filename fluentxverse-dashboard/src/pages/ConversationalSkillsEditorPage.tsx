@@ -13,6 +13,8 @@ import {
   updateLessonHeader,
   deleteLesson,
   duplicateLesson,
+  publishLesson,
+  unpublishLesson,
   type LessonMaterial,
   type Skill,
   type CreateLessonInput,
@@ -190,6 +192,32 @@ export default function ConversationalSkillsEditorPage() {
     window.open(`/conversational-skills-preview/${lesson.id}`, '_blank');
   };
 
+  const handlePublishLesson = async (lesson: LessonMaterial) => {
+    try {
+      const updated = await publishLesson(lesson.id);
+      setLessons(lessons.map(l => l.id === lesson.id ? updated : l));
+      if (selectedLesson?.id === lesson.id) {
+        setSelectedLesson(updated);
+      }
+      toast.success('Lesson published! It will now appear in student/tutor apps.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to publish lesson');
+    }
+  };
+
+  const handleUnpublishLesson = async (lesson: LessonMaterial) => {
+    try {
+      const updated = await unpublishLesson(lesson.id);
+      setLessons(lessons.map(l => l.id === lesson.id ? updated : l));
+      if (selectedLesson?.id === lesson.id) {
+        setSelectedLesson(updated);
+      }
+      toast.success('Lesson unpublished. It will no longer appear in student/tutor apps.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to unpublish lesson');
+    }
+  };
+
   const handleSelectLesson = (lesson: LessonMaterial) => {
     setSelectedLesson(prev => prev?.id === lesson.id ? null : lesson);
   };
@@ -305,7 +333,7 @@ export default function ConversationalSkillsEditorPage() {
                                 {chapterLessons.length > 0 ? (
                                   chapterLessons.map(lesson => (
                                     <div 
-                                      className={`cse-lesson-row ${selectedLesson?.id === lesson.id ? 'selected' : ''}`} 
+                                      className={`cse-lesson-row ${selectedLesson?.id === lesson.id ? 'selected' : ''} ${lesson.status === 'published' ? 'published' : ''}`} 
                                       key={lesson.id}
                                       onClick={() => handleSelectLesson(lesson)}
                                     >
@@ -313,8 +341,28 @@ export default function ConversationalSkillsEditorPage() {
                                         <span className={`cse-skill-dot cse-skill-${lesson.skill}`} />
                                         <span className="cse-lesson-number">L{lesson.lessonNumber}</span>
                                         <span className="cse-lesson-title">{lesson.lessonTitle}</span>
+                                        {lesson.status === 'published' && (
+                                          <span className="cse-published-badge">Published</span>
+                                        )}
                                       </div>
                                       <div className="cse-lesson-actions">
+                                        {lesson.status === 'draft' ? (
+                                          <button 
+                                            className="cse-action-btn cse-action-publish"
+                                            onClick={(e) => { e.stopPropagation(); handlePublishLesson(lesson); }}
+                                            title="Publish"
+                                          >
+                                            <i className="ri-upload-cloud-line" />
+                                          </button>
+                                        ) : (
+                                          <button 
+                                            className="cse-action-btn cse-action-unpublish"
+                                            onClick={(e) => { e.stopPropagation(); handleUnpublishLesson(lesson); }}
+                                            title="Unpublish"
+                                          >
+                                            <i className="ri-download-cloud-line" />
+                                          </button>
+                                        )}
                                         <button 
                                           className="cse-action-btn"
                                           onClick={(e) => { e.stopPropagation(); handleEditLesson(lesson); }}

@@ -1378,8 +1378,40 @@
   color: #ef4444;
 }
 
+.cse-action-btn.cse-action-publish:hover {
+  background: #dcfce7;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.cse-action-btn.cse-action-unpublish:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
 .cse-action-btn i {
   font-size: 14px;
+}
+
+/* Published Badge */
+.cse-published-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+}
+
+/* Published Lesson Row */
+.cse-lesson-row.published {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%);
 }
 
 /* Empty Chapter */
@@ -1473,6 +1505,41 @@
 .cse-lesson-row.selected {
   background: var(--primary-light, #e0f2fe);
   border-left: 3px solid var(--primary);
+}
+
+/* Make action buttons visible on selected rows */
+.cse-lesson-row.selected .cse-lesson-actions {
+  opacity: 1;
+}
+
+.cse-lesson-row.selected .cse-action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(2, 69, 174, 0.2);
+  color: var(--text-secondary);
+}
+
+.cse-lesson-row.selected .cse-action-btn:hover {
+  background: #fff;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.cse-lesson-row.selected .cse-action-btn.cse-action-delete:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.cse-lesson-row.selected .cse-action-btn.cse-action-publish:hover {
+  background: #dcfce7;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.cse-lesson-row.selected .cse-action-btn.cse-action-unpublish:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
 
 .cse-lesson-row {

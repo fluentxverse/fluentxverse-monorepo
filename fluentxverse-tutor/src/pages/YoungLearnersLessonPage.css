@@ -1,0 +1,732 @@
+/**
+ * YoungLearnersLessonPage.css
+ * Styles for the Young Learners lesson viewer - kid-friendly, interactive design
+ */
+
+.yl-lesson-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Comic Neue', 'Nunito', -apple-system, sans-serif;
+}
+
+/* ============================================================================
+   LOADING & ERROR STATES
+   ============================================================================ */
+
+.yl-lesson-loading,
+.yl-lesson-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.yl-loading-mascot {
+  font-size: 5rem;
+  animation: bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.yl-lesson-loading p {
+  margin-top: 1rem;
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+.yl-error-emoji {
+  font-size: 5rem;
+}
+
+.yl-lesson-error h2 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.yl-lesson-error p {
+  margin: 0 0 1.5rem;
+  color: #6b7280;
+}
+
+.yl-lesson-error button {
+  padding: 0.75rem 2rem;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+
+.yl-lesson-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.yl-back-button {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.yl-lesson-title-area {
+  flex: 1;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+.yl-lesson-badge {
+  font-size: 0.75rem;
+  color: #6366f1;
+  font-weight: 600;
+}
+
+.yl-lesson-title-area h1 {
+  margin: 0.25rem 0 0;
+  font-size: 1.125rem;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.yl-lesson-mascot {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+/* ============================================================================
+   PROGRESS BAR
+   ============================================================================ */
+
+.yl-progress-bar {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 0.5rem 1rem;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.yl-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ============================================================================
+   CONTENT
+   ============================================================================ */
+
+.yl-lesson-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.yl-section {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.yl-section-title {
+  text-align: center;
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+  color: #1f2937;
+}
+
+.yl-section-subtitle {
+  text-align: center;
+  color: #6b7280;
+  margin: 0 0 1.5rem;
+}
+
+/* Japanese text */
+.yl-jp {
+  color: #6b7280 !important;
+  font-size: 0.9em !important;
+  margin-top: 0.5rem !important;
+}
+
+/* ============================================================================
+   WELCOME SECTION
+   ============================================================================ */
+
+.yl-welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.yl-welcome-mascot {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.yl-big-mascot {
+  font-size: 5rem;
+  animation: bounce 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.yl-speech-bubble {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 16px;
+  border-radius: 0 16px 16px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.yl-speech-bubble p {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.yl-lesson-preview {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.yl-lesson-preview h2 {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+  color: #374151;
+}
+
+.yl-preview-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.yl-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.yl-preview-item span:first-child {
+  font-size: 1.5rem;
+}
+
+.yl-preview-item span:last-child {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+/* ============================================================================
+   VOCABULARY SECTION
+   ============================================================================ */
+
+.yl-vocab-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.yl-vocab-card {
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.yl-vocab-card-inner {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+
+.yl-vocab-card.flipped .yl-vocab-card-inner {
+  transform: rotateY(180deg);
+}
+
+.yl-vocab-front,
+.yl-vocab-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.yl-vocab-front {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.yl-vocab-front img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.yl-vocab-placeholder {
+  width: 80px;
+  height: 80px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.yl-vocab-front h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2937;
+  text-align: center;
+}
+
+.yl-vocab-back {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  transform: rotateY(180deg);
+}
+
+.yl-translation {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+}
+
+.yl-audio-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #eef2ff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.yl-audio-button:hover {
+  transform: scale(1.1);
+}
+
+/* ============================================================================
+   SONG SECTION
+   ============================================================================ */
+
+.yl-song {
+  padding: 1rem;
+}
+
+.yl-song-title {
+  text-align: center;
+  font-size: 1.25rem;
+  color: #4b5563;
+  margin: 0 0 1.5rem;
+}
+
+.yl-play-song-btn {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto 1.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ec4899, #f472b6);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.yl-play-song-btn:hover {
+  transform: scale(1.05);
+}
+
+.yl-lyrics {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.yl-lyric-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.yl-lyric-line:nth-child(odd) {
+  background: #fdf4ff;
+}
+
+.yl-lyric-number {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ec4899;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.yl-lyric-text {
+  flex: 1;
+}
+
+.yl-lyric-text p {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+/* ============================================================================
+   STORY SECTION
+   ============================================================================ */
+
+.yl-story {
+  padding: 1rem;
+}
+
+.yl-story-title {
+  text-align: center;
+  font-size: 1.25rem;
+  color: #4b5563;
+  margin: 0 0 1.5rem;
+}
+
+.yl-story-book {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.yl-story-page {
+  padding: 1.5rem;
+  min-height: 300px;
+}
+
+.yl-story-image {
+  width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.yl-story-text {
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.yl-story-text p {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #1f2937;
+}
+
+.yl-story-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.yl-story-nav button {
+  padding: 0.625rem 1.25rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.yl-story-nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.yl-story-nav span {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ============================================================================
+   ACTIVITIES SECTION
+   ============================================================================ */
+
+.yl-activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.yl-activity-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.yl-activity-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  border-radius: 16px;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.yl-activity-info h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  color: #1f2937;
+}
+
+.yl-activity-info p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   COMPLETE SECTION
+   ============================================================================ */
+
+.yl-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.yl-complete-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.yl-star-burst {
+  font-size: 5rem;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.yl-complete-content h2 {
+  margin: 1rem 0 0.5rem;
+  font-size: 2rem;
+  color: #1f2937;
+}
+
+.yl-complete-content p {
+  margin: 0 0 1.5rem;
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+.yl-complete-mascot {
+  font-size: 4rem;
+  animation: bounce 1s ease-in-out infinite;
+  margin-bottom: 1.5rem;
+}
+
+.yl-home-button {
+  padding: 1rem 2.5rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.yl-home-button:hover {
+  transform: scale(1.05);
+}
+
+/* ============================================================================
+   FOOTER NAVIGATION
+   ============================================================================ */
+
+.yl-lesson-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.yl-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.yl-nav-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.yl-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.yl-nav-btn.next {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.yl-nav-btn.next:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.yl-section-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.yl-dot {
+  width: 10px;
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.yl-dot.active {
+  width: 24px;
+  background: #6366f1;
+  border-radius: 5px;
+}
+
+.yl-dot.completed {
+  background: #10b981;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 480px) {
+  .yl-lesson-title-area h1 {
+    font-size: 1rem;
+  }
+  
+  .yl-lesson-mascot {
+    font-size: 2rem;
+  }
+  
+  .yl-big-mascot {
+    font-size: 4rem;
+  }
+  
+  .yl-speech-bubble {
+    padding: 1rem;
+  }
+  
+  .yl-speech-bubble p {
+    font-size: 1rem;
+  }
+  
+  .yl-vocab-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .yl-vocab-card-inner {
+    height: 160px;
+  }
+  
+  .yl-nav-btn span {
+    display: none;
+  }
+  
+  .yl-nav-btn {
+    padding: 0.75rem;
+  }
+}

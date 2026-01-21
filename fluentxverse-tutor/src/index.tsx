@@ -17,10 +17,13 @@ import DailyDispatchPage from './pages/DailyDispatchPage';
 import DailyDispatchArticlePage from './pages/DailyDispatchArticlePage';
 import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
+import ConversationalSkillsLessonPage from './pages/ConversationalSkillsLessonPage';
 import LessonViewPage from './pages/LessonViewPage';
 import InboxPage from './pages/InboxPage';
 import MyProfilePage from "./pages/MyProfilePage";
 import PerformanceMetricsPage from "./pages/PerformanceMetricsPage";
+import YoungLearnersPage from './pages/YoungLearnersPage';
+import YoungLearnersLessonPage from './pages/YoungLearnersLessonPage';
 
 import { withProtected, withCertified } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
@@ -119,6 +122,9 @@ export function AppInner() {
 							<Route path="/materials/daily-dispatch/archives/:month" component={withProtected(DailyDispatchArchivePage)} />
 							<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
+							<Route path="/materials/conversational-skills/:id" component={withProtected(ConversationalSkillsLessonPage)} />
+							<Route path="/materials/young-learners" component={withProtected(YoungLearnersPage)} />
+							<Route path="/materials/young-learners/lesson/:id" component={withProtected(YoungLearnersLessonPage)} />
 							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage} />
 							<Route path="/inbox" component={withProtected(InboxPage)} />
 							<Route path="/profile" component={withProtected(MyProfilePage)} />

@@ -22,6 +22,17 @@ interface DispatchArticle {
   createdAt: string;
 }
 
+// Conversational Skills lesson interface for viewing
+interface ConversationalLesson {
+  id: string;
+  title: string;
+  level: number;
+  chapter: number;
+  lessonNumber: number;
+  goalTextEn: string;
+  viewUrl?: string;
+}
+
 interface ClassroomPageProps {
   sessionId?: string;
 }
@@ -320,6 +331,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [loadingDispatch, setLoadingDispatch] = useState(false);
   const [viewingDispatchArticle, setViewingDispatchArticle] = useState<DispatchArticle | null>(null);
   
+  // Conversational Skills viewing state
+  const [viewingConversationalLesson, setViewingConversationalLesson] = useState<ConversationalLesson | null>(null);
+  const [conversationalViewUrl, setConversationalViewUrl] = useState<string | null>(null);
+  const [loadingConversationalView, setLoadingConversationalView] = useState(false);
+  
   // File sharing state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -382,9 +398,33 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     setLoadingMaterials(true);
     try {
-      const result = await lessonApi.getPublishedLessons(courseId);
-      if (result.success && result.lessons) {
-        setAvailableLessons(result.lessons);
+      // Use lesson-materials endpoint for conversational-skills (Memgraph storage)
+      if (courseId === 'conversational-skills') {
+        const result = await lessonApi.getPublishedLessonMaterials(courseId);
+        if (result.success && result.lessons) {
+          // Transform lesson-materials format to match expected Lesson format
+          const transformedLessons = result.lessons.map((l: any) => ({
+            id: l.id,
+            title: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
+            slug: l.id,
+            status: 'published' as const,
+            lessonData: {
+              header: {
+                levelBadge: l.levelBadge,
+                chapterLabel: l.chapterLabel,
+                lessonLabel: l.lessonTitle,
+                goalText: l.goalTextEn || '',
+              }
+            }
+          })) as Lesson[];
+          setAvailableLessons(transformedLessons);
+        }
+      } else {
+        // Use regular lesson endpoint for other courses
+        const result = await lessonApi.getPublishedLessons(courseId);
+        if (result.success && result.lessons) {
+          setAvailableLessons(result.lessons);
+        }
       }
     } catch (err) {
       console.error('Failed to load lessons:', err);
@@ -734,6 +774,18 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       cleanup();
     };
   }, [cleanup]);
+
+  // Listen for close messages from iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'close-lesson-material') {
+        setViewingConversationalLesson(null);
+        setConversationalViewUrl(null);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -1161,9 +1213,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       {/* Right Panel - Learning Materials */}
       <div className="classroom-right">
-        {/* Material Header - conditionally show dispatch header or regular header */}
+        {/* Material Header - conditionally show dispatch/conversational header or regular header */}
         {viewingDispatchArticle ? (
-          <div className="dispatch-view-header">
+          <div className={`dispatch-view-header ${selectedCourse === 'daily-dispatch' ? 'daily-dispatch-theme' : ''}`}>
             <button 
               className="btn-back-to-request"
               onClick={() => setViewingDispatchArticle(null)}
@@ -1179,6 +1231,25 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   day: 'numeric',
                   year: 'numeric'
                 })}
+              </span>
+            </div>
+          </div>
+        ) : viewingConversationalLesson ? (
+          <div className="dispatch-view-header conversational-theme">
+            <button 
+              className="btn-back-to-request"
+              onClick={() => {
+                setViewingConversationalLesson(null);
+                setConversationalViewUrl(null);
+              }}
+            >
+              <i className="fi fi-sr-arrow-left"></i>
+              Back to Selection
+            </button>
+            <div className="dispatch-view-meta">
+              <span className="dispatch-view-category">Level {viewingConversationalLesson.level}</span>
+              <span className="dispatch-view-date">
+                Chapter {viewingConversationalLesson.chapter} • Lesson {viewingConversationalLesson.lessonNumber}
               </span>
             </div>
           </div>
@@ -1201,6 +1272,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               src={`/materials/daily-dispatch/${viewingDispatchArticle.id}`}
               className="dispatch-article-iframe"
               title={viewingDispatchArticle.title}
+            />
+          ) : viewingConversationalLesson && conversationalViewUrl ? (
+            <iframe 
+              src={conversationalViewUrl}
+              className="dispatch-article-iframe conversational-iframe"
+              title={viewingConversationalLesson.title}
             />
           ) : showLessonRequest ? (
             <div className="lesson-request-container">
@@ -1383,8 +1460,90 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   </>
                 )}
                 
-                {/* Level Selector - shows when course is selected */}
-                {selectedCourse && availableLevels.length > 0 && (
+                {/* Conversational Skills Card - shows when Conversational Skills is selected */}
+                {selectedCourse === 'conversational-skills' && (
+                  <>
+                    {loadingMaterials ? (
+                      <div className="dispatch-article-card">
+                        <div className="dispatch-loading">
+                          <div className="spinner-small"></div>
+                          <span>Loading lessons...</span>
+                        </div>
+                      </div>
+                    ) : availableLessons.length > 0 ? (
+                      <>
+                        {/* Group lessons by Level, then Chapter */}
+                        {availableLevels.map(level => {
+                          const levelLessons = availableLessons.filter(l => getLevelNumber(l) === level);
+                          const chaptersInLevel = [...new Set(levelLessons.map(l => getChapterNumber(l)))].sort((a, b) => a - b);
+                          
+                          return (
+                            <div key={level} className="lesson-card conversational-skills-card">
+                              <div className="lesson-card-label">Level {level}</div>
+                              {chaptersInLevel.map(chapter => {
+                                const chapterLessons = levelLessons
+                                  .filter(l => getChapterNumber(l) === chapter)
+                                  .sort((a, b) => getLessonNumber(a) - getLessonNumber(b));
+                                
+                                return (
+                                  <div key={chapter} className="lesson-chapter-group">
+                                    <div className="lesson-chapter-header">Chapter {chapter}</div>
+                                    <div className="lesson-table-header conversational-header">
+                                      <span className="lesson-col-number">Lesson</span>
+                                      <span className="lesson-col-title">Title</span>
+                                      <span className="lesson-col-goal">Goal</span>
+                                      <span className="lesson-col-action">Action</span>
+                                    </div>
+                                    {chapterLessons.map(lesson => {
+                                      const goalText = lesson.lessonData?.header?.goalText || '';
+                                      return (
+                                        <div className="lesson-table-row conversational-row" key={lesson.id}>
+                                          <span className="lesson-col-number">Lesson {getLessonNumber(lesson)}</span>
+                                          <span className="lesson-col-title">{lesson.title}</span>
+                                          <span className="lesson-col-goal" title={goalText}>
+                                            {goalText || '—'}
+                                          </span>
+                                          <button 
+                                            className="dispatch-open-link"
+                                            onClick={async () => {
+                                              // Set the viewing lesson to show in material area
+                                              const viewLesson: ConversationalLesson = {
+                                                id: lesson.id,
+                                                title: lesson.title,
+                                                level: level,
+                                                chapter: chapter,
+                                                lessonNumber: getLessonNumber(lesson),
+                                                goalTextEn: goalText
+                                              };
+                                              setViewingConversationalLesson(viewLesson);
+                                              // Use local route directly instead of API call
+                                              setConversationalViewUrl(`/materials/conversational-skills/${lesson.id}`);
+                                            }}
+                                          >
+                                            Open Material
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      <div className="dispatch-article-card">
+                        <div className="dispatch-empty">
+                          <p>No lessons available</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {/* Level Selector - shows for other courses */}
+                {selectedCourse && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && availableLevels.length > 0 && (
                   <div className="material-selector-row">
                     <select 
                       className="material-selector-dropdown"
@@ -1404,8 +1563,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   </div>
                 )}
                 
-                {/* Chapter Selector - shows when level is selected */}
-                {selectedLevel !== null && availableChapters.length > 0 && (
+                {/* Chapter Selector - shows when level is selected (for other courses) */}
+                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLevel !== null && availableChapters.length > 0 && (
                   <div className="material-selector-row">
                     <select 
                       className="material-selector-dropdown"
@@ -1424,8 +1583,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   </div>
                 )}
                 
-                {/* Lesson Selector - shows when chapter is selected */}
-                {selectedChapter !== null && filteredLessons.length > 0 && (
+                {/* Lesson Selector - shows when chapter is selected (for other courses) */}
+                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedChapter !== null && filteredLessons.length > 0 && (
                   <div className="material-selector-row">
                     <select 
                       className="material-selector-dropdown"
@@ -1442,16 +1601,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   </div>
                 )}
                 
-                {/* Loading indicator */}
-                {loadingMaterials && (
+                {/* Loading indicator - for other courses with dropdowns */}
+                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && loadingMaterials && (
                   <div className="material-loading-inline">
                     <div className="spinner-small"></div>
                     <span>Loading...</span>
                   </div>
                 )}
                 
-                {/* Select Button - shows when a lesson is selected */}
-                {selectedLessonId && (
+                {/* Select Button - shows when a lesson is selected (for other courses) */}
+                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLessonId && (
                   <div className="material-selector-row">
                     <button 
                       className="btn-search-material"

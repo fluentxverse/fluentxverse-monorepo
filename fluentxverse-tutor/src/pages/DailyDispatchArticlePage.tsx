@@ -66,6 +66,7 @@ export default function DailyDispatchArticlePage() {
   const [fontSize, setFontSize] = useState<'S' | 'M' | 'L'>('M');
   const [searchQuery, setSearchQuery] = useState('');
   const [archives, setArchives] = useState<ArchiveItem[]>([]);
+  const [isInClassroom, setIsInClassroom] = useState(false);
   
   // Check if mode=student is in URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -73,6 +74,20 @@ export default function DailyDispatchArticlePage() {
   const [isStudentView, setIsStudentView] = useState(initialStudentMode);
 
   const id = params?.id;
+
+  // Detect if loaded in iframe (classroom context)
+  useEffect(() => {
+    const inIframe = window.self !== window.top;
+    setIsInClassroom(inIframe);
+    if (inIframe) {
+      document.body.classList.add('classroom-mode');
+    } else {
+      document.body.classList.remove('classroom-mode');
+    }
+    return () => {
+      document.body.classList.remove('classroom-mode');
+    };
+  }, []);
 
   useEffect(() => {
     loadArchives();

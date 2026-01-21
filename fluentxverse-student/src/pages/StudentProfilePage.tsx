@@ -197,15 +197,40 @@ const StudentProfilePage = () => {
     
     try {
       setLoadingLessons(true);
-      const result = await lessonApi.getPublishedLessons('all');
-      if (result.success) {
-        // Filter by selected course
-        const filteredLessons = result.lessons.filter(lesson => {
-          const courseName = (lesson.lessonData as any)?.course || '';
-          const selectedCourseName = courses.find(c => c.id === selectedCourse)?.name || '';
-          return courseName.toLowerCase() === selectedCourseName.toLowerCase();
-        });
-        setLessons(filteredLessons);
+      
+      // Use lesson-materials endpoint for conversational-skills
+      if (selectedCourse === 'conversational-skills') {
+        const result = await lessonApi.getPublishedLessonMaterials('conversational-skills');
+        if (result.success) {
+          // Transform lesson-materials format to match expected Lesson format
+          const transformedLessons = result.lessons.map((l: any) => ({
+            id: l.id,
+            title: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
+            slug: l.id,
+            status: 'published' as const,
+            lessonData: {
+              header: {
+                levelBadge: l.levelBadge,
+                chapterLabel: l.chapterLabel,
+                lessonLabel: l.lessonTitle,
+                goalText: l.goalTextEn || '',
+              }
+            }
+          }));
+          setLessons(transformedLessons);
+        }
+      } else {
+        // Use regular lesson endpoint for other courses
+        const result = await lessonApi.getPublishedLessons('all');
+        if (result.success) {
+          // Filter by selected course
+          const filteredLessons = result.lessons.filter(lesson => {
+            const courseName = (lesson.lessonData as any)?.course || '';
+            const selectedCourseName = courses.find(c => c.id === selectedCourse)?.name || '';
+            return courseName.toLowerCase() === selectedCourseName.toLowerCase();
+          });
+          setLessons(filteredLessons);
+        }
       }
     } catch (error) {
       console.error('Failed to load lessons:', error);

@@ -33,9 +33,25 @@ export default function ConversationalSkillsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const result = await lessonApi.getPublishedLessons('all');
+      // Use lesson-materials endpoint for conversational-skills (Memgraph storage)
+      const result = await lessonApi.getPublishedLessonMaterials('conversational-skills');
       if (result.success) {
-        setLessons(result.lessons);
+        // Transform lesson-materials format to match expected Lesson format
+        const transformedLessons = result.lessons.map((l: any) => ({
+          id: l.id,
+          title: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
+          slug: l.id,
+          status: 'published' as const,
+          lessonData: {
+            header: {
+              levelBadge: l.levelBadge,
+              chapterLabel: l.chapterLabel,
+              lessonLabel: l.lessonTitle,
+              goalText: l.goalTextEn || '',
+            }
+          }
+        }));
+        setLessons(transformedLessons);
       } else {
         setError(result.error || 'Failed to load lessons');
       }
@@ -147,7 +163,8 @@ export default function ConversationalSkillsPage() {
   const { route } = useLocation();
 
   const handleOpenLesson = (lesson: Lesson) => {
-    window.open(`/lesson/view?id=${lesson.id}`, '_blank');
+    // Open in new tab using the local lesson renderer
+    window.open(`/materials/conversational-skills/${lesson.id}`, '_blank');
   };
 
   const getLevelFromHeader = (lesson: Lesson): string => {

@@ -15,6 +15,9 @@ import DailyDispatchPage from './pages/DailyDispatchPage';
 import DailyDispatchArticlePage from './pages/DailyDispatchArticlePage';
 import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
+import ConversationalSkillsLessonPage from './pages/ConversationalSkillsLessonPage';
+import YoungLearnersPage from './pages/YoungLearnersPage';
+import YoungLearnersLessonPage from './pages/YoungLearnersLessonPage';
 import LessonViewPage from './pages/LessonViewPage';
 import TicketsPage from './pages/TicketsPage';
 import PurchaseHistoryPage from './pages/PurchaseHistoryPage';
@@ -124,6 +127,9 @@ export function AppInner() {
 						<Route path="/materials/daily-dispatch/archives/:month" component={withProtected(DailyDispatchArchivePage)} />
 						<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)} />
 						<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
+						<Route path="/materials/conversational-skills/:id" component={ConversationalSkillsLessonPage} />
+						<Route path="/young-learners" component={withProtected(YoungLearnersPage)} />
+						<Route path="/young-learners/lesson/:id" component={YoungLearnersLessonPage} />
 						{/* LessonViewPage handles its own loading - not wrapped in ProtectedRoute to avoid triple spinner */}
 						<Route path="/lesson/view" component={LessonViewPage} />
 						<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage} />

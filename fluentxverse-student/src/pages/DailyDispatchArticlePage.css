@@ -29,6 +29,52 @@
    BASE STYLES
    ============================================================================ */
 
+/* Default scrollbar (blue theme - matches FluentXVerse branding) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f0f4ff;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0245ae 0%, #0366d6 100%);
+  border-radius: 5px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0366d6 0%, #0284c7 100%);
+}
+
+/* Firefox scrollbar - default blue */
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: #0245ae #f0f4ff;
+}
+
+/* Yellow scrollbar when in classroom mode (iframe) */
+body.classroom-mode::-webkit-scrollbar-track {
+  background: var(--ddp-gray-100);
+}
+
+body.classroom-mode::-webkit-scrollbar-thumb {
+  background: var(--ddp-accent);
+}
+
+body.classroom-mode::-webkit-scrollbar-thumb:hover {
+  background: var(--ddp-accent-dark);
+}
+
+/* Firefox scrollbar for classroom mode */
+body.classroom-mode {
+  scrollbar-color: var(--ddp-accent) var(--ddp-gray-100);
+}
+
 .ddp-container {
   min-height: 100vh;
   background: var(--ddp-white);

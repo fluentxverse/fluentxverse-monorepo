@@ -274,6 +274,8 @@ export interface CreateLessonInput {
   createdByName?: string;     // Admin name
 }
 
+export type LessonStatus = 'draft' | 'published';
+
 export interface LessonMaterial {
   id: string;
   course: string;
@@ -287,6 +289,7 @@ export interface LessonMaterial {
   goalTextJp: string;
   backgroundImage: string;
   overlayColor: string;
+  status: LessonStatus;
   introductionData?: IntroductionData;
   learnData?: LearnSectionData;
   stepBData?: StepBData;
@@ -424,6 +427,7 @@ function transformLesson(record: any): LessonMaterial {
     goalTextJp: props.goalTextJp,
     backgroundImage: props.backgroundImage || '',
     overlayColor: props.overlayColor || '#0369a1cc',
+    status: props.status || 'draft',
     introductionData,
     learnData,
     stepBData,
@@ -555,6 +559,7 @@ export const lessonMaterialService = {
           goalTextJp: $goalTextJp,
           backgroundImage: $backgroundImage,
           overlayColor: $overlayColor,
+          status: $status,
           createdBy: $createdBy,
           createdByName: $createdByName,
           createdAt: $createdAt,
@@ -574,6 +579,7 @@ export const lessonMaterialService = {
           goalTextJp: input.goalTextJp,
           backgroundImage: '',
           overlayColor: '#0369a1cc',
+          status: 'draft',
           createdBy: input.createdBy,
           createdByName: input.createdByName || '',
           createdAt: now,
@@ -865,6 +871,71 @@ export const lessonMaterialService = {
         chapter: neo4j.isInt(r.get('chapter')) ? r.get('chapter').toNumber() : r.get('chapter'),
         chapterName: r.get('chapterName'),
       }));
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Publish a lesson (change status from 'draft' to 'published')
+   */
+  async publish(id: string): Promise<LessonMaterial | null> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      const result = await session.run(
+        `MATCH (l:LessonMaterial {id: $id})
+        SET l.status = 'published', l.updatedAt = $updatedAt
+        RETURN l`,
+        { id, updatedAt: new Date().toISOString() }
+      );
+      
+      if (result.records.length === 0 || !result.records[0]) return null;
+      return transformLesson(result.records[0].get('l'));
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Unpublish a lesson (change status from 'published' to 'draft')
+   */
+  async unpublish(id: string): Promise<LessonMaterial | null> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      const result = await session.run(
+        `MATCH (l:LessonMaterial {id: $id})
+        SET l.status = 'draft', l.updatedAt = $updatedAt
+        RETURN l`,
+        { id, updatedAt: new Date().toISOString() }
+      );
+      
+      if (result.records.length === 0 || !result.records[0]) return null;
+      return transformLesson(result.records[0].get('l'));
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * List all published lessons for a course (for student/tutor apps)
+   */
+  async listPublishedByCourse(course: string): Promise<LessonMaterial[]> {
+    const driver = getDriver();
+    const session = driver.session();
+    
+    try {
+      const result = await session.run(
+        `MATCH (l:LessonMaterial {course: $course, status: 'published'})
+        RETURN l
+        ORDER BY l.level, l.chapter, l.lessonNumber`,
+        { course }
+      );
+      
+      return result.records.map(r => transformLesson(r.get('l')));
     } finally {
       await session.close();
     }
