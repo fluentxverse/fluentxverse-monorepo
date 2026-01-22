@@ -49,52 +49,64 @@ interface ChatMessage {
   fileSize?: number;
 }
 
-// Format text with bold, italic, and clickable links
+// Format text with bold, italic, clickable links, and line breaks
 const formatMessageText = (text: string): (string | JSX.Element)[] => {
   const parts: (string | JSX.Element)[] = [];
   
-  // Combined regex for bold (*text*), italic (_text_), and URLs
-  const regex = /(\*[^*]+\*)|(_[^_]+_)|(https?:\/\/[^\s<]+)/g;
-  let lastIndex = 0;
-  let match;
-  let keyIndex = 0;
+  // First, split by newlines to handle line breaks
+  const lines = text.split('\n');
   
-  while ((match = regex.exec(text)) !== null) {
-    // Add text before the match
-    if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+  lines.forEach((line, lineIndex) => {
+    // Combined regex for bold (*text*), italic (_text_), and URLs
+    const regex = /(\*[^*]+\*)|(_[^_]+_)|(https?:\/\/[^\s<]+)/g;
+    let lastIndex = 0;
+    let match;
+    let keyIndex = 0;
+    
+    while ((match = regex.exec(line)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        parts.push(line.slice(lastIndex, match.index));
+      }
+      
+      const matchedText = match[0];
+      
+      if (matchedText.startsWith('*') && matchedText.endsWith('*')) {
+        // Bold text
+        parts.push(<strong key={`bold-${lineIndex}-${keyIndex++}`}>{matchedText.slice(1, -1)}</strong>);
+      } else if (matchedText.startsWith('_') && matchedText.endsWith('_')) {
+        // Italic text
+        parts.push(<em key={`italic-${lineIndex}-${keyIndex++}`}>{matchedText.slice(1, -1)}</em>);
+      } else if (matchedText.startsWith('http')) {
+        // URL - make it clickable
+        parts.push(
+          <a 
+            key={`link-${lineIndex}-${keyIndex++}`} 
+            href={matchedText} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="chat-link"
+          >
+            {matchedText}
+          </a>
+        );
+      }
+      
+      lastIndex = match.index + matchedText.length;
     }
     
-    const matchedText = match[0];
-    
-    if (matchedText.startsWith('*') && matchedText.endsWith('*')) {
-      // Bold text
-      parts.push(<strong key={`bold-${keyIndex++}`}>{matchedText.slice(1, -1)}</strong>);
-    } else if (matchedText.startsWith('_') && matchedText.endsWith('_')) {
-      // Italic text
-      parts.push(<em key={`italic-${keyIndex++}`}>{matchedText.slice(1, -1)}</em>);
-    } else if (matchedText.startsWith('http')) {
-      // URL - make it clickable
-      parts.push(
-        <a 
-          key={`link-${keyIndex++}`} 
-          href={matchedText} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="chat-link"
-        >
-          {matchedText}
-        </a>
-      );
+    // Add remaining text from this line
+    if (lastIndex < line.length) {
+      parts.push(line.slice(lastIndex));
+    } else if (line.length === 0 && lines.length > 1) {
+      // Empty line - just add the break
     }
     
-    lastIndex = match.index + matchedText.length;
-  }
-  
-  // Add remaining text
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
-  }
+    // Add line break after each line except the last
+    if (lineIndex < lines.length - 1) {
+      parts.push(<br key={`br-${lineIndex}`} />);
+    }
+  });
   
   return parts.length > 0 ? parts : [text];
 };
@@ -316,6 +328,404 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const [remoteTyping, setRemoteTyping] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  
+  // Daily Dispatch Notes Widget state
+  const [showNotesWidget, setShowNotesWidget] = useState(false);
+  const [vocabularyItems, setVocabularyItems] = useState<{
+    word: string;
+    definitions: {
+      meaning: string;
+      partOfSpeech: string;
+      koreanNative: string;
+      koreanRomanized: string;
+      vietnameseNative: string;
+      vietnameseRomanized: string;
+    }[];
+    selectedDefinitionIndex: number;
+    isLoading: boolean;
+    showDefinition: boolean;
+    showTranslation: boolean;
+  }[]>([
+    { word: '', definitions: [], selectedDefinitionIndex: 0, isLoading: false, showDefinition: false, showTranslation: false }
+  ]);
+  const [grammarItems, setGrammarItems] = useState<{
+    youSaid: string;
+    correct: string;
+    simpleExplanation: string;
+    technicalExplanation: string;
+    isLoading: boolean;
+    showExplanation: boolean;
+  }[]>([
+    { youSaid: '', correct: '', simpleExplanation: '', technicalExplanation: '', isLoading: false, showExplanation: false }
+  ]);
+  const [pronunciationItems, setPronunciationItems] = useState<{
+    word: string;
+    phonetic: string;
+    isLoading: boolean;
+    showPhonetic: boolean;
+  }[]>([
+    { word: '', phonetic: '', isLoading: false, showPhonetic: false }
+  ]);
+  
+  // Vocabulary item handlers
+  const addVocabularyItem = () => {
+    setVocabularyItems(prev => [...prev, { word: '', definitions: [], selectedDefinitionIndex: 0, isLoading: false, showDefinition: false, showTranslation: false }]);
+  };
+  
+  const updateVocabularyWord = (index: number, value: string) => {
+    setVocabularyItems(prev => {
+      const updated = [...prev];
+      const item = updated[index];
+      // If word changed and there were definitions, reset them
+      if (item.definitions.length > 0 && value !== item.word) {
+        updated[index] = {
+          ...item,
+          word: value,
+          definitions: [],
+          selectedDefinitionIndex: 0,
+          showDefinition: false,
+          showTranslation: false
+        };
+      } else {
+        updated[index] = { ...item, word: value };
+      }
+      return updated;
+    });
+  };
+  
+  const selectDefinition = (itemIndex: number, defIndex: number) => {
+    setVocabularyItems(prev => {
+      const updated = [...prev];
+      updated[itemIndex] = { ...updated[itemIndex], selectedDefinitionIndex: defIndex };
+      return updated;
+    });
+  };
+  
+  const removeVocabularyItem = (index: number) => {
+    setVocabularyItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleVocabularyTranslation = (index: number) => {
+    setVocabularyItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], showTranslation: !updated[index].showTranslation };
+      return updated;
+    });
+  };
+
+  const toggleVocabularyDefinition = (index: number) => {
+    setVocabularyItems(prev => {
+      const updated = [...prev];
+      // When hiding definition, also hide translation
+      const newShowDef = !updated[index].showDefinition;
+      updated[index] = { 
+        ...updated[index], 
+        showDefinition: newShowDef,
+        showTranslation: newShowDef ? updated[index].showTranslation : false
+      };
+      return updated;
+    });
+  };
+
+  // Get vocabulary definition from AI
+  const getVocabularyDefinition = async (index: number) => {
+    const item = vocabularyItems[index];
+    if (!item.word.trim()) return;
+
+    // Set loading state
+    setVocabularyItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], isLoading: true };
+      return updated;
+    });
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/vocabulary-definition`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ word: item.word })
+      });
+
+      if (!response.ok) throw new Error('Failed to get definition');
+
+      const data = await response.json();
+      
+      console.log('Vocabulary API response:', data);
+      
+      setVocabularyItems(prev => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          definitions: data.definitions || [],
+          selectedDefinitionIndex: 0,
+          isLoading: false,
+          showDefinition: true
+        };
+        return updated;
+      });
+    } catch (error) {
+      console.error('Vocabulary definition failed:', error);
+      toast.error('Failed to get vocabulary definition');
+      setVocabularyItems(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], isLoading: false };
+        return updated;
+      });
+    }
+  };
+
+  // Send vocabulary to chat
+  const sendVocabularyToChat = (index: number) => {
+    const item = vocabularyItems[index];
+    const selectedDef = item.definitions[item.selectedDefinitionIndex];
+    if (!item.word.trim() || !selectedDef?.meaning || !currentSessionId) return;
+    
+    const partOfSpeech = selectedDef.partOfSpeech ? ` (${selectedDef.partOfSpeech})` : '';
+    const formattedMessage = `${item.word}${partOfSpeech} - ${selectedDef.meaning}`;
+    
+    try {
+      const socket = getSocket();
+      socket.emit('chat:send', {
+        sessionId: currentSessionId,
+        text: formattedMessage
+      });
+      // Hide definition after sending
+      setVocabularyItems(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], showDefinition: false, showTranslation: false };
+        return updated;
+      });
+      toast.success('Vocabulary sent to chat');
+    } catch (error) {
+      console.error('Failed to send vocabulary to chat:', error);
+      toast.error('Failed to send to chat');
+    }
+  };
+
+  // Grammar item handlers
+  const addGrammarItem = () => {
+    setGrammarItems(prev => [...prev, { youSaid: '', correct: '', simpleExplanation: '', technicalExplanation: '', isLoading: false, showExplanation: false }]);
+  };
+
+  const updateGrammarItem = (index: number, field: 'youSaid' | 'correct' | 'simpleExplanation' | 'technicalExplanation' | 'showExplanation', value: string | boolean) => {
+    setGrammarItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  // Update "You Said" and reset correction so user can re-check
+  const updateYouSaid = (index: number, value: string) => {
+    setGrammarItems(prev => {
+      const updated = [...prev];
+      const item = updated[index];
+      // If the text changed and there was a previous correction, reset it
+      if (item.correct && value !== item.youSaid) {
+        updated[index] = {
+          ...item,
+          youSaid: value,
+          correct: '',
+          simpleExplanation: '',
+          technicalExplanation: '',
+          showExplanation: false
+        };
+      } else {
+        updated[index] = { ...item, youSaid: value };
+      }
+      return updated;
+    });
+  };
+
+  const removeGrammarItem = (index: number) => {
+    setGrammarItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleGrammarExplanation = (index: number) => {
+    setGrammarItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], showExplanation: !updated[index].showExplanation };
+      return updated;
+    });
+  };
+
+  // Send grammar correction to chat
+  const sendGrammarToChat = (index: number) => {
+    const item = grammarItems[index];
+    if (!item.youSaid.trim() || !item.correct.trim() || !currentSessionId) return;
+    
+    const formattedMessage = `You said: ${item.youSaid}\nCorrect: ${item.correct}`;
+    
+    try {
+      const socket = getSocket();
+      socket.emit('chat:send', {
+        sessionId: currentSessionId,
+        text: formattedMessage
+      });
+      toast.success('Grammar correction sent to chat');
+    } catch (error) {
+      console.error('Failed to send grammar to chat:', error);
+      toast.error('Failed to send to chat');
+    }
+  };
+
+  // Get grammar correction from OpenAI
+  const getGrammarCorrection = async (index: number) => {
+    const item = grammarItems[index];
+    if (!item.youSaid.trim()) return;
+
+    // Set loading state
+    setGrammarItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], isLoading: true };
+      return updated;
+    });
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/grammar-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ text: item.youSaid })
+      });
+
+      if (!response.ok) throw new Error('Failed to get correction');
+
+      const data = await response.json();
+      
+      console.log('Grammar check API response:', data);
+      
+      setGrammarItems(prev => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          correct: data.corrected || item.youSaid,
+          simpleExplanation: data.simpleExplanation || 'No correction needed.',
+          technicalExplanation: data.technicalExplanation || 'No correction needed.',
+          isLoading: false
+        };
+        return updated;
+      });
+    } catch (error) {
+      console.error('Grammar check failed:', error);
+      toast.error('Failed to get grammar correction');
+      setGrammarItems(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], isLoading: false };
+        return updated;
+      });
+    }
+  };
+  
+  // Pronunciation item handlers
+  const addPronunciationItem = () => {
+    setPronunciationItems(prev => [...prev, { word: '', phonetic: '', isLoading: false, showPhonetic: false }]);
+  };
+
+  const updatePronunciationWord = (index: number, value: string) => {
+    setPronunciationItems(prev => {
+      const updated = [...prev];
+      const item = updated[index];
+      // If word changed and there was phonetic, reset it
+      if (item.phonetic && value !== item.word) {
+        updated[index] = {
+          ...item,
+          word: value,
+          phonetic: '',
+          showPhonetic: false
+        };
+      } else {
+        updated[index] = { ...item, word: value };
+      }
+      return updated;
+    });
+  };
+
+  const removePronunciationItem = (index: number) => {
+    setPronunciationItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const togglePronunciationPhonetic = (index: number) => {
+    setPronunciationItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], showPhonetic: !updated[index].showPhonetic };
+      return updated;
+    });
+  };
+
+  // Get pronunciation from AI
+  const getPronunciationFromAI = async (index: number) => {
+    const item = pronunciationItems[index];
+    if (!item.word.trim()) return;
+
+    // Set loading state
+    setPronunciationItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], isLoading: true };
+      return updated;
+    });
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/ai/pronunciation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ word: item.word })
+      });
+
+      if (!response.ok) throw new Error('Failed to get pronunciation');
+
+      const data = await response.json();
+      
+      console.log('Pronunciation API response:', data);
+      
+      setPronunciationItems(prev => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          phonetic: data.phonetic || '',
+          isLoading: false,
+          showPhonetic: true
+        };
+        return updated;
+      });
+    } catch (error) {
+      console.error('Pronunciation failed:', error);
+      toast.error('Failed to get pronunciation');
+      setPronunciationItems(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], isLoading: false };
+        return updated;
+      });
+    }
+  };
+
+  // Send pronunciation to chat
+  const sendPronunciationToChat = (index: number) => {
+    const item = pronunciationItems[index];
+    if (!item.word.trim() || !item.phonetic || !currentSessionId) return;
+    
+    const formattedMessage = `${item.word} - [${item.phonetic}]`;
+    
+    try {
+      const socket = getSocket();
+      socket.emit('chat:send', {
+        sessionId: currentSessionId,
+        text: formattedMessage
+      });
+      // Hide phonetic after sending
+      setPronunciationItems(prev => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], showPhonetic: false };
+        return updated;
+      });
+      toast.success('Pronunciation sent to chat');
+    } catch (error) {
+      console.error('Failed to send pronunciation to chat:', error);
+      toast.error('Failed to send to chat');
+    }
+  };
   
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -1159,18 +1569,23 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
               </svg>
             </button>
-            <input
-              type="text"
-              placeholder="Type a message... (*bold* _italic_)"
+            <textarea
+              placeholder="Type a message... (*bold* _italic_) | Shift+Enter for new line"
               value={message}
               onChange={(e) => {
-                const newValue = (e.target as HTMLInputElement).value;
+                const newValue = (e.target as HTMLTextAreaElement).value;
                 setMessage(newValue);
                 // Only show typing if there's actual text
                 handleTyping(newValue.trim().length > 0);
               }}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               onBlur={() => handleTyping(false)}
+              rows={1}
             />
             <button className="send-btn" onClick={handleSendMessage} disabled={isUploading}>
               {isUploading ? (
@@ -1617,6 +2032,417 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           )}
         </div>
       </div>
+
+      {/* Daily Dispatch Notes Floating Button - only shows when viewing Daily Dispatch article */}
+      {viewingDispatchArticle && (
+        <button 
+          className={`dispatch-notes-fab dispatch-notes-fab--daily-dispatch ${showNotesWidget ? 'active' : ''}`}
+          onClick={() => setShowNotesWidget(!showNotesWidget)}
+          title="Daily Dispatch Notes"
+        >
+          <i className={showNotesWidget ? 'fi fi-sr-cross-small' : 'fi fi-sr-pencil'} />
+        </button>
+      )}
+
+      {/* Daily Dispatch Notes Widget */}
+      {viewingDispatchArticle && showNotesWidget && (
+        <div className="dispatch-notes-widget dispatch-notes-widget--daily-dispatch">
+          <div className="dispatch-notes-header">
+            <h3>
+              <i className="ri-newspaper-line" />
+              Daily Dispatch Notes
+            </h3>
+            <button 
+              className="dispatch-notes-close"
+              onClick={() => setShowNotesWidget(false)}
+            >
+              <i className="fi fi-sr-cross" />
+            </button>
+          </div>
+          
+          <div className="dispatch-notes-content">
+            <div className="dispatch-notes-section">
+              <label className="dispatch-notes-label">
+                <i className="fi fi-sr-book-alt" />
+                VOCABULARY
+              </label>
+              <div className="vocabulary-items">
+                {vocabularyItems.map((item, index) => (
+                  <div className="vocabulary-row" key={index}>
+                    {vocabularyItems.length > 1 && (
+                      <button 
+                        className="vocabulary-remove-btn"
+                        onClick={() => removeVocabularyItem(index)}
+                        title="Remove"
+                      >
+                        <i className="fi fi-sr-cross-small" />
+                      </button>
+                    )}
+                    <div className="vocabulary-inputs">
+                      <div className="vocabulary-field">
+                        <span className="vocabulary-field-label">Word/Phrase:</span>
+                        <div className="vocabulary-input-row">
+                          <input
+                            type="text"
+                            className="vocabulary-word-input"
+                            placeholder="Enter word or phrase..."
+                            value={item.word}
+                            onChange={(e) => updateVocabularyWord(index, (e.target as HTMLInputElement).value)}
+                            onBlur={() => item.word.trim() && !item.definitions.length && getVocabularyDefinition(index)}
+                          />
+                          <button
+                            className={`vocabulary-check-btn ${item.isLoading ? 'loading' : ''}`}
+                            onClick={() => item.word.trim() && getVocabularyDefinition(index)}
+                            disabled={item.isLoading || !item.word.trim()}
+                            title="Get definition"
+                          >
+                            <i className={item.isLoading ? "fi fi-sr-spinner" : "fi fi-sr-refresh"} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="vocabulary-field">
+                        <span className="vocabulary-field-label">Definition:</span>
+                        <div className="vocabulary-definition-row">
+                          {item.isLoading ? (
+                            <div className="vocabulary-loading">
+                              <i className="fi fi-sr-spinner" />
+                              Getting definition...
+                            </div>
+                          ) : item.definitions.length > 0 ? (
+                            <>
+                              {item.showDefinition ? (
+                                <div className="vocabulary-definition-content">
+                                  {item.definitions.length > 1 && (
+                                    <div className="vocabulary-definition-tabs">
+                                      {item.definitions.map((def, defIdx) => (
+                                        <button
+                                          key={defIdx}
+                                          className={`vocabulary-def-tab ${item.selectedDefinitionIndex === defIdx ? 'active' : ''}`}
+                                          onClick={() => selectDefinition(index, defIdx)}
+                                          title={def.meaning}
+                                        >
+                                          {defIdx + 1}. {def.partOfSpeech || 'def'}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <div className="vocabulary-definition-display">
+                                    {item.definitions[item.selectedDefinitionIndex]?.partOfSpeech && (
+                                      <span className="vocabulary-part-of-speech">
+                                        ({item.definitions[item.selectedDefinitionIndex].partOfSpeech})
+                                      </span>
+                                    )}
+                                    <span className="vocabulary-meaning">
+                                      {item.definitions[item.selectedDefinitionIndex]?.meaning}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="vocabulary-definition-hidden">
+                                  <span>Definition hidden</span>
+                                </div>
+                              )}
+                              <button 
+                                className={`vocabulary-toggle-btn ${item.showDefinition ? 'active' : ''}`}
+                                onClick={() => toggleVocabularyDefinition(index)}
+                                title={item.showDefinition ? "Hide definition" : "Show definition"}
+                              >
+                                <i className={item.showDefinition ? "fi fi-sr-eye" : "fi fi-sr-eye-crossed"} />
+                              </button>
+                              {item.showDefinition && item.definitions[item.selectedDefinitionIndex]?.koreanNative && (
+                                <button 
+                                  className={`vocabulary-info-btn ${item.showTranslation ? 'active' : ''}`}
+                                  onClick={() => toggleVocabularyTranslation(index)}
+                                  title="Show translations"
+                                >
+                                  <i className="fi fi-sr-info" />
+                                </button>
+                              )}
+                              {item.word.trim() && item.definitions[item.selectedDefinitionIndex]?.meaning && (
+                                <button
+                                  className="vocabulary-send-btn"
+                                  onClick={() => sendVocabularyToChat(index)}
+                                  title="Send to chat"
+                                >
+                                  <i className="fi fi-sr-paper-plane" />
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <div className="vocabulary-definition-placeholder">
+                              Enter a word and click refresh to get definition
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {item.showTranslation && item.definitions[item.selectedDefinitionIndex] && (
+                        <div className="vocabulary-translations">
+                          {item.definitions[item.selectedDefinitionIndex].koreanNative && (
+                            <div className="vocabulary-translation-item korean">
+                              <span className="translation-flag">🇰🇷</span>
+                              <div className="translation-content">
+                                <span className="translation-native">{item.definitions[item.selectedDefinitionIndex].koreanNative}</span>
+                                <span className="translation-romanized">{item.definitions[item.selectedDefinitionIndex].koreanRomanized}</span>
+                              </div>
+                            </div>
+                          )}
+                          {item.definitions[item.selectedDefinitionIndex].vietnameseNative && (
+                            <div className="vocabulary-translation-item vietnamese">
+                              <span className="translation-flag">🇻🇳</span>
+                              <div className="translation-content">
+                                <span className="translation-native">{item.definitions[item.selectedDefinitionIndex].vietnameseNative}</span>
+                                <span className="translation-romanized">{item.definitions[item.selectedDefinitionIndex].vietnameseRomanized}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="vocabulary-add-btn" onClick={addVocabularyItem}>
+                <i className="fi fi-sr-plus" />
+                Add Word
+              </button>
+            </div>
+            
+            <div className="dispatch-notes-section">
+              <label className="dispatch-notes-label">
+                <i className="fi fi-sr-text" />
+                GRAMMAR
+              </label>
+              <div className="grammar-items">
+                {grammarItems.map((item, index) => (
+                  <div className="grammar-row" key={index}>
+                    {grammarItems.length > 1 && (
+                      <button 
+                        className="grammar-remove-btn"
+                        onClick={() => removeGrammarItem(index)}
+                        title="Remove"
+                      >
+                        <i className="fi fi-sr-cross-small" />
+                      </button>
+                    )}
+                    <div className="grammar-inputs">
+                      <div className="grammar-field">
+                        <span className="grammar-field-label">You said:</span>
+                        <div className="grammar-input-row">
+                          <textarea
+                            className="grammar-input"
+                            placeholder="Enter incorrect sentence..."
+                            value={item.youSaid}
+                            onChange={(e) => updateYouSaid(index, (e.target as HTMLTextAreaElement).value)}
+                            onBlur={() => item.youSaid.trim() && !item.correct && getGrammarCorrection(index)}
+                            rows={1}
+                          />
+                          <button
+                            className={`grammar-check-btn ${item.isLoading ? 'loading' : ''}`}
+                            onClick={() => item.youSaid.trim() && getGrammarCorrection(index)}
+                            disabled={item.isLoading || !item.youSaid.trim()}
+                            title="Check grammar"
+                          >
+                            <i className={item.isLoading ? "fi fi-sr-spinner" : "fi fi-sr-refresh"} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grammar-field">
+                        <span className="grammar-field-label">Correct:</span>
+                        <div className="grammar-correct-row">
+                          {item.isLoading ? (
+                            <div className="grammar-loading">
+                              <i className="fi fi-sr-spinner" />
+                              Checking...
+                            </div>
+                          ) : (
+                            <>
+                              <textarea
+                                className="grammar-input grammar-input-correct"
+                                placeholder="Corrected sentence..."
+                                value={item.correct}
+                                onChange={(e) => updateGrammarItem(index, 'correct', (e.target as HTMLTextAreaElement).value)}
+                                rows={1}
+                              />
+                              {(item.simpleExplanation || item.technicalExplanation) && (
+                                <button 
+                                  className={`grammar-info-btn ${item.showExplanation ? 'active' : ''}`}
+                                  onClick={() => toggleGrammarExplanation(index)}
+                                  title="Show explanation"
+                                >
+                                  <i className="fi fi-sr-info" />
+                                </button>
+                              )}
+                              {item.youSaid.trim() && item.correct.trim() && (
+                                <button
+                                  className="grammar-send-btn"
+                                  onClick={() => sendGrammarToChat(index)}
+                                  title="Send to chat"
+                                >
+                                  <i className="fi fi-sr-paper-plane" />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {item.showExplanation && (item.simpleExplanation || item.technicalExplanation) && (
+                        <div className="grammar-explanation">
+                          <div className="grammar-explanation-simple">
+                            <i className="fi fi-sr-lightbulb-on" />
+                            {item.simpleExplanation}
+                          </div>
+                          <div className="grammar-explanation-technical">
+                            <i className="fi fi-sr-book-alt" />
+                            {item.technicalExplanation}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="grammar-add-btn" onClick={addGrammarItem}>
+                <i className="fi fi-sr-plus" />
+                Add Grammar Note
+              </button>
+            </div>
+            
+            <div className="dispatch-notes-section">
+              <label className="dispatch-notes-label">
+                <i className="fi fi-sr-microphone" />
+                PRONUNCIATION
+              </label>
+              <div className="pronunciation-items">
+                {pronunciationItems.map((item, index) => (
+                  <div className="pronunciation-row" key={index}>
+                    {pronunciationItems.length > 1 && (
+                      <button 
+                        className="pronunciation-remove-btn"
+                        onClick={() => removePronunciationItem(index)}
+                        title="Remove"
+                      >
+                        <i className="fi fi-sr-cross-small" />
+                      </button>
+                    )}
+                    <div className="pronunciation-inputs">
+                      <div className="pronunciation-field">
+                        <span className="pronunciation-field-label">Word:</span>
+                        <div className="pronunciation-input-row">
+                          <input
+                            type="text"
+                            className="pronunciation-word-input"
+                            placeholder="Enter word..."
+                            value={item.word}
+                            onChange={(e) => updatePronunciationWord(index, (e.target as HTMLInputElement).value)}
+                            onBlur={() => item.word.trim() && !item.phonetic && getPronunciationFromAI(index)}
+                          />
+                          <button
+                            className={`pronunciation-check-btn ${item.isLoading ? 'loading' : ''}`}
+                            onClick={() => item.word.trim() && getPronunciationFromAI(index)}
+                            disabled={item.isLoading || !item.word.trim()}
+                            title="Get pronunciation"
+                          >
+                            <i className={item.isLoading ? "fi fi-sr-spinner" : "fi fi-sr-refresh"} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="pronunciation-field">
+                        <span className="pronunciation-field-label">Phonetic:</span>
+                        <div className="pronunciation-phonetic-row">
+                          {item.isLoading ? (
+                            <div className="pronunciation-loading">
+                              <i className="fi fi-sr-spinner" />
+                              Getting pronunciation...
+                            </div>
+                          ) : item.phonetic ? (
+                            <>
+                              {item.showPhonetic ? (
+                                <div className="pronunciation-phonetic-content">
+                                  <div className="pronunciation-display">
+                                    <span className="pronunciation-phonetic-display">{item.phonetic}</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="pronunciation-phonetic-hidden">
+                                  <span>Pronunciation hidden</span>
+                                </div>
+                              )}
+                              <button 
+                                className={`pronunciation-toggle-btn ${item.showPhonetic ? 'active' : ''}`}
+                                onClick={() => togglePronunciationPhonetic(index)}
+                                title={item.showPhonetic ? "Hide pronunciation" : "Show pronunciation"}
+                              >
+                                <i className={item.showPhonetic ? "fi fi-sr-eye" : "fi fi-sr-eye-crossed"} />
+                              </button>
+                              {item.word.trim() && item.phonetic && (
+                                <button
+                                  className="pronunciation-send-btn"
+                                  onClick={() => sendPronunciationToChat(index)}
+                                  title="Send to chat"
+                                >
+                                  <i className="fi fi-sr-paper-plane" />
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <div className="pronunciation-phonetic-placeholder">
+                              Enter a word and click refresh to get pronunciation
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="pronunciation-add-btn" onClick={addPronunciationItem}>
+                <i className="fi fi-sr-plus" />
+                Add Pronunciation Note
+              </button>
+            </div>
+          </div>
+          
+          <div className="dispatch-notes-footer">
+            <button 
+              className="dispatch-notes-clear"
+              onClick={() => {
+                setVocabularyItems([{ word: '', definitions: [], selectedDefinitionIndex: 0, isLoading: false, showDefinition: false, showTranslation: false }]);
+                setGrammarItems([{ youSaid: '', correct: '', simpleExplanation: '', technicalExplanation: '', isLoading: false, showExplanation: false }]);
+                setPronunciationItems([{ word: '', phonetic: '', isLoading: false, showPhonetic: false }]);
+              }}
+            >
+              <i className="fi fi-sr-trash" />
+              Clear All
+            </button>
+            <button 
+              className="dispatch-notes-copy"
+              onClick={() => {
+                const vocabText = vocabularyItems
+                  .filter(item => item.word.trim() || item.definitions.length > 0)
+                  .map(item => {
+                    const def = item.definitions[item.selectedDefinitionIndex];
+                    return `• ${item.word}: ${def?.meaning || '(no definition)'}`;
+                  })
+                  .join('\n');
+                const grammarText = grammarItems
+                  .filter(item => item.youSaid.trim() || item.correct.trim())
+                  .map(item => `• "${item.youSaid}" → "${item.correct}"${item.simpleExplanation ? ` (${item.simpleExplanation})` : ''}`)
+                  .join('\n');
+                const pronunciationText = pronunciationItems
+                  .filter(item => item.word.trim() || item.phonetic)
+                  .map(item => `• ${item.word} - [${item.phonetic}]`)
+                  .join('\n');
+                const notes = `VOCABULARY:\n${vocabText || '(none)'}\n\nGRAMMAR:\n${grammarText || '(none)'}\n\nPRONUNCIATION:\n${pronunciationText || '(none)'}`;
+                navigator.clipboard.writeText(notes);
+                toast.success('Notes copied to clipboard!');
+              }}
+            >
+              <i className="fi fi-sr-clipboard" />
+              Copy Notes
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

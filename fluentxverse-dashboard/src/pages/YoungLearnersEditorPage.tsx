@@ -416,9 +416,6 @@ export default function YoungLearnersEditorPage() {
                                         <span className="yle-lesson-mascot">{lesson.mascot}</span>
                                         <span className="yle-lesson-number">L{lesson.lessonNumber}</span>
                                         <span className="yle-lesson-title">{lesson.lessonTitle.replace(/^Lesson \d+:\s*/, '')}</span>
-                                        <span className={`yle-theme-badge yle-theme-${lesson.theme}`}>
-                                          {THEMES.find(t => t.value === lesson.theme)?.icon}
-                                        </span>
                                       </div>
                                       <div className="yle-lesson-actions">
                                         <button 

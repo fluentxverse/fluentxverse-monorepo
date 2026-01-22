@@ -29,6 +29,7 @@ import Debug from './routes/debug.route';
 import { lessonMaterialRoutes } from './routes/lessonMaterial.route';
 import { dispatchRoutes } from './routes/dispatch.route';
 import { youngLearnersRoute } from './routes/youngLearners.route';
+import { aiRoute } from './routes/ai.route';
 import { logger, generateRequestId } from './utils/logger';
 
 // Initialize databases (async)
@@ -306,6 +307,7 @@ const app = new Elysia({
   .use(lessonMaterialRoutes)
   .use(dispatchRoutes)
   .use(youngLearnersRoute)
+  .use(aiRoute)
   .use(categoryRoute)
   .use(mediaRoute)
   .use(analyticsRoute)

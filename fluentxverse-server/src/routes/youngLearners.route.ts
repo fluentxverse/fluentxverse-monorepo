@@ -266,10 +266,11 @@ export const youngLearnersRoute = new Elysia({ prefix: '/young-learners' })
       }
       
       try {
+        const adminName = adminPayload.firstName || adminPayload.givenName || adminPayload.email || 'Admin';
         const input: CreateYoungLearnersInput = {
           ...body,
-          createdBy: adminPayload.id,
-          createdByName: adminPayload.name,
+          createdBy: adminPayload.userId,
+          createdByName: adminName,
         };
         
         const lesson = await youngLearnersService.create(input);
@@ -411,10 +412,11 @@ export const youngLearnersRoute = new Elysia({ prefix: '/young-learners' })
       }
       
       try {
+        const adminName = adminPayload.firstName || adminPayload.givenName || adminPayload.email || 'Admin';
         const lesson = await youngLearnersService.duplicate(
           params.id,
-          adminPayload.id,
-          adminPayload.name
+          adminPayload.userId,
+          adminName
         );
         if (!lesson) {
           set.status = 404;

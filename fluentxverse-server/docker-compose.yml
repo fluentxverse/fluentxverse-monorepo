@@ -41,6 +41,8 @@ services:
       - THIRDWEB_VAULT_ADMIN_KEY=${THIRDWEB_VAULT_ADMIN_KEY}
       # OpenAI
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # LanguageTool
+      - LANGUAGETOOL_URL=http://fluentxverse-languagetool:8010
       # Ticket Contract (optional)
       - TICKET_CONTRACT_ADDRESS=${TICKET_CONTRACT_ADDRESS:-0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db}
       - TICKET_CHAIN_ID=${TICKET_CHAIN_ID:-421614}
@@ -185,6 +187,32 @@ services:
       start_period: 30s
 
   # ===========================================
+  # LANGUAGETOOL - Grammar & Spell Checker
+  # ===========================================
+  fluentxverse-languagetool:
+    image: erikvl87/languagetool:latest
+    container_name: fluentxverse-languagetool
+    restart: unless-stopped
+    ports:
+      - "${LANGUAGETOOL_PORT:-8010}:8010"
+    environment:
+      - Java_Xms=512m
+      - Java_Xmx=2g
+      - langtool_languageModel=/ngrams
+      - langtool_fasttextModel=/fasttext/lid.176.bin
+    volumes:
+      - languagetool-ngrams:/ngrams
+      - languagetool-fasttext:/fasttext
+    networks:
+      - fluentxverse-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8010/v2/languages || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ===========================================
   # FRONTEND APPS
   # ===========================================
   fluentxverse-student:
@@ -242,6 +270,8 @@ volumes:
   seaweed-master-data:
   seaweed-volume-data:
   seaweed-filer-data:
+  languagetool-ngrams:
+  languagetool-fasttext:
 
 networks:
   fluentxverse-network:
