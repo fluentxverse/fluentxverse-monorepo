@@ -12,8 +12,12 @@ import {
 } from '../api/lessonMaterial.api';
 import { toast } from '../Components/Toast/Toast';
 import { TutorGuide, type UniversalTutorStep, type TutorGuideFeatures } from '../components/TutorGuideStep';
+import { AIContentGenerator } from '../components/AIContentGenerator';
 import './ConversationalSkillsVisualEditor.css';
 import '../components/TutorGuideStep.css';
+
+// Autosave constants
+const AUTOSAVE_DELAY_MS = 5000; // 5 seconds
 
 // ============================================================================
 // SHARED TYPES
@@ -1708,6 +1712,9 @@ export default function ConversationalSkillsVisualEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'pending' | 'saved'>('idle');
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasUnsavedChangesRef = useRef(false);
 
   // Editable state - styling
   const [backgroundImage, setBackgroundImage] = useState('');
@@ -1823,14 +1830,64 @@ export default function ConversationalSkillsVisualEditor() {
         exerciseData,
       });
       setLesson(updated);
-      toast.success('Changes saved!');
+      setAutosaveStatus('saved');
+      hasUnsavedChangesRef.current = false;
+      
+      // Only show toast if it's a manual save (when not triggered by autosave)
+      // Autosave will show a subtle indicator instead
+      if (autosaveStatus !== 'pending') {
+        toast.success('Changes saved!');
+      }
+      
+      // Clear saved status after 2 seconds
+      setTimeout(() => {
+        setAutosaveStatus('idle');
+      }, 2000);
     } catch (err) {
       console.error('Failed to save:', err);
-      toast.error('Failed to save changes');
+      if (autosaveStatus !== 'pending') {
+        toast.error('Failed to save changes');
+      }
+      setAutosaveStatus('idle');
     } finally {
       setSaving(false);
     }
   };
+
+  // Trigger autosave with debounce
+  const triggerAutosave = () => {
+    hasUnsavedChangesRef.current = true;
+    setAutosaveStatus('pending');
+    
+    // Clear existing timer
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+    }
+    
+    // Set new timer
+    autosaveTimerRef.current = setTimeout(() => {
+      if (hasUnsavedChangesRef.current) {
+        handleSave();
+      }
+    }, AUTOSAVE_DELAY_MS);
+  };
+
+  // Autosave effect - watches for changes in all editable fields
+  useEffect(() => {
+    triggerAutosave();
+  }, [
+    backgroundImage,
+    overlayColor,
+    chapterName,
+    lessonName,
+    goalTextEn,
+    goalTextJp,
+    introductionData,
+    learnData,
+    stepBData,
+    applyData,
+    exerciseData,
+  ]);
 
   const handleImageUpload = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
@@ -1915,6 +1972,18 @@ export default function ConversationalSkillsVisualEditor() {
 
   return (
     <div className="csve-fullpage">
+      {/* AI Content Generator Widget */}
+      <AIContentGenerator
+        topic={lessonName}
+        skillLevel={lesson.levelBadge}
+        skill={lesson.skill}
+        currentIntroductionData={introductionData}
+        onGenerateIntroduction={setIntroductionData}
+        level={lesson.level}
+        chapter={lesson.chapter}
+        lessonNumber={lesson.lessonNumber}
+      />
+
       {/* Editor Toolbar - Fixed at top */}
       <div className="csve-toolbar">
         <div className="csve-toolbar-left">
@@ -1943,9 +2012,16 @@ export default function ConversationalSkillsVisualEditor() {
             className="csve-toolbar-btn csve-save-btn" 
             onClick={handleSave}
             disabled={saving}
+            title={autosaveStatus === 'pending' ? 'Autosaving...' : autosaveStatus === 'saved' ? 'Autosaved!' : 'Save or wait 5 seconds for autosave'}
           >
-            <i className="ri-save-line" />
-            <span>{saving ? 'Saving...' : 'Save'}</span>
+            <i className={`${
+              autosaveStatus === 'saved' ? 'ri-check-line' : 
+              autosaveStatus === 'pending' ? 'ri-loader-4-line' : 
+              'ri-save-line'
+            }`} />
+            <span>
+              {saving ? 'Saving...' : autosaveStatus === 'pending' ? 'Autosaving...' : autosaveStatus === 'saved' ? 'Saved!' : 'Save'}
+            </span>
           </button>
         </div>
       </div>
@@ -1971,17 +2047,9 @@ export default function ConversationalSkillsVisualEditor() {
         >
           <div className="csve-hero-overlay" style={{ backgroundColor: overlayColor }} />
           <div className="csve-hero-content">
-            {/* Lesson Label - Chapter name is editable */}
+            {/* Lesson Label */}
             <p className="csve-lesson-label">
-              Lesson {lesson.lessonNumber}:{' '}
-              <EditableText
-                value={chapterName}
-                onChange={setChapterName}
-                isEditing={editingField === 'chapterName'}
-                onStartEdit={() => setEditingField('chapterName')}
-                onEndEdit={() => setEditingField(null)}
-                placeholder="Chapter Name"
-              />
+              Lesson {lesson.lessonNumber}
             </p>
             
             {/* Lesson Name - Editable */}

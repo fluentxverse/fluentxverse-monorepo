@@ -62,7 +62,7 @@ class AuthService {
                 email: $email,
                 password: $encrypted,
 
-                tier: 0,
+                tier: 2,
 
                 firstName: $firstName,
                 middleName: $middleName,

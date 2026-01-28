@@ -165,7 +165,7 @@
   color: #c7d2fe;
 }
 
-/* Save button - Accent */
+/* Save button - Accent with autosave animations */
 .csve-save-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
@@ -173,6 +173,7 @@
   font-weight: 600;
   padding: 0.5rem 1.25rem;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
 }
 
 .csve-save-btn:hover {
@@ -187,6 +188,37 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Autosave pending state - pulsing animation */
+.csve-save-btn:has(i.ri-loader-4-line) {
+  animation: csve-autosave-pending 0.6s ease-in-out infinite;
+}
+
+.csve-save-btn i.ri-loader-4-line {
+  animation: csve-spin 1s linear infinite;
+}
+
+/* Autosave saved state - brief success animation */
+.csve-save-btn:has(i.ri-check-line) {
+  animation: csve-autosave-saved 0.5s ease-out;
+}
+
+@keyframes csve-autosave-pending {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes csve-autosave-saved {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .csve-toolbar-divider {

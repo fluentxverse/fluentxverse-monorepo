@@ -657,7 +657,7 @@ export default function ConversationalSkillsPreview() {
       >
         <div className="csp-hero-overlay" style={{ backgroundColor: overlayColor }} />
         <div className="csp-hero-content">
-          <p className="csp-lesson-label">Lesson {lesson.lessonNumber}: {chapterName}</p>
+          <p className="csp-lesson-label">Lesson {lesson.lessonNumber}</p>
           <h1 className="csp-lesson-name">{lessonName}</h1>
           
           <div className="csp-goal-wrapper">

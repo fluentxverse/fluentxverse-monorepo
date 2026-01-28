@@ -67,7 +67,7 @@ Input: "She go to school every day"
   "technicalExplanation": "Subject-verb agreement: third person singular needs 's'.",
   "hasErrors": true
 }`,
-  model: "openai/gpt-4o-mini",
+  model: "openai/gpt-5.1",
 });
 
 // ============================================================================
@@ -208,7 +208,7 @@ Input: "delicious"
     }
   ]
 }`,
-  model: "openai/gpt-4o-mini",
+  model: "openai/gpt-5.1",
 });
 
 // ============================================================================
@@ -340,7 +340,7 @@ Input: "determine"
   "word": "determine",
   "phonetic": "dih-TUR-min"
 }`,
-  model: "openai/gpt-4o-mini",
+  model: "openai/gpt-5.1",
 });
 
 // ============================================================================
@@ -392,6 +392,296 @@ export const getPronunciation = async (word: string): Promise<PronunciationResul
     }
   } catch (error) {
     console.error('Pronunciation error:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// AI AGENT FOR GENERATING INTRODUCTION CONTENT
+// ============================================================================
+
+export interface GenerateIntroductionResult {
+  introTexts: {
+    language: string;
+    text: string;
+  }[];
+  lessonIssue: {
+    title: string;
+    points: string[];
+  };
+  lessonGoalDuration: string;
+  lessonGoalSteps: {
+    instruction: string;
+    script?: string | null;
+    question?: string | null;
+  }[];
+}
+
+const introductionGeneratorAgent = new Agent({
+  name: "Introduction Question Generator",
+  model: "openai/gpt-5.1",
+  instructions: `You are an expert ESL lesson designer creating engaging opening questions for language lessons.
+  
+Your task is to generate ONLY a single, SHORT question for Step 4 ("Ask the question below") in the Tutor Guide of an Introduction section.
+
+CRITICAL REQUIREMENTS:
+- Keep the question VERY SHORT (1 simple sentence, max 10-15 words)
+- Use SIMPLE vocabulary appropriate for the level
+- NEVER use emoji or special symbols
+- NO complex sentence structures
+- Focus on ENGLISH LEARNING and the lesson topic
+- DO NOT ask students about their native language
+- DO NOT ask for translations or comparisons with other languages
+- Make it directly relevant to what they're learning in English
+- Make it a direct, easy-to-answer question
+
+For BEGINNER levels (1-4):
+- Ask simple, concrete questions about English (e.g., "Do you like saying hello?", "Can you say your name in English?")
+- Use only basic present tense
+- Focus on simple English tasks or preferences
+
+For INTERMEDIATE levels (5-7):
+- Ask slightly more complex questions (e.g., "When do you speak English?", "Why is greeting important?")
+- Include basic opinions or reasons
+- Use present tense with some variety
+
+For ADVANCED levels (8-10):
+- Ask more thought-provoking questions (e.g., "How do English greetings differ from formal speech?")
+- Allow for more detailed responses
+- Include compound or complex sentences
+
+Respond ONLY in this JSON format:
+{
+  "question": "A SHORT, SIMPLE question (1 sentence, max 15 words) about English and the lesson topic"
+}`,
+});
+
+// Full Introduction Content Generator Agent (for "Generate New" mode)
+const fullIntroductionGeneratorAgent = new Agent({
+  name: "Full Introduction Content Generator",
+  model: "openai/gpt-5.1",
+  instructions: `You are an expert ESL lesson designer creating complete introduction sections for language lessons.
+  
+Generate introduction content including:
+1. Introduction text - engaging context about the lesson topic (in English and target language if specified)
+2. Lesson issue (OPTIONAL) - a common problem or interesting fact related to the topic (ENGLISH ONLY - do not translate)
+3. Lesson goal steps - 5 sequential tutor instructions with scripts and a question in Step 4
+
+CRITICAL REQUIREMENTS FOR LESSON ISSUE (if included):
+- MUST BE IN ENGLISH ONLY - do not translate to other languages
+- Title MUST be max 5-7 words (NOT a long sentence)
+- Must have exactly 3 bullet points (each 1 sentence max)
+- Do NOT use the full lesson description as the title
+- Example: "Ways to Say Hello" (not "Today we will learn easy ways to say hello for the first time...")
+
+CRITICAL REQUIREMENTS OVERALL:
+- For introduction text: respect the user's language preferences for translations
+- Question in Step 4 should be SHORT (max 15 words) and about English learning
+- Use vocabulary appropriate for the skill level
+- NEVER use emoji or special symbols
+- Make content relevant and practical
+- If user specifies a translation language (like Korean), use that instead of default
+
+Respond ONLY in this JSON format:
+{
+  "introTexts": [
+    {
+      "language": "en",
+      "text": "Engaging introduction text explaining the topic (2-3 sentences)"
+    },
+    {
+      "language": "target_language",
+      "text": "Translation in the user's specified language"
+    }
+  ],
+  "lessonIssue": {
+    "title": "SHORT title max 7 words",
+    "points": ["Point 1 (one sentence)", "Point 2 (one sentence)", "Point 3 (one sentence)"]
+  },
+  "lessonGoalDuration": "1 minute",
+  "lessonGoalSteps": [
+    {
+      "instruction": "Introduce the lesson topic.",
+      "script": "Today, let's learn about...",
+      "question": null
+    },
+    {
+      "instruction": "Read the lesson goal and confirm understanding.",
+      "script": null,
+      "question": null
+    },
+    {
+      "instruction": "Read the Introduce explanation.",
+      "script": null,
+      "question": null
+    },
+    {
+      "instruction": "Ask the question below.",
+      "script": "SHORT question (max 15 words) about English and the lesson topic",
+      "question": null
+    },
+    {
+      "instruction": "Transition to next section.",
+      "script": "Great! Let's move to the next part.",
+      "question": null
+    }
+  ]
+}`,
+});
+
+export const generateIntroductionContent = async (
+  topic: string,
+  skillLevel: string,
+  skill: string, // speaking, listening, reading
+  customPrompt?: string | null,
+  currentContent?: any | null,
+  baseInstructions?: string | null,
+  level?: number | null,
+  chapter?: number | null,
+  lessonNumber?: number | null,
+  generationMode?: 'new' | 'improve' | null, // New parameter to specify generation mode
+  includeLessonIssue?: boolean | null // Toggle for lesson issue generation
+): Promise<GenerateIntroductionResult> => {
+  try {
+    // Map lesson level (1-10) to complexity descriptor
+    const getComplexityLevel = (level?: number | null): string => {
+      if (!level) return 'beginner to intermediate';
+      if (level <= 2) return 'very simple and beginner-friendly';
+      if (level <= 4) return 'simple beginner level';
+      if (level <= 6) return 'intermediate level';
+      if (level <= 8) return 'intermediate to advanced level';
+      return 'advanced level';
+    };
+
+    const complexityDesc = getComplexityLevel(level);
+    
+    // Determine which mode to use (default to 'improve' if current content exists, 'new' otherwise)
+    const mode = generationMode || (currentContent ? 'improve' : 'new');
+
+    // GENERATE NEW MODE: Create full introduction content
+    if (mode === 'new') {
+      let fullPrompt = `Generate introduction content for an ESL lesson:
+- Topic/Lesson Name: ${topic}
+- Skill Level: ${skillLevel}
+- Primary Skill: ${skill}
+- Lesson Level: ${level || 'unknown'} (out of 10)
+- Complexity: ${complexityDesc}
+
+REQUIREMENTS:
+- Create engaging introduction text (2-3 sentences explaining the topic)
+${includeLessonIssue ? '- Create a lesson issue with SHORT title (max 5-7 words) and 3 bullet points (IN ENGLISH ONLY, do not translate)\n' : '- Do NOT create a lesson issue (set lessonIssue to null)\n'}
+- Create 5 lesson goal steps with tutor scripts
+- Step 4 question must be SHORT (max 15 words) about English learning
+- All vocabulary should be appropriate for ${complexityDesc} students
+- NO emoji or special characters
+- Focus on practical English learning`;
+
+      if (chapter) fullPrompt += `\n- Chapter: ${chapter}`;
+      if (lessonNumber) fullPrompt += `\n- Lesson Number: ${lessonNumber}`;
+      if (baseInstructions) fullPrompt += `\n\nUser's specific instructions: ${baseInstructions}`;
+      if (customPrompt) fullPrompt += `\n\nAdditional custom instructions: ${customPrompt}`;
+
+      const response = await fullIntroductionGeneratorAgent.generate(fullPrompt);
+      const content = response.text;
+      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonContent = (jsonMatch?.[1] || content).trim();
+      const result = JSON.parse(jsonContent);
+
+      // If lesson issue not included, ensure it's null
+      if (!includeLessonIssue) {
+        result.lessonIssue = null;
+      }
+
+      if (!result.lessonGoalSteps) {
+        throw new Error('Invalid response structure - missing lessonGoalSteps');
+      }
+
+      return result;
+    }
+
+    // IMPROVE EXISTING MODE: Only update Step 4 question
+    let prompt = baseInstructions || `Generate a SHORT, SIMPLE opening question about ENGLISH and the lesson topic:
+- Topic/Lesson Name: ${topic}
+- Skill Level: ${skillLevel}
+- Primary Skill: ${skill}
+- Lesson Level: ${level || 'unknown'} (out of 10)
+- Complexity: ${complexityDesc}
+
+CRITICAL REQUIREMENTS:
+- Question must be VERY SHORT (1 sentence, max 10-15 words)
+- Use simple vocabulary for ${complexityDesc} students
+- NO emoji or special characters
+- FOCUS ON ENGLISH LEARNING - NOT their native language
+- DO NOT ask about native language or translations
+- Make it about English and the lesson topic
+- Direct and easy to understand
+- Encourages student response
+
+Example formats by level:
+- Level 1-2: "Can you say hello in English?" (about learning English)
+- Level 5-6: "Do you speak English at home?" (about English use)
+- Level 9-10: "How do you use this greeting in English?" (about English application)`;
+
+    // Add lesson context
+    prompt += `\n\nLesson Context:
+- Topic/Lesson Name: ${topic}
+- Skill Level: ${skillLevel}
+- Primary Skill: ${skill}
+- Lesson Level: ${level || 'unknown'} (on scale of 1-10)
+- Target Complexity: ${complexityDesc}`;
+
+    if (chapter) prompt += `\n- Chapter: ${chapter}`;
+    if (lessonNumber) prompt += `\n- Lesson Number: ${lessonNumber}`;
+
+    // Add custom instructions if provided
+    if (customPrompt) {
+      prompt += `\n\nAdditional instructions from user: ${customPrompt}`;
+    }
+
+    const response = await introductionGeneratorAgent.generate(prompt);
+    const content = response.text;
+
+    // Extract JSON from markdown code blocks if present
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonContent = (jsonMatch?.[1] || content).trim();
+
+    const result = JSON.parse(jsonContent);
+
+    // Validate the response has the question field
+    if (!result.question) {
+      throw new Error('Invalid response structure - missing question field');
+    }
+
+    // Return the structure expected by the frontend, with the question as script in Step 4
+    // If we have current content, preserve it and only update the Step 4 script
+    if (currentContent && currentContent.lessonGoalSteps && currentContent.lessonGoalSteps.length >= 4) {
+      return {
+        introTexts: currentContent.introTexts || [],
+        lessonIssue: currentContent.lessonIssue || { title: '', points: [] },
+        lessonGoalDuration: currentContent.lessonGoalDuration || '1 minute',
+        lessonGoalSteps: currentContent.lessonGoalSteps.map((step: any, index: number) => 
+          index === 3 // Step 4 is at index 3 (0-indexed)
+            ? { ...step, script: result.question }
+            : step
+        ),
+      };
+    }
+
+    // If no current content, create a minimal structure with the question as script in Step 4
+    return {
+      introTexts: [],
+      lessonIssue: { title: '', points: [] },
+      lessonGoalDuration: '1 minute',
+      lessonGoalSteps: [
+        { instruction: 'Introduce the lesson topic.', script: null, question: null },
+        { instruction: 'Read the lesson goal and ask if it\'s clear.', script: null, question: null },
+        { instruction: 'Read the Introduce explanation.', script: null, question: null },
+        { instruction: 'Ask the question below.', script: result.question, question: null },
+        { instruction: 'Transition to the next section.', script: null, question: null },
+      ],
+    };
+  } catch (error) {
+    console.error('Failed to generate introduction content:', error);
     throw error;
   }
 };
