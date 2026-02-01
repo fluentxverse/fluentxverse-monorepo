@@ -88,6 +88,7 @@ interface ExpressionItem {
   definitionLine: string; // Rich text HTML like "To <strong>cost an arm and a leg</strong> means to be very expensive."
   exampleSentence: string; // Rich text HTML for example sentence
   extraText?: string; // Optional additional text below example
+  translation?: string; // Optional translation (Japanese, Korean, Vietnamese, Chinese)
 }
 
 interface DiscussionImage {
@@ -1979,9 +1980,16 @@ export default function ConversationalSkillsVisualEditor() {
         skill={lesson.skill}
         currentIntroductionData={introductionData}
         onGenerateIntroduction={setIntroductionData}
+        onGenerateLearn={setLearnData}
+        onGenerateStepB={setStepBData}
         level={lesson.level}
         chapter={lesson.chapter}
         lessonNumber={lesson.lessonNumber}
+        lessonGoal={goalTextEn || lessonName}
+        currentStepAType={learnData.steps[0]?.stepType || 'vocabulary'}
+        currentStepBType={stepBData.stepType}
+        vocabularyCount={learnData.steps[0]?.vocabularyItems?.length || 0}
+        expressionCount={learnData.steps[0]?.expressionItems?.length || 0}
       />
 
       {/* Editor Toolbar - Fixed at top */}
@@ -3251,6 +3259,15 @@ function LearnSectionEditor({ data, onChange }: LearnSectionEditorProps) {
                               onChange={(html) => handleExprChange(stepIdx, exprIdx, 'exampleSentence', html)}
                               placeholder="Staying at a five-star hotel will cost an arm and a leg."
                               className="csve-expr-example-rich"
+                            />
+                            {/* Translation field */}
+                            <input
+                              type="text"
+                              value={item.translation || ''}
+                              onChange={(e) => handleExprChange(stepIdx, exprIdx, 'translation', (e.target as HTMLInputElement).value)}
+                              placeholder="Translation (日本語 / 한국어 / Tiếng Việt / 中文)"
+                              className="csve-input"
+                              style={{ marginTop: '8px', fontStyle: 'italic', color: '#888' }}
                             />
                             {item.extraText !== undefined ? (
                               <div className="csve-expr-extra-wrap">

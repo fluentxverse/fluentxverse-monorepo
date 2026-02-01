@@ -148,7 +148,14 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.chapter, // Pass chapter for context
           body.lessonNumber, // Pass lesson number for context
           body.generationMode, // Pass generation mode ('new' or 'improve')
-          body.includeLessonIssue // Pass lesson issue toggle flag
+          body.includeLessonIssue, // Pass lesson issue toggle flag
+          body.lessonGoal, // Pass lesson goal for context-based generation
+          body.learnType, // Pass Step A subtype (vocabulary/expressions)
+          body.stepBType, // Pass Step B type (speak-your-mind/grammar-tip/pronunciation)
+          body.includeTranslation, // Pass translation toggle
+          body.translationLanguage, // Pass translation language
+          body.vocabularyCount, // Pass current vocabulary count from editor
+          body.expressionCount // Pass current expression count from editor
         );
         return {
           success: true,
@@ -176,6 +183,13 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         lessonNumber: t.Optional(t.Number()), // Lesson number for context
         generationMode: t.Optional(t.Union([t.Literal('new'), t.Literal('improve')])), // 'new' or 'improve'
         includeLessonIssue: t.Optional(t.Boolean()), // Whether to generate lesson issue
+        lessonGoal: t.String({ maxLength: 500 }), // Lesson goal/objective (REQUIRED)
+        includeTranslation: t.Optional(t.Boolean()), // Whether to include translations
+        translationLanguage: t.Optional(t.Union([t.Literal('japanese'), t.Literal('korean'), t.Literal('vietnamese'), t.Literal('chinese')])), // Translation language
+        learnType: t.Optional(t.Nullable(t.Union([t.Literal('vocabulary'), t.Literal('expressions')]))), // Step A subtype
+        stepBType: t.Optional(t.Nullable(t.Union([t.Literal('speak-your-mind'), t.Literal('grammar-tip'), t.Literal('pronunciation')]))), // Step B type
+        vocabularyCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current vocabulary count in editor
+        expressionCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current expression count in editor
       }),
       detail: {
         tags: ['AI'],

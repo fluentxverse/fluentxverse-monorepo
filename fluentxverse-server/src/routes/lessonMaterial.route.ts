@@ -384,6 +384,10 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
           goalTextEn: body.goalTextEn,
           goalTextJp: body.goalTextJp,
           introductionData: body.introductionData,
+          learnData: body.learnData,
+          stepBData: body.stepBData,
+          applyData: body.applyData,
+          exerciseData: body.exerciseData,
         });
         
         if (!lesson) {
@@ -409,6 +413,10 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         goalTextEn: t.Optional(t.String()),
         goalTextJp: t.Optional(t.String()),
         introductionData: t.Optional(t.Any()),
+        learnData: t.Optional(t.Any()),
+        stepBData: t.Optional(t.Any()),
+        applyData: t.Optional(t.Any()),
+        exerciseData: t.Optional(t.Any()),
       }),
       detail: {
         tags: ['Lesson Materials'],

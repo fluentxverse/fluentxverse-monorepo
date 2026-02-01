@@ -75,6 +75,7 @@ interface ExpressionItem {
   definitionLine: string; // Rich text HTML like "To <strong>cost an arm and a leg</strong> means..."
   exampleSentence: string; // Rich text HTML for example sentence
   extraText?: string; // Optional additional text below example
+  translation?: string; // Optional translation (Japanese, Korean, Vietnamese, Chinese)
 }
 
 interface DiscussionImage {
@@ -896,6 +897,11 @@ function LearnSection({ data }: LearnSectionProps) {
                 className="csp-expr-example"
                 dangerouslySetInnerHTML={{ __html: item.exampleSentence }}
               />
+              {item.translation && (
+                <p className="csp-expr-translation" style={{ fontStyle: 'italic', color: '#666', marginTop: '4px' }}>
+                  {item.translation}
+                </p>
+              )}
               {item.extraText && (
                 <p 
                   className="csp-expr-extra"

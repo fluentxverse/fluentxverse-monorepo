@@ -53,7 +53,14 @@ export async function generateIntroductionContent(
   chapter?: number,
   lessonNumber?: number,
   generationMode?: 'new' | 'improve',
-  includeLessonIssue?: boolean
+  includeLessonIssue?: boolean,
+  lessonGoal?: string,
+  learnType?: 'vocabulary' | 'expressions',
+  stepBType?: 'speak-your-mind' | 'grammar-tip' | 'pronunciation',
+  includeTranslation?: boolean,
+  translationLanguage?: 'japanese' | 'korean' | 'vietnamese' | 'chinese',
+  vocabularyCount?: number,
+  expressionCount?: number
 ): Promise<GenerateIntroductionResponse> {
   try {
     const response = await apiClient.post('/ai/generate-introduction', {
@@ -68,6 +75,13 @@ export async function generateIntroductionContent(
       lessonNumber: lessonNumber || null,
       generationMode: generationMode || null,
       includeLessonIssue: includeLessonIssue || false,
+      lessonGoal: lessonGoal || '',
+      includeTranslation: includeTranslation !== false, // Default to true
+      translationLanguage: translationLanguage || 'japanese',
+      vocabularyCount: vocabularyCount || null,
+      expressionCount: expressionCount || null,
+      ...(learnType ? { learnType } : {}),
+      ...(stepBType ? { stepBType } : {}),
     });
     return response.data;
   } catch (error: any) {
