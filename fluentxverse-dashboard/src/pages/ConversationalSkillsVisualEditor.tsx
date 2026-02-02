@@ -2005,6 +2005,79 @@ export default function ConversationalSkillsVisualEditor() {
         expressionCount={learnData.steps[0]?.expressionItems?.length || 0}
         currentApplyType={applyData.activityType}
         dialogueLineCount={applyData.dialogueLines?.length || 0}
+        currentExerciseStepAType={exerciseData.stepAType}
+        currentExerciseStepBType={exerciseData.stepBType}
+        exerciseItemCount={
+          exerciseData.stepAType === 'rephrase' ? exerciseData.exerciseItems?.length :
+          exerciseData.stepAType === 'choose' ? exerciseData.chooseItems?.length :
+          exerciseData.changeItems?.length || 0
+        }
+        hasExerciseStepB={exerciseData.hasStepB}
+        onGenerateExercise={(payload) => {
+          // Update exerciseData based on payload step
+          if (payload.exerciseStep === 'stepA') {
+            setExerciseData((prev) => ({
+              ...prev,
+              stepAType: payload.exerciseType,
+              instructions: payload.instructions || prev.instructions,
+              instructionsTranslation: payload.instructionsTranslation || prev.instructionsTranslation,
+              showExpressions: payload.showExpressions ?? prev.showExpressions,
+              expressions: payload.expressions?.length > 0 ? payload.expressions : prev.expressions,
+              showExample: payload.showExample ?? prev.showExample,
+              exampleSentence: payload.exampleSentence || prev.exampleSentence,
+              exampleAnswer: payload.exampleAnswer || prev.exampleAnswer,
+              exerciseItems: payload.exerciseItems?.length > 0 ? payload.exerciseItems : prev.exerciseItems,
+              chooseItems: payload.chooseItems?.length > 0 ? payload.chooseItems : prev.chooseItems,
+              changeItems: payload.changeItems?.length > 0 ? payload.changeItems : prev.changeItems,
+              answers: payload.answers?.length > 0 ? payload.answers : prev.answers,
+              tutorSteps: payload.tutorSteps?.length > 0 ? payload.tutorSteps : prev.tutorSteps,
+            }));
+          } else {
+            // Step B
+            setExerciseData((prev) => ({
+              ...prev,
+              stepBType: payload.exerciseType,
+              stepBInstruction: payload.stepBInstruction || prev.stepBInstruction,
+              stepBInstructionTranslation: payload.stepBInstructionTranslation || prev.stepBInstructionTranslation,
+              conversations: payload.conversations?.length > 0 ? payload.conversations : prev.conversations,
+              multipleChoiceItems: payload.multipleChoiceItems?.length > 0 ? payload.multipleChoiceItems : prev.multipleChoiceItems,
+              speechContent: payload.speechContent || prev.speechContent,
+              compareWordBox: payload.compareWordBox?.length > 0 ? payload.compareWordBox : prev.compareWordBox,
+              compareImages: payload.compareImages?.length > 0 ? payload.compareImages : prev.compareImages,
+              compareExample: payload.compareExample || prev.compareExample,
+              compareItems: payload.compareItems?.length > 0 ? payload.compareItems : prev.compareItems,
+              stepBTutorSteps: payload.stepBTutorSteps?.length > 0 ? payload.stepBTutorSteps : prev.stepBTutorSteps,
+            }));
+          }
+        }}
+        currentMissionType={missionData.missionType}
+        missionQuestionCount={missionData.questions?.length || 0}
+        onGenerateMission={(payload) => {
+          // Update missionData based on payload missionType
+          setMissionData((prev) => ({
+            ...prev,
+            missionType: payload.missionType || prev.missionType,
+            challengeNumber: payload.challengeNumber || prev.challengeNumber,
+            challengeName: payload.challengeName || prev.challengeName,
+            duration: payload.duration || prev.duration,
+            situation: payload.situation || prev.situation,
+            situationTranslation: payload.situationTranslation || prev.situationTranslation,
+            instruction: payload.instruction || prev.instruction,
+            instructionTranslation: payload.instructionTranslation || prev.instructionTranslation,
+            showGrammarTip: payload.showGrammarTip ?? prev.showGrammarTip,
+            grammarTipTitle: payload.grammarTipTitle || prev.grammarTipTitle,
+            grammarTipItems: payload.grammarTipItems?.length > 0 ? payload.grammarTipItems : prev.grammarTipItems,
+            tutorSteps: payload.tutorSteps?.length > 0 ? payload.tutorSteps : prev.tutorSteps,
+            questionsIntro: payload.questionsIntro || prev.questionsIntro,
+            questions: payload.questions?.length > 0 ? payload.questions : prev.questions,
+            // Discussion type specific
+            isOptional: payload.isOptional ?? prev.isOptional,
+            topics: payload.topics?.length > 0 ? payload.topics : prev.topics,
+            // Reading type specific
+            readingPassage: payload.readingPassage || prev.readingPassage,
+            // Listening type specific (handled via tutorSteps with listeningScript)
+          }));
+        }}
       />
 
       {/* Editor Toolbar - Fixed at top */}

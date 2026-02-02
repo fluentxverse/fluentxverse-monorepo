@@ -63,7 +63,12 @@ export async function generateIntroductionContent(
   expressionCount?: number,
   applyType?: 'speaking' | 'listening' | 'reading',
   dialogueLineCount?: number,
-  generateTrivia?: boolean
+  generateTrivia?: boolean,
+  exerciseType?: string,
+  exerciseStep?: 'stepA' | 'stepB',
+  exerciseItemCount?: number,
+  missionType?: 'speaking' | 'discussion' | 'reading' | 'listening',
+  missionQuestionCount?: number
 ): Promise<GenerateIntroductionResponse> {
   try {
     const response = await apiClient.post('/ai/generate-introduction', {
@@ -88,6 +93,11 @@ export async function generateIntroductionContent(
       ...(applyType ? { applyType } : {}),
       ...(dialogueLineCount ? { dialogueLineCount } : {}),
       ...(generateTrivia ? { generateTrivia } : {}),
+      ...(exerciseType ? { exerciseType } : {}),
+      ...(exerciseStep ? { exerciseStep } : {}),
+      ...(exerciseItemCount ? { exerciseItemCount } : {}),
+      ...(missionType ? { missionType } : {}),
+      ...(missionQuestionCount ? { missionQuestionCount } : {}),
     });
     return response.data;
   } catch (error: any) {

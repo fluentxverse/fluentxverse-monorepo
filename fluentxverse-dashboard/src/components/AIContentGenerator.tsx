@@ -14,7 +14,7 @@ export interface IntroductionData {
   lessonGoalSteps: LessonGoalStep[];
 }
 
-type SectionType = 'introduce' | 'learn' | 'apply' | 'trivia' | 'exercise';
+type SectionType = 'introduce' | 'learn' | 'apply' | 'trivia' | 'exercise' | 'mission';
 
 interface SectionConfig {
   id: SectionType;
@@ -30,6 +30,7 @@ const SECTIONS: SectionConfig[] = [
   { id: 'apply', label: 'Apply', number: 3, icon: 'ri-chat-3-line', description: 'Practice activity' },
   { id: 'trivia', label: 'Trivia', number: 0, icon: 'ri-lightbulb-flash-line', description: 'Trivia Time content' },
   { id: 'exercise', label: 'Exercise', number: 4, icon: 'ri-checkbox-circle-line', description: 'Exercises' },
+  { id: 'mission', label: 'Mission', number: 5, icon: 'ri-rocket-line', description: 'Challenge activities' },
 ];
 
 interface AIContentGeneratorProps {
@@ -42,6 +43,8 @@ interface AIContentGeneratorProps {
   onGenerateStepB?: (data: any) => void;
   onGenerateApply?: (data: any) => void;
   onGenerateTrivia?: (data: any) => void;
+  onGenerateExercise?: (data: any) => void;
+  onGenerateMission?: (data: any) => void;
   level?: number;
   chapter?: number;
   lessonNumber?: number;
@@ -56,6 +59,14 @@ interface AIContentGeneratorProps {
   currentApplyType?: 'speaking' | 'listening' | 'reading';
   // Current dialogue line count (for speaking apply)
   dialogueLineCount?: number;
+  // Exercise section props
+  currentExerciseStepAType?: 'rephrase' | 'choose' | 'change';
+  currentExerciseStepBType?: 'conversation' | 'multiple-choice' | 'speech' | 'compare';
+  exerciseItemCount?: number;
+  hasExerciseStepB?: boolean;
+  // Mission section props
+  currentMissionType?: 'speaking' | 'discussion' | 'reading' | 'listening';
+  missionQuestionCount?: number;
 }
 
 export function AIContentGenerator({
@@ -68,6 +79,8 @@ export function AIContentGenerator({
   onGenerateStepB,
   onGenerateApply,
   onGenerateTrivia,
+  onGenerateExercise,
+  onGenerateMission,
   level,
   chapter,
   lessonNumber,
@@ -78,6 +91,12 @@ export function AIContentGenerator({
   expressionCount,
   currentApplyType = 'speaking',
   dialogueLineCount,
+  currentExerciseStepAType = 'rephrase',
+  currentExerciseStepBType = 'conversation',
+  exerciseItemCount,
+  hasExerciseStepB = false,
+  currentMissionType = 'speaking',
+  missionQuestionCount,
 }: AIContentGeneratorProps) {
   const DEFAULT_BASE_INSTRUCTIONS: Record<SectionType, string> = {
     introduce: 'Create an engaging introduction that hooks students with relevant context. Include discussion of why this topic matters and what they will learn.',
@@ -85,6 +104,7 @@ export function AIContentGenerator({
     apply: 'Design practical speaking/listening activities that students can do. Include realistic scenarios, dialogues, or role-play situations.',
     trivia: 'Create interesting cultural trivia or fun language facts related to the lesson topic. Include engaging questions for discussion.',
     exercise: 'Create engaging practice exercises that reinforce learning. Include varied question types, clear instructions, and answer keys.',
+    mission: 'Create immersive challenge activities that let students apply their learning in realistic scenarios. Include roleplay situations, discussion topics, or reading/listening comprehension tasks.',
   };
 
   const [activeSection, setActiveSection] = useState<SectionType>('introduce');
@@ -103,6 +123,8 @@ export function AIContentGenerator({
   const [translationLanguage, setTranslationLanguage] = useState<'japanese' | 'korean' | 'vietnamese' | 'chinese'>('japanese');
   // For Learn section: track which step (A or B) to generate
   const [learnStep, setLearnStep] = useState<'stepA' | 'stepB'>('stepA');
+  // For Exercise section: track which step (A or B) to generate
+  const [exerciseStep, setExerciseStep] = useState<'stepA' | 'stepB'>('stepA');
 
   // Load base instructions from localStorage on mount
   useEffect(() => {
@@ -148,6 +170,15 @@ export function AIContentGenerator({
       // Check if we're generating trivia
       const generateTrivia = activeSection === 'trivia';
 
+      // Check if we're generating exercise content
+      const exerciseType = activeSection === 'exercise' 
+        ? (exerciseStep === 'stepA' ? currentExerciseStepAType : currentExerciseStepBType)
+        : undefined;
+      const exerciseStepType = activeSection === 'exercise' ? exerciseStep : undefined;
+
+      // Check if we're generating mission content
+      const missionType = activeSection === 'mission' ? currentMissionType : undefined;
+
       const response = await generateIntroductionContent(
         topic,
         skillLevel,
@@ -169,7 +200,12 @@ export function AIContentGenerator({
         expressionCount, // Pass current expression count from editor
         applyType, // Pass apply activity type (speaking/listening/reading)
         dialogueLineCount, // Pass current dialogue line count from editor
-        generateTrivia // Pass trivia generation flag
+        generateTrivia, // Pass trivia generation flag
+        exerciseType, // Pass exercise type (rephrase/choose/change or conversation/multiple-choice/speech/compare)
+        exerciseStepType, // Pass exercise step (stepA or stepB)
+        exerciseItemCount, // Pass exercise item count
+        missionType, // Pass mission type (speaking/discussion/reading/listening)
+        missionQuestionCount // Pass mission question count
       );
 
       if (!response.success || !response.data) {
@@ -372,6 +408,135 @@ export function AIContentGenerator({
         };
 
         onGenerateTrivia(triviaPayload);
+      }
+      // Handle Exercise section content
+      else if (activeSection === 'exercise' && generatedContent.exerciseData && onGenerateExercise) {
+        const exercise = generatedContent.exerciseData;
+        
+        const exercisePayload = {
+          exerciseStep: exercise.exerciseStep,
+          exerciseType: exercise.exerciseType,
+          // Step A common fields
+          instructions: exercise.instructions || '',
+          instructionsTranslation: exercise.instructionsTranslation || '',
+          // Step A - Rephrase fields
+          showExpressions: exercise.showExpressions || false,
+          expressions: exercise.expressions || [],
+          showExample: exercise.showExample || false,
+          exampleSentence: exercise.exampleSentence || '',
+          exampleAnswer: exercise.exampleAnswer || '',
+          exerciseItems: (exercise.exerciseItems || []).map((item: any) => ({
+            image: '',
+            sentence: item.sentence || '',
+          })),
+          // Step A - Choose fields
+          chooseItems: (exercise.chooseItems || []).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Step A - Change fields
+          changeItems: (exercise.changeItems || []).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Answer key
+          answers: (exercise.answers || []).map((answer: any) => ({
+            text: answer.text || '',
+          })),
+          // Tutor steps
+          tutorSteps: (exercise.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            answerKey: step.answerKey || [],
+          })),
+          // Step B common fields
+          stepBInstruction: exercise.stepBInstruction || '',
+          stepBInstructionTranslation: exercise.stepBInstructionTranslation || '',
+          // Step B - Conversation fields
+          conversations: (exercise.conversations || []).map((conv: any) => ({
+            speakerImage: '',
+            speechBubble: conv.speechBubble || '',
+            position: conv.position || 'left',
+          })),
+          // Step B - Multiple Choice fields
+          multipleChoiceItems: (exercise.multipleChoiceItems || []).map((item: any) => ({
+            boldSentence: item.boldSentence || '',
+            optionA: item.optionA || '',
+            optionB: item.optionB || '',
+          })),
+          // Step B - Speech fields
+          speechContent: exercise.speechContent || '',
+          // Step B - Compare fields
+          compareWordBox: exercise.compareWordBox || [],
+          compareImages: (exercise.compareImages || []).map((img: any) => ({
+            image: '',
+            label: img.label || '',
+          })),
+          compareExample: exercise.compareExample || '',
+          compareItems: (exercise.compareItems || []).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Step B tutor steps
+          stepBTutorSteps: (exercise.stepBTutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+          })),
+        };
+
+        onGenerateExercise(exercisePayload);
+      }
+      // Handle Mission section content
+      else if (activeSection === 'mission' && generatedContent.missionData && onGenerateMission) {
+        const mission = generatedContent.missionData;
+        
+        const missionPayload = {
+          missionType: mission.missionType,
+          sectionNumber: 5,
+          sectionTitle: 'MISSION',
+          challengeNumber: mission.challengeNumber || 1,
+          challengeName: mission.challengeName || 'Challenge 1',
+          duration: mission.duration || '5-6 minutes',
+          situation: mission.situation || '',
+          situationTranslation: mission.situationTranslation || '',
+          instruction: mission.instruction || '',
+          instructionTranslation: mission.instructionTranslation || '',
+          showGrammarTip: mission.showGrammarTip || false,
+          grammarTipTitle: mission.grammarTipTitle || "Today's grammar tip",
+          grammarTipItems: mission.grammarTipItems || [],
+          image: '',
+          tutorSteps: (mission.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            listeningScript: step.listeningScript || '',
+          })),
+          questionsIntro: mission.questionsIntro || '',
+          questions: (mission.questions || []).map((q: any) => ({
+            question: q.question || '',
+            hints: q.hints || [],
+          })),
+          // Discussion type specific
+          isOptional: mission.isOptional || false,
+          topics: (mission.topics || []).map((topic: any) => ({
+            title: topic.title || '',
+            questions: topic.questions || [],
+          })),
+          // Reading type specific
+          readingPassage: mission.readingPassage ? {
+            title: mission.readingPassage.title || '',
+            author: mission.readingPassage.author || '',
+            blocks: (mission.readingPassage.blocks || []).map((block: any) => ({
+              type: block.type || 'paragraph',
+              text: block.text || '',
+              image: block.image || '',
+            })),
+            closingQuestion: mission.readingPassage.closingQuestion || '',
+          } : undefined,
+          // Listening type specific
+          listeningScript: mission.listeningScript || '',
+        };
+
+        onGenerateMission(missionPayload);
       } else {
         onGenerateIntroduction(generatedContent);
       }
@@ -494,6 +659,62 @@ export function AIContentGenerator({
             </div>
             <p className="ai-step-hint">
               Will generate cultural trivia, fun facts, and discussion questions
+            </p>
+          </div>
+        )}
+
+        {/* Exercise Section Step Selector - Show only when Exercise tab is active */}
+        {activeSection === 'exercise' && (
+          <div className="ai-learn-step-selector ai-exercise-selector">
+            <div className="ai-step-toggle">
+              <button
+                className={`ai-step-btn ${exerciseStep === 'stepA' ? 'ai-step-active' : ''}`}
+                onClick={() => setExerciseStep('stepA')}
+              >
+                <span className="ai-step-letter">A</span>
+                <span className="ai-step-type">
+                  {currentExerciseStepAType === 'rephrase' ? 'Rephrase' :
+                   currentExerciseStepAType === 'choose' ? 'Choose' : 'Change'}
+                </span>
+              </button>
+              <button
+                className={`ai-step-btn ${exerciseStep === 'stepB' ? 'ai-step-active' : ''}`}
+                onClick={() => setExerciseStep('stepB')}
+                disabled={!hasExerciseStepB}
+                title={!hasExerciseStepB ? 'Step B is not enabled in the editor' : ''}
+              >
+                <span className="ai-step-letter">B</span>
+                <span className="ai-step-type">
+                  {currentExerciseStepBType === 'conversation' ? 'Conversation' :
+                   currentExerciseStepBType === 'multiple-choice' ? 'Multiple Choice' :
+                   currentExerciseStepBType === 'speech' ? 'Speech' : 'Compare'}
+                </span>
+              </button>
+            </div>
+            <p className="ai-step-hint">
+              {exerciseStep === 'stepA' 
+                ? `Will generate ${currentExerciseStepAType} exercise with ${exerciseItemCount || 'default'} items`
+                : `Will generate ${currentExerciseStepBType.replace(/-/g, ' ')} exercise for Step B`
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Mission Section Type Indicator - Show only when Mission tab is active */}
+        {activeSection === 'mission' && (
+          <div className="ai-apply-indicator ai-mission-indicator">
+            <div className="ai-apply-type">
+              <i className={`${
+                currentMissionType === 'speaking' ? 'ri-mic-line' :
+                currentMissionType === 'discussion' ? 'ri-discuss-line' :
+                currentMissionType === 'reading' ? 'ri-book-open-line' : 'ri-headphone-line'
+              }`} />
+              <span className="ai-apply-type-label">
+                {currentMissionType.charAt(0).toUpperCase() + currentMissionType.slice(1)} Challenge
+              </span>
+            </div>
+            <p className="ai-step-hint">
+              Will generate {currentMissionType} mission with {missionQuestionCount || 'default'} roleplay questions
             </p>
           </div>
         )}
@@ -785,6 +1006,257 @@ export function AIContentGenerator({
                           </div>
                         ))}
                       </div>
+                    )}
+                  </div>
+                </div>
+              ) : generatedContent.exerciseData ? (
+                <div className="ai-preview-section">
+                  <h5>
+                    <i className="ri-checkbox-circle-line" style={{ marginRight: '8px', color: '#64c896' }} />
+                    Exercise - {generatedContent.exerciseData.exerciseStep === 'stepA' ? 'Step A' : 'Step B'} ({generatedContent.exerciseData.exerciseType})
+                  </h5>
+                  <div className="ai-preview-item">
+                    {/* Step A Preview */}
+                    {generatedContent.exerciseData.exerciseStep === 'stepA' && (
+                      <>
+                        <p style={{ color: '#e0e0e0', fontWeight: 'bold', marginBottom: '10px' }}>{generatedContent.exerciseData.instructions}</p>
+                        {generatedContent.exerciseData.instructionsTranslation && (
+                          <p style={{ color: '#a0a0a0', fontSize: '13px', marginBottom: '12px' }}>{generatedContent.exerciseData.instructionsTranslation}</p>
+                        )}
+                        
+                        {/* Expressions box for rephrase */}
+                        {generatedContent.exerciseData.showExpressions && generatedContent.exerciseData.expressions?.length > 0 && (
+                          <div style={{ background: 'rgba(79, 170, 254, 0.1)', padding: '10px', borderRadius: '6px', marginBottom: '12px', border: '1px solid rgba(79, 170, 254, 0.3)' }}>
+                            <strong style={{ color: '#4faafe' }}>Word Box:</strong>
+                            <p style={{ color: '#e0e0e0' }}>{generatedContent.exerciseData.expressions.join(' • ')}</p>
+                          </div>
+                        )}
+                        
+                        {/* Example */}
+                        {generatedContent.exerciseData.showExample && (
+                          <div style={{ marginBottom: '12px', padding: '10px', background: 'rgba(100, 200, 150, 0.1)', borderRadius: '6px', border: '1px solid rgba(100, 200, 150, 0.3)' }}>
+                            <strong style={{ color: '#64c896' }}>Example:</strong>
+                            <p style={{ color: '#e0e0e0' }}>{generatedContent.exerciseData.exampleSentence}</p>
+                            <p style={{ color: '#64c896' }}>→ {generatedContent.exerciseData.exampleAnswer}</p>
+                          </div>
+                        )}
+                        
+                        {/* Exercise items */}
+                        {(generatedContent.exerciseData.exerciseItems?.length > 0 ||
+                          generatedContent.exerciseData.chooseItems?.length > 0 ||
+                          generatedContent.exerciseData.changeItems?.length > 0) && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <strong style={{ color: '#4faafe' }}>Items:</strong>
+                            <ol style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
+                              {(generatedContent.exerciseData.exerciseItems ||
+                                generatedContent.exerciseData.chooseItems ||
+                                generatedContent.exerciseData.changeItems || []).map((item: any, idx: number) => (
+                                <li key={idx} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{ __html: item.sentence }} />
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                        
+                        {/* Answer key */}
+                        {generatedContent.exerciseData.answers?.length > 0 && (
+                          <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px' }}>
+                            <strong style={{ color: '#ffd700' }}>Answer Key:</strong>
+                            <ol style={{ color: '#a0a0a0', paddingLeft: '20px', fontSize: '13px' }}>
+                              {generatedContent.exerciseData.answers.map((answer: any, idx: number) => (
+                                <li key={idx}>{answer.text}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Step B Preview */}
+                    {generatedContent.exerciseData.exerciseStep === 'stepB' && (
+                      <>
+                        <p style={{ color: '#e0e0e0', fontWeight: 'bold', marginBottom: '10px' }}>{generatedContent.exerciseData.stepBInstruction}</p>
+                        
+                        {/* Conversation preview */}
+                        {generatedContent.exerciseData.conversations?.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            {generatedContent.exerciseData.conversations.map((conv: any, idx: number) => (
+                              <div key={idx} style={{
+                                display: 'flex',
+                                justifyContent: conv.position === 'right' ? 'flex-end' : 'flex-start',
+                                marginBottom: '8px'
+                              }}>
+                                <div style={{
+                                  background: conv.position === 'right' ? 'rgba(100, 200, 150, 0.15)' : 'rgba(79, 170, 254, 0.15)',
+                                  padding: '10px 14px',
+                                  borderRadius: '12px',
+                                  maxWidth: '80%',
+                                  border: conv.position === 'right' ? '1px solid rgba(100, 200, 150, 0.3)' : '1px solid rgba(79, 170, 254, 0.3)'
+                                }}>
+                                  <p style={{ color: '#e0e0e0', margin: 0 }}>{conv.speechBubble}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Multiple choice preview */}
+                        {generatedContent.exerciseData.multipleChoiceItems?.length > 0 && (
+                          <div style={{ marginBottom: '12px' }}>
+                            {generatedContent.exerciseData.multipleChoiceItems.map((item: any, idx: number) => (
+                              <div key={idx} style={{ marginBottom: '16px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px' }}>
+                                <p style={{ color: '#e0e0e0', fontWeight: 'bold' }}>{item.boldSentence}</p>
+                                <p style={{ color: '#a0c4e8', marginTop: '6px' }}>A: {item.optionA}</p>
+                                <p style={{ color: '#64c896', marginTop: '4px' }}>B: {item.optionB}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Speech preview */}
+                        {generatedContent.exerciseData.speechContent && (
+                          <div style={{ background: 'rgba(79, 170, 254, 0.1)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(79, 170, 254, 0.3)' }}>
+                            <p style={{ color: '#e0e0e0', lineHeight: '1.6' }}>{generatedContent.exerciseData.speechContent}</p>
+                          </div>
+                        )}
+                        
+                        {/* Compare preview */}
+                        {generatedContent.exerciseData.compareWordBox?.length > 0 && (
+                          <div>
+                            <div style={{ background: 'rgba(79, 170, 254, 0.1)', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>
+                              <strong style={{ color: '#4faafe' }}>Word Box:</strong>
+                              <p style={{ color: '#e0e0e0' }}>{generatedContent.exerciseData.compareWordBox.join(' • ')}</p>
+                            </div>
+                            {generatedContent.exerciseData.compareExample && (
+                              <p style={{ color: '#64c896', marginBottom: '10px' }}>Example: {generatedContent.exerciseData.compareExample}</p>
+                            )}
+                            <ol style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
+                              {generatedContent.exerciseData.compareItems?.map((item: any, idx: number) => (
+                                <li key={idx}>{item.sentence}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : generatedContent.missionData ? (
+                <div className="ai-preview-section">
+                  <h5>
+                    <i className="ri-rocket-line" style={{ marginRight: '8px', color: '#ff9f43' }} />
+                    Mission - {generatedContent.missionData.missionType.charAt(0).toUpperCase() + generatedContent.missionData.missionType.slice(1)} Challenge
+                  </h5>
+                  <div className="ai-preview-item">
+                    {/* Challenge Name */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <span style={{ background: 'rgba(255, 159, 67, 0.2)', color: '#ff9f43', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                        Challenge {generatedContent.missionData.challengeNumber || 1}
+                      </span>
+                      <span style={{ color: '#e0e0e0', fontWeight: 'bold' }}>{generatedContent.missionData.challengeName}</span>
+                      <span style={{ color: '#a0a0a0', fontSize: '13px' }}>• {generatedContent.missionData.duration}</span>
+                    </div>
+                    
+                    {/* Situation */}
+                    {generatedContent.missionData.situation && (
+                      <div style={{ marginBottom: '14px', padding: '12px', background: 'rgba(79, 170, 254, 0.1)', borderRadius: '8px', border: '1px solid rgba(79, 170, 254, 0.2)' }}>
+                        <strong style={{ color: '#4faafe', display: 'block', marginBottom: '6px' }}>Situation:</strong>
+                        <p style={{ color: '#e0e0e0', marginBottom: generatedContent.missionData.situationTranslation ? '6px' : '0' }}>{generatedContent.missionData.situation}</p>
+                        {generatedContent.missionData.situationTranslation && (
+                          <p style={{ color: '#a0a0a0', fontSize: '13px' }}>{generatedContent.missionData.situationTranslation}</p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Instruction */}
+                    {generatedContent.missionData.instruction && (
+                      <div style={{ marginBottom: '14px', padding: '12px', background: 'rgba(100, 200, 150, 0.1)', borderRadius: '8px', border: '1px solid rgba(100, 200, 150, 0.2)' }}>
+                        <strong style={{ color: '#64c896', display: 'block', marginBottom: '6px' }}>Instruction:</strong>
+                        <p style={{ color: '#e0e0e0', marginBottom: generatedContent.missionData.instructionTranslation ? '6px' : '0' }}>{generatedContent.missionData.instruction}</p>
+                        {generatedContent.missionData.instructionTranslation && (
+                          <p style={{ color: '#a0a0a0', fontSize: '13px' }}>{generatedContent.missionData.instructionTranslation}</p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Grammar Tip */}
+                    {generatedContent.missionData.showGrammarTip && generatedContent.missionData.grammarTipItems?.length > 0 && (
+                      <div style={{ marginBottom: '14px', padding: '12px', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
+                        <strong style={{ color: '#ffd700', display: 'block', marginBottom: '6px' }}>{generatedContent.missionData.grammarTipTitle || "Today's grammar tip"}:</strong>
+                        <p style={{ color: '#e0e0e0' }}>{generatedContent.missionData.grammarTipItems.join(', ')}</p>
+                      </div>
+                    )}
+                    
+                    {/* Discussion Topics (for discussion type) */}
+                    {generatedContent.missionData.topics?.length > 0 && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <strong style={{ color: '#ff9f43', display: 'block', marginBottom: '8px' }}>Discussion Topics:</strong>
+                        {generatedContent.missionData.topics.map((topic: any, idx: number) => (
+                          <div key={idx} style={{ marginBottom: '10px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', borderLeft: '3px solid #ff9f43' }}>
+                            <p style={{ color: '#e0e0e0', fontWeight: 'bold', marginBottom: '6px' }}>{topic.title}</p>
+                            <ul style={{ color: '#a0c4e8', paddingLeft: '16px', margin: 0 }}>
+                              {topic.questions?.map((q: string, qIdx: number) => (
+                                <li key={qIdx} style={{ marginBottom: '4px' }}>{q}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Reading Passage (for reading type) */}
+                    {generatedContent.missionData.readingPassage && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <strong style={{ color: '#ff9f43', display: 'block', marginBottom: '8px' }}>Reading Passage:</strong>
+                        <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                          <p style={{ color: '#e0e0e0', fontWeight: 'bold', marginBottom: '4px' }}>{generatedContent.missionData.readingPassage.title}</p>
+                          {generatedContent.missionData.readingPassage.author && (
+                            <p style={{ color: '#a0a0a0', fontSize: '13px', marginBottom: '10px' }}>— {generatedContent.missionData.readingPassage.author}</p>
+                          )}
+                          {generatedContent.missionData.readingPassage.blocks?.slice(0, 2).map((block: any, idx: number) => (
+                            <p key={idx} style={{ color: '#c0c0c0', marginBottom: '8px', fontSize: '13px' }}>
+                              {block.type === 'paragraph' ? (block.text?.slice(0, 150) + '...') : '[Image]'}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Listening Script (for listening type) */}
+                    {generatedContent.missionData.listeningScript && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <strong style={{ color: '#ff9f43', display: 'block', marginBottom: '8px' }}>Listening Script:</strong>
+                        <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
+                          <p style={{ color: '#c0c0c0', fontSize: '13px' }} dangerouslySetInnerHTML={{ __html: generatedContent.missionData.listeningScript.slice(0, 200) + '...' }} />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Questions Preview */}
+                    {generatedContent.missionData.questions?.length > 0 && (
+                      <div style={{ marginTop: '12px' }}>
+                        <strong style={{ color: '#4faafe', display: 'block', marginBottom: '8px' }}>Roleplay Questions ({generatedContent.missionData.questions.length}):</strong>
+                        <ol style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
+                          {generatedContent.missionData.questions.slice(0, 4).map((q: any, idx: number) => (
+                            <li key={idx} style={{ marginBottom: '6px' }}>
+                              {q.question}
+                              {q.hints?.length > 0 && (
+                                <span style={{ color: '#a0a0a0', fontSize: '12px', marginLeft: '8px' }}>({q.hints.length} hints)</span>
+                              )}
+                            </li>
+                          ))}
+                          {generatedContent.missionData.questions.length > 4 && (
+                            <li style={{ color: '#a0a0a0', fontStyle: 'italic' }}>...and {generatedContent.missionData.questions.length - 4} more</li>
+                          )}
+                        </ol>
+                      </div>
+                    )}
+                    
+                    {/* Tutor Steps Count */}
+                    {generatedContent.missionData.tutorSteps?.length > 0 && (
+                      <p style={{ color: '#a0a0a0', fontSize: '12px', marginTop: '12px' }}>
+                        <i className="ri-user-line" style={{ marginRight: '4px' }} />
+                        {generatedContent.missionData.tutorSteps.length} tutor steps included
+                      </p>
                     )}
                   </div>
                 </div>

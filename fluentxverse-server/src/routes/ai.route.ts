@@ -158,7 +158,12 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.expressionCount, // Pass current expression count from editor
           body.applyType, // Pass Apply activity type (speaking/listening/reading)
           body.dialogueLineCount, // Pass current dialogue line count from editor
-          body.generateTrivia // Pass trivia generation flag
+          body.generateTrivia, // Pass trivia generation flag
+          body.exerciseType, // Pass exercise type (rephrase/choose/change or conversation/multiple-choice/speech/compare)
+          body.exerciseStep, // Pass exercise step (stepA or stepB)
+          body.exerciseItemCount, // Pass exercise item count from editor
+          body.missionType, // Pass mission type (speaking/discussion/reading/listening)
+          body.missionQuestionCount // Pass mission question count from editor
         );
         return {
           success: true,
@@ -196,6 +201,11 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         applyType: t.Optional(t.Nullable(t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading')]))), // Apply activity type
         dialogueLineCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 30 }))), // Current dialogue line count in editor
         generateTrivia: t.Optional(t.Boolean()), // Whether to generate standalone trivia content
+        exerciseType: t.Optional(t.Nullable(t.String())), // Exercise type (rephrase/choose/change or conversation/multiple-choice/speech/compare)
+        exerciseStep: t.Optional(t.Nullable(t.Union([t.Literal('stepA'), t.Literal('stepB')]))), // Exercise step (A or B)
+        exerciseItemCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current exercise item count in editor
+        missionType: t.Optional(t.Nullable(t.Union([t.Literal('speaking'), t.Literal('discussion'), t.Literal('reading'), t.Literal('listening')]))), // Mission type
+        missionQuestionCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current mission question count in editor
       }),
       detail: {
         tags: ['AI'],

@@ -480,6 +480,80 @@ export interface GenerateIntroductionResult {
       questions?: { question: string; answer?: string }[];
     }[];
   };
+  // Exercise section content (Section 4)
+  exerciseData?: {
+    exerciseStep: 'stepA' | 'stepB';
+    exerciseType: string;
+    // Step A common
+    instructions?: string;
+    instructionsTranslation?: string;
+    // Step A - Rephrase
+    showExpressions?: boolean;
+    expressions?: string[];
+    showExample?: boolean;
+    exampleSentence?: string;
+    exampleAnswer?: string;
+    exerciseItems?: { sentence: string }[];
+    // Step A - Choose
+    chooseItems?: { sentence: string }[];
+    // Step A - Change
+    changeItems?: { sentence: string }[];
+    // Answer key
+    answers?: { text: string }[];
+    tutorSteps?: any[];
+    // Step B common
+    stepBInstruction?: string;
+    stepBInstructionTranslation?: string;
+    // Step B - Conversation
+    conversations?: { speechBubble: string; position: string }[];
+    // Step B - Multiple Choice
+    multipleChoiceItems?: { boldSentence: string; optionA: string; optionB: string }[];
+    // Step B - Speech
+    speechContent?: string;
+    // Step B - Compare
+    compareWordBox?: string[];
+    compareImages?: { label: string }[];
+    compareExample?: string;
+    compareItems?: { sentence: string }[];
+    stepBTutorSteps?: any[];
+  };
+  // Mission section content (Section 5)
+  missionData?: {
+    missionType: 'speaking' | 'discussion' | 'reading' | 'listening';
+    sectionNumber: number;
+    sectionTitle: string;
+    challengeNumber: number;
+    challengeName: string;
+    duration: string;
+    situation: string;
+    situationTranslation?: string;
+    instruction: string;
+    instructionTranslation?: string;
+    showGrammarTip: boolean;
+    grammarTipTitle: string;
+    grammarTipItems: string[];
+    image?: string;
+    tutorSteps: {
+      instruction: string;
+      scripts?: { text: string }[];
+      tips?: { text: string }[];
+      listeningScript?: string;
+    }[];
+    questionsIntro?: string;
+    questions: { question: string; hints: string[] }[];
+    // Discussion type specific
+    isOptional?: boolean;
+    topics?: { title: string; questions: string[] }[];
+    // Reading type specific
+    readingPassage?: {
+      title: string;
+      author?: string;
+      blocks: { type: 'paragraph' | 'images'; text?: string; image?: string }[];
+      closingQuestion?: string;
+    };
+    // Listening type specific
+    listeningScript?: string;
+  };
 }
 
 const introductionGeneratorAgent = new Agent({
@@ -954,6 +1028,515 @@ Respond ONLY in JSON format:
 `
 });
 
+// ============================================================================
+// EXERCISE SECTION AGENTS (Section 4)
+// ============================================================================
+
+// Exercise Step A - Rephrase Agent
+const exerciseRephraseAgent = new Agent({
+  name: 'Exercise Rephrase Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a REPHRASE exercise for Step A of the Exercise section.
+Students will rephrase sentences using vocabulary/expressions from the lesson.
+
+IMPORTANT GUIDELINES:
+- Create clear, context-appropriate sentences that need rephrasing
+- Sentences should use everyday language that can be rephrased with lesson vocabulary
+- Each sentence should have a natural way to be rephrased using expressions from the word box
+- Provide example with original sentence and rephrased version
+- Generate answer key for tutor reference
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepAType": "rephrase",
+    "instructions": "Rephrase the sentences using the expressions in the box. Some expressions may be used more than once.",
+    "instructionsTranslation": "Translation of instructions",
+    "showExpressions": true,
+    "expressions": ["expression 1", "expression 2", "expression 3"],
+    "showExample": true,
+    "exampleSentence": "ex. Original sentence that needs rephrasing.",
+    "exampleAnswer": "Rephrased sentence using an expression.",
+    "exerciseItems": [
+      { "sentence": "First sentence to rephrase" },
+      { "sentence": "Second sentence to rephrase" },
+      { "sentence": "Third sentence to rephrase" }
+    ],
+    "answers": [
+      { "text": "First answer" },
+      { "text": "Second answer" },
+      { "text": "Third answer" }
+    ],
+    "tutorSteps": [
+      { "instruction": "Introduce Exercise.", "scripts": [{ "text": "Okay, now let's do Exercise." }, { "text": "We're going to practice the expressions we learned earlier." }] },
+      { "instruction": "Read the instructions." },
+      { "instruction": "Read the example." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
+      { "instruction": "Have the student read the first sentence." },
+      { "instruction": "Ask them to rephrase the sentence.", "scripts": [{ "text": "Please rephrase the sentence using one of the expressions in the box." }], "tips": [{ "text": "The student should read the full sentence." }] },
+      { "instruction": "Repeat with remaining sentences.", "tips": [{ "text": "Student's answers may vary. Accept any grammatically correct answers." }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Great! Let's go to the next section!" }] }
+    ]
+  }
+}
+`
+});
+
+// Exercise Step A - Choose Agent
+const exerciseChooseAgent = new Agent({
+  name: 'Exercise Choose Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a CHOOSE THE CORRECT WORD exercise for Step A.
+Students will choose the correct word from parenthetical options in each sentence.
+
+IMPORTANT GUIDELINES:
+- Create sentences with grammatical choices in parentheses like "(doesn't / don't)"
+- Focus on common grammar points relevant to the lesson
+- Each sentence should test a clear grammar concept
+- Provide answer key for tutor reference
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepAType": "choose",
+    "instructions": "Choose the correct word.",
+    "instructionsTranslation": "Translation of instructions",
+    "chooseItems": [
+      { "sentence": "He (doesn't / don't) eat breakfast." },
+      { "sentence": "She does (she / her) hair for an hour!" },
+      { "sentence": "I (get / gets) dressed before breakfast." },
+      { "sentence": "They (doesn't / don't) drink tea for breakfast." }
+    ],
+    "answers": [
+      { "text": "He doesn't eat breakfast." },
+      { "text": "She does her hair for an hour!" },
+      { "text": "I get dressed before breakfast." },
+      { "text": "They don't drink tea for breakfast." }
+    ],
+    "tutorSteps": [
+      { "instruction": "Introduce Exercise.", "scripts": [{ "text": "Okay, now let's do Exercise." }] },
+      { "instruction": "Read the instructions." },
+      { "instruction": "Have the student read each sentence and choose the correct word." },
+      { "instruction": "Correct any mistakes.", "tips": [{ "text": "Briefly explain the grammar rule if the student makes an error." }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Great! Let's go to the next section!" }] }
+    ]
+  }
+}
+`
+});
+
+// Exercise Step A - Change Agent
+const exerciseChangeAgent = new Agent({
+  name: 'Exercise Change Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a CHANGE THE UNDERLINED exercise for Step A.
+Students will modify the underlined portion of sentences.
+
+IMPORTANT GUIDELINES:
+- Create sentences with underlined portions using <u> tags
+- The underlined part should be what students need to change/transform
+- Focus on grammar transformations relevant to the lesson
+- Provide answer key for tutor reference
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepAType": "change",
+    "instructions": "Change the underlined part of each sentence.",
+    "instructionsTranslation": "Translation of instructions",
+    "changeItems": [
+      { "sentence": "I need to find a place to stay tonight. <u>Is there a nice hotel around here?</u>" },
+      { "sentence": "I want to go shopping for clothes tomorrow. <u>Where's the mall?</u>" },
+      { "sentence": "That restaurant has really good reviews. <u>Is it expensive?</u>" }
+    ],
+    "answers": [
+      { "text": "Could you tell me if there's a nice hotel around here?" },
+      { "text": "Could you tell me where the mall is?" },
+      { "text": "Could you tell me if it's expensive?" }
+    ],
+    "tutorSteps": [
+      { "instruction": "Introduce Exercise.", "scripts": [{ "text": "Okay, now let's do Exercise." }] },
+      { "instruction": "Read the instructions." },
+      { "instruction": "Have the student read each sentence and change the underlined part." },
+      { "instruction": "Correct any mistakes.", "tips": [{ "text": "Model the correct transformation if needed." }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Great! Let's go to the next section!" }] }
+    ]
+  }
+}
+`
+});
+
+// Exercise Step B - Conversation Agent
+const exerciseConversationAgent = new Agent({
+  name: 'Exercise Conversation Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a CONVERSATION exercise for Step B.
+Students will complete speech bubbles in a conversation using their own information.
+
+IMPORTANT GUIDELINES:
+- Create natural conversation exchanges with fill-in blanks (_____)
+- Blanks should be for personal information or opinions
+- Create 2-4 conversation bubbles alternating left/right positions
+- Make conversations relevant to the lesson topic
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepBType": "conversation",
+    "stepBInstruction": "Complete the conversation using your own information.",
+    "stepBInstructionTranslation": "Translation of instructions",
+    "conversations": [
+      { "speechBubble": "Hi! My name is _____. I'm from _____.", "position": "left" },
+      { "speechBubble": "Nice to meet you! What do you do for a living?", "position": "right" },
+      { "speechBubble": "I'm a _____. I work at _____.", "position": "left" },
+      { "speechBubble": "That sounds interesting! Do you enjoy it?", "position": "right" }
+    ],
+    "stepBTutorSteps": [
+      { "instruction": "Introduce Step B.", "scripts": [{ "text": "Now let's practice a conversation." }] },
+      { "instruction": "Read the instructions." },
+      { "instruction": "Have the student complete the speech bubbles.", "tips": [{ "text": "Encourage the student to use their own information." }] },
+      { "instruction": "Practice the conversation together." },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Great job! Let's continue!" }] }
+    ]
+  }
+}
+`
+});
+
+// Exercise Step B - Multiple Choice Agent
+const exerciseMultipleChoiceAgent = new Agent({
+  name: 'Exercise Multiple Choice Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a MULTIPLE CHOICE exercise for Step B.
+Students will choose the correct interpretation of bold sentences.
+
+IMPORTANT GUIDELINES:
+- Create sentences with vocabulary/expressions from the lesson in bold
+- Provide two options: one correct interpretation, one incorrect
+- Options should test understanding of meaning, not just grammar
+- Make distractors plausible but clearly wrong
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepBType": "multiple-choice",
+    "stepBInstruction": "Choose the correct meaning of the bold sentence.",
+    "stepBInstructionTranslation": "Translation of instructions",
+    "multipleChoiceItems": [
+      { "boldSentence": "James thinks the world of his mother.", "optionA": "He thinks she focused on her work too much.", "optionB": "He admires and respects her greatly." },
+      { "boldSentence": "The movie was a remarkable achievement.", "optionA": "It stands out from other movies made that year.", "optionB": "It was similar to many other movies." },
+      { "boldSentence": "She let the cat out of the bag.", "optionA": "She accidentally revealed a secret.", "optionB": "She released a cat from a bag." }
+    ],
+    "stepBTutorSteps": [
+      { "instruction": "Introduce Step B.", "scripts": [{ "text": "Now let's check your understanding." }] },
+      { "instruction": "Read the instructions." },
+      { "instruction": "Have the student choose the correct option for each item." },
+      { "instruction": "Discuss any mistakes.", "tips": [{ "text": "Explain why the correct answer is right." }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Excellent! Let's continue!" }] }
+    ]
+  }
+}
+`
+});
+
+// Exercise Step B - Speech Agent
+const exerciseSpeechAgent = new Agent({
+  name: 'Exercise Speech Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a SPEECH exercise for Step B.
+Students will complete a speech with blanks using parenthetical choices or their own information.
+
+IMPORTANT GUIDELINES:
+- Create a single speech/monologue with blanks (_____)
+- Include some blanks with choices in parentheses like "(often / sometimes / rarely)"
+- Include some open blanks for personal information
+- Make the speech topic relevant to the lesson
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepBType": "speech",
+    "stepBInstruction": "Complete the speech using your own information.",
+    "stepBInstructionTranslation": "Translation of instructions",
+    "speechContent": "I (often / sometimes / rarely) go to _____. I think it's _____ to spend time there. I usually go (alone / with _____) because _____. My favorite thing to do there is _____. I really enjoy it!",
+    "stepBTutorSteps": [
+      { "instruction": "Introduce Step B.", "scripts": [{ "text": "Now let's complete a speech." }] },
+      { "instruction": "Read the instructions." },
+      { "instruction": "Have the student complete the speech with their own information." },
+      { "instruction": "Ask the student to read the completed speech aloud." },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Great speech! Let's continue!" }] }
+    ]
+  }
+}
+`
+});
+
+// Exercise Step B - Compare Agent
+const exerciseCompareAgent = new Agent({
+  name: 'Exercise Compare Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a COMPARE exercise for Step B.
+Students will compare items using words from a word box.
+
+IMPORTANT GUIDELINES:
+- Create a word box with comparison words like "a little", "far", "a lot", "easily"
+- Include 2-4 images/items to compare with labels
+- Create comparison sentences with clues in parentheses
+- Focus on comparative structures relevant to the lesson
+
+Respond ONLY in JSON format:
+{
+  "exerciseData": {
+    "stepBType": "compare",
+    "stepBInstruction": "Compare the items using the words in the box.",
+    "stepBInstructionTranslation": "Translation of instructions",
+    "compareWordBox": ["a little", "far", "a lot", "easily"],
+    "compareImages": [
+      { "label": "Option A" },
+      { "label": "Option B" },
+      { "label": "Option C" }
+    ],
+    "compareExample": "Option A is far more expensive than Option C.",
+    "compareItems": [
+      { "sentence": "(Option A and B: expensive)" },
+      { "sentence": "(Option B and C: popular)" },
+      { "sentence": "(Option A, B, and C: romantic)" }
+    ],
+    "stepBTutorSteps": [
+      { "instruction": "Introduce Step B.", "scripts": [{ "text": "Now let's practice comparisons." }] },
+      { "instruction": "Read the instructions and word box." },
+      { "instruction": "Show the example if available." },
+      { "instruction": "Have the student make comparisons using the clues." },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Great comparisons! Let's continue!" }] }
+    ]
+  }
+}
+`
+});
+
+// ============================================================================
+// MISSION SECTION AGENTS (Section 5)
+// ============================================================================
+
+// Mission Speaking Agent - Roleplay-based speaking challenge
+const missionSpeakingAgent = new Agent({
+  name: 'Mission Speaking Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a SPEAKING mission challenge.
+This is a roleplay activity where the tutor plays a character and the student practices speaking.
+
+IMPORTANT GUIDELINES:
+- Create a realistic roleplay situation relevant to the lesson topic
+- Include clear tutor steps for conducting the roleplay
+- Generate 5-8 roleplay questions with optional hints for students who struggle
+- Questions should flow naturally like a real conversation
+- Include grammar tip reminder if relevant to the lesson
+- Make situations practical and relatable (restaurant, hotel, shopping, etc.)
+
+Respond ONLY in JSON format:
+{
+  "missionData": {
+    "missionType": "speaking",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "5-6 minutes",
+    "situation": "Describe the roleplay scenario the student will be in",
+    "situationTranslation": "Translation of situation",
+    "instruction": "What the student should do in this roleplay",
+    "instructionTranslation": "Translation of instruction",
+    "showGrammarTip": true,
+    "grammarTipTitle": "Today's grammar tip",
+    "grammarTipItems": ["grammar concept 1", "grammar concept 2"],
+    "tutorSteps": [
+      { "instruction": "Introduce Challenge 1.", "scripts": [{ "text": "Okay, now let's do the Challenge." }, { "text": "First we have Challenge 1." }] },
+      { "instruction": "Read the situation." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
+      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "I'll be the (character)." }, { "text": "You'll be yourself." }] },
+      { "instruction": "Start the roleplay.", "scripts": [{ "text": "I'll start." }] },
+      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions only as guides. Ask other questions based on the flow." }] }
+    ],
+    "questionsIntro": "(Greeting or opening line for the roleplay)",
+    "questions": [
+      { "question": "First roleplay question", "hints": ["Hint if student struggles"] },
+      { "question": "Second roleplay question", "hints": [] },
+      { "question": "Third roleplay question", "hints": ["Another helpful hint"] },
+      { "question": "Fourth roleplay question", "hints": [] },
+      { "question": "Fifth roleplay question", "hints": [] },
+      { "question": "Closing question", "hints": ["(Thank the student or wrap up)"] }
+    ]
+  }
+}
+`
+});
+
+// Mission Discussion Agent - Topic-based discussion with questions
+const missionDiscussionAgent = new Agent({
+  name: 'Mission Discussion Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a DISCUSSION mission challenge.
+This is a discussion activity where students discuss topics and answer open-ended questions.
+
+IMPORTANT GUIDELINES:
+- Create 2-4 discussion topics related to the lesson theme
+- Each topic should have 2-4 thought-provoking questions
+- Questions should encourage personal opinions and experiences
+- Topics can be marked as optional for shorter lessons
+- Include tutor steps for facilitating the discussion
+- Make questions appropriate for the skill level
+
+Respond ONLY in JSON format:
+{
+  "missionData": {
+    "missionType": "discussion",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "5-6 minutes",
+    "situation": "Overview of the discussion activity",
+    "situationTranslation": "Translation of situation",
+    "instruction": "What students should do during the discussion",
+    "instructionTranslation": "Translation of instruction",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "isOptional": false,
+    "tutorSteps": [
+      { "instruction": "Introduce the discussion.", "scripts": [{ "text": "Now let's have a discussion." }] },
+      { "instruction": "Present the first topic." },
+      { "instruction": "Ask the discussion questions and encourage elaboration." },
+      { "instruction": "Move to the next topic if time allows." },
+      { "instruction": "Wrap up the discussion.", "scripts": [{ "text": "Great discussion! Let's continue." }] }
+    ],
+    "topics": [
+      {
+        "title": "First Discussion Topic",
+        "questions": [
+          "What do you think about...?",
+          "Have you ever experienced...?",
+          "Why do you think...?"
+        ]
+      },
+      {
+        "title": "Second Discussion Topic",
+        "questions": [
+          "How would you feel if...?",
+          "What advice would you give...?"
+        ]
+      }
+    ],
+    "questions": []
+  }
+}
+`
+});
+
+// Mission Reading Agent - Reading comprehension challenge
+const missionReadingAgent = new Agent({
+  name: 'Mission Reading Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a READING mission challenge.
+This is a reading comprehension activity where students read a passage and discuss it.
+
+IMPORTANT GUIDELINES:
+- Create a reading passage with title and optional author
+- Passage should be 3-5 paragraphs, appropriate for the skill level
+- Include comprehension questions about the text
+- Questions should test understanding and encourage discussion
+- Include tutor steps for reading and discussion
+- Passage can be a story, article, poem, or informational text
+
+Respond ONLY in JSON format:
+{
+  "missionData": {
+    "missionType": "reading",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "6-8 minutes",
+    "situation": "You will read a passage and discuss it with your tutor.",
+    "situationTranslation": "Translation of situation",
+    "instruction": "Read the passage carefully and answer the questions.",
+    "instructionTranslation": "Translation of instruction",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "tutorSteps": [
+      { "instruction": "Introduce the reading.", "scripts": [{ "text": "Now let's do some reading." }] },
+      { "instruction": "Have the student read the passage aloud or silently." },
+      { "instruction": "Ask comprehension questions." },
+      { "instruction": "Discuss the closing question.", "scripts": [{ "text": "What did you think about the passage?" }] }
+    ],
+    "readingPassage": {
+      "title": "Title of the Reading Passage",
+      "author": "Author Name (optional)",
+      "blocks": [
+        { "type": "paragraph", "text": "First paragraph of the reading passage. This should introduce the topic and set the scene." },
+        { "type": "paragraph", "text": "Second paragraph continues the story or provides more information." },
+        { "type": "paragraph", "text": "Third paragraph develops the main idea or conflict." },
+        { "type": "paragraph", "text": "Final paragraph provides a conclusion or resolution." }
+      ],
+      "closingQuestion": "What do you think about the main idea of this passage?"
+    },
+    "questions": [
+      { "question": "What is the main topic of the passage?", "hints": [] },
+      { "question": "What happened in the beginning?", "hints": [] },
+      { "question": "How did the story end?", "hints": [] },
+      { "question": "What lesson can we learn from this?", "hints": [] }
+    ]
+  }
+}
+`
+});
+
+// Mission Listening Agent - Listening comprehension challenge
+const missionListeningAgent = new Agent({
+  name: 'Mission Listening Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a LISTENING mission challenge.
+This is a listening comprehension activity where the tutor reads a script and students respond.
+
+IMPORTANT GUIDELINES:
+- Create a listening script that the tutor will read to the student
+- Include key words/phrases in <u> tags that students should remember
+- After listening, students should roleplay using the information they heard
+- Include tutor steps for the listening and follow-up roleplay
+- Generate questions for the roleplay that test comprehension
+- Make the listening script realistic (friend's recommendation, announcement, etc.)
+
+Respond ONLY in JSON format:
+{
+  "missionData": {
+    "missionType": "listening",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "5-6 minutes",
+    "situation": "Listen to your friend talk about something, then use that information.",
+    "situationTranslation": "Translation of situation",
+    "instruction": "After listening, you will practice using the information.",
+    "instructionTranslation": "Translation of instruction",
+    "showGrammarTip": true,
+    "grammarTipTitle": "Today's grammar tip",
+    "grammarTipItems": ["grammar concept to practice"],
+    "tutorSteps": [
+      { "instruction": "Introduce Challenge 1.", "scripts": [{ "text": "Okay, now let's do the Challenge." }] },
+      { "instruction": "Read the situation." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
+      { "instruction": "Set up the listening.", "scripts": [{ "text": "First, let's listen." }, { "text": "I'll be your friend." }] },
+      { "instruction": "Read the listening script below, emphasizing the underlined words.", "listeningScript": "Hey, (student's name)! I found this amazing place. It was so <u>incredible</u>! The <u>atmosphere was cozy</u> and the <u>service was excellent</u>. You should definitely try it!" },
+      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "Now, I'll be the (character)." }, { "text": "Please use the information you heard." }] },
+      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions only as guides." }] }
+    ],
+    "listeningScript": "Hey, (student's name)! I found this amazing place. It was so <u>incredible</u>! The <u>atmosphere was cozy</u> and the <u>service was excellent</u>. You should definitely try it!",
+    "questionsIntro": "(Greet the customer/start the roleplay)",
+    "questions": [
+      { "question": "First question based on listening", "hints": ["Hint with underlined info from script"] },
+      { "question": "Second question", "hints": [] },
+      { "question": "Third question", "hints": ["Another hint with script info"] },
+      { "question": "Final question", "hints": ["(Wrap up the roleplay)"] }
+    ]
+  }
+}
+`
+});
+
 export const generateIntroductionContent = async (
   topic: string,
   skillLevel: string,
@@ -975,7 +1558,12 @@ export const generateIntroductionContent = async (
   expressionCount?: number | null, // Current expression count in editor (AI will generate this many)
   applyType?: 'speaking' | 'listening' | 'reading' | null, // Apply activity type
   dialogueLineCount?: number | null, // Current dialogue line count in editor
-  generateTrivia?: boolean | null // Whether to generate standalone trivia content
+  generateTrivia?: boolean | null, // Whether to generate standalone trivia content
+  exerciseType?: string | null, // Exercise type (rephrase/choose/change or conversation/multiple-choice/speech/compare)
+  exerciseStep?: 'stepA' | 'stepB' | null, // Exercise step (A or B)
+  exerciseItemCount?: number | null, // Current exercise item count in editor
+  missionType?: 'speaking' | 'discussion' | 'reading' | 'listening' | null, // Mission type
+  missionQuestionCount?: number | null // Current mission question count in editor
 ): Promise<GenerateIntroductionResult> => {
   try {
     // Map lesson level (1-10) to complexity descriptor
@@ -1408,6 +1996,259 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
             scripts: step.scripts || [],
             questions: step.questions || [],
           })),
+        },
+      };
+    }
+
+    // ========================================================================
+    // EXERCISE SECTION GENERATION (Section 4)
+    // ========================================================================
+    if (exerciseType && exerciseStep) {
+      const itemCount = exerciseItemCount || 4; // Default to 4 items
+      
+      let exerciseAgent: Agent;
+      let exercisePrompt = '';
+      
+      // Select appropriate agent based on exercise type and step
+      if (exerciseStep === 'stepA') {
+        if (exerciseType === 'rephrase') {
+          exerciseAgent = exerciseRephraseAgent;
+        } else if (exerciseType === 'choose') {
+          exerciseAgent = exerciseChooseAgent;
+        } else {
+          exerciseAgent = exerciseChangeAgent;
+        }
+      } else {
+        // Step B
+        if (exerciseType === 'conversation') {
+          exerciseAgent = exerciseConversationAgent;
+        } else if (exerciseType === 'multiple-choice') {
+          exerciseAgent = exerciseMultipleChoiceAgent;
+        } else if (exerciseType === 'speech') {
+          exerciseAgent = exerciseSpeechAgent;
+        } else {
+          exerciseAgent = exerciseCompareAgent;
+        }
+      }
+
+      exercisePrompt = `[Variation ID: ${variationSeed}] Generate a ${exerciseType.toUpperCase()} exercise for ${exerciseStep === 'stepA' ? 'Step A' : 'Step B'} of the Exercise section.
+
+CONTEXT:
+- Lesson Topic: ${topic}
+- Skill Level: ${skillLevel}
+- Lesson Skill: ${skill}
+${lessonGoal ? `- Lesson Goal: ${lessonGoal}` : ''}
+${level ? `- Level: ${level} (${complexityDesc})` : ''}
+${chapter ? `- Chapter: ${chapter}` : ''}
+${lessonNumber ? `- Lesson Number: ${lessonNumber}` : ''}
+
+REQUIREMENTS:
+1. Create exactly ${itemCount} exercise items${exerciseStep === 'stepA' ? ' with answer key' : ''}.
+2. Content should reinforce vocabulary and grammar from the lesson.
+3. Difficulty should match the level (${complexityDesc}).
+4. Make exercises practical and relevant to the lesson topic.
+${shouldIncludeTranslation ? `5. Include translations in ${langName} for instructions.` : '5. Do NOT include translations.'}
+
+${customPrompt ? `ADDITIONAL NOTES: ${customPrompt}` : ''}
+${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
+
+      const exerciseResponse = await exerciseAgent.generate(exercisePrompt);
+      const text = typeof exerciseResponse.text === 'string' ? exerciseResponse.text : '';
+      
+      // Parse JSON from response
+      let parsed: any = {};
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonContent = jsonMatch ? jsonMatch[0] : text;
+      
+      try {
+        parsed = JSON.parse(jsonContent);
+      } catch (e) {
+        console.error('Failed to parse exercise response:', text);
+      }
+
+      const exercise = parsed.exerciseData || {};
+      
+      return {
+        introTexts: [],
+        lessonIssue: { title: '', points: [] },
+        lessonGoalDuration: '1 minute',
+        lessonGoalSteps: [],
+        exerciseData: {
+          exerciseStep: exerciseStep,
+          exerciseType: exerciseType,
+          // Step A common fields
+          instructions: exercise.instructions || '',
+          instructionsTranslation: shouldIncludeTranslation ? (exercise.instructionsTranslation || '') : '',
+          // Step A - Rephrase fields
+          showExpressions: exercise.showExpressions || false,
+          expressions: exercise.expressions || [],
+          showExample: exercise.showExample || false,
+          exampleSentence: exercise.exampleSentence || '',
+          exampleAnswer: exercise.exampleAnswer || '',
+          exerciseItems: (exercise.exerciseItems || []).slice(0, itemCount).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Step A - Choose fields
+          chooseItems: (exercise.chooseItems || []).slice(0, itemCount).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Step A - Change fields
+          changeItems: (exercise.changeItems || []).slice(0, itemCount).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Answer key
+          answers: (exercise.answers || []).slice(0, itemCount).map((answer: any) => ({
+            text: answer.text || '',
+          })),
+          // Tutor steps
+          tutorSteps: (exercise.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            answerKey: step.answerKey || [],
+          })),
+          // Step B common fields
+          stepBInstruction: exercise.stepBInstruction || '',
+          stepBInstructionTranslation: shouldIncludeTranslation ? (exercise.stepBInstructionTranslation || '') : '',
+          // Step B - Conversation fields
+          conversations: (exercise.conversations || []).map((conv: any) => ({
+            speechBubble: conv.speechBubble || '',
+            position: conv.position || 'left',
+          })),
+          // Step B - Multiple Choice fields
+          multipleChoiceItems: (exercise.multipleChoiceItems || []).map((item: any) => ({
+            boldSentence: item.boldSentence || '',
+            optionA: item.optionA || '',
+            optionB: item.optionB || '',
+          })),
+          // Step B - Speech fields
+          speechContent: exercise.speechContent || '',
+          // Step B - Compare fields
+          compareWordBox: exercise.compareWordBox || [],
+          compareImages: (exercise.compareImages || []).map((img: any) => ({
+            label: img.label || '',
+          })),
+          compareExample: exercise.compareExample || '',
+          compareItems: (exercise.compareItems || []).map((item: any) => ({
+            sentence: item.sentence || '',
+          })),
+          // Step B tutor steps
+          stepBTutorSteps: (exercise.stepBTutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+          })),
+        },
+      };
+    }
+
+    // ========================================================================
+    // MISSION SECTION GENERATION (Section 5)
+    // ========================================================================
+    if (missionType) {
+      const questionCount = missionQuestionCount || 6; // Default to 6 questions
+      
+      let missionAgent: Agent;
+      
+      // Select appropriate agent based on mission type
+      if (missionType === 'speaking') {
+        missionAgent = missionSpeakingAgent;
+      } else if (missionType === 'discussion') {
+        missionAgent = missionDiscussionAgent;
+      } else if (missionType === 'reading') {
+        missionAgent = missionReadingAgent;
+      } else {
+        missionAgent = missionListeningAgent;
+      }
+
+      const missionPrompt = `[Variation ID: ${variationSeed}] Generate a ${missionType.toUpperCase()} mission challenge for Section 5 (Mission).
+
+CONTEXT:
+- Lesson Topic: ${topic}
+- Skill Level: ${skillLevel}
+- Lesson Skill: ${skill}
+${lessonGoal ? `- Lesson Goal: ${lessonGoal}` : ''}
+${level ? `- Level: ${level} (${complexityDesc})` : ''}
+${chapter ? `- Chapter: ${chapter}` : ''}
+${lessonNumber ? `- Lesson Number: ${lessonNumber}` : ''}
+
+REQUIREMENTS:
+1. Create a ${missionType} challenge appropriate for the skill level.
+2. ${missionType === 'speaking' || missionType === 'listening' ? `Generate exactly ${questionCount} roleplay questions with helpful hints.` : missionType === 'discussion' ? 'Generate 2-4 discussion topics with 2-4 questions each.' : 'Generate a reading passage with 4-6 comprehension questions.'}
+3. Content should reinforce vocabulary and grammar from the lesson.
+4. Difficulty should match the level (${complexityDesc}).
+5. Make the scenario realistic and practical for language learners.
+${shouldIncludeTranslation ? `6. Include translations in ${langName} for situation and instruction.` : '6. Do NOT include translations.'}
+
+${customPrompt ? `ADDITIONAL NOTES: ${customPrompt}` : ''}
+${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
+
+      const missionResponse = await missionAgent.generate(missionPrompt);
+      const text = typeof missionResponse.text === 'string' ? missionResponse.text : '';
+      
+      // Parse JSON from response
+      let parsed: any = {};
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonContent = jsonMatch ? jsonMatch[0] : text;
+      
+      try {
+        parsed = JSON.parse(jsonContent);
+      } catch (e) {
+        console.error('Failed to parse mission response:', text);
+      }
+
+      const mission = parsed.missionData || {};
+      
+      return {
+        introTexts: [],
+        lessonIssue: { title: '', points: [] },
+        lessonGoalDuration: '1 minute',
+        lessonGoalSteps: [],
+        missionData: {
+          missionType: missionType,
+          sectionNumber: 5,
+          sectionTitle: 'MISSION',
+          challengeNumber: mission.challengeNumber || 1,
+          challengeName: mission.challengeName || 'Challenge 1',
+          duration: mission.duration || '5-6 minutes',
+          situation: mission.situation || '',
+          situationTranslation: shouldIncludeTranslation ? (mission.situationTranslation || '') : '',
+          instruction: mission.instruction || '',
+          instructionTranslation: shouldIncludeTranslation ? (mission.instructionTranslation || '') : '',
+          showGrammarTip: mission.showGrammarTip || false,
+          grammarTipTitle: mission.grammarTipTitle || "Today's grammar tip",
+          grammarTipItems: mission.grammarTipItems || [],
+          image: '',
+          tutorSteps: (mission.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            listeningScript: step.listeningScript || '',
+          })),
+          questionsIntro: mission.questionsIntro || '',
+          questions: (mission.questions || []).slice(0, questionCount).map((q: any) => ({
+            question: q.question || '',
+            hints: q.hints || [],
+          })),
+          // Discussion type specific
+          isOptional: mission.isOptional || false,
+          topics: (mission.topics || []).map((topic: any) => ({
+            title: topic.title || '',
+            questions: topic.questions || [],
+          })),
+          // Reading type specific
+          readingPassage: mission.readingPassage ? {
+            title: mission.readingPassage.title || '',
+            author: mission.readingPassage.author || '',
+            blocks: (mission.readingPassage.blocks || []).map((block: any) => ({
+              type: block.type || 'paragraph',
+              text: block.text || '',
+              image: block.image || '',
+            })),
+            closingQuestion: mission.readingPassage.closingQuestion || '',
+          } : undefined,
+          // Listening type specific
+          listeningScript: mission.listeningScript || '',
         },
       };
     }
