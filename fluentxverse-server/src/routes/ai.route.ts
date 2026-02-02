@@ -155,7 +155,10 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.includeTranslation, // Pass translation toggle
           body.translationLanguage, // Pass translation language
           body.vocabularyCount, // Pass current vocabulary count from editor
-          body.expressionCount // Pass current expression count from editor
+          body.expressionCount, // Pass current expression count from editor
+          body.applyType, // Pass Apply activity type (speaking/listening/reading)
+          body.dialogueLineCount, // Pass current dialogue line count from editor
+          body.generateTrivia // Pass trivia generation flag
         );
         return {
           success: true,
@@ -190,6 +193,9 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         stepBType: t.Optional(t.Nullable(t.Union([t.Literal('speak-your-mind'), t.Literal('grammar-tip'), t.Literal('pronunciation')]))), // Step B type
         vocabularyCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current vocabulary count in editor
         expressionCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current expression count in editor
+        applyType: t.Optional(t.Nullable(t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading')]))), // Apply activity type
+        dialogueLineCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 30 }))), // Current dialogue line count in editor
+        generateTrivia: t.Optional(t.Boolean()), // Whether to generate standalone trivia content
       }),
       detail: {
         tags: ['AI'],

@@ -448,6 +448,38 @@ export interface GenerateIntroductionResult {
       phrases: { phrase: string; pronunciationGuide: string; exampleSentence: string }[];
     };
   };
+  // Apply section content (Section 3)
+  applyData?: {
+    activityType: 'speaking' | 'listening' | 'reading';
+    activityDuration: string;
+    situationText: string;
+    situationTranslation?: string;
+    dialogueLines: { speaker: string; text: string; isAction?: boolean }[];
+    readingText?: string;
+    tutorSteps: {
+      instruction: string;
+      scripts?: { text: string }[];
+      tips?: { text: string }[];
+      questions?: { question: string; answer?: string }[];
+      listeningScript?: string;
+    }[];
+    triviaEnabled?: boolean;
+    triviaText?: string;
+    triviaTranslation?: string;
+    triviaDuration?: string;
+    triviaTutorSteps?: any[];
+  };
+  // Standalone Trivia content (separate from Apply)
+  triviaData?: {
+    triviaText: string;
+    triviaTranslation?: string;
+    triviaDuration?: string;
+    triviaTutorSteps?: {
+      instruction: string;
+      scripts?: { text: string }[];
+      questions?: { question: string; answer?: string }[];
+    }[];
+  };
 }
 
 const introductionGeneratorAgent = new Agent({
@@ -627,19 +659,22 @@ const expressionsListAgent = new Agent({
 When given a lesson goal, level, and topic:
 1. Carefully analyze the LESSON GOAL and select expressions that students will need to accomplish it.
 2. Generate a JSON object with a single key "expressions" containing an array of expression entries.
-3. Each entry must be: { "expression": "...", "definitionLine": "...", "exampleSentence": "..." }
-3. The definitionLine should explain the expression with the expression itself in <strong> tags.
+3. Each entry must be: { "expression": "...", "definitionLine": "...", "exampleSentence": "...", "translation": "..." }
+4. The definitionLine should explain the expression with the expression itself in <strong> tags.
    Example: "To <strong>cost an arm and a leg</strong> means to be very expensive."
-4. The exampleSentence should show usage in context with the expression in <strong> tags, wrapped in <em> for italics.
+5. The exampleSentence should show usage in context with the expression in <strong> tags, wrapped in <em> for italics.
    Example: "<em>Staying at a five-star hotel will <strong>cost an arm and a leg</strong>.</em>"
-5. Choose idiomatic expressions and phrases appropriate for the lesson level:
+6. The translation field is for translating the EXPLANATION/DEFINITION (what the expression means), NOT the expression itself.
+   - This must be PLAIN TEXT only - NO HTML tags allowed in translations
+   - Example: For "cost an arm and a leg", the translation explains "very expensive" in the target language
+7. Choose idiomatic expressions and phrases appropriate for the lesson level:
    - Level 1-2: 2-3 very common expressions (e.g., "nice to meet you", "how are you")
    - Level 3-4: 3-4 practical expressions and basic idioms
    - Level 5+: 4-5 idiomatic expressions and phrasal verbs
-6. Respond ONLY in JSON with no extra commentary. Example:
+8. Respond ONLY in JSON with no extra commentary. Example:
 {
   "expressions": [
-    { "expression": "cost an arm and a leg", "definitionLine": "To <strong>cost an arm and a leg</strong> means to be very expensive.", "exampleSentence": "<em>Staying at a five-star hotel will <strong>cost an arm and a leg</strong>.</em>" }
+    { "expression": "cost an arm and a leg", "definitionLine": "To <strong>cost an arm and a leg</strong> means to be very expensive.", "exampleSentence": "<em>Staying at a five-star hotel will <strong>cost an arm and a leg</strong>.</em>", "translation": "とても高価であることを意味します。" }
   ]
 }
 `
@@ -738,6 +773,187 @@ Respond ONLY in JSON:
 `
 });
 
+// ============================================================================
+// AI AGENTS FOR APPLY SECTION (Section 3 - Speaking/Listening/Reading)
+// ============================================================================
+
+const applySpeakingAgent = new Agent({
+  name: 'Apply Speaking Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a SPEAKING activity for the Apply section.
+This section features a realistic dialogue scenario where students practice speaking with vocabulary from the lesson.
+
+IMPORTANT GUIDELINES:
+- Create a realistic, engaging conversation scenario between 2 characters
+- Use simple, natural dialogue appropriate for the level
+- Include underlined words (<u>word</u>) for important vocabulary/expressions from the lesson
+- Action descriptions should be marked with isAction: true (e.g., "(laughs)")
+- Dialogue should demonstrate practical use of the lesson content
+- Create tutor steps with scripts and tips for guiding the activity
+- Include a TRIVIA TIME section with an interesting cultural or language fact related to the topic
+
+Respond ONLY in JSON format:
+{
+  "applyData": {
+    "activityType": "speaking",
+    "activityDuration": "3 minutes",
+    "situationText": "A short description of the scenario (1 sentence)",
+    "situationTranslation": "Translation of the situation in target language",
+    "dialogueLines": [
+      { "speaker": "Character1", "text": "First line of dialogue with <u>key vocabulary</u>", "isAction": false },
+      { "speaker": "Character2", "text": "Response with <u>another expression</u>", "isAction": false },
+      { "speaker": "Character1", "text": "(laughs)", "isAction": true }
+    ],
+    "tutorSteps": [
+      { "instruction": "Introduce Apply.", "scripts": [{ "text": "Okay, now let's do Apply." }] },
+      { "instruction": "Read the situation." },
+      { "instruction": "Assign roles and read through the dialogue together." },
+      { "instruction": "Ask comprehension questions.", "questions": [{ "question": "What did Character1 say about...?", "answer": "..." }] },
+      { "instruction": "Transition to the next part.", "scripts": [{ "text": "Great! Let's go to the next part!" }] }
+    ],
+    "triviaEnabled": true,
+    "triviaText": "An interesting cultural fact or language tip related to the lesson topic (2-3 sentences)",
+    "triviaTranslation": "Translation of the trivia in target language",
+    "triviaDuration": "1 minute",
+    "triviaTutorSteps": [
+      { "instruction": "Introduce the Trivia.", "scripts": [{ "text": "Let's look at the Trivia." }] },
+      { "instruction": "Read the trivia." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
+      { "instruction": "Ask the question below.", "questions": [{ "question": "A follow-up question about the trivia", "answer": "(student's own answer)" }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Excellent! Let's go to the next section!" }] }
+    ]
+  }
+}
+`
+});
+
+const applyListeningAgent = new Agent({
+  name: 'Apply Listening Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a LISTENING activity for the Apply section.
+This section features a listening script that the tutor reads aloud, followed by comprehension questions.
+
+IMPORTANT GUIDELINES:
+- Create an engaging listening script (a monologue or narrative) related to the lesson topic
+- Use appropriate vocabulary for the student level
+- Include underlined words (<u>word</u>) for important vocabulary to emphasize
+- Create 2-3 comprehension questions with answers
+- Script should be substantial but not overwhelming (150-250 words)
+- Include a TRIVIA TIME section with an interesting cultural or language fact related to the topic
+
+Respond ONLY in JSON format:
+{
+  "applyData": {
+    "activityType": "listening",
+    "activityDuration": "3 minutes",
+    "situationText": "A short description of the listening context (1 sentence)",
+    "situationTranslation": "Translation of the situation in target language",
+    "dialogueLines": [],
+    "tutorSteps": [
+      { "instruction": "Introduce Apply.", "scripts": [{ "text": "Okay, now let's do Apply." }, { "text": "First we have a listening activity." }] },
+      { "instruction": "Read the situation." },
+      { "instruction": "Set up the listening.", "scripts": [{ "text": "Let's listen to the speaker." }, { "text": "I'll read the script." }] },
+      { "instruction": "Read the listening script below, emphasizing the underlined words.", "listeningScript": "The full listening script with <u>emphasized words</u>..." },
+      { "instruction": "Ask the questions below.", "questions": [{ "question": "What was the main point?", "answer": "..." }, { "question": "How do you feel about this?", "answer": "(student's own answer)" }] },
+      { "instruction": "Transition to the next part.", "scripts": [{ "text": "Great! Let's go to the next part!" }] }
+    ],
+    "triviaEnabled": true,
+    "triviaText": "An interesting cultural fact or language tip related to the lesson topic (2-3 sentences)",
+    "triviaTranslation": "Translation of the trivia in target language",
+    "triviaDuration": "1 minute",
+    "triviaTutorSteps": [
+      { "instruction": "Introduce the Trivia.", "scripts": [{ "text": "Let's look at the Trivia." }] },
+      { "instruction": "Read the trivia." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
+      { "instruction": "Ask the question below.", "questions": [{ "question": "A follow-up question about the trivia", "answer": "(student's own answer)" }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Excellent! Let's go to the next section!" }] }
+    ]
+  }
+}
+`
+});
+
+const applyReadingAgent = new Agent({
+  name: 'Apply Reading Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a READING activity for the Apply section.
+This section features a reading passage (like an email, article, or letter) that students read and discuss.
+
+IMPORTANT GUIDELINES:
+- Create a realistic reading passage (email, letter, article, etc.) related to the lesson topic
+- Use appropriate vocabulary for the student level
+- Include underlined words (<u>word</u>) for important vocabulary
+- Create 2-3 comprehension questions with answers
+- Passage should be substantial but appropriate for the level (100-200 words for beginners, 150-300 for advanced)
+
+Respond ONLY in JSON format:
+{
+  "applyData": {
+    "activityType": "reading",
+    "activityDuration": "3 minutes",
+    "situationText": "A short description of what the student is reading (1 sentence)",
+    "situationTranslation": "Translation of the situation in target language",
+    "dialogueLines": [],
+    "readingText": "The full reading passage with <u>key vocabulary</u> underlined...",
+    "tutorSteps": [
+      { "instruction": "Introduce Apply.", "scripts": [{ "text": "Okay, now let's do Apply." }, { "text": "First we have a reading activity." }] },
+      { "instruction": "Read the situation." },
+      { "instruction": "Have the student read the passage aloud or silently." },
+      { "instruction": "Ask comprehension questions.", "questions": [{ "question": "What is the main message?", "answer": "..." }, { "question": "What do you think about...?", "answer": "(student's own answer)" }] },
+      { "instruction": "Transition to the next part.", "scripts": [{ "text": "Great! Let's go to the next part!" }] }
+    ],
+    "triviaEnabled": true,
+    "triviaText": "An interesting cultural fact or language tip related to the lesson topic (2-3 sentences)",
+    "triviaTranslation": "Translation of the trivia in target language",
+    "triviaDuration": "1 minute",
+    "triviaTutorSteps": [
+      { "instruction": "Introduce the Trivia.", "scripts": [{ "text": "Let's look at the Trivia." }] },
+      { "instruction": "Read the trivia." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
+      { "instruction": "Ask the question below.", "questions": [{ "question": "A follow-up question about the trivia", "answer": "(student's own answer)" }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Excellent! Let's go to the next section!" }] }
+    ]
+  }
+}
+`
+});
+
+// ============================================================================
+// TRIVIA TIME AGENT (Standalone trivia generation)
+// ============================================================================
+
+const triviaAgent = new Agent({
+  name: 'Trivia Time Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an ESL lesson content generator. Generate a TRIVIA TIME segment for a lesson.
+This segment provides interesting cultural facts, language tips, or fun facts related to the lesson topic to keep students engaged.
+
+IMPORTANT GUIDELINES:
+- Create interesting, engaging trivia that students will find memorable
+- Content should be culturally relevant or language-related
+- Include surprising or lesser-known facts
+- Create 1-2 follow-up discussion questions
+- Trivia should be educational but fun
+- Keep it concise (2-4 sentences for the main trivia)
+
+Respond ONLY in JSON format:
+{
+  "triviaData": {
+    "triviaText": "An interesting cultural fact, language tip, or fun fact related to the lesson topic (2-4 sentences). Make it engaging and memorable!",
+    "triviaTranslation": "Translation of the trivia in target language",
+    "triviaDuration": "1 minute",
+    "triviaTutorSteps": [
+      { "instruction": "Introduce the Trivia.", "scripts": [{ "text": "Let's look at the Trivia." }, { "text": "Here's something interesting about this topic." }] },
+      { "instruction": "Read the trivia." },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }, { "text": "Did you know that before?" }] },
+      { "instruction": "Ask the questions below.", "questions": [{ "question": "A thought-provoking follow-up question about the trivia topic", "answer": "(student's own answer)" }, { "question": "Another engaging question to spark discussion", "answer": "(student's own answer)" }] },
+      { "instruction": "Transition to the next section.", "scripts": [{ "text": "Interesting, right? Let's continue!" }] }
+    ]
+  }
+}
+`
+});
+
 export const generateIntroductionContent = async (
   topic: string,
   skillLevel: string,
@@ -756,7 +972,10 @@ export const generateIntroductionContent = async (
   includeTranslation?: boolean | null, // Whether to include translations
   translationLanguage?: 'japanese' | 'korean' | 'vietnamese' | 'chinese' | null, // Translation language
   vocabularyCount?: number | null, // Current vocabulary count in editor (AI will generate this many)
-  expressionCount?: number | null // Current expression count in editor (AI will generate this many)
+  expressionCount?: number | null, // Current expression count in editor (AI will generate this many)
+  applyType?: 'speaking' | 'listening' | 'reading' | null, // Apply activity type
+  dialogueLineCount?: number | null, // Current dialogue line count in editor
+  generateTrivia?: boolean | null // Whether to generate standalone trivia content
 ): Promise<GenerateIntroductionResult> => {
   try {
     // Map lesson level (1-10) to complexity descriptor
@@ -864,10 +1083,10 @@ Return ONLY JSON:
       // If user has items in editor, use that count; otherwise use level-based default
       const count = expressionCount && expressionCount > 0 ? expressionCount : defaultExprCount(level);
       const exprFormat = shouldIncludeTranslation 
-        ? '{ "expression": "...", "definitionLine": "To <strong>...</strong> means...", "exampleSentence": "<em>...</em>", "translation": "..." }'
+        ? '{ "expression": "...", "definitionLine": "To <strong>...</strong> means...", "exampleSentence": "<em>...</em>", "translation": "plain text translation of the definition/explanation" }'
         : '{ "expression": "...", "definitionLine": "To <strong>...</strong> means...", "exampleSentence": "<em>...</em>" }';
       const translationReq = shouldIncludeTranslation 
-        ? `6. Include ${langName} translations for each expression.`
+        ? `6. Include ${langName} translations of the DEFINITION/EXPLANATION (NOT the expression itself) in the "translation" field. The translation must be PLAIN TEXT only - NO HTML tags.`
         : '';
       
       let prompt = `[Variation ID: ${variationSeed}] Generate exactly ${count} FRESH expressions/idioms.
@@ -902,11 +1121,14 @@ Return ONLY JSON:
         parsed.expressions = [];
       }
 
+      // Helper to strip HTML tags from translation fields (translations should be plain text)
+      const stripHtml = (html: string) => html?.replace(/<[^>]*>/g, '') || '';
+
       const expressions = (parsed.expressions || []).slice(0, count).map((e: any) => ({
         expression: (e.expression || '').toString(),
         definitionLine: (e.definitionLine || e.definition || '').toString(),
         exampleSentence: (e.exampleSentence || e.example || '').toString(),
-        translation: shouldIncludeTranslation ? (e.translation || '').toString() : undefined,
+        translation: shouldIncludeTranslation ? stripHtml((e.translation || '').toString()) : undefined,
       }));
 
       return {
@@ -1029,6 +1251,165 @@ Return ONLY JSON:
           },
         };
       }
+    }
+
+    // ========================================================================
+    // APPLY SECTION GENERATION (Section 3)
+    // ========================================================================
+    if (applyType) {
+      // Determine dialogue line count for speaking activities
+      const defaultDialogueCount = (lvl?: number | null) => {
+        const n = lvl || 1;
+        if (n <= 2) return 6;
+        if (n <= 4) return 8;
+        if (n <= 6) return 10;
+        return 12;
+      };
+
+      const dialogueCount = dialogueLineCount && dialogueLineCount > 0 ? dialogueLineCount : defaultDialogueCount(level);
+
+      const translationInstruction = shouldIncludeTranslation
+        ? `Include ${langName} translations for situationTranslation field.`
+        : 'Do NOT include situationTranslation (leave it empty).';
+
+      let applyPrompt = `[Variation ID: ${variationSeed}] Generate an ${applyType.toUpperCase()} activity for the Apply section.
+
+=== LESSON CONTEXT ===
+Topic: ${topic}
+Lesson Goal: "${lessonGoal || 'General English practice'}"
+Level: ${level || 1} (${complexityDesc})
+Skill Level: ${skillLevel}
+
+=== REQUIREMENTS ===
+1. Create content that helps students APPLY what they learned to achieve the lesson goal.
+2. Match complexity to Level ${level || 1} (${complexityDesc}).
+3. ${translationInstruction}
+4. Use underlined words (<u>word</u>) for key vocabulary from the lesson.
+${applyType === 'speaking' ? `5. Create exactly ${dialogueCount} dialogue lines between 2 characters.
+6. Include some action lines like "(laughs)" or "(smiles)" marked with isAction: true.` : ''}
+${applyType === 'listening' ? '5. Create a substantial listening script (150-250 words) that the tutor will read aloud.\n6. Include 2-3 comprehension questions with answers.' : ''}
+${applyType === 'reading' ? '5. Create a reading passage (email, letter, or article) appropriate for the level.\n6. Include 2-3 comprehension questions with answers.' : ''}
+
+Return ONLY JSON in the format specified.`;
+
+      if (customPrompt) applyPrompt += `\n\nAdditional instructions: ${customPrompt}`;
+
+      let agent;
+      if (applyType === 'speaking') {
+        agent = applySpeakingAgent;
+      } else if (applyType === 'listening') {
+        agent = applyListeningAgent;
+      } else {
+        agent = applyReadingAgent;
+      }
+
+      const resp = await agent.generate(applyPrompt);
+      const text = resp.text || '';
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonContent = (jsonMatch?.[1] || text).trim();
+      let parsed: any = { applyData: {} };
+      try {
+        parsed = JSON.parse(jsonContent);
+      } catch (e) {
+        console.error('Failed to parse apply response:', text);
+      }
+
+      const apply = parsed.applyData || {};
+      
+      return {
+        introTexts: [],
+        lessonIssue: { title: '', points: [] },
+        lessonGoalDuration: '1 minute',
+        lessonGoalSteps: [],
+        applyData: {
+          activityType: applyType,
+          activityDuration: apply.activityDuration || '3 minutes',
+          situationText: apply.situationText || '',
+          situationTranslation: shouldIncludeTranslation ? (apply.situationTranslation || '') : '',
+          dialogueLines: (apply.dialogueLines || []).slice(0, dialogueCount).map((line: any) => ({
+            speaker: line.speaker || '',
+            text: line.text || '',
+            isAction: line.isAction || false,
+          })),
+          readingText: apply.readingText || '',
+          tutorSteps: (apply.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            questions: step.questions || [],
+            listeningScript: step.listeningScript || '',
+          })),
+          // Trivia Time content
+          triviaEnabled: apply.triviaEnabled !== false, // Default to true
+          triviaText: apply.triviaText || '',
+          triviaTranslation: shouldIncludeTranslation ? (apply.triviaTranslation || '') : '',
+          triviaDuration: apply.triviaDuration || '1 minute',
+          triviaTutorSteps: (apply.triviaTutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            questions: step.questions || [],
+          })),
+        },
+      };
+    }
+
+    // ========================================================================
+    // STANDALONE TRIVIA GENERATION
+    // ========================================================================
+    if (generateTrivia) {
+      let triviaPrompt = `[Variation ID: ${variationSeed}] Generate a TRIVIA TIME segment for an ESL lesson.
+
+CONTEXT:
+- Lesson Topic: ${topic}
+- Skill Level: ${skillLevel}
+- Lesson Skill: ${skill}
+${lessonGoal ? `- Lesson Goal: ${lessonGoal}` : ''}
+${level ? `- Level: ${level} (${complexityDesc})` : ''}
+${chapter ? `- Chapter: ${chapter}` : ''}
+${lessonNumber ? `- Lesson Number: ${lessonNumber}` : ''}
+
+REQUIREMENTS:
+1. Create an interesting cultural fact, language tip, or fun fact related to the lesson topic.
+2. Make it engaging and memorable - something students will want to share.
+3. Keep it educational but fun (2-4 sentences).
+4. Include thought-provoking follow-up questions for discussion.
+${shouldIncludeTranslation ? `5. Include translation in ${langName}.` : '5. Do NOT include translations.'}
+
+${customPrompt ? `ADDITIONAL NOTES: ${customPrompt}` : ''}
+${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
+
+      const triviaResponse = await triviaAgent.generate(triviaPrompt);
+      const text = typeof triviaResponse.text === 'string' ? triviaResponse.text : '';
+      
+      // Parse JSON from response
+      let parsed: any = {};
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonContent = jsonMatch ? jsonMatch[0] : text;
+      
+      try {
+        parsed = JSON.parse(jsonContent);
+      } catch (e) {
+        console.error('Failed to parse trivia response:', text);
+      }
+
+      const trivia = parsed.triviaData || {};
+      
+      return {
+        introTexts: [],
+        lessonIssue: { title: '', points: [] },
+        lessonGoalDuration: '1 minute',
+        lessonGoalSteps: [],
+        triviaData: {
+          triviaText: trivia.triviaText || '',
+          triviaTranslation: shouldIncludeTranslation ? (trivia.triviaTranslation || '') : '',
+          triviaDuration: trivia.triviaDuration || '1 minute',
+          triviaTutorSteps: (trivia.triviaTutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            questions: step.questions || [],
+          })),
+        },
+      };
     }
     
     // Determine which mode to use (default to 'improve' if current content exists, 'new' otherwise)

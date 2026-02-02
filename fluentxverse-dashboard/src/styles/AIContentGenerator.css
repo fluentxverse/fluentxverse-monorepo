@@ -357,6 +357,54 @@
 }
 
 /* ============================================================================
+ * APPLY SECTION INDICATOR
+ * ============================================================================ */
+.ai-apply-indicator {
+  padding: 12px 16px;
+  background: rgba(0, 255, 65, 0.03);
+  border-bottom: 1px solid var(--matrix-border);
+}
+
+.ai-apply-type {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(0, 255, 65, 0.12);
+  border: 1px solid var(--matrix-green);
+  border-radius: 6px;
+  color: var(--matrix-green);
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 0 15px var(--matrix-green-glow);
+  margin-bottom: 8px;
+}
+
+.ai-apply-type i {
+  font-size: 18px;
+  filter: drop-shadow(0 0 4px var(--matrix-green-glow));
+}
+
+.ai-apply-type-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Trivia Indicator - golden color variant */
+.ai-trivia-indicator .ai-apply-type {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.ai-trivia-indicator .ai-apply-type i {
+  filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+}
+
+/* ============================================================================
  * CONTENT AREA
  * ============================================================================ */
 .ai-generator-content {

@@ -1982,6 +1982,19 @@ export default function ConversationalSkillsVisualEditor() {
         onGenerateIntroduction={setIntroductionData}
         onGenerateLearn={setLearnData}
         onGenerateStepB={setStepBData}
+        onGenerateApply={setApplyData}
+        onGenerateTrivia={(triviaPayload) => {
+          // Update only the trivia-related fields in applyData
+          setApplyData((prev) => ({
+            ...prev,
+            triviaEnabled: triviaPayload.triviaEnabled ?? true,
+            triviaText: triviaPayload.triviaText || '',
+            triviaTranslation: triviaPayload.triviaTranslation || '',
+            triviaImage: triviaPayload.triviaImage || '',
+            triviaDuration: triviaPayload.triviaDuration || '1 minute',
+            triviaTutorSteps: triviaPayload.triviaTutorSteps || [],
+          }));
+        }}
         level={lesson.level}
         chapter={lesson.chapter}
         lessonNumber={lesson.lessonNumber}
@@ -1990,6 +2003,8 @@ export default function ConversationalSkillsVisualEditor() {
         currentStepBType={stepBData.stepType}
         vocabularyCount={learnData.steps[0]?.vocabularyItems?.length || 0}
         expressionCount={learnData.steps[0]?.expressionItems?.length || 0}
+        currentApplyType={applyData.activityType}
+        dialogueLineCount={applyData.dialogueLines?.length || 0}
       />
 
       {/* Editor Toolbar - Fixed at top */}

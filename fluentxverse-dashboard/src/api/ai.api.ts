@@ -60,7 +60,10 @@ export async function generateIntroductionContent(
   includeTranslation?: boolean,
   translationLanguage?: 'japanese' | 'korean' | 'vietnamese' | 'chinese',
   vocabularyCount?: number,
-  expressionCount?: number
+  expressionCount?: number,
+  applyType?: 'speaking' | 'listening' | 'reading',
+  dialogueLineCount?: number,
+  generateTrivia?: boolean
 ): Promise<GenerateIntroductionResponse> {
   try {
     const response = await apiClient.post('/ai/generate-introduction', {
@@ -82,6 +85,9 @@ export async function generateIntroductionContent(
       expressionCount: expressionCount || null,
       ...(learnType ? { learnType } : {}),
       ...(stepBType ? { stepBType } : {}),
+      ...(applyType ? { applyType } : {}),
+      ...(dialogueLineCount ? { dialogueLineCount } : {}),
+      ...(generateTrivia ? { generateTrivia } : {}),
     });
     return response.data;
   } catch (error: any) {

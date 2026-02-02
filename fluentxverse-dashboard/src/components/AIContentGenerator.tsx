@@ -14,7 +14,7 @@ export interface IntroductionData {
   lessonGoalSteps: LessonGoalStep[];
 }
 
-type SectionType = 'introduce' | 'learn' | 'apply' | 'exercise';
+type SectionType = 'introduce' | 'learn' | 'apply' | 'trivia' | 'exercise';
 
 interface SectionConfig {
   id: SectionType;
@@ -28,6 +28,7 @@ const SECTIONS: SectionConfig[] = [
   { id: 'introduce', label: 'Introduce', number: 1, icon: 'ri-lightbulb-line', description: 'Opening & context' },
   { id: 'learn', label: 'Learn', number: 2, icon: 'ri-book-line', description: 'Step A & B vocabulary/grammar' },
   { id: 'apply', label: 'Apply', number: 3, icon: 'ri-chat-3-line', description: 'Practice activity' },
+  { id: 'trivia', label: 'Trivia', number: 0, icon: 'ri-lightbulb-flash-line', description: 'Trivia Time content' },
   { id: 'exercise', label: 'Exercise', number: 4, icon: 'ri-checkbox-circle-line', description: 'Exercises' },
 ];
 
@@ -39,6 +40,8 @@ interface AIContentGeneratorProps {
   onGenerateIntroduction: (data: IntroductionData) => void;
   onGenerateLearn?: (data: any) => void;
   onGenerateStepB?: (data: any) => void;
+  onGenerateApply?: (data: any) => void;
+  onGenerateTrivia?: (data: any) => void;
   level?: number;
   chapter?: number;
   lessonNumber?: number;
@@ -49,6 +52,10 @@ interface AIContentGeneratorProps {
   // Current item counts in the editor - AI will generate this many items
   vocabularyCount?: number;
   expressionCount?: number;
+  // Current apply activity type
+  currentApplyType?: 'speaking' | 'listening' | 'reading';
+  // Current dialogue line count (for speaking apply)
+  dialogueLineCount?: number;
 }
 
 export function AIContentGenerator({
@@ -59,6 +66,8 @@ export function AIContentGenerator({
   onGenerateIntroduction,
   onGenerateLearn,
   onGenerateStepB,
+  onGenerateApply,
+  onGenerateTrivia,
   level,
   chapter,
   lessonNumber,
@@ -67,11 +76,14 @@ export function AIContentGenerator({
   currentStepBType = 'speak-your-mind',
   vocabularyCount,
   expressionCount,
+  currentApplyType = 'speaking',
+  dialogueLineCount,
 }: AIContentGeneratorProps) {
   const DEFAULT_BASE_INSTRUCTIONS: Record<SectionType, string> = {
     introduce: 'Create an engaging introduction that hooks students with relevant context. Include discussion of why this topic matters and what they will learn.',
     learn: 'Generate clear vocabulary and grammar content with practical examples. Include explanations, translations, and usage examples that are easy to understand.',
     apply: 'Design practical speaking/listening activities that students can do. Include realistic scenarios, dialogues, or role-play situations.',
+    trivia: 'Create interesting cultural trivia or fun language facts related to the lesson topic. Include engaging questions for discussion.',
     exercise: 'Create engaging practice exercises that reinforce learning. Include varied question types, clear instructions, and answer keys.',
   };
 
@@ -130,6 +142,12 @@ export function AIContentGenerator({
       const learnType = activeSection === 'learn' && learnStep === 'stepA' ? currentStepAType : undefined;
       const stepBType = activeSection === 'learn' && learnStep === 'stepB' ? currentStepBType : undefined;
 
+      // Determine apply type when in Apply section
+      const applyType = activeSection === 'apply' ? currentApplyType : undefined;
+
+      // Check if we're generating trivia
+      const generateTrivia = activeSection === 'trivia';
+
       const response = await generateIntroductionContent(
         topic,
         skillLevel,
@@ -148,7 +166,10 @@ export function AIContentGenerator({
         includeTranslation, // Pass translation toggle
         translationLanguage, // Pass selected translation language
         vocabularyCount, // Pass current vocabulary count from editor
-        expressionCount // Pass current expression count from editor
+        expressionCount, // Pass current expression count from editor
+        applyType, // Pass apply activity type (speaking/listening/reading)
+        dialogueLineCount, // Pass current dialogue line count from editor
+        generateTrivia // Pass trivia generation flag
       );
 
       if (!response.success || !response.data) {
@@ -293,6 +314,64 @@ export function AIContentGenerator({
             }
           });
         }
+      }
+      // Handle Apply section content
+      else if (activeSection === 'apply' && generatedContent.applyData && onGenerateApply) {
+        const apply = generatedContent.applyData;
+        
+        // Build the Apply payload based on activity type
+        const applyPayload = {
+          sectionNumber: 3,
+          sectionTitle: 'APPLY',
+          activityType: apply.activityType || currentApplyType,
+          activityTitle: (apply.activityType || currentApplyType).toUpperCase(),
+          activityDuration: apply.activityDuration || '3 minutes',
+          situationText: apply.situationText || '',
+          situationTranslation: apply.situationTranslation || '',
+          situationImage: '',
+          dialogueLines: (apply.dialogueLines || []).map((line: any) => ({
+            speaker: line.speaker || '',
+            text: line.text || '',
+            isAction: line.isAction || false,
+          })),
+          readingText: apply.readingText || '',
+          readingImage: '',
+          readingImageLabel: '',
+          tutorSteps: (apply.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            questions: step.questions || [],
+            listeningScript: step.listeningScript || '',
+          })),
+          triviaEnabled: apply.triviaEnabled || false,
+          triviaText: apply.triviaText || '',
+          triviaTranslation: apply.triviaTranslation || '',
+          triviaImage: '',
+          triviaDuration: apply.triviaDuration || '1 minute',
+          triviaTutorSteps: apply.triviaTutorSteps || [],
+        };
+
+        onGenerateApply(applyPayload);
+      }
+      // Handle Trivia section content (separate from Apply)
+      else if (activeSection === 'trivia' && generatedContent.triviaData && onGenerateTrivia) {
+        const trivia = generatedContent.triviaData;
+        
+        const triviaPayload = {
+          triviaEnabled: true,
+          triviaText: trivia.triviaText || '',
+          triviaTranslation: trivia.triviaTranslation || '',
+          triviaImage: '',
+          triviaDuration: trivia.triviaDuration || '1 minute',
+          triviaTutorSteps: (trivia.triviaTutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            questions: step.questions || [],
+          })),
+        };
+
+        onGenerateTrivia(triviaPayload);
       } else {
         onGenerateIntroduction(generatedContent);
       }
@@ -384,6 +463,37 @@ export function AIContentGenerator({
                 ? `Will generate ${currentStepAType} content for Step A`
                 : `Will generate ${currentStepBType.replace(/-/g, ' ')} content for Step B`
               }
+            </p>
+          </div>
+        )}
+
+        {/* Apply Section Type Indicator - Show only when Apply tab is active */}
+        {activeSection === 'apply' && (
+          <div className="ai-apply-indicator">
+            <div className="ai-apply-type">
+              <i className={`${
+                currentApplyType === 'speaking' ? 'ri-mic-line' :
+                currentApplyType === 'listening' ? 'ri-headphone-line' : 'ri-book-open-line'
+              }`} />
+              <span className="ai-apply-type-label">
+                {currentApplyType.charAt(0).toUpperCase() + currentApplyType.slice(1)} Activity
+              </span>
+            </div>
+            <p className="ai-step-hint">
+              Will generate {currentApplyType} content with {dialogueLineCount || 'default'} dialogue lines
+            </p>
+          </div>
+        )}
+
+        {/* Trivia Section Indicator - Show only when Trivia tab is active */}
+        {activeSection === 'trivia' && (
+          <div className="ai-apply-indicator ai-trivia-indicator">
+            <div className="ai-apply-type">
+              <i className="ri-lightbulb-flash-line" />
+              <span className="ai-apply-type-label">Trivia Time</span>
+            </div>
+            <p className="ai-step-hint">
+              Will generate cultural trivia, fun facts, and discussion questions
             </p>
           </div>
         )}
@@ -640,6 +750,41 @@ export function AIContentGenerator({
                           </div>
                         ))}
                       </>
+                    )}
+                  </div>
+                </div>
+              ) : generatedContent.triviaData ? (
+                <div className="ai-preview-section">
+                  <h5>
+                    <i className="ri-lightbulb-flash-line" style={{ marginRight: '8px', color: '#ffd700' }} />
+                    Trivia Time
+                  </h5>
+                  <div className="ai-preview-item">
+                    <div style={{ background: 'rgba(255, 215, 0, 0.1)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.3)', marginBottom: '16px' }}>
+                      <p style={{ color: '#e0e0e0', fontSize: '15px', lineHeight: '1.6' }}>{generatedContent.triviaData.triviaText}</p>
+                      {generatedContent.triviaData.triviaTranslation && (
+                        <p style={{ color: '#a0a0a0', marginTop: '10px', fontStyle: 'italic' }}>{generatedContent.triviaData.triviaTranslation}</p>
+                      )}
+                    </div>
+                    <p style={{ color: '#a0a0a0', fontSize: '13px' }}>
+                      <i className="ri-time-line" style={{ marginRight: '6px' }} />
+                      Duration: {generatedContent.triviaData.triviaDuration || '1 minute'}
+                    </p>
+                    {generatedContent.triviaData.triviaTutorSteps?.length > 0 && (
+                      <div style={{ marginTop: '16px' }}>
+                        <strong style={{ color: '#4faafe', fontSize: '14px' }}>Tutor Steps:</strong>
+                        {generatedContent.triviaData.triviaTutorSteps.map((step: any, idx: number) => (
+                          <div key={idx} style={{ marginTop: '10px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <p style={{ color: '#e0e0e0', marginBottom: '6px' }}><strong>Step {idx + 1}:</strong> {step.instruction}</p>
+                            {step.scripts?.length > 0 && step.scripts.map((s: any, sIdx: number) => (
+                              <p key={sIdx} style={{ color: '#a0c4e8', marginLeft: '10px', fontSize: '13px' }}>📝 "{s.text || s}"</p>
+                            ))}
+                            {step.questions?.length > 0 && step.questions.map((q: any, qIdx: number) => (
+                              <p key={qIdx} style={{ color: '#64c896', marginLeft: '10px', fontSize: '13px' }}>❓ {q.question || q}</p>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
