@@ -14,7 +14,7 @@ export interface IntroductionData {
   lessonGoalSteps: LessonGoalStep[];
 }
 
-type SectionType = 'introduce' | 'learn' | 'apply' | 'trivia' | 'exercise' | 'mission';
+type SectionType = 'introduce' | 'learn' | 'apply' | 'trivia' | 'exercise' | 'mission' | 'mission2';
 
 interface SectionConfig {
   id: SectionType;
@@ -30,7 +30,8 @@ const SECTIONS: SectionConfig[] = [
   { id: 'apply', label: 'Apply', number: 3, icon: 'ri-chat-3-line', description: 'Practice activity' },
   { id: 'trivia', label: 'Trivia', number: 0, icon: 'ri-lightbulb-flash-line', description: 'Trivia Time content' },
   { id: 'exercise', label: 'Exercise', number: 4, icon: 'ri-checkbox-circle-line', description: 'Exercises' },
-  { id: 'mission', label: 'Mission', number: 5, icon: 'ri-rocket-line', description: 'Challenge activities' },
+  { id: 'mission', label: 'Mission', number: 5, icon: 'ri-rocket-line', description: 'Challenge 1' },
+  { id: 'mission2', label: 'Mission 2', number: 6, icon: 'ri-rocket-2-line', description: 'Challenge 2' },
 ];
 
 interface AIContentGeneratorProps {
@@ -67,6 +68,20 @@ interface AIContentGeneratorProps {
   // Mission section props
   currentMissionType?: 'speaking' | 'discussion' | 'reading' | 'listening';
   missionQuestionCount?: number;
+  // Mission 2 section props
+  currentMission2Type?: 'speaking' | 'discussion' | 'reading' | 'listening';
+  mission2QuestionCount?: number;
+  onGenerateMission2?: (data: any) => void;
+  // Section status - indicates which sections have content
+  sectionStatus?: {
+    introduce: boolean;
+    learn: boolean;
+    apply: boolean;
+    trivia: boolean;
+    exercise: boolean;
+    mission: boolean;
+    mission2: boolean;
+  };
 }
 
 export function AIContentGenerator({
@@ -97,18 +112,100 @@ export function AIContentGenerator({
   hasExerciseStepB = false,
   currentMissionType = 'speaking',
   missionQuestionCount,
+  currentMission2Type = 'discussion',
+  mission2QuestionCount,
+  onGenerateMission2,
+  sectionStatus = {
+    introduce: false,
+    learn: false,
+    apply: false,
+    trivia: false,
+    exercise: false,
+    mission: false,
+    mission2: false,
+  },
 }: AIContentGeneratorProps) {
+  // Helper function to get smart default instructions based on skill level and topic
+  const getSmartInstructions = (section: SectionType, level?: number, skillLevel?: string): string => {
+    const complexity = !level ? 'intermediate' : level <= 3 ? 'simple and beginner-friendly' : level <= 6 ? 'intermediate' : 'advanced';
+    const levelHint = skillLevel?.toLowerCase().includes('beginner') ? 'Use simple vocabulary and short sentences.' 
+      : skillLevel?.toLowerCase().includes('advanced') ? 'Use sophisticated vocabulary and complex structures.'
+      : 'Balance simplicity with natural language patterns.';
+    
+    const smartInstructions: Record<SectionType, string> = {
+      introduce: `Create an engaging ${complexity} introduction about "${topic}". ${levelHint} Focus on why this topic matters and set clear expectations.`,
+      learn: `Generate ${complexity} vocabulary/grammar content for "${topic}". ${levelHint} Include practical examples that students can immediately use.`,
+      apply: `Design ${complexity} practice activities for "${topic}". ${levelHint} Create realistic scenarios relevant to the lesson goal.`,
+      trivia: `Create interesting ${complexity} trivia about "${topic}". ${levelHint} Include fun facts that connect to the lesson content.`,
+      exercise: `Create ${complexity} exercises for "${topic}". ${levelHint} Vary question types and provide clear answer keys.`,
+      mission: `Create an immersive ${complexity} challenge for "${topic}". ${levelHint} Design scenarios that feel authentic and meaningful.`,
+      mission2: `Create a second ${complexity} challenge for "${topic}" with different content from Challenge 1. ${levelHint}`,
+    };
+    return smartInstructions[section];
+  };
+
+  // Helper function to calculate content metrics
+  const calculateContentMetrics = (content: any): { wordCount: number; readingTime: string; complexity: string } => {
+    let text = '';
+    
+    // Extract all text content based on section type
+    if (content.introTexts) {
+      text += content.introTexts.map((t: any) => t.text).join(' ');
+    }
+    if (content.lessonIssue) {
+      text += ' ' + content.lessonIssue.title + ' ' + (content.lessonIssue.points?.join(' ') || '');
+    }
+    if (content.learnData) {
+      const learn = content.learnData;
+      if (learn.vocabularyItems) text += ' ' + learn.vocabularyItems.map((v: any) => `${v.word} ${v.definition} ${v.example}`).join(' ');
+      if (learn.expressionItems) text += ' ' + learn.expressionItems.map((e: any) => `${e.expression} ${e.meaning} ${e.example}`).join(' ');
+    }
+    if (content.applyData) {
+      const apply = content.applyData;
+      text += ' ' + (apply.situationText || '') + ' ' + (apply.readingText || '');
+      if (apply.dialogueLines) text += ' ' + apply.dialogueLines.map((d: any) => d.text).join(' ');
+    }
+    if (content.triviaData) {
+      text += ' ' + (content.triviaData.triviaText || '');
+    }
+    if (content.exerciseData) {
+      const ex = content.exerciseData;
+      if (ex.exerciseItems) text += ' ' + ex.exerciseItems.map((i: any) => `${i.question} ${i.answer}`).join(' ');
+      if (ex.chooseItems) text += ' ' + ex.chooseItems.map((i: any) => `${i.question} ${i.options?.join(' ')}`).join(' ');
+    }
+    if (content.missionData) {
+      const m = content.missionData;
+      text += ' ' + (m.situation || '') + ' ' + (m.instruction || '');
+      if (m.questions) text += ' ' + m.questions.map((q: any) => q.question).join(' ');
+      if (m.readingPassage?.blocks) text += ' ' + m.readingPassage.blocks.map((b: any) => b.text).join(' ');
+    }
+    
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    const wordCount = words.length;
+    const avgWordsPerMin = 150; // Average reading speed for ESL learners
+    const readingMins = Math.ceil(wordCount / avgWordsPerMin);
+    const readingTime = readingMins <= 1 ? '< 1 min' : `~${readingMins} min`;
+    
+    // Calculate complexity based on word length and sentence structure
+    const avgWordLength = wordCount > 0 ? words.reduce((sum, w) => sum + w.length, 0) / wordCount : 0;
+    const complexity = avgWordLength < 4.5 ? 'Simple' : avgWordLength < 6 ? 'Intermediate' : 'Advanced';
+    
+    return { wordCount, readingTime, complexity };
+  };
   const DEFAULT_BASE_INSTRUCTIONS: Record<SectionType, string> = {
-    introduce: 'Create an engaging introduction that hooks students with relevant context. Include discussion of why this topic matters and what they will learn.',
-    learn: 'Generate clear vocabulary and grammar content with practical examples. Include explanations, translations, and usage examples that are easy to understand.',
-    apply: 'Design practical speaking/listening activities that students can do. Include realistic scenarios, dialogues, or role-play situations.',
-    trivia: 'Create interesting cultural trivia or fun language facts related to the lesson topic. Include engaging questions for discussion.',
-    exercise: 'Create engaging practice exercises that reinforce learning. Include varied question types, clear instructions, and answer keys.',
-    mission: 'Create immersive challenge activities that let students apply their learning in realistic scenarios. Include roleplay situations, discussion topics, or reading/listening comprehension tasks.',
+    introduce: getSmartInstructions('introduce', level, skillLevel),
+    learn: getSmartInstructions('learn', level, skillLevel),
+    apply: getSmartInstructions('apply', level, skillLevel),
+    trivia: getSmartInstructions('trivia', level, skillLevel),
+    exercise: getSmartInstructions('exercise', level, skillLevel),
+    mission: getSmartInstructions('mission', level, skillLevel),
+    mission2: getSmartInstructions('mission2', level, skillLevel),
   };
 
   const [activeSection, setActiveSection] = useState<SectionType>('introduce');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isBatchGenerating, setIsBatchGenerating] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; section: string }>({ current: 0, total: 0, section: '' });
   const [generatedContent, setGeneratedContent] = useState<any | null>(null);
   const [generatedSection, setGeneratedSection] = useState<SectionType | null>(null);
   const [error, setError] = useState('');
@@ -176,8 +273,14 @@ export function AIContentGenerator({
         : undefined;
       const exerciseStepType = activeSection === 'exercise' ? exerciseStep : undefined;
 
-      // Check if we're generating mission content
-      const missionType = activeSection === 'mission' ? currentMissionType : undefined;
+      // Check if we're generating mission content (mission or mission2)
+      const missionType = activeSection === 'mission' ? currentMissionType 
+        : activeSection === 'mission2' ? currentMission2Type 
+        : undefined;
+      const missionQCount = activeSection === 'mission' ? missionQuestionCount 
+        : activeSection === 'mission2' ? mission2QuestionCount 
+        : undefined;
+      const isMission2 = activeSection === 'mission2';
 
       const response = await generateIntroductionContent(
         topic,
@@ -205,7 +308,8 @@ export function AIContentGenerator({
         exerciseStepType, // Pass exercise step (stepA or stepB)
         exerciseItemCount, // Pass exercise item count
         missionType, // Pass mission type (speaking/discussion/reading/listening)
-        missionQuestionCount // Pass mission question count
+        missionQCount, // Pass mission question count
+        isMission2 // Pass flag for mission 2
       );
 
       if (!response.success || !response.data) {
@@ -378,7 +482,7 @@ export function AIContentGenerator({
             scripts: step.scripts || [],
             tips: step.tips || [],
             questions: step.questions || [],
-            listeningScript: step.listeningScript || '',
+            ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
           })),
           triviaEnabled: apply.triviaEnabled || false,
           triviaText: apply.triviaText || '',
@@ -508,7 +612,7 @@ export function AIContentGenerator({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
             tips: step.tips || [],
-            listeningScript: step.listeningScript || '',
+            ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
           })),
           questionsIntro: mission.questionsIntro || '',
           questions: (mission.questions || []).map((q: any) => ({
@@ -533,10 +637,63 @@ export function AIContentGenerator({
             closingQuestion: mission.readingPassage.closingQuestion || '',
           } : undefined,
           // Listening type specific
-          listeningScript: mission.listeningScript || '',
+          ...(mission.listeningScript ? { listeningScript: mission.listeningScript } : {}),
         };
 
         onGenerateMission(missionPayload);
+      }
+      // Handle Mission 2 section content
+      else if (activeSection === 'mission2' && generatedContent.missionData && onGenerateMission2) {
+        const mission = generatedContent.missionData;
+        
+        const mission2Payload = {
+          missionType: mission.missionType,
+          sectionNumber: 5,
+          sectionTitle: 'MISSION',
+          challengeNumber: 2,
+          challengeName: mission.challengeName || 'Challenge 2',
+          duration: mission.duration || '5-6 minutes',
+          situation: mission.situation || '',
+          situationTranslation: mission.situationTranslation || '',
+          instruction: mission.instruction || '',
+          instructionTranslation: mission.instructionTranslation || '',
+          showGrammarTip: mission.showGrammarTip || false,
+          grammarTipTitle: mission.grammarTipTitle || "Today's grammar tip",
+          grammarTipItems: mission.grammarTipItems || [],
+          image: '',
+          tutorSteps: (mission.tutorSteps || []).map((step: any) => ({
+            instruction: step.instruction || '',
+            scripts: step.scripts || [],
+            tips: step.tips || [],
+            ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
+          })),
+          questionsIntro: mission.questionsIntro || '',
+          questions: (mission.questions || []).map((q: any) => ({
+            question: q.question || '',
+            hints: q.hints || [],
+          })),
+          // Discussion type specific
+          isOptional: mission.isOptional || false,
+          topics: (mission.topics || []).map((topic: any) => ({
+            title: topic.title || '',
+            questions: topic.questions || [],
+          })),
+          // Reading type specific
+          readingPassage: mission.readingPassage ? {
+            title: mission.readingPassage.title || '',
+            author: mission.readingPassage.author || '',
+            blocks: (mission.readingPassage.blocks || []).map((block: any) => ({
+              type: block.type || 'paragraph',
+              text: block.text || '',
+              image: block.image || '',
+            })),
+            closingQuestion: mission.readingPassage.closingQuestion || '',
+          } : undefined,
+          // Listening type specific
+          ...(mission.listeningScript ? { listeningScript: mission.listeningScript } : {}),
+        };
+
+        onGenerateMission2(mission2Payload);
       } else {
         onGenerateIntroduction(generatedContent);
       }
@@ -550,6 +707,42 @@ export function AIContentGenerator({
     setShowPreview(false);
     setGeneratedContent(null);
     setGeneratedSection(null);
+  };
+
+  // Batch generation - generate all empty sections
+  const handleBatchGenerate = async () => {
+    const sectionsToGenerate = SECTIONS.filter(s => !sectionStatus[s.id]);
+    if (sectionsToGenerate.length === 0) {
+      setError('All sections already have content!');
+      return;
+    }
+
+    setIsBatchGenerating(true);
+    setBatchProgress({ current: 0, total: sectionsToGenerate.length, section: '' });
+    setError('');
+
+    for (let i = 0; i < sectionsToGenerate.length; i++) {
+      const section = sectionsToGenerate[i];
+      setBatchProgress({ current: i + 1, total: sectionsToGenerate.length, section: section.label });
+      setActiveSection(section.id);
+
+      try {
+        // Generate content for this section
+        await handleGenerateIntroduction();
+        // Wait a bit for the content to be processed
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Auto-insert if we have generated content
+        if (generatedContent) {
+          handleInsertContent();
+        }
+      } catch (err) {
+        console.error(`Failed to generate ${section.label}:`, err);
+        // Continue with next section even if one fails
+      }
+    }
+
+    setIsBatchGenerating(false);
+    setBatchProgress({ current: 0, total: 0, section: '' });
   };
 
   return (
@@ -588,12 +781,13 @@ export function AIContentGenerator({
             {SECTIONS.map(section => (
               <button
                 key={section.id}
-                className={`ai-tab ${activeSection === section.id ? 'ai-tab-active' : ''}`}
+                className={`ai-tab ${activeSection === section.id ? 'ai-tab-active' : ''} ${sectionStatus[section.id] ? 'ai-tab-has-content' : ''}`}
                 onClick={() => setActiveSection(section.id)}
-                title={section.description}
+                title={`${section.description}${sectionStatus[section.id] ? ' ✓ Has content' : ''}`}
               >
                 <span className="ai-tab-number">{section.number}</span>
                 <span className="ai-tab-label">{section.label}</span>
+                {sectionStatus[section.id] && <span className="ai-tab-status-badge">✓</span>}
               </button>
             ))}
           </div>
@@ -710,11 +904,30 @@ export function AIContentGenerator({
                 currentMissionType === 'reading' ? 'ri-book-open-line' : 'ri-headphone-line'
               }`} />
               <span className="ai-apply-type-label">
-                {currentMissionType.charAt(0).toUpperCase() + currentMissionType.slice(1)} Challenge
+                {currentMissionType.charAt(0).toUpperCase() + currentMissionType.slice(1)} Challenge 1
               </span>
             </div>
             <p className="ai-step-hint">
               Will generate {currentMissionType} mission with {missionQuestionCount || 'default'} roleplay questions
+            </p>
+          </div>
+        )}
+
+        {/* Mission 2 Section Type Indicator - Show only when Mission 2 tab is active */}
+        {activeSection === 'mission2' && (
+          <div className="ai-apply-indicator ai-mission-indicator">
+            <div className="ai-apply-type">
+              <i className={`${
+                currentMission2Type === 'speaking' ? 'ri-mic-line' :
+                currentMission2Type === 'discussion' ? 'ri-discuss-line' :
+                currentMission2Type === 'reading' ? 'ri-book-open-line' : 'ri-headphone-line'
+              }`} />
+              <span className="ai-apply-type-label">
+                {currentMission2Type.charAt(0).toUpperCase() + currentMission2Type.slice(1)} Challenge 2
+              </span>
+            </div>
+            <p className="ai-step-hint">
+              Will generate {currentMission2Type} mission with {mission2QuestionCount || 'default'} questions
             </p>
           </div>
         )}
@@ -865,14 +1078,42 @@ export function AIContentGenerator({
             )}
           </div>
 
-          <button
-            className="ai-generate-btn"
-            onClick={handleGenerateIntroduction}
-            disabled={isGenerating || !topic || !skillLevel}
-          >
-            <i className={`${isGenerating ? 'ri-loader-4-line' : 'ri-magic-line'}`} />
-            <span>{isGenerating ? 'Generating...' : `Generate ${currentSectionConfig.label}`}</span>
-          </button>
+          {/* Generation Buttons */}
+          <div className="ai-generate-buttons">
+            <button
+              className="ai-generate-btn"
+              onClick={handleGenerateIntroduction}
+              disabled={isGenerating || isBatchGenerating || !topic || !skillLevel}
+            >
+              <i className={`${isGenerating ? 'ri-loader-4-line ai-spin' : 'ri-magic-line'}`} />
+              <span>{isGenerating ? 'Generating...' : `Generate ${currentSectionConfig.label}`}</span>
+            </button>
+
+            <button
+              className="ai-batch-btn"
+              onClick={handleBatchGenerate}
+              disabled={isGenerating || isBatchGenerating || !topic || !skillLevel}
+              title="Generate content for all empty sections"
+            >
+              <i className={`${isBatchGenerating ? 'ri-loader-4-line ai-spin' : 'ri-stack-line'}`} />
+              <span>{isBatchGenerating ? `${batchProgress.current}/${batchProgress.total}` : 'Generate All'}</span>
+            </button>
+          </div>
+
+          {/* Batch Progress Indicator */}
+          {isBatchGenerating && (
+            <div className="ai-batch-progress">
+              <div className="ai-batch-progress-bar">
+                <div 
+                  className="ai-batch-progress-fill" 
+                  style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                />
+              </div>
+              <span className="ai-batch-progress-text">
+                Generating {batchProgress.section}... ({batchProgress.current}/{batchProgress.total})
+              </span>
+            </div>
+          )}
 
           {error && <div className="ai-error-message">{error}</div>}
         </div>
@@ -887,6 +1128,27 @@ export function AIContentGenerator({
                 <i className="ri-close-line" />
               </button>
             </div>
+
+            {/* Content Metrics Bar */}
+            {(() => {
+              const metrics = calculateContentMetrics(generatedContent);
+              return (
+                <div className="ai-content-metrics">
+                  <div className="ai-metric">
+                    <i className="ri-text" />
+                    <span>{metrics.wordCount} words</span>
+                  </div>
+                  <div className="ai-metric">
+                    <i className="ri-timer-line" />
+                    <span>{metrics.readingTime}</span>
+                  </div>
+                  <div className={`ai-metric ai-complexity-${metrics.complexity.toLowerCase()}`}>
+                    <i className="ri-bar-chart-line" />
+                    <span>{metrics.complexity}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="ai-preview-body">
               {/* Learn -> Vocabulary Preview */}
@@ -974,6 +1236,82 @@ export function AIContentGenerator({
                     )}
                   </div>
                 </div>
+              ) : generatedContent.applyData ? (
+                <div className="ai-preview-section">
+                  <h5>
+                    <i className={`${
+                      generatedContent.applyData.activityType === 'speaking' ? 'ri-mic-line' :
+                      generatedContent.applyData.activityType === 'listening' ? 'ri-headphone-line' : 'ri-book-open-line'
+                    }`} style={{ marginRight: '8px', color: '#4faafe' }} />
+                    Apply - {generatedContent.applyData.activityType?.charAt(0).toUpperCase() + generatedContent.applyData.activityType?.slice(1)} Activity
+                  </h5>
+                  <div className="ai-preview-item">
+                    {/* Situation */}
+                    {generatedContent.applyData.situationText && (
+                      <div style={{ marginBottom: '14px', padding: '12px', background: 'rgba(79, 170, 254, 0.1)', borderRadius: '8px', border: '1px solid rgba(79, 170, 254, 0.2)' }}>
+                        <strong style={{ color: '#4faafe', display: 'block', marginBottom: '6px' }}>Situation:</strong>
+                        <p style={{ color: '#e0e0e0' }} dangerouslySetInnerHTML={{ __html: generatedContent.applyData.situationText }} />
+                        {generatedContent.applyData.situationTranslation && (
+                          <p style={{ color: '#a0a0a0', fontSize: '13px', marginTop: '6px' }}>{generatedContent.applyData.situationTranslation}</p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Dialogue Lines (for speaking) */}
+                    {generatedContent.applyData.dialogueLines?.length > 0 && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <strong style={{ color: '#64c896', display: 'block', marginBottom: '8px' }}>Dialogue ({generatedContent.applyData.dialogueLines.length} lines):</strong>
+                        <div style={{ maxHeight: '200px', overflowY: 'auto', paddingRight: '8px' }}>
+                          {generatedContent.applyData.dialogueLines.slice(0, 6).map((line: any, idx: number) => (
+                            <div key={idx} style={{
+                              marginBottom: '8px',
+                              padding: '8px 12px',
+                              background: line.isAction ? 'transparent' : idx % 2 === 0 ? 'rgba(79, 170, 254, 0.1)' : 'rgba(100, 200, 150, 0.1)',
+                              borderRadius: '6px',
+                              borderLeft: line.isAction ? 'none' : idx % 2 === 0 ? '3px solid rgba(79, 170, 254, 0.5)' : '3px solid rgba(100, 200, 150, 0.5)'
+                            }}>
+                              {line.isAction ? (
+                                <p style={{ color: '#a0a0a0', fontStyle: 'italic', textAlign: 'center' }}>{line.text}</p>
+                              ) : (
+                                <>
+                                  <strong style={{ color: idx % 2 === 0 ? '#4faafe' : '#64c896' }}>{line.speaker}:</strong>
+                                  <span style={{ color: '#e0e0e0', marginLeft: '8px' }} dangerouslySetInnerHTML={{ __html: line.text }} />
+                                </>
+                              )}
+                            </div>
+                          ))}
+                          {generatedContent.applyData.dialogueLines.length > 6 && (
+                            <p style={{ color: '#a0a0a0', fontStyle: 'italic', textAlign: 'center' }}>...and {generatedContent.applyData.dialogueLines.length - 6} more lines</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Reading Text */}
+                    {generatedContent.applyData.readingText && (
+                      <div style={{ marginBottom: '14px' }}>
+                        <strong style={{ color: '#64c896', display: 'block', marginBottom: '8px' }}>Reading Passage:</strong>
+                        <div style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', maxHeight: '150px', overflowY: 'auto' }}>
+                          <p style={{ color: '#c0c0c0', fontSize: '13px', lineHeight: '1.6' }} dangerouslySetInnerHTML={{ __html: generatedContent.applyData.readingText.slice(0, 300) + '...' }} />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Duration */}
+                    <p style={{ color: '#a0a0a0', fontSize: '12px' }}>
+                      <i className="ri-time-line" style={{ marginRight: '4px' }} />
+                      {generatedContent.applyData.activityDuration || '3 minutes'}
+                    </p>
+                    
+                    {/* Tutor Steps Count */}
+                    {generatedContent.applyData.tutorSteps?.length > 0 && (
+                      <p style={{ color: '#a0a0a0', fontSize: '12px', marginTop: '6px' }}>
+                        <i className="ri-user-line" style={{ marginRight: '4px' }} />
+                        {generatedContent.applyData.tutorSteps.length} tutor steps included
+                      </p>
+                    )}
+                  </div>
+                </div>
               ) : generatedContent.triviaData ? (
                 <div className="ai-preview-section">
                   <h5>
@@ -1042,20 +1380,48 @@ export function AIContentGenerator({
                         )}
                         
                         {/* Exercise items */}
-                        {(generatedContent.exerciseData.exerciseItems?.length > 0 ||
-                          generatedContent.exerciseData.chooseItems?.length > 0 ||
-                          generatedContent.exerciseData.changeItems?.length > 0) && (
-                          <div style={{ marginBottom: '12px' }}>
-                            <strong style={{ color: '#4faafe' }}>Items:</strong>
-                            <ol style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
-                              {(generatedContent.exerciseData.exerciseItems ||
-                                generatedContent.exerciseData.chooseItems ||
-                                generatedContent.exerciseData.changeItems || []).map((item: any, idx: number) => (
-                                <li key={idx} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{ __html: item.sentence }} />
-                              ))}
-                            </ol>
-                          </div>
-                        )}
+                        {(() => {
+                          // Get the appropriate items based on exercise type
+                          const exerciseType = generatedContent.exerciseData.exerciseType;
+                          let items: any[] = [];
+                          if (exerciseType === 'rephrase' && generatedContent.exerciseData.exerciseItems?.length > 0) {
+                            items = generatedContent.exerciseData.exerciseItems;
+                          } else if (exerciseType === 'choose' && generatedContent.exerciseData.chooseItems?.length > 0) {
+                            items = generatedContent.exerciseData.chooseItems;
+                          } else if (exerciseType === 'change' && generatedContent.exerciseData.changeItems?.length > 0) {
+                            items = generatedContent.exerciseData.changeItems;
+                          } else {
+                            // Fallback: try any available items
+                            items = generatedContent.exerciseData.exerciseItems || 
+                                   generatedContent.exerciseData.chooseItems || 
+                                   generatedContent.exerciseData.changeItems || [];
+                          }
+                          
+                          if (items.length > 0) {
+                            return (
+                              <div style={{ marginBottom: '12px' }}>
+                                <strong style={{ color: '#4faafe' }}>Items:</strong>
+                                <ol style={{ color: '#e0e0e0', paddingLeft: '20px' }}>
+                                  {items.map((item: any, idx: number) => {
+                                    const text = typeof item === 'string' ? item : (item.sentence || item.text || '');
+                                    return text ? (
+                                      <li key={idx} style={{ marginBottom: '6px' }} dangerouslySetInnerHTML={{ __html: text }} />
+                                    ) : null;
+                                  })}
+                                </ol>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div style={{ marginBottom: '12px', padding: '10px', background: 'rgba(255, 100, 100, 0.1)', borderRadius: '6px', border: '1px solid rgba(255, 100, 100, 0.3)' }}>
+                                <p style={{ color: '#ff6b6b', margin: 0 }}>
+                                  <i className="ri-error-warning-line" style={{ marginRight: '6px' }} />
+                                  No exercise items generated. Try generating again.
+                                </p>
+                              </div>
+                            );
+                          }
+                        })()}
                         
                         {/* Answer key */}
                         {generatedContent.exerciseData.answers?.length > 0 && (
@@ -1143,8 +1509,8 @@ export function AIContentGenerator({
               ) : generatedContent.missionData ? (
                 <div className="ai-preview-section">
                   <h5>
-                    <i className="ri-rocket-line" style={{ marginRight: '8px', color: '#ff9f43' }} />
-                    Mission - {generatedContent.missionData.missionType.charAt(0).toUpperCase() + generatedContent.missionData.missionType.slice(1)} Challenge
+                    <i className={activeSection === 'mission2' ? 'ri-rocket-2-line' : 'ri-rocket-line'} style={{ marginRight: '8px', color: '#ff9f43' }} />
+                    {activeSection === 'mission2' ? 'Mission 2' : 'Mission'} - {generatedContent.missionData.missionType.charAt(0).toUpperCase() + generatedContent.missionData.missionType.slice(1)} Challenge
                   </h5>
                   <div className="ai-preview-item">
                     {/* Challenge Name */}

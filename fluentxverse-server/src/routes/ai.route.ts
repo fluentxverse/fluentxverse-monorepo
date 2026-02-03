@@ -163,7 +163,8 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.exerciseStep, // Pass exercise step (stepA or stepB)
           body.exerciseItemCount, // Pass exercise item count from editor
           body.missionType, // Pass mission type (speaking/discussion/reading/listening)
-          body.missionQuestionCount // Pass mission question count from editor
+          body.missionQuestionCount, // Pass mission question count from editor
+          body.isMission2 // Pass flag for mission 2 (challenge 2)
         );
         return {
           success: true,
@@ -206,6 +207,7 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         exerciseItemCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current exercise item count in editor
         missionType: t.Optional(t.Nullable(t.Union([t.Literal('speaking'), t.Literal('discussion'), t.Literal('reading'), t.Literal('listening')]))), // Mission type
         missionQuestionCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current mission question count in editor
+        isMission2: t.Optional(t.Boolean()), // Whether this is mission 2 (challenge 2)
       }),
       detail: {
         tags: ['AI'],

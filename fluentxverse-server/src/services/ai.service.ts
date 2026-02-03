@@ -1563,7 +1563,8 @@ export const generateIntroductionContent = async (
   exerciseStep?: 'stepA' | 'stepB' | null, // Exercise step (A or B)
   exerciseItemCount?: number | null, // Current exercise item count in editor
   missionType?: 'speaking' | 'discussion' | 'reading' | 'listening' | null, // Mission type
-  missionQuestionCount?: number | null // Current mission question count in editor
+  missionQuestionCount?: number | null, // Current mission question count in editor
+  isMission2?: boolean | null // Whether this is mission 2 (challenge 2)
 ): Promise<GenerateIntroductionResult> => {
   try {
     // Map lesson level (1-10) to complexity descriptor
@@ -2066,7 +2067,31 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
         console.error('Failed to parse exercise response:', text);
       }
 
-      const exercise = parsed.exerciseData || {};
+      // Handle both wrapped and unwrapped response formats
+      const exercise = parsed.exerciseData || parsed || {};
+      
+      console.log('Exercise type:', exerciseType);
+      console.log('Parsed exercise data keys:', Object.keys(exercise));
+      console.log('changeItems:', exercise.changeItems);
+      console.log('chooseItems:', exercise.chooseItems);
+      console.log('exerciseItems:', exercise.exerciseItems);
+      console.log('items:', exercise.items);
+      
+      // Extract items from AI response - check multiple possible field names
+      const extractItems = (data: any, primaryKey: string): any[] => {
+        // Check the primary key first
+        if (data[primaryKey]?.length > 0) return data[primaryKey];
+        // Check common fallback keys
+        if (data.items?.length > 0) return data.items;
+        if (data.exerciseItems?.length > 0) return data.exerciseItems;
+        if (data.sentences?.length > 0) return data.sentences;
+        return [];
+      };
+
+      // Get the appropriate items based on exercise type
+      const rephraseItems = exerciseType === 'rephrase' ? extractItems(exercise, 'exerciseItems') : [];
+      const chooseItemsArr = exerciseType === 'choose' ? extractItems(exercise, 'chooseItems') : [];
+      const changeItemsArr = exerciseType === 'change' ? extractItems(exercise, 'changeItems') : [];
       
       return {
         introTexts: [],
@@ -2085,20 +2110,20 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           showExample: exercise.showExample || false,
           exampleSentence: exercise.exampleSentence || '',
           exampleAnswer: exercise.exampleAnswer || '',
-          exerciseItems: (exercise.exerciseItems || []).slice(0, itemCount).map((item: any) => ({
-            sentence: item.sentence || '',
+          exerciseItems: rephraseItems.slice(0, itemCount).map((item: any) => ({
+            sentence: typeof item === 'string' ? item : (item.sentence || item.text || ''),
           })),
           // Step A - Choose fields
-          chooseItems: (exercise.chooseItems || []).slice(0, itemCount).map((item: any) => ({
-            sentence: item.sentence || '',
+          chooseItems: chooseItemsArr.slice(0, itemCount).map((item: any) => ({
+            sentence: typeof item === 'string' ? item : (item.sentence || item.text || ''),
           })),
           // Step A - Change fields
-          changeItems: (exercise.changeItems || []).slice(0, itemCount).map((item: any) => ({
-            sentence: item.sentence || '',
+          changeItems: changeItemsArr.slice(0, itemCount).map((item: any) => ({
+            sentence: typeof item === 'string' ? item : (item.sentence || item.text || ''),
           })),
           // Answer key
           answers: (exercise.answers || []).slice(0, itemCount).map((answer: any) => ({
-            text: answer.text || '',
+            text: typeof answer === 'string' ? answer : (answer.text || answer.answer || ''),
           })),
           // Tutor steps
           tutorSteps: (exercise.tutorSteps || []).map((step: any) => ({
@@ -2147,6 +2172,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
     // ========================================================================
     if (missionType) {
       const questionCount = missionQuestionCount || 6; // Default to 6 questions
+      const challengeNum = isMission2 ? 2 : 1; // Challenge 1 or 2
       
       let missionAgent: Agent;
       
@@ -2161,12 +2187,13 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
         missionAgent = missionListeningAgent;
       }
 
-      const missionPrompt = `[Variation ID: ${variationSeed}] Generate a ${missionType.toUpperCase()} mission challenge for Section 5 (Mission).
+      const missionPrompt = `[Variation ID: ${variationSeed}] Generate a ${missionType.toUpperCase()} mission CHALLENGE ${challengeNum} for Section 5 (Mission).
 
 CONTEXT:
 - Lesson Topic: ${topic}
 - Skill Level: ${skillLevel}
 - Lesson Skill: ${skill}
+- Challenge Number: ${challengeNum}
 ${lessonGoal ? `- Lesson Goal: ${lessonGoal}` : ''}
 ${level ? `- Level: ${level} (${complexityDesc})` : ''}
 ${chapter ? `- Chapter: ${chapter}` : ''}
@@ -2178,7 +2205,8 @@ REQUIREMENTS:
 3. Content should reinforce vocabulary and grammar from the lesson.
 4. Difficulty should match the level (${complexityDesc}).
 5. Make the scenario realistic and practical for language learners.
-${shouldIncludeTranslation ? `6. Include translations in ${langName} for situation and instruction.` : '6. Do NOT include translations.'}
+6. This is Challenge ${challengeNum}${isMission2 ? ' - create a DIFFERENT scenario from Challenge 1 with varied content and situations' : ''}.
+${shouldIncludeTranslation ? `7. Include translations in ${langName} for situation and instruction.` : '7. Do NOT include translations.'}
 
 ${customPrompt ? `ADDITIONAL NOTES: ${customPrompt}` : ''}
 ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
@@ -2208,8 +2236,8 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           missionType: missionType,
           sectionNumber: 5,
           sectionTitle: 'MISSION',
-          challengeNumber: mission.challengeNumber || 1,
-          challengeName: mission.challengeName || 'Challenge 1',
+          challengeNumber: challengeNum,
+          challengeName: mission.challengeName || `Challenge ${challengeNum}`,
           duration: mission.duration || '5-6 minutes',
           situation: mission.situation || '',
           situationTranslation: shouldIncludeTranslation ? (mission.situationTranslation || '') : '',

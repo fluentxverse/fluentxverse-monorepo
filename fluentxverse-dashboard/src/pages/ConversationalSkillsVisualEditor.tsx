@@ -2078,6 +2078,42 @@ export default function ConversationalSkillsVisualEditor() {
             // Listening type specific (handled via tutorSteps with listeningScript)
           }));
         }}
+        currentMission2Type={missionData2.missionType}
+        mission2QuestionCount={missionData2.questions?.length || missionData2.topics?.reduce((acc, t) => acc + (t.questions?.length || 0), 0) || 0}
+        onGenerateMission2={(payload) => {
+          // Update missionData2 based on payload missionType
+          setMissionData2((prev) => ({
+            ...prev,
+            missionType: payload.missionType || prev.missionType,
+            challengeNumber: 2,
+            challengeName: payload.challengeName || prev.challengeName,
+            duration: payload.duration || prev.duration,
+            situation: payload.situation || prev.situation,
+            situationTranslation: payload.situationTranslation || prev.situationTranslation,
+            instruction: payload.instruction || prev.instruction,
+            instructionTranslation: payload.instructionTranslation || prev.instructionTranslation,
+            showGrammarTip: payload.showGrammarTip ?? prev.showGrammarTip,
+            grammarTipTitle: payload.grammarTipTitle || prev.grammarTipTitle,
+            grammarTipItems: payload.grammarTipItems?.length > 0 ? payload.grammarTipItems : prev.grammarTipItems,
+            tutorSteps: payload.tutorSteps?.length > 0 ? payload.tutorSteps : prev.tutorSteps,
+            questionsIntro: payload.questionsIntro || prev.questionsIntro,
+            questions: payload.questions?.length > 0 ? payload.questions : prev.questions,
+            // Discussion type specific
+            isOptional: payload.isOptional ?? prev.isOptional,
+            topics: payload.topics?.length > 0 ? payload.topics : prev.topics,
+            // Reading type specific
+            readingPassage: payload.readingPassage || prev.readingPassage,
+          }));
+        }}
+        sectionStatus={{
+          introduce: !!(introductionData.introTexts?.some(t => t.text?.trim()) || introductionData.lessonGoalSteps?.length > 0),
+          learn: !!((learnData.steps[0]?.vocabularyItems?.length ?? 0) > 0 || (learnData.steps[0]?.expressionItems?.length ?? 0) > 0),
+          apply: !!(applyData.situationText?.trim() || applyData.dialogueLines?.length > 0 || applyData.readingText?.trim()),
+          trivia: !!(applyData.triviaEnabled && applyData.triviaText?.trim()),
+          exercise: !!(exerciseData.exerciseItems?.length > 0 || exerciseData.chooseItems?.length > 0 || exerciseData.changeItems?.length > 0),
+          mission: !!(missionData.situation?.trim() || missionData.questions?.length > 0 || (missionData.topics?.length ?? 0) > 0),
+          mission2: !!(missionData2.situation?.trim() || missionData2.questions?.length > 0 || (missionData2.topics?.length ?? 0) > 0),
+        }}
       />
 
       {/* Editor Toolbar - Fixed at top */}

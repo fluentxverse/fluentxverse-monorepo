@@ -535,6 +535,7 @@ export default function ConversationalSkillsPreview() {
     missionData2?: MissionSectionData;
     feedbackData?: FeedbackSectionData;
   } | null>(null);
+  const [hasSessionData, setHasSessionData] = useState(false);
 
   const id = params?.id;
 
@@ -545,6 +546,7 @@ export default function ConversationalSkillsPreview() {
       if (storedData) {
         try {
           setPreviewOverrides(JSON.parse(storedData));
+          setHasSessionData(true);
         } catch (e) {
           console.error('Failed to parse preview data:', e);
         }
@@ -559,9 +561,13 @@ export default function ConversationalSkillsPreview() {
       // Use public endpoint so it works from student/tutor apps (iframe)
       const data = await getPublicLessonById(lessonId);
       setLesson(data);
+      setError(null);
     } catch (err) {
-      console.error('Failed to load lesson:', err);
-      setError('Failed to load lesson preview');
+      console.error('Failed to load lesson from API:', err);
+      // Don't set error if we have session data - we can still preview
+      if (!sessionStorage.getItem(`preview-${lessonId}`)) {
+        setError('Failed to load lesson preview');
+      }
     } finally {
       setLoading(false);
     }
@@ -578,7 +584,8 @@ export default function ConversationalSkillsPreview() {
     );
   }
 
-  if (error || !lesson) {
+  // Only show error if we have no lesson AND no session data to preview
+  if ((error || !lesson) && !hasSessionData) {
     return (
       <div className="csp-fullpage csp-error">
         <i className="ri-error-warning-line" />
@@ -588,55 +595,61 @@ export default function ConversationalSkillsPreview() {
     );
   }
 
-  // Apply overrides from sessionStorage if present, otherwise use saved lesson data
-  const backgroundImage = previewOverrides?.backgroundImage ?? lesson.backgroundImage;
-  const overlayColor = previewOverrides?.overlayColor ?? (lesson.overlayColor || '#134e4acc');
-  const chapterName = previewOverrides?.chapterName ?? lesson.chapterName;
-  const lessonName = previewOverrides?.lessonName ?? lesson.lessonName;
-  const goalTextEn = previewOverrides?.goalTextEn ?? lesson.goalTextEn;
-  const goalTextJp = previewOverrides?.goalTextJp ?? lesson.goalTextJp;
+  // Apply overrides from sessionStorage if present, otherwise use saved lesson data (or defaults)
+  const backgroundImage = previewOverrides?.backgroundImage ?? lesson?.backgroundImage ?? '';
+  const overlayColor = previewOverrides?.overlayColor ?? (lesson?.overlayColor || '#134e4acc');
+  const chapterName = previewOverrides?.chapterName ?? lesson?.chapterName ?? 'Preview';
+  const lessonName = previewOverrides?.lessonName ?? lesson?.lessonName ?? 'Untitled Lesson';
+  const goalTextEn = previewOverrides?.goalTextEn ?? lesson?.goalTextEn ?? '';
+  const goalTextJp = previewOverrides?.goalTextJp ?? lesson?.goalTextJp ?? '';
   
   // Introduction data: prioritize sessionStorage > saved lesson > default
   const introductionData: IntroductionData = 
     previewOverrides?.introductionData ?? 
-    lesson.introductionData ?? 
+    lesson?.introductionData ?? 
     DEFAULT_INTRODUCTION_DATA;
 
   // Learn data: prioritize sessionStorage > saved lesson > default
   const learnData: LearnSectionData = 
     previewOverrides?.learnData ?? 
-    lesson.learnData ?? 
+    lesson?.learnData ?? 
     DEFAULT_LEARN_DATA;
 
   // Step B data: prioritize sessionStorage > saved lesson
   const stepBData: StepBData | undefined = 
     previewOverrides?.stepBData ?? 
-    lesson.stepBData;
+    lesson?.stepBData;
 
   // Apply data: prioritize sessionStorage > saved lesson
   const applyData: ApplySectionData | undefined = 
     previewOverrides?.applyData ?? 
-    lesson.applyData;
+    lesson?.applyData;
 
   // Exercise data: prioritize sessionStorage > saved lesson
   const exerciseData: ExerciseSectionData | undefined = 
     previewOverrides?.exerciseData ?? 
-    (lesson as any).exerciseData;
+    (lesson as any)?.exerciseData;
 
   // Mission data: prioritize sessionStorage > saved lesson
   const missionData: MissionSectionData | undefined = 
     previewOverrides?.missionData ?? 
-    (lesson as any).missionData;
+    (lesson as any)?.missionData;
 
   // Mission data 2 (Challenge 2 / Discussion): prioritize sessionStorage > saved lesson
   const missionData2: MissionSectionData | undefined = 
     previewOverrides?.missionData2 ?? 
-    (lesson as any).missionData2;
+    (lesson as any)?.missionData2;
 
   // Feedback data: prioritize sessionStorage > saved lesson
   const feedbackData: FeedbackSectionData | undefined = 
     previewOverrides?.feedbackData ?? 
-    (lesson as any).feedbackData;
+    (lesson as any)?.feedbackData;
+
+  // Get lesson metadata with fallbacks for unpublished lessons
+  const levelBadge = lesson?.levelBadge ?? 'L1';
+  const skill = lesson?.skill ?? 'speaking';
+  const chapter = lesson?.chapter ?? 1;
+  const lessonNumber = lesson?.lessonNumber ?? 1;
 
   return (
     <div className="csp-fullpage">
@@ -644,7 +657,7 @@ export default function ConversationalSkillsPreview() {
       <nav className="csp-topbar">
         <div className="csp-topbar-content">
           <span className="csp-course-info">
-            Conversational Skills {lesson.levelBadge} | {lesson.skill.toUpperCase()} | Chapter {lesson.chapter}: {chapterName}
+            Conversational Skills {levelBadge} | {skill.toUpperCase()} | Chapter {chapter}: {chapterName}
           </span>
         </div>
       </nav>
@@ -658,7 +671,7 @@ export default function ConversationalSkillsPreview() {
       >
         <div className="csp-hero-overlay" style={{ backgroundColor: overlayColor }} />
         <div className="csp-hero-content">
-          <p className="csp-lesson-label">Lesson {lesson.lessonNumber}</p>
+          <p className="csp-lesson-label">Lesson {lessonNumber}</p>
           <h1 className="csp-lesson-name">{lessonName}</h1>
           
           <div className="csp-goal-wrapper">

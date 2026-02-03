@@ -222,34 +222,34 @@
 .ai-tabs-container {
   background: rgba(0, 255, 65, 0.02);
   border-bottom: 1px solid var(--matrix-border);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 .ai-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 8px 10px;
 }
 
 .ai-tab {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 12px 8px;
+  gap: 2px;
+  padding: 6px 2px;
   background: transparent;
   border: 1px solid rgba(0, 255, 65, 0.2);
   border-radius: 4px;
   color: var(--matrix-text-dim);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
   font-family: 'Courier New', monospace;
+  min-width: 0;
 }
 
 .ai-tab:hover {
@@ -267,16 +267,38 @@
     inset 0 0 10px rgba(0, 255, 65, 0.1);
 }
 
+/* Tab with content indicator */
+.ai-tab-has-content {
+  position: relative;
+}
+
+.ai-tab-status-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 8px;
+  color: #4ade80;
+  text-shadow: 0 0 4px rgba(74, 222, 128, 0.6);
+}
+
+.ai-tab-has-content:not(.ai-tab-active) {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(74, 222, 128, 0.05);
+}
+
 .ai-tab-number {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   display: block;
 }
 
 .ai-tab-label {
-  font-size: 9px;
-  letter-spacing: 0.5px;
+  font-size: 8px;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ============================================================================
@@ -486,6 +508,29 @@
 .ai-instructions-input::placeholder,
 .ai-prompt-input-compact::placeholder {
   color: rgba(0, 255, 65, 0.3);
+}
+
+/* Matrix-themed scrollbar for textareas */
+.ai-instructions-input::-webkit-scrollbar,
+.ai-prompt-input-compact::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-instructions-input::-webkit-scrollbar-track,
+.ai-prompt-input-compact::-webkit-scrollbar-track {
+  background: rgba(0, 255, 65, 0.05);
+  border-radius: 3px;
+}
+
+.ai-instructions-input::-webkit-scrollbar-thumb,
+.ai-prompt-input-compact::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.4);
+  border-radius: 3px;
+}
+
+.ai-instructions-input::-webkit-scrollbar-thumb:hover,
+.ai-prompt-input-compact::-webkit-scrollbar-thumb:hover {
+  background: var(--matrix-green);
 }
 
 .ai-prompt-section-compact {
@@ -1132,6 +1177,25 @@
   color: rgba(0, 255, 65, 0.3);
 }
 
+/* Matrix-themed scrollbar for base instructions */
+.ai-base-instructions-input::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-base-instructions-input::-webkit-scrollbar-track {
+  background: rgba(0, 255, 65, 0.05);
+  border-radius: 3px;
+}
+
+.ai-base-instructions-input::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 65, 0.4);
+  border-radius: 3px;
+}
+
+.ai-base-instructions-input::-webkit-scrollbar-thumb:hover {
+  background: var(--matrix-green);
+}
+
 .ai-base-instructions-hint {
   font-size: 10px;
   color: var(--matrix-green-dim);
@@ -1199,4 +1263,143 @@
 
 .ai-show-current-btn i {
   font-size: 14px;
+}
+
+/* ============================================================================
+ * BATCH GENERATION & BUTTONS
+ * ============================================================================ */
+.ai-generate-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.ai-generate-btn {
+  flex: 1;
+}
+
+.ai-batch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 14px;
+  background: rgba(0, 255, 65, 0.08);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  border-radius: 6px;
+  color: var(--matrix-green-dim);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+}
+
+.ai-batch-btn:hover:not(:disabled) {
+  background: rgba(0, 255, 65, 0.15);
+  border-color: var(--matrix-green);
+  color: var(--matrix-green);
+  box-shadow: 0 0 15px var(--matrix-green-glow);
+}
+
+.ai-batch-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-batch-btn i {
+  font-size: 14px;
+}
+
+/* Spin animation for loader icons */
+.ai-spin {
+  animation: ai-spin 1s linear infinite;
+}
+
+@keyframes ai-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Batch Progress */
+.ai-batch-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid var(--matrix-border);
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.ai-batch-progress-bar {
+  height: 4px;
+  background: rgba(0, 255, 65, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ai-batch-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--matrix-green-dim), var(--matrix-green));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px var(--matrix-green-glow);
+}
+
+.ai-batch-progress-text {
+  font-size: 11px;
+  color: var(--matrix-green-dim);
+  text-align: center;
+}
+
+/* ============================================================================
+ * CONTENT METRICS
+ * ============================================================================ */
+.ai-content-metrics {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: rgba(0, 255, 65, 0.03);
+  border-bottom: 1px solid var(--matrix-border);
+}
+
+.ai-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--matrix-text-dim);
+  font-family: 'Courier New', monospace;
+}
+
+.ai-metric i {
+  font-size: 13px;
+  color: var(--matrix-green-dim);
+}
+
+.ai-complexity-simple {
+  color: #4ade80 !important;
+}
+
+.ai-complexity-simple i {
+  color: #4ade80 !important;
+}
+
+.ai-complexity-intermediate {
+  color: #fbbf24 !important;
+}
+
+.ai-complexity-intermediate i {
+  color: #fbbf24 !important;
+}
+
+.ai-complexity-advanced {
+  color: #f87171 !important;
+}
+
+.ai-complexity-advanced i {
+  color: #f87171 !important;
 }
