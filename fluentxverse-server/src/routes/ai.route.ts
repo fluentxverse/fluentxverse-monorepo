@@ -164,7 +164,8 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.exerciseItemCount, // Pass exercise item count from editor
           body.missionType, // Pass mission type (speaking/discussion/reading/listening)
           body.missionQuestionCount, // Pass mission question count from editor
-          body.isMission2 // Pass flag for mission 2 (challenge 2)
+          body.isMission2, // Pass flag for mission 2 (challenge 2)
+          body.storyData // Pass story data for K-Drama style generation
         );
         return {
           success: true,
@@ -208,6 +209,22 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         missionType: t.Optional(t.Nullable(t.Union([t.Literal('speaking'), t.Literal('discussion'), t.Literal('reading'), t.Literal('listening')]))), // Mission type
         missionQuestionCount: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 20 }))), // Current mission question count in editor
         isMission2: t.Optional(t.Boolean()), // Whether this is mission 2 (challenge 2)
+        storyData: t.Optional(t.Object({
+          enabled: t.Boolean(),
+          storyTitle: t.String(),
+          characters: t.Array(t.Object({
+            id: t.String(),
+            name: t.String(),
+            koreanName: t.Optional(t.String()),
+            role: t.Union([t.Literal('main'), t.Literal('supporting'), t.Literal('minor')]),
+            description: t.String(),
+            personality: t.Optional(t.String()),
+          })),
+          setting: t.String(),
+          previousSummary: t.String(),
+          currentPlotPoints: t.Array(t.String()),
+          storyNotes: t.String(),
+        })), // Story data for K-Drama style generation
       }),
       detail: {
         tags: ['AI'],

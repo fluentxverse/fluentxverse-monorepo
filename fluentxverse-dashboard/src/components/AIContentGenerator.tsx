@@ -82,6 +82,27 @@ interface AIContentGeneratorProps {
     mission: boolean;
     mission2: boolean;
   };
+  // Story data for K-Drama style immersive learning
+  storyData?: {
+    enabled: boolean;
+    storyTitle: string;
+    characters: Array<{
+      id: string;
+      name: string;
+      koreanName?: string;
+      role: 'main' | 'supporting' | 'minor';
+      description: string;
+      personality?: string;
+      image?: string;
+    }>;
+    setting: string;
+    previousSummary: string;
+    currentPlotPoints: string[];
+    currentEpisodeSummary: string;
+    nextEpisodeHook: string;
+    storyNotes: string;
+  };
+  onUpdateStory?: (data: any) => void;
 }
 
 export function AIContentGenerator({
@@ -124,6 +145,8 @@ export function AIContentGenerator({
     mission: false,
     mission2: false,
   },
+  storyData,
+  onUpdateStory,
 }: AIContentGeneratorProps) {
   // Helper function to get smart default instructions based on skill level and topic
   const getSmartInstructions = (section: SectionType, level?: number, skillLevel?: string): string => {
@@ -222,6 +245,10 @@ export function AIContentGenerator({
   const [learnStep, setLearnStep] = useState<'stepA' | 'stepB'>('stepA');
   // For Exercise section: track which step (A or B) to generate
   const [exerciseStep, setExerciseStep] = useState<'stepA' | 'stepB'>('stepA');
+  // For Story refinement chat
+  const [storyRefinePrompt, setStoryRefinePrompt] = useState('');
+  const [isRefiningStory, setIsRefiningStory] = useState(false);
+  const [showStoryPanel, setShowStoryPanel] = useState(false);
 
   // Load base instructions from localStorage on mount
   useEffect(() => {
@@ -309,7 +336,8 @@ export function AIContentGenerator({
         exerciseItemCount, // Pass exercise item count
         missionType, // Pass mission type (speaking/discussion/reading/listening)
         missionQCount, // Pass mission question count
-        isMission2 // Pass flag for mission 2
+        isMission2, // Pass flag for mission 2
+        storyData // Pass story data for K-Drama style generation
       );
 
       if (!response.success || !response.data) {
@@ -792,6 +820,98 @@ export function AIContentGenerator({
             ))}
           </div>
         </div>
+
+        {/* Story Mode Indicator - Show when story mode is enabled */}
+        {storyData?.enabled && (
+          <div className="ai-story-mode-bar">
+            <div className="ai-story-mode-info">
+              <i className="ri-movie-2-line" />
+              <span className="ai-story-mode-label">Story Mode</span>
+              <span className="ai-story-mode-title">{storyData.storyTitle || 'Untitled Episode'}</span>
+            </div>
+            <button 
+              className={`ai-story-panel-btn ${showStoryPanel ? 'active' : ''}`}
+              onClick={() => setShowStoryPanel(!showStoryPanel)}
+            >
+              <i className={showStoryPanel ? 'ri-arrow-up-s-line' : 'ri-chat-3-line'} />
+              {showStoryPanel ? 'Hide' : 'Refine Story'}
+            </button>
+          </div>
+        )}
+
+        {/* Story Refinement Panel - Collapsible chat interface */}
+        {storyData?.enabled && showStoryPanel && (
+          <div className="ai-story-refine-panel">
+            <div className="ai-story-refine-header">
+              <i className="ri-quill-pen-line" />
+              <span>Refine Your Story</span>
+            </div>
+            <div className="ai-story-refine-context">
+              <p><strong>Characters:</strong> {storyData.characters.map(c => c.name).join(', ') || 'None defined'}</p>
+              <p><strong>Setting:</strong> {storyData.setting || 'Not set'}</p>
+              <p><strong>Plot Points:</strong> {storyData.currentPlotPoints.length || 0} defined</p>
+            </div>
+            <div className="ai-story-refine-input">
+              <textarea
+                value={storyRefinePrompt}
+                onChange={(e) => setStoryRefinePrompt((e.target as HTMLTextAreaElement).value)}
+                placeholder="Tell me how to improve the story...&#10;&#10;Examples:&#10;• Make the dialogue more dramatic&#10;• Add more conflict between characters&#10;• Change the setting to a hospital&#10;• Make Ji-hoon more mysterious"
+                rows={4}
+              />
+              <button
+                className="ai-story-refine-btn"
+                disabled={isRefiningStory || !storyRefinePrompt.trim()}
+                onClick={() => {
+                  // This will be sent to the AI along with story context
+                  // when generating Apply, Exercise, or Mission sections
+                  setIsRefiningStory(true);
+                  // For now, store the refinement notes in storyNotes
+                  if (onUpdateStory && storyData) {
+                    const updatedNotes = storyData.storyNotes 
+                      ? `${storyData.storyNotes}\n\n[Refinement ${new Date().toLocaleTimeString()}]: ${storyRefinePrompt.trim()}`
+                      : `[Refinement ${new Date().toLocaleTimeString()}]: ${storyRefinePrompt.trim()}`;
+                    onUpdateStory({ ...storyData, storyNotes: updatedNotes });
+                  }
+                  setTimeout(() => {
+                    setIsRefiningStory(false);
+                    setStoryRefinePrompt('');
+                  }, 500);
+                }}
+              >
+                {isRefiningStory ? (
+                  <>
+                    <i className="ri-loader-4-line ai-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-add-line" />
+                    Add Refinement
+                  </>
+                )}
+              </button>
+            </div>
+            {storyData.storyNotes && (
+              <div className="ai-story-notes-list">
+                <div className="ai-story-notes-header">
+                  <i className="ri-file-list-3-line" />
+                  <span>Story Notes</span>
+                  <button 
+                    className="ai-clear-notes-btn"
+                    onClick={() => onUpdateStory?.({ ...storyData, storyNotes: '' })}
+                    title="Clear all notes"
+                  >
+                    <i className="ri-delete-bin-line" />
+                  </button>
+                </div>
+                <pre className="ai-story-notes-content">{storyData.storyNotes}</pre>
+              </div>
+            )}
+            <p className="ai-story-refine-hint">
+              💡 These refinements will be used when generating Apply, Exercise, and Mission sections.
+            </p>
+          </div>
+        )}
 
         {/* Learn Section Step Selector - Show only when Learn tab is active */}
         {activeSection === 'learn' && (

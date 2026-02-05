@@ -374,6 +374,7 @@ export interface LessonMaterial {
   stepBData?: StepBData;
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
+  storyData?: StoryData;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -382,6 +383,29 @@ export interface LessonMaterial {
   levelBadge: LevelBadge;
   chapterLabel: string;
   lessonTitle: string;
+}
+
+// Story data types for K-Drama style learning
+export interface StoryCharacter {
+  id: string;
+  name: string;
+  koreanName?: string;
+  role: 'main' | 'supporting' | 'minor';
+  description: string;
+  personality?: string;
+  image?: string;
+}
+
+export interface StoryData {
+  enabled: boolean;
+  storyTitle: string;
+  characters: StoryCharacter[];
+  setting: string;
+  previousSummary: string;
+  currentPlotPoints: string[];
+  currentEpisodeSummary: string;
+  nextEpisodeHook: string;
+  storyNotes: string;
 }
 
 export interface UpdateHeaderInput {
@@ -396,6 +420,7 @@ export interface UpdateHeaderInput {
   stepBData?: StepBData;
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
+  storyData?: StoryData;
 }
 
 export interface ChapterInfo {

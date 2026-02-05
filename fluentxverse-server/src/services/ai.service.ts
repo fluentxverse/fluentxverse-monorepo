@@ -1564,7 +1564,23 @@ export const generateIntroductionContent = async (
   exerciseItemCount?: number | null, // Current exercise item count in editor
   missionType?: 'speaking' | 'discussion' | 'reading' | 'listening' | null, // Mission type
   missionQuestionCount?: number | null, // Current mission question count in editor
-  isMission2?: boolean | null // Whether this is mission 2 (challenge 2)
+  isMission2?: boolean | null, // Whether this is mission 2 (challenge 2)
+  storyData?: {
+    enabled: boolean;
+    storyTitle: string;
+    characters: Array<{
+      id: string;
+      name: string;
+      koreanName?: string;
+      role: 'main' | 'supporting' | 'minor';
+      description: string;
+      personality?: string;
+    }>;
+    setting: string;
+    previousSummary: string;
+    currentPlotPoints: string[];
+    storyNotes: string;
+  } | null // Story data for K-Drama style generation
 ): Promise<GenerateIntroductionResult> => {
   try {
     // Map lesson level (1-10) to complexity descriptor
@@ -1581,6 +1597,50 @@ export const generateIntroductionContent = async (
     
     // Generate a variation seed to encourage different responses each time
     const variationSeed = Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+    
+    // Build story context string for K-Drama style generation
+    const buildStoryContext = (): string => {
+      if (!storyData?.enabled) return '';
+      
+      const characterList = storyData.characters
+        .map(c => `- ${c.name}${c.koreanName ? ` (${c.koreanName})` : ''}: ${c.role} character. ${c.description}${c.personality ? ` Personality: ${c.personality}` : ''}`)
+        .join('\n');
+      
+      const plotPoints = storyData.currentPlotPoints
+        .map((p, i) => `${i + 1}. ${p}`)
+        .join('\n');
+      
+      return `
+=== K-DRAMA STORY MODE (IMPORTANT!) ===
+You are creating content for an immersive K-drama style learning experience.
+The student interacts with the story characters but is NOT the protagonist.
+
+Episode Title: "${storyData.storyTitle || 'Untitled Episode'}"
+Setting: ${storyData.setting || 'Not specified'}
+
+CHARACTERS:
+${characterList || 'No characters defined yet - create appropriate characters based on the topic.'}
+
+PREVIOUS EPISODE SUMMARY:
+${storyData.previousSummary || 'This is the beginning of the story.'}
+
+PLOT POINTS FOR THIS EPISODE:
+${plotPoints || 'No specific plot points - create an engaging scenario based on the topic.'}
+
+STORY NOTES:
+${storyData.storyNotes || 'None'}
+
+INSTRUCTIONS:
+1. Use the characters defined above in dialogues and scenarios
+2. Continue the story naturally from where the previous episode left off
+3. Follow the plot points to create dramatic, engaging content
+4. Make dialogues natural and emotionally engaging like a K-drama
+5. The student's role is to interact with characters (ordering food, asking questions, etc.)
+6. Include dramatic moments, misunderstandings, or emotional beats appropriate to the topic
+`;
+    };
+    
+    const storyContext = buildStoryContext();
     
     // Determine if translations should be included and which language
     const shouldIncludeTranslation = includeTranslation !== false; // Default to true
@@ -1862,7 +1922,7 @@ Return ONLY JSON:
         : 'Do NOT include situationTranslation (leave it empty).';
 
       let applyPrompt = `[Variation ID: ${variationSeed}] Generate an ${applyType.toUpperCase()} activity for the Apply section.
-
+${storyContext}
 === LESSON CONTEXT ===
 Topic: ${topic}
 Lesson Goal: "${lessonGoal || 'General English practice'}"
@@ -1875,9 +1935,9 @@ Skill Level: ${skillLevel}
 3. ${translationInstruction}
 4. Use underlined words (<u>word</u>) for key vocabulary from the lesson.
 ${applyType === 'speaking' ? `5. Create exactly ${dialogueCount} dialogue lines between 2 characters.
-6. Include some action lines like "(laughs)" or "(smiles)" marked with isAction: true.` : ''}
-${applyType === 'listening' ? '5. Create a substantial listening script (150-250 words) that the tutor will read aloud.\n6. Include 2-3 comprehension questions with answers.' : ''}
-${applyType === 'reading' ? '5. Create a reading passage (email, letter, or article) appropriate for the level.\n6. Include 2-3 comprehension questions with answers.' : ''}
+6. Include some action lines like "(laughs)" or "(smiles)" marked with isAction: true.${storyContext ? '\n7. Use the STORY MODE characters and setting for the dialogue scene.' : ''}` : ''}
+${applyType === 'listening' ? `5. Create a substantial listening script (150-250 words) that the tutor will read aloud.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Incorporate the STORY MODE characters and plot into the listening narrative.' : ''}` : ''}
+${applyType === 'reading' ? `5. Create a reading passage (email, letter, or article) appropriate for the level.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Make the reading content relate to the STORY MODE characters and plot.' : ''}` : ''}
 
 Return ONLY JSON in the format specified.`;
 
@@ -2033,7 +2093,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       }
 
       exercisePrompt = `[Variation ID: ${variationSeed}] Generate a ${exerciseType.toUpperCase()} exercise for ${exerciseStep === 'stepA' ? 'Step A' : 'Step B'} of the Exercise section.
-
+${storyContext}
 CONTEXT:
 - Lesson Topic: ${topic}
 - Skill Level: ${skillLevel}
@@ -2049,6 +2109,7 @@ REQUIREMENTS:
 3. Difficulty should match the level (${complexityDesc}).
 4. Make exercises practical and relevant to the lesson topic.
 ${shouldIncludeTranslation ? `5. Include translations in ${langName} for instructions.` : '5. Do NOT include translations.'}
+${storyContext ? '6. Use scenarios and dialogues involving the STORY MODE characters.' : ''}
 
 ${customPrompt ? `ADDITIONAL NOTES: ${customPrompt}` : ''}
 ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
@@ -2188,7 +2249,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       }
 
       const missionPrompt = `[Variation ID: ${variationSeed}] Generate a ${missionType.toUpperCase()} mission CHALLENGE ${challengeNum} for Section 5 (Mission).
-
+${storyContext}
 CONTEXT:
 - Lesson Topic: ${topic}
 - Skill Level: ${skillLevel}
@@ -2207,6 +2268,7 @@ REQUIREMENTS:
 5. Make the scenario realistic and practical for language learners.
 6. This is Challenge ${challengeNum}${isMission2 ? ' - create a DIFFERENT scenario from Challenge 1 with varied content and situations' : ''}.
 ${shouldIncludeTranslation ? `7. Include translations in ${langName} for situation and instruction.` : '7. Do NOT include translations.'}
+${storyContext ? '8. The roleplay scenario should advance the STORY MODE plot and involve the characters.' : ''}
 
 ${customPrompt ? `ADDITIONAL NOTES: ${customPrompt}` : ''}
 ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;

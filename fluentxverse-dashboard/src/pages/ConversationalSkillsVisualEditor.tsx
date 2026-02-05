@@ -47,6 +47,44 @@ interface IntroductionData {
   lessonGoalSteps: LessonGoalStep[];
 }
 
+// ============================================================================
+// STORY TYPES (K-Drama Style Immersive Learning)
+// ============================================================================
+
+interface StoryCharacter {
+  id: string;
+  name: string;
+  koreanName?: string; // Optional Korean name
+  role: 'main' | 'supporting' | 'minor';
+  description: string;
+  personality?: string;
+  image?: string;
+}
+
+interface StoryData {
+  enabled: boolean; // Toggle story mode on/off
+  storyTitle: string; // Episode title
+  characters: StoryCharacter[];
+  setting: string; // Current scene location
+  previousSummary: string; // What happened in previous lesson
+  currentPlotPoints: string[]; // Key story beats for this lesson
+  currentEpisodeSummary: string; // Generated summary of this episode
+  nextEpisodeHook: string; // Teaser for next lesson
+  storyNotes: string; // Additional notes for AI context
+}
+
+const DEFAULT_STORY_DATA: StoryData = {
+  enabled: false,
+  storyTitle: '',
+  characters: [],
+  setting: '',
+  previousSummary: '',
+  currentPlotPoints: [],
+  currentEpisodeSummary: '',
+  nextEpisodeHook: '',
+  storyNotes: '',
+};
+
 // Default introduction data
 const DEFAULT_INTRODUCTION_DATA: IntroductionData = {
   introTexts: [
@@ -1749,6 +1787,9 @@ export default function ConversationalSkillsVisualEditor() {
   // Feedback section state (Section 6)
   const [feedbackData, setFeedbackData] = useState<FeedbackSectionData>(DEFAULT_FEEDBACK_DATA);
   
+  // Story data (K-Drama Style Immersive Learning)
+  const [storyData, setStoryData] = useState<StoryData>(DEFAULT_STORY_DATA);
+  
   // UI state
   const [activeElement, setActiveElement] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -1804,6 +1845,11 @@ export default function ConversationalSkillsVisualEditor() {
           showExample: loadedExercise.showExample ?? false,
         });
       }
+      
+      // Load story data from lesson if available
+      if (data.storyData) {
+        setStoryData({ ...DEFAULT_STORY_DATA, ...data.storyData });
+      }
     } catch (err) {
       console.error('Failed to load lesson:', err);
       setError('Failed to load lesson');
@@ -1829,6 +1875,7 @@ export default function ConversationalSkillsVisualEditor() {
         stepBData,
         applyData,
         exerciseData,
+        storyData,
       });
       setLesson(updated);
       setAutosaveStatus('saved');
@@ -2114,6 +2161,8 @@ export default function ConversationalSkillsVisualEditor() {
           mission: !!(missionData.situation?.trim() || missionData.questions?.length > 0 || (missionData.topics?.length ?? 0) > 0),
           mission2: !!(missionData2.situation?.trim() || missionData2.questions?.length > 0 || (missionData2.topics?.length ?? 0) > 0),
         }}
+        storyData={storyData}
+        onUpdateStory={setStoryData}
       />
 
       {/* Editor Toolbar - Fixed at top */}
@@ -2237,6 +2286,17 @@ export default function ConversationalSkillsVisualEditor() {
         {/* Content Sections */}
         <main className="csve-main">
           <div className="csve-sections">
+            {/* Story Overview Section - K-Drama Style */}
+            <StoryOverviewEditor
+              data={storyData}
+              onChange={(newData) => {
+                setStoryData(newData);
+                hasUnsavedChangesRef.current = true;
+                triggerAutosave();
+              }}
+              lessonId={id || ''}
+            />
+            
             {/* Introduction Section - Matches Preview */}
             <IntroductionSectionEditor 
               data={introductionData}
@@ -2499,6 +2559,304 @@ function PlaceholderSection({ icon, title }: { icon: string; title: string }) {
       <div className="csve-section-body">
         <p>Section editor coming soon...</p>
       </div>
+    </section>
+  );
+}
+
+// ============================================================================
+// STORY OVERVIEW EDITOR - K-DRAMA STYLE IMMERSIVE LEARNING
+// ============================================================================
+
+interface StoryOverviewEditorProps {
+  data: StoryData;
+  onChange: (data: StoryData) => void;
+  lessonId: string;
+}
+
+function StoryOverviewEditor({ data, onChange, lessonId }: StoryOverviewEditorProps) {
+  const [isExpanded, setIsExpanded] = useState(data.enabled);
+  const [newPlotPoint, setNewPlotPoint] = useState('');
+  const [editingCharacter, setEditingCharacter] = useState<string | null>(null);
+
+  const toggleStoryMode = () => {
+    const newEnabled = !data.enabled;
+    onChange({ ...data, enabled: newEnabled });
+    if (newEnabled) setIsExpanded(true);
+  };
+
+  const addCharacter = () => {
+    const newCharacter: StoryCharacter = {
+      id: `char_${Date.now()}`,
+      name: '',
+      koreanName: '',
+      role: 'supporting',
+      description: '',
+      personality: '',
+    };
+    onChange({ ...data, characters: [...data.characters, newCharacter] });
+    setEditingCharacter(newCharacter.id);
+  };
+
+  const updateCharacter = (id: string, updates: Partial<StoryCharacter>) => {
+    onChange({
+      ...data,
+      characters: data.characters.map(c => c.id === id ? { ...c, ...updates } : c)
+    });
+  };
+
+  const removeCharacter = (id: string) => {
+    onChange({
+      ...data,
+      characters: data.characters.filter(c => c.id !== id)
+    });
+  };
+
+  const addPlotPoint = () => {
+    if (!newPlotPoint.trim()) return;
+    onChange({
+      ...data,
+      currentPlotPoints: [...data.currentPlotPoints, newPlotPoint.trim()]
+    });
+    setNewPlotPoint('');
+  };
+
+  const removePlotPoint = (index: number) => {
+    onChange({
+      ...data,
+      currentPlotPoints: data.currentPlotPoints.filter((_, i) => i !== index)
+    });
+  };
+
+  const updatePlotPoint = (index: number, value: string) => {
+    const newPoints = [...data.currentPlotPoints];
+    newPoints[index] = value;
+    onChange({ ...data, currentPlotPoints: newPoints });
+  };
+
+  return (
+    <section className={`csve-section csve-story-section ${data.enabled ? 'story-enabled' : ''}`}>
+      <div className="csve-section-header csve-story-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="csve-story-header-left">
+          <i className="ri-movie-2-line" />
+          <h2>📺 Story Mode</h2>
+          <span className="csve-story-badge">K-Drama Style</span>
+        </div>
+        <div className="csve-story-header-right">
+          <label className="csve-story-toggle" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={data.enabled}
+              onChange={toggleStoryMode}
+            />
+            <span className="csve-toggle-slider" />
+            <span className="csve-toggle-label">{data.enabled ? 'Enabled' : 'Disabled'}</span>
+          </label>
+          <button className="csve-expand-btn">
+            <i className={isExpanded ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'} />
+          </button>
+        </div>
+      </div>
+      
+      {isExpanded && (
+        <div className="csve-section-body csve-story-body">
+          {!data.enabled ? (
+            <div className="csve-story-disabled-notice">
+              <i className="ri-film-line" />
+              <p>Enable Story Mode to create an immersive K-drama style learning experience!</p>
+              <p className="csve-story-hint">
+                Story elements will appear in Apply, Exercise, and Mission sections.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Episode Title */}
+              <div className="csve-story-field">
+                <label>
+                  <i className="ri-quill-pen-line" /> Episode Title
+                </label>
+                <input
+                  type="text"
+                  value={data.storyTitle}
+                  onChange={(e) => onChange({ ...data, storyTitle: (e.target as HTMLInputElement).value })}
+                  placeholder="e.g., 'The First Encounter'"
+                />
+              </div>
+
+              {/* Setting */}
+              <div className="csve-story-field">
+                <label>
+                  <i className="ri-map-pin-line" /> Scene Setting
+                </label>
+                <input
+                  type="text"
+                  value={data.setting}
+                  onChange={(e) => onChange({ ...data, setting: (e.target as HTMLInputElement).value })}
+                  placeholder="e.g., 'A cozy coffee shop in Gangnam'"
+                />
+              </div>
+
+              {/* Characters Section */}
+              <div className="csve-story-field csve-story-characters">
+                <label>
+                  <i className="ri-group-line" /> Characters
+                  <button className="csve-add-btn" onClick={addCharacter}>
+                    <i className="ri-add-line" /> Add
+                  </button>
+                </label>
+                
+                {data.characters.length === 0 ? (
+                  <div className="csve-story-empty">
+                    <p>No characters yet. Add your story's cast!</p>
+                  </div>
+                ) : (
+                  <div className="csve-characters-list">
+                    {data.characters.map((char) => (
+                      <div key={char.id} className={`csve-character-card ${editingCharacter === char.id ? 'editing' : ''}`}>
+                        <div className="csve-char-header">
+                          <span className={`csve-char-role csve-role-${char.role}`}>
+                            {char.role === 'main' ? '⭐' : char.role === 'supporting' ? '🌟' : '✨'}
+                          </span>
+                          <input
+                            type="text"
+                            className="csve-char-name"
+                            value={char.name}
+                            onChange={(e) => updateCharacter(char.id, { name: (e.target as HTMLInputElement).value })}
+                            placeholder="Character name"
+                          />
+                          <input
+                            type="text"
+                            className="csve-char-korean"
+                            value={char.koreanName || ''}
+                            onChange={(e) => updateCharacter(char.id, { koreanName: (e.target as HTMLInputElement).value })}
+                            placeholder="한글 이름"
+                          />
+                          <button 
+                            className="csve-char-remove"
+                            onClick={() => removeCharacter(char.id)}
+                          >
+                            <i className="ri-close-line" />
+                          </button>
+                        </div>
+                        
+                        <div className="csve-char-details">
+                          <select
+                            value={char.role}
+                            onChange={(e) => updateCharacter(char.id, { role: (e.target as HTMLSelectElement).value as StoryCharacter['role'] })}
+                          >
+                            <option value="main">Main Character</option>
+                            <option value="supporting">Supporting</option>
+                            <option value="minor">Minor</option>
+                          </select>
+                          <input
+                            type="text"
+                            value={char.personality || ''}
+                            onChange={(e) => updateCharacter(char.id, { personality: (e.target as HTMLInputElement).value })}
+                            placeholder="Personality traits"
+                          />
+                        </div>
+                        
+                        <textarea
+                          value={char.description}
+                          onChange={(e) => updateCharacter(char.id, { description: (e.target as HTMLTextAreaElement).value })}
+                          placeholder="Brief description of this character..."
+                          rows={2}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Previous Episode Summary */}
+              <div className="csve-story-field">
+                <label>
+                  <i className="ri-history-line" /> Previous Episode Summary
+                  <span className="csve-field-hint">(Auto-populated from previous lesson or enter manually)</span>
+                </label>
+                <textarea
+                  value={data.previousSummary}
+                  onChange={(e) => onChange({ ...data, previousSummary: (e.target as HTMLTextAreaElement).value })}
+                  placeholder="What happened in the previous lesson's story..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Current Episode Plot Points */}
+              <div className="csve-story-field csve-story-plot-points">
+                <label>
+                  <i className="ri-list-ordered" /> Plot Points for This Episode
+                </label>
+                
+                <div className="csve-plot-points-list">
+                  {data.currentPlotPoints.map((point, index) => (
+                    <div key={index} className="csve-plot-point">
+                      <span className="csve-plot-number">{index + 1}</span>
+                      <input
+                        type="text"
+                        value={point}
+                        onChange={(e) => updatePlotPoint(index, (e.target as HTMLInputElement).value)}
+                      />
+                      <button onClick={() => removePlotPoint(index)}>
+                        <i className="ri-delete-bin-line" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="csve-add-plot-point">
+                  <input
+                    type="text"
+                    value={newPlotPoint}
+                    onChange={(e) => setNewPlotPoint((e.target as HTMLInputElement).value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addPlotPoint()}
+                    placeholder="Add a plot point..."
+                  />
+                  <button onClick={addPlotPoint}>
+                    <i className="ri-add-line" /> Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Next Episode Hook */}
+              <div className="csve-story-field">
+                <label>
+                  <i className="ri-arrow-right-double-line" /> Next Episode Hook
+                </label>
+                <textarea
+                  value={data.nextEpisodeHook}
+                  onChange={(e) => onChange({ ...data, nextEpisodeHook: (e.target as HTMLTextAreaElement).value })}
+                  placeholder="Teaser for the next lesson's story continuation..."
+                  rows={2}
+                />
+              </div>
+
+              {/* Additional Story Notes */}
+              <div className="csve-story-field">
+                <label>
+                  <i className="ri-sticky-note-line" /> Story Notes (AI Context)
+                </label>
+                <textarea
+                  value={data.storyNotes}
+                  onChange={(e) => onChange({ ...data, storyNotes: (e.target as HTMLTextAreaElement).value })}
+                  placeholder="Additional context for AI generation: tone, themes, cultural references..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Story Tips */}
+              <div className="csve-story-tips">
+                <h4><i className="ri-lightbulb-line" /> Story Tips</h4>
+                <ul>
+                  <li>The student interacts with characters but isn't the protagonist</li>
+                  <li>Each lesson continues from where the previous one ended</li>
+                  <li>Plot points help AI generate consistent dialogue in sections</li>
+                  <li>Use the AI widget to refine and improve generated story content</li>
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }

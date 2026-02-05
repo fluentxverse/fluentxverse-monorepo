@@ -69,7 +69,23 @@ export async function generateIntroductionContent(
   exerciseItemCount?: number,
   missionType?: 'speaking' | 'discussion' | 'reading' | 'listening',
   missionQuestionCount?: number,
-  isMission2?: boolean
+  isMission2?: boolean,
+  storyData?: {
+    enabled: boolean;
+    storyTitle: string;
+    characters: Array<{
+      id: string;
+      name: string;
+      koreanName?: string;
+      role: 'main' | 'supporting' | 'minor';
+      description: string;
+      personality?: string;
+    }>;
+    setting: string;
+    previousSummary: string;
+    currentPlotPoints: string[];
+    storyNotes: string;
+  }
 ): Promise<GenerateIntroductionResponse> {
   try {
     const response = await apiClient.post('/ai/generate-introduction', {
@@ -100,6 +116,7 @@ export async function generateIntroductionContent(
       ...(missionType ? { missionType } : {}),
       ...(missionQuestionCount ? { missionQuestionCount } : {}),
       ...(isMission2 ? { isMission2 } : {}),
+      ...(storyData?.enabled ? { storyData } : {}),
     });
     return response.data;
   } catch (error: any) {

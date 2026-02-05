@@ -295,6 +295,7 @@ export interface LessonMaterial {
   stepBData?: StepBData;
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
+  storyData?: StoryData;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -303,6 +304,29 @@ export interface LessonMaterial {
   levelBadge: LevelBadge;
   chapterLabel: string;
   lessonTitle: string;
+}
+
+// Story data types for K-Drama style learning
+export interface StoryCharacter {
+  id: string;
+  name: string;
+  koreanName?: string;
+  role: 'main' | 'supporting' | 'minor';
+  description: string;
+  personality?: string;
+  image?: string;
+}
+
+export interface StoryData {
+  enabled: boolean;
+  storyTitle: string;
+  characters: StoryCharacter[];
+  setting: string;
+  previousSummary: string;
+  currentPlotPoints: string[];
+  currentEpisodeSummary: string;
+  nextEpisodeHook: string;
+  storyNotes: string;
 }
 
 export interface UpdateHeaderInput {
@@ -317,6 +341,7 @@ export interface UpdateHeaderInput {
   stepBData?: StepBData;
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
+  storyData?: StoryData;
 }
 
 // ============================================================================
@@ -413,6 +438,18 @@ function transformLesson(record: any): LessonMaterial {
       console.error('Failed to parse exerciseData:', e);
     }
   }
+
+  // Parse storyData from JSON string if present
+  let storyData: StoryData | undefined;
+  if (props.storyData) {
+    try {
+      storyData = typeof props.storyData === 'string' 
+        ? JSON.parse(props.storyData) 
+        : props.storyData;
+    } catch (e) {
+      console.error('Failed to parse storyData:', e);
+    }
+  }
   
   return {
     id: props.id,
@@ -433,6 +470,7 @@ function transformLesson(record: any): LessonMaterial {
     stepBData,
     applyData,
     exerciseData,
+    storyData,
     createdBy: props.createdBy,
     createdByName: props.createdByName || '',
     createdAt: props.createdAt,
@@ -707,6 +745,12 @@ export const lessonMaterialService = {
         setClauses.push('l.exerciseData = $exerciseData');
         // Store as JSON string
         params.exerciseData = JSON.stringify(input.exerciseData);
+      }
+
+      if (input.storyData !== undefined) {
+        setClauses.push('l.storyData = $storyData');
+        // Store as JSON string
+        params.storyData = JSON.stringify(input.storyData);
       }
       
       const result = await session.run(

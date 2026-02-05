@@ -388,6 +388,7 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
           stepBData: body.stepBData,
           applyData: body.applyData,
           exerciseData: body.exerciseData,
+          storyData: body.storyData,
         });
         
         if (!lesson) {
@@ -417,6 +418,7 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         stepBData: t.Optional(t.Any()),
         applyData: t.Optional(t.Any()),
         exerciseData: t.Optional(t.Any()),
+        storyData: t.Optional(t.Any()),
       }),
       detail: {
         tags: ['Lesson Materials'],
