@@ -103,6 +103,29 @@ interface AIContentGeneratorProps {
     storyNotes: string;
   };
   onUpdateStory?: (data: any) => void;
+  // Current Learn section data - passed to Apply, Exercise, Mission for cohesion
+  currentLearnData?: {
+    steps?: Array<{
+      id: string;
+      label: string;
+      items?: Array<{
+        foreign: string;
+        foreignLabel?: string;
+        native: string;
+        audio?: string;
+        image?: string;
+      }>;
+    }>;
+    stepBType?: 'speak-your-mind' | 'grammar-tip' | 'pronunciation';
+    grammarTip?: {
+      title?: string;
+      items?: Array<{
+        pattern?: string;
+        explanation?: string;
+        example?: string;
+      }>;
+    };
+  };
 }
 
 export function AIContentGenerator({
@@ -147,6 +170,7 @@ export function AIContentGenerator({
   },
   storyData,
   onUpdateStory,
+  currentLearnData,
 }: AIContentGeneratorProps) {
   // Helper function to get smart default instructions based on skill level and topic
   const getSmartInstructions = (section: SectionType, level?: number, skillLevel?: string): string => {
@@ -337,7 +361,8 @@ export function AIContentGenerator({
         missionType, // Pass mission type (speaking/discussion/reading/listening)
         missionQCount, // Pass mission question count
         isMission2, // Pass flag for mission 2
-        storyData // Pass story data for K-Drama style generation
+        storyData, // Pass story data for K-Drama style generation
+        currentLearnData // Pass Learn section data for cross-section cohesion
       );
 
       if (!response.success || !response.data) {

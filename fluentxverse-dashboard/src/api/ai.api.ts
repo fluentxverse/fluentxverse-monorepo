@@ -85,6 +85,28 @@ export async function generateIntroductionContent(
     previousSummary: string;
     currentPlotPoints: string[];
     storyNotes: string;
+  },
+  currentLearnData?: {
+    steps?: Array<{
+      id: string;
+      label: string;
+      items?: Array<{
+        foreign: string;
+        foreignLabel?: string;
+        native: string;
+        audio?: string;
+        image?: string;
+      }>;
+    }>;
+    stepBType?: 'speak-your-mind' | 'grammar-tip' | 'pronunciation';
+    grammarTip?: {
+      title?: string;
+      items?: Array<{
+        pattern?: string;
+        explanation?: string;
+        example?: string;
+      }>;
+    };
   }
 ): Promise<GenerateIntroductionResponse> {
   try {
@@ -117,6 +139,7 @@ export async function generateIntroductionContent(
       ...(missionQuestionCount ? { missionQuestionCount } : {}),
       ...(isMission2 ? { isMission2 } : {}),
       ...(storyData?.enabled ? { storyData } : {}),
+      ...(currentLearnData ? { currentLearnData } : {}),
     });
     return response.data;
   } catch (error: any) {

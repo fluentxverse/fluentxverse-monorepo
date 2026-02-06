@@ -165,7 +165,8 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.missionType, // Pass mission type (speaking/discussion/reading/listening)
           body.missionQuestionCount, // Pass mission question count from editor
           body.isMission2, // Pass flag for mission 2 (challenge 2)
-          body.storyData // Pass story data for K-Drama style generation
+          body.storyData, // Pass story data for K-Drama style generation
+          body.currentLearnData // Pass Learn section data for cross-section cohesion
         );
         return {
           success: true,
@@ -225,6 +226,34 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           currentPlotPoints: t.Array(t.String()),
           storyNotes: t.String(),
         })), // Story data for K-Drama style generation
+        currentLearnData: t.Optional(t.Object({
+          steps: t.Optional(t.Array(t.Object({
+            id: t.String(),
+            label: t.String(),
+            items: t.Optional(t.Array(t.Object({
+              foreign: t.String(),
+              foreignLabel: t.Optional(t.String()),
+              native: t.String(),
+              audio: t.Optional(t.String()),
+              image: t.Optional(t.String()),
+            }))),
+          }))),
+          stepBType: t.Optional(t.Object({
+            format: t.String(),
+            type: t.String(),
+            items: t.Optional(t.Array(t.Object({
+              foreign: t.String(),
+              foreignLabel: t.Optional(t.String()),
+              native: t.String(),
+              audio: t.Optional(t.String()),
+              image: t.Optional(t.String()),
+            }))),
+          })),
+          grammarTip: t.Optional(t.Object({
+            title: t.String(),
+            content: t.String(),
+          })),
+        })), // Learn section data for cross-section cohesion
       }),
       detail: {
         tags: ['AI'],

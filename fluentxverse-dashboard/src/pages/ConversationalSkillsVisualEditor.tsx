@@ -2163,6 +2163,32 @@ export default function ConversationalSkillsVisualEditor() {
         }}
         storyData={storyData}
         onUpdateStory={setStoryData}
+        currentLearnData={{
+          steps: learnData.steps.map(step => ({
+            id: step.stepType || 'vocabulary',
+            label: step.stepType === 'vocabulary' ? 'Vocabulary' : 'Expressions',
+            items: step.stepType === 'vocabulary' 
+              ? (step.vocabularyItems || []).map(item => ({
+                  foreign: item.englishText || '',
+                  foreignLabel: item.highlightedWord || '',
+                  native: item.translation || '',
+                }))
+              : (step.expressionItems || []).map(item => ({
+                  foreign: item.definitionLine?.replace(/<[^>]*>/g, '') || '',
+                  foreignLabel: '',
+                  native: item.translation || '',
+                })),
+          })),
+          stepBType: stepBData.stepType,
+          grammarTip: stepBData.stepType === 'grammar-tip' && stepBData.grammarTip ? {
+            title: stepBData.grammarTip.stepName || 'Grammar Tip',
+            items: stepBData.grammarTip.explanations?.map(exp => ({
+              pattern: exp.ruleText?.replace(/<[^>]*>/g, '') || '',
+              explanation: exp.ruleTranslation || '',
+              example: exp.examples?.[0]?.sentence?.replace(/<[^>]*>/g, '') || '',
+            })),
+          } : undefined,
+        }}
       />
 
       {/* Editor Toolbar - Fixed at top */}

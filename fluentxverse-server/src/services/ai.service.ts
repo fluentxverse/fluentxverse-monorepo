@@ -1580,7 +1580,35 @@ export const generateIntroductionContent = async (
     previousSummary: string;
     currentPlotPoints: string[];
     storyNotes: string;
-  } | null // Story data for K-Drama style generation
+  } | null, // Story data for K-Drama style generation
+  currentLearnData?: {
+    steps?: Array<{
+      id: string;
+      label: string;
+      items?: Array<{
+        foreign: string;
+        foreignLabel?: string;
+        native: string;
+        audio?: string;
+        image?: string;
+      }>;
+    }>;
+    stepBType?: {
+      format: string;
+      type: string;
+      items?: Array<{
+        foreign: string;
+        foreignLabel?: string;
+        native: string;
+        audio?: string;
+        image?: string;
+      }>;
+    };
+    grammarTip?: {
+      title: string;
+      content: string;
+    };
+  } | null // Learn section data for cross-section cohesion
 ): Promise<GenerateIntroductionResult> => {
   try {
     // Map lesson level (1-10) to complexity descriptor
@@ -1641,6 +1669,82 @@ INSTRUCTIONS:
     };
     
     const storyContext = buildStoryContext();
+    
+    // Build context from Learn section for cross-section cohesion (Apply, Exercise, Mission)
+    const buildLearnContext = (): string => {
+      if (!currentLearnData) return '';
+      
+      const parts: string[] = [];
+      
+      // Extract vocabulary items from Step A
+      if (currentLearnData.steps && currentLearnData.steps.length > 0) {
+        const vocabularyItems: string[] = [];
+        const expressionItems: string[] = [];
+        
+        for (const step of currentLearnData.steps) {
+          if (step.items && step.items.length > 0) {
+            const isVocabulary = step.label.toLowerCase().includes('vocab');
+            const isExpression = step.label.toLowerCase().includes('express');
+            
+            for (const item of step.items) {
+              if (isVocabulary) {
+                vocabularyItems.push(`- ${item.foreign} (${item.native})`);
+              } else if (isExpression) {
+                expressionItems.push(`- ${item.foreign} (${item.native})`);
+              } else {
+                // Default to vocabulary if label doesn't specify
+                vocabularyItems.push(`- ${item.foreign} (${item.native})`);
+              }
+            }
+          }
+        }
+        
+        if (vocabularyItems.length > 0) {
+          parts.push(`VOCABULARY FROM LEARN SECTION:\n${vocabularyItems.join('\n')}`);
+        }
+        if (expressionItems.length > 0) {
+          parts.push(`EXPRESSIONS FROM LEARN SECTION:\n${expressionItems.join('\n')}`);
+        }
+      }
+      
+      // Extract Step B items (Speak Your Mind, Grammar Tip, Pronunciation)
+      if (currentLearnData.stepBType?.items && currentLearnData.stepBType.items.length > 0) {
+        const stepBItems = currentLearnData.stepBType.items
+          .map(item => `- ${item.foreign} (${item.native})`)
+          .join('\n');
+        const stepBLabel = currentLearnData.stepBType.type === 'speak-your-mind' ? 'SPEAK YOUR MIND PHRASES' :
+                          currentLearnData.stepBType.type === 'pronunciation' ? 'PRONUNCIATION FOCUS' :
+                          'ADDITIONAL ITEMS';
+        parts.push(`${stepBLabel} FROM LEARN SECTION:\n${stepBItems}`);
+      }
+      
+      // Extract Grammar Tip
+      if (currentLearnData.grammarTip?.title && currentLearnData.grammarTip?.content) {
+        parts.push(`GRAMMAR RULE FROM LEARN SECTION:
+Title: ${currentLearnData.grammarTip.title}
+Explanation: ${currentLearnData.grammarTip.content}
+
+IMPORTANT: Create content that allows students to PRACTICE this grammar pattern. The exercises and scenarios should require using this grammar structure.`);
+      }
+      
+      if (parts.length === 0) return '';
+      
+      return `
+=== CROSS-SECTION COHESION (IMPORTANT!) ===
+The student has already learned the following vocabulary, expressions, and grammar rules in the LEARN section.
+Your generated content should help them PRACTICE and APPLY what they learned.
+
+${parts.join('\n\n')}
+
+INSTRUCTIONS FOR COHESION:
+1. Use the vocabulary and expressions from above naturally in dialogues and scenarios
+2. If a grammar rule is provided, create sentences/questions that require using that grammar pattern
+3. Don't just repeat the items - create realistic situations where students must use them
+4. The goal is reinforcement through practice, not repetition of definitions
+`;
+    };
+    
+    const learnContext = buildLearnContext();
     
     // Determine if translations should be included and which language
     const shouldIncludeTranslation = includeTranslation !== false; // Default to true
@@ -1923,6 +2027,7 @@ Return ONLY JSON:
 
       let applyPrompt = `[Variation ID: ${variationSeed}] Generate an ${applyType.toUpperCase()} activity for the Apply section.
 ${storyContext}
+${learnContext}
 === LESSON CONTEXT ===
 Topic: ${topic}
 Lesson Goal: "${lessonGoal || 'General English practice'}"
@@ -2094,6 +2199,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
 
       exercisePrompt = `[Variation ID: ${variationSeed}] Generate a ${exerciseType.toUpperCase()} exercise for ${exerciseStep === 'stepA' ? 'Step A' : 'Step B'} of the Exercise section.
 ${storyContext}
+${learnContext}
 CONTEXT:
 - Lesson Topic: ${topic}
 - Skill Level: ${skillLevel}
@@ -2250,6 +2356,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
 
       const missionPrompt = `[Variation ID: ${variationSeed}] Generate a ${missionType.toUpperCase()} mission CHALLENGE ${challengeNum} for Section 5 (Mission).
 ${storyContext}
+${learnContext}
 CONTEXT:
 - Lesson Topic: ${topic}
 - Skill Level: ${skillLevel}
