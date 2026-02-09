@@ -587,7 +587,7 @@
   background: rgba(0, 255, 65, 0.03);
   border-left: 2px solid var(--matrix-green);
   border-radius: 4px;
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
   animation: slideDown 0.2s ease-out;
 }
@@ -599,7 +599,7 @@
   }
   to {
     opacity: 1;
-    max-height: 200px;
+    max-height: 400px;
   }
 }
 
@@ -1612,6 +1612,62 @@
   max-height: 100px;
   overflow-y: auto;
   font-family: inherit;
+}
+
+/* Episode Summary Section */
+.ai-story-episode-summary {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(0, 255, 65, 0.08), rgba(0, 200, 255, 0.05));
+  border: 1px solid rgba(0, 255, 65, 0.25);
+  border-radius: 6px;
+}
+
+.ai-story-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--matrix-green);
+  margin-bottom: 0.5rem;
+}
+
+.ai-story-summary-header i {
+  font-size: 0.875rem;
+}
+
+.ai-episode-current,
+.ai-episode-hook {
+  margin-bottom: 0.5rem;
+}
+
+.ai-episode-current:last-child,
+.ai-episode-hook:last-child {
+  margin-bottom: 0;
+}
+
+.ai-episode-current strong,
+.ai-episode-hook strong {
+  display: block;
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--matrix-text-dim);
+  margin-bottom: 0.25rem;
+}
+
+.ai-episode-current p,
+.ai-episode-hook p {
+  margin: 0;
+  font-size: 0.625rem;
+  line-height: 1.5;
+  color: var(--matrix-text);
+}
+
+.ai-episode-hook p {
+  color: var(--matrix-cyan);
+  font-style: italic;
 }
 
 .ai-story-refine-hint {

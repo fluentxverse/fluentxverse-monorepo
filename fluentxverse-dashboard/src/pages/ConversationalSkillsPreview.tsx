@@ -2284,92 +2284,93 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
       <div className="csp-feedback-layout">
         {/* Left Column - Student View */}
         <div className="csp-feedback-left">
-          {/* Goal Box - Horizontal layout like editor */}
-          <div className="csp-feedback-goal">
-            <div className="csp-feedback-goal-header">
-              <span className="csp-goal-badge">GOAL</span>
-            </div>
-            <div className="csp-feedback-goal-content">
-              <p className="csp-feedback-goal-text">{data.goal}</p>
-              <p className="csp-feedback-goal-jp">{data.goalJp}</p>
+          {/* Goal Card */}
+          <div className="csp-fb-goal-card">
+            <div className="csp-fb-goal-accent" />
+            <div className="csp-fb-goal-body">
+              <span className="csp-fb-goal-label">SESSION OBJECTIVE</span>
+              <p className="csp-fb-goal-text">{data.goal}</p>
+              <p className="csp-fb-goal-jp">{data.goalJp}</p>
             </div>
           </div>
 
-          {/* Rubric */}
-          <div className="csp-feedback-rubric">
-            <div className="csp-feedback-rubric-header">{data.rubricTitle}</div>
-            <div className="csp-feedback-rubric-grid">
+          {/* Performance Levels */}
+          <div className="csp-fb-rubric-card">
+            <div className="csp-fb-rubric-title-row">{data.rubricTitle}</div>
+            <div className="csp-fb-rubric-scale">
               {data.rubricLevels.map((level, idx) => (
-                <div key={idx} className={`csp-rubric-level csp-rubric-level-${level.score}`}>
-                  <div className="csp-rubric-score">{level.score}</div>
-                  <div className="csp-rubric-label">{level.label}</div>
-                  <div className="csp-rubric-desc">{level.description}</div>
+                <div key={idx} className={`csp-fb-rubric-item csp-fb-rubric-${level.score}`}>
+                  <div className="csp-fb-rubric-circle">{level.score}</div>
+                  <div className="csp-fb-rubric-details">
+                    <span className="csp-fb-rubric-label">{level.label}</span>
+                    <span className="csp-fb-rubric-desc">{level.description}</span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Personalized Feedback Header */}
-          <div className="csp-feedback-pf">
-            <div className="csp-feedback-pf-header">{data.personalizedFeedbackTitle}</div>
-            <div className="csp-feedback-pf-categories">
-              {data.categories.map((cat) => (
-                <div key={cat.id} className={`csp-feedback-pf-cat csp-feedback-pf-${cat.id}`}>
-                  <div className="csp-feedback-pf-cat-title">{cat.title}</div>
-                  <div className="csp-feedback-pf-cat-jp">{cat.titleJp}</div>
+          {/* Assessment Areas */}
+          <div className="csp-fb-categories-header">{data.personalizedFeedbackTitle}</div>
+
+          {/* Category Cards */}
+          {data.categories.map((cat) => (
+            <div key={cat.id} className={`csp-fb-category-card csp-fb-cat-${cat.id}`}>
+              {/* Category Header */}
+              <div className="csp-fb-cat-header">
+                <div className="csp-fb-cat-icon">
+                  {cat.id === 'range' && <i className="ri-compass-3-line" />}
+                  {cat.id === 'accuracy' && <i className="ri-focus-2-line" />}
+                  {cat.id === 'fluency' && <i className="ri-speed-line" />}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Feedback Guide Table - 3-column layout like editor */}
-          <div className="csp-feedback-guide">
-            <div className="csp-feedback-guide-header">{data.feedbackGuideTitle}</div>
-            
-            {/* Column Headers */}
-            <div className="csp-feedback-table-columns">
-              <div className="csp-feedback-col-header"></div>
-              <div className="csp-feedback-col-header">Focus on...</div>
-              <div className="csp-feedback-col-header">example feedback</div>
-            </div>
-
-            {/* Table Rows */}
-            {data.categories.map((cat) => (
-              <div key={cat.id} className={`csp-feedback-table-row csp-feedback-row-${cat.id}`}>
-                {/* Column 1: Category */}
-                <div className="csp-feedback-col-category">
-                  <span className={`csp-feedback-category-title csp-cat-${cat.id}`}>{cat.title}</span>
-                  <span className="csp-feedback-focus-on">{cat.focusOn}</span>
+                <div className="csp-fb-cat-titles">
+                  <span className="csp-fb-cat-name">{cat.title}</span>
+                  <span className="csp-fb-cat-jp">{cat.titleJp}</span>
                 </div>
+              </div>
 
-                {/* Column 2: Focus Items */}
-                <div className="csp-feedback-col-focus">
+              {/* Assessment Criteria */}
+              <div className="csp-fb-cat-assess">
+                <span className="csp-fb-assess-label">Assessment criteria</span>
+                <p className="csp-fb-assess-text">{cat.focusOn}</p>
+              </div>
+
+              {/* Key Indicators */}
+              <div className="csp-fb-cat-focus">
+                <span className="csp-fb-focus-label">Key indicators</span>
+                <div className="csp-fb-focus-tags">
                   {cat.exampleFeedbackItems.map((item, idx) => (
-                    <span key={idx} className="csp-feedback-focus-item">{item}</span>
-                  ))}
-                </div>
-
-                {/* Column 3: Example Feedback */}
-                <div className="csp-feedback-col-examples">
-                  {cat.id === 'range' && cat.vocabularyExample && (
-                    <div className="csp-feedback-vocab-line">{cat.vocabularyExample}</div>
-                  )}
-                  {cat.examples.map((ex, exIdx) => (
-                    <div key={exIdx} className="csp-feedback-example-block">
-                      <div className="csp-feedback-example-row">
-                        <span className="csp-feedback-label">You said:</span>
-                        <span className="csp-feedback-wrong">"{ex.youSaid}"</span>
-                      </div>
-                      <div className="csp-feedback-example-row">
-                        <span className="csp-feedback-label">{ex.correctionLabel}</span>
-                        <span className="csp-feedback-correct">"{ex.correction}"</span>
-                      </div>
-                    </div>
+                    <span key={idx} className="csp-fb-focus-tag">{item}</span>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Sample Corrections */}
+              <div className="csp-fb-cat-examples">
+                <span className="csp-fb-examples-label">Sample corrections</span>
+
+                {cat.id === 'range' && cat.vocabularyExample && (
+                  <div className="csp-fb-vocab-highlight">
+                    <i className="ri-book-2-line" />
+                    <span>{cat.vocabularyExample}</span>
+                  </div>
+                )}
+
+                {cat.examples.map((ex, exIdx) => (
+                  <div key={exIdx} className="csp-fb-example-card">
+                    <div className="csp-fb-example-said">
+                      <span className="csp-fb-example-icon">✗</span>
+                      <span className="csp-fb-said-text">{ex.youSaid}</span>
+                    </div>
+                    <div className="csp-fb-example-better">
+                      <span className="csp-fb-better-icon">✓</span>
+                      <span className="csp-fb-better-text">{ex.correction}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Right Column - Tutor Guide */}

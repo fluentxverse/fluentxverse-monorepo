@@ -8092,20 +8092,21 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
       <div className="csve-feedback-content">
         {/* Left Column - Student View */}
         <div className="csve-feedback-left">
-          {/* GOAL Box */}
-          <div className="csve-feedback-goal">
-            <span className="csve-feedback-goal-badge">GOAL</span>
-            <div className="csve-feedback-goal-content">
+          {/* GOAL Card */}
+          <div className="csve-fb-goal-card">
+            <div className="csve-fb-goal-accent" />
+            <div className="csve-fb-goal-body">
+              <span className="csve-fb-goal-label">SESSION OBJECTIVE</span>
               <input
                 type="text"
-                className="csve-feedback-goal-input"
+                className="csve-fb-goal-text"
                 value={data.goal}
                 onChange={e => updateData({ goal: (e.target as HTMLInputElement).value })}
-                placeholder="I can listen to and understand..."
+                placeholder="Students will be able to..."
               />
               <input
                 type="text"
-                className="csve-feedback-goal-jp"
+                className="csve-fb-goal-jp"
                 value={data.goalJp}
                 onChange={e => updateData({ goalJp: (e.target as HTMLInputElement).value })}
                 placeholder="Japanese translation..."
@@ -8113,123 +8114,125 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
             </div>
           </div>
 
-          {/* LESSON GOAL ACHIEVEMENT Rubric */}
-          <div className="csve-feedback-rubric">
-            <div className="csve-feedback-rubric-header">
+          {/* Performance Levels */}
+          <div className="csve-fb-rubric-card">
+            <div className="csve-fb-rubric-title-row">
               <input
                 type="text"
-                className="csve-feedback-rubric-title"
+                className="csve-fb-rubric-title"
                 value={data.rubricTitle}
                 onChange={e => updateData({ rubricTitle: (e.target as HTMLInputElement).value })}
               />
             </div>
-            <div className="csve-feedback-rubric-grid">
+            <div className="csve-fb-rubric-scale">
               {data.rubricLevels.map((level, levelIdx) => (
-                <div key={level.score} className={`csve-feedback-rubric-col csve-rubric-${level.score}`}>
-                  <div className="csve-rubric-score-row">
-                    <span className="csve-rubric-score">{level.score}</span>
+                <div key={level.score} className={`csve-fb-rubric-item csve-fb-rubric-${level.score}`}>
+                  <div className="csve-fb-rubric-circle">{level.score}</div>
+                  <div className="csve-fb-rubric-details">
                     <input
                       type="text"
-                      className="csve-rubric-label"
+                      className="csve-fb-rubric-label"
                       value={level.label}
                       onChange={e => updateRubricLevel(levelIdx, { label: (e.target as HTMLInputElement).value })}
                     />
+                    <textarea
+                      className="csve-fb-rubric-desc"
+                      value={level.description}
+                      onChange={e => updateRubricLevel(levelIdx, { description: (e.target as HTMLTextAreaElement).value })}
+                      rows={1}
+                      ref={el => {
+                        if (el) {
+                          el.style.height = 'auto';
+                          el.style.height = el.scrollHeight + 'px';
+                        }
+                      }}
+                      onInput={e => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = target.scrollHeight + 'px';
+                      }}
+                    />
                   </div>
-                  <textarea
-                    className="csve-rubric-desc"
-                    value={level.description}
-                    onChange={e => updateRubricLevel(levelIdx, { description: (e.target as HTMLTextAreaElement).value })}
-                    rows={2}
-                  />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* PERSONALIZED FEEDBACK Header */}
-          <div className="csve-feedback-pf-header">
-            <div className="csve-feedback-pf-title-bar">
-              <input
-                type="text"
-                className="csve-feedback-pf-title"
-                value={data.personalizedFeedbackTitle}
-                onChange={e => updateData({ personalizedFeedbackTitle: (e.target as HTMLInputElement).value })}
-              />
-            </div>
-            <div className="csve-feedback-pf-categories">
-              {data.categories.map((category, categoryIdx) => (
-                <div key={category.id} className={`csve-feedback-pf-cat csve-feedback-pf-${category.id}`}>
+          {/* Assessment Areas */}
+          <div className="csve-fb-categories-header">
+            <input
+              type="text"
+              className="csve-fb-categories-title"
+              value={data.personalizedFeedbackTitle}
+              onChange={e => updateData({ personalizedFeedbackTitle: (e.target as HTMLInputElement).value })}
+            />
+          </div>
+
+          {/* Category Cards */}
+          {data.categories.map((category, categoryIdx) => (
+            <div key={category.id} className={`csve-fb-category-card csve-fb-cat-${category.id}`}>
+              {/* Category Header */}
+              <div className="csve-fb-cat-header">
+                <div className="csve-fb-cat-icon">
+                  {category.id === 'range' && <i className="ri-compass-3-line" />}
+                  {category.id === 'accuracy' && <i className="ri-focus-2-line" />}
+                  {category.id === 'fluency' && <i className="ri-speed-line" />}
+                </div>
+                <div className="csve-fb-cat-titles">
                   <input
                     type="text"
-                    className="csve-feedback-pf-cat-title"
+                    className="csve-fb-cat-name"
                     value={category.title}
                     onChange={e => updateCategory(categoryIdx, { title: (e.target as HTMLInputElement).value })}
                   />
                   <textarea
-                    className="csve-feedback-pf-cat-jp"
+                    className="csve-fb-cat-jp"
                     value={category.titleJp}
                     onChange={e => updateCategory(categoryIdx, { titleJp: (e.target as HTMLTextAreaElement).value })}
-                    rows={2}
+                    rows={1}
                   />
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* PERSONALIZED FEEDBACK GUIDE Table */}
-          <div className="csve-feedback-table">
-            <div className="csve-feedback-table-header">
-              <input
-                type="text"
-                className="csve-feedback-table-title"
-                value={data.feedbackGuideTitle}
-                onChange={e => updateData({ feedbackGuideTitle: (e.target as HTMLInputElement).value })}
-              />
-            </div>
+              {/* Assessment Criteria */}
+              <div className="csve-fb-cat-assess">
+                <span className="csve-fb-assess-label">Assessment criteria</span>
+                <textarea
+                  className="csve-fb-assess-text"
+                  value={category.focusOn}
+                  onChange={e => updateCategory(categoryIdx, { focusOn: (e.target as HTMLTextAreaElement).value })}
+                  placeholder="Evaluate the student's ability to..."
+                  rows={1}
+                  ref={el => {
+                    if (el) {
+                      el.style.height = 'auto';
+                      el.style.height = el.scrollHeight + 'px';
+                    }
+                  }}
+                  onInput={e => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = target.scrollHeight + 'px';
+                  }}
+                />
+              </div>
 
-            <div className="csve-feedback-table-columns">
-              <div className="csve-feedback-col-header"></div>
-              <div className="csve-feedback-col-header">Focus on...</div>
-              <div className="csve-feedback-col-header">example feedback</div>
-            </div>
-
-            {data.categories.map((category, categoryIdx) => (
-              <div key={category.id} className={`csve-feedback-table-row csve-feedback-${category.id}`}>
-                <div className="csve-feedback-col-category">
-                  <span className="csve-feedback-category-title">{category.title}</span>
-                  <textarea
-                    className="csve-feedback-focus-on"
-                    value={category.focusOn}
-                    onChange={e => updateCategory(categoryIdx, { focusOn: (e.target as HTMLTextAreaElement).value })}
-                    placeholder="the ability to..."
-                    rows={2}
-                    ref={el => {
-                      if (el) {
-                        el.style.height = 'auto';
-                        el.style.height = el.scrollHeight + 'px';
-                      }
-                    }}
-                    onInput={e => {
-                      const target = e.target as HTMLTextAreaElement;
-                      target.style.height = 'auto';
-                      target.style.height = target.scrollHeight + 'px';
-                    }}
-                  />
-                </div>
-
-                <div className="csve-feedback-col-focus">
+              {/* Key Indicators */}
+              <div className="csve-fb-cat-focus">
+                <span className="csve-fb-focus-label">Key indicators</span>
+                <div className="csve-fb-focus-tags">
                   {category.exampleFeedbackItems.map((item, itemIdx) => (
-                    <div key={itemIdx} className="csve-feedback-focus-item">
+                    <div key={itemIdx} className="csve-fb-focus-tag">
                       <input
                         type="text"
-                        className="csve-feedback-focus-input"
+                        className="csve-fb-tag-input"
                         value={item}
                         onChange={e => updateExampleFeedbackItem(categoryIdx, itemIdx, (e.target as HTMLInputElement).value)}
                         placeholder="feedback item..."
                       />
                       {category.exampleFeedbackItems.length > 1 && (
                         <button
-                          className="csve-feedback-remove-btn"
+                          className="csve-fb-tag-remove"
                           onClick={() => removeExampleFeedbackItem(categoryIdx, itemIdx)}
                         >
                           <i className="ri-close-line" />
@@ -8237,76 +8240,77 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
                       )}
                     </div>
                   ))}
-                  {category.exampleFeedbackItems.length > 1 && (
-                    <span className="csve-feedback-plus">+</span>
-                  )}
-                  <button className="csve-feedback-add-focus" onClick={() => addExampleFeedbackItem(categoryIdx)}>
-                    <i className="ri-add-line" /> Add
-                  </button>
-                </div>
-
-                <div className="csve-feedback-col-examples">
-                  {category.id === 'range' && (
-                    <div className="csve-feedback-vocab-line">
-                      <input
-                        type="text"
-                        className="csve-feedback-vocab-input"
-                        value={category.vocabularyExample || ''}
-                        onChange={e => updateCategory(categoryIdx, { vocabularyExample: (e.target as HTMLInputElement).value })}
-                        placeholder="the latest - something that is the newest version"
-                      />
-                    </div>
-                  )}
-
-                  {category.examples.map((example, exampleIdx) => (
-                    <div key={exampleIdx} className="csve-feedback-example-block">
-                      <div className="csve-feedback-example-row">
-                        <span className="csve-feedback-label">You said:</span>
-                        <input
-                          type="text"
-                          className="csve-feedback-input csve-feedback-wrong"
-                          value={example.youSaid}
-                          onChange={e => updateExample(categoryIdx, exampleIdx, { youSaid: (e.target as HTMLInputElement).value })}
-                          placeholder="What the student said..."
-                        />
-                      </div>
-                      <div className="csve-feedback-example-row">
-                        <select
-                          className="csve-feedback-label csve-feedback-label-select"
-                          value={example.correctionLabel}
-                          onChange={e => updateExample(categoryIdx, exampleIdx, { correctionLabel: (e.target as HTMLSelectElement).value })}
-                        >
-                          <option value="Better:">Better:</option>
-                          <option value="Correct:">Correct:</option>
-                        </select>
-                        <input
-                          type="text"
-                          className="csve-feedback-input"
-                          value={example.correction}
-                          onChange={e => updateExample(categoryIdx, exampleIdx, { correction: (e.target as HTMLInputElement).value })}
-                          placeholder="The correct/better version..."
-                        />
-                      </div>
-                      {category.examples.length > 1 && (
-                        <button
-                          className="csve-feedback-remove-example"
-                          onClick={() => removeExample(categoryIdx, exampleIdx)}
-                        >
-                          <i className="ri-close-line" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button className="csve-feedback-add-example" onClick={() => addExample(categoryIdx)}>
-                    <i className="ri-add-line" /> Add Example
+                  <button className="csve-fb-add-tag" onClick={() => addExampleFeedbackItem(categoryIdx)}>
+                    <i className="ri-add-line" />
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Sample Corrections */}
+              <div className="csve-fb-cat-examples">
+                <span className="csve-fb-examples-label">Sample corrections</span>
+
+                {category.id === 'range' && (
+                  <div className="csve-fb-vocab-highlight">
+                    <i className="ri-book-2-line" />
+                    <input
+                      type="text"
+                      className="csve-fb-vocab-input"
+                      value={category.vocabularyExample || ''}
+                      onChange={e => updateCategory(categoryIdx, { vocabularyExample: (e.target as HTMLInputElement).value })}
+                      placeholder="target word — brief definition or usage note"
+                    />
+                  </div>
+                )}
+
+                {category.examples.map((example, exampleIdx) => (
+                  <div key={exampleIdx} className="csve-fb-example-card">
+                    <div className="csve-fb-example-said">
+                      <span className="csve-fb-example-icon">✗</span>
+                      <input
+                        type="text"
+                        className="csve-fb-example-input csve-fb-said-input"
+                        value={example.youSaid}
+                        onChange={e => updateExample(categoryIdx, exampleIdx, { youSaid: (e.target as HTMLInputElement).value })}
+                        placeholder="Student's original attempt..."
+                      />
+                    </div>
+                    <div className="csve-fb-example-better">
+                      <select
+                        className="csve-fb-example-select"
+                        value={example.correctionLabel}
+                        onChange={e => updateExample(categoryIdx, exampleIdx, { correctionLabel: (e.target as HTMLSelectElement).value })}
+                      >
+                        <option value="Better:">✓</option>
+                        <option value="Correct:">✓✓</option>
+                      </select>
+                      <input
+                        type="text"
+                        className="csve-fb-example-input csve-fb-better-input"
+                        value={example.correction}
+                        onChange={e => updateExample(categoryIdx, exampleIdx, { correction: (e.target as HTMLInputElement).value })}
+                        placeholder="Suggested improvement..."
+                      />
+                    </div>
+                    {category.examples.length > 1 && (
+                      <button
+                        className="csve-fb-example-remove"
+                        onClick={() => removeExample(categoryIdx, exampleIdx)}
+                      >
+                        <i className="ri-close-line" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button className="csve-fb-add-example" onClick={() => addExample(categoryIdx)}>
+                  <i className="ri-add-line" /> Add Example
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Right Column - Tutor Guide */}
+        {/* Right Column - Tutor Guide (unchanged) */}
         <div className="csve-feedback-right">
           <div className="tgs-tutor-guide">
             <div className="tgs-header">

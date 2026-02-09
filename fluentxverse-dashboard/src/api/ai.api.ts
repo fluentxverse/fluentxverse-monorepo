@@ -150,3 +150,52 @@ export async function generateIntroductionContent(
     };
   }
 }
+
+// ============================================================================
+// STORY EPISODE SUMMARY GENERATION
+// ============================================================================
+
+export interface GenerateEpisodeSummaryResponse {
+  success: boolean;
+  data?: {
+    currentEpisodeSummary: string;
+    nextEpisodeHook: string;
+  };
+  error?: string;
+}
+
+/**
+ * Generate episode summary after Mission content is created
+ * This creates continuity for the next lesson's story
+ */
+export async function generateEpisodeSummary(
+  storyData: {
+    storyTitle: string;
+    characters: Array<{ name: string; role: string; description: string }>;
+    setting: string;
+    previousSummary: string;
+    currentPlotPoints: string[];
+  },
+  missionContent: {
+    situation: string;
+    instruction: string;
+    questions?: Array<{ question: string }>;
+    topics?: Array<{ title: string; questions: string[] }>;
+  },
+  lessonTopic: string
+): Promise<GenerateEpisodeSummaryResponse> {
+  try {
+    const response = await apiClient.post('/ai/generate-episode-summary', {
+      storyData,
+      missionContent,
+      lessonTopic,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error generating episode summary:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate episode summary',
+    };
+  }
+}

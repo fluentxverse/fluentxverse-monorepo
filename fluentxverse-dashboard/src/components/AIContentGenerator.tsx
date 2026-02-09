@@ -3,7 +3,7 @@
  * Generates lesson content with tab-based section selection
  */
 import { useState, useEffect } from 'preact/hooks';
-import { generateIntroductionContent, type IntroText, type LessonIssue, type LessonGoalStep } from '../api/ai.api';
+import { generateIntroductionContent, generateEpisodeSummary, type IntroText, type LessonIssue, type LessonGoalStep } from '../api/ai.api';
 import '../styles/AIContentGenerator.css';
 
 export interface IntroductionData {
@@ -261,7 +261,7 @@ export function AIContentGenerator({
   const [generationMode, setGenerationMode] = useState<'new' | 'improve'>('new');
   const [baseInstructions, setBaseInstructions] = useState<Record<SectionType, string>>(DEFAULT_BASE_INSTRUCTIONS);
   const [customPrompt, setCustomPrompt] = useState('');
-  const [showCurrentContent, setShowCurrentContent] = useState(false);
+
   const [includeLessonIssue, setIncludeLessonIssue] = useState(false);
   const [includeTranslation, setIncludeTranslation] = useState(true);
   const [translationLanguage, setTranslationLanguage] = useState<'japanese' | 'korean' | 'vietnamese' | 'chinese'>('japanese');
@@ -367,6 +367,14 @@ export function AIContentGenerator({
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to generate content');
+      }
+
+      console.log('[AI Widget] Generation response for section:', activeSection, 'data keys:', Object.keys(response.data));
+      if (activeSection === 'exercise') {
+        console.log('[AI Widget] exerciseData present:', !!(response.data as any).exerciseData);
+        if ((response.data as any).exerciseData) {
+          console.log('[AI Widget] exerciseData:', JSON.stringify((response.data as any).exerciseData).substring(0, 500));
+        }
       }
 
       setGeneratedContent(response.data);
@@ -603,7 +611,8 @@ export function AIContentGenerator({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
             tips: step.tips || [],
-            answerKey: step.answerKey || [],
+            // Use undefined (not []) when empty so "Add Answer Key" button shows in editor
+            answerKey: step.answerKey?.length > 0 ? step.answerKey : undefined,
           })),
           // Step B common fields
           stepBInstruction: exercise.stepBInstruction || '',
@@ -694,6 +703,41 @@ export function AIContentGenerator({
         };
 
         onGenerateMission(missionPayload);
+        
+        // Auto-update story episode summary if story mode is enabled
+        // Only for Mission 1 if there's no Mission 2, otherwise do it after Mission 2
+        if (storyData?.enabled && onUpdateStory && !sectionStatus?.mission2) {
+          // Generate episode summary in the background
+          generateEpisodeSummary(
+            {
+              storyTitle: storyData.storyTitle || '',
+              characters: storyData.characters.map(c => ({
+                name: c.name,
+                role: c.role,
+                description: c.description,
+              })),
+              setting: storyData.setting || '',
+              previousSummary: storyData.previousSummary || '',
+              currentPlotPoints: storyData.currentPlotPoints || [],
+            },
+            {
+              situation: missionPayload.situation,
+              instruction: missionPayload.instruction,
+              questions: missionPayload.questions,
+              topics: missionPayload.topics,
+            },
+            topic
+          ).then((result) => {
+            if (result.success && result.data) {
+              onUpdateStory({
+                ...storyData,
+                previousSummary: storyData.currentEpisodeSummary || storyData.previousSummary,
+                currentEpisodeSummary: result.data.currentEpisodeSummary,
+                nextEpisodeHook: result.data.nextEpisodeHook,
+              });
+            }
+          }).catch(console.error);
+        }
       }
       // Handle Mission 2 section content
       else if (activeSection === 'mission2' && generatedContent.missionData && onGenerateMission2) {
@@ -747,6 +791,41 @@ export function AIContentGenerator({
         };
 
         onGenerateMission2(mission2Payload);
+        
+        // Auto-update story episode summary after Mission 2 (final mission in lesson)
+        if (storyData?.enabled && onUpdateStory) {
+          // Generate episode summary in the background
+          generateEpisodeSummary(
+            {
+              storyTitle: storyData.storyTitle || '',
+              characters: storyData.characters.map(c => ({
+                name: c.name,
+                role: c.role,
+                description: c.description,
+              })),
+              setting: storyData.setting || '',
+              previousSummary: storyData.previousSummary || '',
+              currentPlotPoints: storyData.currentPlotPoints || [],
+            },
+            {
+              situation: mission2Payload.situation,
+              instruction: mission2Payload.instruction,
+              questions: mission2Payload.questions,
+              topics: mission2Payload.topics,
+            },
+            topic
+          ).then((result) => {
+            if (result.success && result.data) {
+              onUpdateStory({
+                ...storyData,
+                // Move current episode summary to previous (for next lesson's context)
+                previousSummary: storyData.currentEpisodeSummary || storyData.previousSummary,
+                currentEpisodeSummary: result.data.currentEpisodeSummary,
+                nextEpisodeHook: result.data.nextEpisodeHook,
+              });
+            }
+          }).catch(console.error);
+        }
       } else {
         onGenerateIntroduction(generatedContent);
       }
@@ -932,6 +1011,29 @@ export function AIContentGenerator({
                 <pre className="ai-story-notes-content">{storyData.storyNotes}</pre>
               </div>
             )}
+            
+            {/* Episode Summary Section - Shows after Mission content is generated */}
+            {(storyData.currentEpisodeSummary || storyData.nextEpisodeHook) && (
+              <div className="ai-story-episode-summary">
+                <div className="ai-story-summary-header">
+                  <i className="ri-movie-line" />
+                  <span>Episode Summary</span>
+                </div>
+                {storyData.currentEpisodeSummary && (
+                  <div className="ai-episode-current">
+                    <strong>This Episode:</strong>
+                    <p>{storyData.currentEpisodeSummary}</p>
+                  </div>
+                )}
+                {storyData.nextEpisodeHook && (
+                  <div className="ai-episode-hook">
+                    <strong>Next Episode Preview:</strong>
+                    <p><em>{storyData.nextEpisodeHook}</em></p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <p className="ai-story-refine-hint">
               💡 These refinements will be used when generating Apply, Exercise, and Mission sections.
             </p>
@@ -1104,38 +1206,6 @@ export function AIContentGenerator({
               rows={4}
             />
           </div>
-
-          {/* Quick Preview Toggle */}
-          {currentIntroductionData && (
-            <button
-              className="ai-preview-toggle-btn"
-              onClick={() => setShowCurrentContent(!showCurrentContent)}
-            >
-              <i className={`${showCurrentContent ? 'ri-eye-off-line' : 'ri-eye-line'}`} />
-              <span>{showCurrentContent ? 'Hide' : 'Show'} Current</span>
-            </button>
-          )}
-
-          {/* Compact Current Content Display */}
-          {showCurrentContent && currentIntroductionData && (
-            <div className="ai-current-content">
-              <div className="ai-current-section">
-                <strong>Current Introduction:</strong>
-                {currentIntroductionData.introTexts.map((text: IntroText, idx: number) => (
-                  <p key={idx} className="ai-current-text">
-                    <span className="ai-lang-badge">{text.language.toUpperCase()}</span>
-                    {text.text}
-                  </p>
-                ))}
-              </div>
-              {currentIntroductionData.lessonIssue && (
-                <div className="ai-current-section">
-                  <strong>Current Issue:</strong>
-                  <p>{currentIntroductionData.lessonIssue.title}</p>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Generation Mode Toggle */}
           <div className="ai-mode-selector">

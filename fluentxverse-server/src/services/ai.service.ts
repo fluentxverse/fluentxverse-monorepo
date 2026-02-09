@@ -5,6 +5,15 @@
 import { Agent } from "@mastra/core/agent";
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+/** Strip em dashes (—) and en dashes (–) from AI output, replacing with regular dashes */
+function sanitizeAIText(text: string): string {
+  return text.replace(/—/g, '-').replace(/–/g, '-');
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -67,7 +76,7 @@ Input: "She go to school every day"
   "technicalExplanation": "Subject-verb agreement: third person singular needs 's'.",
   "hasErrors": true
 }`,
-  model: "openai/gpt-5.1",
+  model: "openai/gpt-5.2",
 });
 
 // ============================================================================
@@ -208,7 +217,7 @@ Input: "delicious"
     }
   ]
 }`,
-  model: "openai/gpt-5.1",
+  model: "openai/gpt-5.2",
 });
 
 // ============================================================================
@@ -340,7 +349,7 @@ Input: "determine"
   "word": "determine",
   "phonetic": "dih-TUR-min"
 }`,
-  model: "openai/gpt-5.1",
+  model: "openai/gpt-5.2",
 });
 
 // ============================================================================
@@ -558,7 +567,7 @@ export interface GenerateIntroductionResult {
 
 const introductionGeneratorAgent = new Agent({
   name: "Introduction Question Generator",
-  model: "openai/gpt-5.1",
+  model: "openai/gpt-5.2",
   instructions: `You are an expert ESL lesson designer creating engaging opening questions for language lessons.
   
 Your task is to generate ONLY a single, SHORT question for Step 4 ("Ask the question below") in the Tutor Guide of an Introduction section.
@@ -693,29 +702,63 @@ Respond ONLY in this JSON format:
 
 const vocabularyListAgent = new Agent({
   name: 'Vocabulary List Generator',
-  model: 'openai/gpt-5.1',
-  instructions: `You are an English vocabulary generator for ESL lesson authors. Your PRIMARY job is to:
-1. Generate vocabulary that DIRECTLY supports the lesson goal - every word must help students achieve the lesson objective.
-2. Match vocabulary complexity to the specified level (1=beginner, 5+=advanced).
-3. Generate FRESH, VARIED content each time - never repeat the same vocabulary sets.
+  model: 'openai/gpt-5.2',
+  instructions: `You are an expert ESL vocabulary curriculum designer. Generate vocabulary that students DON'T already know - things they need to LEARN, not words everyone knows.
 
-When given a lesson goal, level, and topic:
-1. Carefully analyze the LESSON GOAL and select vocabulary that students will need to accomplish it.
-2. Generate a JSON object with a single key "vocabulary" containing an array of vocabulary entries.
-3. Each entry must be: { "word": "...", "partOfSpeech": "...", "meaning": "..." }
-4. Choose words and simple phrases that are appropriate for the lesson level:
-   - Level 1: 6 basic single-word items (greetings, common nouns/verbs)
-   - Level 2-4: 8 words/short phrases (basic collocations and verbs)
-   - Level 5+: 10-12 items including short phrases and useful expressions
-5. Provide concise meanings (max 10 words) suitable for learner-level.
-6. IMPORTANT: Generate different vocabulary each request - vary your selections even for similar topics.
-7. Respond ONLY in JSON with no extra commentary.
+=== CRITICAL: AVOID OBVIOUS WORDS ===
+NEVER generate basic words that ALL English learners already know:
+- ❌ "hello", "hi", "bye", "goodbye" (everyone knows these)
+- ❌ "name", "friend", "teacher" (too basic)
+- ❌ "say hello", "say goodbye" (obvious)
+- ❌ "yes", "no", "please", "thank you" (universal)
+- ❌ Single pronouns or fragments (I, you, I'm, you're)
 
-Example:
+=== WHAT TO GENERATE INSTEAD ===
+Generate USEFUL phrases and vocabulary that TEACH something new:
+
+1. COMPLETE QUESTION PATTERNS (40% of items):
+   - "How are you doing?" (not just "how are you")
+   - "What's your name?" (complete question)
+   - "Where are you from?"
+   - "What do you do?" (asking about job/occupation)
+   - "How do you spell that?"
+
+2. COMPLETE RESPONSE PATTERNS (30% of items):
+   - "I'm from [country]" 
+   - "Nice to meet you too"
+   - "I'm doing well, thanks"
+   - "My name is..." / "You can call me..."
+   - "I work as a..."
+
+3. SITUATIONAL PHRASES students need to learn (30% of items):
+   - "Let me introduce myself"
+   - "Have we met before?"
+   - "It's a pleasure to meet you" (formal)
+   - "See you around"
+   - "Keep in touch"
+
+=== LEVEL GUIDELINES ===
+- Level 1-2 (Beginner): Common but complete phrases
+  ✓ "How are you doing?", "Nice to meet you too", "I'm from...", "What's your name?"
+  
+- Level 3-4 (Intermediate): More varied expressions
+  ✓ "It's a pleasure", "Let me introduce myself", "How do you know each other?"
+  
+- Level 5+ (Advanced): Formal/nuanced expressions
+  ✓ "How do you do?", "Allow me to introduce myself", "We've crossed paths before"
+
+=== OUTPUT FORMAT ===
+Return ONLY valid JSON:
 {
-  "vocabulary": [ { "word": "hello", "partOfSpeech": "interj", "meaning": "A friendly greeting" } ]
+  "vocabulary": [
+    { "word": "How are you doing?", "partOfSpeech": "phrase", "meaning": "Friendly way to ask about someone's condition" },
+    { "word": "Nice to meet you too", "partOfSpeech": "phrase", "meaning": "Response when someone says nice to meet you" },
+    { "word": "I'm from...", "partOfSpeech": "phrase", "meaning": "Used to tell someone your country or city" },
+    { "word": "What do you do?", "partOfSpeech": "phrase", "meaning": "Asking about someone's job or occupation" }
+  ]
 }
-`
+
+REMEMBER: If a 5-year-old knows the word, DON'T include it. Generate phrases that TEACH something useful!`
 });
 
 // ============================================================================
@@ -724,34 +767,72 @@ Example:
 
 const expressionsListAgent = new Agent({
   name: 'Expressions List Generator',
-  model: 'openai/gpt-5.1',
-  instructions: `You are an English expressions generator for ESL lesson authors. Your PRIMARY job is to:
-1. Generate expressions/idioms that DIRECTLY support the lesson goal - every expression must help students achieve the lesson objective.
-2. Match expression complexity to the specified level (1=beginner, 5+=advanced).
-3. Generate FRESH, VARIED content each time - never repeat the same expression sets.
+  model: 'openai/gpt-5.2',
+  instructions: `You are an expert ESL expressions curriculum designer. Generate USEFUL idiomatic expressions, phrasal verbs, and set phrases that students need to LEARN - not basic phrases everyone knows.
 
-When given a lesson goal, level, and topic:
-1. Carefully analyze the LESSON GOAL and select expressions that students will need to accomplish it.
-2. Generate a JSON object with a single key "expressions" containing an array of expression entries.
-3. Each entry must be: { "expression": "...", "definitionLine": "...", "exampleSentence": "...", "translation": "..." }
-4. The definitionLine should explain the expression with the expression itself in <strong> tags.
-   Example: "To <strong>cost an arm and a leg</strong> means to be very expensive."
-5. The exampleSentence should show usage in context with the expression in <strong> tags, wrapped in <em> for italics.
-   Example: "<em>Staying at a five-star hotel will <strong>cost an arm and a leg</strong>.</em>"
-6. The translation field is for translating the EXPLANATION/DEFINITION (what the expression means), NOT the expression itself.
-   - This must be PLAIN TEXT only - NO HTML tags allowed in translations
-   - Example: For "cost an arm and a leg", the translation explains "very expensive" in the target language
-7. Choose idiomatic expressions and phrases appropriate for the lesson level:
-   - Level 1-2: 2-3 very common expressions (e.g., "nice to meet you", "how are you")
-   - Level 3-4: 3-4 practical expressions and basic idioms
-   - Level 5+: 4-5 idiomatic expressions and phrasal verbs
-8. Respond ONLY in JSON with no extra commentary. Example:
+=== CRITICAL: AVOID OBVIOUS EXPRESSIONS ===
+NEVER generate basic expressions that ALL English learners already know:
+- ❌ "nice to meet you", "how are you", "thank you very much"
+- ❌ "good morning", "good night", "see you later"
+- ❌ "I'm sorry", "excuse me", "you're welcome"
+- ❌ Any phrase a beginner would learn in their first week
+
+=== WHAT TO GENERATE INSTEAD ===
+Generate expressions that TEACH something new and interesting:
+
+1. IDIOMATIC EXPRESSIONS (phrases with non-literal meanings):
+   - "break the ice" (start a conversation in an awkward situation)
+   - "hit it off" (immediately become friends)
+   - "get along with" (have a good relationship)
+   - "make a good impression" (create a positive first image)
+
+2. PHRASAL VERBS (verb + preposition combinations):
+   - "warm up to someone" (gradually start to like someone)
+   - "open up" (share personal feelings)
+   - "reach out to" (contact someone)
+   - "catch up with" (talk after not seeing someone)
+
+3. CONVERSATIONAL EXPRESSIONS:
+   - "I didn't catch your name" (polite way to ask name again)
+   - "What brings you here?" (why are you at this event)
+   - "How do you two know each other?" (asking about relationships)
+   - "It's on the tip of my tongue" (almost remembering something)
+
+4. SOCIAL EXPRESSIONS:
+   - "Let's keep in touch" (stay connected after meeting)
+   - "Feel free to..." (giving permission politely)
+   - "I'm looking forward to..." (expressing anticipation)
+   - "It was lovely meeting you" (formal goodbye)
+
+=== LEVEL GUIDELINES ===
+- Level 1-2: Common but NON-OBVIOUS expressions
+  ✓ "break the ice", "get along with", "I didn't catch that"
+  
+- Level 3-4: More nuanced expressions and phrasal verbs
+  ✓ "hit it off", "warm up to", "make small talk"
+  
+- Level 5+: Sophisticated idioms and subtle expressions
+  ✓ "rub someone the wrong way", "have a lot in common", "strike up a conversation"
+
+=== OUTPUT FORMAT ===
+Each expression needs:
+- definitionLine: Explain with expression in <strong> tags
+- exampleSentence: Real usage in <em> tags with expression in <strong> tags
+- translation: PLAIN TEXT translation of the explanation (NO HTML)
+
+Example:
 {
   "expressions": [
-    { "expression": "cost an arm and a leg", "definitionLine": "To <strong>cost an arm and a leg</strong> means to be very expensive.", "exampleSentence": "<em>Staying at a five-star hotel will <strong>cost an arm and a leg</strong>.</em>", "translation": "とても高価であることを意味します。" }
+    {
+      "expression": "break the ice",
+      "definitionLine": "To <strong>break the ice</strong> means to do or say something to make people feel more comfortable in a social situation.",
+      "exampleSentence": "<em>I told a joke to <strong>break the ice</strong> at the party.</em>",
+      "translation": "社交的な場面で人々をリラックスさせるために何かをしたり言ったりすること。"
+    }
   ]
 }
-`
+
+REMEMBER: If students learned it in their first English class, DON'T include it!`
 });
 
 // ============================================================================
@@ -760,7 +841,7 @@ When given a lesson goal, level, and topic:
 
 const speakYourMindAgent = new Agent({
   name: 'Speak Your Mind Generator',
-  model: 'openai/gpt-5.1',
+  model: 'openai/gpt-5.2',
   instructions: `You are an English lesson content generator. Generate a "Speak Your Mind" activity for ESL lessons.
 This activity teaches grammar/expressions through a short dialogue and follow-up question.
 
@@ -787,37 +868,49 @@ Respond ONLY in JSON:
 
 const grammarTipAgent = new Agent({
   name: 'Grammar Tip Generator',
-  model: 'openai/gpt-5.1',
-  instructions: `You are an English grammar lesson generator. Generate a "Grammar Tip" section for ESL lessons.
-This section explains grammar rules with examples and translations.
+  model: 'openai/gpt-5.2',
+  instructions: `You are an expert ESL grammar teacher. Generate a "Grammar Tip" section that teaches USEFUL grammar patterns related to the lesson topic.
 
-When given a topic, level, and goal:
-1. Create 1-2 grammar explanations relevant to the lesson
-2. Each explanation should have:
-   - ruleText: The grammar rule in HTML (use <em> for italics, <strong> for emphasis)
-   - ruleTranslation: Plain text translation of the rule (NO HTML tags - just text)
-   - examples: 2-3 example sentences with translations
+=== IMPORTANT RULES ===
+1. Generate 2-3 different grammar explanations (not just one!)
+2. Example sentences should be SIMPLE, STANDALONE sentences - NOT dialogues
+3. Do NOT use "A:" or "B:" in examples - just write clean sentences
 
-IMPORTANT: 
-- Only use HTML tags (<em>, <strong>) in "ruleText" and "sentence" fields
-- NEVER use HTML tags in "ruleTranslation" or "translation" fields - these must be plain text only
-
-Respond ONLY in JSON:
+=== EXAMPLE FORMAT (CORRECT) ===
 {
   "grammarTip": {
     "explanations": [
       {
-        "ruleText": "Use <em>would like</em> + noun or <em>would like to</em> + verb.",
-        "ruleTranslation": "would like + 명사 또는 would like to + 동사를 사용하세요.",
+        "ruleText": "Use <em>Nice to meet you</em> when meeting someone for the FIRST time.",
+        "ruleTranslation": "初めて会う人には「Nice to meet you」を使います。",
         "examples": [
-          { "sentence": "I <strong>would like</strong> a coffee.", "translation": "커피를 마시고 싶습니다." },
-          { "sentence": "She <strong>would like to</strong> travel.", "translation": "그녀는 여행하고 싶어합니다." }
+          { "sentence": "<strong>Nice to meet you</strong>, Sarah!", "translation": "はじめまして、サラ！" },
+          { "sentence": "It's <strong>nice to meet you</strong> finally.", "translation": "やっとお会いできてうれしいです。" }
+        ]
+      },
+      {
+        "ruleText": "Use <em>Nice to see you</em> when meeting someone you ALREADY know.",
+        "ruleTranslation": "すでに知っている人には「Nice to see you」を使います。",
+        "examples": [
+          { "sentence": "<strong>Nice to see you</strong> again!", "translation": "また会えてうれしい！" },
+          { "sentence": "It's always <strong>nice to see you</strong>.", "translation": "いつも会えてうれしいです。" }
         ]
       }
     ]
   }
 }
-`
+
+=== WRONG FORMAT (DO NOT DO THIS) ===
+❌ "sentence": "A: Hi! B: Nice to meet you." (No dialogue format!)
+❌ Only generating 1 explanation (Generate 2-3!)
+
+=== OUTPUT REQUIREMENTS ===
+- Generate 2-3 grammar explanations per request
+- Each explanation needs 2-3 example sentences
+- Examples must be simple standalone sentences (NOT dialogues)
+- ruleText/sentence can use <em> and <strong> HTML tags
+- ruleTranslation/translation must be PLAIN TEXT only (no HTML)
+- Make the grammar RELEVANT to the lesson topic`
 });
 
 // ============================================================================
@@ -826,7 +919,7 @@ Respond ONLY in JSON:
 
 const stepBPronunciationAgent = new Agent({
   name: 'Pronunciation Lesson Generator',
-  model: 'openai/gpt-5.1',
+  model: 'openai/gpt-5.2',
   instructions: `You are an English pronunciation lesson generator. Generate a "Pronunciation" section for ESL lessons.
 This section helps students practice specific sounds or connected speech patterns.
 
@@ -861,7 +954,10 @@ IMPORTANT GUIDELINES:
 - Create a realistic, engaging conversation scenario between 2 characters
 - Use simple, natural dialogue appropriate for the level
 - Include underlined words (<u>word</u>) for important vocabulary/expressions from the lesson
-- Action descriptions should be marked with isAction: true (e.g., "(laughs)")
+- EVERY dialogue line MUST contain actual spoken words. Never create a line that only has an action or emotion like "(laughs)" or "(smiles)" with no dialogue.
+- If you want to include an action/emotion, append it to a line that also has spoken dialogue, e.g. "That's hilarious! (laughs)" with isAction: false. Or place the action inline within the spoken text.
+- Only set isAction: true for stage directions that genuinely have NO spoken words AND are essential to the scene (this should be extremely rare — avoid it whenever possible).
+- NEVER make the dialogue about spelling, names, introductions at a desk, auditions, or check-ins. The dialogue topic must NOT revolve around meeting someone new and exchanging names. Instead, create scenarios like: hanging out with a friend, planning a trip, talking about weekend plans, discussing food, shopping, giving directions, etc. Even if the lesson expressions include greetings like "Nice to meet you" or "How do you spell that?", weave them naturally into a more interesting scenario — do NOT build the entire scene around introductions or spelling.
 - Dialogue should demonstrate practical use of the lesson content
 - Create tutor steps with scripts and tips for guiding the activity
 - Include a TRIVIA TIME section with an interesting cultural or language fact related to the topic
@@ -876,7 +972,7 @@ Respond ONLY in JSON format:
     "dialogueLines": [
       { "speaker": "Character1", "text": "First line of dialogue with <u>key vocabulary</u>", "isAction": false },
       { "speaker": "Character2", "text": "Response with <u>another expression</u>", "isAction": false },
-      { "speaker": "Character1", "text": "(laughs)", "isAction": true }
+      { "speaker": "Character1", "text": "Ha, that's so true! I totally agree.", "isAction": false }
     ],
     "tutorSteps": [
       { "instruction": "Introduce Apply.", "scripts": [{ "text": "Okay, now let's do Apply." }] },
@@ -1039,28 +1135,57 @@ const exerciseRephraseAgent = new Agent({
   instructions: `You are an ESL lesson content generator. Generate a REPHRASE exercise for Step A of the Exercise section.
 Students will rephrase sentences using vocabulary/expressions from the lesson.
 
+CRITICAL RULE - READ CAREFULLY:
+- Names may appear in sentences only where they make logical sense (e.g., self-introductions like "My name is ..."). But NEVER have a speaker ask about something they already stated (e.g., asking to spell their own name).
+  - NEVER: "My name is Ji-ho. Can you tell me the spelling of Ji-ho?" (Ji-ho already knows their own name)
+  - CORRECT: "My name is Jihyun. <u>How do you spell your name?</u>" (asking the other person)
+  - CORRECT: "<u>Can you tell me the spelling of your name?</u>"
+- Use a DIVERSE MIX of names from different backgrounds: Korean (e.g., Jihyun, Minho, Soyeon), Vietnamese (e.g., Linh, Minh, Hoa, Tuan, Mai), and Japanese (e.g., Yuki, Haruto, Sakura, Ren, Aoi). Do NOT use only Korean names.
+- Every sentence must make logical sense from the speaker's perspective. The speaker should never ask about something they already know.
+
 IMPORTANT GUIDELINES:
 - Create clear, context-appropriate sentences that need rephrasing
-- Sentences should use everyday language that can be rephrased with lesson vocabulary
-- Each sentence should have a natural way to be rephrased using expressions from the word box
+- The sentences should use slightly awkward, wordy, or unnatural phrasing so it makes sense to rephrase them with a better expression
+- Use <u> tags to underline the SPECIFIC PART of the sentence that should be rephrased
+  - If only part of the sentence needs rephrasing, underline just that part
+  - If the entire sentence is one short phrase that needs rephrasing, underline the whole sentence
+- The example sentence and answer should also use <u> tags on the part being rephrased
+- Write PLAIN, SIMPLE sentences only:
+  - NO parenthetical scene descriptions like "(at the office)" or "(while cooking)"
+  - NO "Name asks:" or "Name says:" prefixes like "Jiwoo asks: Where are you from?"
+  - NO dialogue attribution of any kind
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence. Each sentence must be self-contained and understandable on its own.
+  - NO narrative or descriptive context before the sentence. Write ONLY what the person actually says.
+    - WRONG: "Min-jun bowed slightly. I'm pleased to meet you for the first time."
+    - WRONG: "Seo-yeon looked worried. How is your life these days?"
+    - CORRECT: "<u>I'm pleased to meet you for the first time.</u>"
+    - CORRECT: "<u>How is your life these days?</u>"
+  - Just write a standalone sentence as if someone is naturally speaking
+- The number of expressions in the word box must EXACTLY match the number of exercise items. If there are 4 sentences, provide exactly 4 expressions - one per sentence. No extras.
 - Provide example with original sentence and rephrased version
 - Generate answer key for tutor reference
+
+EXAMPLES:
+- WRONG sentence: "I'm happy to meet you." (no underline - student doesn't know what to rephrase)
+- CORRECT sentence: "<u>I'm happy to meet you.</u>" (underlined part gets rephrased)
+- CORRECT sentence: "<u>What place are you from?</u>" (whole short sentence underlined)
+- CORRECT example: "ex. <u>How are you today?</u>" → "How are you doing?"
 
 Respond ONLY in JSON format:
 {
   "exerciseData": {
     "stepAType": "rephrase",
-    "instructions": "Rephrase the sentences using the expressions in the box. Some expressions may be used more than once.",
+    "instructions": "Rephrase the underlined part of the sentences using the expressions in the box.",
     "instructionsTranslation": "Translation of instructions",
     "showExpressions": true,
     "expressions": ["expression 1", "expression 2", "expression 3"],
     "showExample": true,
-    "exampleSentence": "ex. Original sentence that needs rephrasing.",
-    "exampleAnswer": "Rephrased sentence using an expression.",
+    "exampleSentence": "ex. <u>How are you today?</u>",
+    "exampleAnswer": "How are you doing?",
     "exerciseItems": [
-      { "sentence": "First sentence to rephrase" },
-      { "sentence": "Second sentence to rephrase" },
-      { "sentence": "Third sentence to rephrase" }
+      { "sentence": "<u>I'm happy to meet you.</u>" },
+      { "sentence": "<u>I'm happy to meet you too.</u>" },
+      { "sentence": "<u>What place are you from?</u>" }
     ],
     "answers": [
       { "text": "First answer" },
@@ -1593,9 +1718,9 @@ export const generateIntroductionContent = async (
         image?: string;
       }>;
     }>;
-    stepBType?: {
-      format: string;
-      type: string;
+    stepBType?: string | {
+      format?: string;
+      type?: string;
       items?: Array<{
         foreign: string;
         foreignLabel?: string;
@@ -1605,8 +1730,13 @@ export const generateIntroductionContent = async (
       }>;
     };
     grammarTip?: {
-      title: string;
-      content: string;
+      title?: string;
+      content?: string;
+      items?: Array<{
+        pattern?: string;
+        explanation?: string;
+        example?: string;
+      }>;
     };
   } | null // Learn section data for cross-section cohesion
 ): Promise<GenerateIntroductionResult> => {
@@ -1708,23 +1838,43 @@ INSTRUCTIONS:
       }
       
       // Extract Step B items (Speak Your Mind, Grammar Tip, Pronunciation)
-      if (currentLearnData.stepBType?.items && currentLearnData.stepBType.items.length > 0) {
+      // stepBType can be a string or an object with items
+      if (typeof currentLearnData.stepBType === 'object' && currentLearnData.stepBType?.items && currentLearnData.stepBType.items.length > 0) {
         const stepBItems = currentLearnData.stepBType.items
           .map(item => `- ${item.foreign} (${item.native})`)
           .join('\n');
-        const stepBLabel = currentLearnData.stepBType.type === 'speak-your-mind' ? 'SPEAK YOUR MIND PHRASES' :
-                          currentLearnData.stepBType.type === 'pronunciation' ? 'PRONUNCIATION FOCUS' :
+        const stepBTypeStr = currentLearnData.stepBType.type || '';
+        const stepBLabel = stepBTypeStr === 'speak-your-mind' ? 'SPEAK YOUR MIND PHRASES' :
+                          stepBTypeStr === 'pronunciation' ? 'PRONUNCIATION FOCUS' :
                           'ADDITIONAL ITEMS';
         parts.push(`${stepBLabel} FROM LEARN SECTION:\n${stepBItems}`);
       }
       
-      // Extract Grammar Tip
-      if (currentLearnData.grammarTip?.title && currentLearnData.grammarTip?.content) {
-        parts.push(`GRAMMAR RULE FROM LEARN SECTION:
+      // Extract Grammar Tip - handle both content string and items array formats
+      if (currentLearnData.grammarTip?.title) {
+        let grammarContent = '';
+        
+        if (currentLearnData.grammarTip.content) {
+          grammarContent = `Explanation: ${currentLearnData.grammarTip.content}`;
+        } else if (currentLearnData.grammarTip.items && currentLearnData.grammarTip.items.length > 0) {
+          grammarContent = currentLearnData.grammarTip.items
+            .map(item => {
+              const parts = [];
+              if (item.pattern) parts.push(`Pattern: ${item.pattern}`);
+              if (item.explanation) parts.push(`Explanation: ${item.explanation}`);
+              if (item.example) parts.push(`Example: ${item.example}`);
+              return parts.join('\n');
+            })
+            .join('\n\n');
+        }
+        
+        if (grammarContent) {
+          parts.push(`GRAMMAR RULE FROM LEARN SECTION:
 Title: ${currentLearnData.grammarTip.title}
-Explanation: ${currentLearnData.grammarTip.content}
+${grammarContent}
 
 IMPORTANT: Create content that allows students to PRACTICE this grammar pattern. The exercises and scenarios should require using this grammar structure.`);
+        }
       }
       
       if (parts.length === 0) return '';
@@ -1771,32 +1921,46 @@ INSTRUCTIONS FOR COHESION:
         ? '{ "word": "...", "partOfSpeech": "...", "meaning": "...", "translation": "..." }'
         : '{ "word": "...", "partOfSpeech": "...", "meaning": "..." }';
       const translationReq = shouldIncludeTranslation 
-        ? `5. Include ${langName} translations for each vocabulary item.`
+        ? `6. Include ${langName} translations for each vocabulary item.`
         : '';
       
-      let prompt = `[Variation ID: ${variationSeed}] Generate exactly ${count} FRESH vocabulary items.
+      let prompt = `[Variation ID: ${variationSeed}] Generate exactly ${count} USEFUL vocabulary items that students need to LEARN.
 
-=== LESSON CONTEXT (IMPORTANT - vocabulary must support this goal) ===
+=== LESSON CONTEXT ===
+Topic: "${topic}"
 Lesson Goal: "${lessonGoal || 'General English practice'}"
-Topic: ${topic}
 Level: ${level || 1} (${complexityDesc})
 
+=== CRITICAL: WHAT NOT TO GENERATE ===
+DO NOT include basic words everyone already knows:
+- ❌ "hello", "hi", "bye", "goodbye", "name", "friend"
+- ❌ "yes", "no", "please", "thank you"
+- ❌ Single words that are obvious
+
+=== WHAT TO GENERATE ===
+Generate COMPLETE PHRASES that teach something useful:
+- ✓ Question patterns: "What's your name?", "Where are you from?", "What do you do?"
+- ✓ Response patterns: "Nice to meet you too", "I'm from...", "I work as..."
+- ✓ Situational phrases: "Let me introduce myself", "Have we met before?"
+
+Every item should make a student think "Oh, THAT'S how you say that in English!"
+
 === REQUIREMENTS ===
-1. Choose vocabulary that students will NEED to achieve the lesson goal above.
+1. Focus on COMPLETE, USEFUL phrases - not single obvious words.
 2. Match complexity to Level ${level || 1} (${complexityDesc}).
-3. Generate DIFFERENT words than previous requests - be creative and varied.
-4. Meanings must be concise (max 10 words).
+3. Meanings must be concise (max 10 words).
+4. Each item must teach something NEW to the student.
 ${translationReq}
 
 Return ONLY JSON:
 { "vocabulary": [ ${vocabFormat} ] }`;
 
-      if (customPrompt) prompt += `\nAdditional instructions: ${customPrompt}`;
+      if (customPrompt) prompt += `\n\nAdditional context: ${customPrompt}`;
 
       const resp = await vocabularyListAgent.generate(prompt);
       const text = resp.text || '';
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      const jsonContent = (jsonMatch?.[1] || text).trim();
+      const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
       let parsed: any = { vocabulary: [] };
       try {
         parsed = JSON.parse(jsonContent);
@@ -1842,30 +2006,42 @@ Return ONLY JSON:
         ? `6. Include ${langName} translations of the DEFINITION/EXPLANATION (NOT the expression itself) in the "translation" field. The translation must be PLAIN TEXT only - NO HTML tags.`
         : '';
       
-      let prompt = `[Variation ID: ${variationSeed}] Generate exactly ${count} FRESH expressions/idioms.
+      let prompt = `[Variation ID: ${variationSeed}] Generate exactly ${count} USEFUL expressions that students need to LEARN.
 
-=== LESSON CONTEXT (IMPORTANT - expressions must support this goal) ===
+=== LESSON CONTEXT ===
+Topic: "${topic}"
 Lesson Goal: "${lessonGoal || 'General English practice'}"
-Topic: ${topic}
 Level: ${level || 1} (${complexityDesc})
 
-=== REQUIREMENTS ===
-1. Choose expressions that students will NEED to achieve the lesson goal above.
-2. Match complexity to Level ${level || 1} (${complexityDesc}).
-3. Generate DIFFERENT expressions than previous requests - be creative and varied.
-4. definitionLine must include the expression wrapped in <strong> tags.
-5. exampleSentence must be wrapped in <em> tags with the expression in <strong> tags.
+=== CRITICAL: WHAT NOT TO GENERATE ===
+DO NOT include basic expressions everyone already knows:
+- ❌ "nice to meet you", "how are you", "thank you"
+- ❌ "good morning", "see you later", "excuse me"
+- ❌ Any phrase learned in the first week of English class
+
+=== WHAT TO GENERATE ===
+Generate INTERESTING expressions that teach something new:
+- ✓ Idioms: "break the ice", "hit it off", "make a good impression"
+- ✓ Phrasal verbs: "warm up to", "reach out to", "catch up with"
+- ✓ Useful phrases: "I didn't catch your name", "What brings you here?"
+
+Every expression should make a student think "Oh, THAT'S how native speakers say that!"
+
+=== FORMAT REQUIREMENTS ===
+1. definitionLine: Explain the expression with it wrapped in <strong> tags
+2. exampleSentence: Show real usage in <em> tags with expression in <strong> tags
+3. Make examples feel natural - like real conversations
 ${translationReq}
 
 Return ONLY JSON:
 { "expressions": [ ${exprFormat} ] }`;
 
-      if (customPrompt) prompt += `\nAdditional instructions: ${customPrompt}`;
+      if (customPrompt) prompt += `\n\nAdditional context: ${customPrompt}`;
 
       const resp = await expressionsListAgent.generate(prompt);
       const text = resp.text || '';
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      const jsonContent = (jsonMatch?.[1] || text).trim();
+      const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
       let parsed: any = { expressions: [] };
       try {
         parsed = JSON.parse(jsonContent);
@@ -1899,18 +2075,18 @@ Return ONLY JSON:
         ? `\n- Include ${langName} translations where applicable`
         : '\n- Do NOT include translations';
       
-      let prompt = `Generate Step B content for an ESL lesson.
+      let basePrompt = `Generate Step B content for an ESL lesson.
 - Topic: ${topic}
 - Lesson Goal: ${lessonGoal || ''}
 - Level: ${level || 'unknown'} (complexity: ${complexityDesc})${translationLangInstruction}`;
 
-      if (customPrompt) prompt += `\nAdditional instructions: ${customPrompt}`;
+      if (customPrompt) basePrompt += `\nAdditional instructions: ${customPrompt}`;
 
       if (stepBType === 'speak-your-mind') {
-        const resp = await speakYourMindAgent.generate(prompt);
+        const resp = await speakYourMindAgent.generate(basePrompt);
         const text = resp.text || '';
         const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-        const jsonContent = (jsonMatch?.[1] || text).trim();
+        const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
         let parsed: any = { speakYourMind: {} };
         try {
           parsed = JSON.parse(jsonContent);
@@ -1937,15 +2113,46 @@ Return ONLY JSON:
       }
 
       if (stepBType === 'grammar-tip') {
-        const resp = await grammarTipAgent.generate(prompt);
+        // Create a more specific prompt for grammar tips
+        const grammarPrompt = `Generate a Grammar Tip for an ESL lesson about "${topic}".
+
+Lesson Goal: ${lessonGoal || 'General English practice'}
+Level: ${level || 1} (${complexityDesc})
+${shouldIncludeTranslation ? `Include ${langName} translations for rule explanations and examples.` : 'Do NOT include translations.'}
+
+=== REQUIREMENTS ===
+1. Generate 2-3 different grammar explanations (NOT just one!)
+2. Each explanation needs 2-3 example sentences
+3. Example sentences must be SIMPLE STANDALONE sentences - NOT dialogues
+4. Do NOT use "A:" or "B:" format in examples - just write clean sentences
+
+Create grammar rules that help students achieve the lesson goal. The grammar should be DIRECTLY USEFUL for the topic.
+${customPrompt ? `Additional notes: ${customPrompt}` : ''}`;
+
+        const resp = await grammarTipAgent.generate(grammarPrompt);
         const text = resp.text || '';
+        console.log('Grammar Tip raw response:', text); // Debug log
+        
+        // Try to extract JSON - handle both with and without code blocks
+        let jsonContent = text;
         const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-        const jsonContent = (jsonMatch?.[1] || text).trim();
+        if (jsonMatch && jsonMatch[1]) {
+          jsonContent = jsonMatch[1].trim();
+        } else {
+          // Try to find raw JSON object
+          const rawJsonMatch = text.match(/\{[\s\S]*\}/);
+          if (rawJsonMatch) {
+            jsonContent = sanitizeAIText(rawJsonMatch[0]);
+          }
+        }
+        
         let parsed: any = { grammarTip: {} };
         try {
           parsed = JSON.parse(jsonContent);
+          console.log('Grammar Tip parsed:', JSON.stringify(parsed, null, 2)); // Debug log
         } catch (e) {
           console.error('Failed to parse grammar-tip response:', text);
+          console.error('Attempted to parse:', jsonContent);
         }
 
         // Helper to strip HTML tags from translation fields
@@ -1974,10 +2181,10 @@ Return ONLY JSON:
       }
 
       if (stepBType === 'pronunciation') {
-        const resp = await stepBPronunciationAgent.generate(prompt);
+        const resp = await stepBPronunciationAgent.generate(basePrompt);
         const text = resp.text || '';
         const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-        const jsonContent = (jsonMatch?.[1] || text).trim();
+        const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
         let parsed: any = { pronunciation: {} };
         try {
           parsed = JSON.parse(jsonContent);
@@ -2040,7 +2247,7 @@ Skill Level: ${skillLevel}
 3. ${translationInstruction}
 4. Use underlined words (<u>word</u>) for key vocabulary from the lesson.
 ${applyType === 'speaking' ? `5. Create exactly ${dialogueCount} dialogue lines between 2 characters.
-6. Include some action lines like "(laughs)" or "(smiles)" marked with isAction: true.${storyContext ? '\n7. Use the STORY MODE characters and setting for the dialogue scene.' : ''}` : ''}
+6. EVERY line must contain actual spoken dialogue. Do NOT create lines that only contain actions or emotions like "(laughs)" with no spoken words. If you want to show emotion, weave it into the spoken text (e.g. "Ha, that's amazing!").${storyContext ? '\n7. Use the STORY MODE characters and setting for the dialogue scene.' : ''}` : ''}
 ${applyType === 'listening' ? `5. Create a substantial listening script (150-250 words) that the tutor will read aloud.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Incorporate the STORY MODE characters and plot into the listening narrative.' : ''}` : ''}
 ${applyType === 'reading' ? `5. Create a reading passage (email, letter, or article) appropriate for the level.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Make the reading content relate to the STORY MODE characters and plot.' : ''}` : ''}
 
@@ -2060,7 +2267,7 @@ Return ONLY JSON in the format specified.`;
       const resp = await agent.generate(applyPrompt);
       const text = resp.text || '';
       const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-      const jsonContent = (jsonMatch?.[1] || text).trim();
+      const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
       let parsed: any = { applyData: {} };
       try {
         parsed = JSON.parse(jsonContent);
@@ -2138,7 +2345,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       // Parse JSON from response
       let parsed: any = {};
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const jsonContent = jsonMatch ? jsonMatch[0] : text;
+      const jsonContent = sanitizeAIText(jsonMatch ? jsonMatch[0] : text);
       
       try {
         parsed = JSON.parse(jsonContent);
@@ -2169,7 +2376,9 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
     // ========================================================================
     // EXERCISE SECTION GENERATION (Section 4)
     // ========================================================================
+    console.log('[EXERCISE DEBUG] exerciseType:', exerciseType, '| exerciseStep:', exerciseStep, '| condition:', !!(exerciseType && exerciseStep));
     if (exerciseType && exerciseStep) {
+      console.log('[EXERCISE DEBUG] Entered exercise generation block');
       const itemCount = exerciseItemCount || 4; // Default to 4 items
       
       let exerciseAgent: Agent;
@@ -2222,27 +2431,31 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
 
       const exerciseResponse = await exerciseAgent.generate(exercisePrompt);
       const text = typeof exerciseResponse.text === 'string' ? exerciseResponse.text : '';
+      console.log('[EXERCISE DEBUG] Raw AI response length:', text.length);
+      console.log('[EXERCISE DEBUG] Raw AI response (first 500 chars):', text.substring(0, 500));
       
-      // Parse JSON from response
+      // Parse JSON from response - try code fence extraction first, then raw JSON
       let parsed: any = {};
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const jsonContent = jsonMatch ? jsonMatch[0] : text;
+      const codeFenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const rawJsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonContent = sanitizeAIText(
+        codeFenceMatch?.[1]?.trim() || (rawJsonMatch ? rawJsonMatch[0] : text)
+      );
+      console.log('[EXERCISE DEBUG] JSON extraction method:', codeFenceMatch ? 'code-fence' : (rawJsonMatch ? 'raw-json' : 'fallback'));
       
       try {
         parsed = JSON.parse(jsonContent);
+        console.log('[EXERCISE DEBUG] JSON parsed successfully, keys:', Object.keys(parsed));
       } catch (e) {
-        console.error('Failed to parse exercise response:', text);
+        console.error('[EXERCISE DEBUG] Failed to parse exercise response:', text);
+        console.error('[EXERCISE DEBUG] Parse error:', e);
       }
 
       // Handle both wrapped and unwrapped response formats
       const exercise = parsed.exerciseData || parsed || {};
       
-      console.log('Exercise type:', exerciseType);
-      console.log('Parsed exercise data keys:', Object.keys(exercise));
-      console.log('changeItems:', exercise.changeItems);
-      console.log('chooseItems:', exercise.chooseItems);
-      console.log('exerciseItems:', exercise.exerciseItems);
-      console.log('items:', exercise.items);
+      console.log('[EXERCISE DEBUG] Exercise type:', exerciseType, '| Parsed data keys:', Object.keys(exercise));
+      console.log('[EXERCISE DEBUG] exerciseItems:', exercise.exerciseItems?.length, '| chooseItems:', exercise.chooseItems?.length, '| changeItems:', exercise.changeItems?.length, '| items:', exercise.items?.length);
       
       // Extract items from AI response - check multiple possible field names
       const extractItems = (data: any, primaryKey: string): any[] => {
@@ -2251,7 +2464,10 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
         // Check common fallback keys
         if (data.items?.length > 0) return data.items;
         if (data.exerciseItems?.length > 0) return data.exerciseItems;
+        if (data.chooseItems?.length > 0) return data.chooseItems;
+        if (data.changeItems?.length > 0) return data.changeItems;
         if (data.sentences?.length > 0) return data.sentences;
+        if (data.questions?.length > 0) return data.questions;
         return [];
       };
 
@@ -2259,6 +2475,47 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       const rephraseItems = exerciseType === 'rephrase' ? extractItems(exercise, 'exerciseItems') : [];
       const chooseItemsArr = exerciseType === 'choose' ? extractItems(exercise, 'chooseItems') : [];
       const changeItemsArr = exerciseType === 'change' ? extractItems(exercise, 'changeItems') : [];
+      
+      console.log('[EXERCISE DEBUG] Final items count - rephrase:', rephraseItems.length, 'choose:', chooseItemsArr.length, 'change:', changeItemsArr.length);
+      console.log('[EXERCISE DEBUG] Returning exerciseData with step:', exerciseStep, 'type:', exerciseType);
+      
+      // Build the answer key from the answers array
+      const answersArr = (exercise.answers || []).slice(0, itemCount).map((answer: any) => ({
+        text: typeof answer === 'string' ? answer : (answer.text || answer.answer || ''),
+      }));
+      
+      // Build tutor steps and inject answerKey into the appropriate step
+      const rawTutorSteps = (exercise.tutorSteps || []).map((step: any) => ({
+        instruction: step.instruction || '',
+        scripts: step.scripts || [],
+        tips: step.tips || [],
+        // Use undefined (not []) when empty, so the "Add Answer Key" button shows in the editor
+        answerKey: step.answerKey?.length > 0 ? step.answerKey : undefined,
+      }));
+      
+      // For Step A exercises, inject the answer key into the tutor steps
+      // Find the best step to attach it to (one that mentions answers/corrections/repeat)
+      // or add a dedicated answer key step
+      if (exerciseStep === 'stepA' && answersArr.length > 0 && rawTutorSteps.length > 0) {
+        // Look for a step that mentions checking answers, correcting, or repeating with remaining
+        const answerStepIdx = rawTutorSteps.findIndex((s: any) => 
+          /repeat|remaining|correct|answer|check|rephrase|choose|change/i.test(s.instruction)
+        );
+        
+        if (answerStepIdx >= 0 && (!rawTutorSteps[answerStepIdx].answerKey || rawTutorSteps[answerStepIdx].answerKey.length === 0)) {
+          // Inject into the matching step
+          rawTutorSteps[answerStepIdx].answerKey = answersArr;
+        } else {
+          // No matching step found or it already has answers - insert a dedicated step before the last one (transition step)
+          const insertIdx = Math.max(rawTutorSteps.length - 1, 0);
+          rawTutorSteps.splice(insertIdx, 0, {
+            instruction: 'Check the student\'s answers.',
+            scripts: [],
+            tips: [{ text: 'Correct any mistakes and explain briefly.' }],
+            answerKey: answersArr,
+          });
+        }
+      }
       
       return {
         introTexts: [],
@@ -2289,16 +2546,9 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
             sentence: typeof item === 'string' ? item : (item.sentence || item.text || ''),
           })),
           // Answer key
-          answers: (exercise.answers || []).slice(0, itemCount).map((answer: any) => ({
-            text: typeof answer === 'string' ? answer : (answer.text || answer.answer || ''),
-          })),
-          // Tutor steps
-          tutorSteps: (exercise.tutorSteps || []).map((step: any) => ({
-            instruction: step.instruction || '',
-            scripts: step.scripts || [],
-            tips: step.tips || [],
-            answerKey: step.answerKey || [],
-          })),
+          answers: answersArr,
+          // Tutor steps (with answerKey injected)
+          tutorSteps: rawTutorSteps,
           // Step B common fields
           stepBInstruction: exercise.stepBInstruction || '',
           stepBInstructionTranslation: shouldIncludeTranslation ? (exercise.stepBInstructionTranslation || '') : '',
@@ -2386,7 +2636,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       // Parse JSON from response
       let parsed: any = {};
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      const jsonContent = jsonMatch ? jsonMatch[0] : text;
+      const jsonContent = sanitizeAIText(jsonMatch ? jsonMatch[0] : text);
       
       try {
         parsed = JSON.parse(jsonContent);
@@ -2451,6 +2701,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
     }
     
     // Determine which mode to use (default to 'improve' if current content exists, 'new' otherwise)
+    console.log('[GENERATION DEBUG] Fell through to introduction generation. exerciseType:', exerciseType, 'exerciseStep:', exerciseStep, 'missionType:', missionType, 'generateTrivia:', generateTrivia, 'applyType:', applyType, 'learnType:', learnType);
     const mode = generationMode || (currentContent ? 'improve' : 'new');
 
     // GENERATE NEW MODE: Create full introduction content
@@ -2490,7 +2741,7 @@ ${lessonGoal ? `- Lesson Goal: ${lessonGoal}` : ''}`;
       const response = await fullIntroductionGeneratorAgent.generate(fullPrompt);
       const content = response.text;
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-      const jsonContent = (jsonMatch?.[1] || content).trim();
+      const jsonContent = sanitizeAIText((jsonMatch?.[1] || content).trim());
       const result = JSON.parse(jsonContent);
 
       // Post-process introTexts to enforce level-based brevity
@@ -2640,7 +2891,7 @@ Example formats by level (focus on the skill, not "English"):
 
     // Extract JSON from markdown code blocks if present
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const jsonContent = (jsonMatch?.[1] || content).trim();
+    const jsonContent = sanitizeAIText((jsonMatch?.[1] || content).trim());
 
     const result = JSON.parse(jsonContent);
 
@@ -2679,6 +2930,129 @@ Example formats by level (focus on the skill, not "English"):
     };
   } catch (error) {
     console.error('Failed to generate introduction content:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// EPISODE SUMMARY AGENT
+// ============================================================================
+
+const episodeSummaryAgent = new Agent({
+  name: "Episode Summary Generator",
+  instructions: `You are a K-drama story writer creating summaries for an immersive language learning experience.
+Given story context and mission content from a lesson, create:
+1. A CURRENT EPISODE SUMMARY: What happened in this episode (2-3 sentences, past tense, engaging)
+2. A NEXT EPISODE HOOK: A teaser for what might happen next (1-2 sentences, intriguing, cliffhanger-style)
+
+The summary should:
+- Focus on character interactions and emotional moments
+- Reference the actual content from the mission scenarios
+- Maintain the K-drama storytelling style
+- Be concise but evocative
+
+Return ONLY valid JSON:
+{
+  "currentEpisodeSummary": "...",
+  "nextEpisodeHook": "..."
+}`,
+  model: "openai/gpt-4.1-mini",
+});
+
+// ============================================================================
+// GENERATE EPISODE SUMMARY
+// ============================================================================
+
+export interface EpisodeSummaryResult {
+  currentEpisodeSummary: string;
+  nextEpisodeHook: string;
+}
+
+export const generateEpisodeSummary = async (
+  storyData: {
+    storyTitle: string;
+    characters: Array<{ name: string; role: string; description: string }>;
+    setting: string;
+    previousSummary: string;
+    currentPlotPoints: string[];
+  },
+  missionContent: {
+    situation: string;
+    instruction: string;
+    questions?: Array<{ question: string }>;
+    topics?: Array<{ title: string; questions: string[] }>;
+  },
+  lessonTopic: string
+): Promise<EpisodeSummaryResult> => {
+  try {
+    const characterList = storyData.characters
+      .map(c => `- ${c.name} (${c.role}): ${c.description}`)
+      .join('\n');
+
+    const plotPoints = storyData.currentPlotPoints
+      .map((p, i) => `${i + 1}. ${p}`)
+      .join('\n');
+
+    const questionsContext = missionContent.questions
+      ? missionContent.questions.map(q => `- ${q.question}`).join('\n')
+      : missionContent.topics
+        ? missionContent.topics.map(t => `${t.title}: ${t.questions.join(', ')}`).join('\n')
+        : 'General practice scenarios';
+
+    const prompt = `Create an episode summary for this K-drama style language lesson:
+
+EPISODE TITLE: "${storyData.storyTitle}"
+SETTING: ${storyData.setting}
+LESSON TOPIC: ${lessonTopic}
+
+CHARACTERS:
+${characterList || 'Various characters in typical daily scenarios'}
+
+PREVIOUS EPISODE:
+${storyData.previousSummary || 'This is the beginning of the story.'}
+
+PLOT POINTS FOR THIS EPISODE:
+${plotPoints || 'General interaction around the lesson topic'}
+
+MISSION SCENARIO:
+Situation: ${missionContent.situation || 'Practice scenario'}
+Student Task: ${missionContent.instruction || 'Complete the roleplay'}
+
+PRACTICE CONTENT:
+${questionsContext}
+
+Now write:
+1. A summary of what happened in THIS episode (2-3 sentences)
+2. A hook/teaser for the NEXT episode (1-2 sentences)
+
+Make it dramatic and engaging like a K-drama recap!`;
+
+    const response = await episodeSummaryAgent.generate(prompt);
+    const text = response.text || '';
+
+    // Parse JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonContent = sanitizeAIText(jsonMatch ? jsonMatch[0] : text);
+
+    let result: EpisodeSummaryResult = {
+      currentEpisodeSummary: '',
+      nextEpisodeHook: '',
+    };
+
+    try {
+      const parsed = JSON.parse(jsonContent);
+      result.currentEpisodeSummary = parsed.currentEpisodeSummary || '';
+      result.nextEpisodeHook = parsed.nextEpisodeHook || '';
+    } catch (e) {
+      console.error('Failed to parse episode summary response:', text);
+      // Fallback - try to extract content
+      result.currentEpisodeSummary = `In this episode, the student practiced ${lessonTopic} scenarios in ${storyData.setting || 'various settings'}.`;
+      result.nextEpisodeHook = 'What new adventures await in the next lesson?';
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Failed to generate episode summary:', error);
     throw error;
   }
 };
