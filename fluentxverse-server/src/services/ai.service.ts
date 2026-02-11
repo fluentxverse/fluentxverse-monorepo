@@ -1161,6 +1161,8 @@ IMPORTANT GUIDELINES:
     - CORRECT: "<u>I'm pleased to meet you for the first time.</u>"
     - CORRECT: "<u>How is your life these days?</u>"
   - Just write a standalone sentence as if someone is naturally speaking
+  - NO double negatives (e.g., "I don't have no friends", "She can't never come")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon", "May I inquire", "Pardon me", "I am delighted"). Use simple, everyday expressions appropriate for Level 1 beginners.
 - The number of expressions in the word box must EXACTLY match the number of exercise items. If there are 4 sentences, provide exactly 4 expressions - one per sentence. No extras.
 - Provide example with original sentence and rephrased version
 - Generate answer key for tutor reference
@@ -1219,6 +1221,24 @@ IMPORTANT GUIDELINES:
 - Focus on common grammar points relevant to the lesson
 - Each sentence should test a clear grammar concept
 - Provide answer key for tutor reference
+- Write PLAIN, SIMPLE sentences only:
+  - NO narrative or descriptive context. Write ONLY what the person says.
+    - WRONG: "In the studio lobby, Jae-min says, '(Hello / Goodbye). Nice to meet you.'"
+    - WRONG: "Hana introduces herself: '(I'm / My) Hana. Nice to meet you.'"
+    - WRONG: "Jae-min asks Hana, 'Where (are / is) you from?'"
+    - WRONG: "Hana says, '(How / Where) do you spell that?' when she hears the student's name."
+    - CORRECT: "(Hello / Goodbye). Nice to meet you."
+    - CORRECT: "(I'm / My) name is Hana. Nice to meet you."
+    - CORRECT: "Where (are / is) you from?"
+    - CORRECT: "(How / Where) do you spell your name?"
+  - NO parenthetical scene descriptions like "(at the office)" or "(while cooking)"
+  - NO "Name asks:" or "Name says:" prefixes
+  - NO dialogue attribution of any kind (no "he says", "she asks", "they replied")
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence
+  - NO double negatives (e.g., "I don't have no friends")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon"). Use simple, everyday expressions appropriate for Level 1 beginners.
+- Use a DIVERSE MIX of names from different backgrounds when names are needed: Korean (Jihyun, Minho), Vietnamese (Linh, Minh, Hoa), Japanese (Yuki, Haruto, Sakura). Do NOT use only Korean names.
+- Every sentence must make logical sense from the speaker's perspective. The speaker should never ask about something they already know.
 
 Respond ONLY in JSON format:
 {
@@ -1227,16 +1247,16 @@ Respond ONLY in JSON format:
     "instructions": "Choose the correct word.",
     "instructionsTranslation": "Translation of instructions",
     "chooseItems": [
-      { "sentence": "He (doesn't / don't) eat breakfast." },
-      { "sentence": "She does (she / her) hair for an hour!" },
-      { "sentence": "I (get / gets) dressed before breakfast." },
-      { "sentence": "They (doesn't / don't) drink tea for breakfast." }
+      { "sentence": "(Hello / Goodbye). Nice to meet you." },
+      { "sentence": "(I'm / My) name is Hana." },
+      { "sentence": "Where (are / is) you from?" },
+      { "sentence": "(How / Where) do you spell your name?" }
     ],
     "answers": [
-      { "text": "He doesn't eat breakfast." },
-      { "text": "She does her hair for an hour!" },
-      { "text": "I get dressed before breakfast." },
-      { "text": "They don't drink tea for breakfast." }
+      { "text": "Hello. Nice to meet you." },
+      { "text": "My name is Hana." },
+      { "text": "Where are you from?" },
+      { "text": "How do you spell your name?" }
     ],
     "tutorSteps": [
       { "instruction": "Introduce Exercise.", "scripts": [{ "text": "Okay, now let's do Exercise." }] },
@@ -1262,6 +1282,20 @@ IMPORTANT GUIDELINES:
 - The underlined part should be what students need to change/transform
 - Focus on grammar transformations relevant to the lesson
 - Provide answer key for tutor reference
+- Write PLAIN, SIMPLE sentences only:
+  - NO narrative or descriptive context. Write ONLY what the person says.
+    - WRONG: "In the lobby, Jae-min says, 'Is there a nice hotel around here?'"
+    - WRONG: "Hana asks her friend, 'Where's the mall?'"
+    - CORRECT: "<u>Is there a nice hotel around here?</u>"
+    - CORRECT: "<u>Where's the mall?</u>"
+  - NO parenthetical scene descriptions like "(at the office)" or "(while cooking)"
+  - NO "Name asks:" or "Name says:" prefixes
+  - NO dialogue attribution of any kind (no "he says", "she asks", "they replied")
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence
+  - NO double negatives (e.g., "I don't have no friends")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon"). Use simple, everyday expressions appropriate for Level 1 beginners.
+- Use a DIVERSE MIX of names from different backgrounds when names are needed: Korean (Jihyun, Minho), Vietnamese (Linh, Minh, Hoa), Japanese (Yuki, Haruto, Sakura). Do NOT use only Korean names.
+- Every sentence must make logical sense from the speaker's perspective. The speaker should never ask about something they already know.
 
 Respond ONLY in JSON format:
 {
@@ -1303,6 +1337,15 @@ IMPORTANT GUIDELINES:
 - Blanks should be for personal information or opinions
 - Create 2-4 conversation bubbles alternating left/right positions
 - Make conversations relevant to the lesson topic
+- Write PLAIN, SIMPLE sentences only:
+  - NO narrative or descriptive context. Write ONLY what the person says.
+  - NO parenthetical scene descriptions like "(at the office)" or "(while cooking)"
+  - NO dialogue attribution of any kind (no "he says", "she asks")
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence
+  - NO double negatives (e.g., "I don't have no friends")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon"). Use simple, everyday expressions appropriate for Level 1 beginners.
+- Use a DIVERSE MIX of names from different backgrounds when names are needed: Korean (Jihyun, Minho), Vietnamese (Linh, Minh, Hoa), Japanese (Yuki, Haruto, Sakura). Do NOT use only Korean names.
+- Every sentence must make logical sense from the speaker's perspective.
 
 Respond ONLY in JSON format:
 {
@@ -1332,14 +1375,28 @@ Respond ONLY in JSON format:
 const exerciseMultipleChoiceAgent = new Agent({
   name: 'Exercise Multiple Choice Generator',
   model: 'openai/gpt-5.2',
-  instructions: `You are an ESL lesson content generator. Generate a MULTIPLE CHOICE exercise for Step B.
+  instructions: `You are an ESL lesson content generator. Generate a CHOOSE THE CORRECT MEANING exercise for Step B.
 Students will choose the correct interpretation of bold sentences.
 
 IMPORTANT GUIDELINES:
-- Create sentences with vocabulary/expressions from the lesson in bold
+- Create sentences with vocabulary/expressions from the lesson
+- The boldSentence field should be PLAIN TEXT — do NOT use ** markdown asterisks. The app already renders it in bold automatically.
+  - WRONG: "**Good morning. I'm Minho.**"
+  - CORRECT: "Good morning. I'm Minho."
 - Provide two options: one correct interpretation, one incorrect
+- The CORRECT answer option must be wrapped in <strong> tags to mark it as the answer
+  - Example: optionA with <strong> means A is correct
 - Options should test understanding of meaning, not just grammar
 - Make distractors plausible but clearly wrong
+- Write PLAIN, SIMPLE sentences only:
+  - NO narrative or descriptive context. Write ONLY what the person says.
+  - NO parenthetical scene descriptions like "(at the office)" or "(while cooking)"
+  - NO dialogue attribution of any kind (no "he says", "she asks")
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence
+  - NO double negatives (e.g., "I don't have no friends")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon"). Use simple, everyday expressions appropriate for Level 1 beginners.
+- Use a DIVERSE MIX of names from different backgrounds when names are needed: Korean (Jihyun, Minho), Vietnamese (Linh, Minh, Hoa), Japanese (Yuki, Haruto, Sakura). Do NOT use only Korean names.
+- Every sentence must make logical sense from the speaker's perspective.
 
 Respond ONLY in JSON format:
 {
@@ -1348,9 +1405,9 @@ Respond ONLY in JSON format:
     "stepBInstruction": "Choose the correct meaning of the bold sentence.",
     "stepBInstructionTranslation": "Translation of instructions",
     "multipleChoiceItems": [
-      { "boldSentence": "James thinks the world of his mother.", "optionA": "He thinks she focused on her work too much.", "optionB": "He admires and respects her greatly." },
-      { "boldSentence": "The movie was a remarkable achievement.", "optionA": "It stands out from other movies made that year.", "optionB": "It was similar to many other movies." },
-      { "boldSentence": "She let the cat out of the bag.", "optionA": "She accidentally revealed a secret.", "optionB": "She released a cat from a bag." }
+      { "boldSentence": "Good morning. I'm Minho.", "optionA": "<strong>Minho is greeting and saying his name.</strong>", "optionB": "Minho is asking for someone else's name." },
+      { "boldSentence": "Nice to meet you.", "optionA": "<strong>The speaker is meeting someone for the first time and is being polite.</strong>", "optionB": "The speaker is saying goodbye." },
+      { "boldSentence": "Where are you from, Linh?", "optionA": "<strong>The speaker is asking Linh about her country or city.</strong>", "optionB": "The speaker is asking Linh for directions." }
     ],
     "stepBTutorSteps": [
       { "instruction": "Introduce Step B.", "scripts": [{ "text": "Now let's check your understanding." }] },
@@ -1376,6 +1433,12 @@ IMPORTANT GUIDELINES:
 - Include some blanks with choices in parentheses like "(often / sometimes / rarely)"
 - Include some open blanks for personal information
 - Make the speech topic relevant to the lesson
+- Write PLAIN, SIMPLE sentences only:
+  - NO narrative or descriptive context. The speech should be first-person and natural.
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence
+  - NO double negatives (e.g., "I don't have no friends")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon"). Use simple, everyday expressions appropriate for Level 1 beginners.
+- Every sentence must make logical sense from the speaker's perspective.
 
 Respond ONLY in JSON format:
 {
@@ -1408,6 +1471,12 @@ IMPORTANT GUIDELINES:
 - Include 2-4 images/items to compare with labels
 - Create comparison sentences with clues in parentheses
 - Focus on comparative structures relevant to the lesson
+- Write PLAIN, SIMPLE sentences only:
+  - NO narrative or descriptive context
+  - NO pronouns (like "that", "this", "it") without a clear reference within the same sentence
+  - NO double negatives (e.g., "I don't have no friends")
+  - NO overly formal or archaic language (e.g., "Shall we proceed?", "I beg your pardon"). Use simple, everyday expressions appropriate for Level 1 beginners.
+- Every sentence must make logical sense from the speaker's perspective.
 
 Respond ONLY in JSON format:
 {
@@ -1453,10 +1522,43 @@ This is a roleplay activity where the tutor plays a character and the student pr
 IMPORTANT GUIDELINES:
 - Create a realistic roleplay situation relevant to the lesson topic
 - Include clear tutor steps for conducting the roleplay
-- Generate 5-8 roleplay questions with optional hints for students who struggle
 - Questions should flow naturally like a real conversation
-- Include grammar tip reminder if relevant to the lesson
 - Make situations practical and relatable (restaurant, hotel, shopping, etc.)
+- NEVER create scenarios about spelling one's name, asking someone to spell their name, or any spelling-related tasks. This is boring and unnatural.
+- The "situation" field should describe the roleplay scenario AND what the student should do, all in one block. Do NOT generate a separate "instruction" field.
+  - EXAMPLE situation: "You are at a small café in Seoul. A new person sits near you and you also meet the café manager. Greet them, introduce yourself, and talk about what you like to do on weekends."
+- Set "instruction" to an empty string "". All guidance should be in the situation.
+- The entire challenge must be doable in 3-4 minutes. Keep it SHORT and focused.
+
+SITUATION TEXT RULES — NO GRAMMAR PATTERNS:
+- The situation must be a PURE scenario description. It should read like a movie scene setup.
+- NEVER include grammar rules, grammar patterns, or parenthetical grammar hints in the situation.
+- NEVER include examples like "(I'm/My name is…)", "(Nice to meet you / How are you?)", "(I like… / I don't like…)", etc.
+- NEVER include any parenthetical text showing how to say something.
+- The situation tells the student WHAT to do, not HOW to say it. The grammar tips section handles grammar separately.
+- WRONG situation: "You are at a café. Introduce yourself (I'm… / My name is…) and say where you're from (I'm from…)."
+- CORRECT situation: "You are at a small café in Seoul. A new person sits near you and you also meet the café manager. Greet them, introduce yourself, and say where you're from."
+
+TUTOR GUIDE RULES:
+- tutorSteps should be exactly 5 steps as shown in the example.
+- Step 5 scripts should ONLY be the questionsIntro and questions. Do NOT add scene-narration scripts like "Action! We're in the lobby now!" or "Alright-scene start." — these are cringy and unnecessary. The tutor just starts talking in character.
+- Do NOT include grammar tip steps or grammar reminders in tutorSteps. Grammar is handled by the grammarTip section separately.
+- Keep the tutor guide SHORT and practical. No filler.
+
+questionsIntro rules:
+- A short tutor direction in parentheses to open the roleplay in character.
+- Example: "(Thank the student for inviting you to eat out.)"
+
+questions array rules:
+- Keep it SHORT. This is a 3-4 minute roleplay.
+- The tutor plays ONE character only. Do NOT switch between multiple characters or play two roles.
+- Generate EXACTLY 4 questions total + 1 closing direction entry (5 items max).
+- Questions should be numbered: "1.", "2.", "3.", "4."
+- Each question is a simple, natural thing the tutor says in character.
+- Hints are optional short coaching notes for the student (e.g., "Say your country or city", "Keep it simple").
+- The last entry should be a closing direction in parentheses to end the roleplay naturally (e.g., "(Say goodbye and end the conversation.)").
+- Do NOT use "(As Character)" prefixes. The tutor is already playing that character.
+- Do NOT generate sub-scenes, scene switches, or multiple characters.
 
 Respond ONLY in JSON format:
 {
@@ -1464,33 +1566,37 @@ Respond ONLY in JSON format:
     "missionType": "speaking",
     "challengeNumber": 1,
     "challengeName": "Challenge 1",
-    "duration": "5-6 minutes",
-    "situation": "Describe the roleplay scenario the student will be in",
-    "situationTranslation": "Translation of situation",
-    "instruction": "What the student should do in this roleplay",
-    "instructionTranslation": "Translation of instruction",
+    "duration": "3-4 minutes",
+    "situation": "Pure scenario description. No grammar patterns.",
+    "situationTranslation": "Translation here",
+    "instruction": "",
+    "instructionTranslation": "",
     "showGrammarTip": true,
     "grammarTipTitle": "Today's grammar tip",
     "grammarTipItems": ["grammar concept 1", "grammar concept 2"],
     "tutorSteps": [
       { "instruction": "Introduce Challenge 1.", "scripts": [{ "text": "Okay, now let's do the Challenge." }, { "text": "First we have Challenge 1." }] },
-      { "instruction": "Read the situation." },
-      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
-      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "I'll be the (character)." }, { "text": "You'll be yourself." }] },
-      { "instruction": "Start the roleplay.", "scripts": [{ "text": "I'll start." }] },
-      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions only as guides. Ask other questions based on the flow." }] }
+      { "instruction": "Read the situation.", "tips": [{ "text": "Read it slowly and clearly. Point to key words if needed." }] },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Do you understand the situation?" }, { "text": "Is it clear?" }], "tips": [{ "text": "If the student looks confused, rephrase the situation in simpler words." }] },
+      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "I'll be your friend. You'll be yourself." }, { "text": "Let's start. I'll go first." }] },
+      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions below only as guides. Ask other questions based on the flow of the conversation." }, { "text": "Make sure that you simulate a real-life situation." }, { "text": "Change your tone according to the character you are playing." }] }
     ],
-    "questionsIntro": "(Greeting or opening line for the roleplay)",
+    "questionsIntro": "(Thank the student for inviting you to eat out.)",
     "questions": [
-      { "question": "First roleplay question", "hints": ["Hint if student struggles"] },
-      { "question": "Second roleplay question", "hints": [] },
-      { "question": "Third roleplay question", "hints": ["Another helpful hint"] },
-      { "question": "Fourth roleplay question", "hints": [] },
-      { "question": "Fifth roleplay question", "hints": [] },
-      { "question": "Closing question", "hints": ["(Thank the student or wrap up)"] }
+      { "question": "1. Do you usually eat out on the weekend?", "hints": [] },
+      { "question": "2. What do you like to eat?", "hints": [] },
+      { "question": "3. Oh, I like that, too. So, what else do you do?", "hints": ["(You may ask specific questions.)", "Do you stay at home?", "Do you go out?"] },
+      { "question": "4. I like jogging. Do you jog?", "hints": ["(If yes, ask, \\"Do you want to jog together?\\")", "(If no, say, \\"Do you want to try it?\\")"] },
+      { "question": "(Say that you're hungry and want to order food now.)", "hints": [] }
     ]
   }
 }
+
+CRITICAL RULES:
+- EXACTLY 4 numbered questions + 1 closing direction = 5 items total. No more.
+- ONE character only. Never switch characters mid-conversation.
+- Step 5 must NOT have scripts — only the 3 standard tips.
+- No scene-narration, no "(As Character)" prefixes, no grammar guides in tutorSteps.
 `
 });
 

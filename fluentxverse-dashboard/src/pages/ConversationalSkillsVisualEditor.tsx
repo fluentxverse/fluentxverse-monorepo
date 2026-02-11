@@ -1850,6 +1850,21 @@ export default function ConversationalSkillsVisualEditor() {
       if (data.storyData) {
         setStoryData({ ...DEFAULT_STORY_DATA, ...data.storyData });
       }
+
+      // Load mission data from lesson if available
+      if (data.missionData) {
+        setMissionData(data.missionData);
+      }
+
+      // Load mission 2 data from lesson if available
+      if (data.missionData2) {
+        setMissionData2(data.missionData2);
+      }
+
+      // Load feedback data from lesson if available
+      if (data.feedbackData) {
+        setFeedbackData(data.feedbackData);
+      }
     } catch (err) {
       console.error('Failed to load lesson:', err);
       setError('Failed to load lesson');
@@ -1876,6 +1891,9 @@ export default function ConversationalSkillsVisualEditor() {
         applyData,
         exerciseData,
         storyData,
+        missionData,
+        missionData2,
+        feedbackData,
       });
       setLesson(updated);
       setAutosaveStatus('saved');
@@ -1935,6 +1953,9 @@ export default function ConversationalSkillsVisualEditor() {
     stepBData,
     applyData,
     exerciseData,
+    missionData,
+    missionData2,
+    feedbackData,
   ]);
 
   const handleImageUpload = (e: Event) => {

@@ -654,40 +654,44 @@ export function AIContentGenerator({
       // Handle Mission section content
       else if (activeSection === 'mission' && generatedContent.missionData && onGenerateMission) {
         const mission = generatedContent.missionData;
-        
-        const missionPayload = {
-          missionType: mission.missionType,
-          sectionNumber: 5,
-          sectionTitle: 'MISSION',
-          challengeNumber: mission.challengeNumber || 1,
-          challengeName: mission.challengeName || 'Challenge 1',
-          duration: mission.duration || '5-6 minutes',
-          situation: mission.situation || '',
-          situationTranslation: mission.situationTranslation || '',
-          instruction: mission.instruction || '',
-          instructionTranslation: mission.instructionTranslation || '',
-          showGrammarTip: mission.showGrammarTip || false,
-          grammarTipTitle: mission.grammarTipTitle || "Today's grammar tip",
-          grammarTipItems: mission.grammarTipItems || [],
-          image: '',
-          tutorSteps: (mission.tutorSteps || []).map((step: any) => ({
-            instruction: step.instruction || '',
-            scripts: step.scripts || [],
-            tips: step.tips || [],
-            ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
-          })),
+
+        // Build tutorSteps and inject questionsIntro + questions as scripts into the last step
+        const builtTutorSteps = (mission.tutorSteps || []).map((step: any) => ({
+          instruction: step.instruction || '',
+          scripts: step.scripts || [],
+          tips: step.tips || [],
+          ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
+        }));
+
+        const qi = mission.questionsIntro || '';
+        const rq = mission.questions || [];
+        if ((qi || rq.length > 0) && builtTutorSteps.length > 0) {
+          const last = builtTutorSteps[builtTutorSteps.length - 1];
+          const extra: { text: string }[] = [];
+          if (qi) extra.push({ text: qi });
+          for (const q of rq) {
+            if (q.question) extra.push({ text: q.question });
+            for (const h of (q.hints || [])) {
+              if (h) extra.push({ text: `   ${h}` });
+            }
+          }
+          last.scripts = [...(last.scripts || []), ...extra];
+        }
+
+        // Insert into missionData (Challenge 1)
+        onGenerateMission({
+          ...mission,
+          tutorSteps: builtTutorSteps,
           questionsIntro: mission.questionsIntro || '',
           questions: (mission.questions || []).map((q: any) => ({
             question: q.question || '',
             hints: q.hints || [],
           })),
-          // Discussion type specific
           isOptional: mission.isOptional || false,
           topics: (mission.topics || []).map((topic: any) => ({
             title: topic.title || '',
             questions: topic.questions || [],
           })),
-          // Reading type specific
           readingPassage: mission.readingPassage ? {
             title: mission.readingPassage.title || '',
             author: mission.readingPassage.author || '',
@@ -698,11 +702,8 @@ export function AIContentGenerator({
             })),
             closingQuestion: mission.readingPassage.closingQuestion || '',
           } : undefined,
-          // Listening type specific
           ...(mission.listeningScript ? { listeningScript: mission.listeningScript } : {}),
-        };
-
-        onGenerateMission(missionPayload);
+        });
         
         // Auto-update story episode summary if story mode is enabled
         // Only for Mission 1 if there's no Mission 2, otherwise do it after Mission 2
@@ -742,6 +743,29 @@ export function AIContentGenerator({
       // Handle Mission 2 section content
       else if (activeSection === 'mission2' && generatedContent.missionData && onGenerateMission2) {
         const mission = generatedContent.missionData;
+
+        // Build tutorSteps and inject questionsIntro + questions as scripts into the last step
+        const builtTutorSteps2 = (mission.tutorSteps || []).map((step: any) => ({
+          instruction: step.instruction || '',
+          scripts: step.scripts || [],
+          tips: step.tips || [],
+          ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
+        }));
+
+        const qi2 = mission.questionsIntro || '';
+        const rq2 = mission.questions || [];
+        if ((qi2 || rq2.length > 0) && builtTutorSteps2.length > 0) {
+          const last2 = builtTutorSteps2[builtTutorSteps2.length - 1];
+          const extra2: { text: string }[] = [];
+          if (qi2) extra2.push({ text: qi2 });
+          for (const q of rq2) {
+            if (q.question) extra2.push({ text: q.question });
+            for (const h of (q.hints || [])) {
+              if (h) extra2.push({ text: `   ${h}` });
+            }
+          }
+          last2.scripts = [...(last2.scripts || []), ...extra2];
+        }
         
         const mission2Payload = {
           missionType: mission.missionType,
@@ -758,12 +782,7 @@ export function AIContentGenerator({
           grammarTipTitle: mission.grammarTipTitle || "Today's grammar tip",
           grammarTipItems: mission.grammarTipItems || [],
           image: '',
-          tutorSteps: (mission.tutorSteps || []).map((step: any) => ({
-            instruction: step.instruction || '',
-            scripts: step.scripts || [],
-            tips: step.tips || [],
-            ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
-          })),
+          tutorSteps: builtTutorSteps2,
           questionsIntro: mission.questionsIntro || '',
           questions: (mission.questions || []).map((q: any) => ({
             question: q.question || '',

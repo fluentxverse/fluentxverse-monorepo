@@ -375,6 +375,9 @@ export interface LessonMaterial {
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
   storyData?: StoryData;
+  missionData?: any;
+  missionData2?: any;
+  feedbackData?: any;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -421,6 +424,9 @@ export interface UpdateHeaderInput {
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
   storyData?: StoryData;
+  missionData?: any;
+  missionData2?: any;
+  feedbackData?: any;
 }
 
 export interface ChapterInfo {

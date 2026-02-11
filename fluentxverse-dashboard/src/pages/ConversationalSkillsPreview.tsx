@@ -1787,10 +1787,66 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
               )}
             </>
           )}
+        </div>
 
-          {/* STEP B CONTENT - Only if enabled */}
-          {data.hasStepB && (
-            <>
+        {/* Right Column - Tutor Guide */}
+        <div className="csp-exercise-right">
+          {/* Step A Tutor Guide */}
+          <div className="csp-tutor-guide">
+            <div className="csp-guide-header">
+              {data.hasStepB ? (data.stepAName || 'STEP A') : data.sectionTitle} ({data.duration})
+            </div>
+            <div className="csp-guide-steps">
+              {data.tutorSteps.map((step, stepIdx) => (
+                <div key={stepIdx} className="csp-guide-step csp-apply-step">
+                  <span className="csp-guide-number">{stepIdx + 1}</span>
+                  <div className="csp-guide-content">
+                    <p className="csp-guide-instruction">{step.instruction}</p>
+
+                    {/* Scripts (green bullets) */}
+                    {step.scripts && step.scripts.map((script, scriptIdx) => (
+                      <p key={scriptIdx} className="csp-apply-script">
+                        <span className="csp-script-bullet">●</span>
+                        <span>"{script.text}"</span>
+                      </p>
+                    ))}
+
+                    {/* Tips (red text) */}
+                    {step.tips && step.tips.map((tip, tipIdx) => (
+                      <p key={tipIdx} className="csp-apply-tip">
+                        <span className="csp-tip-icon">◆</span>
+                        <span>{tip.text}</span>
+                      </p>
+                    ))}
+
+                    {/* Answer Key Box */}
+                    {step.answerKey && step.answerKey.length > 0 && (
+                      <div className="csp-tutor-answer-key-box">
+                        <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
+                        <div className="csp-tutor-answer-key-items">
+                          {step.answerKey.map((answer, answerIdx) => (
+                            <p key={answerIdx} className="csp-tutor-answer-key-item">
+                              <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
+                              <span>{answer.text}</span>
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* STEP B ROW - Separate layout row for Step B */}
+      {data.hasStepB && (
+        <div className="csp-exercise-layout csp-stepb-row">
+          {/* Left Column - Step B Content */}
+          <div className="csp-exercise-left">
+            <div className="csp-stepb-section">
               <h3 className="csp-step-name csp-stepb-name">{data.stepBName || 'STEP B'}</h3>
               
               {/* Step B Instruction */}
@@ -1849,8 +1905,8 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                         <strong>{item.boldSentence}</strong>
                       </p>
                       <div className="csp-mc-options">
-                        <p className="csp-mc-option"><span className="csp-mc-label">a.</span> {item.optionA}</p>
-                        <p className="csp-mc-option"><span className="csp-mc-label">b.</span> {item.optionB}</p>
+                        <p className="csp-mc-option"><span className="csp-mc-label">a.</span> <span dangerouslySetInnerHTML={{ __html: item.optionA }} /></p>
+                        <p className="csp-mc-option"><span className="csp-mc-label">b.</span> <span dangerouslySetInnerHTML={{ __html: item.optionB }} /></p>
                       </div>
                     </div>
                   ))}
@@ -1883,111 +1939,62 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                   </div>
                 </div>
               )}
-            </>
-          )}
-        </div>
-
-        {/* Right Column - Tutor Guide */}
-        <div className="csp-exercise-right">
-          {/* Step A Tutor Guide */}
-          <div className="csp-tutor-guide">
-            <div className="csp-guide-header">
-              {data.hasStepB ? (data.stepAName || 'STEP A') : data.sectionTitle} ({data.duration})
-            </div>
-            <div className="csp-guide-steps">
-              {data.tutorSteps.map((step, stepIdx) => (
-                <div key={stepIdx} className="csp-guide-step csp-apply-step">
-                  <span className="csp-guide-number">{stepIdx + 1}</span>
-                  <div className="csp-guide-content">
-                    <p className="csp-guide-instruction">{step.instruction}</p>
-
-                    {/* Scripts (green bullets) */}
-                    {step.scripts && step.scripts.map((script, scriptIdx) => (
-                      <p key={scriptIdx} className="csp-apply-script">
-                        <span className="csp-script-bullet">●</span>
-                        <span>"{script.text}"</span>
-                      </p>
-                    ))}
-
-                    {/* Tips (red text) */}
-                    {step.tips && step.tips.map((tip, tipIdx) => (
-                      <p key={tipIdx} className="csp-apply-tip">
-                        <span className="csp-tip-icon">◆</span>
-                        <span>{tip.text}</span>
-                      </p>
-                    ))}
-
-                    {/* Answer Key Box */}
-                    {step.answerKey && step.answerKey.length > 0 && (
-                      <div className="csp-tutor-answer-key-box">
-                        <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
-                        <div className="csp-tutor-answer-key-items">
-                          {step.answerKey.map((answer, answerIdx) => (
-                            <p key={answerIdx} className="csp-tutor-answer-key-item">
-                              <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
-                              <span>{answer.text}</span>
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
-          {/* Step B Tutor Guide - Only if Step B is enabled */}
-          {data.hasStepB && data.stepBTutorSteps && (
-            <div className="csp-tutor-guide csp-stepb-tutor-guide">
-              <div className="csp-guide-header">
-                {data.stepBName || 'STEP B'}
-              </div>
-              <div className="csp-guide-steps">
-                {data.stepBTutorSteps.map((step, stepIdx) => (
-                  <div key={stepIdx} className="csp-guide-step csp-apply-step">
-                    <span className="csp-guide-number">{stepIdx + 1}</span>
-                    <div className="csp-guide-content">
-                      <p className="csp-guide-instruction">{step.instruction}</p>
+          {/* Right Column - Step B Tutor Guide */}
+          <div className="csp-exercise-right">
+            {data.stepBTutorSteps && (
+              <div className="csp-tutor-guide csp-stepb-tutor-guide">
+                <div className="csp-guide-header">
+                  {data.stepBName || 'STEP B'}
+                </div>
+                <div className="csp-guide-steps">
+                  {data.stepBTutorSteps.map((step, stepIdx) => (
+                    <div key={stepIdx} className="csp-guide-step csp-apply-step">
+                      <span className="csp-guide-number">{stepIdx + 1}</span>
+                      <div className="csp-guide-content">
+                        <p className="csp-guide-instruction">{step.instruction}</p>
 
-                      {/* Scripts (green bullets) */}
-                      {step.scripts && step.scripts.map((script, scriptIdx) => (
-                        <p key={scriptIdx} className="csp-apply-script">
-                          <span className="csp-script-bullet">●</span>
-                          <span>"{script.text}"</span>
-                        </p>
-                      ))}
+                        {/* Scripts (green bullets) */}
+                        {step.scripts && step.scripts.map((script, scriptIdx) => (
+                          <p key={scriptIdx} className="csp-apply-script">
+                            <span className="csp-script-bullet">●</span>
+                            <span>"{script.text}"</span>
+                          </p>
+                        ))}
 
-                      {/* Tips (red text) */}
-                      {step.tips && step.tips.map((tip, tipIdx) => (
-                        <p key={tipIdx} className="csp-apply-tip">
-                          <span className="csp-tip-icon">◆</span>
-                          <span>{tip.text}</span>
-                        </p>
-                      ))}
+                        {/* Tips (red text) */}
+                        {step.tips && step.tips.map((tip, tipIdx) => (
+                          <p key={tipIdx} className="csp-apply-tip">
+                            <span className="csp-tip-icon">◆</span>
+                            <span>{tip.text}</span>
+                          </p>
+                        ))}
 
-                      {/* Answer Key Box */}
-                      {step.answerKey && step.answerKey.length > 0 && (
-                        <div className="csp-tutor-answer-key-box">
-                          <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
-                          <div className="csp-tutor-answer-key-items">
-                            {step.answerKey.map((answer, answerIdx) => (
-                              <p key={answerIdx} className="csp-tutor-answer-key-item">
-                                <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
-                                <span>{answer.text}</span>
-                              </p>
-                            ))}
+                        {/* Answer Key Box */}
+                        {step.answerKey && step.answerKey.length > 0 && (
+                          <div className="csp-tutor-answer-key-box">
+                            <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
+                            <div className="csp-tutor-answer-key-items">
+                              {step.answerKey.map((answer, answerIdx) => (
+                                <p key={answerIdx} className="csp-tutor-answer-key-item">
+                                  <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
+                                  <span>{answer.text}</span>
+                                </p>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

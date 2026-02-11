@@ -296,6 +296,9 @@ export interface LessonMaterial {
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
   storyData?: StoryData;
+  missionData?: any;
+  missionData2?: any;
+  feedbackData?: any;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -342,6 +345,9 @@ export interface UpdateHeaderInput {
   applyData?: ApplySectionData;
   exerciseData?: ExerciseSectionData;
   storyData?: StoryData;
+  missionData?: any;
+  missionData2?: any;
+  feedbackData?: any;
 }
 
 // ============================================================================
@@ -450,6 +456,42 @@ function transformLesson(record: any): LessonMaterial {
       console.error('Failed to parse storyData:', e);
     }
   }
+
+  // Parse missionData from JSON string if present
+  let missionData: any | undefined;
+  if (props.missionData) {
+    try {
+      missionData = typeof props.missionData === 'string' 
+        ? JSON.parse(props.missionData) 
+        : props.missionData;
+    } catch (e) {
+      console.error('Failed to parse missionData:', e);
+    }
+  }
+
+  // Parse missionData2 from JSON string if present
+  let missionData2: any | undefined;
+  if (props.missionData2) {
+    try {
+      missionData2 = typeof props.missionData2 === 'string' 
+        ? JSON.parse(props.missionData2) 
+        : props.missionData2;
+    } catch (e) {
+      console.error('Failed to parse missionData2:', e);
+    }
+  }
+
+  // Parse feedbackData from JSON string if present
+  let feedbackData: any | undefined;
+  if (props.feedbackData) {
+    try {
+      feedbackData = typeof props.feedbackData === 'string' 
+        ? JSON.parse(props.feedbackData) 
+        : props.feedbackData;
+    } catch (e) {
+      console.error('Failed to parse feedbackData:', e);
+    }
+  }
   
   return {
     id: props.id,
@@ -471,6 +513,9 @@ function transformLesson(record: any): LessonMaterial {
     applyData,
     exerciseData,
     storyData,
+    missionData,
+    missionData2,
+    feedbackData,
     createdBy: props.createdBy,
     createdByName: props.createdByName || '',
     createdAt: props.createdAt,
@@ -751,6 +796,21 @@ export const lessonMaterialService = {
         setClauses.push('l.storyData = $storyData');
         // Store as JSON string
         params.storyData = JSON.stringify(input.storyData);
+      }
+
+      if (input.missionData !== undefined) {
+        setClauses.push('l.missionData = $missionData');
+        params.missionData = JSON.stringify(input.missionData);
+      }
+
+      if (input.missionData2 !== undefined) {
+        setClauses.push('l.missionData2 = $missionData2');
+        params.missionData2 = JSON.stringify(input.missionData2);
+      }
+
+      if (input.feedbackData !== undefined) {
+        setClauses.push('l.feedbackData = $feedbackData');
+        params.feedbackData = JSON.stringify(input.feedbackData);
       }
       
       const result = await session.run(

@@ -1774,104 +1774,6 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
               )}
             </>
           )}
-
-          {/* STEP B CONTENT - Only if enabled */}
-          {data.hasStepB && (
-            <>
-              <h3 className="csp-step-name csp-stepb-name">{data.stepBName || 'STEP B'}</h3>
-              
-              {/* Step B Instruction */}
-              <p className="csp-exercise-instructions">{data.stepBInstruction}</p>
-              {data.stepBInstructionTranslation && (
-                <p className="csp-exercise-instructions-translation">{data.stepBInstructionTranslation}</p>
-              )}
-
-              {/* Conversation Type */}
-              {(!data.stepBType || data.stepBType === 'conversation') && (
-                <div className="csp-exercise-conversations">
-                  {(data.conversations || []).map((conv, convIdx) => (
-                    <div 
-                      key={convIdx} 
-                      className={`csp-exercise-conv-row csp-exercise-conv-${conv.position}`}
-                    >
-                      {conv.position === 'left' && (
-                        <div className="csp-exercise-speaker-image">
-                          {conv.speakerImage ? (
-                            <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} />
-                          ) : (
-                            <div className="csp-image-placeholder">
-                              <span className="csp-placeholder-dims">150 × 150</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="csp-exercise-speech-bubble">
-                        <p dangerouslySetInnerHTML={{ __html: conv.speechBubble }} />
-                      </div>
-                      
-                      {conv.position === 'right' && (
-                        <div className="csp-exercise-speaker-image">
-                          {conv.speakerImage ? (
-                            <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} />
-                          ) : (
-                            <div className="csp-image-placeholder">
-                              <span className="csp-placeholder-dims">150 × 150</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Multiple Choice Type */}
-              {data.stepBType === 'multiple-choice' && (
-                <div className="csp-stepb-multiple-choice">
-                  {(data.multipleChoiceItems || []).map((item, mcIdx) => (
-                    <div key={mcIdx} className="csp-mc-item">
-                      <p className="csp-mc-sentence">
-                        <span className="csp-mc-number">{mcIdx + 1}.</span>
-                        <strong>{item.boldSentence}</strong>
-                      </p>
-                      <div className="csp-mc-options">
-                        <p className="csp-mc-option"><span className="csp-mc-label">a.</span> {item.optionA}</p>
-                        <p className="csp-mc-option"><span className="csp-mc-label">b.</span> {item.optionB}</p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Optional Image */}
-                  {data.multipleChoiceImage && (
-                    <div className="csp-mc-image">
-                      <img src={data.multipleChoiceImage} alt="Multiple choice" />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Speech Type - Single speaker with speech bubble */}
-              {data.stepBType === 'speech' && (
-                <div className="csp-stepb-speech">
-                  <div className="csp-speech-layout">
-                    <div className="csp-speech-speaker-image">
-                      {data.speechSpeakerImage ? (
-                        <img src={data.speechSpeakerImage} alt="Speaker" />
-                      ) : (
-                        <div className="csp-image-placeholder">
-                          <span className="csp-placeholder-dims">150 × 200</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="csp-speech-bubble">
-                      <p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
         </div>
 
         {/* Right Column - Tutor Guide */}
@@ -1924,57 +1826,103 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
             </div>
           </div>
 
-          {/* Step B Tutor Guide - Only if Step B is enabled */}
-          {data.hasStepB && data.stepBTutorSteps && (
-            <div className="csp-tutor-guide csp-stepb-tutor-guide">
-              <div className="csp-guide-header">
-                {data.stepBName || 'STEP B'}
-              </div>
-              <div className="csp-guide-steps">
-                {data.stepBTutorSteps.map((step, stepIdx) => (
-                  <div key={stepIdx} className="csp-guide-step csp-apply-step">
-                    <span className="csp-guide-number">{stepIdx + 1}</span>
-                    <div className="csp-guide-content">
-                      <p className="csp-guide-instruction">{step.instruction}</p>
+        </div>
+      </div>
 
-                      {/* Scripts (green bullets) */}
-                      {step.scripts && step.scripts.map((script, scriptIdx) => (
-                        <p key={scriptIdx} className="csp-apply-script">
-                          <span className="csp-script-bullet">●</span>
-                          <span>"{script.text}"</span>
-                        </p>
-                      ))}
+      {/* STEP B ROW - Separate layout row */}
+      {data.hasStepB && (
+        <div className="csp-exercise-layout csp-stepb-row">
+          <div className="csp-exercise-left">
+            <div className="csp-stepb-section">
+              <h3 className="csp-step-name csp-stepb-name">{data.stepBName || 'STEP B'}</h3>
+              <p className="csp-exercise-instructions">{data.stepBInstruction}</p>
+              {data.stepBInstructionTranslation && (
+                <p className="csp-exercise-instructions-translation">{data.stepBInstructionTranslation}</p>
+              )}
 
-                      {/* Tips (red text) */}
-                      {step.tips && step.tips.map((tip, tipIdx) => (
-                        <p key={tipIdx} className="csp-apply-tip">
-                          <span className="csp-tip-icon">◆</span>
-                          <span>{tip.text}</span>
-                        </p>
-                      ))}
-
-                      {/* Answer Key Box */}
-                      {step.answerKey && step.answerKey.length > 0 && (
-                        <div className="csp-tutor-answer-key-box">
-                          <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
-                          <div className="csp-tutor-answer-key-items">
-                            {step.answerKey.map((answer, answerIdx) => (
-                              <p key={answerIdx} className="csp-tutor-answer-key-item">
-                                <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
-                                <span>{answer.text}</span>
-                              </p>
-                            ))}
-                          </div>
+              {(!data.stepBType || data.stepBType === 'conversation') && (
+                <div className="csp-exercise-conversations">
+                  {(data.conversations || []).map((conv, convIdx) => (
+                    <div key={convIdx} className={`csp-exercise-conv-row csp-exercise-conv-${conv.position}`}>
+                      {conv.position === 'left' && (
+                        <div className="csp-exercise-speaker-image">
+                          {conv.speakerImage ? <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} /> : <div className="csp-image-placeholder"><span className="csp-placeholder-dims">150 × 150</span></div>}
+                        </div>
+                      )}
+                      <div className="csp-exercise-speech-bubble"><p dangerouslySetInnerHTML={{ __html: conv.speechBubble }} /></div>
+                      {conv.position === 'right' && (
+                        <div className="csp-exercise-speaker-image">
+                          {conv.speakerImage ? <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} /> : <div className="csp-image-placeholder"><span className="csp-placeholder-dims">150 × 150</span></div>}
                         </div>
                       )}
                     </div>
+                  ))}
+                </div>
+              )}
+
+              {data.stepBType === 'multiple-choice' && (
+                <div className="csp-stepb-multiple-choice">
+                  {(data.multipleChoiceItems || []).map((item, mcIdx) => (
+                    <div key={mcIdx} className="csp-mc-item">
+                      <p className="csp-mc-sentence"><span className="csp-mc-number">{mcIdx + 1}.</span><strong>{item.boldSentence}</strong></p>
+                      <div className="csp-mc-options">
+                        <p className="csp-mc-option"><span className="csp-mc-label">a.</span> <span dangerouslySetInnerHTML={{ __html: item.optionA }} /></p>
+                        <p className="csp-mc-option"><span className="csp-mc-label">b.</span> <span dangerouslySetInnerHTML={{ __html: item.optionB }} /></p>
+                      </div>
+                    </div>
+                  ))}
+                  {data.multipleChoiceImage && <div className="csp-mc-image"><img src={data.multipleChoiceImage} alt="Multiple choice" /></div>}
+                </div>
+              )}
+
+              {data.stepBType === 'speech' && (
+                <div className="csp-stepb-speech">
+                  <div className="csp-speech-layout">
+                    <div className="csp-speech-speaker-image">
+                      {data.speechSpeakerImage ? <img src={data.speechSpeakerImage} alt="Speaker" /> : <div className="csp-image-placeholder"><span className="csp-placeholder-dims">150 × 200</span></div>}
+                    </div>
+                    <div className="csp-speech-bubble"><p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} /></div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="csp-exercise-right">
+            {data.stepBTutorSteps && (
+              <div className="csp-tutor-guide csp-stepb-tutor-guide">
+                <div className="csp-guide-header">{data.stepBName || 'STEP B'}</div>
+                <div className="csp-guide-steps">
+                  {data.stepBTutorSteps.map((step, stepIdx) => (
+                    <div key={stepIdx} className="csp-guide-step csp-apply-step">
+                      <span className="csp-guide-number">{stepIdx + 1}</span>
+                      <div className="csp-guide-content">
+                        <p className="csp-guide-instruction">{step.instruction}</p>
+                        {step.scripts && step.scripts.map((script, scriptIdx) => (
+                          <p key={scriptIdx} className="csp-apply-script"><span className="csp-script-bullet">●</span><span>"{script.text}"</span></p>
+                        ))}
+                        {step.tips && step.tips.map((tip, tipIdx) => (
+                          <p key={tipIdx} className="csp-apply-tip"><span className="csp-tip-icon">◆</span><span>{tip.text}</span></p>
+                        ))}
+                        {step.answerKey && step.answerKey.length > 0 && (
+                          <div className="csp-tutor-answer-key-box">
+                            <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
+                            <div className="csp-tutor-answer-key-items">
+                              {step.answerKey.map((answer, answerIdx) => (
+                                <p key={answerIdx} className="csp-tutor-answer-key-item"><span className="csp-tutor-answer-number">{answerIdx + 1}.</span><span>{answer.text}</span></p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
