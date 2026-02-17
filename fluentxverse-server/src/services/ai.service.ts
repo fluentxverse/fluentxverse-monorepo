@@ -1518,17 +1518,22 @@ const missionSpeakingAgent = new Agent({
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a SPEAKING mission challenge.
 This is a roleplay activity where the tutor plays a character and the student practices speaking.
+The lesson is conducted via VIDEO CALL (online ESL), but the roleplay scenarios are about everyday real-life situations.
 
 IMPORTANT GUIDELINES:
 - Create a realistic roleplay situation relevant to the lesson topic
 - Include clear tutor steps for conducting the roleplay
 - Questions should flow naturally like a real conversation
-- Make situations practical and relatable (restaurant, hotel, shopping, etc.)
+- Settings must be NORMAL, everyday places: a café, a restaurant, a park, a bus stop, a workplace break room, a neighbor's house, a shop, etc.
+- NEVER invent unusual or niche settings like "language café", "trial class", "language exchange meetup", "cultural center", etc. Just use plain, ordinary locations that anyone would visit.
 - NEVER create scenarios about spelling one's name, asking someone to spell their name, or any spelling-related tasks. This is boring and unnatural.
+- NEVER generate questions like "How do you spell it?", "Can you say your name again?", "Can you spell that?", "Sorry, I didn't catch that—can you say your name again?". Spelling is NOT a conversation topic. If the character is introduced, just move on to the next topic.
+- Keep the conversation PRACTICAL and moving forward. Don't waste questions on name repetition or clarification. Every question should advance the conversation to a new topic.
 - The "situation" field should describe the roleplay scenario AND what the student should do, all in one block. Do NOT generate a separate "instruction" field.
-  - EXAMPLE situation: "You are at a small café in Seoul. A new person sits near you and you also meet the café manager. Greet them, introduce yourself, and talk about what you like to do on weekends."
+  - EXAMPLE situation: "You are at a café. Someone sits near you and starts a conversation. Greet them, introduce yourself, and talk about what you like to do on weekends."
 - Set "instruction" to an empty string "". All guidance should be in the situation.
 - The entire challenge must be doable in 3-4 minutes. Keep it SHORT and focused.
+- Keep the situation SHORT — 2 to 3 sentences max.
 
 SITUATION TEXT RULES — NO GRAMMAR PATTERNS:
 - The situation must be a PURE scenario description. It should read like a movie scene setup.
@@ -1537,17 +1542,20 @@ SITUATION TEXT RULES — NO GRAMMAR PATTERNS:
 - NEVER include any parenthetical text showing how to say something.
 - The situation tells the student WHAT to do, not HOW to say it. The grammar tips section handles grammar separately.
 - WRONG situation: "You are at a café. Introduce yourself (I'm… / My name is…) and say where you're from (I'm from…)."
-- CORRECT situation: "You are at a small café in Seoul. A new person sits near you and you also meet the café manager. Greet them, introduce yourself, and say where you're from."
+- CORRECT situation: "You are at a café. Someone sits near you and starts a conversation. Greet them, introduce yourself, and say where you're from."
 
 TUTOR GUIDE RULES:
 - tutorSteps should be exactly 5 steps as shown in the example.
 - Step 5 scripts should ONLY be the questionsIntro and questions. Do NOT add scene-narration scripts like "Action! We're in the lobby now!" or "Alright-scene start." — these are cringy and unnecessary. The tutor just starts talking in character.
 - Do NOT include grammar tip steps or grammar reminders in tutorSteps. Grammar is handled by the grammarTip section separately.
 - Keep the tutor guide SHORT and practical. No filler.
+- Since the lesson is via video call, do NOT include physical stage directions in tutor steps like "(Sit down near the student)", "(Walk over to...)", "(Point to...)". Just describe what to say.
 
 questionsIntro rules:
 - A short tutor direction in parentheses to open the roleplay in character.
-- Example: "(Thank the student for inviting you to eat out.)"
+- Example: "(Start by greeting the student casually.)"
+- WRONG: "(Sit down near the student, look a little unsure, and start politely.)" — no physical actions.
+- CORRECT: "(Start the conversation. Sound a little unsure and be polite.)"
 
 questions array rules:
 - Keep it SHORT. This is a 3-4 minute roleplay.
@@ -1555,7 +1563,15 @@ questions array rules:
 - Generate EXACTLY 4 questions total + 1 closing direction entry (5 items max).
 - Questions should be numbered: "1.", "2.", "3.", "4."
 - Each question is a simple, natural thing the tutor says in character.
-- Hints are optional short coaching notes for the student (e.g., "Say your country or city", "Keep it simple").
+- Remember: the tutor guide and roleplay script are FOR THE TUTOR. The tutor is an experienced ESL teacher.
+- Only add a hint when the question is AMBIGUOUS or the expected student response is NOT obvious from the question itself.
+- If the question already makes it clear what the student should say (e.g., "What's your name?", "Where are you from?", "Do you like coffee?"), leave hints as an EMPTY array []. The tutor can figure it out.
+- WRONG: question "What's your name?" with hint "Say your name" — this is redundant and patronizing.
+- WRONG: question "Do you like Korean food?" with hint "Say yes or no" — obvious from the question.
+- CORRECT: question "3. Oh really? Tell me more." with hint ["Talk about one hobby or activity"] — the question is open-ended so a hint helps guide the tutor.
+- CORRECT: question "1. Hi! How are you doing today?" with hints [] — obvious response needed.
+- Maximum 1 hint per question. Most questions should have 0 hints.
+- The closing direction entry should always have 0 hints.
 - The last entry should be a closing direction in parentheses to end the roleplay naturally (e.g., "(Say goodbye and end the conversation.)").
 - Do NOT use "(As Character)" prefixes. The tutor is already playing that character.
 - Do NOT generate sub-scenes, scene switches, or multiple characters.
@@ -1567,7 +1583,7 @@ Respond ONLY in JSON format:
     "challengeNumber": 1,
     "challengeName": "Challenge 1",
     "duration": "3-4 minutes",
-    "situation": "Pure scenario description. No grammar patterns.",
+    "situation": "You are at a café. Someone sits near you and starts a conversation. Greet them, introduce yourself, and talk about what you like to do on weekends.",
     "situationTranslation": "Translation here",
     "instruction": "",
     "instructionTranslation": "",
@@ -1581,13 +1597,13 @@ Respond ONLY in JSON format:
       { "instruction": "Set up the roleplay.", "scripts": [{ "text": "I'll be your friend. You'll be yourself." }, { "text": "Let's start. I'll go first." }] },
       { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions below only as guides. Ask other questions based on the flow of the conversation." }, { "text": "Make sure that you simulate a real-life situation." }, { "text": "Change your tone according to the character you are playing." }] }
     ],
-    "questionsIntro": "(Thank the student for inviting you to eat out.)",
+    "questionsIntro": "(Start by greeting the student casually.)",
     "questions": [
-      { "question": "1. Do you usually eat out on the weekend?", "hints": [] },
-      { "question": "2. What do you like to eat?", "hints": [] },
-      { "question": "3. Oh, I like that, too. So, what else do you do?", "hints": ["(You may ask specific questions.)", "Do you stay at home?", "Do you go out?"] },
-      { "question": "4. I like jogging. Do you jog?", "hints": ["(If yes, ask, \\"Do you want to jog together?\\")", "(If no, say, \\"Do you want to try it?\\")"] },
-      { "question": "(Say that you're hungry and want to order food now.)", "hints": [] }
+      { "question": "1. Hi! Do you come here often?", "hints": [] },
+      { "question": "2. What do you usually order?", "hints": [] },
+      { "question": "3. Oh, I like that too. So, what do you do on weekends?", "hints": ["Talk about one hobby or activity"] },
+      { "question": "4. That sounds fun. Do you usually go alone or with friends?", "hints": [] },
+      { "question": "(Say you need to go and say goodbye.)", "hints": [] }
     ]
   }
 }
@@ -1597,6 +1613,11 @@ CRITICAL RULES:
 - ONE character only. Never switch characters mid-conversation.
 - Step 5 must NOT have scripts — only the 3 standard tips.
 - No scene-narration, no "(As Character)" prefixes, no grammar guides in tutorSteps.
+- Hints are OPTIONAL. Only add one when the question is ambiguous. Most questions need 0 hints. Max 1 hint per question.
+- No physical stage directions in tutor guide. The lesson is via video call.
+- Normal everyday settings ONLY. No weird or niche locations.
+- The "instruction" field MUST be an empty string "". Speaking missions do NOT have a separate instruction — all guidance goes in the situation. NEVER generate text like "Read the passage" or "Answer the questions" for speaking missions.
+- The "instructionTranslation" field MUST also be an empty string "".
 `
 });
 
@@ -1660,20 +1681,61 @@ Respond ONLY in JSON format:
 `
 });
 
-// Mission Reading Agent - Reading comprehension challenge
+// Mission Reading Agent - Reading + roleplay challenge
 const missionReadingAgent = new Agent({
   name: 'Mission Reading Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a READING mission challenge.
-This is a reading comprehension activity where students read a passage and discuss it.
+This is a reading + roleplay activity. The student first reads a practical real-world text (a restaurant review, a brochure, a menu, a flyer, a schedule, a poster, an online post, etc.), and then has a roleplay conversation with the tutor about what they read — similar to a speaking mission.
 
-IMPORTANT GUIDELINES:
-- Create a reading passage with title and optional author
-- Passage should be 3-5 paragraphs, appropriate for the skill level
-- Include comprehension questions about the text
-- Questions should test understanding and encourage discussion
-- Include tutor steps for reading and discussion
-- Passage can be a story, article, poem, or informational text
+THE FLOW:
+1. Student reads a short practical text (a review, menu, price list, flyer, product listing, event poster, etc.)
+2. Tutor checks pronunciation and corrects mistakes
+3. Tutor and student do a roleplay conversation where the student uses the information from the reading
+
+READING PASSAGE RULES:
+- The passage should be a PRACTICAL, real-world text — NOT a story, essay, or academic article.
+- Perfect examples: restaurant review comparing places, karaoke price list, hotel brochure, event schedule, travel guide excerpt, product comparison, online forum post, job listing, apartment listing, etc.
+- The passage is a DOCUMENT that exists in the real world. It should read like something you'd find posted on a wall, printed on paper, or published online.
+- The text should contain USEFUL information (prices, times, locations, features, names, descriptions) that the student can reference during the roleplay.
+- NEVER put instructions, prompts, or scripts in the reading passage. No "Say:", "Share:", "Tell:", "Ask:", "Introduce yourself", "Greet them", etc. These belong in tutorSteps, NOT in the passage.
+- The passage is NOT a lesson plan or activity guide. It is a real-world document the student reads for information.
+  - WRONG: "• Say: Hello / Hi / Good evening\n• Say: Nice to meet you\n• Share: your name" — this is a script/prompt, NOT a reading passage.
+  - CORRECT: "TODAY: New Friends Coffee Meet-up\nTime: 5:30-6:30 p.m.\nPlace: Cafe Haneul, 2F\n\nSpecial menu:\n• Iced Americano 3,000 won\n• Hot Latte 3,500 won" — this is real information.
+- Use <b> tags to bold section headings, restaurant/place names, prices, and key vocabulary in the passage block text. Example: "<b>Food Hub</b> is a good place to hang out. Main courses start at <b>$12</b>." Only use <b> — do NOT use <br>, <i>, <u>, or any other HTML tags.
+- Use SEPARATE blocks for each section/paragraph of the passage. Each block is one paragraph or section.
+- For structured content (menus, price lists), put each section in its own block. Use bullet points with the • symbol and line breaks with \n for lists.
+- Keep it 100-200 words for lower levels, 200-350 for higher levels.
+- The content should naturally connect to the lesson topic and feel like something you'd actually read in real life.
+- Include a "closingQuestion" — a fun prompt at the end of the passage (like a blog comment prompt or question to the reader).
+
+SITUATION AND INSTRUCTION:
+- "situation" describes the scenario setup — what the student will read AND what they'll do after.
+  - Example: "You want to invite a coworker to dinner. Read a review of some new restaurants in your area. Then, talk to your coworker and decide which restaurant to go to."
+- "instruction" should tell the student what to do with the reading: "Read the review below. Then answer the questions using the information from the text."
+- Both situation and instruction should be filled in for reading type.
+
+TUTOR GUIDE (tutorSteps):
+- The tutorSteps should follow this standard 8-step structure:
+  1. Introduce Challenge (scripts: intro lines)
+  2. Read the situation (no scripts needed)
+  3. Confirm student's understanding (scripts: "Is it clear?")
+  4. Set up the reading (scripts: "Let's read the article/review/menu.")
+  5. Have the student read aloud
+  6. After reading, correct pronunciation (tips about limiting corrections)
+  7. Set up the roleplay (scripts: character setup + "I'll start")
+  8. Ask the questions below (tips: the 3 standard roleplay tips)
+
+QUESTIONS RULES (same as speaking type):
+- The tutor plays ONE character and has a conversation about the reading material.
+- questionsIntro: A parenthetical direction for the tutor to start the roleplay.
+- Generate 4-7 numbered questions + 1 closing direction.
+- Questions should reference information FROM the reading passage.
+  - GOOD: "Which restaurant is the cheapest?" (references the review)
+  - GOOD: "How much is the big room for 3 hours?" (references the price list)
+- The LAST entry should be a closing direction in parentheses.
+- Only add hints when the question is ambiguous. Most need 0 hints.
+- Max 1 hint per question.
 
 Respond ONLY in JSON format:
 {
@@ -1681,39 +1743,59 @@ Respond ONLY in JSON format:
     "missionType": "reading",
     "challengeNumber": 1,
     "challengeName": "Challenge 1",
-    "duration": "6-8 minutes",
-    "situation": "You will read a passage and discuss it with your tutor.",
-    "situationTranslation": "Translation of situation",
-    "instruction": "Read the passage carefully and answer the questions.",
-    "instructionTranslation": "Translation of instruction",
-    "showGrammarTip": false,
-    "grammarTipTitle": "",
-    "grammarTipItems": [],
+    "duration": "5-7 minutes",
+    "situation": "You want to invite a coworker to dinner. Read a review of some new restaurants in your area. Then, talk to your coworker and decide which restaurant to go to.",
+    "situationTranslation": "Translation here",
+    "instruction": "Read the review below. Then answer the questions about the restaurants.",
+    "instructionTranslation": "Translation here",
+    "showGrammarTip": true,
+    "grammarTipTitle": "Today's grammar tip",
+    "grammarTipItems": ["grammar concept 1", "grammar concept 2"],
     "tutorSteps": [
-      { "instruction": "Introduce the reading.", "scripts": [{ "text": "Now let's do some reading." }] },
-      { "instruction": "Have the student read the passage aloud or silently." },
-      { "instruction": "Ask comprehension questions." },
-      { "instruction": "Discuss the closing question.", "scripts": [{ "text": "What did you think about the passage?" }] }
+      { "instruction": "Introduce Challenge 1.", "scripts": [{ "text": "Okay, now let's do the Challenge." }, { "text": "First we have Challenge 1." }] },
+      { "instruction": "Read the situation.", "tips": [{ "text": "Read it slowly and clearly. Point to key words if needed." }] },
+      { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Do you understand the situation?" }, { "text": "Is it clear?" }], "tips": [{ "text": "If the student looks confused, rephrase the situation in simpler words." }] },
+      { "instruction": "Set up the reading.", "scripts": [{ "text": "Let's read the online article." }] },
+      { "instruction": "Have the student read the reading text aloud." },
+      { "instruction": "After they finish reading, correct their pronunciation mistakes.", "tips": [{ "text": "Limit this to 2-3 corrections." }, { "text": "If the student made a lot of mistakes, focus on the biggest ones." }] },
+      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "Now, I'll be your coworker." }, { "text": "Please talk to me about which restaurant to go to." }, { "text": "Remember to use today's grammar tip." }, { "text": "Is it clear?" }, { "text": "I'll start." }] },
+      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions below only as guides. Ask other questions based on the flow of the conversation." }, { "text": "Make sure that you simulate a real-life situation." }, { "text": "Change your tone according to the character you are playing." }] }
     ],
     "readingPassage": {
-      "title": "Title of the Reading Passage",
-      "author": "Author Name (optional)",
+      "title": "Crazy for Foodie",
+      "author": "Nicole Khallie",
       "blocks": [
-        { "type": "paragraph", "text": "First paragraph of the reading passage. This should introduce the topic and set the scene." },
-        { "type": "paragraph", "text": "Second paragraph continues the story or provides more information." },
-        { "type": "paragraph", "text": "Third paragraph develops the main idea or conflict." },
-        { "type": "paragraph", "text": "Final paragraph provides a conclusion or resolution." }
+        { "type": "paragraph", "text": "Three new restaurants opened this month, and of course, we went to try them!" },
+        { "type": "paragraph", "text": "<b>Food Hub</b> is a good place to just hang out. It is easily the most affordable of the three restaurants. Try their <b>steak and fries</b> or <b>lamb chop</b> for your main course." },
+        { "type": "paragraph", "text": "<b>Rare Basil</b> is slightly classier than Food Hub and is great for a girls' night out. They serve amazing pasta. All pasta dishes come with a side of fish fillet, steak, or chicken." },
+        { "type": "paragraph", "text": "<b>Palate Palace</b> is easily the classiest restaurant we visited. The food here is a little cheaper than at Rare Basil. They serve unique dishes like <b>chicken with white chocolate sauce</b>." }
       ],
-      "closingQuestion": "What do you think about the main idea of this passage?"
+      "closingQuestion": "Have you visited these restaurants? Share your favorite dish in the comments section below!"
     },
+    "questionsIntro": "(Talk about your day first.)",
     "questions": [
-      { "question": "What is the main topic of the passage?", "hints": [] },
-      { "question": "What happened in the beginning?", "hints": [] },
-      { "question": "How did the story end?", "hints": [] },
-      { "question": "What lesson can we learn from this?", "hints": [] }
+      { "question": "1. I'm tired and hungry! How about you?", "hints": [] },
+      { "question": "2. Do you know any new restaurants we can try?", "hints": [] },
+      { "question": "3. What kind of food do they serve at (restaurant name)?", "hints": ["Ask about the other restaurants too"] },
+      { "question": "4. Which is the most affordable?", "hints": [] },
+      { "question": "5. I can't decide... Which one do you want to go to?", "hints": [] },
+      { "question": "(Thank the student for suggesting new restaurants.)", "hints": [] }
     ]
   }
 }
+
+CRITICAL RULES:
+- The reading passage must be a PRACTICAL text (review, menu, brochure, list, poster, flyer), NOT a story or essay.
+- The passage must contain concrete info (prices, names, features, times) the student can reference in the roleplay.
+- The roleplay questions should require the student to USE information from the passage.
+- ONE roleplay character only. The tutor plays one person having a natural conversation.
+- tutorSteps must follow the exact 8-step structure shown above.
+- 4-7 numbered roleplay questions + 1 closing direction.
+- Hints are OPTIONAL. Only add when the question is ambiguous.
+- Normal everyday settings ONLY.
+- Keep the readingPassage blocks as "paragraph" type. Use <b> tags for headings and key info. Do NOT use "images" type.
+- Each block text should be a separate paragraph or section of the passage. Use \n for line breaks within a block.
+- NEVER put instructions, scripts, or prompts (like "Say:", "Share:", "Tell:", "Greet") inside the reading passage. The passage is a DOCUMENT, not a lesson script.
 `
 });
 
@@ -1722,15 +1804,39 @@ const missionListeningAgent = new Agent({
   name: 'Mission Listening Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a LISTENING mission challenge.
-This is a listening comprehension activity where the tutor reads a script and students respond.
+This is an ONLINE listening comprehension activity where the tutor reads a script and students respond via video call.
 
 IMPORTANT GUIDELINES:
 - Create a listening script that the tutor will read to the student
+- The listening script must be a MONOLOGUE — one person speaking. NEVER write a dialogue or conversation between two or more people. No "A: ... B: ..." or "Joon: ... Hana: ..." format.
+- The script should sound like ONE person talking TO the student: a friend recommending a place, a coworker sharing news, a neighbor giving directions, an announcement, a voicemail, etc.
 - Include key words/phrases in <u> tags that students should remember
 - After listening, students should roleplay using the information they heard
 - Include tutor steps for the listening and follow-up roleplay
 - Generate questions for the roleplay that test comprehension
-- Make the listening script realistic (friend's recommendation, announcement, etc.)
+- Make the listening script realistic (friend's recommendation, announcement, voicemail, etc.)
+- This is for ONLINE ESL lessons (video call). NEVER include physical/face-to-face stage directions like "(Sit down)", "(Walk over)", "(Point to)", etc.
+- Each numbered question must have EXACTLY 1 hint — a single short coaching note. No more than 1 hint per question.
+
+TUTOR STEPS RULES:
+- The "Set up the roleplay" step should contain ALL roleplay setup scripts (character intro, student role, "I'll start").
+- The "Ask the questions below" step should have NO scripts in it — only tips. The questions are injected separately.
+- Do NOT repeat roleplay setup information in both the tutorSteps and questionsIntro. The setup belongs in the "Set up the roleplay" step ONLY.
+
+questionsIntro rules:
+- A short parenthetical direction for the tutor to open the roleplay in character.
+- Must start and end with parentheses.
+- Should NOT repeat the character/role info from "Set up the roleplay" step.
+- GOOD: "(Greet the customer warmly.)"
+- WRONG: "Start the roleplay: You are a customer at a café and..." — this repeats the setup.
+
+questions array rules:
+- The tutor plays ONE character only.
+- Generate 4-6 numbered questions + 1 closing direction entry.
+- Questions MUST be numbered: "1.", "2.", "3.", etc.
+- Each question is a natural thing the tutor says in character.
+- The LAST entry should be a closing direction in parentheses, e.g. "(Thank the student and end the conversation.)"
+- Only add a hint when the question is ambiguous. If the expected answer is obvious, use an empty hints array [].
 
 Respond ONLY in JSON format:
 {
@@ -1741,8 +1847,8 @@ Respond ONLY in JSON format:
     "duration": "5-6 minutes",
     "situation": "Listen to your friend talk about something, then use that information.",
     "situationTranslation": "Translation of situation",
-    "instruction": "After listening, you will practice using the information.",
-    "instructionTranslation": "Translation of instruction",
+    "instruction": "",
+    "instructionTranslation": "",
     "showGrammarTip": true,
     "grammarTipTitle": "Today's grammar tip",
     "grammarTipItems": ["grammar concept to practice"],
@@ -1752,16 +1858,17 @@ Respond ONLY in JSON format:
       { "instruction": "Confirm the student's understanding.", "scripts": [{ "text": "Is it clear?" }] },
       { "instruction": "Set up the listening.", "scripts": [{ "text": "First, let's listen." }, { "text": "I'll be your friend." }] },
       { "instruction": "Read the listening script below, emphasizing the underlined words.", "listeningScript": "Hey, (student's name)! I found this amazing place. It was so <u>incredible</u>! The <u>atmosphere was cozy</u> and the <u>service was excellent</u>. You should definitely try it!" },
-      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "Now, I'll be the (character)." }, { "text": "Please use the information you heard." }] },
-      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions only as guides." }] }
+      { "instruction": "Set up the roleplay.", "scripts": [{ "text": "Now, I'll be the barista at the café." }, { "text": "You are a customer who wants to try the place your friend recommended." }, { "text": "Please use the information you heard." }, { "text": "I'll start." }] },
+      { "instruction": "Ask the questions below.", "tips": [{ "text": "Use the questions only as guides. Ask other questions based on the flow of the conversation." }, { "text": "Make sure that you simulate a real-life situation." }, { "text": "Change your tone according to the character you are playing." }] }
     ],
     "listeningScript": "Hey, (student's name)! I found this amazing place. It was so <u>incredible</u>! The <u>atmosphere was cozy</u> and the <u>service was excellent</u>. You should definitely try it!",
-    "questionsIntro": "(Greet the customer/start the roleplay)",
+    "questionsIntro": "(Greet the customer warmly.)",
     "questions": [
-      { "question": "First question based on listening", "hints": ["Hint with underlined info from script"] },
-      { "question": "Second question", "hints": [] },
-      { "question": "Third question", "hints": ["Another hint with script info"] },
-      { "question": "Final question", "hints": ["(Wrap up the roleplay)"] }
+      { "question": "1. Hi! Welcome! Is this your first time here?", "hints": ["If yes, ask how they heard about the place"] },
+      { "question": "2. What can I get for you today?", "hints": [] },
+      { "question": "3. Would you like to try our special drink?", "hints": ["Mention a specific item"] },
+      { "question": "4. How is everything? Are you enjoying it?", "hints": [] },
+      { "question": "(Thank the customer and invite them to come back.)", "hints": [] }
     ]
   }
 }
@@ -2402,6 +2509,7 @@ Return ONLY JSON in the format specified.`;
           tutorSteps: (apply.tutorSteps || []).map((step: any) => ({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
+            prompts: step.prompts || [],
             tips: step.tips || [],
             questions: step.questions || [],
             listeningScript: step.listeningScript || '',
@@ -2414,6 +2522,7 @@ Return ONLY JSON in the format specified.`;
           triviaTutorSteps: (apply.triviaTutorSteps || []).map((step: any) => ({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
+            prompts: step.prompts || [],
             questions: step.questions || [],
           })),
         },
@@ -2473,6 +2582,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           triviaTutorSteps: (trivia.triviaTutorSteps || []).map((step: any) => ({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
+            prompts: step.prompts || [],
             questions: step.questions || [],
           })),
         },
@@ -2594,6 +2704,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       const rawTutorSteps = (exercise.tutorSteps || []).map((step: any) => ({
         instruction: step.instruction || '',
         scripts: step.scripts || [],
+        prompts: step.prompts || [],
         tips: step.tips || [],
         // Use undefined (not []) when empty, so the "Add Answer Key" button shows in the editor
         answerKey: step.answerKey?.length > 0 ? step.answerKey : undefined,
@@ -2684,6 +2795,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           stepBTutorSteps: (exercise.stepBTutorSteps || []).map((step: any) => ({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
+            prompts: step.prompts || [],
             tips: step.tips || [],
           })),
         },
@@ -2725,10 +2837,10 @@ ${lessonNumber ? `- Lesson Number: ${lessonNumber}` : ''}
 
 REQUIREMENTS:
 1. Create a ${missionType} challenge appropriate for the skill level.
-2. ${missionType === 'speaking' || missionType === 'listening' ? `Generate exactly ${questionCount} roleplay questions with helpful hints.` : missionType === 'discussion' ? 'Generate 2-4 discussion topics with 2-4 questions each.' : 'Generate a reading passage with 4-6 comprehension questions.'}
+2. ${missionType === 'speaking' ? `Generate EXACTLY 4 numbered roleplay questions + 1 closing direction (5 items total). Only add a hint if the question is ambiguous — most questions need 0 hints.` : missionType === 'listening' ? `Generate exactly ${questionCount} roleplay questions. Only add a hint if the question is ambiguous.` : missionType === 'discussion' ? 'Generate 2-4 discussion topics with 2-4 questions each.' : `Generate a practical reading passage (review, menu, brochure, price list, etc.) and ${questionCount} roleplay questions that reference the passage content. Follow the 8-step tutor guide structure.`}
 3. Content should reinforce vocabulary and grammar from the lesson.
 4. Difficulty should match the level (${complexityDesc}).
-5. Make the scenario realistic and practical for language learners.
+5. Make the scenario realistic and practical — use ordinary everyday settings (café, restaurant, park, office, etc.). NEVER ask the student to spell anything or repeat their name for spelling purposes.
 6. This is Challenge ${challengeNum}${isMission2 ? ' - create a DIFFERENT scenario from Challenge 1 with varied content and situations' : ''}.
 ${shouldIncludeTranslation ? `7. Include translations in ${langName} for situation and instruction.` : '7. Do NOT include translations.'}
 ${storyContext ? '8. The roleplay scenario should advance the STORY MODE plot and involve the characters.' : ''}
@@ -2766,8 +2878,8 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           duration: mission.duration || '5-6 minutes',
           situation: mission.situation || '',
           situationTranslation: shouldIncludeTranslation ? (mission.situationTranslation || '') : '',
-          instruction: mission.instruction || '',
-          instructionTranslation: shouldIncludeTranslation ? (mission.instructionTranslation || '') : '',
+          instruction: (missionType === 'speaking' || missionType === 'listening') ? '' : (mission.instruction || ''),
+          instructionTranslation: (missionType === 'speaking' || missionType === 'listening') ? '' : (shouldIncludeTranslation ? (mission.instructionTranslation || '') : ''),
           showGrammarTip: mission.showGrammarTip || false,
           grammarTipTitle: mission.grammarTipTitle || "Today's grammar tip",
           grammarTipItems: mission.grammarTipItems || [],
@@ -2775,6 +2887,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           tutorSteps: (mission.tutorSteps || []).map((step: any) => ({
             instruction: step.instruction || '',
             scripts: step.scripts || [],
+            prompts: step.prompts || [],
             tips: step.tips || [],
             listeningScript: step.listeningScript || '',
           })),
@@ -2795,8 +2908,8 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
             author: mission.readingPassage.author || '',
             blocks: (mission.readingPassage.blocks || []).map((block: any) => ({
               type: block.type || 'paragraph',
-              text: block.text || '',
-              image: block.image || '',
+              content: (block.text || block.content || ''),
+              images: block.images || [],
             })),
             closingQuestion: mission.readingPassage.closingQuestion || '',
           } : undefined,

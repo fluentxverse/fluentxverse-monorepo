@@ -802,6 +802,7 @@ type MissionType = 'speaking' | 'discussion' | 'reading' | 'listening';
 interface MissionTutorStep {
   instruction: string;
   scripts?: { text: string }[];
+  prompts?: { text: string }[];
   tips?: { text: string }[];
   listeningScript?: string; // Listening script (for listening type)
 }
@@ -898,6 +899,7 @@ interface RubricLevel {
 interface FeedbackTutorStep {
   instruction: string;
   scripts?: { text: string }[];
+  prompts?: { text: string }[];
   tips?: { text: string }[];
 }
 
@@ -1744,6 +1746,66 @@ function RichTextInput({ value, onChange, placeholder, className = '', singleLin
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
+
+/** Heuristic: lines starting with a number+punctuation are tutor dialogue */
+const DIALOGUE_RE = /^\s*\d+[.):]/ ;
+const isDialogueScript = (text: string) => !text || DIALOGUE_RE.test(text);
+
+/** Build an interleaved list of scripts + prompts for the editor, distributing prompts BEFORE each numbered question */
+function interleaveForEditor(
+  scripts: { text: string }[],
+  prompts: { text: string }[],
+): { text: string; kind: 'script' | 'prompt'; sourceIdx: number; isDialogue: boolean }[] {
+  const out: { text: string; kind: 'script' | 'prompt'; sourceIdx: number; isDialogue: boolean }[] = [];
+  const NUMBERED_RE = /^\s*\d+[.):/]/;
+  // Find the index of the first and last numbered script
+  let firstNum = -1, lastNum = -1;
+  for (let i = 0; i < scripts.length; i++) {
+    if (NUMBERED_RE.test(scripts[i].text)) {
+      if (firstNum === -1) firstNum = i;
+      lastNum = i;
+    }
+  }
+  // Separate: before-intro scripts, numbered scripts, after-closing scripts
+  const beforeIdxs: number[] = [];
+  const numberedIdxs: number[] = [];
+  const afterIdxs: number[] = [];
+  for (let i = 0; i < scripts.length; i++) {
+    if (NUMBERED_RE.test(scripts[i].text)) numberedIdxs.push(i);
+    else if (firstNum === -1 || i < firstNum) beforeIdxs.push(i);
+    else afterIdxs.push(i);
+  }
+  // Helper: scripts are dialogue (green) unless they are parenthetical directions
+  const scriptIsDlg = (text: string) => !/^\s*\(/.test(text);
+
+  // Intro scripts at top
+  for (const si of beforeIdxs) {
+    out.push({ text: scripts[si].text, kind: 'script', sourceIdx: si, isDialogue: scriptIsDlg(scripts[si].text) });
+  }
+  if (numberedIdxs.length > 0 && prompts.length > 0) {
+    const perQ = Math.ceil(prompts.length / numberedIdxs.length);
+    let pi = 0;
+    numberedIdxs.forEach((si, qIdx) => {
+      const take = qIdx === numberedIdxs.length - 1 ? prompts.length - pi : perQ;
+      for (let j = 0; j < take && pi < prompts.length; j++, pi++)
+        out.push({ text: prompts[pi].text, kind: 'prompt', sourceIdx: pi, isDialogue: false });
+      out.push({ text: scripts[si].text, kind: 'script', sourceIdx: si, isDialogue: true });
+    });
+    while (pi < prompts.length) { out.push({ text: prompts[pi].text, kind: 'prompt', sourceIdx: pi, isDialogue: false }); pi++; }
+  } else {
+    for (const si of numberedIdxs) {
+      out.push({ text: scripts[si].text, kind: 'script', sourceIdx: si, isDialogue: true });
+    }
+    for (let pi = 0; pi < prompts.length; pi++) {
+      out.push({ text: prompts[pi].text, kind: 'prompt', sourceIdx: pi, isDialogue: false });
+    }
+  }
+  // Closing scripts at bottom
+  for (const si of afterIdxs) {
+    out.push({ text: scripts[si].text, kind: 'script', sourceIdx: si, isDialogue: scriptIsDlg(scripts[si].text) });
+  }
+  return out;
+}
 
 export default function ConversationalSkillsVisualEditor() {
   const { params } = useRoute();
@@ -7120,41 +7182,6 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                 )}
               </div>
 
-              {/* Instruction */}
-              <div className="csve-mission-instruction-box">
-                <RichTextInput
-                  className="csve-mission-instruction"
-                  value={data.instruction}
-                  onChange={html => updateData({ instruction: html })}
-                  placeholder="Tell him what you think."
-                  singleLine={true}
-                />
-                {data.instructionTranslation !== undefined ? (
-                  <div className="csve-mission-instruction-translation">
-                    <RichTextInput
-                      className="csve-mission-translation-input"
-                      value={data.instructionTranslation || ''}
-                      onChange={html => updateData({ instructionTranslation: html })}
-                      placeholder="Japanese translation..."
-                      singleLine={true}
-                    />
-                    <button
-                      className="csve-remove-translation-btn"
-                      onClick={() => updateData({ instructionTranslation: undefined })}
-                    >
-                      <i className="ri-close-line" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="csve-add-translation-btn"
-                    onClick={() => updateData({ instructionTranslation: '' })}
-                  >
-                    <i className="ri-translate-2" /> Add Translation
-                  </button>
-                )}
-              </div>
-
               {/* Grammar Tip (Optional) */}
               {data.showGrammarTip ? (
                 <div className="csve-mission-grammar-tip">
@@ -7467,16 +7494,16 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                     <div key={blockIdx} className="csve-reading-block">
                       {block.type === 'paragraph' ? (
                         <div className="csve-reading-paragraph-wrapper">
-                          <textarea
+                          <RichTextInput
                             className="csve-reading-paragraph"
                             value={block.content || ''}
-                            onChange={e => {
+                            onChange={html => {
                               const newBlocks = [...(data.readingPassage?.blocks || [])];
-                              newBlocks[blockIdx] = { ...newBlocks[blockIdx], content: (e.target as HTMLTextAreaElement).value };
+                              newBlocks[blockIdx] = { ...newBlocks[blockIdx], content: html };
                               updateData({ readingPassage: { ...data.readingPassage!, blocks: newBlocks } });
                             }}
                             placeholder="Write your paragraph here..."
-                            rows={3}
+                            singleLine={false}
                           />
                           <button
                             className="csve-reading-block-remove"
@@ -7618,41 +7645,6 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                   <button
                     className="csve-add-translation-btn"
                     onClick={() => updateData({ situationTranslation: '' })}
-                  >
-                    <i className="ri-translate-2" /> Add Translation
-                  </button>
-                )}
-              </div>
-
-              {/* Instruction */}
-              <div className="csve-mission-instruction-box">
-                <RichTextInput
-                  className="csve-mission-instruction"
-                  value={data.instruction}
-                  onChange={html => updateData({ instruction: html })}
-                  placeholder="Then, go to the restaurant and try to order..."
-                  singleLine={true}
-                />
-                {data.instructionTranslation !== undefined ? (
-                  <div className="csve-mission-instruction-translation">
-                    <RichTextInput
-                      className="csve-mission-translation-input"
-                      value={data.instructionTranslation || ''}
-                      onChange={html => updateData({ instructionTranslation: html })}
-                      placeholder="Japanese translation..."
-                      singleLine={true}
-                    />
-                    <button
-                      className="csve-remove-translation-btn"
-                      onClick={() => updateData({ instructionTranslation: undefined })}
-                    >
-                      <i className="ri-close-line" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="csve-add-translation-btn"
-                    onClick={() => updateData({ instructionTranslation: '' })}
                   >
                     <i className="ri-translate-2" /> Add Translation
                   </button>
@@ -7878,32 +7870,62 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                       onChange={e => handleTutorStepUpdate(stepIdx, 'instruction', (e.target as HTMLInputElement).value)}
                       placeholder="Step instruction..."
                     />
-                    {/* Scripts */}
-                    {(step.scripts || []).map((script, scriptIdx) => (
-                      <div key={scriptIdx} className="tgs-script-item">
-                        <span className="tgs-script-bullet">●</span>
-                        <input
-                          type="text"
-                          className="tgs-script-input"
-                          value={script.text}
-                          onChange={e => {
-                            const newScripts = [...(step.scripts || [])];
-                            newScripts[scriptIdx] = { text: (e.target as HTMLInputElement).value };
-                            handleTutorStepUpdate(stepIdx, 'scripts', newScripts);
-                          }}
-                          placeholder="Script..."
-                        />
-                        <button
-                          className="tgs-remove-btn"
-                          onClick={() => {
-                            const newScripts = (step.scripts || []).filter((_, i) => i !== scriptIdx);
-                            handleTutorStepUpdate(stepIdx, 'scripts', newScripts);
-                          }}
-                        >
-                          <i className="ri-close-line" />
-                        </button>
-                      </div>
-                    ))}
+                    {/* Scripts & Prompts interleaved */}
+                    {interleaveForEditor(step.scripts || [], step.prompts || []).map((item) => {
+                      if (item.kind === 'script') {
+                        const isDlg = item.isDialogue;
+                        return (
+                          <div key={`s-${item.sourceIdx}`} className={isDlg ? "tgs-script-item" : "tgs-prompt-item"}>
+                            <span className={isDlg ? "tgs-script-bullet" : "tgs-prompt-icon"}>{isDlg ? '●' : '▸'}</span>
+                            <input
+                              type="text"
+                              className={isDlg ? "tgs-script-input" : "tgs-prompt-input"}
+                              value={item.text}
+                              onChange={e => {
+                                const newScripts = [...(step.scripts || [])];
+                                newScripts[item.sourceIdx] = { text: (e.target as HTMLInputElement).value };
+                                handleTutorStepUpdate(stepIdx, 'scripts', newScripts);
+                              }}
+                              placeholder="Script..."
+                            />
+                            <button
+                              className="tgs-remove-btn"
+                              onClick={() => {
+                                const newScripts = (step.scripts || []).filter((_, i) => i !== item.sourceIdx);
+                                handleTutorStepUpdate(stepIdx, 'scripts', newScripts);
+                              }}
+                            >
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={`p-${item.sourceIdx}`} className="tgs-prompt-item">
+                          <span className="tgs-prompt-icon">▸</span>
+                          <input
+                            type="text"
+                            className="tgs-prompt-input"
+                            value={item.text}
+                            onChange={e => {
+                              const newPrompts = [...(step.prompts || [])];
+                              newPrompts[item.sourceIdx] = { text: (e.target as HTMLInputElement).value };
+                              handleTutorStepUpdate(stepIdx, 'prompts', newPrompts);
+                            }}
+                            placeholder="Question or direction..."
+                          />
+                          <button
+                            className="tgs-remove-btn"
+                            onClick={() => {
+                              const newPrompts = (step.prompts || []).filter((_, i) => i !== item.sourceIdx);
+                              handleTutorStepUpdate(stepIdx, 'prompts', newPrompts);
+                            }}
+                          >
+                            <i className="ri-close-line" />
+                          </button>
+                        </div>
+                      );
+                    })}
                     {/* Tips */}
                     {(step.tips || []).map((tip, tipIdx) => (
                       <div key={tipIdx} className="tgs-tip-item">
@@ -7962,6 +7984,32 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
                       >
                         <i className="ri-add-line" /> Script
                       </button>
+                      <button
+                        className="tgs-add-prompt-btn"
+                        onClick={() => {
+                          const newPrompts = [...(step.prompts || []), { text: '' }];
+                          handleTutorStepUpdate(stepIdx, 'prompts', newPrompts);
+                        }}
+                      >
+                        <i className="ri-add-line" /> Prompt
+                      </button>
+                      {/* Auto-split: move hint scripts to prompts */}
+                      {(step.scripts || []).some(s => s.text && !isDialogueScript(s.text)) && (
+                        <button
+                          className="tgs-add-prompt-btn"
+                          style={{ borderStyle: 'dashed' }}
+                          onClick={() => {
+                            const scripts = step.scripts || [];
+                            const keepScripts = scripts.filter(s => isDialogueScript(s.text));
+                            const moveToPrompts = scripts.filter(s => s.text && !isDialogueScript(s.text));
+                            const newSteps = [...data.tutorSteps];
+                            newSteps[stepIdx] = { ...newSteps[stepIdx], scripts: keepScripts, prompts: [...(step.prompts || []), ...moveToPrompts] };
+                            updateData({ tutorSteps: newSteps });
+                          }}
+                        >
+                          <i className="ri-scissors-line" /> Auto-Split
+                        </button>
+                      )}
                       <button
                         className="tgs-add-tip-btn"
                         onClick={() => {
@@ -8362,31 +8410,62 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
                       onChange={e => updateTutorStep(stepIdx, 'instruction', (e.target as HTMLInputElement).value)}
                       placeholder="Step instruction..."
                     />
-                    {(step.scripts || []).map((script, scriptIdx) => (
-                      <div key={scriptIdx} className="tgs-script-item">
-                        <span className="tgs-script-bullet">●</span>
-                        <input
-                          type="text"
-                          className="tgs-script-input"
-                          value={script.text}
-                          onChange={e => {
-                            const newScripts = [...(step.scripts || [])];
-                            newScripts[scriptIdx] = { text: (e.target as HTMLInputElement).value };
-                            updateTutorStep(stepIdx, 'scripts', newScripts);
-                          }}
-                          placeholder="Script..."
-                        />
-                        <button
-                          className="tgs-remove-btn"
-                          onClick={() => {
-                            const newScripts = (step.scripts || []).filter((_, i) => i !== scriptIdx);
-                            updateTutorStep(stepIdx, 'scripts', newScripts);
-                          }}
-                        >
-                          <i className="ri-close-line" />
-                        </button>
-                      </div>
-                    ))}
+                    {/* Scripts & Prompts interleaved */}
+                    {interleaveForEditor(step.scripts || [], step.prompts || []).map((item) => {
+                      if (item.kind === 'script') {
+                        const isDlg = item.isDialogue;
+                        return (
+                          <div key={`s-${item.sourceIdx}`} className={isDlg ? "tgs-script-item" : "tgs-prompt-item"}>
+                            <span className={isDlg ? "tgs-script-bullet" : "tgs-prompt-icon"}>{isDlg ? '●' : '▸'}</span>
+                            <input
+                              type="text"
+                              className={isDlg ? "tgs-script-input" : "tgs-prompt-input"}
+                              value={item.text}
+                              onChange={e => {
+                                const newScripts = [...(step.scripts || [])];
+                                newScripts[item.sourceIdx] = { text: (e.target as HTMLInputElement).value };
+                                updateTutorStep(stepIdx, 'scripts', newScripts);
+                              }}
+                              placeholder="Script..."
+                            />
+                            <button
+                              className="tgs-remove-btn"
+                              onClick={() => {
+                                const newScripts = (step.scripts || []).filter((_, i) => i !== item.sourceIdx);
+                                updateTutorStep(stepIdx, 'scripts', newScripts);
+                              }}
+                            >
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div key={`p-${item.sourceIdx}`} className="tgs-prompt-item">
+                          <span className="tgs-prompt-icon">▸</span>
+                          <input
+                            type="text"
+                            className="tgs-prompt-input"
+                            value={item.text}
+                            onChange={e => {
+                              const newPrompts = [...(step.prompts || [])];
+                              newPrompts[item.sourceIdx] = { text: (e.target as HTMLInputElement).value };
+                              updateTutorStep(stepIdx, 'prompts', newPrompts);
+                            }}
+                            placeholder="Question or direction..."
+                          />
+                          <button
+                            className="tgs-remove-btn"
+                            onClick={() => {
+                              const newPrompts = (step.prompts || []).filter((_, i) => i !== item.sourceIdx);
+                              updateTutorStep(stepIdx, 'prompts', newPrompts);
+                            }}
+                          >
+                            <i className="ri-close-line" />
+                          </button>
+                        </div>
+                      );
+                    })}
                     {(step.tips || []).map((tip, tipIdx) => (
                       <div key={tipIdx} className="tgs-tip-item">
                         <span className="tgs-tip-icon">◆</span>
@@ -8419,6 +8498,28 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
                       >
                         <i className="ri-add-line" /> Script
                       </button>
+                      <button
+                        className="tgs-add-prompt-btn"
+                        onClick={() => updateTutorStep(stepIdx, 'prompts', [...(step.prompts || []), { text: '' }])}
+                      >
+                        <i className="ri-add-line" /> Prompt
+                      </button>
+                      {(step.scripts || []).some(s => s.text && !isDialogueScript(s.text)) && (
+                        <button
+                          className="tgs-add-prompt-btn"
+                          style={{ borderStyle: 'dashed' }}
+                          onClick={() => {
+                            const scripts = step.scripts || [];
+                            const keepScripts = scripts.filter(s => isDialogueScript(s.text));
+                            const moveToPrompts = scripts.filter(s => s.text && !isDialogueScript(s.text));
+                            const newSteps = [...data.tutorSteps];
+                            newSteps[stepIdx] = { ...newSteps[stepIdx], scripts: keepScripts, prompts: [...(step.prompts || []), ...moveToPrompts] };
+                            updateData({ tutorSteps: newSteps });
+                          }}
+                        >
+                          <i className="ri-scissors-line" /> Auto-Split
+                        </button>
+                      )}
                       <button
                         className="tgs-add-tip-btn"
                         onClick={() => updateTutorStep(stepIdx, 'tips', [...(step.tips || []), { text: '' }])}

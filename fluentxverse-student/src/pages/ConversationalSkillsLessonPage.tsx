@@ -386,6 +386,7 @@ interface MissionQuestion {
 interface MissionTutorStep {
   instruction: string;
   scripts?: { text: string }[];
+  prompts?: { text: string }[];
   tips?: { text: string }[];
   questions?: { question: string; answer?: string }[];
 }
@@ -465,6 +466,7 @@ interface RubricLevel {
 interface FeedbackTutorStep {
   instruction: string;
   scripts?: { text: string }[];
+  prompts?: { text: string }[];
   tips?: { text: string }[];
 }
 
@@ -1936,6 +1938,59 @@ interface MissionSectionProps {
   hideHeader?: boolean;
 }
 
+const _isDlg = (t: string) => !t || /^\s*\d+[.):]/.test(t);
+
+/** Format a script line: put quotes only around the spoken text, not the number prefix */
+const _fmtScript = (text: string) => {
+  const m = text.match(/^(\s*\d+[.):])\s*(.*)/);
+  if (m) return <>{m[1]} “{m[2]}”</>;
+  return <>“{text}”</>;
+};
+
+function interleaveStepContent(
+  scripts: { text: string }[],
+  prompts: { text: string }[]
+): { text: string; type: 'script' | 'prompt' }[] {
+  const items: { text: string; type: 'script' | 'prompt' }[] = [];
+  let firstNum = -1;
+  for (let i = 0; i < scripts.length; i++) {
+    if (/^\s*\d+[.):]/.test(scripts[i].text)) { if (firstNum === -1) firstNum = i; }
+  }
+  const beforeScripts: { text: string }[] = [];
+  const numberedScripts: { text: string }[] = [];
+  const afterScripts: { text: string }[] = [];
+  for (let i = 0; i < scripts.length; i++) {
+    if (/^\s*\d+[.):]/.test(scripts[i].text)) numberedScripts.push(scripts[i]);
+    else if (firstNum === -1 || i < firstNum) beforeScripts.push(scripts[i]);
+    else afterScripts.push(scripts[i]);
+  }
+  for (const s of beforeScripts) {
+    items.push({ text: s.text, type: /^\s*\(/.test(s.text) ? 'prompt' : 'script' });
+  }
+  if (numberedScripts.length > 0 && prompts.length > 0) {
+    const hintsPerQ = Math.ceil(prompts.length / numberedScripts.length);
+    numberedScripts.forEach((q, idx) => {
+      const start = idx * hintsPerQ;
+      const end = idx === numberedScripts.length - 1 ? prompts.length : Math.min(start + hintsPerQ, prompts.length);
+      for (let j = start; j < end; j++) {
+        items.push({ text: prompts[j].text, type: 'prompt' });
+      }
+      items.push({ text: q.text, type: 'script' });
+    });
+  } else {
+    for (const s of numberedScripts) {
+      items.push({ text: s.text, type: 'script' });
+    }
+    for (const p of prompts) {
+      items.push({ text: p.text, type: 'prompt' });
+    }
+  }
+  for (const s of afterScripts) {
+    items.push({ text: s.text, type: /^\s*\(/.test(s.text) ? 'prompt' : 'script' });
+  }
+  return items;
+}
+
 function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
   // Render speaking type content
   const renderSpeakingContent = () => (
@@ -1948,13 +2003,15 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
         )}
       </div>
 
-      {/* Instruction */}
+      {/* Instruction (only if present) */}
+      {data.instruction && (
       <div className="csp-mission-instruction-box">
         <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
         {data.instructionTranslation && (
           <p className="csp-mission-translation">{data.instructionTranslation}</p>
         )}
       </div>
+      )}
 
       {/* Grammar Tip */}
       {data.showGrammarTip && data.grammarTipItems.length > 0 && (
@@ -2012,7 +2069,7 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
             {(data.readingPassage.blocks || []).map((block, idx) => (
               <div key={idx} className="csp-reading-block">
                 {block.type === 'paragraph' && block.content && (
-                  <p className="csp-reading-paragraph">{block.content}</p>
+                  <p className="csp-reading-paragraph" dangerouslySetInnerHTML={{ __html: block.content }} />
                 )}
                 {block.type === 'images' && block.images && block.images.length > 0 && (
                   <div className="csp-reading-images">
@@ -2058,13 +2115,15 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
         )}
       </div>
 
-      {/* Instruction */}
+      {/* Instruction (only if present) */}
+      {data.instruction && (
       <div className="csp-mission-instruction-box">
         <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
         {data.instructionTranslation && (
           <p className="csp-mission-translation">{data.instructionTranslation}</p>
         )}
       </div>
+      )}
 
       {/* Image */}
       {data.image && (
@@ -2157,11 +2216,11 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
                   <div className="csp-guide-content">
                     <p className="csp-guide-instruction">{step.instruction}</p>
 
-                    {/* Scripts */}
-                    {step.scripts && step.scripts.map((script, scriptIdx) => (
-                      <p key={scriptIdx} className="csp-apply-script">
-                        <span className="csp-script-bullet">●</span>
-                        <span>"{script.text}"</span>
+                    {/* Scripts + Prompts interleaved */}
+                    {interleaveStepContent(step.scripts || [], step.prompts || []).map((item, idx) => (
+                      <p key={idx} className={item.type === 'script' ? "csp-apply-script" : "csp-apply-prompt"}>
+                        <span className={item.type === 'script' ? "csp-script-bullet" : "csp-prompt-bullet"}>{item.type === 'script' ? '●' : '▸'}</span>
+                        <span>{item.type === 'script' ? _fmtScript(item.text) : item.text.replace(/^\s*\((.+)\)\s*$/s, '$1')}</span>
                       </p>
                     ))}
 

@@ -488,6 +488,7 @@
 
 .tgs-add-script-btn,
 .tgs-add-tip-btn,
+.tgs-add-prompt-btn,
 .tgs-add-question-btn,
 .tgs-add-answer-key-btn,
 .tgs-add-listening-script-btn {
@@ -519,6 +520,15 @@
 
 .tgs-add-tip-btn:hover {
   background: #fef2f2;
+}
+
+.tgs-add-prompt-btn {
+  color: #0369a1;
+  border-color: #7dd3fc;
+}
+
+.tgs-add-prompt-btn:hover {
+  background: #f0f9ff;
 }
 
 .tgs-add-question-btn {

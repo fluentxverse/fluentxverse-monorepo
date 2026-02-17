@@ -655,10 +655,11 @@ export function AIContentGenerator({
       else if (activeSection === 'mission' && generatedContent.missionData && onGenerateMission) {
         const mission = generatedContent.missionData;
 
-        // Build tutorSteps and inject questionsIntro + questions as scripts into the last step
+        // Build tutorSteps and inject questionsIntro as prompt (direction), questions as scripts (green), hints as prompts (black)
         const builtTutorSteps = (mission.tutorSteps || []).map((step: any) => ({
           instruction: step.instruction || '',
           scripts: step.scripts || [],
+          prompts: step.prompts || [],
           tips: step.tips || [],
           ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
         }));
@@ -667,15 +668,17 @@ export function AIContentGenerator({
         const rq = mission.questions || [];
         if ((qi || rq.length > 0) && builtTutorSteps.length > 0) {
           const last = builtTutorSteps[builtTutorSteps.length - 1];
-          const extra: { text: string }[] = [];
-          if (qi) extra.push({ text: qi });
+          const extraScripts: { text: string }[] = [];
+          const extraPrompts: { text: string }[] = [];
+          if (qi) extraPrompts.push({ text: qi });
           for (const q of rq) {
-            if (q.question) extra.push({ text: q.question });
+            if (q.question) extraScripts.push({ text: q.question });
             for (const h of (q.hints || [])) {
-              if (h) extra.push({ text: `   ${h}` });
+              if (h) extraPrompts.push({ text: h });
             }
           }
-          last.scripts = [...(last.scripts || []), ...extra];
+          last.scripts = [...(last.scripts || []), ...extraScripts];
+          last.prompts = [...(last.prompts || []), ...extraPrompts];
         }
 
         // Insert into missionData (Challenge 1)
@@ -697,8 +700,8 @@ export function AIContentGenerator({
             author: mission.readingPassage.author || '',
             blocks: (mission.readingPassage.blocks || []).map((block: any) => ({
               type: block.type || 'paragraph',
-              text: block.text || '',
-              image: block.image || '',
+              content: (block.text || block.content || ''),
+              images: block.images || [],
             })),
             closingQuestion: mission.readingPassage.closingQuestion || '',
           } : undefined,
@@ -722,10 +725,10 @@ export function AIContentGenerator({
               currentPlotPoints: storyData.currentPlotPoints || [],
             },
             {
-              situation: missionPayload.situation,
-              instruction: missionPayload.instruction,
-              questions: missionPayload.questions,
-              topics: missionPayload.topics,
+              situation: mission.situation,
+              instruction: mission.instruction,
+              questions: mission.questions,
+              topics: mission.topics,
             },
             topic
           ).then((result) => {
@@ -744,10 +747,11 @@ export function AIContentGenerator({
       else if (activeSection === 'mission2' && generatedContent.missionData && onGenerateMission2) {
         const mission = generatedContent.missionData;
 
-        // Build tutorSteps and inject questionsIntro + questions as scripts into the last step
+        // Build tutorSteps and inject questionsIntro as prompt (direction), questions as scripts (green), hints as prompts (black)
         const builtTutorSteps2 = (mission.tutorSteps || []).map((step: any) => ({
           instruction: step.instruction || '',
           scripts: step.scripts || [],
+          prompts: step.prompts || [],
           tips: step.tips || [],
           ...(step.listeningScript ? { listeningScript: step.listeningScript } : {}),
         }));
@@ -756,15 +760,17 @@ export function AIContentGenerator({
         const rq2 = mission.questions || [];
         if ((qi2 || rq2.length > 0) && builtTutorSteps2.length > 0) {
           const last2 = builtTutorSteps2[builtTutorSteps2.length - 1];
-          const extra2: { text: string }[] = [];
-          if (qi2) extra2.push({ text: qi2 });
+          const extraScripts2: { text: string }[] = [];
+          const extraPrompts2: { text: string }[] = [];
+          if (qi2) extraPrompts2.push({ text: qi2 });
           for (const q of rq2) {
-            if (q.question) extra2.push({ text: q.question });
+            if (q.question) extraScripts2.push({ text: q.question });
             for (const h of (q.hints || [])) {
-              if (h) extra2.push({ text: `   ${h}` });
+              if (h) extraPrompts2.push({ text: h });
             }
           }
-          last2.scripts = [...(last2.scripts || []), ...extra2];
+          last2.scripts = [...(last2.scripts || []), ...extraScripts2];
+          last2.prompts = [...(last2.prompts || []), ...extraPrompts2];
         }
         
         const mission2Payload = {
@@ -800,8 +806,8 @@ export function AIContentGenerator({
             author: mission.readingPassage.author || '',
             blocks: (mission.readingPassage.blocks || []).map((block: any) => ({
               type: block.type || 'paragraph',
-              text: block.text || '',
-              image: block.image || '',
+              content: (block.text || block.content || ''),
+              images: block.images || [],
             })),
             closingQuestion: mission.readingPassage.closingQuestion || '',
           } : undefined,
