@@ -166,7 +166,8 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.missionQuestionCount, // Pass mission question count from editor
           body.isMission2, // Pass flag for mission 2 (challenge 2)
           body.storyData, // Pass story data for K-Drama style generation
-          body.currentLearnData // Pass Learn section data for cross-section cohesion
+          body.currentLearnData, // Pass Learn section data for cross-section cohesion
+          body.currentApplyData // Pass Apply section data for story continuity in Mission
         );
         return {
           success: true,
@@ -262,6 +263,22 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
             }))),
           })),
         })), // Learn section data for cross-section cohesion
+        currentApplyData: t.Optional(t.Object({
+          activityType: t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading')]),
+          situationText: t.Optional(t.String()),
+          dialogueLines: t.Optional(t.Array(t.Object({
+            speaker: t.String(),
+            text: t.String(),
+          }))),
+          readingText: t.Optional(t.String()),
+          tutorSteps: t.Optional(t.Array(t.Object({
+            instruction: t.Optional(t.String()),
+            scripts: t.Optional(t.Array(t.Object({
+              text: t.String(),
+            }))),
+            listeningScript: t.Optional(t.String()),
+          }))),
+        })), // Apply section data for story continuity in Mission
       }),
       detail: {
         tags: ['AI'],

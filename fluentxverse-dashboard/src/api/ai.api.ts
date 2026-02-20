@@ -107,6 +107,13 @@ export async function generateIntroductionContent(
         example?: string;
       }>;
     };
+  },
+  currentApplyData?: {
+    activityType: 'speaking' | 'listening' | 'reading';
+    situationText?: string;
+    dialogueLines?: Array<{ speaker: string; text: string }>;
+    readingText?: string;
+    tutorSteps?: Array<{ instruction?: string; scripts?: Array<{ text: string }>; listeningScript?: string }>;
   }
 ): Promise<GenerateIntroductionResponse> {
   try {
@@ -140,6 +147,7 @@ export async function generateIntroductionContent(
       ...(isMission2 ? { isMission2 } : {}),
       ...(storyData?.enabled ? { storyData } : {}),
       ...(currentLearnData ? { currentLearnData } : {}),
+      ...(currentApplyData ? { currentApplyData } : {}),
     });
     return response.data;
   } catch (error: any) {

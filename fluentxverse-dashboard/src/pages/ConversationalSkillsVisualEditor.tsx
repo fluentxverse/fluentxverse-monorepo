@@ -2272,6 +2272,17 @@ export default function ConversationalSkillsVisualEditor() {
             })),
           } : undefined,
         }}
+        currentApplyData={{
+          activityType: applyData.activityType,
+          situationText: applyData.situationText,
+          dialogueLines: applyData.dialogueLines?.map(d => ({ speaker: d.speaker, text: d.text })),
+          readingText: applyData.readingText,
+          tutorSteps: applyData.tutorSteps?.map(s => ({
+            instruction: s.instruction,
+            scripts: s.scripts?.map(sc => ({ text: sc.text })),
+            listeningScript: (s as any).listeningScript,
+          })),
+        }}
       />
 
       {/* Editor Toolbar - Fixed at top */}

@@ -103,6 +103,14 @@ interface AIContentGeneratorProps {
     storyNotes: string;
   };
   onUpdateStory?: (data: any) => void;
+  // Current Apply section data - passed to Mission for story continuity
+  currentApplyData?: {
+    activityType: 'speaking' | 'listening' | 'reading';
+    situationText?: string;
+    dialogueLines?: Array<{ speaker: string; text: string }>;
+    readingText?: string;
+    tutorSteps?: Array<{ instruction?: string; scripts?: Array<{ text: string }>; listeningScript?: string }>;
+  };
   // Current Learn section data - passed to Apply, Exercise, Mission for cohesion
   currentLearnData?: {
     steps?: Array<{
@@ -170,6 +178,7 @@ export function AIContentGenerator({
   },
   storyData,
   onUpdateStory,
+  currentApplyData,
   currentLearnData,
 }: AIContentGeneratorProps) {
   // Helper function to get smart default instructions based on skill level and topic
@@ -362,7 +371,9 @@ export function AIContentGenerator({
         missionQCount, // Pass mission question count
         isMission2, // Pass flag for mission 2
         storyData, // Pass story data for K-Drama style generation
-        currentLearnData // Pass Learn section data for cross-section cohesion
+        currentLearnData, // Pass Learn section data for cross-section cohesion
+        // Pass Apply data to Mission for story continuity
+        (activeSection === 'mission' || activeSection === 'mission2') && storyData?.enabled ? currentApplyData : undefined
       );
 
       if (!response.success || !response.data) {
@@ -1318,12 +1329,33 @@ export function AIContentGenerator({
             )}
           </div>
 
+          {/* Story Mode generation order warning */}
+          {storyData?.enabled && (activeSection === 'mission' || activeSection === 'mission2') && !sectionStatus.apply && (
+            <div style={{
+              background: 'rgba(234, 179, 8, 0.1)',
+              border: '1px solid rgba(234, 179, 8, 0.3)',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '13px',
+              color: '#eab308',
+            }}>
+              <i className="ri-lock-line" style={{ fontSize: '16px' }} />
+              <span>
+                <strong>Story Mode:</strong> Generate the <strong>Apply</strong> section first so the Mission can continue the story coherently.
+              </span>
+            </div>
+          )}
+
           {/* Generation Buttons */}
           <div className="ai-generate-buttons">
             <button
               className="ai-generate-btn"
               onClick={handleGenerateIntroduction}
-              disabled={isGenerating || isBatchGenerating || !topic || !skillLevel}
+              disabled={isGenerating || isBatchGenerating || !topic || !skillLevel || (storyData?.enabled && (activeSection === 'mission' || activeSection === 'mission2') && !sectionStatus.apply)}
             >
               <i className={`${isGenerating ? 'ri-loader-4-line ai-spin' : 'ri-magic-line'}`} />
               <span>{isGenerating ? 'Generating...' : `Generate ${currentSectionConfig.label}`}</span>

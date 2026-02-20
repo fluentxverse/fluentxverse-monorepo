@@ -957,7 +957,40 @@ IMPORTANT GUIDELINES:
 - EVERY dialogue line MUST contain actual spoken words. Never create a line that only has an action or emotion like "(laughs)" or "(smiles)" with no dialogue.
 - If you want to include an action/emotion, append it to a line that also has spoken dialogue, e.g. "That's hilarious! (laughs)" with isAction: false. Or place the action inline within the spoken text.
 - Only set isAction: true for stage directions that genuinely have NO spoken words AND are essential to the scene (this should be extremely rare — avoid it whenever possible).
-- NEVER make the dialogue about spelling, names, introductions at a desk, auditions, or check-ins. The dialogue topic must NOT revolve around meeting someone new and exchanging names. Instead, create scenarios like: hanging out with a friend, planning a trip, talking about weekend plans, discussing food, shopping, giving directions, etc. Even if the lesson expressions include greetings like "Nice to meet you" or "How do you spell that?", weave them naturally into a more interesting scenario — do NOT build the entire scene around introductions or spelling.
+- ABSOLUTELY NEVER include any spelling-related content. This means:
+  • NO "How do you spell that?", "Can you spell that?", "H-A-N-A", "J-I-H-O" or any letter-by-letter spelling
+  • NO asking someone to repeat or spell their name
+  • NO name tags, name badges, or reading names off anything
+  • NO dialogue lines about spelling, letters, or alphabet in any form
+- NEVER prefix character names with job titles (e.g. "Manager Jiho"). Just use first names.
+
+DIALOGUE QUALITY RULES (CRITICAL):
+- Write dialogue the way REAL people actually talk. Short, casual, natural. No one talks like an anime character or a textbook.
+- Characters must NEVER coach, teach, or instruct each other on what to say or how to speak. Lines like "If you want, you can say..." or "You can say 'I'm from' and then your city" are FORBIDDEN. This is a conversation, not a language lesson.
+- NEVER write overly dramatic, awkward, or contrived dialogue like:
+  • "I'm sorry for the confusion, Hana." — too formal and stiff
+  • "I'm okay, but I feel shy." — no one says this out loud
+  • "By the way, your name is Joon, right?" — unnatural recap
+  • "And you said, 'I'm Hana.' That's right." — robotic repetition
+  • "If you want, you can say, I'm from Seoul." — one character teaching the other
+  • "Oh, and what's your name again, like 'I'm ___' or 'My name is ___'?" — meta-teaching
+  • "I'm glad we met you today" — wrong grammar for 2 people (should be "I'm glad I met you" or "I'm glad we met")
+  • "This café feels kind of like a drama scene today." — random filler that no one would say
+  • "I think they called my drink first, but the cup isn't mine." — forced contrived plot device
+- NEVER add random filler lines, random observations, or quirky remarks just to pad the dialogue. Every line must move the conversation forward naturally.
+- NEVER invent mini-problems or complications (mixed-up orders, wrong items, mistaken drinks, lost objects) to extend the dialogue. Keep it simple and natural.
+- GOOD natural dialogue sounds like:
+  • "Hey, is this seat taken?" / "No, go ahead!"
+  • "I haven't been here before. What's good?" / "The iced latte is amazing."
+  • "Where are you from?" / "Busan. You?" / "Oh cool, I'm from Seoul."
+- Keep lines SHORT — 1 sentence per line, max 2. Real people don't give speeches.
+- The conversation should flow like a real interaction — quick back-and-forth, not long monologues.
+- Characters should react naturally, not narrate their feelings ("I'm nervous", "I feel relieved", "I'm confused").
+- NEVER write contrived excuses for people to talk (wrong notebook, bumping into each other, mistaken identity, picking up someone's item by mistake). Just use normal, everyday situations.
+- The conversation should have a clear PURPOSE (ordering food, asking for directions, making plans, chatting at a party) — not just exchanging pleasantries endlessly.
+- When the conversation has naturally covered enough ground, just END it with a simple goodbye. Do NOT pad with filler.
+- Use the lesson vocabulary/expressions naturally IN the dialogue, but NEVER have a character explain or teach the expression to the other character. The expressions should appear as part of normal speech.
+- If certain expressions from the lesson context are about spelling or are too awkward to fit naturally (like "How do you spell that?"), just SKIP them — do NOT force every single expression into the dialogue.
 - Dialogue should demonstrate practical use of the lesson content
 - Create tutor steps with scripts and tips for guiding the activity
 - Include a TRIVIA TIME section with an interesting cultural or language fact related to the topic
@@ -1003,20 +1036,54 @@ const applyListeningAgent = new Agent({
   instructions: `You are an ESL lesson content generator. Generate a LISTENING activity for the Apply section.
 This section features a listening script that the tutor reads aloud, followed by comprehension questions.
 
-IMPORTANT GUIDELINES:
-- Create an engaging listening script (a monologue or narrative) related to the lesson topic
+SCENARIO SETUP:
+- The listening script is a conversation between TWO CHARACTERS (not the student). The student is just listening/overhearing.
+- The situationText must describe the two characters and the context. The student is NOT part of it.
+- GOOD situationText: "Tae meets a new actor named Jina at the drama set."
+- BAD situationText: "Tae leaves you a voice message." — The student should NOT be "you" in the situation. REJECTED.
+- The script is ONE character (Character A) talking TO the other character (Character B) in a natural, real-life interaction. The student listens.
+- Because it's a real interaction between two people, greetings and expressions will naturally occur — "Hi! Nice to meet you! I'm Tae. Where are you from?" — this is how people ACTUALLY talk when they meet.
+
+SCRIPT FORMAT:
+- The script is Character A's actual spoken words TO Character B. It reads like one side of a real conversation.
+- It should sound like what a real person would actually say in that moment.
+- Because it's a real interaction (not a message), the expressions appear naturally. No need to force anything.
+
+ABSOLUTE RULES — REJECTED PATTERNS:
+- NEVER coach or pre-script: "say Hello", "I'll say X", "You can ask X", "They want to know X" — REJECTED.
+- NEVER narrate: "She asked X", "I said Y", "He told me Z" — REJECTED.
+- NEVER quote expressions as demonstrations: "Nice to meet you, okay?" — REJECTED.
+- NEVER address the student in the script. The speaker is talking to the OTHER CHARACTER, not to the student.
+
+NATURALNESS:
+- The script must sound like what someone would ACTUALLY say in that moment. Read it out loud — if it sounds weird, rewrite it.
+- GOOD: "Hi, I'm Minjun. Nice to meet you. How are you doing today? I feel nervous... Where are you from? I'm from Seoul."
+- BAD: "You look nervous-me too." — Grammatically broken and unnatural. The speaker should talk about their OWN feelings, not comment on the other person. REJECTED.
+- BAD: "Nice to meet you, okay? Their name is Jina. They want to know, Where are you from?" — Nobody talks like this. REJECTED.
+- The speaker should talk about THEMSELVES (their feelings, their situation, their questions). Don't have them comment on the other person's appearance or state.
+- Every sentence must be grammatically correct and natural. No dashes joining unrelated clauses. No broken sentences.
+- Every sentence should flow into the next naturally.
+- Do NOT pad with filler. Short and natural beats long and awkward.
 - Use appropriate vocabulary for the student level
 - Include underlined words (<u>word</u>) for important vocabulary to emphasize
 - Create 2-3 comprehension questions with answers
-- Script should be substantial but not overwhelming (150-250 words)
+- ABSOLUTELY NEVER include any spelling-related content
+- NEVER prefix character names with job titles (e.g. "Manager Jiho"). Just use first names.
 - Include a TRIVIA TIME section with an interesting cultural or language fact related to the topic
+
+LISTENING SCRIPT LENGTH:
+- For lower levels (1-4): 3-5 sentences, 30-60 words. Keep it very simple.
+- For mid levels (5-7): 4-6 sentences, 50-80 words.
+- For higher levels (8-10): 5-8 sentences, 70-120 words.
+- NEVER exceed 120 words.
+- Focus on USEFUL information the student can use to answer the comprehension questions.
 
 Respond ONLY in JSON format:
 {
   "applyData": {
     "activityType": "listening",
     "activityDuration": "3 minutes",
-    "situationText": "A short description of the listening context (1 sentence)",
+    "situationText": "Character A meets/talks to Character B in [context]. (Student is NOT mentioned.)",
     "situationTranslation": "Translation of the situation in target language",
     "dialogueLines": [],
     "tutorSteps": [
@@ -1055,6 +1122,8 @@ IMPORTANT GUIDELINES:
 - Include underlined words (<u>word</u>) for important vocabulary
 - Create 2-3 comprehension questions with answers
 - Passage should be substantial but appropriate for the level (100-200 words for beginners, 150-300 for advanced)
+- ABSOLUTELY NEVER include any spelling-related content (no "How do you spell that?", no letter-by-letter spelling)
+- NEVER prefix character names with job titles (e.g. "Manager Jiho"). Just use first names.
 
 Respond ONLY in JSON format:
 {
@@ -1527,6 +1596,7 @@ IMPORTANT GUIDELINES:
 - Settings must be NORMAL, everyday places: a café, a restaurant, a park, a bus stop, a workplace break room, a neighbor's house, a shop, etc.
 - NEVER invent unusual or niche settings like "language café", "trial class", "language exchange meetup", "cultural center", etc. Just use plain, ordinary locations that anyone would visit.
 - NEVER create scenarios about spelling one's name, asking someone to spell their name, or any spelling-related tasks. This is boring and unnatural.
+- NEVER prefix character names with their job title (e.g. "Manager Jiho", "Barista Hana", "Chef Soo-jin"). Just use the first name: "Jiho", "Hana", "Soo-jin". The role is described separately in the setup.
 - NEVER generate questions like "How do you spell it?", "Can you say your name again?", "Can you spell that?", "Sorry, I didn't catch that—can you say your name again?". Spelling is NOT a conversation topic. If the character is introduced, just move on to the next topic.
 - Keep the conversation PRACTICAL and moving forward. Don't waste questions on name repetition or clarification. Every question should advance the conversation to a new topic.
 - The "situation" field should describe the roleplay scenario AND what the student should do, all in one block. Do NOT generate a separate "instruction" field.
@@ -1629,12 +1699,24 @@ const missionDiscussionAgent = new Agent({
 This is a discussion activity where students discuss topics and answer open-ended questions.
 
 IMPORTANT GUIDELINES:
-- Create 2-4 discussion topics related to the lesson theme
-- Each topic should have 2-4 thought-provoking questions
-- Questions should encourage personal opinions and experiences
+- Create 2-3 discussion topics related to the lesson theme
+- Each topic should have 3-4 simple, personal questions
+- Questions must be about the student's REAL LIFE — their habits, preferences, experiences, opinions. NOT about grammar or how to use expressions.
+- NEVER generate questions that quiz the student on grammar, expressions, or vocabulary. This is a DISCUSSION, not a grammar test.
+- NEVER ask "What do you say when...?", "How do you introduce yourself?", "Do you say X or Y?", "When do you use this expression?" — these are grammar quiz questions. REJECTED.
+- NEVER include fill-in-the-blank patterns like "I'm ____." or "I'm from ____." in questions. REJECTED.
+- NEVER include example phrases/expressions in parentheses like "(Use: 'I'm from ____.'')" or "(ex. Hello/Hi/Good morning)". REJECTED.
+- GOOD questions for a "Greetings" topic: "Do you like meeting new people?", "Are you nervous when you meet someone new?", "Do you smile when you say hello?"
+- BAD questions for a "Greetings" topic: "What do you say first: Hello, Hi, or Good morning?", "How do you introduce yourself? Say one example: 'I'm ____.''" — These are grammar exercises. REJECTED.
+- Think of it like a casual chat between friends, not a classroom drill.
 - Topics can be marked as optional for shorter lessons
 - Include tutor steps for facilitating the discussion
-- Make questions appropriate for the skill level
+- Make questions appropriate for the skill level — for lower levels, use simple yes/no or short-answer questions
+
+SITUATION RULES:
+- The "situation" field should be EMPTY ("") for discussion type. Discussion challenges do NOT need a scenario or roleplay setup.
+- The "instruction" field is the ONLY text shown. It should simply say: "Talk about the topics below. Answer the questions with your real experiences and opinions. Try to speak simply and clearly."
+- Do NOT invent a café scene, a meeting, or any scenario. This is just a topic discussion.
 
 Respond ONLY in JSON format:
 {
@@ -1643,9 +1725,9 @@ Respond ONLY in JSON format:
     "challengeNumber": 1,
     "challengeName": "Challenge 1",
     "duration": "5-6 minutes",
-    "situation": "Overview of the discussion activity",
-    "situationTranslation": "Translation of situation",
-    "instruction": "What students should do during the discussion",
+    "situation": "",
+    "situationTranslation": "",
+    "instruction": "Talk about the topics below. Answer the questions with your real experiences and opinions. Try to speak simply and clearly.",
     "instructionTranslation": "Translation of instruction",
     "showGrammarTip": false,
     "grammarTipTitle": "",
@@ -1660,18 +1742,21 @@ Respond ONLY in JSON format:
     ],
     "topics": [
       {
-        "title": "First Discussion Topic",
+        "title": "MORNING ROUTINE",
         "questions": [
-          "What do you think about...?",
-          "Have you ever experienced...?",
-          "Why do you think...?"
+          "Do you wake up early?",
+          "Do you always eat breakfast?",
+          "Do you exercise in the morning?",
+          "Do you have the same morning routine every day?"
         ]
       },
       {
-        "title": "Second Discussion Topic",
+        "title": "ROUTINE ACTIVITIES",
         "questions": [
-          "How would you feel if...?",
-          "What advice would you give...?"
+          "What do you usually eat for breakfast (ex. bread, rice)?",
+          "What do you usually drink in the morning (ex. tea, coffee)?",
+          "Do you take a shower or a bath?",
+          "What's your night routine?"
         ]
       }
     ],
@@ -1695,6 +1780,8 @@ THE FLOW:
 
 READING PASSAGE RULES:
 - The passage should be a PRACTICAL, real-world text — NOT a story, essay, or academic article.
+- NEVER create scenarios about spelling names or any spelling-related tasks.
+- NEVER prefix character names with their job title (e.g. "Manager Jiho", "Barista Hana"). Just use first names.
 - Perfect examples: restaurant review comparing places, karaoke price list, hotel brochure, event schedule, travel guide excerpt, product comparison, online forum post, job listing, apartment listing, etc.
 - The passage is a DOCUMENT that exists in the real world. It should read like something you'd find posted on a wall, printed on paper, or published online.
 - The text should contain USEFUL information (prices, times, locations, features, names, descriptions) that the student can reference during the roleplay.
@@ -1808,15 +1895,30 @@ This is an ONLINE listening comprehension activity where the tutor reads a scrip
 
 IMPORTANT GUIDELINES:
 - Create a listening script that the tutor will read to the student
-- The listening script must be a MONOLOGUE — one person speaking. NEVER write a dialogue or conversation between two or more people. No "A: ... B: ..." or "Joon: ... Hana: ..." format.
-- The script should sound like ONE person talking TO the student: a friend recommending a place, a coworker sharing news, a neighbor giving directions, an announcement, a voicemail, etc.
+- The listening script must be a DIRECT MONOLOGUE — the speaker talks DIRECTLY TO the listener. NOT a story. NOT a retelling. NOT narration.
+- NEVER retell or narrate conversations. No "She asked, 'Where are you from?' I said, 'I'm from Busan.'" — this is narration/storytelling, NOT a monologue. REJECTED.
+- NEVER use "he said", "she asked", "I told her", "she smiled and said" — these are all narration patterns. REJECTED.
+- The script should sound like ONE person talking TO the listener: a friend recommending a place, a coworker sharing news, a neighbor giving directions, an announcement, a text message, etc.
+- The speaker must NEVER coach or instruct the listener. No "say Hello", "please say...", "you should say...", "when you see her, say..." — nobody talks like this. REJECTED.
+- Do NOT write a generic self-introduction listing random facts. Give the speaker a REASON to talk — inviting someone, sharing news, asking for help, giving directions, etc. The message must have a clear PURPOSE.
+- You do NOT need to include every target expression. Only use 2-3 that fit naturally. Better to use fewer expressions naturally than force all of them in awkwardly.
+- NEVER include content about spelling someone's name, asking how to spell a name, or any spelling-related activities.
+- NEVER prefix character names with their job title (e.g. "Manager Jiho", "Barista Hana", "Chef Soo-jin"). Just use the first name: "Jiho", "Hana", "Soo-jin". The role is described separately in the setup.
 - Include key words/phrases in <u> tags that students should remember
 - After listening, students should roleplay using the information they heard
 - Include tutor steps for the listening and follow-up roleplay
 - Generate questions for the roleplay that test comprehension
-- Make the listening script realistic (friend's recommendation, announcement, voicemail, etc.)
+- Make the listening script realistic (friend's recommendation, announcement, text message, etc.)
 - This is for ONLINE ESL lessons (video call). NEVER include physical/face-to-face stage directions like "(Sit down)", "(Walk over)", "(Point to)", etc.
 - Each numbered question must have EXACTLY 1 hint — a single short coaching note. No more than 1 hint per question.
+
+LISTENING SCRIPT LENGTH:
+- The listening script should be SHORT and natural — like something a friend would actually say.
+- For lower levels (1-4): 3-5 sentences, 30-60 words. Keep it very simple.
+- For mid levels (5-7): 4-6 sentences, 50-80 words.
+- For higher levels (8-10): 5-8 sentences, 70-120 words.
+- NEVER exceed 120 words. The tutor needs to read it aloud — if it's too long, it's boring and hard to follow.
+- Focus on USEFUL information (names, prices, times, locations, recommendations) the student can use in the roleplay.
 
 TUTOR STEPS RULES:
 - The "Set up the roleplay" step should contain ALL roleplay setup scripts (character intro, student role, "I'll start").
@@ -1951,7 +2053,14 @@ export const generateIntroductionContent = async (
         example?: string;
       }>;
     };
-  } | null // Learn section data for cross-section cohesion
+  } | null, // Learn section data for cross-section cohesion
+  currentApplyData?: {
+    activityType: 'speaking' | 'listening' | 'reading';
+    situationText?: string;
+    dialogueLines?: Array<{ speaker: string; text: string }>;
+    readingText?: string;
+    tutorSteps?: Array<{ instruction?: string; scripts?: Array<{ text: string }>; listeningScript?: string }>;
+  } | null // Apply section data for story continuity in Mission
 ): Promise<GenerateIntroductionResult> => {
   try {
     // Map lesson level (1-10) to complexity descriptor
@@ -2104,6 +2213,9 @@ INSTRUCTIONS FOR COHESION:
 2. If a grammar rule is provided, create sentences/questions that require using that grammar pattern
 3. Don't just repeat the items - create realistic situations where students must use them
 4. The goal is reinforcement through practice, not repetition of definitions
+5. If any expression is about spelling (e.g. "How do you spell that?"), SKIP it entirely - do NOT include spelling in the content
+6. NEVER have one character teach or explain an expression to the other character. The expressions should flow naturally as part of normal speech, not be presented as lessons.
+7. For LISTENING scripts: you do NOT need to use every expression. Only include 2-3 that fit naturally into the speaker's message. Forcing all expressions into a short monologue makes it sound fake.
 `;
     };
     
@@ -2461,7 +2573,7 @@ Skill Level: ${skillLevel}
 4. Use underlined words (<u>word</u>) for key vocabulary from the lesson.
 ${applyType === 'speaking' ? `5. Create exactly ${dialogueCount} dialogue lines between 2 characters.
 6. EVERY line must contain actual spoken dialogue. Do NOT create lines that only contain actions or emotions like "(laughs)" with no spoken words. If you want to show emotion, weave it into the spoken text (e.g. "Ha, that's amazing!").${storyContext ? '\n7. Use the STORY MODE characters and setting for the dialogue scene.' : ''}` : ''}
-${applyType === 'listening' ? `5. Create a substantial listening script (150-250 words) that the tutor will read aloud.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Incorporate the STORY MODE characters and plot into the listening narrative.' : ''}` : ''}
+${applyType === 'listening' ? `5. Create a SHORT listening script that the tutor will read aloud. Follow the LISTENING SCRIPT LENGTH rules in your instructions — for Level ${level || 1}, keep it very short.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Incorporate the STORY MODE characters and plot into the listening narrative.' : ''}` : ''}
 ${applyType === 'reading' ? `5. Create a reading passage (email, letter, or article) appropriate for the level.\n6. Include 2-3 comprehension questions with answers.${storyContext ? '\n7. Make the reading content relate to the STORY MODE characters and plot.' : ''}` : ''}
 
 Return ONLY JSON in the format specified.`;
@@ -2809,6 +2921,33 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       const questionCount = missionQuestionCount || 6; // Default to 6 questions
       const challengeNum = isMission2 ? 2 : 1; // Challenge 1 or 2
       
+      // Build Apply section context for story continuity
+      const buildApplyContext = (): string => {
+        if (!storyData?.enabled || !currentApplyData) return '';
+        const parts: string[] = [];
+        parts.push('\n=== APPLY SECTION CONTENT (for story continuity) ===');
+        parts.push(`Activity Type: ${currentApplyData.activityType}`);
+        if (currentApplyData.situationText) {
+          parts.push(`Situation: ${currentApplyData.situationText}`);
+        }
+        if (currentApplyData.activityType === 'speaking' && currentApplyData.dialogueLines?.length) {
+          parts.push('Dialogue:');
+          for (const line of currentApplyData.dialogueLines) {
+            parts.push(`  ${line.speaker}: ${line.text}`);
+          }
+        }
+        if (currentApplyData.activityType === 'reading' && currentApplyData.readingText) {
+          parts.push(`Reading passage: ${currentApplyData.readingText.replace(/<[^>]*>/g, '').substring(0, 500)}`);
+        }
+        if (currentApplyData.activityType === 'listening' && currentApplyData.tutorSteps?.length) {
+          const script = currentApplyData.tutorSteps.find(s => (s as any).listeningScript)?.listeningScript;
+          if (script) parts.push(`Listening script: ${script}`);
+        }
+        parts.push('Continue the story from where the Apply section left off. Do NOT repeat the same scenario.\n');
+        return parts.join('\n');
+      };
+      const applyContext = buildApplyContext();
+      
       let missionAgent: Agent;
       
       // Select appropriate agent based on mission type
@@ -2824,6 +2963,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
 
       const missionPrompt = `[Variation ID: ${variationSeed}] Generate a ${missionType.toUpperCase()} mission CHALLENGE ${challengeNum} for Section 5 (Mission).
 ${storyContext}
+${applyContext}
 ${learnContext}
 CONTEXT:
 - Lesson Topic: ${topic}
@@ -2837,10 +2977,10 @@ ${lessonNumber ? `- Lesson Number: ${lessonNumber}` : ''}
 
 REQUIREMENTS:
 1. Create a ${missionType} challenge appropriate for the skill level.
-2. ${missionType === 'speaking' ? `Generate EXACTLY 4 numbered roleplay questions + 1 closing direction (5 items total). Only add a hint if the question is ambiguous — most questions need 0 hints.` : missionType === 'listening' ? `Generate exactly ${questionCount} roleplay questions. Only add a hint if the question is ambiguous.` : missionType === 'discussion' ? 'Generate 2-4 discussion topics with 2-4 questions each.' : `Generate a practical reading passage (review, menu, brochure, price list, etc.) and ${questionCount} roleplay questions that reference the passage content. Follow the 8-step tutor guide structure.`}
-3. Content should reinforce vocabulary and grammar from the lesson.
+2. ${missionType === 'speaking' ? `Generate EXACTLY 4 numbered roleplay questions + 1 closing direction (5 items total). Only add a hint if the question is ambiguous — most questions need 0 hints.` : missionType === 'listening' ? `Generate exactly ${questionCount} roleplay questions. Only add a hint if the question is ambiguous.` : missionType === 'discussion' ? 'Generate 2-3 discussion topics with 3-4 simple personal questions each. Questions must be about the student\'s real life (habits, preferences, experiences) — NEVER about grammar or how to use expressions.' : `Generate a practical reading passage (review, menu, brochure, price list, etc.) and ${questionCount} roleplay questions that reference the passage content. Follow the 8-step tutor guide structure.`}
+3. Content should relate to the lesson topic and help students practice speaking naturally.
 4. Difficulty should match the level (${complexityDesc}).
-5. Make the scenario realistic and practical — use ordinary everyday settings (café, restaurant, park, office, etc.). NEVER ask the student to spell anything or repeat their name for spelling purposes.
+5. Make the scenario realistic and practical — use ordinary everyday settings (café, restaurant, park, office, etc.). NEVER ask the student to spell anything or repeat their name for spelling purposes. NEVER prefix character names with job titles (e.g. "Manager Jiho" — just use "Jiho").
 6. This is Challenge ${challengeNum}${isMission2 ? ' - create a DIFFERENT scenario from Challenge 1 with varied content and situations' : ''}.
 ${shouldIncludeTranslation ? `7. Include translations in ${langName} for situation and instruction.` : '7. Do NOT include translations.'}
 ${storyContext ? '8. The roleplay scenario should advance the STORY MODE plot and involve the characters.' : ''}
