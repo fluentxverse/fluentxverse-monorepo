@@ -185,7 +185,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       // Method 3: Explicit Set-Cookie header to clear the cookie.
       // Use a single header string (known reliable across proxies/runtimes).
       const domainAttr = cookieConfig.domain ? `; Domain=${cookieConfig.domain}` : '';
-      set.headers['Set-Cookie'] = `tutorAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
+      set.headers['Set-Cookie'] = `tutorAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=${isProduction ? 'None; Secure' : 'Lax'}`;
       
       // Set headers to prevent caching
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';

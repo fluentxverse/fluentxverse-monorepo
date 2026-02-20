@@ -66,7 +66,7 @@ export function refreshAuthCookie(cookie: Record<string, Cookie<any>>, authData:
     }),
     httpOnly: true,
     secure: isProduction, // true for HTTPS in production
-    sameSite: 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 60 * 60, // 1 hour in seconds
     path: '/'
   });

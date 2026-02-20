@@ -194,7 +194,7 @@ const Student = new Elysia({ name: "student" })
     // when multiple cookie operations occur; ensure the last one targets the
     // cross-subdomain cookie your frontends actually use.
     const domainAttr = cookieConfig.domain ? `; Domain=${cookieConfig.domain}` : '';
-    set.headers['Set-Cookie'] = `studentAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=Lax${isProduction ? '; Secure' : ''}`;
+    set.headers['Set-Cookie'] = `studentAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=${isProduction ? 'None; Secure' : 'Lax'}`;
     
     // Set headers to prevent caching
     set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';

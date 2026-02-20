@@ -38,7 +38,7 @@ const getCookieDomain = (): string | undefined => {
 export const getCookieConfig = (isProduction: boolean) => ({
   httpOnly: true,
   secure: isProduction,
-  sameSite: 'lax' as const,
+  sameSite: isProduction ? 'none' as const : 'lax' as const,
   maxAge: 60 * 60, // 1 hour
   path: '/',
   domain: getCookieDomain()

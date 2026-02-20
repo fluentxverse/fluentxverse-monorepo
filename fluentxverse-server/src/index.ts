@@ -70,6 +70,7 @@ const defaultOrigins = [
   'http://localhost:5174',
   'http://localhost:5175',
   'http://localhost:5176',
+  'https://dashboard.fluentxverse.xyz',
   // Production domains
 ];
 
@@ -144,16 +145,18 @@ const app = new Elysia({
   .use(cors({
     origin: (request) => {
       const origin = request.headers.get('origin');
-      // In production, require an origin header for security
-      // In development, allow requests with no origin (like curl) for testing
-      if (!origin) {
-        if (isProduction) {
-          console.warn('⚠️ CORS blocked request with no origin (production mode)');
-          return false;
-        }
-        return true; // Allow in development only
-      }
-      if (allowedOrigins.includes(origin)) return true;
+      // Allow requests with no origin (preflight, curl, etc.)
+      if (!origin) return true;
+      // Normalize: strip trailing slash for comparison
+      const normalizedOrigin = origin.replace(/\/$/, '');
+      if (allowedOrigins.some(o => o.replace(/\/$/, '') === normalizedOrigin)) return true;
+      // Also allow http variant when https is allowed (Cloudflare tunnel may send http internally)
+      const httpVariant = normalizedOrigin.replace(/^https:/, 'http:');
+      const httpsVariant = normalizedOrigin.replace(/^http:/, 'https:');
+      if (allowedOrigins.some(o => {
+        const n = o.replace(/\/$/, '');
+        return n === httpVariant || n === httpsVariant;
+      })) return true;
       console.warn(`⚠️ CORS blocked origin: ${origin}`);
       return false;
     },
