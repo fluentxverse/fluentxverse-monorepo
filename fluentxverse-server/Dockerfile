@@ -14,6 +14,13 @@ RUN bun install --production --no-save
 COPY src ./src
 COPY tsconfig.json ./
 
+# Create non-root user and set ownership
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
 # Expose ports (HTTP API + Socket.IO)
 EXPOSE 8765 8767
 

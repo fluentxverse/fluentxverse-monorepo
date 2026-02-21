@@ -1814,6 +1814,7 @@ export default function ConversationalSkillsVisualEditor() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'pending' | 'saved'>('idle');
+  const [showHelpManual, setShowHelpManual] = useState(false);
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasUnsavedChangesRef = useRef(false);
 
@@ -2305,6 +2306,10 @@ export default function ConversationalSkillsVisualEditor() {
           </span>
         </div>
         <div className="csve-toolbar-right">
+          <button className="csve-toolbar-btn" onClick={() => setShowHelpManual(true)} title="Editor Manual">
+            <i className="ri-question-line" />
+            <span>Help</span>
+          </button>
           <button className="csve-toolbar-btn csve-preview-btn" onClick={handleOpenPreview}>
             <i className="ri-eye-line" />
             <span>Preview</span>
@@ -2326,6 +2331,132 @@ export default function ConversationalSkillsVisualEditor() {
           </button>
         </div>
       </div>
+
+      {/* Help Manual Modal */}
+      {showHelpManual && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setShowHelpManual(false)}>
+          <div style={{ background: '#0a0a0a', border: '1px solid rgba(0,255,65,0.2)', borderRadius: '12px', width: '720px', maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 0 40px rgba(0,255,65,0.08)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(0,255,65,0.15)' }}>
+              <span style={{ color: '#00ff41', fontWeight: 700, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className="ri-book-open-line" /> Lesson Material Maker — Quick Manual
+              </span>
+              <button onClick={() => setShowHelpManual(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '20px', padding: '4px' }}>
+                <i className="ri-close-line" />
+              </button>
+            </div>
+            <div style={{ overflow: 'auto', padding: '20px 24px', color: '#ccc', fontSize: '13.5px', lineHeight: 1.7 }}>
+              <style>{`.help-manual h2{color:#00ff41;font-size:16px;margin:20px 0 8px;border-bottom:1px solid rgba(0,255,65,.15);padding-bottom:6px}.help-manual h3{color:#4ade80;font-size:14px;margin:16px 0 6px}.help-manual h4{color:#86efac;font-size:13px;margin:12px 0 4px}.help-manual p,.help-manual li{color:#bbb;margin:4px 0}.help-manual ul,.help-manual ol{padding-left:20px;margin:4px 0}.help-manual strong{color:#e2e8f0}.help-manual table{width:100%;border-collapse:collapse;margin:8px 0}.help-manual th,.help-manual td{text-align:left;padding:6px 10px;border:1px solid rgba(255,255,255,.08)}.help-manual th{background:rgba(0,255,65,.06);color:#4ade80;font-weight:600}.help-manual td{color:#bbb}.help-manual hr{border:none;border-top:1px solid rgba(255,255,255,.06);margin:16px 0}.help-manual h2:first-child{margin-top:0}`}</style>
+              <div className="help-manual">
+                <h2>Overview</h2>
+                <p>The Visual Editor is a WYSIWYG page builder for creating conversational English lesson materials. It provides inline text editing, section editors, a floating AI assistant, autosave, and an optional Story Mode for immersive K-drama style lessons.</p>
+
+                <hr />
+                <h2>Toolbar</h2>
+                <table><thead><tr><th>Feature</th><th>Description</th></tr></thead><tbody>
+                  <tr><td><strong>Back</strong></td><td>Returns to the lesson list</td></tr>
+                  <tr><td><strong>Preview</strong></td><td>Opens student-facing preview in a new tab</td></tr>
+                  <tr><td><strong>Save</strong></td><td>Manual save (autosave triggers 5 sec after any edit)</td></tr>
+                </tbody></table>
+
+                <hr />
+                <h2>Hero Header</h2>
+                <p>Click the header to open a side panel with:</p>
+                <ul>
+                  <li>Background image upload</li>
+                  <li>Overlay color picker + opacity slider</li>
+                  <li>Editable: <strong>Chapter Name</strong>, <strong>Lesson Name</strong>, <strong>Goal (EN)</strong>, <strong>Goal (JP/KR)</strong></li>
+                </ul>
+
+                <hr />
+                <h2>Lesson Sections</h2>
+
+                <h3>1. Introduce</h3>
+                <ul>
+                  <li>Intro paragraphs (multilingual) + optional image</li>
+                  <li>Lesson Issue callout (title + bullet points)</li>
+                  <li>Lesson Goal Steps (tutor guide)</li>
+                </ul>
+
+                <h3>2. Learn (Step A + Step B)</h3>
+                <p><strong>Step A</strong> — choose one:</p>
+                <ul>
+                  <li><strong>Vocabulary</strong>: image + English text + highlighted word + translation</li>
+                  <li><strong>Expressions</strong>: rich-text definition + example sentence + translation</li>
+                </ul>
+                <p><strong>Step B</strong> — choose one:</p>
+                <ul>
+                  <li><strong>Speak Your Mind</strong>: explanation + two-speaker dialogue + question</li>
+                  <li><strong>Grammar Tip</strong>: grammar rules with translations + examples</li>
+                  <li><strong>Pronunciation</strong>: tip + phrases with pronunciation guides</li>
+                </ul>
+
+                <h3>3. Apply</h3>
+                <p>Choose one activity type:</p>
+                <ul>
+                  <li><strong>Speaking</strong>: situation + dialogue lines + tutor steps</li>
+                  <li><strong>Listening</strong>: situation + listening script + comprehension questions</li>
+                  <li><strong>Reading</strong>: situation + reading passage + tutor steps</li>
+                </ul>
+                <p>Optional <strong>Trivia Time</strong> sub-section available for all types.</p>
+
+                <h3>4. Exercise (Step A + optional Step B)</h3>
+                <p><strong>Step A</strong>: Rephrase / Choose / Change</p>
+                <p><strong>Step B</strong> (optional): Conversation / Multiple Choice / Speech / Compare</p>
+                <p>Both include Answer Keys and Tutor Guide Steps.</p>
+
+                <h3>5. Mission (Challenge 1) &amp; Mission 2 (Challenge 2)</h3>
+                <p>Choose one type per challenge:</p>
+                <ul>
+                  <li><strong>Speaking</strong>: roleplay scenario + questions with hints</li>
+                  <li><strong>Discussion</strong>: topic cards with grouped personal questions</li>
+                  <li><strong>Reading</strong>: reading passage + roleplay follow-up</li>
+                  <li><strong>Listening</strong>: listening script + roleplay follow-up</li>
+                </ul>
+
+                <h3>6. Feedback (auto-populated)</h3>
+                <p>4-point rubric + personalized feedback: Range, Accuracy, Fluency.</p>
+
+                <hr />
+                <h2>AI Content Generator</h2>
+                <p>Toggle the floating <strong>magic wand</strong> button to open the AI panel.</p>
+
+                <h3>Section Tabs</h3>
+                <p>Seven tabs: Introduce, Learn, Apply, Trivia, Exercise, Mission, Mission 2. A <strong>✓</strong> badge shows which sections have content.</p>
+
+                <h3>How to Generate</h3>
+                <ol>
+                  <li>Select the section tab you want</li>
+                  <li>(Optional) Edit <strong>Base Instructions</strong> or add <strong>Additional Notes</strong></li>
+                  <li>Click <strong>Generate [Section]</strong> — or <strong>Generate All</strong> for batch</li>
+                  <li>Preview the result → click <strong>Insert Content</strong> to apply</li>
+                </ol>
+
+                <h3>Options</h3>
+                <ul>
+                  <li><strong>Generation Mode</strong>: Generate New or Improve Existing</li>
+                  <li><strong>Include Translations</strong>: toggle + pick language (JP/KR/VN/CN)</li>
+                  <li><strong>Step A/B toggle</strong>: for Learn and Exercise sections</li>
+                </ul>
+
+                <h3>Story Mode</h3>
+                <p>When enabled, story context (characters, setting, plot points) is injected into AI generation.</p>
+                <p><strong>Important</strong>: Generate sections in order (Introduce → Learn → Apply → Exercise → Mission) so each section continues the story. Apply must be generated before Mission.</p>
+
+                <hr />
+                <h2>Workflow Tips</h2>
+                <ol>
+                  <li><strong>Fill the header first</strong> — lesson name and goal are used by the AI</li>
+                  <li><strong>AI reads your editor</strong> — it matches your current item counts and types</li>
+                  <li><strong>Use Step A/B toggles</strong> — generate Learn and Exercise steps independently</li>
+                  <li><strong>Preview often</strong> — check the student-facing view before saving</li>
+                  <li><strong>Base Instructions persist</strong> — saved to your browser across sessions</li>
+                  <li><strong>Autosave is active</strong> — changes save automatically after 5 seconds</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Canvas - The actual lesson layout */}
       <div className="csve-canvas" onClick={() => { setActiveElement(null); setEditingField(null); }}>
