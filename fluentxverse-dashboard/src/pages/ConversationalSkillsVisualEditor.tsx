@@ -2478,6 +2478,12 @@ export default function ConversationalSkillsVisualEditor() {
           onClick={(e) => { e.stopPropagation(); setActiveElement('hero'); }}
         >
           <div className="csve-hero-overlay" style={{ backgroundColor: overlayColor }} />
+
+          {/* Geometric accent shapes */}
+          <div className="csve-hero-shape csve-hero-shape--tr1" />
+          <div className="csve-hero-shape csve-hero-shape--tr2" />
+          <div className="csve-hero-shape csve-hero-shape--bl1" />
+
           <div className="csve-hero-content">
             {/* Lesson Label */}
             <p className="csve-lesson-label">

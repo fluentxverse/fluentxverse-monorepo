@@ -31,6 +31,8 @@ import DailyDispatchStudentPage from './pages/DailyDispatchStudentPage';
 import YoungLearnersEditorPage from './pages/YoungLearnersEditorPage';
 import YoungLearnersVisualEditor from './pages/YoungLearnersVisualEditor';
 import YoungLearnersPreview from './pages/YoungLearnersPreview';
+import DiscussionQuestionsEditorPage from './pages/DiscussionQuestionsEditorPage';
+import DiscussionQuestionsVisualEditor from './pages/DiscussionQuestionsVisualEditor';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -170,6 +172,18 @@ const AppContent = () => {
     );
   }
 
+  // Discussion Questions visual editor - standalone (fullscreen)
+  if (path.startsWith('/discussion-questions-visual-editor')) {
+    if (!isAuthenticated) {
+      return <LoginPage />;
+    }
+    return (
+      <Router>
+        <Route path="/discussion-questions-visual-editor/:id" component={DiscussionQuestionsVisualEditor} />
+      </Router>
+    );
+  }
+
   if (path.startsWith('/interview-room')) {
     if (!isAuthenticated) {
       return <LoginPage />;
@@ -199,6 +213,7 @@ const AppContent = () => {
         <Route path="/daily-dispatch" component={DailyDispatchEditorPage} />
         <Route path="/daily-dispatch-preview/:id" component={DailyDispatchPreviewPage} />
         <Route path="/young-learners-editor" component={YoungLearnersEditorPage} />
+        <Route path="/discussion-questions-editor" component={DiscussionQuestionsEditorPage} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />

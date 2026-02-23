@@ -64,8 +64,8 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         skill: t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading')]),
         chapterName: t.String({ minLength: 1 }),
         lessonName: t.String({ minLength: 1 }),
-        goalTextEn: t.String({ minLength: 1 }),
-        goalTextJp: t.String({ minLength: 1 }),
+        goalTextEn: t.String(),
+        goalTextJp: t.String(),
       }),
       detail: {
         tags: ['Lesson Materials'],
@@ -425,6 +425,7 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         missionData: t.Optional(t.Any()),
         missionData2: t.Optional(t.Any()),
         feedbackData: t.Optional(t.Any()),
+        discussionQuestionsData: t.Optional(t.Any()),
       }),
       detail: {
         tags: ['Lesson Materials'],

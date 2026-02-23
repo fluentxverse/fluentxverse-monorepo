@@ -207,3 +207,41 @@ export async function generateEpisodeSummary(
     };
   }
 }
+
+// ============================================================================
+// DISCUSSION QUESTIONS GENERATION
+// ============================================================================
+
+export interface GenerateDiscussionQuestionsResponse {
+  success: boolean;
+  data?: {
+    questions: string[];
+  };
+  error?: string;
+}
+
+/**
+ * Generate discussion questions based on topic, level, and count.
+ */
+export async function generateDiscussionQuestions(
+  topic: string,
+  level: number,
+  questionCount: number,
+  customPrompt?: string,
+): Promise<GenerateDiscussionQuestionsResponse> {
+  try {
+    const response = await apiClient.post('/ai/generate-discussion-questions', {
+      topic,
+      level,
+      questionCount,
+      customPrompt: customPrompt || null,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error generating discussion questions:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate discussion questions',
+    };
+  }
+}

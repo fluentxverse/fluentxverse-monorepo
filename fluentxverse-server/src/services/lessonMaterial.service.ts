@@ -299,6 +299,7 @@ export interface LessonMaterial {
   missionData?: any;
   missionData2?: any;
   feedbackData?: any;
+  discussionQuestionsData?: any;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -348,6 +349,8 @@ export interface UpdateHeaderInput {
   missionData?: any;
   missionData2?: any;
   feedbackData?: any;
+  discussionQuestionsData?: any;
+  discussionQuestionsData?: any;
 }
 
 // ============================================================================
@@ -492,6 +495,18 @@ function transformLesson(record: any): LessonMaterial {
       console.error('Failed to parse feedbackData:', e);
     }
   }
+
+  // Parse discussionQuestionsData from JSON string if present
+  let discussionQuestionsData: any | undefined;
+  if (props.discussionQuestionsData) {
+    try {
+      discussionQuestionsData = typeof props.discussionQuestionsData === 'string' 
+        ? JSON.parse(props.discussionQuestionsData) 
+        : props.discussionQuestionsData;
+    } catch (e) {
+      console.error('Failed to parse discussionQuestionsData:', e);
+    }
+  }
   
   return {
     id: props.id,
@@ -516,6 +531,7 @@ function transformLesson(record: any): LessonMaterial {
     missionData,
     missionData2,
     feedbackData,
+    discussionQuestionsData,
     createdBy: props.createdBy,
     createdByName: props.createdByName || '',
     createdAt: props.createdAt,
@@ -811,6 +827,11 @@ export const lessonMaterialService = {
       if (input.feedbackData !== undefined) {
         setClauses.push('l.feedbackData = $feedbackData');
         params.feedbackData = JSON.stringify(input.feedbackData);
+      }
+
+      if (input.discussionQuestionsData !== undefined) {
+        setClauses.push('l.discussionQuestionsData = $discussionQuestionsData');
+        params.discussionQuestionsData = JSON.stringify(input.discussionQuestionsData);
       }
       
       const result = await session.run(

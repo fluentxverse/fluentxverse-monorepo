@@ -3415,3 +3415,99 @@ Make it dramatic and engaging like a K-drama recap!`;
     throw error;
   }
 };
+
+// ============================================================================
+// DISCUSSION QUESTIONS GENERATOR
+// ============================================================================
+
+const discussionQuestionsAgent = new Agent({
+  name: 'Discussion Questions Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an expert ESL discussion facilitator and curriculum designer. You generate thoughtful, engaging discussion questions for English language students.
+
+Your questions should:
+- Be open-ended (not yes/no answers)
+- Encourage students to share opinions, experiences, and ideas
+- Be culturally inclusive and appropriate
+- Progress from simpler to more complex within a set
+- Use vocabulary appropriate for the student's level
+- Be relevant to the given topic
+- Make students want to talk and share
+
+Always respond ONLY with valid JSON. No markdown, no explanations.`,
+});
+
+export interface GenerateDiscussionQuestionsResult {
+  questions: string[];
+}
+
+/**
+ * Generate discussion questions based on level, topic, and count.
+ */
+export const generateDiscussionQuestions = async (
+  topic: string,
+  level: number,
+  questionCount: number,
+  customPrompt?: string | null,
+): Promise<GenerateDiscussionQuestionsResult> => {
+  const complexityMap: Record<number, string> = {
+    1: 'Starter/Beginner - Use simple vocabulary and short sentence structures. Questions should be very accessible, about personal experience ("What is your favorite...?", "Do you like...? Why?").',
+    2: 'Elementary - Simple but slightly more varied questions. Students can handle basic comparisons and preferences.',
+    3: 'Pre-Intermediate - Students can discuss opinions and reasons. Use moderate vocabulary. Ask "why" and "how" questions.',
+    4: 'Intermediate - Students can discuss abstract topics, hypotheticals, and express nuanced opinions. More complex sentence structures are fine.',
+    5: 'Upper-Intermediate/Advanced - Students can debate, analyze, and discuss complex social/philosophical topics. Use sophisticated vocabulary and multi-layered questions.',
+  };
+
+  const complexityDesc = complexityMap[level] || complexityMap[3];
+  const count = Math.max(5, Math.min(30, questionCount));
+
+  let prompt = `Generate exactly ${count} discussion questions for an ESL class.
+
+=== CONTEXT ===
+Topic: "${topic}"
+Level: ${level} - ${complexityDesc}
+
+=== REQUIREMENTS ===
+1. Generate exactly ${count} questions.
+2. All questions must be open-ended (no yes/no answers).
+3. Questions should feel natural and conversational.
+4. Progress from easier to harder within the set.
+5. First 2-3 questions should be "warm-up" style (personal, easy to answer).
+6. Middle questions should go deeper into the topic.
+7. Last 2-3 questions should be thought-provoking or hypothetical.
+8. Match vocabulary and complexity to Level ${level}.
+
+=== EXAMPLES OF GOOD QUESTIONS (Level 1) ===
+- "What is your favorite food? Why do you like it?"
+- "What do you usually do on weekends?"
+
+=== EXAMPLES OF GOOD QUESTIONS (Level 5) ===
+- "To what extent do you think social media has altered the way we form meaningful relationships?"
+- "If you could redesign the education system from scratch, what would you change and why?"
+
+Return ONLY JSON:
+{ "questions": ["Question 1?", "Question 2?", ...] }`;
+
+  if (customPrompt) {
+    prompt += `\n\nAdditional instructions from the editor: ${customPrompt}`;
+  }
+
+  const resp = await discussionQuestionsAgent.generate(prompt);
+  const text = resp.text || '';
+  const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+
+  let parsed: any = { questions: [] };
+  try {
+    parsed = JSON.parse(jsonContent);
+  } catch (e) {
+    console.error('Failed to parse discussion questions response:', text);
+    // Fallback: try to extract lines that look like questions
+    const lines = text.split(/\n+/).map((l: string) => l.replace(/^\d+[\.\)]\s*/, '').trim()).filter((l: string) => l.endsWith('?'));
+    parsed.questions = lines.slice(0, count);
+  }
+
+  const questions = (parsed.questions || []).slice(0, count).map((q: any) => (q || '').toString().trim());
+
+  return { questions };
+};

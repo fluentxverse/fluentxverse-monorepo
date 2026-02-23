@@ -390,6 +390,7 @@
   padding-top: 2.5rem;
   cursor: pointer;
   transition: box-shadow 0.2s;
+  overflow: hidden;
 }
 
 .csve-hero:hover {
@@ -398,6 +399,40 @@
 
 .csve-hero.csve-active {
   box-shadow: inset 0 0 0 3px #8b5cf6;
+}
+
+/* ── Geometric accent shapes (tron blue) ── */
+.csve-hero-shape {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.csve-hero-shape--tr1 {
+  top: -20%;
+  right: -5%;
+  width: 35%;
+  height: 120%;
+  background: rgba(0, 180, 255, 0.15);
+  transform: skewX(-12deg) rotate(-5deg);
+}
+
+.csve-hero-shape--tr2 {
+  top: -30%;
+  right: 5%;
+  width: 18%;
+  height: 130%;
+  background: rgba(0, 180, 255, 0.08);
+  transform: skewX(-20deg) rotate(-8deg);
+}
+
+.csve-hero-shape--bl1 {
+  bottom: -40%;
+  left: -5%;
+  width: 25%;
+  height: 100%;
+  background: rgba(0, 180, 255, 0.06);
+  transform: skewX(15deg) rotate(3deg);
 }
 
 .csve-hero-overlay {
@@ -9545,4 +9580,805 @@
 
 .csve-story-tips li:last-child {
   margin-bottom: 0;
+}
+
+/* ============================================================================
+   DISCUSSION QUESTIONS VISUAL EDITOR (dqve-)
+   Reuses all csve- classes (toolbar, canvas, hero, section-number, etc).
+   Only custom classes specific to the DQ question list are defined here.
+   DESIGN: Edgy — sharp corners, hard borders, angular shapes.
+   ============================================================================ */
+
+/* Counter pill in the toolbar */
+.dqve-toolbar-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: 'Courier New', 'Monaco', monospace;
+  font-size: 0.8125rem;
+  color: rgba(0, 180, 255, 0.85);
+  letter-spacing: 0.5px;
+  padding: 0.3rem 0.75rem;
+  background: rgba(0, 180, 255, 0.08);
+  border: 1px solid rgba(0, 180, 255, 0.25);
+  border-radius: 0;
+}
+
+.dqve-toolbar-counter i {
+  font-size: 0.875rem;
+}
+
+/* ── Hero inline inputs (rendered inside csve-hero-content) ── */
+
+.dqve-hero-title {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 0;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-style: italic;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.dqve-hero-title:focus {
+  border-bottom-color: #fff;
+}
+
+.dqve-hero-title::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dqve-hero-desc {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 0;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.dqve-hero-desc:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.dqve-hero-desc::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Section actions row (counter + add btn below section-number) ── */
+
+.dqve-section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.dqve-filled-badge {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+.dqve-header-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4rem 0.875rem;
+  background: #00b4ff;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dqve-header-add-btn:hover {
+  background: #0099dd;
+}
+
+.dqve-header-add-btn i {
+  font-size: 0.875rem;
+}
+
+/* ── Question list ── */
+
+.dqve-questions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Individual question row */
+.dqve-q {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0.5rem 0.5rem;
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.1s ease;
+  cursor: grab;
+}
+
+.dqve-q:hover {
+  background: #f8fafc;
+  border-left-color: #cbd5e1;
+}
+
+.dqve-q.dqve-q--filled {
+  background: #edf7ff;
+  border-left-color: #00b4ff;
+}
+
+.dqve-q.dqve-q--filled:hover {
+  border-left-color: #0099dd;
+  background: #e0f0ff;
+}
+
+.dqve-q.dqve-q--drag-over {
+  border-top: 3px solid #00b4ff;
+}
+
+.dqve-q.dqve-q--dragging {
+  opacity: 0.3;
+}
+
+/* Drag grip */
+.dqve-q-grip {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.375rem 0.375rem 0;
+  color: #d1d5db;
+  cursor: grab;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.dqve-q:hover .dqve-q-grip {
+  color: #6b7280;
+}
+
+.dqve-q-grip i {
+  font-size: 1rem;
+}
+
+/* Number badge — sharp square */
+.dqve-q-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  background: #e0f0ff;
+  color: #0077bb;
+  border-radius: 0;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  font-family: 'Courier New', monospace;
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+  transition: all 0.1s;
+  border: 1px solid rgba(0, 180, 255, 0.2);
+}
+
+.dqve-q--filled .dqve-q-num {
+  background: #00b4ff;
+  color: #fff;
+  border-color: #00b4ff;
+}
+
+/* Body (input) */
+.dqve-q-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.dqve-q-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 0;
+  color: #0f172a;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.1s;
+}
+
+.dqve-q-input:focus {
+  border-color: #00b4ff;
+}
+
+.dqve-q-input::placeholder {
+  color: #cbd5e1;
+}
+
+/* Remove button — sharp square */
+.dqve-q-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: 0.5rem;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 0;
+  color: #d1d5db;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+
+.dqve-q-remove:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.dqve-q-remove:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Add row button at bottom — sharp, angular */
+.dqve-add-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem;
+  margin-top: 0.5rem;
+  background: transparent;
+  border: none;
+  border-top: 2px dashed #cbd5e1;
+  border-radius: 0;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dqve-add-row:hover {
+  color: #00b4ff;
+  background: #edf7ff;
+  border-top-color: #00b4ff;
+}
+}
+
+/* ============================================================================
+   DQVE EDGY OVERRIDES — scoped to .dqve-page
+   Removes all border-radius, adds hard borders, angular shapes.
+   Overrides shared csve- and tgs- classes ONLY inside the DQ editor.
+   ============================================================================ */
+
+/* ── Shared csve- overrides ── */
+.dqve-page .csve-toolbar-btn {
+  border-radius: 0;
+  color: rgba(255, 106, 0, 0.7);
+  background: rgba(255, 106, 0, 0.05);
+  border-color: rgba(255, 106, 0, 0.15);
+}
+
+.dqve-page .csve-toolbar-btn:hover {
+  background: rgba(255, 106, 0, 0.15);
+  color: #ff6a00;
+  border-color: rgba(255, 106, 0, 0.4);
+  text-shadow: 0 0 8px rgba(255, 106, 0, 0.4);
+}
+
+.dqve-page .csve-back-btn {
+  background: transparent;
+  border-color: transparent;
+  color: rgba(255, 106, 0, 0.6);
+}
+
+.dqve-page .csve-back-btn:hover {
+  background: rgba(255, 106, 0, 0.1);
+  border-color: transparent;
+  color: #ff6a00;
+  text-shadow: 0 0 8px rgba(255, 106, 0, 0.5);
+}
+
+.dqve-page .csve-badge {
+  border-radius: 0;
+  background: rgba(255, 106, 0, 0.15);
+  color: #ff6a00;
+  border-color: rgba(255, 106, 0, 0.4);
+  text-shadow: 0 0 8px rgba(255, 106, 0, 0.5);
+  box-shadow: 0 0 10px rgba(255, 106, 0, 0.2);
+}
+
+.dqve-page .csve-edit-mode {
+  border-radius: 0;
+  background: rgba(255, 106, 0, 0.1);
+  color: #ff6a00;
+  border-color: rgba(255, 106, 0, 0.3);
+  text-shadow: 0 0 8px rgba(255, 106, 0, 0.3);
+}
+
+.dqve-page .csve-edit-mode i {
+  color: #ff6a00;
+  filter: drop-shadow(0 0 4px rgba(255, 106, 0, 0.5));
+}
+
+.dqve-page .csve-toolbar-title {
+  color: rgba(255, 106, 0, 0.9);
+  text-shadow: 0 0 10px rgba(255, 106, 0, 0.3);
+}
+
+.dqve-page .csve-save-btn {
+  background: linear-gradient(135deg, #ff6a00 0%, #e05d00 100%);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 106, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.dqve-page .csve-save-btn:hover {
+  background: linear-gradient(135deg, #ff8533 0%, #ff6a00 100%);
+  color: #fff;
+  box-shadow: 0 0 30px rgba(255, 106, 0, 0.6), 0 4px 15px rgba(255, 106, 0, 0.3);
+}
+
+.dqve-page .csve-number-badge {
+  border-radius: 0;
+  background: #00b4ff;
+}
+
+.dqve-page .csve-section-line {
+  background: #00b4ff;
+}
+
+.dqve-page .csve-lesson-goal-box {
+  border-radius: 0;
+}
+
+.dqve-page .csve-hero {
+  background-color: #1a1a2e;
+  overflow: hidden;
+}
+
+/* ── Edgy geometric accent shapes on hero ── */
+.dqve-hero-shape {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Upper-right large angled shape */
+.dqve-hero-shape--tr1 {
+  top: -20%;
+  right: -5%;
+  width: 35%;
+  height: 120%;
+  background: rgba(0, 180, 255, 0.18);
+  transform: skewX(-12deg) rotate(-5deg);
+}
+
+/* Upper-right smaller overlapping shard */
+.dqve-hero-shape--tr2 {
+  top: -30%;
+  right: 5%;
+  width: 18%;
+  height: 130%;
+  background: rgba(0, 180, 255, 0.10);
+  transform: skewX(-20deg) rotate(-8deg);
+}
+
+/* Bottom-left angular accent */
+.dqve-hero-shape--bl1 {
+  bottom: -40%;
+  left: -5%;
+  width: 25%;
+  height: 100%;
+  background: rgba(0, 180, 255, 0.08);
+  transform: skewX(15deg) rotate(3deg);
+}
+
+/* Bottom edge angular strip */
+.dqve-hero-shape--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, #00b4ff 20%, #00b4ff 80%, transparent 100%);
+  z-index: 3;
+}
+
+.dqve-page .csve-hero:hover {
+  box-shadow: inset 0 0 0 3px rgba(0, 180, 255, 0.5);
+}
+
+.dqve-page .csve-hero.csve-active {
+  box-shadow: inset 0 0 0 3px #00b4ff;
+}
+
+.dqve-page .csve-topbar {
+  border-radius: 0;
+}
+
+/* ── TutorGuide (tgs-) edgy overrides ── */
+.dqve-page .tgs-tutor-guide {
+  border-radius: 0;
+  border: 2px solid var(--border-color, #e2e8f0);
+}
+
+.dqve-page .tgs-header {
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+  background: #00b4ff;
+}
+
+.dqve-page .tgs-title {
+  text-decoration: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+  padding-bottom: 1px;
+}
+
+.dqve-page .tgs-step {
+  border-radius: 0;
+  border: 2px solid #e2e8f0;
+  transition: border-color 0.1s;
+}
+
+.dqve-page .tgs-step:hover {
+  border-color: #94a3b8;
+}
+
+.dqve-page .tgs-number {
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  background: #00b4ff;
+}
+
+/* TutorGuide button colors harmonized with orange */
+.dqve-page .tgs-add-script-btn {
+  color: #00b4ff;
+  border-color: rgba(0, 180, 255, 0.3);
+}
+
+.dqve-page .tgs-add-script-btn:hover {
+  background: rgba(0, 180, 255, 0.06);
+}
+
+.dqve-page .tgs-add-question-btn {
+  color: #00b4ff;
+  border-color: rgba(0, 180, 255, 0.3);
+}
+
+.dqve-page .tgs-add-question-btn:hover {
+  background: rgba(0, 180, 255, 0.06);
+}
+
+.dqve-page .tgs-question-box {
+  border-color: #00b4ff;
+}
+
+.dqve-page .tgs-script-quote {
+  color: #00b4ff;
+}
+
+.dqve-page .tgs-script-input {
+  color: #0077bb;
+}
+
+.dqve-page .tgs-script-input:hover {
+  border-color: rgba(0, 180, 255, 0.25);
+}
+
+.dqve-page .tgs-script-input:focus {
+  border-color: #00b4ff;
+}
+
+.dqve-page .tgs-instruction-input {
+  border-radius: 0;
+  font-weight: 600;
+}
+
+.dqve-page .tgs-instruction-input:hover {
+  border-radius: 0;
+  border: 1px solid #cbd5e1;
+}
+
+.dqve-page .tgs-instruction-input:focus {
+  border-radius: 0;
+  border: 1px solid #00b4ff;
+}
+
+.dqve-page .tgs-script-input {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-script-input:hover {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-script-input:focus {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-tip-input {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-tip-input:hover {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-tip-input:focus {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-questions-box {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-question-input {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-answer-hint-input {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-question-box {
+  border-radius: 0;
+  border-width: 2px;
+  border-color: #00b4ff;
+}
+
+.dqve-page .tgs-question-box .tgs-question-input {
+  color: #0077bb;
+}
+
+.dqve-page .tgs-answer-key-box {
+  border-radius: 0;
+  border-width: 2px;
+}
+
+.dqve-page .tgs-answer-key-input {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-remove-answer-key-btn {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-remove-btn {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-remove-answer-btn {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-step-remove {
+  border-radius: 0;
+}
+
+.dqve-page .tgs-add-step-btn {
+  border-radius: 0;
+  border: 2px dashed #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.dqve-page .tgs-add-step-btn:hover {
+  border-color: #00b4ff;
+  color: #00b4ff;
+}
+
+.dqve-page .tgs-add-script-btn,
+.dqve-page .tgs-add-tip-btn,
+.dqve-page .tgs-add-prompt-btn,
+.dqve-page .tgs-add-question-btn,
+.dqve-page .tgs-add-answer-key-btn,
+.dqve-page .tgs-add-listening-script-btn {
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dqve-page .tgs-listening-script-box {
+  border-radius: 0;
+  border-width: 2px;
+}
+
+.dqve-page .tgs-add-answer-btn {
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dqve-page .tgs-duration-input {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+}
+
+/* ============================================================================
+   DQVE FEEDBACK SECTION — Edgy overrides (tron blue)
+   Applies sharp corners, monospace, angular design to the feedback cards
+   when inside the .dqve-page wrapper.
+   ============================================================================ */
+
+/* Section header badge + line */
+.dqve-page .csve-feedback-number .csve-number-badge {
+  background: #00b4ff;
+}
+.dqve-page .csve-feedback-number .csve-section-line {
+  background: #00b4ff;
+}
+.dqve-page .csve-section-title-editable {
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 0;
+}
+
+/* Goal card — edgy */
+.dqve-page .csve-fb-goal-card {
+  border-radius: 0;
+  border: 2px solid #e2e8f0;
+}
+.dqve-page .csve-fb-goal-accent {
+  background: linear-gradient(180deg, #00b4ff 0%, #0077bb 100%);
+}
+.dqve-page .csve-fb-goal-label {
+  color: #00b4ff;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+.dqve-page .csve-fb-goal-text {
+  font-family: 'Courier New', monospace;
+}
+
+/* Rubric card — edgy */
+.dqve-page .csve-fb-rubric-card {
+  border-radius: 0;
+  border: 2px solid #e2e8f0;
+}
+.dqve-page .csve-fb-rubric-title {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+.dqve-page .csve-fb-rubric-circle {
+  border-radius: 0;
+}
+
+/* Categories header — edgy */
+.dqve-page .csve-fb-categories-title {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+/* Category cards — edgy */
+.dqve-page .csve-fb-category-card {
+  border-radius: 0;
+  border: 2px solid #e2e8f0;
+}
+.dqve-page .csve-fb-cat-icon {
+  border-radius: 0;
+}
+.dqve-page .csve-fb-cat-name {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+.dqve-page .csve-fb-assess-label,
+.dqve-page .csve-fb-focus-label,
+.dqve-page .csve-fb-examples-label {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+.dqve-page .csve-fb-assess-text {
+  border-radius: 0;
+}
+
+/* Focus tags — edgy */
+.dqve-page .csve-fb-focus-tag {
+  border-radius: 0;
+  border: 1px solid #cbd5e1;
+}
+.dqve-page .csve-fb-tag-remove {
+  border-radius: 0;
+}
+.dqve-page .csve-fb-add-tag {
+  border-radius: 0;
+  border-style: solid;
+}
+.dqve-page .csve-fb-add-tag:hover {
+  border-color: #00b4ff;
+  color: #00b4ff;
+  background: #edf7ff;
+}
+
+/* Vocab highlight — edgy */
+.dqve-page .csve-fb-vocab-highlight {
+  border-radius: 0;
+  background: linear-gradient(135deg, #edf7ff 0%, #e0f0ff 100%);
+}
+.dqve-page .csve-fb-vocab-highlight i {
+  color: #00b4ff;
+}
+.dqve-page .csve-fb-vocab-input {
+  color: #00b4ff;
+}
+
+/* Example cards — edgy */
+.dqve-page .csve-fb-example-card {
+  border-radius: 0;
+  border-left: 3px solid #00b4ff;
+}
+.dqve-page .csve-fb-example-icon {
+  border-radius: 0;
+}
+.dqve-page .csve-fb-example-select {
+  border-radius: 0;
+}
+.dqve-page .csve-fb-example-input {
+  border-radius: 0;
+}
+.dqve-page .csve-fb-example-remove {
+  border-radius: 0;
+}
+
+/* Add example button — edgy */
+.dqve-page .csve-fb-add-example {
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+.dqve-page .csve-fb-add-example:hover {
+  border-color: #00b4ff;
+  color: #00b4ff;
+  background: #edf7ff;
+}
+
+/* Feedback right tutor guide subheader */
+.dqve-page .csve-feedback-subheader-title {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+.dqve-page .csve-mission-duration-input {
+  font-family: 'Courier New', monospace;
 }

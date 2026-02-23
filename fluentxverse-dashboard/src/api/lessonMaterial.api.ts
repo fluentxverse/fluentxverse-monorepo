@@ -378,6 +378,7 @@ export interface LessonMaterial {
   missionData?: any;
   missionData2?: any;
   feedbackData?: any;
+  discussionQuestionsData?: any;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -427,6 +428,7 @@ export interface UpdateHeaderInput {
   missionData?: any;
   missionData2?: any;
   feedbackData?: any;
+  discussionQuestionsData?: any;
 }
 
 export interface ChapterInfo {

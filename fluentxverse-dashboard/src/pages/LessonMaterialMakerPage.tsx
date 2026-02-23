@@ -116,6 +116,10 @@ export default function LessonMaterialMakerPage() {
       location.route('/young-learners-editor');
       return;
     }
+    if (template.id === 'discussion-questions') {
+      location.route('/discussion-questions-editor');
+      return;
+    }
     
     setSelectedTemplate(template);
     const data = createConversationalTemplate(); // For now, use conversational for all

@@ -2,7 +2,7 @@
  * AI Routes - Grammar checking and language assistance
  */
 import { Elysia, t } from 'elysia';
-import { checkGrammar, getVocabularyDefinition, getPronunciation, generateIntroductionContent } from '../services/ai.service';
+import { checkGrammar, getVocabularyDefinition, getPronunciation, generateIntroductionContent, generateDiscussionQuestions } from '../services/ai.service';
 import { createAdminGuard, createTutorGuard } from '../middleware/auth.middleware';
 
 export const aiRoute = new Elysia({ prefix: '/ai' })
@@ -349,6 +349,48 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         tags: ['AI'],
         summary: 'Generate episode summary after Mission content',
         description: 'Creates a summary of the current episode and a hook for the next episode to maintain story continuity.',
+      },
+    }
+  )
+  // ============================================================================
+  // DISCUSSION QUESTIONS GENERATION (Admin only)
+  // ============================================================================
+  .post(
+    '/generate-discussion-questions',
+    async ({ body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        const result = await generateDiscussionQuestions(
+          body.topic,
+          body.level,
+          body.questionCount,
+          body.customPrompt,
+        );
+        return { success: true, data: result };
+      } catch (error) {
+        console.error('Discussion questions generation failed:', error);
+        set.status = 500;
+        return {
+          success: false,
+          error: 'Failed to generate discussion questions. Please try again.',
+        };
+      }
+    },
+    {
+      body: t.Object({
+        topic: t.String({ minLength: 1 }),
+        level: t.Number({ minimum: 1, maximum: 5 }),
+        questionCount: t.Number({ minimum: 5, maximum: 30 }),
+        customPrompt: t.Optional(t.Nullable(t.String())),
+      }),
+      detail: {
+        tags: ['AI'],
+        summary: 'Generate discussion questions for a topic',
+        description: 'Uses AI to generate level-appropriate discussion questions for the given topic.',
       },
     }
   );

@@ -1,22 +1,21 @@
 # Use official Bun image
 FROM docker.io/oven/bun:1-alpine
 
+# Create non-root user early (before any files are copied)
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 # Set working directory
 WORKDIR /app
 
 # Copy package files first (for better caching)
-COPY package.json ./
+COPY --chown=appuser:appgroup package.json ./
 
 # Install dependencies (--no-save prevents lockfile changes error)
 RUN bun install --production --no-save
 
 # Copy source code
-COPY src ./src
-COPY tsconfig.json ./
-
-# Create non-root user and set ownership
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
-    && chown -R appuser:appgroup /app
+COPY --chown=appuser:appgroup src ./src
+COPY --chown=appuser:appgroup tsconfig.json ./
 
 # Switch to non-root user
 USER appuser
