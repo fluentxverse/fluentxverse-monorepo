@@ -266,7 +266,7 @@ export interface CreateLessonInput {
   chapter: number;            // 1-5
   lessonNumber: number;       // 1-10
   skill: Skill;
-  chapterName: string;        // "All About Me"
+  chapterName?: string;       // Optional — auto-resolved from CourseMetadata
   lessonName: string;         // "Greetings"
   goalTextEn: string;         // "I can say basic greetings."
   goalTextJp: string;         // "基本的な挨拶ができるようになる。"
@@ -626,6 +626,26 @@ export const lessonMaterialService = {
     const session = driver.session();
     
     try {
+      // Enforce rule: For Conversational Skills Level 1, only chapter 1 is allowed.
+      if (input.course === 'conversational-skills' && input.level === 1) {
+        if (input.chapter !== 1) {
+          console.warn('Overriding chapter to 1 for conversational-skills Level 1');
+        }
+        // Force chapter to 1 to ensure Level 1 has only 1 chapter
+        input.chapter = 1;
+      }
+
+      // Auto-resolve chapterName from CourseMetadata if not provided
+      if (!input.chapterName) {
+        try {
+          const metaData = await this.getCourseMetadata(input.course);
+          const metaKey = `${input.level}-${input.chapter}`;
+          input.chapterName = metaData.chapters[metaKey]?.name || '';
+        } catch {
+          input.chapterName = '';
+        }
+      }
+
       // Check for duplicate
       const exists = await this.checkDuplicate(
         input.course,
@@ -672,7 +692,7 @@ export const lessonMaterialService = {
           chapter: neo4j.int(input.chapter),
           lessonNumber: neo4j.int(input.lessonNumber),
           skill: input.skill,
-          chapterName: input.chapterName,
+          chapterName: input.chapterName || '',
           lessonName: input.lessonName,
           goalTextEn: input.goalTextEn,
           goalTextJp: input.goalTextJp,
@@ -985,13 +1005,28 @@ export const lessonMaterialService = {
     const session = driver.session();
     
     try {
+      // For conversational-skills Level 1 enforce only chapter 1 is returned
+      if (course === 'conversational-skills' && level === 1) {
+        const result = await session.run(
+          `MATCH (l:LessonMaterial {course: $course, level: $level, chapter: $chapter})
+          RETURN DISTINCT l.chapter as chapter, l.chapterName as chapterName
+          ORDER BY l.chapter`,
+          { course, level: neo4j.int(level), chapter: neo4j.int(1) }
+        );
+
+        return result.records.map(r => ({
+          chapter: neo4j.isInt(r.get('chapter')) ? r.get('chapter').toNumber() : r.get('chapter'),
+          chapterName: r.get('chapterName'),
+        }));
+      }
+
       const result = await session.run(
         `MATCH (l:LessonMaterial {course: $course, level: $level})
         RETURN DISTINCT l.chapter as chapter, l.chapterName as chapterName
         ORDER BY l.chapter`,
         { course, level: neo4j.int(level) }
       );
-      
+
       return result.records.map(r => ({
         chapter: neo4j.isInt(r.get('chapter')) ? r.get('chapter').toNumber() : r.get('chapter'),
         chapterName: r.get('chapterName'),
@@ -1061,6 +1096,246 @@ export const lessonMaterialService = {
       );
       
       return result.records.map(r => transformLesson(r.get('l')));
+    } finally {
+      await session.close();
+    }
+  },
+
+  // ==========================================================================
+  // COURSE METADATA  (Level topics, Chapter themes & names)
+  // ==========================================================================
+
+  /**
+   * Get all metadata for a course (level topics + chapter themes/names)
+   */
+  async getCourseMetadata(
+    course: string
+  ): Promise<{ levels: Record<number, { mainTopic: string }>; chapters: Record<string, { theme: string; name: string }> }> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `MATCH (m:CourseMetadata {course: $course}) RETURN m`,
+        { course }
+      );
+
+      const levels: Record<number, { mainTopic: string }> = {};
+      const chapters: Record<string, { theme: string; name: string }> = {};
+
+      for (const record of result.records) {
+        const props = record.get('m').properties;
+        const type = props.type as string; // 'level' | 'chapter'
+
+        if (type === 'level') {
+          const lvl = neo4j.isInt(props.level) ? props.level.toNumber() : Number(props.level);
+          levels[lvl] = { mainTopic: props.mainTopic || '' };
+        } else if (type === 'chapter') {
+          const lvl = neo4j.isInt(props.level) ? props.level.toNumber() : Number(props.level);
+          const ch = neo4j.isInt(props.chapter) ? props.chapter.toNumber() : Number(props.chapter);
+          chapters[`${lvl}-${ch}`] = { theme: props.theme || '', name: props.name || '' };
+        }
+      }
+
+      return { levels, chapters };
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Save level main-topic
+   */
+  async saveLevelTopic(course: string, level: number, mainTopic: string): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      await session.run(
+        `MERGE (m:CourseMetadata {course: $course, type: 'level', level: $level})
+         SET m.mainTopic = $mainTopic, m.updatedAt = $now`,
+        { course, level: neo4j.int(level), mainTopic, now: new Date().toISOString() }
+      );
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Save chapter theme + name (and propagate name to all lessons in that chapter)
+   */
+  async saveChapterMeta(
+    course: string,
+    level: number,
+    chapter: number,
+    data: { theme?: string; name?: string }
+  ): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const setClauses = ['m.updatedAt = $now'];
+      const params: Record<string, any> = {
+        course,
+        level: neo4j.int(level),
+        chapter: neo4j.int(chapter),
+        now: new Date().toISOString(),
+      };
+
+      if (data.theme !== undefined) {
+        setClauses.push('m.theme = $theme');
+        params.theme = data.theme;
+      }
+      if (data.name !== undefined) {
+        setClauses.push('m.name = $name');
+        params.name = data.name;
+      }
+
+      await session.run(
+        `MERGE (m:CourseMetadata {course: $course, type: 'chapter', level: $level, chapter: $chapter})
+         SET ${setClauses.join(', ')}`,
+        params
+      );
+
+      // Also propagate chapter name to all existing lessons in that chapter
+      if (data.name !== undefined) {
+        await session.run(
+          `MATCH (l:LessonMaterial {course: $course, level: $level, chapter: $chapter})
+           SET l.chapterName = $name, l.updatedAt = $now`,
+          { course, level: neo4j.int(level), chapter: neo4j.int(chapter), name: data.name, now: new Date().toISOString() }
+        );
+      }
+    } finally {
+      await session.close();
+    }
+  },
+
+  // ==========================================================================
+  // LEVEL ADMIN ASSIGNMENT
+  // ==========================================================================
+
+  /**
+   * Assign an admin to a level (stores on the level metadata node)
+   */
+  async assignLevelAdmin(
+    course: string,
+    level: number,
+    adminId: string,
+    adminName: string
+  ): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      await session.run(
+        `MERGE (m:CourseMetadata {course: $course, type: 'level', level: $level})
+         SET m.assignedAdminId = $adminId, m.assignedAdminName = $adminName, m.updatedAt = $now`,
+        {
+          course,
+          level: neo4j.int(level),
+          adminId,
+          adminName,
+          now: new Date().toISOString(),
+        }
+      );
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Unassign admin from a level
+   */
+  async unassignLevelAdmin(course: string, level: number): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      await session.run(
+        `MATCH (m:CourseMetadata {course: $course, type: 'level', level: $level})
+         REMOVE m.assignedAdminId, m.assignedAdminName
+         SET m.updatedAt = $now`,
+        { course, level: neo4j.int(level), now: new Date().toISOString() }
+      );
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Get level assignments for a course
+   */
+  async getLevelAssignments(course: string): Promise<Record<number, { adminId: string; adminName: string }>> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `MATCH (m:CourseMetadata {course: $course, type: 'level'})
+         WHERE m.assignedAdminId IS NOT NULL
+         RETURN m.level AS level, m.assignedAdminId AS adminId, m.assignedAdminName AS adminName`,
+        { course }
+      );
+
+      const assignments: Record<number, { adminId: string; adminName: string }> = {};
+      for (const record of result.records) {
+        const lvl = neo4j.isInt(record.get('level')) ? record.get('level').toNumber() : Number(record.get('level'));
+        assignments[lvl] = {
+          adminId: record.get('adminId'),
+          adminName: record.get('adminName'),
+        };
+      }
+      return assignments;
+    } finally {
+      await session.close();
+    }
+  },
+
+  /**
+   * Batch-save course structure generated by AI (level topic + chapter themes/names)
+   */
+  async saveCourseStructure(
+    course: string,
+    level: number,
+    data: {
+      mainTopic: string;
+      chapters: Array<{ chapter: number; theme: string; name: string }>;
+    }
+  ): Promise<void> {
+    const driver = getDriver();
+    const session = driver.session();
+    const now = new Date().toISOString();
+
+    try {
+      // Save level topic
+      await session.run(
+        `MERGE (m:CourseMetadata {course: $course, type: 'level', level: $level})
+         SET m.mainTopic = $mainTopic, m.updatedAt = $now`,
+        { course, level: neo4j.int(level), mainTopic: data.mainTopic, now }
+      );
+
+      // Save all chapter themes/names
+      for (const ch of data.chapters) {
+        await session.run(
+          `MERGE (m:CourseMetadata {course: $course, type: 'chapter', level: $level, chapter: $chapter})
+           SET m.theme = $theme, m.name = $name, m.updatedAt = $now`,
+          {
+            course,
+            level: neo4j.int(level),
+            chapter: neo4j.int(ch.chapter),
+            theme: ch.theme,
+            name: ch.name,
+            now,
+          }
+        );
+
+        // Propagate name to existing lessons
+        await session.run(
+          `MATCH (l:LessonMaterial {course: $course, level: $level, chapter: $chapter})
+           SET l.chapterName = $name, l.updatedAt = $now`,
+          { course, level: neo4j.int(level), chapter: neo4j.int(ch.chapter), name: ch.name, now }
+        );
+      }
     } finally {
       await session.close();
     }

@@ -2,7 +2,7 @@
  * AI Routes - Grammar checking and language assistance
  */
 import { Elysia, t } from 'elysia';
-import { checkGrammar, getVocabularyDefinition, getPronunciation, generateIntroductionContent, generateDiscussionQuestions } from '../services/ai.service';
+import { checkGrammar, getVocabularyDefinition, getPronunciation, generateIntroductionContent, generateDiscussionQuestions, generateCourseStructure, generateLessonStructure } from '../services/ai.service';
 import { createAdminGuard, createTutorGuard } from '../middleware/auth.middleware';
 
 export const aiRoute = new Elysia({ prefix: '/ai' })
@@ -391,6 +391,100 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         tags: ['AI'],
         summary: 'Generate discussion questions for a topic',
         description: 'Uses AI to generate level-appropriate discussion questions for the given topic.',
+      },
+    }
+  )
+  // ============================================================================
+  // GENERATE COURSE STRUCTURE (Admin only)
+  // Level topic + Chapter themes & names
+  // ============================================================================
+  .post(
+    '/generate-course-structure',
+    async ({ body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        const result = await generateCourseStructure(
+          body.level,
+          body.existingTopic,
+          body.existingChapters,
+          body.customPrompt
+        );
+        return { success: true, data: result };
+      } catch (error) {
+        console.error('Course structure generation failed:', error);
+        set.status = 500;
+        return {
+          success: false,
+          error: 'Failed to generate course structure. Please try again.',
+        };
+      }
+    },
+    {
+      body: t.Object({
+        level: t.Number({ minimum: 1, maximum: 10 }),
+        existingTopic: t.Optional(t.Nullable(t.String())),
+        existingChapters: t.Optional(t.Nullable(t.Array(t.Object({
+          chapter: t.Number(),
+          theme: t.Optional(t.String()),
+          name: t.Optional(t.String()),
+        })))),
+        customPrompt: t.Optional(t.Nullable(t.String())),
+      }),
+      detail: {
+        tags: ['AI'],
+        summary: 'Generate course structure for a level',
+        description: 'Uses AI to generate level main topic + chapter themes and names.',
+      },
+    }
+  )
+  // ============================================================================
+  // GENERATE LESSON STRUCTURE (Admin only)
+  // Lesson names & goals for a chapter
+  // ============================================================================
+  .post(
+    '/generate-lesson-structure',
+    async ({ body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        const result = await generateLessonStructure(
+          body.level,
+          body.chapter,
+          body.levelTopic,
+          body.chapterTheme,
+          body.chapterName,
+          body.customPrompt
+        );
+        return { success: true, data: result };
+      } catch (error) {
+        console.error('Lesson structure generation failed:', error);
+        set.status = 500;
+        return {
+          success: false,
+          error: 'Failed to generate lesson structure. Please try again.',
+        };
+      }
+    },
+    {
+      body: t.Object({
+        level: t.Number({ minimum: 1, maximum: 10 }),
+        chapter: t.Number({ minimum: 1, maximum: 5 }),
+        levelTopic: t.String(),
+        chapterTheme: t.String(),
+        chapterName: t.String(),
+        customPrompt: t.Optional(t.Nullable(t.String())),
+      }),
+      detail: {
+        tags: ['AI'],
+        summary: 'Generate lesson names and goals for a chapter',
+        description: 'Uses AI to generate lesson names, English goals, and Japanese goals for all 10 lessons in a chapter.',
       },
     }
   );

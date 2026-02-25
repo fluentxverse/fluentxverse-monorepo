@@ -108,39 +108,41 @@ const DEFAULT_DQ_FEEDBACK_DATA: DQFeedbackSectionData = {
     { instruction: 'Have the student read the lesson goal.' },
     { instruction: 'Ask if they achieved the lesson goal.', scripts: [{ text: '"Did you achieve the lesson goal?"' }] },
     { instruction: 'Give the student a score for their lesson goal achievement using the rubric.', tips: [{ text: 'Base your score on how well they answered the discussion questions.' }] },
-    { instruction: 'Give feedback on the student\'s range, accuracy, and fluency using the template below.', tips: [{ text: 'Refer to the Personalized Feedback Guide for more information.' }] },
+    { instruction: 'Give feedback on the student\'s content, accuracy, and fluency using the template below.', tips: [{ text: 'Refer to the Personalized Feedback Guide for more information.' }] },
     { instruction: 'Wrap up the lesson.', scripts: [{ text: '"You did a great job! Thank you very much for today."' }] },
   ],
   categories: [
     {
-      id: 'range',
-      title: 'RANGE',
-      titleJp: '表現の幅\n語彙をどの程度使えるか',
-      focusOn: 'the ability to use a wide variety of vocabulary',
-      exampleFeedbackItems: ['words the student learned', 'words the student overused'],
-      vocabularyExample: 'the latest - something that is the newest version',
-      examples: [{ youSaid: 'My job is VERY fun. I like it VERY much.', correction: 'My job is A LOT OF fun. I like it VERY much.', correctionLabel: 'Better:' }],
+      id: 'content',
+      title: 'CONTENT & IDEAS',
+      titleJp: '内容と考え\n意見を明確に表現し、理由や具体例で補強できるか',
+      focusOn: 'the ability to express clear opinions, support them with reasons and examples, and develop ideas beyond one-sentence answers',
+      exampleFeedbackItems: ['depth of response', 'use of reasons and examples', 'ability to expand on ideas'],
+      examples: [
+        { youSaid: 'I like traveling.', correction: 'I like traveling because I enjoy learning about different cultures. For example, last year I visited Thailand and tried many local dishes.', correctionLabel: 'Correct:' },
+        { youSaid: 'I think it\'s good.', correction: 'I think it\'s a good idea because it helps people save money. Also, it\'s better for the environment.', correctionLabel: 'Correct:' },
+      ],
     },
     {
       id: 'accuracy',
       title: 'ACCURACY',
-      titleJp: '正確さ\n文法が正しく使えているかどうか',
-      focusOn: 'the ability to speak correctly',
-      exampleFeedbackItems: ['grammar mistakes'],
+      titleJp: '正確さ\n文法や語彙が正しく使えているかどうか',
+      focusOn: 'the ability to use grammar and vocabulary correctly when expressing opinions',
+      exampleFeedbackItems: ['grammar mistakes', 'word choice errors'],
       examples: [
         { youSaid: 'I GO to the park yesterday.', correction: 'I WENT to the park yesterday.', correctionLabel: 'Correct:' },
-        { youSaid: 'I HAVE NOT started yet.', correction: 'I HAVEN\'T started yet.', correctionLabel: 'Better:' },
+        { youSaid: 'I\'m AGREE with that opinion.', correction: 'I AGREE with that opinion.', correctionLabel: 'Correct:' },
       ],
     },
     {
-      id: 'fluency',
-      title: 'FLUENCY',
-      titleJp: '流暢さ\n円滑に喋ることができるかどうか',
-      focusOn: 'the ability to speak smoothly without pauses or fillers',
-      exampleFeedbackItems: ['unnaturally long pauses', 'Japanese or English fillers (etto..., ano..., um..., etc.)'],
+      id: 'interaction',
+      title: 'FLUENCY & INTERACTION',
+      titleJp: '流暢さと対話力\n円滑に話し、会話に自然に参加できるかどうか',
+      focusOn: 'the ability to speak smoothly, use discourse markers (however, for example, on the other hand), and engage naturally in the discussion',
+      exampleFeedbackItems: ['unnaturally long pauses', 'use of fillers (etto..., ano..., um...)', 'use of discourse markers', 'ability to expand answers'],
       examples: [
-        { youSaid: 'I went shopping. ... It was fun.', correction: 'I went shopping. It was fun.', correctionLabel: 'Better:' },
-        { youSaid: 'I went shopping. ETTO, it was fun.', correction: 'I went shopping. It was fun.', correctionLabel: 'Better:' },
+        { youSaid: 'I think... etto... it\'s good. ... Yes.', correction: 'I think it\'s a good idea. For example, it can help people save time.', correctionLabel: 'Correct:' },
+        { youSaid: 'Yes. I agree.', correction: 'Yes, I agree. On the other hand, some people might think it\'s too expensive.', correctionLabel: 'Correct:' },
       ],
     },
   ],
@@ -938,9 +940,9 @@ function DQFeedbackSectionEditor({ data, onChange }: DQFeedbackSectionEditorProp
               {/* Category Header */}
               <div className="csve-fb-cat-header">
                 <div className="csve-fb-cat-icon">
-                  {category.id === 'range' && <i className="ri-compass-3-line" />}
+                  {category.id === 'content' && <i className="ri-lightbulb-line" />}
                   {category.id === 'accuracy' && <i className="ri-focus-2-line" />}
-                  {category.id === 'fluency' && <i className="ri-speed-line" />}
+                  {category.id === 'interaction' && <i className="ri-chat-smile-2-line" />}
                 </div>
                 <div className="csve-fb-cat-titles">
                   <input
@@ -1006,7 +1008,7 @@ function DQFeedbackSectionEditor({ data, onChange }: DQFeedbackSectionEditorProp
               <div className="csve-fb-cat-examples">
                 <span className="csve-fb-examples-label">Sample corrections</span>
 
-                {category.id === 'range' && (
+                {category.id === 'content' && category.vocabularyExample && (
                   <div className="csve-fb-vocab-highlight">
                     <i className="ri-book-2-line" />
                     <input
@@ -1020,9 +1022,9 @@ function DQFeedbackSectionEditor({ data, onChange }: DQFeedbackSectionEditorProp
                 )}
 
                 {category.examples.map((example, exIdx) => (
-                  <div key={exIdx} className="csve-fb-example-card">
+                  <div key={exIdx} className="csve-fb-example-card dqve-fb-example-card">
                     <div className="csve-fb-example-said">
-                      <span className="csve-fb-example-icon">✗</span>
+                      <span className="dqve-fb-label dqve-fb-label--said">You said:</span>
                       <input
                         type="text"
                         className="csve-fb-example-input csve-fb-said-input"
@@ -1032,20 +1034,13 @@ function DQFeedbackSectionEditor({ data, onChange }: DQFeedbackSectionEditorProp
                       />
                     </div>
                     <div className="csve-fb-example-better">
-                      <select
-                        className="csve-fb-example-select"
-                        value={example.correctionLabel}
-                        onChange={e => updateExample(catIdx, exIdx, { correctionLabel: (e.target as HTMLSelectElement).value })}
-                      >
-                        <option value="Better:">✓</option>
-                        <option value="Correct:">✓✓</option>
-                      </select>
+                      <span className="dqve-fb-label dqve-fb-label--correct">Correct:</span>
                       <input
                         type="text"
                         className="csve-fb-example-input csve-fb-better-input"
                         value={example.correction}
                         onChange={e => updateExample(catIdx, exIdx, { correction: (e.target as HTMLInputElement).value })}
-                        placeholder="Suggested improvement..."
+                        placeholder="Improved version..."
                       />
                     </div>
                     {category.examples.length > 1 && (

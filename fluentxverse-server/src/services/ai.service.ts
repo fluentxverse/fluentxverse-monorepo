@@ -3511,3 +3511,232 @@ Return ONLY JSON:
 
   return { questions };
 };
+
+// ============================================================================
+// AI AGENT FOR COURSE STRUCTURE GENERATION
+// (Level topic → Chapter themes & names)
+// ============================================================================
+
+export interface CourseStructureResult {
+  mainTopic: string;
+  chapters: Array<{
+    chapter: number;
+    theme: string;
+    name: string;
+  }>;
+}
+
+const courseStructureAgent = new Agent({
+  name: 'Course Structure Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an expert ESL curriculum architect specializing in conversational English programs.
+
+Your job is to design the STRUCTURE of a level within a conversational skills course. Given a level number (1-10) and its proficiency tier, generate:
+1. A Main Topic for the level (the overarching theme)
+2. Chapter themes and names for all chapters in that level
+
+PROFICIENCY TIERS:
+- Level 1-2: STARTER - Very basic, survival English. Topics like greetings, self-introduction, numbers, daily routines
+- Level 3-4: BEGINNER - Basic social English. Topics like family, hobbies, food, directions, shopping
+- Level 5-6: ELEMENTARY - Functional English. Topics like travel, health, work, opinions, making plans
+- Level 7-8: INTERMEDIATE - Expressive English. Topics like culture, news, relationships, debates, storytelling
+- Level 9-10: ADVANCED - Sophisticated English. Topics like philosophy, business negotiation, humor, abstract concepts
+
+DESIGN PRINCIPLES:
+- The Main Topic should be broad enough to support multiple chapters but specific enough to feel cohesive
+- Chapter Themes are sub-categories under the main topic - they define the focus area
+- Chapter Names are catchy, memorable titles for each chapter - student-facing labels
+- Each chapter should build on the previous one in complexity or expand to related territory
+- Content MUST be conversation-worthy - things people actually talk about in real life
+- Themes should be practical, engaging, and culturally inclusive
+- Avoid overly academic or boring topics - keep it fun and relatable
+
+CRITICAL RULES:
+- Level 1 ALWAYS has exactly 1 chapter
+- Levels 2-10 have exactly 5 chapters
+- Chapter themes should be distinct from each other (no overlap)
+- Names should be short (2-5 words), catchy, and memorable
+- NEVER use emoji
+
+If the user provides an existing main topic, build the chapters around that topic. If they provide some chapter info already, work around what exists.
+
+Respond ONLY in this JSON format:
+{
+  "mainTopic": "The overarching topic for this level",
+  "chapters": [
+    { "chapter": 1, "theme": "Sub-theme description", "name": "Catchy Chapter Name" },
+    { "chapter": 2, "theme": "Sub-theme description", "name": "Catchy Chapter Name" }
+  ]
+}`,
+});
+
+/**
+ * Generate course structure (level topic + chapter themes/names)
+ */
+export const generateCourseStructure = async (
+  level: number,
+  existingTopic?: string | null,
+  existingChapters?: Array<{ chapter: number; theme?: string; name?: string }> | null,
+  customPrompt?: string | null
+): Promise<CourseStructureResult> => {
+  const tiers: Record<number, string> = {
+    1: 'STARTER', 2: 'STARTER', 3: 'BEGINNER', 4: 'BEGINNER',
+    5: 'ELEMENTARY', 6: 'ELEMENTARY', 7: 'INTERMEDIATE', 8: 'INTERMEDIATE',
+    9: 'ADVANCED', 10: 'ADVANCED',
+  };
+
+  const chapterCount = level === 1 ? 1 : 5;
+
+  let prompt = `Generate the structure for Level ${level} (${tiers[level]}) of a Conversational Skills course.\nThis level should have exactly ${chapterCount} chapter(s).`;
+
+  if (existingTopic) {
+    prompt += `\n\nThe level's main topic has already been set to: "${existingTopic}". Build the chapters around this topic.`;
+  }
+
+  if (existingChapters && existingChapters.length > 0) {
+    const existing = existingChapters
+      .filter(c => c.theme || c.name)
+      .map(c => `Chapter ${c.chapter}: Theme="${c.theme || '(not set)'}", Name="${c.name || '(not set)'}"`)
+      .join('\n');
+    if (existing) {
+      prompt += `\n\nSome chapters already have content. Keep those and fill in the rest:\n${existing}`;
+    }
+  }
+
+  if (customPrompt) {
+    prompt += `\n\nAdditional instructions: ${customPrompt}`;
+  }
+
+  try {
+    const response = await courseStructureAgent.generate(prompt);
+    const text = response.text || '';
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+
+    const parsed = JSON.parse(jsonContent);
+
+    return {
+      mainTopic: parsed.mainTopic || existingTopic || '',
+      chapters: (parsed.chapters || []).slice(0, chapterCount).map((ch: any, i: number) => ({
+        chapter: ch.chapter || i + 1,
+        theme: ch.theme || '',
+        name: ch.name || '',
+      })),
+    };
+  } catch (error) {
+    console.error('Failed to generate course structure:', error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// AI AGENT FOR LESSON STRUCTURE GENERATION
+// (Chapter theme/name -> Lesson names & goals)
+// ============================================================================
+
+export interface LessonStructureResult {
+  lessons: Array<{
+    lessonNumber: number;
+    lessonName: string;
+    goalTextEn: string;
+    goalTextJp: string;
+  }>;
+}
+
+const lessonStructureAgent = new Agent({
+  name: 'Lesson Structure Generator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are an expert ESL lesson planner specializing in conversational English courses.
+
+Your job is to generate lesson names and goals for all lessons in a chapter. Each chapter has up to 10 lesson slots (for each of the 3 skills: speaking, listening, reading - but you generate a general lesson name and goal that works across skills).
+
+Given a level, chapter theme, and chapter name, generate 10 lessons that:
+1. Progress logically from simple to complex within the chapter theme
+2. Cover different angles/sub-topics of the chapter theme
+3. Have conversation-worthy content - things people actually discuss in real life
+4. Build from the level topic and chapter theme naturally
+
+LESSON NAMING RULES:
+- Lesson names should be short (1-4 words), clear, and descriptive
+- They should indicate what the lesson teaches (e.g., "First Impressions", "Asking for Help", "Making Plans")
+- Avoid generic names like "Lesson 1", "Practice", "Review"
+- Names should feel like natural conversation topics
+
+GOAL RULES:
+- English goals should start with "I can..." and describe what the student will be able to do
+- Japanese goals should be the equivalent in Japanese
+- Goals should be specific and measurable (e.g., "I can introduce myself and ask someone's name" not "I can do greetings")
+- Keep goals concise (max 15 words)
+- Goals should be achievable within a single lesson
+
+PROFICIENCY MAPPING:
+- Level 1-2 (STARTER): Very simple goals - basic phrases, single exchanges
+- Level 3-4 (BEGINNER): Simple goals - short conversations, common situations
+- Level 5-6 (ELEMENTARY): Moderate goals - functional conversations, opinions
+- Level 7-8 (INTERMEDIATE): Complex goals - nuanced discussions, storytelling
+- Level 9-10 (ADVANCED): Sophisticated goals - debates, persuasion, abstract ideas
+
+Respond ONLY in this JSON format:
+{
+  "lessons": [
+    {
+      "lessonNumber": 1,
+      "lessonName": "Short Name",
+      "goalTextEn": "I can do something specific.",
+      "goalTextJp": "Equivalent Japanese goal."
+    }
+  ]
+}
+
+Generate exactly 10 lessons.`,
+});
+
+/**
+ * Generate lesson names and goals for a chapter
+ */
+export const generateLessonStructure = async (
+  level: number,
+  chapter: number,
+  levelTopic: string,
+  chapterTheme: string,
+  chapterName: string,
+  customPrompt?: string | null
+): Promise<LessonStructureResult> => {
+  const tiers: Record<number, string> = {
+    1: 'STARTER', 2: 'STARTER', 3: 'BEGINNER', 4: 'BEGINNER',
+    5: 'ELEMENTARY', 6: 'ELEMENTARY', 7: 'INTERMEDIATE', 8: 'INTERMEDIATE',
+    9: 'ADVANCED', 10: 'ADVANCED',
+  };
+
+  let prompt = `Generate 10 lesson names and goals for:
+- Level ${level} (${tiers[level]})
+- Level Main Topic: "${levelTopic}"
+- Chapter ${chapter}: Theme = "${chapterTheme}", Name = "${chapterName}"
+
+The lessons should progressively explore different facets of "${chapterTheme}" under the umbrella of "${levelTopic}". All content must be conversation-worthy and appropriate for ${tiers[level]} level students.`;
+
+  if (customPrompt) {
+    prompt += `\n\nAdditional instructions: ${customPrompt}`;
+  }
+
+  try {
+    const response = await lessonStructureAgent.generate(prompt);
+    const text = response.text || '';
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+
+    const parsed = JSON.parse(jsonContent);
+
+    return {
+      lessons: (parsed.lessons || []).slice(0, 10).map((l: any, i: number) => ({
+        lessonNumber: l.lessonNumber || i + 1,
+        lessonName: l.lessonName || '',
+        goalTextEn: l.goalTextEn || '',
+        goalTextJp: l.goalTextJp || '',
+      })),
+    };
+  } catch (error) {
+    console.error('Failed to generate lesson structure:', error);
+    throw error;
+  }
+};

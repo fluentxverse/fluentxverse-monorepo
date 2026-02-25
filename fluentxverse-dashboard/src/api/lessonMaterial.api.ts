@@ -349,7 +349,6 @@ export interface CreateLessonInput {
   chapter: number;
   lessonNumber: number;
   skill: Skill;
-  chapterName: string;
   lessonName: string;
   goalTextEn: string;
   goalTextJp: string;
@@ -542,4 +541,89 @@ export async function publishLesson(id: string): Promise<LessonMaterial> {
 export async function unpublishLesson(id: string): Promise<LessonMaterial> {
   const response = await apiClient.post<{ lesson: LessonMaterial }>(`/lesson-materials/${id}/unpublish`);
   return response.data.lesson;
+}
+
+// ============================================================================
+// COURSE METADATA  (Level topics + Chapter themes/names)
+// ============================================================================
+
+export interface CourseMetadata {
+  levels: Record<number, { mainTopic: string }>;
+  chapters: Record<string, { theme: string; name: string }>;
+}
+
+/**
+ * Get all metadata for a course
+ */
+export async function getCourseMetadata(course: string): Promise<CourseMetadata> {
+  const response = await apiClient.get(`/lesson-materials/metadata/${course}`);
+  return { levels: response.data.levels || {}, chapters: response.data.chapters || {} };
+}
+
+/**
+ * Save level main-topic
+ */
+export async function saveLevelTopic(course: string, level: number, mainTopic: string): Promise<void> {
+  await apiClient.put(`/lesson-materials/metadata/${course}/level/${level}`, { mainTopic });
+}
+
+/**
+ * Save chapter theme and/or name
+ */
+export async function saveChapterMeta(
+  course: string,
+  level: number,
+  chapter: number,
+  data: { theme?: string; name?: string }
+): Promise<void> {
+  await apiClient.put(`/lesson-materials/metadata/${course}/chapter/${level}/${chapter}`, data);
+}
+
+// ============================================================================
+// LEVEL ADMIN ASSIGNMENT
+// ============================================================================
+
+export interface LevelAssignment {
+  adminId: string;
+  adminName: string;
+}
+
+/**
+ * Assign an admin to a level
+ */
+export async function assignLevelAdmin(
+  course: string,
+  level: number,
+  adminId: string,
+  adminName: string
+): Promise<void> {
+  await apiClient.put(`/lesson-materials/metadata/${course}/level/${level}/assign`, { adminId, adminName });
+}
+
+/**
+ * Unassign admin from a level
+ */
+export async function unassignLevelAdmin(course: string, level: number): Promise<void> {
+  await apiClient.delete(`/lesson-materials/metadata/${course}/level/${level}/assign`);
+}
+
+/**
+ * Get level assignments for a course
+ */
+export async function getLevelAssignments(
+  course: string
+): Promise<Record<number, LevelAssignment>> {
+  const response = await apiClient.get(`/lesson-materials/metadata/${course}/assignments`);
+  return response.data.assignments || {};
+}
+
+/**
+ * Batch-save AI-generated course structure for a level
+ */
+export async function saveCourseStructure(
+  course: string,
+  level: number,
+  data: { mainTopic: string; chapters: Array<{ chapter: number; theme: string; name: string }> }
+): Promise<void> {
+  await apiClient.put(`/lesson-materials/metadata/${course}/level/${level}/structure`, data);
 }

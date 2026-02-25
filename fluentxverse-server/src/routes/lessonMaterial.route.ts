@@ -62,7 +62,7 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         chapter: t.Number({ minimum: 1, maximum: 5 }),
         lessonNumber: t.Number({ minimum: 1, maximum: 10 }),
         skill: t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading')]),
-        chapterName: t.String({ minLength: 1 }),
+        chapterName: t.Optional(t.String()),
         lessonName: t.String({ minLength: 1 }),
         goalTextEn: t.String(),
         goalTextJp: t.String(),
@@ -577,6 +577,241 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
       detail: {
         tags: ['Lesson Materials'],
         summary: 'Unpublish a lesson (set back to draft)',
+      },
+    }
+  )
+
+  // ============================================================================
+  // COURSE METADATA  (Level topics + Chapter themes/names)
+  // ============================================================================
+
+  // GET all metadata for a course
+  .get(
+    '/metadata/:course',
+    async ({ params, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        const metadata = await lessonMaterialService.getCourseMetadata(params.course);
+        return { success: true, ...metadata };
+      } catch (error) {
+        console.error('Error fetching course metadata:', error);
+        return { success: false, error: 'Failed to fetch course metadata' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String() }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Get all metadata (level topics + chapter themes/names) for a course',
+      },
+    }
+  )
+
+  // SAVE level main-topic
+  .put(
+    '/metadata/:course/level/:level',
+    async ({ params, body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        await lessonMaterialService.saveLevelTopic(params.course, parseInt(params.level), body.mainTopic);
+        return { success: true };
+      } catch (error) {
+        console.error('Error saving level topic:', error);
+        return { success: false, error: 'Failed to save level topic' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String(), level: t.String() }),
+      body: t.Object({ mainTopic: t.String() }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Save the main topic for a level',
+      },
+    }
+  )
+
+  // SAVE chapter theme + name
+  .put(
+    '/metadata/:course/chapter/:level/:chapter',
+    async ({ params, body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        await lessonMaterialService.saveChapterMeta(
+          params.course,
+          parseInt(params.level),
+          parseInt(params.chapter),
+          { theme: body.theme, name: body.name }
+        );
+        return { success: true };
+      } catch (error) {
+        console.error('Error saving chapter metadata:', error);
+        return { success: false, error: 'Failed to save chapter metadata' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String(), level: t.String(), chapter: t.String() }),
+      body: t.Object({
+        theme: t.Optional(t.String()),
+        name: t.Optional(t.String()),
+      }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Save theme and/or name for a chapter',
+      },
+    }
+  )
+
+  // ============================================================================
+  // LEVEL ADMIN ASSIGNMENT
+  // ============================================================================
+
+  // ASSIGN admin to a level
+  .put(
+    '/metadata/:course/level/:level/assign',
+    async ({ params, body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      // Only superadmins can assign levels
+      if (adminPayload.role !== 'superadmin') {
+        set.status = 403;
+        return { success: false, error: 'Only superadmins can assign levels' };
+      }
+
+      try {
+        await lessonMaterialService.assignLevelAdmin(
+          params.course,
+          parseInt(params.level),
+          body.adminId,
+          body.adminName
+        );
+        return { success: true };
+      } catch (error) {
+        console.error('Error assigning level admin:', error);
+        return { success: false, error: 'Failed to assign level admin' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String(), level: t.String() }),
+      body: t.Object({
+        adminId: t.String(),
+        adminName: t.String(),
+      }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Assign an admin to a level (superadmin only)',
+      },
+    }
+  )
+
+  // UNASSIGN admin from a level
+  .delete(
+    '/metadata/:course/level/:level/assign',
+    async ({ params, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      if (adminPayload.role !== 'superadmin') {
+        set.status = 403;
+        return { success: false, error: 'Only superadmins can unassign levels' };
+      }
+
+      try {
+        await lessonMaterialService.unassignLevelAdmin(params.course, parseInt(params.level));
+        return { success: true };
+      } catch (error) {
+        console.error('Error unassigning level admin:', error);
+        return { success: false, error: 'Failed to unassign level admin' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String(), level: t.String() }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Unassign admin from a level (superadmin only)',
+      },
+    }
+  )
+
+  // GET level assignments for a course
+  .get(
+    '/metadata/:course/assignments',
+    async ({ params, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        const assignments = await lessonMaterialService.getLevelAssignments(params.course);
+        return { success: true, assignments };
+      } catch (error) {
+        console.error('Error fetching level assignments:', error);
+        return { success: false, error: 'Failed to fetch level assignments' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String() }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Get all level admin assignments for a course',
+      },
+    }
+  )
+
+  // BATCH SAVE course structure (level topic + all chapter themes/names)
+  .put(
+    '/metadata/:course/level/:level/structure',
+    async ({ params, body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        await lessonMaterialService.saveCourseStructure(
+          params.course,
+          parseInt(params.level),
+          {
+            mainTopic: body.mainTopic,
+            chapters: body.chapters,
+          }
+        );
+        return { success: true };
+      } catch (error) {
+        console.error('Error saving course structure:', error);
+        return { success: false, error: 'Failed to save course structure' };
+      }
+    },
+    {
+      params: t.Object({ course: t.String(), level: t.String() }),
+      body: t.Object({
+        mainTopic: t.String(),
+        chapters: t.Array(t.Object({
+          chapter: t.Number(),
+          theme: t.String(),
+          name: t.String(),
+        })),
+      }),
+      detail: {
+        tags: ['Lesson Materials'],
+        summary: 'Batch-save AI-generated course structure for a level',
       },
     }
   );

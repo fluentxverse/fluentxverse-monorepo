@@ -11,6 +11,10 @@ const TOTAL_LEVELS = 10;
 const CHAPTERS_PER_LEVEL = 5;
 const LESSONS_PER_CHAPTER = 10;
 
+/** Level 1 has only 1 chapter; all other levels have 5 */
+const getChaptersForLevel = (level: number): number[] =>
+  level === 1 ? [1] : Array.from({ length: CHAPTERS_PER_LEVEL }, (_, i) => i + 1);
+
 const ConversationalSkillsPage = () => {
   const { user } = useAuthContext();
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -187,7 +191,7 @@ const ConversationalSkillsPage = () => {
 
   // Get available chapters for selected level
   const availableChapters = selectedLevel !== null 
-    ? Array.from({ length: CHAPTERS_PER_LEVEL }, (_, i) => i + 1)
+    ? getChaptersForLevel(selectedLevel)
     : [];
 
   return (
@@ -219,7 +223,7 @@ const ConversationalSkillsPage = () => {
                     </div>
                     <div className="course-stat">
                       <i className="fi-sr-layers"></i>
-                      <span>{TOTAL_LEVELS} Levels • {CHAPTERS_PER_LEVEL} Chapters each</span>
+                      <span>{TOTAL_LEVELS} Levels • Up to {CHAPTERS_PER_LEVEL} Chapters each</span>
                     </div>
                   </div>
                 </div>
@@ -356,7 +360,7 @@ const ConversationalSkillsPage = () => {
                       
                       {isExpanded && (
                         <div className="level-content">
-                          {Array.from({ length: CHAPTERS_PER_LEVEL }, (_, j) => j + 1).map(chapter => {
+                          {getChaptersForLevel(level).map(chapter => {
                             const chapterKey = `${level}-${chapter}`;
                             const chapterLessons = groupedLessons[level]?.[chapter] || [];
                             const isChapterExpanded = expandedChapters.includes(chapterKey);

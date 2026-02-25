@@ -15,10 +15,27 @@ import {
   duplicateLesson,
   publishLesson,
   unpublishLesson,
+  getCourseMetadata,
+  saveLevelTopic,
+  saveChapterMeta,
+  assignLevelAdmin,
+  unassignLevelAdmin,
+  getLevelAssignments,
+  saveCourseStructure,
   type LessonMaterial,
   type Skill,
   type CreateLessonInput,
+  type CourseMetadata,
+  type LevelAssignment,
 } from '../api/lessonMaterial.api';
+import {
+  generateCourseStructure,
+  generateLessonStructure,
+  type CourseStructureChapter,
+  type LessonStructureItem,
+} from '../api/ai.api';
+import { authApi, type AdminListItem } from '../api/auth.api';
+import { useAuthContext } from '../context/AuthContext';
 import { toast } from '../Components/Toast/Toast';
 import './ConversationalSkillsEditorPage.css';
 
@@ -30,6 +47,10 @@ const COURSE_ID = 'conversational-skills';
 const LEVELS = Array.from({ length: 10 }, (_, i) => i + 1);
 const CHAPTERS = Array.from({ length: 5 }, (_, i) => i + 1);
 const LESSONS = Array.from({ length: 10 }, (_, i) => i + 1);
+
+/** Level 1 has only 1 chapter; all other levels have 5 */
+const getChaptersForLevel = (level: number): number[] =>
+  level === 1 ? [1] : CHAPTERS;
 const SKILLS: { value: Skill; label: string }[] = [
   { value: 'speaking', label: 'Speaking' },
   { value: 'listening', label: 'Listening' },
@@ -57,6 +78,9 @@ const LEVEL_COLORS: Record<number, string> = {
 // ============================================================================
 
 export default function ConversationalSkillsEditorPage() {
+  const { user } = useAuthContext();
+  const isSuperAdmin = user?.role === 'superadmin';
+
   const [lessons, setLessons] = useState<LessonMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -64,9 +88,35 @@ export default function ConversationalSkillsEditorPage() {
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [selectedLesson, setSelectedLesson] = useState<LessonMaterial | null>(null);
 
-  // Load lessons on mount
+  // Course metadata: level topics + chapter themes/names
+  const [metadata, setMetadata] = useState<CourseMetadata>({ levels: {}, chapters: {} });
+  // Inline-editing tracking
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState('');
+
+  // Level admin assignments
+  const [assignments, setAssignments] = useState<Record<number, LevelAssignment>>({});
+  const [showAssignModal, setShowAssignModal] = useState(false);
+
+  // AI Generation state
+  const [generatingStructure, setGeneratingStructure] = useState<number | null>(null); // level being generated
+  const [structurePreview, setStructurePreview] = useState<{
+    level: number;
+    mainTopic: string;
+    chapters: CourseStructureChapter[];
+  } | null>(null);
+  const [generatingLessons, setGeneratingLessons] = useState<string | null>(null); // "level-chapter" key
+  const [lessonPreview, setLessonPreview] = useState<{
+    level: number;
+    chapter: number;
+    lessons: LessonStructureItem[];
+  } | null>(null);
+
+  // Load lessons + metadata + assignments on mount
   useEffect(() => {
     loadLessons();
+    loadMetadata();
+    loadAssignments();
   }, []);
 
   const loadLessons = async () => {
@@ -80,6 +130,189 @@ export default function ConversationalSkillsEditorPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMetadata = async () => {
+    try {
+      const data = await getCourseMetadata(COURSE_ID);
+      setMetadata(data);
+    } catch (error) {
+      console.error('Failed to load course metadata:', error);
+    }
+  };
+
+  const loadAssignments = async () => {
+    try {
+      const data = await getLevelAssignments(COURSE_ID);
+      setAssignments(data);
+    } catch (error) {
+      console.error('Failed to load level assignments:', error);
+    }
+  };
+
+  // ----- AI Generation Handlers -----
+  const handleGenerateStructure = async (level: number) => {
+    setGeneratingStructure(level);
+    try {
+      const existingTopic = metadata.levels[level]?.mainTopic || null;
+      const chapterKeys = getChaptersForLevel(level);
+      const existingChapters = chapterKeys.map(c => {
+        const key = `${level}-${c}`;
+        const ch = metadata.chapters[key];
+        return { chapter: c, theme: ch?.theme, name: ch?.name };
+      }).filter(c => c.theme || c.name);
+
+      const result = await generateCourseStructure(level, existingTopic, existingChapters.length > 0 ? existingChapters : null);
+      if (result.success && result.data) {
+        setStructurePreview({ level, ...result.data });
+      } else {
+        toast.error(result.error || 'Failed to generate structure');
+      }
+    } catch (error) {
+      toast.error('Failed to generate structure');
+    } finally {
+      setGeneratingStructure(null);
+    }
+  };
+
+  const handleAcceptStructure = async () => {
+    if (!structurePreview) return;
+    try {
+      await saveCourseStructure(COURSE_ID, structurePreview.level, {
+        mainTopic: structurePreview.mainTopic,
+        chapters: structurePreview.chapters,
+      });
+      // Reload metadata + lessons (chapter names propagated)
+      await loadMetadata();
+      await loadLessons();
+      toast.success('Course structure saved!');
+    } catch (error) {
+      toast.error('Failed to save structure');
+    } finally {
+      setStructurePreview(null);
+    }
+  };
+
+  const handleGenerateLessons = async (level: number, chapter: number) => {
+    const key = `${level}-${chapter}`;
+    setGeneratingLessons(key);
+    try {
+      const levelTopic = metadata.levels[level]?.mainTopic || '';
+      const chapterMeta = metadata.chapters[key] || { theme: '', name: '' };
+
+      if (!levelTopic || !chapterMeta.theme || !chapterMeta.name) {
+        toast.error('Please set the level topic, chapter theme, and chapter name first');
+        setGeneratingLessons(null);
+        return;
+      }
+
+      const result = await generateLessonStructure(level, chapter, levelTopic, chapterMeta.theme, chapterMeta.name);
+      if (result.success && result.data) {
+        setLessonPreview({ level, chapter, lessons: result.data.lessons });
+      } else {
+        toast.error(result.error || 'Failed to generate lessons');
+      }
+    } catch (error) {
+      toast.error('Failed to generate lessons');
+    } finally {
+      setGeneratingLessons(null);
+    }
+  };
+
+  const handleAcceptLessons = async () => {
+    if (!lessonPreview) return;
+    const { level, chapter, lessons: generatedLessons } = lessonPreview;
+
+    try {
+      let created = 0;
+      for (const gl of generatedLessons) {
+        // Create for each skill type
+        for (const skill of ['speaking', 'listening', 'reading'] as Skill[]) {
+          try {
+            const exists = await checkDuplicate(COURSE_ID, level, chapter, gl.lessonNumber, skill);
+            if (exists) continue;
+
+            await createLesson({
+              course: COURSE_ID,
+              level,
+              chapter,
+              lessonNumber: gl.lessonNumber,
+              skill,
+              lessonName: gl.lessonName,
+              goalTextEn: gl.goalTextEn,
+              goalTextJp: gl.goalTextJp,
+            });
+            created++;
+          } catch (error) {
+            console.error(`Failed to create L${level}-C${chapter}-${gl.lessonNumber}-${skill}:`, error);
+          }
+        }
+      }
+
+      await loadLessons();
+      setExpandedLevels(prev => new Set([...prev, level]));
+      setExpandedChapters(prev => new Set([...prev, `${level}-${chapter}`]));
+      toast.success(`Created ${created} lessons!`);
+    } catch (error) {
+      toast.error('Failed to create lessons');
+    } finally {
+      setLessonPreview(null);
+    }
+  };
+
+  // ----- Inline editing helpers -----
+  const startEditing = (fieldKey: string, currentValue: string) => {
+    setEditingField(fieldKey);
+    setEditingValue(currentValue);
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+    setEditingValue('');
+  };
+
+  const saveLevelTopicInline = async (level: number) => {
+    try {
+      await saveLevelTopic(COURSE_ID, level, editingValue);
+      setMetadata(prev => ({
+        ...prev,
+        levels: { ...prev.levels, [level]: { mainTopic: editingValue } },
+      }));
+      toast.success('Level topic saved');
+    } catch (error) {
+      toast.error('Failed to save level topic');
+    } finally {
+      cancelEditing();
+    }
+  };
+
+  const saveChapterMetaInline = async (level: number, chapter: number, field: 'theme' | 'name') => {
+    const key = `${level}-${chapter}`;
+    const existing = metadata.chapters[key] || { theme: '', name: '' };
+    const updated = { ...existing, [field]: editingValue };
+
+    try {
+      await saveChapterMeta(COURSE_ID, level, chapter, { [field]: editingValue });
+      setMetadata(prev => ({
+        ...prev,
+        chapters: { ...prev.chapters, [key]: updated },
+      }));
+      // If name was updated, reload lessons so chapterLabel is refreshed
+      if (field === 'name') {
+        await loadLessons();
+      }
+      toast.success(field === 'theme' ? 'Chapter theme saved' : 'Chapter name saved');
+    } catch (error) {
+      toast.error(`Failed to save chapter ${field}`);
+    } finally {
+      cancelEditing();
+    }
+  };
+
+  // Helper to get metadata-stored chapter name (used by create modal auto-fill)
+  const getMetadataChapterName = (level: number, chapter: number): string => {
+    const key = `${level}-${chapter}`;
+    return metadata.chapters[key]?.name || '';
   };
 
   // Group lessons by level and chapter
@@ -265,6 +498,12 @@ export default function ConversationalSkillsEditorPage() {
             <i className="ri-add-line" />
             Create Lesson
           </button>
+          {isSuperAdmin && (
+            <button className="cse-assign-btn" onClick={() => setShowAssignModal(true)}>
+              <i className="ri-user-settings-line" />
+              Manage Assignments
+            </button>
+          )}
         </div>
       </div>
 
@@ -293,18 +532,85 @@ export default function ConversationalSkillsEditorPage() {
                         {LEVEL_BADGES[level]}
                       </span>
                       <span className="cse-level-name">Level {level}</span>
+                      {/* Level Main Topic (inline) */}
+                      {metadata.levels[level]?.mainTopic && (
+                        <span className="cse-level-topic">{metadata.levels[level].mainTopic}</span>
+                      )}
+                      {/* Assigned admin badge */}
+                      {assignments[level] && (
+                        <span className="cse-assigned-badge" title={`Assigned to ${assignments[level].adminName}`}>
+                          <i className="ri-user-line" /> {assignments[level].adminName}
+                        </span>
+                      )}
                     </div>
                     <span className="cse-level-count">
                       {getLevelLessonCount(level)} lesson{getLevelLessonCount(level) !== 1 ? 's' : ''}
                     </span>
                   </button>
 
-                  {/* Chapters */}
+                  {/* Expanded: Level metadata editor + Chapters */}
                   {expandedLevels.has(level) && (
-                    <div className="cse-chapters">
-                      {CHAPTERS.map(chapter => {
+                    <>
+                      {/* Level Main Topic Editor */}
+                      <div className="cse-meta-row">
+                        <label className="cse-meta-label"><i className="ri-lightbulb-line" /> Main Topic</label>
+                        {editingField === `level-topic-${level}` ? (
+                          <div className="cse-meta-edit">
+                            <input
+                              type="text"
+                              className="cse-meta-input"
+                              value={editingValue}
+                              onInput={e => setEditingValue((e.target as HTMLInputElement).value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') saveLevelTopicInline(level);
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              autoFocus
+                              placeholder="e.g., Self-Introduction & Daily Life"
+                            />
+                            <button className="cse-meta-save" onClick={() => saveLevelTopicInline(level)} title="Save">
+                              <i className="ri-check-line" />
+                            </button>
+                            <button className="cse-meta-cancel" onClick={cancelEditing} title="Cancel">
+                              <i className="ri-close-line" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            className="cse-meta-display"
+                            onClick={(e) => { e.stopPropagation(); startEditing(`level-topic-${level}`, metadata.levels[level]?.mainTopic || ''); }}
+                          >
+                            <span className={metadata.levels[level]?.mainTopic ? '' : 'cse-meta-placeholder'}>
+                              {metadata.levels[level]?.mainTopic || 'Click to set main topic…'}
+                            </span>
+                            <i className="ri-pencil-line cse-meta-edit-icon" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* AI Generate Structure Button */}
+                      <div className="cse-ai-generate-row">
+                        <button
+                          className="cse-ai-generate-btn"
+                          onClick={() => handleGenerateStructure(level)}
+                          disabled={generatingStructure === level}
+                        >
+                          {generatingStructure === level ? (
+                            <><i className="ri-loader-4-line ri-spin" /> Generating...</>
+                          ) : (
+                            <><i className="ri-magic-line" /> Generate Structure with AI</>
+                          )}
+                        </button>
+                        <span className="cse-ai-generate-hint">
+                          Generates main topic + chapter themes & names
+                        </span>
+                      </div>
+
+                      <div className="cse-chapters">
+                      {getChaptersForLevel(level).map(chapter => {
                         const chapterKey = `${level}-${chapter}`;
-                        const chapterName = getChapterName(level, chapter);
+                        const chapterName = getChapterName(level, chapter) || metadata.chapters[chapterKey]?.name || '';
+                        const chapterTheme = metadata.chapters[chapterKey]?.theme || '';
                         const chapterLessons = lessonsByLevelChapter[chapterKey] || [];
                         const hasLessons = chapterLessons.length > 0;
 
@@ -318,6 +624,9 @@ export default function ConversationalSkillsEditorPage() {
                               <div className="cse-chapter-info">
                                 <i className={`ri-arrow-${expandedChapters.has(chapterKey) ? 'down' : 'right'}-s-line`} />
                                 <span className="cse-chapter-number">Chapter {chapter}</span>
+                                {chapterTheme && (
+                                  <span className="cse-chapter-theme">{chapterTheme}</span>
+                                )}
                                 {chapterName && (
                                   <span className="cse-chapter-name">{chapterName}</span>
                                 )}
@@ -327,9 +636,104 @@ export default function ConversationalSkillsEditorPage() {
                               </span>
                             </button>
 
+                            {/* Chapter metadata editors (shown when chapter is expanded) */}
+                            {expandedChapters.has(chapterKey) && (
+                              <div className="cse-chapter-meta-editors">
+                                {/* Chapter Theme */}
+                                <div className="cse-meta-row cse-meta-row-compact">
+                                  <label className="cse-meta-label"><i className="ri-bookmark-line" /> Theme</label>
+                                  {editingField === `chapter-theme-${chapterKey}` ? (
+                                    <div className="cse-meta-edit">
+                                      <input
+                                        type="text"
+                                        className="cse-meta-input"
+                                        value={editingValue}
+                                        onInput={e => setEditingValue((e.target as HTMLInputElement).value)}
+                                        onKeyDown={e => {
+                                          if (e.key === 'Enter') saveChapterMetaInline(level, chapter, 'theme');
+                                          if (e.key === 'Escape') cancelEditing();
+                                        }}
+                                        autoFocus
+                                        placeholder="e.g., Getting to Know People"
+                                      />
+                                      <button className="cse-meta-save" onClick={() => saveChapterMetaInline(level, chapter, 'theme')} title="Save">
+                                        <i className="ri-check-line" />
+                                      </button>
+                                      <button className="cse-meta-cancel" onClick={cancelEditing} title="Cancel">
+                                        <i className="ri-close-line" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className="cse-meta-display"
+                                      onClick={(e) => { e.stopPropagation(); startEditing(`chapter-theme-${chapterKey}`, chapterTheme); }}
+                                    >
+                                      <span className={chapterTheme ? '' : 'cse-meta-placeholder'}>
+                                        {chapterTheme || 'Click to set theme…'}
+                                      </span>
+                                      <i className="ri-pencil-line cse-meta-edit-icon" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Chapter Name */}
+                                <div className="cse-meta-row cse-meta-row-compact">
+                                  <label className="cse-meta-label"><i className="ri-text" /> Name</label>
+                                  {editingField === `chapter-name-${chapterKey}` ? (
+                                    <div className="cse-meta-edit">
+                                      <input
+                                        type="text"
+                                        className="cse-meta-input"
+                                        value={editingValue}
+                                        onInput={e => setEditingValue((e.target as HTMLInputElement).value)}
+                                        onKeyDown={e => {
+                                          if (e.key === 'Enter') saveChapterMetaInline(level, chapter, 'name');
+                                          if (e.key === 'Escape') cancelEditing();
+                                        }}
+                                        autoFocus
+                                        placeholder="e.g., The First Meeting"
+                                      />
+                                      <button className="cse-meta-save" onClick={() => saveChapterMetaInline(level, chapter, 'name')} title="Save">
+                                        <i className="ri-check-line" />
+                                      </button>
+                                      <button className="cse-meta-cancel" onClick={cancelEditing} title="Cancel">
+                                        <i className="ri-close-line" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className="cse-meta-display"
+                                      onClick={(e) => { e.stopPropagation(); startEditing(`chapter-name-${chapterKey}`, chapterName); }}
+                                    >
+                                      <span className={chapterName ? '' : 'cse-meta-placeholder'}>
+                                        {chapterName || 'Click to set name…'}
+                                      </span>
+                                      <i className="ri-pencil-line cse-meta-edit-icon" />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Lessons */}
                             {expandedChapters.has(chapterKey) && (
-                              <div className="cse-lessons-list">
+                              <>
+                                {/* AI Generate Lessons Button */}
+                                <div className="cse-ai-generate-row cse-ai-generate-row-chapter">
+                                  <button
+                                    className="cse-ai-generate-btn cse-ai-generate-btn-sm"
+                                    onClick={() => handleGenerateLessons(level, chapter)}
+                                    disabled={generatingLessons === chapterKey}
+                                  >
+                                    {generatingLessons === chapterKey ? (
+                                      <><i className="ri-loader-4-line ri-spin" /> Generating...</>
+                                    ) : (
+                                      <><i className="ri-magic-line" /> Generate Lessons with AI</>
+                                    )}
+                                  </button>
+                                </div>
+
+                                <div className="cse-lessons-list">
                                 {chapterLessons.length > 0 ? (
                                   chapterLessons.map(lesson => (
                                     <div 
@@ -407,11 +811,13 @@ export default function ConversationalSkillsEditorPage() {
                                   </div>
                                 )}
                               </div>
+                              </>
                             )}
                           </div>
                         );
                       })}
-                    </div>
+                      </div>
+                    </>
                   )}
                 </div>
               ))
@@ -436,6 +842,45 @@ export default function ConversationalSkillsEditorPage() {
         <CreateLessonModal
           onClose={() => setShowCreateModal(false)}
           onCreate={handleCreateLesson}
+          metadata={metadata}
+        />
+      )}
+
+      {/* Admin Assignment Modal */}
+      {showAssignModal && (
+        <AssignmentModal
+          assignments={assignments}
+          onClose={() => setShowAssignModal(false)}
+          onAssign={async (level, adminId, adminName) => {
+            await assignLevelAdmin(COURSE_ID, level, adminId, adminName);
+            await loadAssignments();
+            toast.success(`Level ${level} assigned to ${adminName}`);
+          }}
+          onUnassign={async (level) => {
+            await unassignLevelAdmin(COURSE_ID, level);
+            await loadAssignments();
+            toast.success(`Level ${level} unassigned`);
+          }}
+        />
+      )}
+
+      {/* AI Structure Preview Modal */}
+      {structurePreview && (
+        <StructurePreviewModal
+          preview={structurePreview}
+          onAccept={handleAcceptStructure}
+          onReject={() => setStructurePreview(null)}
+          onChange={(updated) => setStructurePreview(updated)}
+        />
+      )}
+
+      {/* AI Lesson Preview Modal */}
+      {lessonPreview && (
+        <LessonPreviewModal
+          preview={lessonPreview}
+          onAccept={handleAcceptLessons}
+          onReject={() => setLessonPreview(null)}
+          onChange={(updated) => setLessonPreview(updated)}
         />
       )}
     </div>
@@ -449,41 +894,23 @@ export default function ConversationalSkillsEditorPage() {
 function CreateLessonModal({
   onClose,
   onCreate,
+  metadata,
 }: {
   onClose: () => void;
   onCreate: (input: CreateLessonInput) => void;
+  metadata: CourseMetadata;
 }) {
   const [form, setForm] = useState({
     level: 1,
     chapter: 1,
     lessonNumber: 1,
     skill: 'speaking' as Skill,
-    chapterName: '',
     lessonName: '',
     goalTextEn: '',
     goalTextJp: '',
   });
   const [loading, setLoading] = useState(false);
-  const [chapterNameLocked, setChapterNameLocked] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState('');
-
-  // Check for existing chapter name when level/chapter changes
-  useEffect(() => {
-    const checkChapter = async () => {
-      try {
-        const existingName = await getExistingChapterName(COURSE_ID, form.level, form.chapter);
-        if (existingName) {
-          setForm(f => ({ ...f, chapterName: existingName }));
-          setChapterNameLocked(true);
-        } else {
-          setChapterNameLocked(false);
-        }
-      } catch (error) {
-        console.error('Failed to check chapter name:', error);
-      }
-    };
-    checkChapter();
-  }, [form.level, form.chapter]);
 
   // Check for duplicate when selection changes
   useEffect(() => {
@@ -516,7 +943,7 @@ function CreateLessonModal({
       toast.error('This lesson combination already exists');
       return;
     }
-    if (!form.chapterName || !form.lessonName || !form.goalTextEn || !form.goalTextJp) {
+    if (!form.lessonName || !form.goalTextEn || !form.goalTextJp) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -563,7 +990,7 @@ function CreateLessonModal({
                   value={form.chapter}
                   onChange={e => setForm({ ...form, chapter: parseInt((e.target as HTMLSelectElement).value) })}
                 >
-                  {CHAPTERS.map(c => (
+                  {getChaptersForLevel(form.level).map(c => (
                     <option key={c} value={c}>Chapter {c}</option>
                   ))}
                 </select>
@@ -600,21 +1027,6 @@ function CreateLessonModal({
               </div>
             )}
 
-            {/* Chapter Name */}
-            <div className="cse-form-field">
-              <label>
-                Chapter Name
-                {chapterNameLocked && <span className="cse-locked-label">(auto-filled from existing)</span>}
-              </label>
-              <input
-                type="text"
-                value={form.chapterName}
-                onChange={e => setForm({ ...form, chapterName: (e.target as HTMLInputElement).value })}
-                placeholder="e.g., All About Me"
-                disabled={chapterNameLocked}
-              />
-            </div>
-
             {/* Lesson Name */}
             <div className="cse-form-field">
               <label>Lesson Name</label>
@@ -628,7 +1040,6 @@ function CreateLessonModal({
 
             {/* Preview */}
             <div className="cse-preview-labels">
-              <p><strong>Chapter Label:</strong> Chapter {form.chapter}: {form.chapterName || '...'}</p>
               <p><strong>Lesson Title:</strong> Lesson {form.lessonNumber}: {form.lessonName || '...'}</p>
             </div>
 
@@ -961,6 +1372,280 @@ function LessonAnalytics({
             <i className={lesson.exerciseData ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
             <span>Exercise/Mission</span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// ADMIN ASSIGNMENT MODAL
+// ============================================================================
+
+function AssignmentModal({
+  assignments,
+  onClose,
+  onAssign,
+  onUnassign,
+}: {
+  assignments: Record<number, LevelAssignment>;
+  onClose: () => void;
+  onAssign: (level: number, adminId: string, adminName: string) => Promise<void>;
+  onUnassign: (level: number) => Promise<void>;
+}) {
+  const [admins, setAdmins] = useState<AdminListItem[]>([]);
+  const [loadingAdmins, setLoadingAdmins] = useState(true);
+  const [saving, setSaving] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await authApi.listAdmins();
+        setAdmins(list);
+      } catch (error) {
+        toast.error('Failed to load admin list');
+      } finally {
+        setLoadingAdmins(false);
+      }
+    })();
+  }, []);
+
+  const handleChange = async (level: number, adminId: string) => {
+    setSaving(level);
+    try {
+      if (adminId === '') {
+        await onUnassign(level);
+      } else {
+        const admin = admins.find(a => a.id === adminId);
+        const name = admin ? `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.username : '';
+        await onAssign(level, adminId, name);
+      }
+    } catch (error) {
+      toast.error('Failed to update assignment');
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  return (
+    <div className="cse-modal-overlay" onClick={onClose}>
+      <div className="cse-modal cse-modal-wide" onClick={e => e.stopPropagation()}>
+        <div className="cse-modal-header">
+          <h2><i className="ri-user-settings-line" /> Manage Level Assignments</h2>
+          <button className="cse-modal-close" onClick={onClose}>
+            <i className="ri-close-line" />
+          </button>
+        </div>
+        <div className="cse-modal-body">
+          <p className="cse-assign-description">
+            Assign admins to levels. Assigned admins are responsible for the level and all its chapters and lessons.
+          </p>
+          {loadingAdmins ? (
+            <div className="cse-loading"><i className="ri-loader-4-line" /> Loading admins...</div>
+          ) : (
+            <div className="cse-assign-grid">
+              {LEVELS.map(level => (
+                <div className="cse-assign-row" key={level}>
+                  <div className="cse-assign-level">
+                    <span className="cse-level-badge" style={{ backgroundColor: LEVEL_COLORS[level] }}>
+                      {LEVEL_BADGES[level]}
+                    </span>
+                    <span>Level {level}</span>
+                  </div>
+                  <select
+                    className="cse-assign-select"
+                    value={assignments[level]?.adminId || ''}
+                    onChange={e => handleChange(level, (e.target as HTMLSelectElement).value)}
+                    disabled={saving === level}
+                  >
+                    <option value="">— Unassigned —</option>
+                    {admins.map(admin => (
+                      <option key={admin.id} value={admin.id}>
+                        {`${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.username}
+                        {admin.role === 'superadmin' ? ' (Super Admin)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {saving === level && <i className="ri-loader-4-line ri-spin" />}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="cse-modal-footer">
+          <button type="button" className="cse-btn-secondary" onClick={onClose}>Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// AI STRUCTURE PREVIEW MODAL
+// ============================================================================
+
+function StructurePreviewModal({
+  preview,
+  onAccept,
+  onReject,
+  onChange,
+}: {
+  preview: { level: number; mainTopic: string; chapters: CourseStructureChapter[] };
+  onAccept: () => void;
+  onReject: () => void;
+  onChange: (updated: { level: number; mainTopic: string; chapters: CourseStructureChapter[] }) => void;
+}) {
+  return (
+    <div className="cse-modal-overlay" onClick={onReject}>
+      <div className="cse-modal cse-modal-wide" onClick={e => e.stopPropagation()}>
+        <div className="cse-modal-header cse-modal-header-ai">
+          <h2><i className="ri-magic-line" /> AI-Generated Structure — Level {preview.level}</h2>
+          <button className="cse-modal-close" onClick={onReject}>
+            <i className="ri-close-line" />
+          </button>
+        </div>
+        <div className="cse-modal-body">
+          <p className="cse-ai-review-hint">Review and edit the generated structure. Click Accept to save.</p>
+
+          {/* Main Topic */}
+          <div className="cse-form-field">
+            <label>Level Main Topic</label>
+            <input
+              type="text"
+              value={preview.mainTopic}
+              onInput={e =>
+                onChange({ ...preview, mainTopic: (e.target as HTMLInputElement).value })
+              }
+            />
+          </div>
+
+          {/* Chapters */}
+          <div className="cse-ai-chapters-list">
+            {preview.chapters.map((ch, idx) => (
+              <div className="cse-ai-chapter-card" key={ch.chapter}>
+                <div className="cse-ai-chapter-num">Chapter {ch.chapter}</div>
+                <div className="cse-form-field">
+                  <label>Theme</label>
+                  <input
+                    type="text"
+                    value={ch.theme}
+                    onInput={e => {
+                      const updated = [...preview.chapters];
+                      updated[idx] = { ...ch, theme: (e.target as HTMLInputElement).value };
+                      onChange({ ...preview, chapters: updated });
+                    }}
+                  />
+                </div>
+                <div className="cse-form-field">
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    value={ch.name}
+                    onInput={e => {
+                      const updated = [...preview.chapters];
+                      updated[idx] = { ...ch, name: (e.target as HTMLInputElement).value };
+                      onChange({ ...preview, chapters: updated });
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="cse-modal-footer">
+          <button type="button" className="cse-btn-secondary" onClick={onReject}>Discard</button>
+          <button type="button" className="cse-btn-primary cse-btn-ai" onClick={onAccept}>
+            <i className="ri-check-line" /> Accept & Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// AI LESSON PREVIEW MODAL
+// ============================================================================
+
+function LessonPreviewModal({
+  preview,
+  onAccept,
+  onReject,
+  onChange,
+}: {
+  preview: { level: number; chapter: number; lessons: LessonStructureItem[] };
+  onAccept: () => void;
+  onReject: () => void;
+  onChange: (updated: { level: number; chapter: number; lessons: LessonStructureItem[] }) => void;
+}) {
+  return (
+    <div className="cse-modal-overlay" onClick={onReject}>
+      <div className="cse-modal cse-modal-wide cse-modal-tall" onClick={e => e.stopPropagation()}>
+        <div className="cse-modal-header cse-modal-header-ai">
+          <h2>
+            <i className="ri-magic-line" /> AI-Generated Lessons — Level {preview.level}, Chapter {preview.chapter}
+          </h2>
+          <button className="cse-modal-close" onClick={onReject}>
+            <i className="ri-close-line" />
+          </button>
+        </div>
+        <div className="cse-modal-body">
+          <p className="cse-ai-review-hint">
+            Review and edit the generated lessons. Accepting will create lessons for all 3 skills
+            (speaking, listening, reading). Existing lessons will be skipped.
+          </p>
+
+          <div className="cse-ai-lessons-list">
+            {preview.lessons.map((lesson, idx) => (
+              <div className="cse-ai-lesson-card" key={lesson.lessonNumber}>
+                <div className="cse-ai-lesson-num">Lesson {lesson.lessonNumber}</div>
+                <div className="cse-form-row cse-form-row-2">
+                  <div className="cse-form-field">
+                    <label>Lesson Name</label>
+                    <input
+                      type="text"
+                      value={lesson.lessonName}
+                      onInput={e => {
+                        const updated = [...preview.lessons];
+                        updated[idx] = { ...lesson, lessonName: (e.target as HTMLInputElement).value };
+                        onChange({ ...preview, lessons: updated });
+                      }}
+                    />
+                  </div>
+                  <div className="cse-form-field">
+                    <label>Goal (English)</label>
+                    <input
+                      type="text"
+                      value={lesson.goalTextEn}
+                      onInput={e => {
+                        const updated = [...preview.lessons];
+                        updated[idx] = { ...lesson, goalTextEn: (e.target as HTMLInputElement).value };
+                        onChange({ ...preview, lessons: updated });
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="cse-form-field">
+                  <label>Goal (Japanese)</label>
+                  <input
+                    type="text"
+                    value={lesson.goalTextJp}
+                    onInput={e => {
+                      const updated = [...preview.lessons];
+                      updated[idx] = { ...lesson, goalTextJp: (e.target as HTMLInputElement).value };
+                      onChange({ ...preview, lessons: updated });
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="cse-modal-footer">
+          <button type="button" className="cse-btn-secondary" onClick={onReject}>Discard</button>
+          <button type="button" className="cse-btn-primary cse-btn-ai" onClick={onAccept}>
+            <i className="ri-check-line" /> Accept & Create Lessons
+          </button>
         </div>
       </div>
     </div>

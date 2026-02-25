@@ -245,3 +245,97 @@ export async function generateDiscussionQuestions(
     };
   }
 }
+
+// ============================================================================
+// COURSE STRUCTURE GENERATION
+// ============================================================================
+
+export interface CourseStructureChapter {
+  chapter: number;
+  theme: string;
+  name: string;
+}
+
+export interface GenerateCourseStructureResponse {
+  success: boolean;
+  data?: {
+    mainTopic: string;
+    chapters: CourseStructureChapter[];
+  };
+  error?: string;
+}
+
+/**
+ * Generate course structure (level topic + chapter themes/names) using AI
+ */
+export async function generateCourseStructure(
+  level: number,
+  existingTopic?: string | null,
+  existingChapters?: Array<{ chapter: number; theme?: string; name?: string }> | null,
+  customPrompt?: string | null
+): Promise<GenerateCourseStructureResponse> {
+  try {
+    const response = await apiClient.post('/ai/generate-course-structure', {
+      level,
+      existingTopic: existingTopic || null,
+      existingChapters: existingChapters || null,
+      customPrompt: customPrompt || null,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error generating course structure:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate course structure',
+    };
+  }
+}
+
+// ============================================================================
+// LESSON STRUCTURE GENERATION
+// ============================================================================
+
+export interface LessonStructureItem {
+  lessonNumber: number;
+  lessonName: string;
+  goalTextEn: string;
+  goalTextJp: string;
+}
+
+export interface GenerateLessonStructureResponse {
+  success: boolean;
+  data?: {
+    lessons: LessonStructureItem[];
+  };
+  error?: string;
+}
+
+/**
+ * Generate lesson names and goals for a chapter using AI
+ */
+export async function generateLessonStructure(
+  level: number,
+  chapter: number,
+  levelTopic: string,
+  chapterTheme: string,
+  chapterName: string,
+  customPrompt?: string | null
+): Promise<GenerateLessonStructureResponse> {
+  try {
+    const response = await apiClient.post('/ai/generate-lesson-structure', {
+      level,
+      chapter,
+      levelTopic,
+      chapterTheme,
+      chapterName,
+      customPrompt: customPrompt || null,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error generating lesson structure:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate lesson structure',
+    };
+  }
+}
