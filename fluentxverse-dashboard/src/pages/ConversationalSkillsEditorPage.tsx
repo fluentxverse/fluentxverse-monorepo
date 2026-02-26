@@ -1491,71 +1491,95 @@ function StructurePreviewModal({
   onChange,
 }: {
   preview: { level: number; mainTopic: string; chapters: CourseStructureChapter[] };
-  onAccept: () => void;
+  onAccept: () => Promise<void> | void;
   onReject: () => void;
   onChange: (updated: { level: number; mainTopic: string; chapters: CourseStructureChapter[] }) => void;
 }) {
+  const [saving, setSaving] = useState(false);
+
+  const handleAccept = async () => {
+    setSaving(true);
+    try {
+      await onAccept();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div className="cse-modal-overlay" onClick={onReject}>
+    <div className="cse-modal-overlay" onClick={saving ? undefined : onReject}>
       <div className="cse-modal cse-modal-wide" onClick={e => e.stopPropagation()}>
         <div className="cse-modal-header cse-modal-header-ai">
           <h2><i className="ri-magic-line" /> AI-Generated Structure — Level {preview.level}</h2>
-          <button className="cse-modal-close" onClick={onReject}>
+          <button className="cse-modal-close" onClick={onReject} disabled={saving}>
             <i className="ri-close-line" />
           </button>
         </div>
         <div className="cse-modal-body">
-          <p className="cse-ai-review-hint">Review and edit the generated structure. Click Accept to save.</p>
+          {saving ? (
+            <div className="cse-saving-overlay">
+              <i className="ri-loader-4-line ri-spin" />
+              <span>Saving structure...</span>
+            </div>
+          ) : (
+            <>
+              <p className="cse-ai-review-hint">Review and edit the generated structure. Click Accept to save.</p>
 
-          {/* Main Topic */}
-          <div className="cse-form-field">
-            <label>Level Main Topic</label>
-            <input
-              type="text"
-              value={preview.mainTopic}
-              onInput={e =>
-                onChange({ ...preview, mainTopic: (e.target as HTMLInputElement).value })
-              }
-            />
-          </div>
-
-          {/* Chapters */}
-          <div className="cse-ai-chapters-list">
-            {preview.chapters.map((ch, idx) => (
-              <div className="cse-ai-chapter-card" key={ch.chapter}>
-                <div className="cse-ai-chapter-num">Chapter {ch.chapter}</div>
-                <div className="cse-form-field">
-                  <label>Theme</label>
-                  <input
-                    type="text"
-                    value={ch.theme}
-                    onInput={e => {
-                      const updated = [...preview.chapters];
-                      updated[idx] = { ...ch, theme: (e.target as HTMLInputElement).value };
-                      onChange({ ...preview, chapters: updated });
-                    }}
-                  />
-                </div>
-                <div className="cse-form-field">
-                  <label>Name</label>
-                  <input
-                    type="text"
-                    value={ch.name}
-                    onInput={e => {
-                      const updated = [...preview.chapters];
-                      updated[idx] = { ...ch, name: (e.target as HTMLInputElement).value };
-                      onChange({ ...preview, chapters: updated });
-                    }}
-                  />
-                </div>
+              {/* Main Topic */}
+              <div className="cse-form-field">
+                <label>Level Main Topic</label>
+                <input
+                  type="text"
+                  value={preview.mainTopic}
+                  onInput={e =>
+                    onChange({ ...preview, mainTopic: (e.target as HTMLInputElement).value })
+                  }
+                />
               </div>
-            ))}
-          </div>
+
+              {/* Chapters */}
+              <div className="cse-ai-chapters-list">
+                {preview.chapters.map((ch, idx) => (
+                  <div className="cse-ai-chapter-card" key={ch.chapter}>
+                    <div className="cse-ai-chapter-num">Chapter {ch.chapter}</div>
+                    <div className="cse-form-field">
+                      <label>Theme</label>
+                      <input
+                        type="text"
+                        value={ch.theme}
+                        onInput={e => {
+                          const updated = [...preview.chapters];
+                          updated[idx] = { ...ch, theme: (e.target as HTMLInputElement).value };
+                          onChange({ ...preview, chapters: updated });
+                        }}
+                      />
+                    </div>
+                    <div className="cse-form-field">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        value={ch.name}
+                        onInput={e => {
+                          const updated = [...preview.chapters];
+                          updated[idx] = { ...ch, name: (e.target as HTMLInputElement).value };
+                          onChange({ ...preview, chapters: updated });
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <div className="cse-modal-footer">
-          <button type="button" className="cse-btn-secondary" onClick={onReject}>Discard</button>
-          <button type="button" className="cse-btn-primary cse-btn-ai" onClick={onAccept}>
-            <i className="ri-check-line" /> Accept & Save
+          <button type="button" className="cse-btn-secondary" onClick={onReject} disabled={saving}>Discard</button>
+          <button type="button" className="cse-btn-primary cse-btn-ai" onClick={handleAccept} disabled={saving}>
+            {saving ? (
+              <><i className="ri-loader-4-line ri-spin" /> Saving...</>
+            ) : (
+              <><i className="ri-check-line" /> Accept & Save</>
+            )}
           </button>
         </div>
       </div>
@@ -1574,77 +1598,101 @@ function LessonPreviewModal({
   onChange,
 }: {
   preview: { level: number; chapter: number; lessons: LessonStructureItem[] };
-  onAccept: () => void;
+  onAccept: () => Promise<void> | void;
   onReject: () => void;
   onChange: (updated: { level: number; chapter: number; lessons: LessonStructureItem[] }) => void;
 }) {
+  const [saving, setSaving] = useState(false);
+
+  const handleAccept = async () => {
+    setSaving(true);
+    try {
+      await onAccept();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div className="cse-modal-overlay" onClick={onReject}>
+    <div className="cse-modal-overlay" onClick={saving ? undefined : onReject}>
       <div className="cse-modal cse-modal-wide cse-modal-tall" onClick={e => e.stopPropagation()}>
         <div className="cse-modal-header cse-modal-header-ai">
           <h2>
             <i className="ri-magic-line" /> AI-Generated Lessons — Level {preview.level}, Chapter {preview.chapter}
           </h2>
-          <button className="cse-modal-close" onClick={onReject}>
+          <button className="cse-modal-close" onClick={onReject} disabled={saving}>
             <i className="ri-close-line" />
           </button>
         </div>
         <div className="cse-modal-body">
-          <p className="cse-ai-review-hint">
-            Review and edit the generated lessons. Accepting will create lessons for all 3 skills
-            (speaking, listening, reading). Existing lessons will be skipped.
-          </p>
+          {saving ? (
+            <div className="cse-saving-overlay">
+              <i className="ri-loader-4-line ri-spin" />
+              <span>Creating lessons...</span>
+            </div>
+          ) : (
+            <>
+              <p className="cse-ai-review-hint">
+                Review and edit the generated lessons. Accepting will create lessons for all 3 skills
+                (speaking, listening, reading). Existing lessons will be skipped.
+              </p>
 
-          <div className="cse-ai-lessons-list">
-            {preview.lessons.map((lesson, idx) => (
-              <div className="cse-ai-lesson-card" key={lesson.lessonNumber}>
-                <div className="cse-ai-lesson-num">Lesson {lesson.lessonNumber}</div>
-                <div className="cse-form-row cse-form-row-2">
-                  <div className="cse-form-field">
-                    <label>Lesson Name</label>
-                    <input
-                      type="text"
-                      value={lesson.lessonName}
-                      onInput={e => {
-                        const updated = [...preview.lessons];
-                        updated[idx] = { ...lesson, lessonName: (e.target as HTMLInputElement).value };
-                        onChange({ ...preview, lessons: updated });
-                      }}
-                    />
+              <div className="cse-ai-lessons-list">
+                {preview.lessons.map((lesson, idx) => (
+                  <div className="cse-ai-lesson-card" key={lesson.lessonNumber}>
+                    <div className="cse-ai-lesson-num">Lesson {lesson.lessonNumber}</div>
+                    <div className="cse-form-row cse-form-row-2">
+                      <div className="cse-form-field">
+                        <label>Lesson Name</label>
+                        <input
+                          type="text"
+                          value={lesson.lessonName}
+                          onInput={e => {
+                            const updated = [...preview.lessons];
+                            updated[idx] = { ...lesson, lessonName: (e.target as HTMLInputElement).value };
+                            onChange({ ...preview, lessons: updated });
+                          }}
+                        />
+                      </div>
+                      <div className="cse-form-field">
+                        <label>Goal (English)</label>
+                        <input
+                          type="text"
+                          value={lesson.goalTextEn}
+                          onInput={e => {
+                            const updated = [...preview.lessons];
+                            updated[idx] = { ...lesson, goalTextEn: (e.target as HTMLInputElement).value };
+                            onChange({ ...preview, lessons: updated });
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="cse-form-field">
+                      <label>Goal (Japanese)</label>
+                      <input
+                        type="text"
+                        value={lesson.goalTextJp}
+                        onInput={e => {
+                          const updated = [...preview.lessons];
+                          updated[idx] = { ...lesson, goalTextJp: (e.target as HTMLInputElement).value };
+                          onChange({ ...preview, lessons: updated });
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="cse-form-field">
-                    <label>Goal (English)</label>
-                    <input
-                      type="text"
-                      value={lesson.goalTextEn}
-                      onInput={e => {
-                        const updated = [...preview.lessons];
-                        updated[idx] = { ...lesson, goalTextEn: (e.target as HTMLInputElement).value };
-                        onChange({ ...preview, lessons: updated });
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="cse-form-field">
-                  <label>Goal (Japanese)</label>
-                  <input
-                    type="text"
-                    value={lesson.goalTextJp}
-                    onInput={e => {
-                      const updated = [...preview.lessons];
-                      updated[idx] = { ...lesson, goalTextJp: (e.target as HTMLInputElement).value };
-                      onChange({ ...preview, lessons: updated });
-                    }}
-                  />
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
         <div className="cse-modal-footer">
-          <button type="button" className="cse-btn-secondary" onClick={onReject}>Discard</button>
-          <button type="button" className="cse-btn-primary cse-btn-ai" onClick={onAccept}>
-            <i className="ri-check-line" /> Accept & Create Lessons
+          <button type="button" className="cse-btn-secondary" onClick={onReject} disabled={saving}>Discard</button>
+          <button type="button" className="cse-btn-primary cse-btn-ai" onClick={handleAccept} disabled={saving}>
+            {saving ? (
+              <><i className="ri-loader-4-line ri-spin" /> Creating...</>
+            ) : (
+              <><i className="ri-check-line" /> Accept & Create Lessons</>
+            )}
           </button>
         </div>
       </div>

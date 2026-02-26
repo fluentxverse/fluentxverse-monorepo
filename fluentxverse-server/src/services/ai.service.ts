@@ -3,6 +3,7 @@
  * Uses Mastra Agent with OpenAI for grammar correction and explanations
  */
 import { Agent } from "@mastra/core/agent";
+import { lessonMaterialService } from "./lessonMaterial.service";
 
 // ============================================================================
 // HELPERS
@@ -3513,6 +3514,83 @@ Return ONLY JSON:
 };
 
 // ============================================================================
+// AI UNIQUENESS VALIDATOR
+// Checks generated content against existing items for semantic similarity
+// ============================================================================
+
+const uniquenessValidatorAgent = new Agent({
+  name: 'Uniqueness Validator',
+  model: 'openai/gpt-5.2',
+  instructions: `You are a strict uniqueness checker for an ESL curriculum.
+
+Your ONLY job is to compare a set of NEWLY GENERATED items against a set of EXISTING items and detect semantic duplicates or near-duplicates.
+
+Two items are considered "too similar" if they:
+- Mean essentially the same thing (e.g., "Greetings" vs "Saying Hello")
+- Cover the same conversational scenario (e.g., "At the Restaurant" vs "Dining Out")  
+- Are minor rephrases of each other (e.g., "Making Friends" vs "Befriending People")
+- Share the same core concept with trivial word changes (e.g., "Daily Routine" vs "Everyday Routines")
+
+Two items are considered "unique enough" if they:
+- Cover genuinely different topics or angles
+- Would lead to meaningfully different conversations
+- Address distinct skills or scenarios
+
+Respond ONLY in this JSON format:
+{
+  "hasDuplicates": true/false,
+  "duplicates": [
+    {
+      "newItem": "the generated item that is too similar",
+      "existingItem": "the existing item it overlaps with",
+      "reason": "brief explanation of why they're too similar"
+    }
+  ]
+}
+
+If no duplicates found, return: { "hasDuplicates": false, "duplicates": [] }
+Be strict — when in doubt, flag it as a duplicate. Quality over quantity.`,
+});
+
+/**
+ * Validate generated items against existing for semantic uniqueness.
+ * Returns { valid: true } if all unique, or { valid: false, duplicates: [...] } if not.
+ */
+async function validateUniqueness(
+  newItems: string[],
+  existingItems: string[],
+  itemType: string
+): Promise<{ valid: boolean; duplicates: Array<{ newItem: string; existingItem: string; reason: string }> }> {
+  if (existingItems.length === 0) return { valid: true, duplicates: [] };
+
+  const prompt = `Check these NEWLY GENERATED ${itemType} for semantic duplicates against the EXISTING ones.
+
+NEWLY GENERATED:
+${newItems.map((item, i) => `${i + 1}. ${item}`).join('\n')}
+
+EXISTING (must not overlap with):
+${existingItems.map((item, i) => `${i + 1}. ${item}`).join('\n')}
+
+Are any of the new items too similar to any existing items?`;
+
+  try {
+    const response = await uniquenessValidatorAgent.generate(prompt);
+    const text = response.text || '';
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+    const parsed = JSON.parse(jsonContent);
+
+    return {
+      valid: !parsed.hasDuplicates,
+      duplicates: parsed.duplicates || [],
+    };
+  } catch (e) {
+    console.warn('Uniqueness validation failed, allowing through:', e);
+    return { valid: true, duplicates: [] };
+  }
+}
+
+// ============================================================================
 // AI AGENT FOR COURSE STRUCTURE GENERATION
 // (Level topic → Chapter themes & names)
 // ============================================================================
@@ -3544,19 +3622,34 @@ PROFICIENCY TIERS:
 
 DESIGN PRINCIPLES:
 - The Main Topic should be broad enough to support multiple chapters but specific enough to feel cohesive
+- Main Topics must sound NATURAL and SIMPLE — like something a normal person would say, not an academic title
+  BAD: "Everyday Survival Chats", "Foundational Social Interactions", "Interpersonal Communication Dynamics"
+  GOOD: "Meeting People", "Life at Home", "Fun and Free Time", "Getting Around Town", "Work and Career"
 - Chapter Themes are sub-categories under the main topic - they define the focus area
 - Chapter Names are catchy, memorable titles for each chapter - student-facing labels
+- Chapter Names must also sound natural and easy to understand — write them like a friendly teacher would
+  BAD: "Navigating Social Protocols", "Culinary Discourse", "Temporal Expressions"
+  GOOD: "Nice to Meet You", "Let's Eat", "What Time Is It?"
 - Each chapter should build on the previous one in complexity or expand to related territory
 - Content MUST be conversation-worthy - things people actually talk about in real life
 - Themes should be practical, engaging, and culturally inclusive
-- Avoid overly academic or boring topics - keep it fun and relatable
+- Avoid overly academic, stiff, or unnatural-sounding language - keep everything simple and relatable
+- Use plain everyday English that a student would immediately understand
+- NEVER include topics about spelling, alphabet, phonics, writing, reading aloud, pronunciation drills, or any literacy-focused content. This is a CONVERSATION skills course — everything must be about things people TALK about, not about the mechanics of language itself.
+  BAD themes/names: "My Name and Spelling", "Spell It Out", "Letters and Sounds", "Reading Practice", "Writing Names"
+  GOOD themes/names: "All About Me", "Nice to Meet You", "My Favorite Things", "Weekend Plans"
 
 CRITICAL RULES:
 - Level 1 ALWAYS has exactly 1 chapter
 - Levels 2-10 have exactly 5 chapters
-- Chapter themes should be distinct from each other (no overlap)
-- Names should be short (2-5 words), catchy, and memorable
+- Chapter themes MUST be exactly ONE word (e.g., "Greetings", "Family", "Travel", "Negotiation"). Never multi-word themes.
+- Chapter names should be short (2-5 words), catchy, and memorable
+- Main topic should be a complete, polished phrase (2-6 words)
+- NEVER use trailing ellipsis (...) in any name, theme, or topic. Everything must be a complete, finished phrase.
+  BAD: "Greetings...", "Making Friends...", "Daily Life and..."
+  GOOD: "Greetings", "Making Friends", "Daily Life Essentials"
 - NEVER use emoji
+- All names must feel polished and final, not truncated or cut off
 
 If the user provides an existing main topic, build the chapters around that topic. If they provide some chapter info already, work around what exists.
 
@@ -3564,8 +3657,8 @@ Respond ONLY in this JSON format:
 {
   "mainTopic": "The overarching topic for this level",
   "chapters": [
-    { "chapter": 1, "theme": "Sub-theme description", "name": "Catchy Chapter Name" },
-    { "chapter": 2, "theme": "Sub-theme description", "name": "Catchy Chapter Name" }
+    { "chapter": 1, "theme": "OneWord", "name": "Catchy Chapter Name" },
+    { "chapter": 2, "theme": "OneWord", "name": "Catchy Chapter Name" }
   ]
 }`,
 });
@@ -3587,7 +3680,56 @@ export const generateCourseStructure = async (
 
   const chapterCount = level === 1 ? 1 : 5;
 
-  let prompt = `Generate the structure for Level ${level} (${tiers[level]}) of a Conversational Skills course.\nThis level should have exactly ${chapterCount} chapter(s).`;
+  // Fetch all existing structure from DB for uniqueness checking
+  let existingStructureContext = '';
+  let existingTopicsList: string[] = [];
+  let existingThemesList: string[] = [];
+  let existingNamesList: string[] = [];
+  try {
+    const course = 'conversational-skills';
+    const meta = await lessonMaterialService.getCourseMetadata(course);
+    const otherLevels = Object.entries(meta.levels)
+      .filter(([lvl]) => Number(lvl) !== level)
+      .map(([lvl, data]) => `Level ${lvl}: "${data.mainTopic}"`);
+    existingTopicsList = Object.entries(meta.levels)
+      .filter(([lvl]) => Number(lvl) !== level && meta.levels[Number(lvl)]?.mainTopic)
+      .map(([, data]) => data.mainTopic);
+    const otherChapters = Object.entries(meta.chapters)
+      .filter(([key]) => !key.startsWith(`${level}-`))
+      .map(([key, data]) => {
+        const [lvl, ch] = key.split('-');
+        return `Level ${lvl} Ch${ch}: Theme="${data.theme}", Name="${data.name}"`;
+      });
+    existingThemesList = Object.entries(meta.chapters)
+      .filter(([key]) => !key.startsWith(`${level}-`) && meta.chapters[key]?.theme)
+      .map(([, data]) => data.theme);
+    existingNamesList = Object.entries(meta.chapters)
+      .filter(([key]) => !key.startsWith(`${level}-`) && meta.chapters[key]?.name)
+      .map(([, data]) => data.name);
+    const thisLevelChapters = Object.entries(meta.chapters)
+      .filter(([key]) => key.startsWith(`${level}-`))
+      .map(([key, data]) => {
+        const ch = key.split('-')[1];
+        return `Chapter ${ch}: Theme="${data.theme}", Name="${data.name}"`;
+      });
+
+    if (otherLevels.length > 0 || otherChapters.length > 0) {
+      existingStructureContext = '\n\n⚠️ UNIQUENESS REQUIREMENT — The following topics, themes, and names ALREADY EXIST in other levels. You MUST NOT duplicate or closely paraphrase any of them. Generate something distinctly different.';
+      if (otherLevels.length > 0) {
+        existingStructureContext += `\n\nExisting level topics (DO NOT reuse):\n${otherLevels.join('\n')}`;
+      }
+      if (otherChapters.length > 0) {
+        existingStructureContext += `\n\nExisting chapter themes & names in other levels (DO NOT reuse):\n${otherChapters.join('\n')}`;
+      }
+    }
+    if (thisLevelChapters.length > 0) {
+      existingStructureContext += `\n\nThis level already has these chapters set:\n${thisLevelChapters.join('\n')}`;
+    }
+  } catch (e) {
+    console.warn('Could not fetch existing structure for uniqueness check:', e);
+  }
+
+  let prompt = `Generate the structure for Level ${level} (${tiers[level]}) of a Conversational Skills course.\nThis level should have exactly ${chapterCount} chapter(s).${existingStructureContext}`;
 
   if (existingTopic) {
     prompt += `\n\nThe level's main topic has already been set to: "${existingTopic}". Build the chapters around this topic.`;
@@ -3608,21 +3750,53 @@ export const generateCourseStructure = async (
   }
 
   try {
-    const response = await courseStructureAgent.generate(prompt);
-    const text = response.text || '';
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+    const MAX_RETRIES = 3;
+    const allExistingItems = [...existingTopicsList, ...existingThemesList, ...existingNamesList];
 
-    const parsed = JSON.parse(jsonContent);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const currentPrompt = attempt > 1
+        ? prompt + `\n\n⚠️ RETRY ATTEMPT ${attempt}: Your previous generation contained items too similar to existing ones. Generate COMPLETELY DIFFERENT topics, themes, and names this time.`
+        : prompt;
 
-    return {
-      mainTopic: parsed.mainTopic || existingTopic || '',
-      chapters: (parsed.chapters || []).slice(0, chapterCount).map((ch: any, i: number) => ({
-        chapter: ch.chapter || i + 1,
-        theme: ch.theme || '',
-        name: ch.name || '',
-      })),
-    };
+      const response = await courseStructureAgent.generate(currentPrompt);
+      const text = response.text || '';
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+
+      const parsed = JSON.parse(jsonContent);
+
+      const result: CourseStructureResult = {
+        mainTopic: parsed.mainTopic || existingTopic || '',
+        chapters: (parsed.chapters || []).slice(0, chapterCount).map((ch: any, i: number) => ({
+          chapter: ch.chapter || i + 1,
+          theme: ch.theme || '',
+          name: ch.name || '',
+        })),
+      };
+
+      // Validate uniqueness if there are existing items to check against
+      if (allExistingItems.length > 0) {
+        const newItems = [
+          result.mainTopic,
+          ...result.chapters.map(ch => ch.theme),
+          ...result.chapters.map(ch => ch.name),
+        ].filter(Boolean);
+
+        const validation = await validateUniqueness(newItems, allExistingItems, 'course structure items (level topics, chapter themes, chapter names)');
+
+        if (!validation.valid) {
+          console.warn(`Course structure attempt ${attempt}/${MAX_RETRIES} has duplicates:`, validation.duplicates);
+          if (attempt < MAX_RETRIES) continue; // retry
+          // On last attempt, log but return anyway
+          console.warn('Max retries reached — returning result despite potential duplicates');
+        }
+      }
+
+      return result;
+    }
+
+    // Fallback (should not reach here)
+    throw new Error('Failed to generate unique course structure after max retries');
   } catch (error) {
     console.error('Failed to generate course structure:', error);
     throw error;
@@ -3660,14 +3834,23 @@ LESSON NAMING RULES:
 - Lesson names should be short (1-4 words), clear, and descriptive
 - They should indicate what the lesson teaches (e.g., "First Impressions", "Asking for Help", "Making Plans")
 - Avoid generic names like "Lesson 1", "Practice", "Review"
-- Names should feel like natural conversation topics
+- Names must sound NATURAL and SIMPLE — like how a normal person would describe the topic, not academic or stiff
+  BAD: "Interpersonal Introductions", "Navigating Transactions", "Temporal Discourse"
+  GOOD: "Saying Hello", "Buying Things", "What Time Is It?"
+- NEVER use trailing ellipsis (...) in lesson names. Every name must be a complete, finished phrase.
+- NEVER create lessons about spelling, alphabet, phonics, writing, reading aloud, or language mechanics. This is a CONVERSATION skills course — all lessons must be about topics people actually TALK about in real life.
+  BAD: "Spell Your Name", "Letters and Sounds", "Reading Out Loud", "Writing Practice"
+  GOOD: "Saying Hello", "My Family", "What Do You Like?", "Weekend Fun"
+- All names must feel polished, natural, and easy to understand at a glance
+- Use plain everyday English
 
 GOAL RULES:
-- English goals should start with "I can..." and describe what the student will be able to do
+- English goals should start with "I can" and describe what the student will be able to do
 - Japanese goals should be the equivalent in Japanese
 - Goals should be specific and measurable (e.g., "I can introduce myself and ask someone's name" not "I can do greetings")
 - Keep goals concise (max 15 words)
 - Goals should be achievable within a single lesson
+- NEVER use trailing ellipsis (...) in goals. Every goal must be a complete sentence.
 
 PROFICIENCY MAPPING:
 - Level 1-2 (STARTER): Very simple goals - basic phrases, single exchanges
@@ -3708,33 +3891,92 @@ export const generateLessonStructure = async (
     9: 'ADVANCED', 10: 'ADVANCED',
   };
 
+  // Fetch all existing lesson names from DB for uniqueness checking
+  let existingLessonsContext = '';
+  let existingLessonNamesList: string[] = [];
+  try {
+    const course = 'conversational-skills';
+    const allLessons = await lessonMaterialService.listByCourse(course);
+    // Collect unique lesson names from other chapters (deduplicate across skills)
+    const otherLessonNames = [...new Set(
+      allLessons
+        .filter(l => !(l.level === level && l.chapter === chapter))
+        .map(l => `Level ${l.level} Ch${l.chapter}: "${l.lessonName}"`)
+    )];
+    existingLessonNamesList = [...new Set(
+      allLessons
+        .filter(l => !(l.level === level && l.chapter === chapter))
+        .map(l => l.lessonName)
+    )];
+    // Also collect lesson names in THIS chapter (to avoid duplicating within)
+    const thisChapterNames = [...new Set(
+      allLessons
+        .filter(l => l.level === level && l.chapter === chapter)
+        .map(l => l.lessonName)
+    )];
+    existingLessonNamesList.push(...thisChapterNames);
+
+    if (otherLessonNames.length > 0) {
+      existingLessonsContext = `\n\n⚠️ UNIQUENESS REQUIREMENT — The following lesson names ALREADY EXIST in other chapters. You MUST NOT duplicate or closely paraphrase any of them. Generate distinctly different lesson names.\n\nExisting lesson names (DO NOT reuse):\n${otherLessonNames.join('\n')}`;
+    }
+    if (thisChapterNames.length > 0) {
+      existingLessonsContext += `\n\nThis chapter already has these lessons (avoid duplicating): ${thisChapterNames.join(', ')}`;
+    }
+  } catch (e) {
+    console.warn('Could not fetch existing lessons for uniqueness check:', e);
+  }
+
   let prompt = `Generate 10 lesson names and goals for:
 - Level ${level} (${tiers[level]})
 - Level Main Topic: "${levelTopic}"
 - Chapter ${chapter}: Theme = "${chapterTheme}", Name = "${chapterName}"
 
-The lessons should progressively explore different facets of "${chapterTheme}" under the umbrella of "${levelTopic}". All content must be conversation-worthy and appropriate for ${tiers[level]} level students.`;
+The lessons should progressively explore different facets of "${chapterTheme}" under the umbrella of "${levelTopic}". All content must be conversation-worthy and appropriate for ${tiers[level]} level students.${existingLessonsContext}`;
 
   if (customPrompt) {
     prompt += `\n\nAdditional instructions: ${customPrompt}`;
   }
 
   try {
-    const response = await lessonStructureAgent.generate(prompt);
-    const text = response.text || '';
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+    const MAX_RETRIES = 3;
 
-    const parsed = JSON.parse(jsonContent);
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const currentPrompt = attempt > 1
+        ? prompt + `\n\n⚠️ RETRY ATTEMPT ${attempt}: Your previous generation contained lesson names too similar to existing ones. Generate COMPLETELY DIFFERENT lesson names and goals this time.`
+        : prompt;
 
-    return {
-      lessons: (parsed.lessons || []).slice(0, 10).map((l: any, i: number) => ({
-        lessonNumber: l.lessonNumber || i + 1,
-        lessonName: l.lessonName || '',
-        goalTextEn: l.goalTextEn || '',
-        goalTextJp: l.goalTextJp || '',
-      })),
-    };
+      const response = await lessonStructureAgent.generate(currentPrompt);
+      const text = response.text || '';
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const jsonContent = sanitizeAIText((jsonMatch?.[1] || text).trim());
+
+      const parsed = JSON.parse(jsonContent);
+
+      const result: LessonStructureResult = {
+        lessons: (parsed.lessons || []).slice(0, 10).map((l: any, i: number) => ({
+          lessonNumber: l.lessonNumber || i + 1,
+          lessonName: l.lessonName || '',
+          goalTextEn: l.goalTextEn || '',
+          goalTextJp: l.goalTextJp || '',
+        })),
+      };
+
+      // Validate uniqueness if there are existing lesson names to check against
+      if (existingLessonNamesList.length > 0) {
+        const newLessonNames = result.lessons.map(l => l.lessonName).filter(Boolean);
+        const validation = await validateUniqueness(newLessonNames, existingLessonNamesList, 'lesson names');
+
+        if (!validation.valid) {
+          console.warn(`Lesson structure attempt ${attempt}/${MAX_RETRIES} has duplicates:`, validation.duplicates);
+          if (attempt < MAX_RETRIES) continue; // retry
+          console.warn('Max retries reached — returning result despite potential duplicates');
+        }
+      }
+
+      return result;
+    }
+
+    throw new Error('Failed to generate unique lesson structure after max retries');
   } catch (error) {
     console.error('Failed to generate lesson structure:', error);
     throw error;

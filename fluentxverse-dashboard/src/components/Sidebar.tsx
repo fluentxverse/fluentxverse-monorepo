@@ -79,9 +79,11 @@ export function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="logo-icon">
-            <i className="ri-book-open-line"></i>
-          </div>
+          <img
+            src="/assets/img/logo/icon_logo.png"
+            alt="FluentXVerse Logo"
+            className="logo-icon-img"
+          />
           <div className="logo-text">
             <span className="logo-title">FluentXVerse</span>
             <span className="logo-subtitle">Admin Dashboard</span>
@@ -146,6 +148,9 @@ export function Sidebar() {
             <span className="admin-name">{getDisplayName()}</span>
             <span className="admin-role">{getRoleLabel()}</span>
           </div>
+          <a href="/settings" className="change-pw-btn" title="Change Password">
+            <i className="ri-lock-password-line"></i>
+          </a>
           <button className="logout-btn" title="Logout" onClick={logout}>
             <i className="ri-logout-box-r-line"></i>
           </button>
