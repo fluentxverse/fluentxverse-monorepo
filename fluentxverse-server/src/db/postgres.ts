@@ -16,7 +16,6 @@ const sql = new SQL({
   connectionTimeout: 2,
 });
 
-console.log('✅ Bun SQL (PostgreSQL) initialized');
 
 /**
  * Execute a raw query with parameters (legacy compatibility)
@@ -43,7 +42,6 @@ export const db = sql;
  */
 export const closePool = async () => {
   await sql.close();
-  console.log('Bun SQL connection pool closed');
 };
 
 // For backwards compatibility

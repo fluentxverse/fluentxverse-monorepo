@@ -23,13 +23,11 @@ export const authMiddleware = async (
     if (tokenFromAuth) {
       authPayload = await verifyAuthToken(tokenFromAuth);
       if (authPayload) {
-        console.log('🔐 Auth verified from handshake token - userId:', authPayload.userId);
       }
     }
 
     // Try cookies if no valid token from handshake
     if (!authPayload && cookieString) {
-      console.log('🍪 Cookie string received, attempting JWT verification');
 
       // Admin dashboard cookie
       const adminAuthCookie = cookieString
@@ -44,7 +42,6 @@ export const authMiddleware = async (
           socket.data.userId = adminPayload.userId;
           socket.data.userType = 'admin';
           socket.data.email = adminPayload.email;
-          console.log(`✅ Socket authenticated: Admin ${adminPayload.userId}`);
           return next();
         }
       }
@@ -55,21 +52,18 @@ export const authMiddleware = async (
         .find(row => row.startsWith('tutorAuth='))
         ?.split('=')[1];
       
-      console.log('🍪 tutorAuth cookie found:', authCookie ? 'YES' : 'NO');
       
       if (!authCookie) {
         authCookie = cookieString
           .split('; ')
           .find(row => row.startsWith('studentAuth='))
           ?.split('=')[1];
-        console.log('🍪 studentAuth cookie found:', authCookie ? 'YES' : 'NO');
       }
 
       if (authCookie) {
         const decodedCookie = decodeURIComponent(authCookie);
         authPayload = await verifyAuthToken(decodedCookie);
         if (authPayload) {
-          console.log('🍪 JWT verified from cookie - userId:', authPayload.userId);
         }
       }
     }
@@ -90,7 +84,6 @@ export const authMiddleware = async (
     socket.data.userType = (authPayload.tier && authPayload.tier >= 2) ? 'tutor' : 'student';
     socket.data.email = authPayload.email;
 
-    console.log(`✅ Socket authenticated: User ${authPayload.userId} (${socket.data.userType})`);
     next();
   } catch (error) {
     console.error('Socket authentication error:', error);

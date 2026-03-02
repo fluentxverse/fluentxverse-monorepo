@@ -142,7 +142,6 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       });
 
 
-      console.log('Fetched schedule:', schedule);
 
       return {
         success: true,
@@ -418,14 +417,10 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .post('/book', async ({ body, cookie, set }) => {
     try {
-      console.log('=== BOOKING REQUEST STARTED ===');
-      console.log('Request body:', JSON.stringify(body, null, 2));
       
       const raw = cookie.studentAuth?.value;
-      console.log('Cookie studentAuth raw:', raw ? 'Present' : 'Missing');
       
       if (!raw) {
-        console.log('ERROR: No authentication cookie found');
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
       }
@@ -435,26 +430,19 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         set.status = 401;
         return { success: false, error: 'Invalid or expired token' };
       }
-      console.log('Auth payload verified:', JSON.stringify(payload, null, 2));
       
       const studentId = payload.userId;
-      console.log('Student ID:', studentId);
       
       // Rate limiting check
       const rateLimitError = await rateLimitMiddleware(studentId, 'booking', set as any);
       if (rateLimitError) {
-        console.log('ERROR: Rate limit exceeded for student:', studentId);
         return rateLimitError;
       }
       
-      console.log('Slot ID from body:', body.slotId);
 
       // Refresh JWT cookie on every request
       await refreshJwtCookie(cookie, payload, 'studentAuth');
-      console.log('Cookie refreshed');
 
-      console.log('Calling scheduleService.bookSlot...');
-      console.log('Ticket transfer tx hash:', body.ticketTransferTxHash || 'Not provided');
       
       const booking = await scheduleService.bookSlot({
         studentId,
@@ -462,8 +450,6 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         ticketTransferTxHash: body.ticketTransferTxHash
       });
       
-      console.log('Booking successful:', JSON.stringify(booking, null, 2));
-      console.log('=== BOOKING REQUEST COMPLETED ===');
 
       // Invalidate tutor search cache since slot is no longer available
       await invalidateCache('tutor:search:*');
@@ -501,7 +487,6 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    */
   .post('/cancel', async ({ body, cookie, set }) => {
     try {
-      console.log('=== CANCEL BOOKING REQUEST ===');
       
       const raw = cookie.studentAuth?.value;
       if (!raw) {
@@ -519,7 +504,6 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       // Refresh JWT cookie on every request
       await refreshJwtCookie(cookie, payload, 'studentAuth');
 
-      console.log('Cancelling booking:', body.bookingId, 'for student:', studentId);
 
       const result = await scheduleService.cancelBooking({
         bookingId: body.bookingId,
@@ -527,7 +511,6 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         reason: body.reason
       });
 
-      console.log('Cancellation result:', result);
 
       // Invalidate tutor search cache since slot may be available again
       await invalidateCache('tutor:search:*');

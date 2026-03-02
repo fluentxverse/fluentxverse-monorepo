@@ -103,7 +103,6 @@ export const checkGrammar = async (text: string): Promise<GrammarCheckResult> =>
     const response = await grammarCheckAgent.generate(text);
     const content = response.text;
 
-    console.log('AI Grammar Check Response:', content);
 
     if (!content) {
       throw new Error('No response from AI');
@@ -117,11 +116,9 @@ export const checkGrammar = async (text: string): Promise<GrammarCheckResult> =>
         .replace(/```\n?/g, '')
         .trim();
       
-      console.log('Cleaned content:', cleanContent);
       
       const result = JSON.parse(cleanContent);
       
-      console.log('Parsed result:', result);
       
       // Handle various possible field names the AI might use
       const simpleExp = result.simpleExplanation || result.simple_explanation || result.simpleexplanation || '';
@@ -248,7 +245,6 @@ export const getVocabularyDefinition = async (word: string): Promise<VocabularyD
     const response = await vocabularyAgent.generate(word);
     const content = response.text;
 
-    console.log('AI Vocabulary Response:', content);
 
     if (!content) {
       throw new Error('No response from AI');
@@ -374,7 +370,6 @@ export const getPronunciation = async (word: string): Promise<PronunciationResul
     const response = await pronunciationAgent.generate(word);
     const content = response.text;
 
-    console.log('AI Pronunciation Response:', content);
 
     if (!content) {
       throw new Error('No response from AI');
@@ -2457,7 +2452,6 @@ ${customPrompt ? `Additional notes: ${customPrompt}` : ''}`;
 
         const resp = await grammarTipAgent.generate(grammarPrompt);
         const text = resp.text || '';
-        console.log('Grammar Tip raw response:', text); // Debug log
         
         // Try to extract JSON - handle both with and without code blocks
         let jsonContent = text;
@@ -2475,7 +2469,6 @@ ${customPrompt ? `Additional notes: ${customPrompt}` : ''}`;
         let parsed: any = { grammarTip: {} };
         try {
           parsed = JSON.parse(jsonContent);
-          console.log('Grammar Tip parsed:', JSON.stringify(parsed, null, 2)); // Debug log
         } catch (e) {
           console.error('Failed to parse grammar-tip response:', text);
           console.error('Attempted to parse:', jsonContent);
@@ -2705,9 +2698,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
     // ========================================================================
     // EXERCISE SECTION GENERATION (Section 4)
     // ========================================================================
-    console.log('[EXERCISE DEBUG] exerciseType:', exerciseType, '| exerciseStep:', exerciseStep, '| condition:', !!(exerciseType && exerciseStep));
     if (exerciseType && exerciseStep) {
-      console.log('[EXERCISE DEBUG] Entered exercise generation block');
       const itemCount = exerciseItemCount || 4; // Default to 4 items
       
       let exerciseAgent: Agent;
@@ -2760,8 +2751,6 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
 
       const exerciseResponse = await exerciseAgent.generate(exercisePrompt);
       const text = typeof exerciseResponse.text === 'string' ? exerciseResponse.text : '';
-      console.log('[EXERCISE DEBUG] Raw AI response length:', text.length);
-      console.log('[EXERCISE DEBUG] Raw AI response (first 500 chars):', text.substring(0, 500));
       
       // Parse JSON from response - try code fence extraction first, then raw JSON
       let parsed: any = {};
@@ -2770,11 +2759,9 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       const jsonContent = sanitizeAIText(
         codeFenceMatch?.[1]?.trim() || (rawJsonMatch ? rawJsonMatch[0] : text)
       );
-      console.log('[EXERCISE DEBUG] JSON extraction method:', codeFenceMatch ? 'code-fence' : (rawJsonMatch ? 'raw-json' : 'fallback'));
       
       try {
         parsed = JSON.parse(jsonContent);
-        console.log('[EXERCISE DEBUG] JSON parsed successfully, keys:', Object.keys(parsed));
       } catch (e) {
         console.error('[EXERCISE DEBUG] Failed to parse exercise response:', text);
         console.error('[EXERCISE DEBUG] Parse error:', e);
@@ -2783,8 +2770,6 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       // Handle both wrapped and unwrapped response formats
       const exercise = parsed.exerciseData || parsed || {};
       
-      console.log('[EXERCISE DEBUG] Exercise type:', exerciseType, '| Parsed data keys:', Object.keys(exercise));
-      console.log('[EXERCISE DEBUG] exerciseItems:', exercise.exerciseItems?.length, '| chooseItems:', exercise.chooseItems?.length, '| changeItems:', exercise.changeItems?.length, '| items:', exercise.items?.length);
       
       // Extract items from AI response - check multiple possible field names
       const extractItems = (data: any, primaryKey: string): any[] => {
@@ -2805,8 +2790,6 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       const chooseItemsArr = exerciseType === 'choose' ? extractItems(exercise, 'chooseItems') : [];
       const changeItemsArr = exerciseType === 'change' ? extractItems(exercise, 'changeItems') : [];
       
-      console.log('[EXERCISE DEBUG] Final items count - rephrase:', rephraseItems.length, 'choose:', chooseItemsArr.length, 'change:', changeItemsArr.length);
-      console.log('[EXERCISE DEBUG] Returning exerciseData with step:', exerciseStep, 'type:', exerciseType);
       
       // Build the answer key from the answers array
       const answersArr = (exercise.answers || []).slice(0, itemCount).map((answer: any) => ({
@@ -3061,7 +3044,6 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
     }
     
     // Determine which mode to use (default to 'improve' if current content exists, 'new' otherwise)
-    console.log('[GENERATION DEBUG] Fell through to introduction generation. exerciseType:', exerciseType, 'exerciseStep:', exerciseStep, 'missionType:', missionType, 'generateTrivia:', generateTrivia, 'applyType:', applyType, 'learnType:', learnType);
     const mode = generationMode || (currentContent ? 'improve' : 'new');
 
     // GENERATE NEW MODE: Create full introduction content

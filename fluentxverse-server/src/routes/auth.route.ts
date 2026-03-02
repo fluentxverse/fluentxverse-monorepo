@@ -26,14 +26,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       
       try 
       {
-        // Log incoming request body (without password)
-        console.log('[/tutor/register] Request body:', { 
-          ...body, 
-          password: '***',
-          birthDate: body.birthDate,
-          birthDateType: typeof body.birthDate
-        });
-        
         const authService = new AuthService();
         const result = await authService.register(body);
 
@@ -68,16 +60,9 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           }
         };
         
-        console.log('[/tutor/register] Success response:', { 
-          success: responsePayload.success, 
-          message: responsePayload.message,
-          userKeys: Object.keys(responsePayload.user)
-        });
-        
         return responsePayload;
         
       } catch (error: any) {
-        console.log('[/tutor/register] Error:', error?.code || error?.message);
         
         // Handle EMAIL_EXISTS with proper 409 Conflict status
         if (error?.code === 'EMAIL_EXISTS' || error?.message === 'EMAIL_EXISTS') {
@@ -139,7 +124,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         
         return { success: true, user: normalizedUser };
       } catch (error: any) {
-        console.log('[/tutor/login] Error:', error?.message || error);
         
         // Handle specific error messages with appropriate status codes
         const errorMessage = error?.message || 'Login failed';
@@ -191,7 +175,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
       
-      console.log('🚪 Tutor logout - cookie cleared');
       
       return { success: true, message: 'Logged out successfully' };
     }, LogoutSchema)

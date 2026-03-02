@@ -222,8 +222,6 @@ const Interview = new Elysia({ prefix: '/interview' })
 
       // Send notification for interview scheduled
       try {
-        console.log('📧 Sending interview notification to tutor:', tutorId);
-        console.log('📧 Booking details:', booking.date, booking.time);
         
         const notification = await notificationService.notifyInterviewScheduled(
           tutorId,
@@ -231,18 +229,14 @@ const Interview = new Elysia({ prefix: '/interview' })
           booking.time
         );
         
-        console.log('📧 Notification created:', notification.id);
         
         // Emit real-time notification via Socket.IO
         const io = getIO();
-        console.log('📧 Socket.IO instance:', io ? 'available' : 'NOT available');
         
         if (io) {
           // Use the same room format as notification.handler.ts
           const room = `notifications:${tutorId}`;
-          console.log('📧 Emitting to room:', room);
           io.to(room).emit('notification:new', notification);
-          console.log('📧 Notification emitted successfully');
         }
       } catch (notifError) {
         console.error('Failed to send interview notification:', notifError);

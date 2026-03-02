@@ -55,13 +55,11 @@ export const initSocketServer = (httpServer: HTTPServer) => {
   io.use(authMiddleware);
 
   io.on('connection', (socket) => {
-    console.log(`✅ Client connected: ${socket.id}`);
 
     // Extract user info from socket (set by auth middleware)
     const userId = socket.data.userId;
     const userType = socket.data.userType;
 
-    console.log(`User ${userId} (${userType}) connected with socket ${socket.id}`);
 
     // Register event handlers
     chatHandler(io, socket);
@@ -75,7 +73,6 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     lessonHandler(io, socket);
 
     socket.on('disconnect', (reason) => {
-      console.log(`❌ Client disconnected: ${socket.id}, reason: ${reason}`);
     });
 
     socket.on('error', (error) => {
@@ -83,6 +80,5 @@ export const initSocketServer = (httpServer: HTTPServer) => {
     });
   });
 
-  console.log('✅ Socket.IO server initialized');
   return io;
 };

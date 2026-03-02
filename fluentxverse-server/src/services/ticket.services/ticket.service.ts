@@ -176,7 +176,6 @@ export class TicketService {
       files: [imageFile],
     });
 
-    console.log(`Uploaded ${tier} ticket image to IPFS:`, imageUri);
     return imageUri;
   }
 
@@ -235,7 +234,6 @@ export class TicketService {
     while (attempts < maxAttempts) {
       try {
         const statusResult = await this.getMintingStatus(transactionId);
-        console.log(`Minting status for ${transactionId}: ${statusResult}`);
 
         if (statusResult === 'confirmed' || statusResult === 'CONFIRMED' || statusResult === 'mined') {
           // Success!
@@ -348,7 +346,6 @@ export class TicketService {
     }
 
     // Upload image to IPFS
-    console.log(`Uploading ${tier} ticket image to IPFS...`);
     const imageUri = await this.uploadTicketImage(tier);
 
     const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
@@ -368,7 +365,6 @@ export class TicketService {
     };
 
     // Mint NFTs to contract address
-    console.log(`Minting ${supply} ${tier} ticket NFTs...`);
     const transaction = mintTo({
       contract,
       to: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
@@ -381,7 +377,6 @@ export class TicketService {
       simulate: false,
     });
 
-    console.log("Transaction ID:", transactionId);
 
     // Send minting started notification
     await this.sendAdminNotification(
@@ -438,13 +433,11 @@ export class TicketService {
         
         // Skip NFTs that don't have a valid Tier attribute (Basic, Premium, or Trial)
         if (!tierAttr?.value) {
-          console.log(`Skipping token ${nft.id}: No Tier attribute found`);
           return null;
         }
         
         const tierValue = tierAttr.value.toLowerCase();
         if (tierValue !== 'basic' && tierValue !== 'premium' && tierValue !== 'trial') {
-          console.log(`Skipping token ${nft.id}: Invalid Tier value "${tierAttr.value}"`);
           return null;
         }
 
@@ -505,7 +498,6 @@ export class TicketService {
     }
 
     const tierName = ticket.tier.charAt(0).toUpperCase() + ticket.tier.slice(1);
-    console.log(`Minting ${quantity} additional ${ticket.tier} tickets (Token ID: ${tokenId})...`);
 
     const transaction = mintAdditionalSupplyTo({
       contract,
@@ -519,7 +511,6 @@ export class TicketService {
       simulate: false,
     });
 
-    console.log("Mint additional transaction ID:", transactionId);
 
     // Send minting started notification
     await this.sendAdminNotification(
@@ -625,7 +616,6 @@ export class TicketService {
       throw new Error('CRITICAL: Cannot transfer tickets to vault wallet');
     }
 
-    console.log(`Processing ticket purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
 
     // Get the token ID for this tier
     const tickets = await this.getTickets();
@@ -644,15 +634,12 @@ export class TicketService {
 
     try {
       // Get current NFT metadata for logging
-      console.log(`Getting NFT metadata for token ${ticket.tokenId}...`);
       const nft = await getNFT({
         contract,
         tokenId,
       });
-      console.log('Current NFT metadata:', nft.metadata);
 
       // Transfer the NFT tickets from server wallet to buyer
-      console.log(`Transferring ${quantity} ${tier} ticket(s) to ${buyerWallet}...`);
       
       const transferTransaction = safeTransferFrom({
         contract,
@@ -668,7 +655,6 @@ export class TicketService {
         simulate: false,
       });
 
-      console.log(`Transfer transaction ID: ${transferTxId}`);
 
       // Send notification about the purchase
       const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
@@ -704,7 +690,6 @@ export class TicketService {
           purchaseDate,
           status: 'completed',
         });
-        console.log(`✅ Purchase record saved to Memgraph with userId: ${userId || 'none'}`);
       } catch (dbError) {
         // Log but don't fail the purchase - blockchain transfer already succeeded
         console.error('⚠️ Failed to save purchase to Memgraph:', dbError);
@@ -760,7 +745,6 @@ export class TicketService {
     premiumTokenId: string | null;
     trialTokenId: string | null;
   }> {
-    console.log(`Getting ticket balance for wallet: ${walletAddress}`);
 
     // Get all tickets to find token IDs for basic, premium, and trial
     const tickets = await this.getTickets();
@@ -781,7 +765,6 @@ export class TicketService {
           tokenId: BigInt(basicTicket.tokenId),
         });
         basicBalance = Number(balance);
-        console.log(`Basic ticket balance for ${walletAddress}: ${basicBalance}`);
       } catch (error) {
         console.error('Error getting basic ticket balance:', error);
       }
@@ -796,7 +779,6 @@ export class TicketService {
           tokenId: BigInt(premiumTicket.tokenId),
         });
         premiumBalance = Number(balance);
-        console.log(`Premium ticket balance for ${walletAddress}: ${premiumBalance}`);
       } catch (error) {
         console.error('Error getting premium ticket balance:', error);
       }
@@ -811,7 +793,6 @@ export class TicketService {
           tokenId: BigInt(trialTicket.tokenId),
         });
         trialBalance = Number(balance);
-        console.log(`Trial ticket balance for ${walletAddress}: ${trialBalance}`);
       } catch (error) {
         console.error('Error getting trial ticket balance:', error);
       }
@@ -883,7 +864,6 @@ export class TicketService {
         });
       }
 
-      console.log(`✅ Saved ticket purchase to Memgraph: ${purchaseId}`);
 
       return {
         id: purchaseId,
@@ -944,7 +924,6 @@ export class TicketService {
     const session = driver.session();
 
     try {
-      console.log(`📊 Getting purchase history for userId: ${userId}`);
       
       // Use comprehensive query like recent activity - check multiple ways to find purchases:
       // 1. By userId property directly on the purchase
@@ -993,7 +972,6 @@ export class TicketService {
       const purchases = Array.from(purchaseMap.values())
         .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
 
-      console.log(`📊 Found ${purchases.length} purchases for user ${userId}`);
       return purchases;
     } catch (error) {
       console.error('Error fetching purchase history from Memgraph:', error);
@@ -1136,8 +1114,6 @@ export class TicketService {
     const transactionId = uuidv4();
     const createdAt = new Date().toISOString();
 
-    console.log(`[TicketService] Deducting ${TICKETS_PER_LESSON} ${tier} ticket(s) for booking ${bookingId}`);
-    console.log(`[TicketService] Student wallet: ${studentWallet}`);
 
     // Get the token ID for this tier
     const tickets = await this.getTickets();
@@ -1196,10 +1172,8 @@ export class TicketService {
         MERGE (s)-[:MADE_TRANSACTION]->(t)
       `, { transactionId, studentId });
 
-      console.log(`[TicketService] Created pending transaction: ${transactionId}`);
 
       // Execute on-chain transfer from student wallet to vault wallet
-      console.log(`[TicketService] Executing on-chain transfer...`);
       
       // Get the student's server wallet to execute the transfer
       const studentServerWallet = this.getStudentServerWallet(studentWallet);
@@ -1220,7 +1194,6 @@ export class TicketService {
         simulate: false,
       });
 
-      console.log(`[TicketService] Transfer transaction enqueued: ${transferTxId}`);
 
       // Update transaction to completed with the real transfer tx ID
       await session.run(`
@@ -1234,8 +1207,6 @@ export class TicketService {
         completedAt: new Date().toISOString(),
       });
 
-      console.log(`[TicketService] ✅ Ticket deducted successfully for booking ${bookingId}`);
-      console.log(`[TicketService] On-chain transfer TX: ${transferTxId}`);
 
       return {
         id: transactionId,
@@ -1282,19 +1253,14 @@ export class TicketService {
     const now = new Date();
     const createdAt = now.toISOString();
 
-    console.log(`[TicketService] Processing refund for booking ${bookingId}`);
-    console.log(`[TicketService] Scheduled time: ${scheduledTime.toISOString()}`);
-    console.log(`[TicketService] Current time: ${now.toISOString()}`);
 
     // Check if refund is allowed (more than 1 hour before scheduled time)
     const hoursUntilLesson = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60);
     
     if (hoursUntilLesson < REFUND_POLICY.NO_REFUND_HOURS) {
-      console.log(`[TicketService] ❌ No refund - only ${hoursUntilLesson.toFixed(2)} hours until lesson (minimum: ${REFUND_POLICY.NO_REFUND_HOURS})`);
       return null; // No refund allowed
     }
 
-    console.log(`[TicketService] ✓ Refund allowed - ${hoursUntilLesson.toFixed(2)} hours until lesson`);
 
     const driver = getDriver();
     const session = driver.session();
@@ -1351,7 +1317,6 @@ export class TicketService {
         MERGE (s)-[:MADE_TRANSACTION]->(refund)
       `, { refundTxId, originalTxId, studentId });
 
-      console.log(`[TicketService] Executing on-chain refund transfer...`);
 
       // Execute on-chain transfer from vault wallet back to student
       const transferTransaction = safeTransferFrom({
@@ -1369,7 +1334,6 @@ export class TicketService {
         simulate: false,
       });
 
-      console.log(`[TicketService] Refund transfer transaction enqueued: ${transferTxId}`);
 
       // Mark refund as completed with real tx ID
       await session.run(`
@@ -1383,8 +1347,6 @@ export class TicketService {
         completedAt: new Date().toISOString(),
       });
 
-      console.log(`[TicketService] ✅ Ticket refunded successfully for booking ${bookingId}`);
-      console.log(`[TicketService] On-chain refund TX: ${transferTxId}`);
 
       return {
         id: refundTxId,
@@ -1517,10 +1479,6 @@ export class TicketService {
     error?: string;
   }> {
     try {
-      console.log(`[TicketService] Verifying transaction: ${txHash}`);
-      console.log(`[TicketService] Expected from wallet: ${expectedFromWallet}`);
-      console.log(`[TicketService] Expected to vault: ${VAULT_WALLET_ADDRESS}`);
-      console.log(`[TicketService] Ticket contract: ${TICKET_CONTRACT_ADDRESS}`);
       
       const chain = defineChain(CHAIN_ID);
       const rpcRequest = getRpcClient({ client: thirdwebClient, chain });
@@ -1533,10 +1491,6 @@ export class TicketService {
         return { valid: false, error: 'Transaction not found on blockchain' };
       }
 
-      console.log(`[TicketService] Transaction status: ${receipt.status}`);
-      console.log(`[TicketService] Transaction to: ${receipt.to}`);
-      console.log(`[TicketService] Transaction from: ${receipt.from}`);
-      console.log(`[TicketService] Number of logs: ${receipt.logs.length}`);
 
       // Check transaction was successful (status 1)
       if (receipt.status !== 'success') {
@@ -1550,7 +1504,6 @@ export class TicketService {
       let foundValidTransfer = false;
       
       for (const log of receipt.logs) {
-        console.log(`[TicketService] Log address: ${log.address}, topics[0]: ${log.topics[0]}`);
         
         // Check this log is from the ticket contract
         if (log.address.toLowerCase() !== TICKET_CONTRACT_ADDRESS.toLowerCase()) {
@@ -1580,7 +1533,6 @@ export class TicketService {
         const fromAddress = '0x' + fromTopic.slice(-40);
         const toAddress = '0x' + toTopic.slice(-40);
         
-        console.log(`[TicketService] Transfer event - from: ${fromAddress}, to: ${toAddress}`);
         
         // Verify the transfer is from the student's wallet to the vault
         const isFromStudent = fromAddress.toLowerCase() === expectedFromWallet.toLowerCase();
@@ -1588,7 +1540,6 @@ export class TicketService {
         
         if (isFromStudent && isToVault) {
           foundValidTransfer = true;
-          console.log(`[TicketService] ✅ Found valid transfer from student to vault`);
           break;
         }
       }
@@ -1597,7 +1548,6 @@ export class TicketService {
         return { valid: false, error: 'No valid ticket transfer from student to vault found in transaction' };
       }
 
-      console.log(`[TicketService] ✅ Transaction verified successfully`);
       return { valid: true };
     } catch (error: any) {
       console.error('[TicketService] Error verifying transaction:', error);
@@ -1615,8 +1565,6 @@ export class TicketService {
     const transactionId = uuidv4();
     const createdAt = new Date().toISOString();
 
-    console.log(`[TicketService] Recording ticket deduction for booking ${bookingId}`);
-    console.log(`[TicketService] Frontend TX hash: ${transferTxHash || 'not provided'}`);
 
     // Verify the transaction on-chain if hash is provided
     if (transferTxHash) {
@@ -1625,7 +1573,6 @@ export class TicketService {
         console.error(`[TicketService] ❌ Transaction verification failed: ${verification.error}`);
         throw new Error(`Invalid ticket transfer: ${verification.error}`);
       }
-      console.log(`[TicketService] ✅ Transaction verified on-chain`);
     } else {
       console.warn(`[TicketService] ⚠️ No transaction hash provided - cannot verify`);
     }
@@ -1680,7 +1627,6 @@ export class TicketService {
         MERGE (s)-[:MADE_TRANSACTION]->(t)
       `, { transactionId, studentId });
 
-      console.log(`[TicketService] ✅ Ticket deduction recorded: ${transactionId}`);
 
       return {
         id: transactionId,
@@ -1713,14 +1659,12 @@ export class TicketService {
    */
   async transferTrialTicketToNewUser(userWallet: string): Promise<{ success: boolean; transactionId?: string; error?: string }> {
     try {
-      console.log(`[TicketService] Attempting to transfer trial ticket to new user: ${userWallet}`);
       
       // Get all tickets to find the trial ticket
       const tickets = await this.getTickets();
       const trialTicket = tickets.find(t => t.tier === 'trial');
       
       if (!trialTicket) {
-        console.log('[TicketService] No trial tickets available in the system');
         return { success: false, error: 'No trial tickets available' };
       }
       
@@ -1734,12 +1678,10 @@ export class TicketService {
       });
       
       if (vaultBalance < 1n) {
-        console.log('[TicketService] No trial tickets available in vault');
         return { success: false, error: 'No trial tickets available in vault' };
       }
       
       // Transfer 1 trial ticket from vault to user
-      console.log(`[TicketService] Transferring 1 trial ticket to ${userWallet}...`);
       
       const transferTransaction = safeTransferFrom({
         contract,
@@ -1755,7 +1697,6 @@ export class TicketService {
         simulate: false,
       });
       
-      console.log(`[TicketService] ✅ Trial ticket transfer initiated. Transaction ID: ${transactionId}`);
       
       // Send notification about the welcome gift
       await this.sendAdminNotification(

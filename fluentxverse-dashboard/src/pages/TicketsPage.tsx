@@ -82,13 +82,11 @@ const TicketsPage = () => {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('Connected to socket for minting updates');
       socket.emit('notification:subscribe');
     });
 
     // Listen for minting updates
     socket.on('minting:update', (data: MintingUpdate) => {
-      console.log('Minting update received:', data);
       
       const tierName = data.tier.charAt(0).toUpperCase() + data.tier.slice(1);
       

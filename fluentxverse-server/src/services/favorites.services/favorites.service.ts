@@ -41,7 +41,6 @@ export class FavoritesService {
         RETURN f
       `, { studentId, tutorId, favoriteId });
 
-      console.log(`✅ Added favorite: Student ${studentId} -> Tutor ${tutorId}`);
       return { success: true, message: 'Tutor added to favorites' };
     } catch (error) {
       console.error('Error adding favorite:', error);
@@ -64,7 +63,6 @@ export class FavoritesService {
         DELETE f
       `, { studentId, tutorId });
 
-      console.log(`✅ Removed favorite: Student ${studentId} -> Tutor ${tutorId}`);
       return { success: true, message: 'Tutor removed from favorites' };
     } catch (error) {
       console.error('Error removing favorite:', error);

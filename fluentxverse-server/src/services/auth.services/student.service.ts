@@ -595,7 +595,6 @@ class StudentService {
    * Get student's own profile data
    */
   public async getOwnProfile(studentId: string) {
-    console.log('[StudentService] getOwnProfile called with:', { studentId });
     
     const driver = getDriver();
     const session = driver.session();
@@ -663,12 +662,6 @@ class StudentService {
         bio: studentData.bio || ''
       };
       
-      console.log('[StudentService] Returning own profile data:', {
-        id: profileData.id,
-        email: profileData.email,
-        totalLessons: profileData.totalLessons
-      });
-      
       return profileData;
     } catch (error) {
       console.error('[StudentService] Error getting own profile:', error);
@@ -686,7 +679,6 @@ class StudentService {
     errorCorrection: 'during_feedback' | 'proactively' | 'tutor_choice';
     otherRequests: string;
   }) {
-    console.log('[StudentService] updateLessonPreferences called with:', { studentId, preferences });
     
     const driver = getDriver();
     const session = driver.session();
@@ -707,7 +699,6 @@ class StudentService {
         throw new Error('Student not found');
       }
 
-      console.log('[StudentService] Lesson preferences updated successfully');
       return { success: true, message: 'Preferences updated successfully' };
     } catch (error) {
       console.error('[StudentService] Error updating lesson preferences:', error);
@@ -726,7 +717,6 @@ class StudentService {
     hobbies: string[];
     bio: string;
   }) {
-    console.log('[StudentService] updateAboutMe called with:', { studentId, aboutMe });
     
     const driver = getDriver();
     const session = driver.session();
@@ -754,7 +744,6 @@ class StudentService {
         throw new Error('Student not found');
       }
 
-      console.log('[StudentService] About Me updated successfully');
       return { success: true, message: 'About Me updated successfully' };
     } catch (error) {
       console.error('[StudentService] Error updating About Me:', error);
@@ -775,7 +764,6 @@ class StudentService {
     goal: string;
     viewedAt: number;
   }) {
-    console.log('[StudentService] saveLastViewedLesson called with:', { studentId, lesson });
     
     const driver = getDriver();
     const session = driver.session();
@@ -807,7 +795,6 @@ class StudentService {
         throw new Error('Student not found');
       }
 
-      console.log('[StudentService] Last viewed lesson saved successfully');
       return { success: true, message: 'Last viewed lesson saved' };
     } catch (error) {
       console.error('[StudentService] Error saving last viewed lesson:', error);
@@ -821,7 +808,6 @@ class StudentService {
    * Get last viewed lesson for student
    */
   public async getLastViewedLesson(studentId: string) {
-    console.log('[StudentService] getLastViewedLesson called for student:', studentId);
     
     const driver = getDriver();
     const session = driver.session();
@@ -854,7 +840,6 @@ class StudentService {
         viewedAt: record.get('viewedAt')
       };
 
-      console.log('[StudentService] Last viewed lesson retrieved:', lessonData);
       return { success: true, data: lessonData };
     } catch (error) {
       console.error('[StudentService] Error getting last viewed lesson:', error);

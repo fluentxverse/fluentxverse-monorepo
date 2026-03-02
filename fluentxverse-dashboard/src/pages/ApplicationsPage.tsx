@@ -80,7 +80,6 @@ const ApplicationsPage = () => {
   const loadPendingProfiles = async () => {
     try {
       const data = await adminApi.getPendingProfiles(50);
-      console.log('Loaded pending profiles:', data);
       setPendingProfiles(data);
     } catch (err) {
       console.error('Failed to load pending profiles:', err);
@@ -90,7 +89,6 @@ const ApplicationsPage = () => {
   const loadTutorsWithChanges = async () => {
     try {
       const data = await adminApi.getPendingChanges(50);
-      console.log('Loaded tutors with pending changes:', data);
       setTutorsWithChanges(data);
     } catch (err) {
       console.error('Failed to load pending changes:', err);
@@ -560,7 +558,6 @@ const ApplicationsPage = () => {
                   key={profile.id} 
                   className="profile-review-card clickable"
                   onClick={() => {
-                    console.log('Card clicked:', profile);
                     setShowProfileModal(profile);
                   }}
                   style={{ cursor: 'pointer' }}

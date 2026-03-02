@@ -33,7 +33,6 @@ export const highlightHandler = (io: TypedServer, socket: TypedSocket) => {
     // Broadcast to others in the session (excluding sender)
     socket.to(sessionId).emit('highlight:stroke' as any, { stroke });
     
-    console.log(`📝 Highlight stroke added to session ${sessionId}, total: ${highlights.length}`);
   });
 
   // Handle clear all highlights
@@ -46,7 +45,6 @@ export const highlightHandler = (io: TypedServer, socket: TypedSocket) => {
     // Broadcast to others in the session
     socket.to(sessionId).emit('highlight:clear' as any, {});
     
-    console.log(`🗑️ Highlights cleared for session ${sessionId}`);
   });
 
   // Handle sync request (when user joins)
@@ -58,7 +56,6 @@ export const highlightHandler = (io: TypedServer, socket: TypedSocket) => {
     // Send current highlights to the requesting socket
     socket.emit('highlight:sync' as any, { highlights });
     
-    console.log(`🔄 Synced ${highlights.length} highlights to socket ${socket.id} for session ${sessionId}`);
   });
 
   // Clean up session highlights on disconnect (optional - could keep them)

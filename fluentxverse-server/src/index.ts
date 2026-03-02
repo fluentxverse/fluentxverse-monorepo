@@ -81,7 +81,6 @@ const envOrigins = (process.env.FRONTEND_URLS || '')
 
 const allowedOrigins = envOrigins.length > 0 ? [...new Set([...envOrigins, ...defaultOrigins])] : defaultOrigins;
 
-console.log('🌐 CORS allowed origins:', allowedOrigins);
 
 // Security: Maximum body size limit (10MB)
 const MAX_BODY_SIZE = 10 * 1024 * 1024;
@@ -363,7 +362,6 @@ const app = new Elysia({
 
 // Start HTTP server - listen on all interfaces for LAN access
 .listen({ hostname: '0.0.0.0', port: 8765 }, () => {
-  console.log(`✅ FluentXVerse HTTP server is running on port 8765`);
 });
 
 
@@ -376,7 +374,6 @@ const io = initSocketServer(httpServer);
 
 // Attach Socket.IO to run alongside Elysia - listen on all interfaces for LAN access
 httpServer.listen(8767, '0.0.0.0', async () => {
-  console.log(`✅ Socket.IO server is running on port 8767`);
   
   // Wait for database initialization to complete before starting background jobs
   await dbInitPromise;
@@ -390,13 +387,11 @@ httpServer.listen(8767, '0.0.0.0', async () => {
   // Start daily notification retention cleanup (delete read > N days)
   const notificationService = new NotificationService();
   const daysToKeep = parseInt(process.env.NOTIFICATION_RETENTION_DAYS || '30', 10);
-  console.log(`🧹 Notification retention enabled: keeping ${daysToKeep} days`);
   // Run once a day
   setInterval(async () => {
     try {
       const deleted = await notificationService.deleteOldNotifications(daysToKeep);
       if (deleted > 0) {
-        console.log(`🧹 Deleted ${deleted} old notifications (> ${daysToKeep} days)`);
         await logRetentionCleanup(deleted);
       }
     } catch (err) {
@@ -408,7 +403,6 @@ httpServer.listen(8767, '0.0.0.0', async () => {
     try {
       const deleted = await notificationService.deleteOldNotifications(daysToKeep);
       if (deleted > 0) {
-        console.log(`🧹 Startup cleanup deleted ${deleted} old notifications`);
         await logRetentionCleanup(deleted);
       }
     } catch {}

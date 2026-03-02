@@ -53,7 +53,6 @@ const Examination = new Elysia({ prefix: "/exam" })
         // Check for existing active exam first
         const existingExam = await getActiveExam(tutorId, "written");
         if (existingExam) {
-          console.log(`📋 Returning existing exam for tutor ${tutorId}`);
           return {
             success: true,
             message: "Returning existing exam",
@@ -62,7 +61,6 @@ const Examination = new Elysia({ prefix: "/exam" })
         }
 
         // Generate new exam using AI and save to Memgraph
-        console.log(`🎓 Generating new written exam for tutor ${tutorId}...`);
         const exam = await generateWrittenExam(tutorId);
 
         return {
@@ -109,7 +107,6 @@ const Examination = new Elysia({ prefix: "/exam" })
         const { examId, answers } = body;
 
         // Grade the exam (fetches from Memgraph, no AI needed)
-        console.log(`📝 Grading exam ${examId} for tutor ${tutorId}...`);
         const result = await gradeExam(examId, tutorId, answers);
 
         return {
@@ -413,7 +410,6 @@ const Examination = new Elysia({ prefix: "/exam" })
         // Check for existing active exam first
         const existingExam = await getActiveSpeakingExam(tutorId);
         if (existingExam) {
-          console.log(`🎤 Returning existing speaking exam for tutor ${tutorId}`);
           return {
             success: true,
             message: "Returning existing exam",
@@ -422,7 +418,6 @@ const Examination = new Elysia({ prefix: "/exam" })
         }
 
         // Generate new speaking exam
-        console.log(`🎤 Generating new speaking exam for tutor ${tutorId}...`);
         const exam = await generateSpeakingExam(tutorId);
 
         return {
@@ -520,7 +515,6 @@ const Examination = new Elysia({ prefix: "/exam" })
       try {
         const { examId, recordings } = body;
 
-        console.log(`🎤 Grading speaking exam ${examId} for tutor ${tutorId}...`);
         const result = await gradeSpeakingExam(examId, tutorId, recordings);
 
         return {

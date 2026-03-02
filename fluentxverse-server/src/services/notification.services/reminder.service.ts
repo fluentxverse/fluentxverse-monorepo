@@ -85,7 +85,6 @@ export class SessionReminderService {
             SET b.reminderSent = true
           `, { bookingId: booking.bookingId });
           
-          console.log(`📢 Sent 15-minute reminder for booking ${booking.bookingId}`);
         }
       }
       
@@ -150,7 +149,6 @@ export class SessionReminderService {
             SET b.fiveMinReminderSent = true
           `, { bookingId: booking.bookingId });
           
-          console.log(`📢 Sent 5-minute reminder for booking ${booking.bookingId}`);
         }
       }
       
@@ -211,7 +209,6 @@ export class SessionReminderService {
             SET i.reminderSent = true
           `, { id: interview.id });
           
-          console.log(`📢 Sent interview reminder for ${interview.id}`);
         }
       }
       
@@ -231,7 +228,6 @@ const sessionReminderService = new SessionReminderService();
  * Call this function when the server starts
  */
 export const startReminderService = () => {
-  console.log('⏰ Starting session reminder service...');
   
   // Check every minute
   setInterval(async () => {

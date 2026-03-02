@@ -315,7 +315,6 @@ const Tutor = new Elysia({ prefix: '/tutor' })
 
       // Invalidate tutor profile cache after update
       await invalidateCache(`tutor:profile:${userId}`);
-      console.log('🗑️ Invalidated tutor profile cache after update');
 
       return { 
         success: true, 
@@ -445,12 +444,9 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    * GET /tutor/student/:studentId
    */
   .get('/student/:studentId', async ({ params, cookie, set }) => {
-    console.log('[TutorRoute] GET /tutor/student/:studentId - Request received');
-    console.log('[TutorRoute] Params:', params);
     
     try {
       const raw = cookie.tutorAuth?.value;
-      console.log('[TutorRoute] tutorAuth cookie present:', !!raw);
       
       if (!raw) {
         console.error('[TutorRoute] No tutorAuth cookie found');
@@ -465,7 +461,6 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         return { success: false, error: 'Invalid or expired token' };
       }
       const tutorId = payload.userId;
-      console.log('[TutorRoute] TutorId from JWT:', tutorId);
 
       await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
@@ -476,9 +471,7 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         return { success: false, error: 'Student ID is required' };
       }
 
-      console.log('[TutorRoute] Calling getStudentProfile with:', { studentId, tutorId });
       const studentProfile = await tutorService.getStudentProfile(studentId, tutorId);
-      console.log('[TutorRoute] Service returned student profile:', studentProfile ? 'SUCCESS' : 'NULL');
       
       return { success: true, data: studentProfile };
     } catch (error: any) {
@@ -493,7 +486,6 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    * GET /tutor/student/:studentId/lesson-request
    */
   .get('/student/:studentId/lesson-request', async ({ params, cookie, set }) => {
-    console.log('[TutorRoute] GET /tutor/student/:studentId/lesson-request - Request received');
     
     try {
       const raw = cookie.tutorAuth?.value;

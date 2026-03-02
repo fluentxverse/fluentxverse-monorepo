@@ -27,7 +27,6 @@ export const lessonHandler = (io: SocketIOServer, socket: Socket) => {
       editors: Array.from(editors)
     });
     
-    console.log(`User ${userId} joined lesson room: ${roomName}`);
   });
 
   /**
@@ -52,7 +51,6 @@ export const lessonHandler = (io: SocketIOServer, socket: Socket) => {
       }
     }
     
-    console.log(`User ${userId} left lesson room: ${roomName}`);
   });
 
   /**
@@ -87,7 +85,6 @@ export const lessonHandler = (io: SocketIOServer, socket: Socket) => {
         startedAt: new Date()
       });
       
-      console.log(`User ${userId} started editing lesson: ${lessonId}`);
     }
   });
 
@@ -110,7 +107,6 @@ export const lessonHandler = (io: SocketIOServer, socket: Socket) => {
           userName
         });
         
-        console.log(`User ${userId} stopped editing lesson: ${lessonId}`);
       }
     }
   });
@@ -147,7 +143,6 @@ export const lessonHandler = (io: SocketIOServer, socket: Socket) => {
       timestamp: new Date()
     });
     
-    console.log(`Lesson ${data.lessonId} saved by ${userId}, version: ${data.version}`);
   });
 
   /**

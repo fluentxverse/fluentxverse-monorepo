@@ -144,15 +144,12 @@ export class TutorService {
       
       if (nameSearchLower) {
         queryParams.nameSearch = nameSearchLower;
-        console.log('🔎 Name search term:', nameSearchLower);
       }
       
       // Get today's date for "all dates" filter
       const today = new Date().toISOString().split('T')[0];
       queryParams.today = today;
       
-      console.log('🔎 Building query with dateFilter:', dateFilter, 'startTime:', startTime, 'endTime:', endTime, 'searchQuery:', searchQuery);
-      console.log('🔎 Today\'s date for filtering:', today);
       
       // Debug: Check if any tutors have open slots
       const debugResult = await session.run(`
@@ -161,35 +158,8 @@ export class TutorService {
         RETURN u.id as tutorId, u.email as email, u.firstName as firstName, u.writtenExamPassed as written, u.speakingExamPassed as speaking, u.profileStatus as profileStatus, s.slotDate as slotDate, s.slotTime as slotTime
         LIMIT 20
       `);
-      console.log('🔍 DEBUG - Total open slots found:', debugResult.records.length);
       if (debugResult.records.length > 0) {
         const uniqueDates = new Set(debugResult.records.map(r => r.get('slotDate')));
-        console.log('🔍 DEBUG - Unique slot dates:', Array.from(uniqueDates));
-      }
-      debugResult.records.forEach(r => {
-        console.log('🔍 DEBUG - Slot:', {
-          tutorId: r.get('tutorId'),
-          email: r.get('email'),
-          firstName: r.get('firstName'),
-          written: r.get('written'),
-          speaking: r.get('speaking'),
-          profileStatus: r.get('profileStatus'),
-          slotDate: r.get('slotDate'),
-          slotTime: r.get('slotTime')
-        });
-      });
-      
-      // Debug: Check specific date filter
-      if (dateFilter) {
-        const dateDebugResult = await session.run(`
-          MATCH (u:User)-[:OPENS_SLOT]->(s:TimeSlot)
-          WHERE s.slotDate = $dateFilter AND s.status = 'open'
-          RETURN count(s) as slotCount, u.email as email
-        `, { dateFilter });
-        console.log('🔍 DEBUG - Slots for dateFilter', dateFilter, ':', dateDebugResult.records.map(r => ({
-          email: r.get('email'),
-          slotCount: r.get('slotCount')?.toNumber?.() || r.get('slotCount')
-        })));
       }
       
       if (dateFilter) {
@@ -207,17 +177,13 @@ export class TutorService {
         // because string comparison of 12-hour times doesn't work correctly
         // No time filtering in Cypher query - we'll handle it after fetching
         
-        console.log('📅 Using date filter match pattern:', matchPattern);
-        console.log('📅 Using date filter WHERE clause:', whereClause);
         
         // Store time filters for post-processing
         if (startTime) {
           queryParams.startTimeMinutes = timeToMinutes(startTime);
-          console.log('📅 Start time filter (minutes):', queryParams.startTimeMinutes);
         }
         if (endTime) {
           queryParams.endTimeMinutes = timeToMinutes(endTime);
-          console.log('📅 End time filter (minutes):', queryParams.endTimeMinutes);
         }
       } else {
         // "All Dates" - show tutors who have ANY open slots from today onwards AND are certified
@@ -236,14 +202,11 @@ export class TutorService {
         // Store time filters for post-processing
         if (startTime) {
           queryParams.startTimeMinutes = timeToMinutes(startTime);
-          console.log('📅 All Dates - Start time filter (minutes):', queryParams.startTimeMinutes);
         }
         if (endTime) {
           queryParams.endTimeMinutes = timeToMinutes(endTime);
-          console.log('📅 All Dates - End time filter (minutes):', queryParams.endTimeMinutes);
         }
         
-        console.log('📅 No date filter, showing tutors with any open slots from today with time range filter');
       }
 
       // Get total count of tutors matching filter
@@ -276,11 +239,6 @@ export class TutorService {
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
       }
 
-      console.log('🔢 Count query:', countQuery);
-      console.log('🔢 Tutors query:', tutorsQuery);
-      console.log('🔢 Query parameters:', JSON.stringify(queryParams, null, 2));
-      console.log('🔢 dateFilter value:', dateFilter);
-      console.log('🔢 needsTimeFiltering:', needsTimeFiltering);
       
       let total: number;
       let tutors: Tutor[];
@@ -335,7 +293,6 @@ export class TutorService {
       const startIdx = (pageNum - 1) * limitNum;
       tutors = filteredTutors.slice(startIdx, startIdx + limitNum);
       
-      console.log(`📅 Slot filtering: ${result.records.length} tutors with open slots, ${total} with bookable slots`);
 
       return {
         tutors,
@@ -375,9 +332,6 @@ export class TutorService {
       endDateObj.setDate(endDateObj.getDate() + 7);
       const endDate = `${endDateObj.getFullYear()}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
       
-      console.log('🔍 getAvailability - tutorId:', tutorId);
-      console.log('🔍 getAvailability - PHT now:', phtNow.toISOString());
-      console.log('🔍 getAvailability - Date range:', startDate, 'to', endDate);
       
       // Get time slots with optional booking info (to get studentId from Booking node)
       const result = await session.run(
@@ -443,17 +397,14 @@ export class TutorService {
         return { date: kstDate, time: kstTime };
       };
       
-      console.log('🔍 getAvailability - Found', result.records.length, 'slots from DB');
       
       const slots = result.records.map(record => {
         const slot = record.get('s').properties;
         const bookingStudentId = record.get('bookingStudentId');
         
-        console.log('🔍 Raw slot:', slot.slotDate, slot.slotTime, 'status:', slot.status);
         
         const { date, time } = convertPHTtoKST(slot.slotDate, slot.slotTime);
         
-        console.log('🔍 Converted to KST:', date, time);
         
         // Check if slot is in the past
         const isPast = isSlotInPast(slot.slotDate, slot.slotTime);
@@ -478,7 +429,6 @@ export class TutorService {
         };
       });
       
-      console.log('🔍 Returning slots:', slots.length, 'with AVAIL:', slots.filter(s => s.status === 'AVAIL').length);
       
       return slots;
     } finally {
@@ -842,13 +792,11 @@ export class TutorService {
    * Get student profile for tutor view (includes booking stats)
    */
   public async getStudentProfile(studentId: string, tutorId: string) {
-    console.log('[TutorService] getStudentProfile called with:', { studentId, tutorId });
     
     const driver = getDriver();
     const session = driver.session();
 
     try {
-      console.log('[TutorService] Executing student profile query...');
       
       const result = await session.run(
         `
@@ -872,7 +820,6 @@ export class TutorService {
         { studentId, tutorId }
       );
 
-      console.log('[TutorService] Query returned', result.records.length, 'records');
 
       if (result.records.length === 0) {
         console.error('[TutorService] Student not found with ID:', studentId);
@@ -880,7 +827,6 @@ export class TutorService {
       }
 
       const studentData = result.records[0]?.get('student');
-      console.log('[TutorService] Raw student data:', studentData);
       
       const profileData = {
         id: studentData.id,
@@ -905,12 +851,6 @@ export class TutorService {
         country: studentData.country,
         timezone: studentData.timezone || 'GMT+8 (Philippine Time)'
       };
-      
-      console.log('[TutorService] Returning profile data (abbreviated):', {
-        id: profileData.id,
-        email: profileData.email,
-        totalLessons: profileData.totalLessons
-      });
       
       return profileData;
     } catch (error) {

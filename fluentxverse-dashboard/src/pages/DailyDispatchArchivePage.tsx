@@ -74,7 +74,6 @@ export default function DailyDispatchArchivePage() {
   const handleCategoryClick = (category: string) => {
     // Navigate to category filter (if implemented) or just show all articles for that category
     // For now, just a placeholder
-    console.log('Category clicked:', category);
   };
 
   const formatDate = (dateStr: string) => {

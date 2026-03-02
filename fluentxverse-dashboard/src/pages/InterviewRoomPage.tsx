@@ -218,7 +218,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
-      localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+      localVideoRef.current.play().catch(() => {});
     }
   }, [localStream]);
 
@@ -229,7 +229,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       setTimeout(() => {
         if (localVideoRef.current && localStream) {
           localVideoRef.current.srcObject = localStream;
-          localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+          localVideoRef.current.play().catch(() => {});
         }
       }, 100);
     }
@@ -239,7 +239,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.play().catch(e => console.log('Remote auto-play prevented:', e));
+      remoteVideoRef.current.play().catch(() => {});
     }
   }, [remoteStream]);
 
@@ -262,7 +262,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       setTimeout(() => {
         if (localVideoRef.current && stream) {
           localVideoRef.current.srcObject = stream;
-          localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+          localVideoRef.current.play().catch(() => {});
         }
       }, 100);
       
@@ -296,7 +296,6 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     };
     
     pc.ontrack = (event) => {
-      console.log('📺 Remote track received');
       if (event.streams[0]) {
         setRemoteStream(event.streams[0]);
         if (remoteVideoRef.current) {
@@ -306,7 +305,6 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     };
     
     pc.onconnectionstatechange = () => {
-      console.log('Connection state:', pc.connectionState);
       setIsConnected(pc.connectionState === 'connected');
       
       if (pc.connectionState === 'connected') {
@@ -334,7 +332,6 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     };
     
     pc.oniceconnectionstatechange = () => {
-      console.log('ICE connection state:', pc.iceConnectionState);
       if (pc.iceConnectionState === 'failed') {
         setError('Network connection failed. Please check your firewall settings or try a different network.');
       }
@@ -368,7 +365,6 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       const pc = createPeerConnection();
       
       socket.on('connect', () => {
-        console.log('Socket connected');
         socket.emit('interview:join', {
           roomId: roomIdRef.current,
           odIuser: 'admin',
@@ -377,12 +373,10 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       });
       
       socket.on('interview:tutor-joined', async () => {
-        console.log('Tutor joined the room');
         setTutorConnected(true);
       });
       
       socket.on('interview:offer', async (data: { offer: RTCSessionDescriptionInit }) => {
-        console.log('Received offer from tutor');
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);

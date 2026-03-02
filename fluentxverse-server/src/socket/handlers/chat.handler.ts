@@ -144,7 +144,6 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
       // Send history to requesting client
       socket.emit('chat:history', historyMessages);
 
-      console.log(`📜 Chat history sent for session ${sessionId} (${historyMessages.length} messages)`);
     } catch (error) {
       console.error('Error handling chat:request-history:', error);
       socket.emit('chat:history', []);

@@ -267,7 +267,6 @@ export const generateSpeakingExam = async (tutorId: string): Promise<SpeakingExa
     }
 
     // Generate exam with AI
-    console.log(`🎤 Generating speaking exam for tutor ${tutorId}...`);
 
     const prompt = `Generate a unique speaking proficiency exam.
 Tutor ID: ${tutorId}
@@ -355,7 +354,6 @@ Make this exam unique by varying topics, difficulty, and scenarios.`;
       }
     );
 
-    console.log(`✅ Speaking exam ${exam.examId} created with ${exam.tasks.length} tasks`);
     return exam;
   } finally {
     await session.close();
@@ -557,7 +555,6 @@ export const gradeSpeakingExam = async (
     const examNode = result.records[0]?.get("e").properties;
     const exam: SpeakingExam = JSON.parse(examNode.content);
 
-    console.log(`🎤 Grading speaking exam ${examId} with ${recordings.length} recordings...`);
 
     // Mark exam as "processing" so the user can see it's being graded
     await session.run(
@@ -571,10 +568,8 @@ export const gradeSpeakingExam = async (
         processingStartedAt: new Date().toISOString(),
       }
     );
-    console.log(`⏳ Exam ${examId} marked as processing...`);
 
     // First, transcribe all recordings that don't have transcriptions
-    console.log(`📝 Transcribing ${recordings.length} recordings...`);
     const transcribedRecordings: TaskRecording[] = [];
     
     for (const recording of recordings) {
@@ -585,7 +580,6 @@ export const gradeSpeakingExam = async (
       }
       
       if (!recording.audioUrl || recording.audioUrl.length < 100) {
-        console.log(`⚠️ Task ${recording.taskId}: No valid audio data`);
         transcribedRecordings.push({ ...recording, transcription: "" });
         continue;
       }
@@ -595,16 +589,13 @@ export const gradeSpeakingExam = async (
         // audioUrl format: "data:audio/webm;base64,XXXXXX..."
         const base64Data = recording.audioUrl.split(",")[1];
         if (!base64Data) {
-          console.log(`⚠️ Task ${recording.taskId}: Invalid base64 format`);
           transcribedRecordings.push({ ...recording, transcription: "" });
           continue;
         }
         
         const audioBuffer = Buffer.from(base64Data, "base64");
-        console.log(`🎙️ Task ${recording.taskId}: Transcribing ${audioBuffer.length} bytes...`);
         
         const transcription = await transcribeAudio(audioBuffer);
-        console.log(`✅ Task ${recording.taskId}: "${transcription.substring(0, 50)}..."`);
         
         transcribedRecordings.push({ ...recording, transcription });
       } catch (err) {
@@ -613,7 +604,6 @@ export const gradeSpeakingExam = async (
       }
     }
     
-    console.log(`📊 Grading ${transcribedRecordings.length} transcribed recordings...`);
 
     // Grade each task
     const taskScores: TaskScore[] = [];
@@ -737,10 +727,8 @@ export const gradeSpeakingExam = async (
           score: examResult.overallScore,
         }
       );
-      console.log(`🎉 Tutor ${tutorId} has passed the speaking exam!`);
     }
 
-    console.log(`✅ Speaking exam ${examId} graded: ${overallScore}% (${passed ? "PASSED" : "FAILED"})`);
     return examResult;
   } finally {
     await session.close();

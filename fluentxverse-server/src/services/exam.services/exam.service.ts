@@ -165,7 +165,6 @@ export const generateWrittenExam = async (tutorId: string): Promise<WrittenExam>
     }
 
     // Generate new exam with AI
-    console.log(`🎓 Generating written exam for tutor ${tutorId}...`);
     
     const prompt = `Generate a unique written English proficiency exam.
 Tutor ID: ${tutorId}
@@ -234,7 +233,6 @@ Make this exam unique by varying the topics, sentence structures, and difficulty
       }
     );
 
-    console.log(`✅ Exam ${exam.examId} created and saved with ${exam.questions.length} questions`);
     return exam;
 
   } finally {
@@ -421,10 +419,8 @@ export const gradeExam = async (
           percentage: examResult.percentage,
         }
       );
-      console.log(`🎉 Tutor ${tutorId} has passed the written exam!`);
     }
 
-    console.log(`✅ Exam ${examId} graded: ${percentage}% (${passed ? "PASSED" : "FAILED"})`);
     return examResult;
 
   } finally {
@@ -632,7 +628,6 @@ export const checkAndAutoSubmitExpiredExam = async (
 
     // Check if exam has expired
     if (elapsedSeconds >= totalSeconds) {
-      console.log(`⏰ Exam ${exam.examId} has expired for tutor ${tutorId}. Auto-submitting...`);
       
       // Get saved answers or empty array
       const savedAnswers = examNode.savedAnswers 

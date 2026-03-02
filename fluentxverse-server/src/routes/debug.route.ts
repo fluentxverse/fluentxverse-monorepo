@@ -35,7 +35,6 @@ const Debug = new Elysia({ name: 'debug', prefix: '/debug' })
       // Print to server terminal
       if (level === 'error') console.error(line);
       else if (level === 'warn') console.warn(line);
-      else console.log(line);
       return { success: true };
     } catch (e) {
       console.error('Debug log error:', e);

@@ -380,11 +380,8 @@ export function AIContentGenerator({
         throw new Error(response.error || 'Failed to generate content');
       }
 
-      console.log('[AI Widget] Generation response for section:', activeSection, 'data keys:', Object.keys(response.data));
       if (activeSection === 'exercise') {
-        console.log('[AI Widget] exerciseData present:', !!(response.data as any).exerciseData);
         if ((response.data as any).exerciseData) {
-          console.log('[AI Widget] exerciseData:', JSON.stringify((response.data as any).exerciseData).substring(0, 500));
         }
       }
 

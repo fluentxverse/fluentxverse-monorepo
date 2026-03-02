@@ -23,7 +23,6 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
 
       if (targetSocket) {
         targetSocket.emit('webrtc:offer', { offer, from });
-        console.log(`📞 WebRTC offer sent from ${from} to ${to}`);
       } else {
         console.error(`Target socket not found for user ${to}`);
       }
@@ -50,7 +49,6 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
 
       if (targetSocket) {
         targetSocket.emit('webrtc:answer', { answer, from });
-        console.log(`📞 WebRTC answer sent from ${from} to ${to}`);
       } else {
         console.error(`Target socket not found for user ${to}`);
       }
@@ -77,7 +75,6 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
 
       if (targetSocket) {
         targetSocket.emit('webrtc:ice-candidate', { candidate, from });
-        console.log(`🧊 ICE candidate sent from ${from} to ${to}`);
       } else {
         console.error(`Target socket not found for user ${to}`);
       }
@@ -93,7 +90,6 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
       if (sessionId) {
         // Notify other peers that this user left
         socket.to(sessionId).emit('webrtc:peer-left');
-        console.log(`📞 User ${socket.data.userId} left WebRTC session`);
       }
     } catch (error) {
       console.error('Error handling peer disconnect:', error);

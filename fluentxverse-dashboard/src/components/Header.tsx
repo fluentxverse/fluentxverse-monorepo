@@ -66,7 +66,6 @@ export function Header() {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('Header socket connected');
       // Subscribe to notifications and join admin room
       socket.emit('notification:subscribe');
       socket.emit('join:admin');
@@ -74,13 +73,11 @@ export function Header() {
 
     // Listen for standard notifications
     socket.on('notification:new', (notification: any) => {
-      console.log('Header received notification:new', notification);
       loadNotifications();
     });
 
     // Also listen for minting updates (broadcasted globally)
     socket.on('minting:update', (data: any) => {
-      console.log('Header received minting:update', data);
       loadNotifications();
     });
 

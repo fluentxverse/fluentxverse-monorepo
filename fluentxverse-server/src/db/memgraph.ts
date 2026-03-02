@@ -25,14 +25,12 @@ export async function initDriver(uri: string, username: string, password: string
       await driver.getServerInfo();
 
       // If connection is successful, break out of the loop
-      console.log('Successfully connected to Memgraph');
       return driver;
     } catch (error: any) {
       attempt++;
       console.error(`Attempt ${attempt} failed: ${error.message}`);
 
       if (attempt < retries) {
-        console.log(`Retrying in ${delay / 1000} seconds...`);
         await sleep(delay);
       } else {
         throw new Error(`Failed to connect to Neo4j after ${retries} attempts.`);

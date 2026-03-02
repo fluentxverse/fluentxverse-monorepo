@@ -37,17 +37,14 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
         room.adminSocketId = socket.id;
       }
       
-      console.log(`👔 ${role} joined interview room: ${roomId}`);
       
       // Notify other participant
       if (role === 'admin' && room.tutorSocketId) {
         // Admin joined, notify tutor
         io.to(room.tutorSocketId).emit('interview:admin-joined' as any);
-        console.log(`📢 Notified tutor that admin joined`);
       } else if (role === 'tutor' && room.adminSocketId) {
         // Tutor joined, notify admin
         io.to(room.adminSocketId).emit('interview:tutor-joined' as any);
-        console.log(`📢 Notified admin that tutor joined`);
       }
     } catch (error) {
       console.error('Error joining interview room:', error);
@@ -62,7 +59,6 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       
       if (room?.adminSocketId) {
         io.to(room.adminSocketId).emit('interview:offer' as any, { offer });
-        console.log(`📞 Interview offer sent to admin`);
       }
     } catch (error) {
       console.error('Error handling interview offer:', error);
@@ -77,7 +73,6 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       
       if (room?.tutorSocketId) {
         io.to(room.tutorSocketId).emit('interview:answer' as any, { answer });
-        console.log(`📞 Interview answer sent to tutor`);
       }
     } catch (error) {
       console.error('Error handling interview answer:', error);
@@ -96,7 +91,6 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       
       if (targetSocketId) {
         io.to(targetSocketId).emit('interview:ice-candidate' as any, { candidate });
-        console.log(`🧊 ICE candidate forwarded in interview`);
       }
     } catch (error) {
       console.error('Error handling interview ICE candidate:', error);
@@ -114,7 +108,6 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       // Cleanup room
       interviewRooms.delete(roomId);
       
-      console.log(`🔚 Interview ended: ${roomId}`);
     } catch (error) {
       console.error('Error ending interview:', error);
     }

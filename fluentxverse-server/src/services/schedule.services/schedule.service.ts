@@ -60,15 +60,12 @@ export class ScheduleService {
       const now = new Date();
       const minOpenTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes ahead
       
-      console.log('📅 openSlots - tutorId:', input.tutorId);
-      console.log('📅 openSlots - slots count:', input.slots.length);
       
       // First verify the tutor exists
       const tutorCheck = await session.run(
         `MATCH (t:User {id: $tutorId}) RETURN t`,
         { tutorId: input.tutorId }
       );
-      console.log('📅 openSlots - tutor found:', tutorCheck.records.length > 0);
       
       if (tutorCheck.records.length === 0) {
         throw new Error(`Tutor with id ${input.tutorId} not found`);
@@ -80,7 +77,6 @@ export class ScheduleService {
         // Use PHT timezone (+08:00) since slot times are stored in Philippine time
         const slotDateTime = new Date(`${slot.date}T${time24h}:00+08:00`);
         
-        console.log('📅 openSlots - processing slot:', slot.date, slot.time, '-> 24h:', time24h);
         
         // Validate: slot must be at least 5 minutes in the future
         if (slotDateTime <= minOpenTime) {
@@ -115,9 +111,7 @@ export class ScheduleService {
           }
         );
         
-        console.log('📅 openSlots - slot created:', createResult.records.length > 0);
         if (createResult.records.length > 0) {
-          console.log('📅 openSlots - created slot properties:', createResult.records[0].get('s')?.properties);
         }
       }
     } finally {
@@ -252,9 +246,6 @@ export class ScheduleService {
       const startDate = monday.toISOString().split('T')[0];
       const endDate = sunday.toISOString().split('T')[0];
       
-      console.log('📅 getTutorSchedule - tutorId:', params.tutorId);
-      console.log('📅 getTutorSchedule - weekOffset:', params.weekOffset);
-      console.log('📅 getTutorSchedule - date range:', startDate, 'to', endDate);
       
       // Get all slots for the week
       const result = await session.run(
@@ -269,14 +260,12 @@ export class ScheduleService {
         { tutorId: params.tutorId, startDate, endDate }
       );
       
-      console.log('📅 getTutorSchedule - records found:', result.records.length);
       
       const slots = result.records.map(record => {
         const slot = record.get('s')?.properties;
         const booking = record.get('b')?.properties;
         const student = record.get('student')?.properties;
         
-        console.log('📅 getTutorSchedule - slot:', slot);
         
         return {
           date: slot.slotDate,
@@ -291,7 +280,6 @@ export class ScheduleService {
         };
       });
       
-      console.log('📅 getTutorSchedule - returning slots:', slots.length);
       
       return {
         weekStart: monday,
@@ -337,7 +325,6 @@ export class ScheduleService {
           
           // Filter out slots less than 5 minutes away
           if (slotDateTime <= minBookTime) {
-            console.log(`[getAvailableSlots] Filtering out slot ${slot.slotDate} ${slot.slotTime} - too close to now (slot: ${slotDateTime.toISOString()}, minBook: ${minBookTime.toISOString()})`);
             return null;
           }
           
@@ -364,12 +351,9 @@ export class ScheduleService {
     const session = driver.session();
     
     try {
-      console.log('=== SERVICE: bookSlot START ===');
-      console.log('Input:', JSON.stringify(input, null, 2));
       
       // ATOMIC: Check slot availability AND lock it in a single transaction
       // This prevents race conditions where two users try to book the same slot
-      console.log('Checking slot availability and locking for slotId:', input.slotId);
       const slotResult = await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId, status: 'open'})
@@ -379,7 +363,6 @@ export class ScheduleService {
         { slotId: input.slotId, studentId: input.studentId }
       );
       
-      console.log('Slot query returned', slotResult.records.length, 'records');
       
       if (slotResult.records.length === 0) {
         // Check if slot exists but is already taken
@@ -389,20 +372,16 @@ export class ScheduleService {
         );
         if (existingSlot.records.length > 0) {
           const status = existingSlot.records[0]?.get('status');
-          console.log('ERROR: Slot exists but status is:', status);
           throw new Error('This slot has already been booked by another student. Please choose a different time.');
         }
-        console.log('ERROR: Slot not found');
         throw new Error('Slot not available for booking');
       }
       
       const slot = slotResult.records[0]?.get('s').properties;
-      console.log('Slot found and locked:', JSON.stringify(slot, null, 2));
       
       // Check if tutor is certified (passed both exams AND profile approved)
       // OR is a test account (bypass for development)
       const TEST_TUTOR_EMAILS = ['paulanthonyarriola@gmail.com'];
-      console.log('Checking tutor certification for tutorId:', slot.tutorId);
       const certificationResult = await session.run(
         `MATCH (u:User {id: $tutorId})
          RETURN u.writtenExamPassed as writtenPassed, u.speakingExamPassed as speakingPassed, u.profileStatus as profileStatus, u.email as email`,
@@ -422,19 +401,15 @@ export class ScheduleService {
         const isFullyCertified = writtenPassed === true && speakingPassed === true && profileStatus === 'approved';
         
         if (!isTestAccount && !isFullyCertified) {
-          console.log('ERROR: Tutor is not certified - writtenPassed:', writtenPassed, 'speakingPassed:', speakingPassed, 'profileStatus:', profileStatus);
           throw new Error('This tutor is not yet certified to teach. Please choose a certified tutor.');
         }
-        console.log('Tutor certification verified ✓', isTestAccount ? '(test account bypass)' : '');
       } else {
-        console.log('ERROR: Tutor not found');
         throw new Error('Tutor not found');
       }
       
       // Parse slotTime - it's already in 12-hour format like "6:00 PM"
       // Convert to 24-hour format for Date constructor
       const slotTime = slot.slotTime; // e.g., "6:00 PM" or "18:00"
-      console.log('Parsing slot time:', slotTime, 'for date:', slot.slotDate);
       let slotDateTime: Date;
       
       try {
@@ -448,7 +423,6 @@ export class ScheduleService {
           minutes = parseInt(time12Match[2] || '', 10);
           const meridiem = time12Match[3].toUpperCase();
           
-          console.log('Parsed 12h time components:', { hours, minutes, meridiem });
           
           // Convert to 24-hour format
           if (meridiem === 'PM' && hours !== 12) {
@@ -462,22 +436,17 @@ export class ScheduleService {
           if (time24Match) {
             hours = parseInt(time24Match[1] || '', 10);
             minutes = parseInt(time24Match[2] || '', 10);
-            console.log('Parsed 24h time components:', { hours, minutes });
           } else {
-            console.log('ERROR: Time format does not match any known format');
             throw new Error(`Invalid time format: ${slotTime}`);
           }
         }
         
-        console.log('Final 24-hour format:', hours);
         
         // Create date with proper format - use PHT timezone (+08:00) since slot times are stored in Philippine time
         slotDateTime = new Date(`${slot.slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
         
-        console.log('Created slotDateTime:', slotDateTime.toISOString());
         
         if (isNaN(slotDateTime.getTime())) {
-          console.log('ERROR: Invalid date created');
           throw new Error(`Invalid date/time combination: ${slot.slotDate} ${slotTime}`);
         }
       } catch (error: any) {
@@ -488,20 +457,14 @@ export class ScheduleService {
       const now = new Date();
       const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // Changed to 5 minutes
       
-      console.log('Current time:', now.toISOString());
-      console.log('Minimum booking time (5 min ahead):', minBookTime.toISOString());
-      console.log('Slot time:', slotDateTime.toISOString());
       
       if (slotDateTime <= minBookTime) {
-        console.log('ERROR: Slot is too soon to book');
         throw new Error('Cannot book slot less than 5 minutes in advance');
       }
       
       const bookingId = nanoid(16);
-      console.log('Generated bookingId:', bookingId);
       
       // Check if student exists and get wallet address
-      console.log('Checking if student exists...');
       const studentCheck = await session.run(
         `MATCH (student:Student {id: $studentId}) 
          RETURN student, student.externalWalletAddress as walletAddress, student.smartWalletAddress as smartWallet`,
@@ -509,8 +472,6 @@ export class ScheduleService {
       );
       
       if (studentCheck.records.length === 0) {
-        console.log('ERROR: Student not found with ID:', input.studentId);
-        console.log('This user might be logged in as a tutor (User node) instead of a student (Student node)');
         throw new Error('Student account not found. Please make sure you are logged in as a student.');
       }
       
@@ -518,23 +479,18 @@ export class ScheduleService {
       const studentWallet = studentCheck.records[0]?.get('walletAddress') || studentCheck.records[0]?.get('smartWallet');
       
       if (!studentWallet) {
-        console.log('ERROR: Student does not have a linked wallet');
         throw new Error('You need a connected wallet to book lessons. Please connect your wallet first.');
       }
       
-      console.log('Student found with wallet:', studentWallet);
       
       // Verify ticket transfer was done from frontend (tx hash is required)
       if (!input.ticketTransferTxHash) {
-        console.log('ERROR: No ticket transfer transaction hash provided');
         throw new Error('Ticket transfer is required to book a lesson. Please try again.');
       }
       
-      console.log('Ticket transfer TX hash:', input.ticketTransferTxHash);
       
       // === TRANSACTION REPLAY PROTECTION ===
       // Check if this transaction hash has already been used for a booking
-      console.log('🔐 Checking for transaction replay...');
       const existingTxResult = await session.run(
         `
         MATCH (t:TicketTransaction {transferTxHash: $txHash})
@@ -545,30 +501,24 @@ export class ScheduleService {
       
       if (existingTxResult.records.length > 0) {
         const existingBookingId = existingTxResult.records[0]?.get('bookingId');
-        console.log('ERROR: Transaction hash already used for booking:', existingBookingId);
         throw new Error('This transaction has already been used for a booking. Please make a new ticket transfer.');
       }
-      console.log('✅ Transaction hash is unique');
       // === END TRANSACTION REPLAY PROTECTION ===
       
       // === SERVER-SIDE TICKET VERIFICATION ===
       // Verify the transaction on the blockchain before accepting the booking
-      console.log('🔐 Verifying ticket transfer on blockchain...');
       const verificationResult = await ticketService.verifyTicketTransfer(
         input.ticketTransferTxHash,
         studentWallet
       );
       
       if (!verificationResult.valid) {
-        console.log('ERROR: Ticket transfer verification failed:', verificationResult.error);
         throw new Error(`Ticket verification failed: ${verificationResult.error}`);
       }
       
-      console.log('✅ Ticket transfer verified on blockchain');
       // === END SERVER-SIDE TICKET VERIFICATION ===
       
       // Record the ticket transaction in database (transfer already happened on frontend)
-      console.log('Recording ticket transaction for booking...');
       try {
         await ticketService.recordTicketDeduction({
           studentId: input.studentId,
@@ -579,25 +529,13 @@ export class ScheduleService {
           tier: 'basic',
           transferTxHash: input.ticketTransferTxHash,
         });
-        console.log('✅ Ticket transaction recorded successfully');
       } catch (ticketError: any) {
         console.error('WARNING: Failed to record ticket transaction:', ticketError.message);
         // Don't fail the booking if recording fails - the transfer already happened on-chain
       }
       
-      console.log('Student found, proceeding with booking...');
       
       // Create booking and update slot
-      console.log('Creating booking in database...');
-      console.log('Parameters:', {
-        slotId: input.slotId,
-        bookingId,
-        studentId: input.studentId,
-        tutorId: slot.tutorId,
-        slotDateTime: slotDateTime.toISOString(),
-        durationMinutes: slot.durationMinutes
-      });
-      
       const bookingResult = await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId})
@@ -627,8 +565,6 @@ export class ScheduleService {
         }
       );
       
-      console.log('Booking query returned', bookingResult.records.length, 'records');
-      console.log('Booking created successfully in database');
       
       // Send notification to tutor about new booking
       try {
@@ -660,7 +596,6 @@ export class ScheduleService {
           const io = getIO();
           if (io) {
             io.to(`notifications:${slot.tutorId}`).emit('notification:new', notification);
-            console.log('📢 Real-time notification emitted to tutor');
             
             // Emit real-time schedule update
             emitSlotBooked(io, slot.tutorId, {
@@ -670,11 +605,9 @@ export class ScheduleService {
               date: formattedDate,
               time: slot.slotTime
             });
-            console.log('📅 Real-time schedule update emitted to tutor');
           }
         });
         
-        console.log('📢 Notification sent to tutor about new booking');
       } catch (notifError) {
         console.error('Failed to send booking notification:', notifError);
         // Don't fail the booking if notification fails
@@ -684,7 +617,6 @@ export class ScheduleService {
       if (studentWallet) {
         const cacheKey = `ticket:balance:${studentWallet.toLowerCase()}`;
         await invalidateCache(cacheKey);
-        console.log('🗑️ Invalidated ticket balance cache for student after booking');
       }
       
       // Invalidate student stats and bookings cache
@@ -694,9 +626,7 @@ export class ScheduleService {
         invalidateCache(`student:activity:${input.studentId}:10`),
         invalidateCache(`student:activity:${input.studentId}:50`)
       ]);
-      console.log('🗑️ Invalidated student schedule caches after booking');
       
-      console.log('=== SERVICE: bookSlot END ===');
       
       return {
         bookingId,
@@ -710,7 +640,6 @@ export class ScheduleService {
       };
     } catch (error: any) {
       // Release the slot lock if booking fails (only if we locked it)
-      console.log('=== BOOKING FAILED, RELEASING SLOT LOCK ===');
       try {
         await session.run(
           `
@@ -720,7 +649,6 @@ export class ScheduleService {
           `,
           { slotId: input.slotId, studentId: input.studentId }
         );
-        console.log('✅ Slot lock released');
       } catch (releaseError) {
         console.error('Failed to release slot lock:', releaseError);
       }
@@ -743,8 +671,6 @@ export class ScheduleService {
     const session = driver.session();
     
     try {
-      console.log('=== SERVICE: cancelBooking START ===');
-      console.log('Input:', JSON.stringify(input, null, 2));
       
       // Get booking details
       const bookingResult = await session.run(
@@ -798,8 +724,6 @@ export class ScheduleService {
         throw new Error('Booking does not have scheduled time');
       }
       
-      console.log('Scheduled time:', scheduledTime.toISOString());
-      console.log('Current time:', new Date().toISOString());
       
       // Get the original ticket transaction for this booking
       const ticketTransaction = await ticketService.getBookingTransaction(input.bookingId);
@@ -822,10 +746,8 @@ export class ScheduleService {
           if (refundResult) {
             refunded = true;
             refundMessage = 'Your ticket has been refunded.';
-            console.log('✅ Ticket refunded for cancelled booking');
           } else {
             refundMessage = `No refund - cancellation was less than ${REFUND_POLICY.NO_REFUND_HOURS} hour before scheduled lesson.`;
-            console.log('❌ No refund - too close to lesson time');
           }
         } catch (refundError: any) {
           console.error('Failed to process refund:', refundError.message);
@@ -900,7 +822,6 @@ export class ScheduleService {
           });
         }
         
-        console.log('📢 Cancellation notification sent to tutor');
       } catch (notifError) {
         console.error('Failed to send cancellation notification:', notifError);
       }
@@ -912,9 +833,7 @@ export class ScheduleService {
         invalidateCache(`student:activity:${booking.studentId}:10`),
         invalidateCache(`student:activity:${booking.studentId}:50`)
       ]);
-      console.log('🗑️ Invalidated student schedule caches after cancellation');
       
-      console.log('=== SERVICE: cancelBooking END ===');
       
       return {
         success: true,
@@ -1576,7 +1495,6 @@ export class ScheduleService {
       // Ensure limit is an integer
       const limitInt = Math.floor(Number(limit)) || 10;
       
-      console.log(`📊 Getting recent activity for student: ${studentId}, limit: ${limitInt}`);
       
       // Get completed lessons and bookings
       const bookingsResult = await session.run(
@@ -1636,7 +1554,6 @@ export class ScheduleService {
         .sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime())
         .slice(0, limitInt);
       
-      console.log(`📊 Found ${bookingsResult.records.length} bookings, ${uniquePurchases.length} purchases`);
       
       // Map bookings to activities
       const bookingActivities = bookingsResult.records.map(record => {

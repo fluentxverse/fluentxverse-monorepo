@@ -55,7 +55,6 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         if (session.student) participants.push(session.student);
         
         console.warn('⚠️ Using in-memory session participants due to DB error:', (err as Error)?.message);
-        console.log('📋 In-memory participants for session', sessionId, ':', participants);
       }
       
       // Prepare session state
@@ -79,8 +78,6 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       // Send session state to all participants
       io.to(sessionId).emit('session:state', sessionState);
 
-      console.log(`✅ User ${userId} (${userType}) joined session ${sessionId}`);
-      console.log(`Session state: ${sessionState.status}, participants:`, sessionState.participants);
     } catch (error) {
       console.error('Error handling session:join:', error);
     }
@@ -144,7 +141,6 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
 
       io.to(sessionId).emit('session:state', sessionState);
 
-      console.log(`👋 User ${userId} (${userType}) left session ${sessionId}`);
     } catch (error) {
       console.error('Error handling session:leave:', error);
     }
@@ -174,7 +170,6 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         message: data?.message || 'The tutor has ended the lesson. Thank you for learning with us!'
       });
 
-      console.log(`🔔 Tutor ${userId} ended lesson for session ${sessionId}`);
     } catch (error) {
       console.error('Error handling session:end-lesson:', error);
     }
@@ -202,7 +197,6 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
           userType
         });
 
-        console.log(`🔌 User ${userId} disconnected from session ${sessionId}`);
       }
     } catch (error) {
       console.error('Error handling disconnect cleanup:', error);

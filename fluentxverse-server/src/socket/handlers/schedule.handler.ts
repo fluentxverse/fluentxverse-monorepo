@@ -15,7 +15,6 @@ const scheduleSubscriptions = new Map<string, Set<string>>();
 export const registerScheduleHandlers = (io: ServerType, socket: SocketType) => {
   // Tutor subscribes to their own schedule updates
   socket.on('schedule:subscribe', ({ tutorId }) => {
-    console.log(`📅 Socket ${socket.id} subscribed to schedule updates for tutor ${tutorId}`);
     
     // Store the tutor ID in socket data
     socket.data.scheduleSubscribedTo = tutorId;
@@ -33,7 +32,6 @@ export const registerScheduleHandlers = (io: ServerType, socket: SocketType) => 
   socket.on('schedule:unsubscribe', () => {
     const tutorId = socket.data.scheduleSubscribedTo;
     if (tutorId) {
-      console.log(`📅 Socket ${socket.id} unsubscribed from schedule updates for tutor ${tutorId}`);
       
       // Remove from subscriptions map
       scheduleSubscriptions.get(tutorId)?.delete(socket.id);
@@ -71,7 +69,6 @@ export const emitSlotBooked = (
     time: string;
   }
 ) => {
-  console.log(`📅 Emitting slot-booked to tutor ${tutorId}:`, data);
   io.to(`schedule:${tutorId}`).emit('schedule:slot-booked', {
     tutorId,
     ...data
@@ -88,7 +85,6 @@ export const emitSlotCancelled = (
     time: string;
   }
 ) => {
-  console.log(`📅 Emitting slot-cancelled to tutor ${tutorId}:`, data);
   io.to(`schedule:${tutorId}`).emit('schedule:slot-cancelled', {
     tutorId,
     ...data

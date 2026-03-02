@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
   // Handle session expired event from API interceptor
   useEffect(() => {
     const handleSessionExpired = (event: CustomEvent) => {
-      console.log('[Auth] Session expired event received');
       setUser(null);
       setSessionExpired(true);
       setSessionExpiredMessage(event.detail?.message || 'Your session has expired. Please log in again.');
@@ -55,7 +54,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
           setUser(adminUser);
         }
       } catch (err) {
-        console.log('Not authenticated');
       } finally {
         setLoading(false);
       }

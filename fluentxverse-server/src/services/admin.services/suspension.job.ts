@@ -167,7 +167,6 @@ const suspensionJobService = new SuspensionJobService();
 export function startSuspensionJob(): void {
   const INTERVAL_MS = 60 * 60 * 1000; // 1 hour
   
-  console.log('🔄 Auto-unsuspend background job scheduled (runs every hour)');
   
   // Skip initial run on startup - just schedule the hourly interval
   // This avoids race conditions with database initialization
@@ -177,7 +176,6 @@ export function startSuspensionJob(): void {
     try {
       const result = await suspensionJobService.processExpiredSuspensions();
       if (result.tutors > 0 || result.students > 0) {
-        console.log(`🔓 Auto-unsuspended: ${result.tutors} tutors, ${result.students} students`);
       }
     } catch (err: any) {
       // Just log the error message, not the full stack trace

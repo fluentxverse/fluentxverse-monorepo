@@ -43,7 +43,6 @@ export class InterviewService {
         `, { date: slot.date, time: slot.time });
 
         if (existingResult.records.length > 0) {
-          console.log(`Interview slot already exists for ${slot.date} ${slot.time}, skipping`);
           continue;
         }
 

@@ -178,7 +178,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
   .post('/purchase', async ({ body, cookie, set }) => {
     // CRITICAL SECURITY: Disable in production - purchases should go through verified payment flow
     if (isProduction) {
-      console.log('❌ SECURITY: /tickets/purchase called in production - BLOCKED');
       set.status = 403;
       return {
         success: false,
@@ -186,15 +185,12 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       };
     }
     
-    console.log('=== POST /tickets/purchase called (DEV MODE) ===');
-    console.log('Request body:', body);
     
     try {
       const { buyerWallet, tier, quantity, mockTransactionHash, userId } = body;
 
       // CRITICAL VALIDATION: Ensure buyer wallet is valid
       if (!buyerWallet || !buyerWallet.startsWith('0x')) {
-        console.log('❌ CRITICAL: Invalid buyer wallet address');
         return {
           success: false,
           error: 'Invalid buyer wallet address'
@@ -203,7 +199,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       
       // CRITICAL: Validate wallet address length (standard Ethereum address)
       if (buyerWallet.length !== 42) {
-        console.log('❌ CRITICAL: Buyer wallet address has invalid length:', buyerWallet.length);
         return {
           success: false,
           error: 'Invalid buyer wallet address format'
@@ -213,7 +208,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       // CRITICAL: Prevent sending to vault/server wallet (would be sending to ourselves!)
       const vaultWallet = process.env.THIRDWEB_VAULT_WALLET_ADDRESS?.toLowerCase();
       if (vaultWallet && buyerWallet.toLowerCase() === vaultWallet) {
-        console.log('❌ CRITICAL: Buyer wallet matches vault wallet - this would send tickets to ourselves!');
         return {
           success: false,
           error: 'Invalid buyer wallet - cannot send to system wallet'
@@ -226,7 +220,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         '0xdead000000000000000000000000000000000000', // Dead address
       ];
       if (invalidAddresses.includes(buyerWallet.toLowerCase())) {
-        console.log('❌ CRITICAL: Buyer wallet is a known invalid address');
         return {
           success: false,
           error: 'Invalid buyer wallet address'
@@ -234,7 +227,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       }
 
       if (tier !== 'basic' && tier !== 'premium' && tier !== 'trial') {
-        console.log('❌ Invalid tier:', tier);
         return {
           success: false,
           error: 'Invalid tier. Must be "basic", "premium", or "trial"'
@@ -242,14 +234,12 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       }
 
       if (!quantity || quantity < 1) {
-        console.log('❌ Invalid quantity:', quantity);
         return {
           success: false,
           error: 'Quantity must be at least 1'
         };
       }
 
-      console.log(`✅ All validations passed. Processing purchase: ${quantity} ${tier} ticket(s) for ${buyerWallet}`);
 
       // Process the purchase - transfer NFT to buyer
       const result = await ticketService.processPurchase({
@@ -260,7 +250,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
         userId,
       });
 
-      console.log('Purchase result:', result);
 
       if (!result.success) {
         return {
@@ -272,7 +261,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       // Invalidate ticket balance cache after successful purchase
       const cacheKey = `ticket:balance:${buyerWallet.toLowerCase()}`;
       await invalidateCache(cacheKey);
-      console.log('🗑️ Invalidated ticket balance cache after purchase');
       
       // Invalidate student activity cache if userId provided
       if (userId) {
@@ -280,7 +268,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
           invalidateCache(`student:activity:${userId}:10`),
           invalidateCache(`student:activity:${userId}:50`),
         ]);
-        console.log('🗑️ Invalidated student activity cache after purchase');
         
         // Send real-time notification via WebSocket
         const io = getIO();
@@ -290,7 +277,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
             quantity: result.quantity,
             transactionId: result.transactionId,
           });
-          console.log('📢 Sent ticket:received notification via WebSocket');
         }
       }
 
@@ -373,7 +359,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       const cacheKey = `ticket:balance:${walletAddress.toLowerCase()}`;
       await invalidateCache(cacheKey);
       
-      console.log(`🗑️ Invalidated ticket balance cache for ${walletAddress}`);
       return { success: true, message: 'Cache invalidated' };
     } catch (error) {
       console.error('Error invalidating cache:', error);
@@ -390,7 +375,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
     try {
       // Get user ID from studentAuth cookie
       const raw = cookie.studentAuth?.value;
-      console.log('🔐 my-purchases: raw studentAuth cookie:', raw ? 'exists' : 'missing');
       
       if (!raw) {
         set.status = 401;
@@ -412,7 +396,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       }
       
       const userId = payload.userId;
-      console.log('🔐 my-purchases: verified userId from JWT:', userId);
 
       if (!userId) {
         set.status = 401;
@@ -423,7 +406,6 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       }
 
       const purchases = await ticketService.getPurchaseHistoryByUserId(userId);
-      console.log(`🔐 my-purchases: found ${purchases.length} purchases for user ${userId}`);
 
       return {
         success: true,

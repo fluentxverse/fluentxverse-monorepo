@@ -82,9 +82,7 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
     '/published/:course',
     async ({ params }) => {
       try {
-        console.log('[LessonMaterials] Fetching published lessons for course:', params.course);
         const lessons = await lessonMaterialService.listPublishedByCourse(params.course);
-        console.log('[LessonMaterials] Found', lessons.length, 'published lessons');
         return { success: true, lessons };
       } catch (error) {
         console.error('Error fetching published lessons:', error);

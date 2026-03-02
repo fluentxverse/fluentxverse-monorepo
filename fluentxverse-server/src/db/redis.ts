@@ -94,7 +94,6 @@ export const initRedis = async () => {
   try {
     redisClient = createInMemoryCache();
     isConnected = true;
-    console.log('✅ Redis-compatible cache initialized (in-memory)');
   } catch (error) {
     console.warn('⚠️ Cache initialization failed:', error);
     isConnected = false;
@@ -144,7 +143,6 @@ export const invalidateCache = async (pattern: string) => {
     const keys = await redisClient!.keys(pattern);
     if (keys.length > 0) {
       await redisClient!.del(keys);
-      console.log(`🗑️ Invalidated ${keys.length} cache keys for pattern: ${pattern}`);
     }
   } catch (error) {
     console.warn(`Cache invalidation error for pattern ${pattern}:`, error);
@@ -193,7 +191,6 @@ export const closeRedis = async () => {
   if (redisClient) {
     redisClient = null;
     isConnected = false;
-    console.log('✅ Cache connection closed');
   }
 };
 
@@ -213,7 +210,6 @@ export const blacklistToken = async (tokenId: string, expiresInSeconds: number =
   try {
     const key = `token:blacklist:${tokenId}`;
     await redisClient!.setEx(key, expiresInSeconds, 'revoked');
-    console.log(`🔒 Token blacklisted: ${tokenId}`);
   } catch (error) {
     console.error('Error blacklisting token:', error);
   }
@@ -255,7 +251,6 @@ export const invalidateUserTokens = async (userId: string, signUpdate: number): 
     const key = `user:signUpdate:${userId}`;
     // Store the signUpdate timestamp - tokens issued before this are invalid
     await redisClient!.setEx(key, 86400, signUpdate.toString()); // 24 hour TTL
-    console.log(`🔒 Invalidated tokens for user ${userId} issued before ${new Date(signUpdate).toISOString()}`);
   } catch (error) {
     console.error('Error invalidating user tokens:', error);
   }

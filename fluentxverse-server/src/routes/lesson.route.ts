@@ -1112,7 +1112,6 @@ async function processUploadedImages(
   for (const [key] of form.entries()) {
     formKeys.push(key);
   }
-  console.log('📦 FormData keys:', formKeys);
   
   // Recursively process an object/array to find and replace upload placeholders
   const processValue = async (obj: any, key: string, parentPath: string): Promise<void> => {
@@ -1120,9 +1119,7 @@ async function processUploadedImages(
     
     if (typeof value === 'string' && value.startsWith('__UPLOAD__:')) {
       const imageKey = value.replace('__UPLOAD__:', '');
-      console.log(`🔍 Found placeholder: ${imageKey}, looking in FormData...`);
       const file = form.get(imageKey);
-      console.log(`📁 File found: ${file instanceof File ? `Yes (${file.size} bytes, ${file.type})` : 'No'}`);
       
       if (file instanceof File && file.size > 0) {
         // Validate it's an image
@@ -1230,7 +1227,6 @@ export default new Elysia({ prefix: '/lesson' })
       lessonData = processedData;
       
       if (uploadedCount > 0) {
-        console.log(`📸 Uploaded ${uploadedCount} images for lesson ${lesson.id}`);
         // Update the version in database with the final lessonData (including image URLs)
         await lessonService.updateVersionData(lesson.id, version.versionNumber, lessonData);
       }
@@ -1256,7 +1252,6 @@ export default new Elysia({ prefix: '/lesson' })
       await uploadToSeaweed(studentJsonPath, JSON.stringify(studentData, null, 2), 'application/json');
       
       const sizeReduction = getMaterialSizeReduction(lessonData, studentData);
-      console.log(`📚 Lesson ${lesson.id}: Student material is ${sizeReduction}% smaller than tutor material`);
 
       // Return the version with the PROCESSED lessonData (image URLs, not placeholders)
       const processedVersion = {
@@ -1331,7 +1326,6 @@ export default new Elysia({ prefix: '/lesson' })
       lessonData = processedData;
       
       if (uploadedCount > 0) {
-        console.log(`📸 Uploaded ${uploadedCount} images for lesson ${lesson.id}`);
       }
       
       // Always update the version in database with the final lessonData
@@ -2140,7 +2134,6 @@ export default new Elysia({ prefix: '/lesson' })
         offset: 0
       });
       
-      console.log(`[Published Lessons] Found ${lessons.length} published lessons total`);
       
       // Map course slugs to match the materials page course IDs
       const courseSlugMap: Record<string, string[]> = {
@@ -2198,7 +2191,6 @@ export default new Elysia({ prefix: '/lesson' })
         const chapterLabel = lessonData.header?.chapterLabel || '';
         const lessonLabel = lessonData.header?.lessonLabel || '';
         
-        console.log(`[Published Lessons] Checking lesson: ${lesson.title}, course: "${lessonCourse}", chapter: "${chapterLabel}"`);
         
         const isMatch = matchingCourseNames.some(name => 
           lessonCourse.toLowerCase().includes(name.toLowerCase()) ||
@@ -2208,7 +2200,6 @@ export default new Elysia({ prefix: '/lesson' })
         );
         
         if (isMatch) {
-          console.log(`[Published Lessons] ✓ Lesson matches course: ${lesson.title}`);
           filteredLessons.push({
             ...lesson,
             url: `${API_BASE}/lesson/files${lesson.storagePath}/index.html?v=${lesson.currentVersion || ''}`,
@@ -2217,7 +2208,6 @@ export default new Elysia({ prefix: '/lesson' })
         }
       }
       
-      console.log(`[Published Lessons] Filtered to ${filteredLessons.length} lessons for course: ${courseSlug}`);
       
       // Apply pagination to filtered results
       const paginatedLessons = filteredLessons.slice(offset, offset + limit);

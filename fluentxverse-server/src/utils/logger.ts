@@ -199,7 +199,6 @@ class Logger {
     } else if (level === 'warn') {
       console.warn(output);
     } else {
-      console.log(output);
     }
   }
 

@@ -65,7 +65,6 @@ const Student = new Elysia({ name: "student" })
         user: normalizedUser
       };
     } catch (error: any) {
-      console.log(error);
       // Map email-exists to a 409 friendly response
       if (error?.code === 'EMAIL_EXISTS' || error?.message === 'EMAIL_EXISTS') {
         if (set) set.status = 409;
@@ -135,7 +134,6 @@ const Student = new Elysia({ name: "student" })
         user: normalizedUser
       };
     } catch (error: any) {
-      console.log('[/student/login] Error:', error?.message || error);
       
       // Handle specific error messages with friendly responses
       const errorMessage = error?.message || 'Login failed';
@@ -200,7 +198,6 @@ const Student = new Elysia({ name: "student" })
     set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
     set.headers['Pragma'] = 'no-cache';
     
-    console.log('🚪 Student logout - cookie cleared');
     
     return { success: true, message: 'Logged out successfully' };
   }, {
@@ -695,9 +692,7 @@ const Student = new Elysia({ name: "student" })
       try {
         const trialResult = await ticketService.transferTrialTicketToNewUser(walletAddress);
         if (trialResult.success) {
-          console.log(`✅ Trial ticket sent to new user: ${walletAddress}`);
         } else {
-          console.log(`⚠️ Could not send trial ticket: ${trialResult.error}`);
         }
       } catch (trialError) {
         // Don't fail registration if trial ticket transfer fails
@@ -778,7 +773,6 @@ const Student = new Elysia({ name: "student" })
    * GET /student/profile
    */
   .get('/student/profile', async ({ cookie, set }) => {
-    console.log('[StudentRoute] GET /student/profile - Request received');
     
     try {
       const authCookie = cookie.studentAuth?.value;
@@ -796,7 +790,6 @@ const Student = new Elysia({ name: "student" })
       }
       const studentId = payload.userId;
 
-      console.log('[StudentRoute] Fetching profile for student:', studentId);
       const studentService = new StudentService();
       const profileData = await studentService.getOwnProfile(studentId);
 
@@ -813,7 +806,6 @@ const Student = new Elysia({ name: "student" })
    * PUT /student/preferences
    */
   .put('/student/preferences', async ({ body, cookie, set }) => {
-    console.log('[StudentRoute] PUT /student/preferences - Request received');
     
     try {
       const authCookie = cookie.studentAuth?.value;
@@ -837,7 +829,6 @@ const Student = new Elysia({ name: "student" })
         otherRequests: string;
       };
 
-      console.log('[StudentRoute] Updating preferences for student:', studentId, preferences);
       const studentService = new StudentService();
       const result = await studentService.updateLessonPreferences(studentId, preferences);
 
@@ -854,7 +845,6 @@ const Student = new Elysia({ name: "student" })
    * PUT /student/about-me
    */
   .put('/student/about-me', async ({ body, cookie, set }) => {
-    console.log('[StudentRoute] PUT /student/about-me - Request received');
     
     try {
       const authCookie = cookie.studentAuth?.value;
@@ -879,7 +869,6 @@ const Student = new Elysia({ name: "student" })
         bio: string;
       };
 
-      console.log('[StudentRoute] Updating about me for student:', studentId, aboutMe);
       const studentService = new StudentService();
       const result = await studentService.updateAboutMe(studentId, aboutMe);
 

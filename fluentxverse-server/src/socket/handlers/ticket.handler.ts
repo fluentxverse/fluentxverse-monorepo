@@ -19,7 +19,6 @@ export const ticketHandler = (io: Server, socket: Socket) => {
       }
       userTicketSockets.get(userId)?.add(socket.id);
       
-      console.log(`🎫 User ${userId} subscribed to ticket notifications`);
     } catch (error) {
       console.error('Error subscribing to ticket notifications:', error);
     }
@@ -39,7 +38,6 @@ export const ticketHandler = (io: Server, socket: Socket) => {
         }
       }
       
-      console.log(`🎫 User ${userId} unsubscribed from ticket notifications`);
     } catch (error) {
       console.error('Error unsubscribing from ticket notifications:', error);
     }
@@ -74,7 +72,6 @@ export const notifyTicketReceived = (
   };
   
   io.to(room).emit('ticket:received', notification);
-  console.log(`🎫 Sent ticket:received notification to user ${userId}:`, notification);
 };
 
 /**
@@ -93,7 +90,6 @@ export const notifyBalanceUpdated = (
   };
   
   io.to(room).emit('ticket:balance-updated', data);
-  console.log(`🎫 Sent ticket:balance-updated notification to user ${userId}:`, balance);
 };
 
 /**

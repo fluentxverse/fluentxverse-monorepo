@@ -53,7 +53,6 @@ const InterviewFeedback = ({ interviewId, onClose, onSuccess }: InterviewFeedbac
         notes,
         feedback_submitted_at: new Date().toISOString()
       };
-      console.log('Feedback submitted:', feedback);
       // await interviewApi.submitFeedback(feedback);
       
       onSuccess?.();
