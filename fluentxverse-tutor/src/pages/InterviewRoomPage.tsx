@@ -103,7 +103,7 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       setTimeout(() => {
         if (localVideoRef.current && stream) {
           localVideoRef.current.srcObject = stream;
-          localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+          localVideoRef.current.play().catch(() => {});
         }
       }, 100);
       
@@ -140,7 +140,6 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
     };
     
     pc.ontrack = (event) => {
-      console.log('📺 Remote track received');
       if (event.streams[0]) {
         setRemoteStream(event.streams[0]);
         if (remoteVideoRef.current) {
@@ -150,7 +149,6 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
     };
     
     pc.onconnectionstatechange = () => {
-      console.log('Connection state:', pc.connectionState);
       setIsConnected(pc.connectionState === 'connected');
       
       if (pc.connectionState === 'connected') {
@@ -177,7 +175,6 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
     };
     
     pc.oniceconnectionstatechange = () => {
-      console.log('ICE connection state:', pc.iceConnectionState);
       if (pc.iceConnectionState === 'failed') {
         setError('Network connection failed. Please check your firewall settings or try a different network.');
       }
@@ -227,7 +224,6 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       
       // Listen for admin joining
       socket.on('interview:admin-joined', async () => {
-        console.log('Admin joined, creating offer...');
         setWaitingForAdmin(false);
         
         const offer = await pc.createOffer();
@@ -241,7 +237,6 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       
       // Listen for answer
       socket.on('interview:answer', async (data: { answer: RTCSessionDescriptionInit }) => {
-        console.log('Received answer');
         await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
       });
       
@@ -341,7 +336,7 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
-      localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+      localVideoRef.current.play().catch(() => {});
     }
   }, [localStream]);
 
@@ -351,7 +346,7 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       setTimeout(() => {
         if (localVideoRef.current && localStream) {
           localVideoRef.current.srcObject = localStream;
-          localVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
+          localVideoRef.current.play().catch(() => {});
         }
       }, 100);
     }

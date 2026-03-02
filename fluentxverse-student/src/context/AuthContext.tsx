@@ -89,7 +89,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
       // Warm the cache for upcoming lesson data in the background
       // Don't await - let it run in background without blocking UI
       scheduleApi.preloadDashboardData()
-        .then(() => console.log('✅ Dashboard data preloaded'))
         .catch((err) => console.warn('Failed to preload dashboard data:', err));
     }
   }, [user, initialLoading]);
@@ -126,9 +125,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
     forceAuthCleanup();
     
     try {
-      console.log('Starting login request...');
       const data = await loginUser(email, password);
-      console.log('Login response received:', data?.success);
 
       // Check for server-provided error message first
       if (data?.success === false || data?.error) {
@@ -138,7 +135,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
       if (data?.user) {
         // /login returns full user data from RegisteredParams
         const loggedInUser = data.user as AuthUser;
-        console.log('Logged in user:', loggedInUser);
         if (loggedInUser.role && loggedInUser.role !== allowedRole) {
           setUser(null);
           throw new Error('You are not allowed to log in to the student app.');
@@ -215,9 +211,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
     forceAuthCleanup();
 
     try {
-      console.log('Starting wallet login request with signature...');
       const response = await loginWithWallet(walletAddress, signature, message);
-      console.log('Wallet auth response:', response);
 
       if (response.status === 'error') {
         throw new Error(response.message || 'Authentication failed');
@@ -280,9 +274,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
     forceAuthCleanup();
 
     try {
-      console.log('Starting wallet registration...');
       const response = await registerWithWallet(params);
-      console.log('Wallet registration response:', response);
 
       if (response.success && response.user) {
         const newUser = response.user as AuthUser;
@@ -335,14 +327,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
       // Disconnect Thirdweb wallet FIRST to clear the wallet session
       try {
         await appWallet.disconnect();
-        console.log('Wallet disconnected on logout');
       } catch (walletErr) {
         console.warn('Failed to disconnect wallet:', walletErr);
       }
       
       // Call server to clear cookie
       await logoutUser();
-      console.log('Server logout complete');
       
       // CRITICAL: Wait for browser to process the Set-Cookie header before navigating.
       // Without this delay, navigation can occur before the cookie is actually deleted,

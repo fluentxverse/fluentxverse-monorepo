@@ -14,7 +14,6 @@ export const useTicketNotifications = (
   const { showSuccess } = useToastContext();
 
   const handleTicketReceived = useCallback((data: TicketReceivedData) => {
-    console.log('🎫 Ticket received notification:', data);
     
     const tierLabel = data.tier.charAt(0).toUpperCase() + data.tier.slice(1);
     const message = `🎉 You received ${data.quantity} ${tierLabel} ticket${data.quantity > 1 ? 's' : ''}!`;
@@ -24,7 +23,6 @@ export const useTicketNotifications = (
   }, [showSuccess]);
 
   const handleBalanceUpdated = useCallback((data: TicketBalanceData) => {
-    console.log('🎫 Balance updated notification:', data);
     
     if (onBalanceUpdate) {
       onBalanceUpdate(data.balance);
@@ -44,7 +42,6 @@ export const useTicketNotifications = (
 
       // Subscribe to ticket notifications
       socket.emit('ticket:subscribe');
-      console.log('🎫 Subscribed to ticket notifications');
 
       // Listen for ticket events
       socket.on('ticket:received', handleTicketReceived);
@@ -55,7 +52,6 @@ export const useTicketNotifications = (
         socket.emit('ticket:unsubscribe');
         socket.off('ticket:received', handleTicketReceived);
         socket.off('ticket:balance-updated', handleBalanceUpdated);
-        console.log('🎫 Unsubscribed from ticket notifications');
       };
     } catch (error) {
       console.error('Error setting up ticket notifications:', error);

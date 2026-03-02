@@ -16,9 +16,6 @@ export interface PSGCRegion {
   municipalities?: PSGCCity[]; // for NCR (no provinces, direct cities/municipalities)
 }
 
-// Import the complete Philippine data
-import phData from './ph.json';
-
 // Region name mapping for better display
 const REGION_NAMES: Record<string, string> = {
   '01': 'Region I - Ilocos Region',
@@ -56,12 +53,12 @@ const toTitleCase = (str: string): string => {
     .replace(/\biv\b/gi, 'IV');
 };
 
-export const loadFullPSGC = (): PSGCRegion[] => {
+export const loadFullPSGC = async (): Promise<PSGCRegion[]> => {
   if (PSGC_REGIONS_CACHE) return PSGC_REGIONS_CACHE;
 
-  const data = phData as Record<string, { region_name: string; province_list: Record<string, { municipality_list: Record<string, { barangay_list: string[] }> }> }>;
+  const phData = (await import('./ph.json')).default as Record<string, { region_name: string; province_list: Record<string, { municipality_list: Record<string, { barangay_list: string[] }> }> }>;
   
-  const regions: PSGCRegion[] = Object.entries(data).map(([code, regionData]) => {
+  const regions: PSGCRegion[] = Object.entries(phData).map(([code, regionData]) => {
     const regionName = REGION_NAMES[code] || regionData.region_name;
     
     // For NCR, provinces are actually cities/municipalities directly
@@ -111,9 +108,9 @@ export const loadFullPSGC = (): PSGCRegion[] => {
   return PSGC_REGIONS_CACHE;
 };
 
-export const findRegion = (codeOrName: string): PSGCRegion | undefined => {
-  const regions = loadFullPSGC();
+export const findRegion = async (codeOrName: string): Promise<PSGCRegion | undefined> => {
+  const regions = await loadFullPSGC();
   return regions.find(r => r.code === codeOrName || r.name === codeOrName);
 };
 
-export const listRegions = (): PSGCRegion[] => loadFullPSGC();
+export const listRegions = async (): Promise<PSGCRegion[]> => loadFullPSGC();

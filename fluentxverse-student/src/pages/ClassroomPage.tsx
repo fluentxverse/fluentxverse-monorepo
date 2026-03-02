@@ -143,7 +143,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     if (!currentSessionId) return;
     
-    console.log('🔌 [Classroom] Initializing socket...');
     // Destroy any existing socket to ensure fresh connection with correct auth
     destroySocket();
     initSocket();
@@ -154,14 +153,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Wait for connection before joining
     const onConnect = () => {
-      console.log('✅ [Classroom] Socket connected, joining session:', currentSessionId);
       socket.emit('session:join', { sessionId: currentSessionId });
       socket.emit('chat:request-history', { sessionId: currentSessionId });
     };
     
     // Handle incoming chat messages
     const onChatMessage = (data: ChatMessageData) => {
-      console.log('💬 [Classroom] Received message:', data);
       const newMsg: ChatMessage = {
         id: data.id,
         sender: data.senderType,
@@ -182,7 +179,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle chat history
     const onChatHistory = (messages: ChatMessageData[]) => {
-      console.log('📜 [Classroom] Received chat history:', messages.length, 'messages');
       const formattedMessages: ChatMessage[] = messages.map(msg => ({
         id: msg.id,
         sender: msg.senderType,
@@ -204,7 +200,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle session state
     const onSessionState = (data: any) => {
-      console.log('📋 [Classroom] Session state:', data);
       if (data.status === 'active') {
         setIsConnecting(false);
       }
@@ -216,7 +211,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           initials: 'TU',
           date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         });
-        console.log('🎯 [Classroom] Updated tutorInfo to:', data.participants.tutorId);
       } else {
         // No tutor in session, clear tutorInfo
         setTutorInfo(null);
@@ -225,7 +219,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle user joined
     const onUserJoined = (data: { userId: string; userType: string }) => {
-      console.log('👋 [Classroom] User joined:', data);
       if (data.userType === 'tutor') {
         setIsConnecting(false);
         // Always update with the latest tutor ID
@@ -235,13 +228,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           initials: 'TU',
           date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         });
-        console.log('🎯 [Classroom] Tutor joined with ID:', data.userId);
       }
     };
     
     // Handle user left
     const onUserLeft = (data: { userId: string; userType: string }) => {
-      console.log('👋 [Classroom] User left:', data);
       if (data.userType === 'tutor') {
         setTutorInfo(null);
       }
@@ -249,7 +240,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle lesson ended by tutor
     const onLessonEnded = (data: { tutorId: string; message?: string }) => {
-      console.log('🔔 [Classroom] Lesson ended by tutor:', data);
       setLessonEndedMessage(data.message || 'The tutor has ended the lesson. Thank you for learning with us!');
     };
     
@@ -479,12 +469,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       // Fetch the lesson viewUrl for iframe display
       setLoadingViewUrl(true);
       try {
-        console.log('🔍 [ClassroomPage] Fetching lesson data for ID:', selectedLesson.id);
-        console.log('🔍 [ClassroomPage] Selected lesson title:', selectedLesson.title);
         const result = await lessonApi.getStudentLesson(selectedLesson.id);
-        console.log('🔍 [ClassroomPage] API Response:', result);
         if (result.success && result.viewUrl) {
-          console.log('🔍 [ClassroomPage] Setting viewUrl:', result.viewUrl);
           setLessonViewUrl(result.viewUrl);
         }
       } catch (err) {
@@ -528,12 +514,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           // Also fetch the lesson viewUrl for iframe display
           if (lessonData.lessonId) {
             try {
-              console.log('🔍 [ClassroomPage] Loading last viewed lesson ID:', lessonData.lessonId);
-              console.log('🔍 [ClassroomPage] Last viewed lesson title:', lessonData.title);
               const lessonResult = await lessonApi.getStudentLesson(lessonData.lessonId);
-              console.log('🔍 [ClassroomPage] Last viewed API Response:', lessonResult);
               if (lessonResult.success && lessonResult.viewUrl) {
-                console.log('🔍 [ClassroomPage] Setting viewUrl:', lessonResult.viewUrl);
                 setLessonViewUrl(lessonResult.viewUrl);
               }
             } catch (err) {
@@ -568,11 +550,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         testAudio.pause();
         // Success! Browser allows autoplay with sound
         setAudioEnabled(true);
-        console.log('🔊 Autoplay with sound allowed by browser');
         return;
       } catch {
         // Autoplay blocked, need user interaction
-        console.log('🔇 Autoplay blocked, waiting for user interaction');
       }
     };
     
@@ -584,7 +564,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       [remoteVideoRef.current, remotePipRef.current].forEach(video => {
         if (video) {
           video.muted = false;
-          console.log('🔊 Audio enabled via user interaction');
         }
       });
       document.removeEventListener('click', enableAudio);
@@ -639,9 +618,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     const initWebRTC = async () => {
       try {
-        console.log('🎥 [Classroom] Starting local media stream...');
         await startLocalStream(true, true);
-        console.log('🎥 [Classroom] Local media stream started successfully');
       } catch (err) {
         console.error('❌ [Classroom] Failed to start media:', err);
       }
@@ -653,7 +630,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // When tutor info is known and local stream is ready, student initiates offer
   useEffect(() => {
     if (tutorInfo?.id && localStream) {
-      console.log('🎓 Student initiating offer to tutor:', tutorInfo.id);
       createOffer();
     }
   }, [tutorInfo?.id, localStream, createOffer]);
@@ -667,13 +643,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         if (localVideoRef.current && localVideoRef.current.srcObject !== localStream) {
           localVideoRef.current.srcObject = localStream;
           localVideoRef.current.play().catch(() => {});
-          console.log('📹 [Classroom] Local stream attached to main video');
           attached = true;
         }
         if (localPipRef.current && localPipRef.current.srcObject !== localStream) {
           localPipRef.current.srcObject = localStream;
           localPipRef.current.play().catch(() => {});
-          console.log('📹 [Classroom] Local stream attached to PiP video');
           attached = true;
         }
         // Update stream ID to force re-render if needed
@@ -685,13 +659,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current.play().catch(() => {});
-          console.log('📺 [Classroom] Remote stream attached to main video');
           attached = true;
         }
         if (remotePipRef.current && remotePipRef.current.srcObject !== remoteStream) {
           remotePipRef.current.srcObject = remoteStream;
           remotePipRef.current.play().catch(() => {});
-          console.log('📺 [Classroom] Remote stream attached to PiP video');
           attached = true;
         }
         // Update stream ID to force re-render if needed
@@ -873,7 +845,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         fileType: fileData?.fileType,
         fileSize: fileData?.fileSize
       });
-      console.log('📤 [Classroom] Sent message:', message.trim(), fileData ? 'with file' : '');
     } catch (error) {
       console.error('Failed to send message:', error);
       setIsUploading(false);
@@ -944,7 +915,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   el.srcObject = remoteStream;
                   el.muted = !audioEnabled;
                   el.play().catch(() => {});
-                  console.log('🎬 Remote Main: Stream attached');
                 }
               }}
               autoPlay 
@@ -1025,7 +995,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   el.srcObject = remoteStream;
                   el.muted = !audioEnabled;
                   el.play().catch(() => {});
-                  console.log('🎬 Remote PiP: Stream attached');
                 }
               }}
               style={{ display: !isSwapped && remoteStream ? 'block' : 'none' }}

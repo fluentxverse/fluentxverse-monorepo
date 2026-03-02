@@ -4,7 +4,7 @@ import './SettingsModal.css';
 import './SettingsModal.extra.css';
 import './SettingsModal.align.css';
 import { useAuthContext } from '../../context/AuthContext';
-import { listRegions, PSGCRegion, PSGCProvince, PSGCCity } from '../../data/ph_psgc';
+import { listRegions, type PSGCRegion, type PSGCProvince, type PSGCCity } from '../../data/ph_psgc';
 import { updatePersonalInfo, updateEmail, updatePassword } from '../../api/auth.api';
 
 // Helper type alias for municipalities (same as PSGCCity)
@@ -66,7 +66,14 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [region, setRegion] = useState(''); // stores region code
   const [province, setProvince] = useState(''); // stores province code
   const [city, setCity] = useState(''); // stores city code
-  const regionsData: PSGCRegion[] = listRegions();
+  const [regionsData, setRegionsData] = useState<PSGCRegion[]>([]);
+
+  // Lazy-load PSGC regions when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    listRegions().then(setRegionsData);
+  }, [isOpen]);
+
   const selectedRegion = regionsData.find(r => r.code === region);
   const provincesForRegion: PSGCProvince[] = selectedRegion?.provinces || [];
   const municipalitiesForRegion: PSGCCity[] = selectedRegion?.municipalities || [];
@@ -328,7 +335,6 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
 
   if (!isOpen) return null;
 
-  console.log(user)
   // Extract user info
   const firstName = user?.firstName || '';
   const lastName = user?.lastName || '';

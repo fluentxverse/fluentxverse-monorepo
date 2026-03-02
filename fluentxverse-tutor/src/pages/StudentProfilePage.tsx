@@ -35,7 +35,6 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
   const bookingId = bookingIdProp || window.location.pathname.split('/lesson/')[1]?.split('?')[0];
   const studentId = studentIdProp || window.location.pathname.split('/student/')[1]?.split('?')[0];
   
-  console.log('[StudentProfile] Pathname:', window.location.pathname, 'BookingId:', bookingId, 'StudentId:', studentId);
   
   useEffect(() => {
     document.title = 'Student Profile | FluentXVerse';
@@ -66,33 +65,28 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
     const fetchData = async () => {
       // If we have a bookingId, first fetch lesson details to get student info
       if (bookingId) {
-        console.log('[StudentProfile] Fetching lesson data for bookingId:', bookingId);
         
         try {
           setLoading(true);
           const lessonUrl = `${API_BASE_URL}/schedule/tutor-lesson/${bookingId}`;
-          console.log('[StudentProfile] Requesting lesson:', lessonUrl);
           
           const lessonResponse = await fetch(lessonUrl, {
             credentials: 'include'
           });
           
           const lessonResult = await lessonResponse.json();
-          console.log('[StudentProfile] Lesson response:', lessonResult);
           
           if (lessonResult.success && lessonResult.data) {
             setLessonData(lessonResult.data);
             
             // Now fetch full student profile using the studentId from lesson
             const studentUrl = `${API_BASE_URL}/tutor/student/${lessonResult.data.studentId}`;
-            console.log('[StudentProfile] Requesting student:', studentUrl);
             
             const studentResponse = await fetch(studentUrl, {
               credentials: 'include'
             });
             
             const studentResult = await studentResponse.json();
-            console.log('[StudentProfile] Student response:', studentResult);
             
             if (studentResult.success && studentResult.data) {
               setStudentData(studentResult.data);
@@ -113,30 +107,23 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
       
       // Fallback: fetch by studentId if no bookingId
       if (!studentId) {
-        console.log('[StudentProfile] No bookingId or studentId provided');
         setLoading(false);
         return;
       }
       
-      console.log('[StudentProfile] Fetching data for studentId:', studentId);
       
       try {
         setLoading(true);
         const url = `${API_BASE_URL}/tutor/student/${studentId}`;
-        console.log('[StudentProfile] Requesting:', url);
         
         const response = await fetch(url, {
           credentials: 'include'
         });
         
-        console.log('[StudentProfile] Response status:', response.status);
-        console.log('[StudentProfile] Response headers:', Object.fromEntries(response.headers.entries()));
         
         const result = await response.json();
-        console.log('[StudentProfile] Response data:', result);
         
         if (result.success && result.data) {
-          console.log('[StudentProfile] Successfully loaded student data:', result.data);
           setStudentData(result.data);
         } else {
           console.error('[StudentProfile] Failed to load student data:', result.error);
@@ -147,7 +134,6 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
         setError('Failed to load student profile');
       } finally {
         setLoading(false);
-        console.log('[StudentProfile] Fetch completed, loading:', false);
       }
     };
 
@@ -257,7 +243,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = cam;
-          videoRef.current.play().catch((e) => console.log('Video play error:', e));
+          videoRef.current.play().catch(() => {});
         }
       }, 100);
     } catch (err: any) {

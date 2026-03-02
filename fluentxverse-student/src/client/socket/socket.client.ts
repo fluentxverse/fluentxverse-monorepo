@@ -22,7 +22,6 @@ const getSocketUrl = () => {
     
     // Production: use dedicated socket URL
     if (isProduction) {
-      console.log('[Socket] Production detected, using:', PRODUCTION_SOCKET_URL);
       return PRODUCTION_SOCKET_URL;
     }
     
@@ -83,11 +82,9 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
   });
 
   socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket?.id);
   });
 
   socket.on('disconnect', (reason) => {
-    console.log('❌ Socket disconnected:', reason);
   });
 
   socket.on('connect_error', (error) => {
@@ -107,7 +104,6 @@ export const connectSocket = () => {
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
-    console.log('Socket manually disconnected');
   }
 };
 
@@ -116,6 +112,5 @@ export const destroySocket = () => {
     socket.disconnect();
     socket.removeAllListeners();
     socket = null;
-    console.log('Socket destroyed');
   }
 };

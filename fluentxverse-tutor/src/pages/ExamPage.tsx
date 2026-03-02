@@ -85,7 +85,6 @@ const ExamPage = () => {
     saveTimeoutRef.current = window.setTimeout(async () => {
       try {
         await saveExamAnswers(examId, tutorId, answersArr, currentQ);
-        console.log('📝 Answers saved to server');
       } catch (e) {
         console.warn('Failed to save answers to server:', e);
       }

@@ -176,30 +176,23 @@ const SchedulePage = () => {
       try {
         const scheduleData = await scheduleApi.getWeekSchedule(currentWeekOffset);
         
-        console.log('📅 Schedule API Response:', scheduleData);
-        console.log('📅 Slots received:', scheduleData.slots.length);
-        console.log('📅 weekDates array:', weekDates.map(d => formatDateISO(d)));
         
         // Convert schedule data to local state format
         const newSelectedSlots = new Set<string>();
         const newBookedSlots = new Map<string, BookedSlotInfo>();
         
         scheduleData.slots.forEach(slot => {
-          console.log('📅 Processing slot:', slot);
           
           // Find which day of the week this slot belongs to
           const slotDate = new Date(slot.date + 'T00:00:00'); // Parse as local date
-          console.log('📅 Slot date parsed:', slotDate.toISOString());
           
           const dayIdx = weekDates.findIndex(d => {
             const match = d.getFullYear() === slotDate.getFullYear() &&
               d.getMonth() === slotDate.getMonth() &&
               d.getDate() === slotDate.getDate();
-            console.log(`📅 Comparing: weekDate=${formatDateISO(d)} vs slotDate=${formatDateISO(slotDate)} match=${match}`);
             return match;
           });
           
-          console.log('📅 dayIdx found:', dayIdx);
           
           if (dayIdx !== -1) {
             // Convert 24h time from API to 12h format used by UI grid
@@ -215,12 +208,10 @@ const SchedulePage = () => {
             const now = new Date();
             const isPast = slotDateTime < now;
 
-            console.log(`📅 Slot key=${key}, time12h=${time12h}, status=${slot.status}, isPast=${isPast}`);
 
             if (slot.status === 'open' && !isPast) {
               // Only add to selected slots if not in the past
               newSelectedSlots.add(key);
-              console.log('📅 Added to selectedSlots:', key);
             } else if (slot.status === 'booked' && slot.studentId && slot.bookingId) {
               newSelectedSlots.add(key); // Keep as open slot visually
               newBookedSlots.set(key, {
@@ -228,18 +219,13 @@ const SchedulePage = () => {
                 bookingId: slot.bookingId,
                 studentName: slot.studentName
               });
-              console.log('📅 Added to bookedSlots:', key);
             } else {
-              console.log('📅 Slot NOT added - status:', slot.status, 'isPast:', isPast);
             }
             // Past open slots are simply not added, so they show as PAST
           } else {
-            console.warn('Could not find dayIdx for slot date:', slot.date);
           }
         });
         
-        console.log('📅 Final selectedSlots:', Array.from(newSelectedSlots));
-        console.log('📅 Final bookedSlots:', Array.from(newBookedSlots.keys()));
         
         setSelectedTimeSlots(newSelectedSlots);
         setBookedSlots(newBookedSlots);
@@ -277,7 +263,6 @@ const SchedulePage = () => {
         date: string; 
         time: string 
       }) => {
-        console.log('📅 Real-time booking received:', data);
         
         // Show toast notification
         setBookingToast({
@@ -300,7 +285,6 @@ const SchedulePage = () => {
         date: string;
         time: string;
       }) => {
-        console.log('📅 Real-time cancellation received:', data);
         
         // Refresh the schedule
         setRefreshTrigger(prev => prev + 1);
@@ -316,7 +300,6 @@ const SchedulePage = () => {
         socket.off('schedule:slot-cancelled', handleSlotCancelled);
       };
     } catch (error) {
-      console.warn('Socket not available for schedule updates:', error);
     }
   }, [userId]);
 
@@ -360,21 +343,11 @@ const SchedulePage = () => {
   };
 
   const handleSlotClick = (dayIdx: number, time: string) => {
-    console.log('🔴 handleSlotClick called', { dayIdx, time });
     
     const date = weekDates[dayIdx];
     const key = `${dayIdx}-${time}`;
     const isBooked = bookedSlots.has(key);
     const isCurrentlyOpen = selectedTimeSlots.has(key);
-    
-    console.log('🔴 Slot state:', {
-      key,
-      date: formatDateISO(date),
-      isBooked,
-      isCurrentlyOpen,
-      canOpen: canOpenSlot(date, time),
-      canMarkAttendance: canMarkAttendance(date, time)
-    });
     
     // Check if slot is in the past or too close (but allow booked slots)
     if (!canOpenSlot(date, time) && !isCurrentlyOpen && !isBooked) {
@@ -423,11 +396,6 @@ const SchedulePage = () => {
   };
 
   const handleOpenSelected = () => {
-    console.log('🟡 handleOpenSelected called', {
-      pendingSelectionsSize: pendingSelections.size,
-      pendingSelectionsArray: Array.from(pendingSelections)
-    });
-    
     if (pendingSelections.size === 0) return;
     
     // Check if selections are for "open/booked" slots (to update attendance) or "available" slots (to open them)
@@ -448,12 +416,6 @@ const SchedulePage = () => {
   };
 
   const confirmBulkAction = async () => {
-    console.log('🔵 confirmBulkAction called', {
-      bulkAction,
-      pendingSelectionsSize: pendingSelections.size,
-      pendingSelectionsArray: Array.from(pendingSelections)
-    });
-    
     setIsConfirming(true);
     setError(null);
 
@@ -469,13 +431,10 @@ const SchedulePage = () => {
         }
         
         setAttendanceMarked(newAttendanceMarked);
-        console.log('Attendance marked as:', attendanceStatus, 'for slots:', Array.from(pendingSelections));
       } else {
         const newSet = new Set(selectedTimeSlots);
         
         if (bulkAction === 'open') {
-          console.log('🟢 Processing OPEN action');
-          console.log('weekDates:', weekDates.map(d => formatDateISO(d)));
           
           // Convert pending selections to API format
           const slotsToOpen = Array.from(pendingSelections).map(key => {
@@ -483,18 +442,15 @@ const SchedulePage = () => {
             const time = timeParts.join('-'); // Rejoin in case time has dashes (unlikely but safe)
             const date = weekDates[parseInt(dayIdx)];
             const time24 = convertTo24Hour(time);
-            console.log(`  Processing key: ${key} -> dayIdx: ${dayIdx}, time: ${time} -> ${time24}, date: ${formatDateISO(date)}`);
             return {
               date: formatDateISO(date),
               time: time24
             };
           });
           
-          console.log('🚀 About to call scheduleApi.openSlots with:', slotsToOpen);
           
           // Call API to open slots
           const result = await scheduleApi.openSlots(slotsToOpen);
-          console.log('✅ API call successful, result:', result);
           
           // Update local state only after successful API call
           pendingSelections.forEach(key => newSet.add(key));

@@ -379,16 +379,13 @@ export default function TicketsPage() {
 
   // Fetch user's ticket balance from blockchain
   const fetchTicketBalance = async (walletAddr: string) => {
-    console.log('🎫 Fetching ticket balance for:', walletAddr);
     setIsLoadingBalance(true);
     try {
       const response = await fetch(`${API_BASE_URL}/tickets/balance/${walletAddr}`);
       const result = await response.json();
-      console.log('🎫 Ticket balance response:', result);
       
       if (result.success) {
         setTicketBalance(result.data);
-        console.log('🎫 Ticket balance set:', result.data);
         return result.data; // Return balance for polling use
       } else {
         console.error('Failed to fetch ticket balance:', result.error);
@@ -404,7 +401,6 @@ export default function TicketsPage() {
 
   // Fetch balance when wallet connects or user is authenticated with wallet address
   useEffect(() => {
-    console.log('🎫 Wallet effect - activeAccount:', activeAccount?.address, 'userWallet:', user?.walletAddress, 'isWalletConnecting:', isWalletConnecting);
     if (walletAddress) {
       fetchTicketBalance(walletAddress);
     }
@@ -436,7 +432,6 @@ export default function TicketsPage() {
       });
       
       // Debug: log the full quote response
-      console.log('Full quote response:', quote);
       
       // currencyAmount is what the user will actually pay in fiat (ensure it's a number)
       const actualFiatCost = Number(quote.currencyAmount);
@@ -449,15 +444,6 @@ export default function TicketsPage() {
       // newAmount = targetAmount - (feeAmount in USDC terms)
       const adjustedUsdcAmount = targetPrice - feeAmount;
       
-      console.log('=== Price Adjustment Details ===');
-      console.log(`Package: ${pkg.name}`);
-      console.log(`Displayed Price: $${targetPrice.toFixed(2)}`);
-      console.log(`Provider Quoted Price: $${actualFiatCost.toFixed(2)}`);
-      console.log(`Fee Added by Provider: $${feeAmount.toFixed(2)} (${((feeAmount / targetPrice) * 100).toFixed(2)}%)`);
-      console.log(`Amount Deducted to Compensate: $${feeAmount.toFixed(2)}`);
-      console.log(`Adjusted USDC Amount: $${adjustedUsdcAmount.toFixed(2)}`);
-      console.log(`Expected Final Price for Customer: ~$${targetPrice.toFixed(2)}`);
-      console.log('================================');
       
       setAdjustedAmount(adjustedUsdcAmount.toFixed(2));
       setShowCheckout(true);
@@ -503,12 +489,6 @@ export default function TicketsPage() {
   };
 
   const handleCheckoutSuccess = async (transactionData: CheckoutSuccessData) => {
-    console.log('=== Payment Success ===');
-    console.log('Transaction Data:', transactionData);
-    console.log('Active Account:', activeAccount?.address);
-    console.log('User Wallet:', user?.walletAddress);
-    console.log('Selected Package:', selectedPackage);
-    console.log('=======================');
     
     if (!selectedPackage) {
       console.error('Missing selectedPackage');
@@ -541,17 +521,8 @@ export default function TicketsPage() {
       return;
     }
     
-    console.log('✅ Using buyer wallet:', buyerWallet);
 
     try {
-      console.log('📤 Calling /tickets/purchase API...');
-      console.log('Request body:', {
-        buyerWallet,
-        tier: selectedPackage.tier,
-        quantity: selectedPackage.tickets,
-        userId: user?.userId,
-      });
-
       // Call backend to process the purchase and transfer NFT tickets
       const response = await fetch(`${API_BASE_URL}/tickets/purchase`, {
         method: 'POST',
@@ -568,13 +539,8 @@ export default function TicketsPage() {
       });
 
       const result = await response.json();
-      console.log('=== Purchase API Response ===');
-      console.log(result);
-      console.log('==============================');
 
       if (result.success) {
-        console.log(`✅ Successfully purchased ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s)!`);
-        console.log(`Transfer Transaction ID: ${result.data.transactionId}`);
         
         // The blockchain transaction is queued but not yet confirmed
         // We need to wait for it to be mined before the balance updates
@@ -595,7 +561,6 @@ export default function TicketsPage() {
               await fetch(`${API_BASE_URL}/tickets/invalidate-cache/${walletAddress}`, {
                 method: 'POST',
               });
-              console.log('🗑️ Cache invalidated');
             } catch (e) {
               console.warn('Cache invalidation failed, continuing anyway:', e);
             }
@@ -609,7 +574,6 @@ export default function TicketsPage() {
             
             for (let i = 0; i < maxAttempts; i++) {
               await new Promise(resolve => setTimeout(resolve, delays[i]));
-              console.log(`🔄 Checking balance (attempt ${i + 1}/${maxAttempts})...`);
               
               const newBalance = await invalidateAndFetch();
               
@@ -618,16 +582,13 @@ export default function TicketsPage() {
                 const currentBalance = newBalance[expectedTier];
                 const expectedBalance = initialBalance[expectedTier] + expectedIncrease;
                 
-                console.log(`📊 Balance check: initial=${initialBalance[expectedTier]}, current=${currentBalance}, expected=${expectedBalance}`);
                 
                 if (currentBalance >= expectedBalance) {
-                  console.log('✅ Balance updated successfully!');
                   return; // Balance updated, stop polling
                 }
               }
             }
             
-            console.log('⚠️ Balance polling complete - balance may take longer to update');
           };
           
           // Start polling in the background

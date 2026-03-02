@@ -134,8 +134,6 @@ export function AppInner() {
 							<Route path="/about" component={AboutUsPage} />
 							<Route path="/become-tutor" component={BecomeTutorPage} />
 
-							{/* <Route path="/blog" component={Blog} />
-							<Route path="/blog-details" component={BlogDetails} /> */}
 							<Route path="/privacy-policy" component={PrivacyPolicy} />
 							<Route path="/terms-of-service" component={TermsOfService} />
 							<Route path="/:404*" component={NotFoundPage} />

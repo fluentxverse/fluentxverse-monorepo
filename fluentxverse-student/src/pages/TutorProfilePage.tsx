@@ -182,7 +182,6 @@ export const TutorProfilePage = () => {
         
         // Fetch raw PHT slots from the same API that BookingModal uses
         const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
-        console.log('🗓️ Raw PHT slots from API:', slots);
         setRawSlots(slots);
         
         // Keep PHT dates, but convert times to KST for display
@@ -191,7 +190,6 @@ export const TutorProfilePage = () => {
         const convertedSlots = slots.map(slot => {
           // Convert time only (PHT to KST is +1 hour)
           const { time: kstTime } = convertPHTtoKST(slot.date, slot.time);
-          console.log(`🗓️ Keeping PHT date, converting time: ${slot.date} ${slot.time} PHT -> ${slot.date} ${kstTime} KST`);
           return {
             date: slot.date, // Keep PHT date for grouping by tutor's schedule date
             time: kstTime,   // Convert time to KST for display
@@ -200,8 +198,6 @@ export const TutorProfilePage = () => {
           };
         });
         
-        console.log('🗓️ Converted slots (PHT dates, KST times):', convertedSlots);
-        console.log('🗓️ Next 7 days:', getNextSevenDays());
         setAvailability(convertedSlots);
       } catch (err) {
         console.error('Failed to load availability', err);

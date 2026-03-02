@@ -46,10 +46,8 @@ export const BookingModal = ({
   useEffect(() => {
     if (isOpen && activeAccount?.address) {
       setTicketLoading(true);
-      console.log('[BookingModal] Fetching ticket balance for:', activeAccount.address);
       getTicketBalance(activeAccount.address)
         .then((balance) => {
-          console.log('[BookingModal] Got ticket balance:', balance);
           setTicketBalance(balance);
         })
         .catch((err) => {
@@ -86,17 +84,14 @@ export const BookingModal = ({
       } else if (period === 'AM' && hours === 12) {
         hours = 0;
       }
-      console.log(`🕐 Parsed 12h time "${normalizedTime}" -> ${hours}:${minutes}`);
     } else {
       // Try 24-hour format (e.g., "18:00", "23:30")
       const time24Match = normalizedTime.match(/^(\d{1,2}):(\d{2})$/);
       if (time24Match) {
         hours = parseInt(time24Match[1], 10);
         minutes = time24Match[2];
-        console.log(`🕐 Parsed 24h time "${normalizedTime}" -> ${hours}:${minutes}`);
       } else {
         // Can't parse, return as-is
-        console.log(`🕐 Failed to parse time "${normalizedTime}", returning as-is`);
         return { date: phDateString, time: phTimeString, dateRolledOver: false };
       }
     }
@@ -115,7 +110,6 @@ export const BookingModal = ({
       const [year, month, day] = phDateString.split('-').map(Number);
       const nextDayDate = new Date(year, month - 1, day + 1);
       resultDate = `${nextDayDate.getFullYear()}-${String(nextDayDate.getMonth() + 1).padStart(2, '0')}-${String(nextDayDate.getDate()).padStart(2, '0')}`;
-      console.log(`🕐 Date rolled over: ${phDateString} -> ${resultDate}`);
     }
 
     return { date: resultDate, time: `${String(hours).padStart(2, '0')}:${minutes}`, dateRolledOver };
@@ -168,13 +162,11 @@ export const BookingModal = ({
       const endDate = filterDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
       const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
-      console.log('📅 Fetched available slots (startDate:', startDate, 'endDate:', endDate, '):', slots);
       
       // Debug: Log conversion for each slot
       if (filterDate) {
         slots.forEach(slot => {
           const converted = convertToKoreanTimeWithDate(slot.date, slot.time);
-          console.log(`📅 Slot ${slot.date} ${slot.time} PHT -> ${converted.date} ${converted.time} KST (rolled: ${converted.dateRolledOver})`);
         });
       }
       
@@ -185,12 +177,10 @@ export const BookingModal = ({
         ? slots.filter(slot => {
             const belongs = slotBelongsToPHTDate(slot.date, filterDate);
             const converted = convertToKoreanTimeWithDate(slot.date, slot.time);
-            console.log(`📅 Slot ${slot.date} ${slot.time} PHT (-> ${converted.date} ${converted.time} KST) belongs to PHT ${filterDate}: ${belongs}`);
             return belongs;
           })
         : slots;
       
-      console.log('📅 Filtered slots for PHT date', filterDate, ':', filteredSlots.length);
       setAvailableSlots(filteredSlots);
     } catch (err: any) {
       setError(getErrorMessage(err));
@@ -215,7 +205,6 @@ export const BookingModal = ({
     }
 
     // Check ticket balance
-    console.log('[BookingModal] Checking ticket balance:', ticketBalance);
     const hasBasicTickets = ticketBalance && ticketBalance.basic >= 1;
     const hasPremiumTickets = ticketBalance && ticketBalance.premium >= 1;
     
@@ -226,7 +215,6 @@ export const BookingModal = ({
     
     // Use basic tickets first, fallback to premium
     const ticketTier = hasBasicTickets ? 'basic' : 'premium';
-    console.log('[BookingModal] Will use ticket tier:', ticketTier);
     
     setBooking(true);
     setTransferringTicket(true);
@@ -234,18 +222,15 @@ export const BookingModal = ({
     
     try {
       // Step 1: Transfer ticket to vault wallet (on-chain)
-      console.log('🎟️ Step 1: Transferring ticket to vault...');
       const transferResult = await transferTicketForBooking(activeAccount, ticketTier as 'basic' | 'premium', 1);
       
       if (!transferResult.success) {
         throw new Error(transferResult.error || 'Failed to transfer ticket');
       }
       
-      console.log('🎟️ Ticket transferred! TX:', transferResult.transactionHash);
       setTransferringTicket(false);
       
       // Step 2: Create booking on backend (pass transaction hash for verification)
-      console.log('📅 Step 2: Creating booking on server...');
       await scheduleApi.bookSlot(selectedSlot.slotId, transferResult.transactionHash);
       
       setBookingSuccess(true);
@@ -345,7 +330,6 @@ export const BookingModal = ({
   };
 
   const formatTime = (timeString: string) => {
-    console.log('🕐 Formatting time:', timeString);
     // Convert Philippine time to Korean time (add 1 hour) - returns 24h format
     return convertToKoreanTime(timeString);
   };
@@ -461,13 +445,10 @@ export const BookingModal = ({
                   <span>
                     {formatDate(selectedSlot.date)} at {formatTime(selectedSlot.time)} KST
                     <span className="booking-modal-duration"> ({(() => {
-                      console.log('⏱️ Duration value:', selectedSlot.durationMinutes);
-                      console.log('⏱️ Duration type:', typeof selectedSlot.durationMinutes);
                       // Neo4j Integer object has 'low' and 'high' properties
                       const duration = typeof selectedSlot.durationMinutes === 'object' && selectedSlot.durationMinutes !== null
                         ? (selectedSlot.durationMinutes as any).low || selectedSlot.durationMinutes
                         : Number(selectedSlot.durationMinutes);
-                      console.log('⏱️ Converted duration:', duration);
                       return duration;
                     })()} min)</span>
                   </span>

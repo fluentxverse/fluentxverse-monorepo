@@ -123,7 +123,6 @@ export const MyProfilePage = () => {
       
       // Load personal info (education, qualifications from Settings)
       const personalData = await getPersonalInfo();
-      console.log('Personal info loaded:', personalData);
       if (personalData) {
         setPersonalInfo(personalData);
       }

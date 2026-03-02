@@ -68,7 +68,6 @@ export function AppInner() {
 		client: thirdwebClient,
 		wallets: [appWallet],
 		onConnect: (wallet) => {
-			console.log('✅ Wallet auto-connected:', wallet.getAccount()?.address);
 		},
 	});
 
@@ -76,7 +75,6 @@ export function AppInner() {
 	// This ensures wallet state stays in sync with auth state
 	useEffect(() => {
 		if (!isAuthenticated && autoConnected) {
-			console.log('User not authenticated, disconnecting wallet...');
 			appWallet.disconnect().catch(err => {
 				console.warn('Failed to disconnect wallet:', err);
 			});
@@ -143,8 +141,6 @@ export function AppInner() {
 
 							<Route path="/contact" component={ContactPage} />
 
-							{/* <Route path="/blog" component={Blog} />
-							<Route path="/blog-details" component={BlogDetails} /> */}
 							<Route path="/privacy-policy" component={PrivacyPolicy} />
 							<Route path="/terms-of-service" component={TermsOfService} />
 							<Route path="/:404*" component={NotFoundPage} />

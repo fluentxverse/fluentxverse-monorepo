@@ -17,9 +17,7 @@ export interface RegisterParams {
 
 export const register = async (params: RegisterParams) => {
     try {
-        console.log('[auth.api] register() called with:', { ...params, password: '***' });
         const response = await client.post('/tutor/register', params);
-        console.log('[auth.api] register() response:', response.data);
         return response.data;
     } catch (error: any) {
         console.error('[auth.api] register() error:', {

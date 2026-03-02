@@ -23,7 +23,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
     
     // If remote user ID changed and we had a connection, reset it
     if (previousUserId && remoteUserId && previousUserId !== remoteUserId) {
-      console.log('🔄 Remote user ID changed from', previousUserId, 'to', remoteUserId, '- resetting peer connection');
       if (peerConnection.current) {
         peerConnection.current.close();
         peerConnection.current = null;
@@ -48,7 +47,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
       return peerConnection.current;
     }
 
-    console.log('🔗 Creating new peer connection');
     const pc = new RTCPeerConnection(iceServers);
 
     // Handle ICE candidates - use ref to always have latest remoteUserId
@@ -60,7 +58,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
             candidate: event.candidate,
             to: remoteUserIdRef.current
           });
-          console.log('🧊 Sent ICE candidate to:', remoteUserIdRef.current);
         } catch (err) {
           console.error('Failed to send ICE candidate:', err);
         }
@@ -69,35 +66,14 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
 
     // Handle remote stream
     pc.ontrack = (event) => {
-      console.log('📺 Received remote track:', event.track.kind, {
-        enabled: event.track.enabled,
-        muted: event.track.muted,
-        readyState: event.track.readyState,
-        id: event.track.id
-      });
       if (event.streams && event.streams[0]) {
         const stream = event.streams[0];
-        console.log('📺 Remote stream received:', {
-          id: stream.id,
-          active: stream.active,
-          videoTracks: stream.getVideoTracks().map(t => ({ 
-            enabled: t.enabled, 
-            muted: t.muted, 
-            readyState: t.readyState 
-          })),
-          audioTracks: stream.getAudioTracks().map(t => ({ 
-            enabled: t.enabled, 
-            muted: t.muted, 
-            readyState: t.readyState 
-          }))
-        });
         setRemoteStream(stream);
       }
     };
 
     // Handle connection state changes
     pc.onconnectionstatechange = () => {
-      console.log('🔌 Connection state:', pc.connectionState);
       setIsConnected(pc.connectionState === 'connected');
       
       if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
@@ -106,7 +82,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
     };
 
     pc.oniceconnectionstatechange = () => {
-      console.log('🧊 ICE connection state:', pc.iceConnectionState);
     };
 
     peerConnection.current = pc;
@@ -117,14 +92,11 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
   const startLocalStream = useCallback(async (audio = true, video = true) => {
     // If we already have a stream, return it
     if (localStreamRef.current) {
-      console.log('🎥 Returning existing local stream');
       return localStreamRef.current;
     }
 
     try {
-      console.log('🎥 Requesting local media stream...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio, video });
-      console.log('🎥 Got local media stream with tracks:', stream.getTracks().map(t => t.kind).join(', '));
       
       setLocalStream(stream);
       localStreamRef.current = stream;
@@ -132,7 +104,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
       // Add tracks to peer connection
       const pc = createPeerConnection();
       stream.getTracks().forEach(track => {
-        console.log('➕ Adding track to peer connection:', track.kind);
         pc.addTrack(track, stream);
       });
 
@@ -154,7 +125,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
 
     try {
       const pc = createPeerConnection();
-      console.log('📤 Creating offer for:', targetUserId);
       
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -165,7 +135,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         to: targetUserId
       });
 
-      console.log('✅ Offer sent to:', targetUserId);
     } catch (err) {
       console.error('❌ Error creating offer:', err);
       setError('Failed to create offer');
@@ -175,7 +144,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
   // Handle received offer
   const handleOffer = useCallback(async (offer: RTCSessionDescriptionInit, fromUserId: string) => {
     try {
-      console.log('📥 Handling offer from:', fromUserId);
       
       // Update remote user ID if we didn't know it
       if (!remoteUserIdRef.current) {
@@ -191,7 +159,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         
         localStreamRef.current.getTracks().forEach(track => {
           if (!existingTrackKinds.includes(track.kind)) {
-            console.log('➕ Adding local track before answering:', track.kind);
             pc.addTrack(track, localStreamRef.current!);
           }
         });
@@ -204,7 +171,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         const candidate = pendingCandidates.current.shift();
         if (candidate) {
           await pc.addIceCandidate(candidate);
-          console.log('🧊 Added pending ICE candidate');
         }
       }
 
@@ -217,7 +183,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         to: fromUserId
       });
 
-      console.log('✅ Answer sent to:', fromUserId);
     } catch (err) {
       console.error('❌ Error handling offer:', err);
       setError('Failed to handle offer');
@@ -233,7 +198,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         return;
       }
 
-      console.log('📥 Setting remote description from answer');
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       
       // Add any pending ICE candidates
@@ -241,11 +205,9 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         const candidate = pendingCandidates.current.shift();
         if (candidate) {
           await pc.addIceCandidate(candidate);
-          console.log('🧊 Added pending ICE candidate');
         }
       }
       
-      console.log('✅ Answer received and set');
     } catch (err) {
       console.error('❌ Error handling answer:', err);
       setError('Failed to handle answer');
@@ -258,13 +220,11 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
       const pc = peerConnection.current;
       if (!pc || !pc.remoteDescription) {
         // Queue the candidate if we don't have a remote description yet
-        console.log('🧊 Queuing ICE candidate (no remote description yet)');
         pendingCandidates.current.push(new RTCIceCandidate(candidate));
         return;
       }
 
       await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      console.log('🧊 ICE candidate added');
     } catch (err) {
       console.error('❌ Error handling ICE candidate:', err);
     }
@@ -312,22 +272,18 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
       const socket = getSocket();
 
       socket.on('webrtc:offer', ({ offer, from }) => {
-        console.log('📥 Received offer from:', from);
         handleOffer(offer, from);
       });
 
       socket.on('webrtc:answer', ({ answer, from }) => {
-        console.log('📥 Received answer from:', from);
         handleAnswer(answer);
       });
 
       socket.on('webrtc:ice-candidate', ({ candidate, from }) => {
-        console.log('🧊 Received ICE candidate from:', from);
         handleIceCandidate(candidate);
       });
 
       socket.on('webrtc:peer-left', () => {
-        console.log('👋 Peer left');
         setRemoteStream(null);
         setIsConnected(false);
       });
@@ -339,7 +295,6 @@ export const useWebRTC = ({ remoteUserId }: UseWebRTCProps = {}) => {
         socket.off('webrtc:peer-left');
       };
     } catch (err) {
-      console.warn('Socket not initialized yet for WebRTC listeners:', err);
       // Socket will be initialized by the parent component
     }
   }, [handleOffer, handleAnswer, handleIceCandidate]);

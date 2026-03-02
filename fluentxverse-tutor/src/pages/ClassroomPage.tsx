@@ -155,7 +155,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     if (!currentSessionId) return;
     
-    console.log('🔌 [Classroom] Initializing socket...');
     // Destroy any existing socket to ensure fresh connection with correct auth
     destroySocket();
     initSocket();
@@ -166,14 +165,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Wait for connection before joining
     const onConnect = () => {
-      console.log('✅ [Classroom] Socket connected, joining session:', currentSessionId);
       socket.emit('session:join', { sessionId: currentSessionId });
       socket.emit('chat:request-history', { sessionId: currentSessionId });
     };
     
     // Handle incoming chat messages
     const onChatMessage = (data: ChatMessageData) => {
-      console.log('💬 [Classroom] Received message:', data);
       const newMsg: ChatMessage = {
         id: data.id,
         sender: data.senderType,
@@ -194,7 +191,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle chat history
     const onChatHistory = (messages: ChatMessageData[]) => {
-      console.log('📜 [Classroom] Received chat history:', messages.length, 'messages');
       const formattedMessages: ChatMessage[] = messages.map(msg => ({
         id: msg.id,
         sender: msg.senderType,
@@ -217,10 +213,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     // Fetch student's lesson request - declared early so it can be used in multiple handlers
     const fetchStudentLessonRequest = async (studentId: string) => {
       try {
-        console.log('📚 [Classroom] Fetching lesson request for student:', studentId);
         const lessonRequest = await tutorApi.getStudentLessonRequest(studentId);
         if (lessonRequest) {
-          console.log('📚 [Classroom] Received student lesson request:', lessonRequest);
           setStudentLessonRequest(lessonRequest);
           
           // Also fetch the lesson viewUrl for iframe display
@@ -242,7 +236,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle session state
     const onSessionState = (data: any) => {
-      console.log('📋 [Classroom] Session state:', data);
       if (data.status === 'active') {
         setIsConnecting(false);
       }
@@ -254,7 +247,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           initials: 'ST',
           date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         });
-        console.log('🎯 [Classroom] Updated studentInfo to:', data.participants.studentId);
         
         // Fetch the student's lesson request
         fetchStudentLessonRequest(data.participants.studentId);
@@ -266,7 +258,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle user joined
     const onUserJoined = (data: { userId: string; userType: string }) => {
-      console.log('👋 [Classroom] User joined:', data);
       if (data.userType === 'student') {
         setIsConnecting(false);
         // Always update with the latest student ID
@@ -276,7 +267,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           initials: 'ST',
           date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
         });
-        console.log('🎯 [Classroom] Student joined with ID:', data.userId);
         
         // Fetch the student's lesson request
         fetchStudentLessonRequest(data.userId);
@@ -285,7 +275,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle user left
     const onUserLeft = (data: { userId: string; userType: string }) => {
-      console.log('👋 [Classroom] User left:', data);
       if (data.userType === 'student') {
         setStudentInfo(null);
       }
@@ -451,7 +440,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       const data = await response.json();
       
-      console.log('Vocabulary API response:', data);
       
       setVocabularyItems(prev => {
         const updated = [...prev];
@@ -594,7 +582,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       const data = await response.json();
       
-      console.log('Grammar check API response:', data);
       
       setGrammarItems(prev => {
         const updated = [...prev];
@@ -678,7 +665,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       const data = await response.json();
       
-      console.log('Pronunciation API response:', data);
       
       setPronunciationItems(prev => {
         const updated = [...prev];
@@ -933,11 +919,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         testAudio.pause();
         // Success! Browser allows autoplay with sound
         setAudioEnabled(true);
-        console.log('🔊 Autoplay with sound allowed by browser');
         return;
       } catch {
         // Autoplay blocked, need user interaction
-        console.log('🔇 Autoplay blocked, waiting for user interaction');
       }
     };
     
@@ -949,7 +933,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       [remoteVideoRef.current, remotePipRef.current].forEach(video => {
         if (video) {
           video.muted = false;
-          console.log('🔊 Audio enabled via user interaction');
         }
       });
       document.removeEventListener('click', enableAudio);
@@ -1004,9 +987,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     const initWebRTC = async () => {
       try {
-        console.log('🎥 [Classroom] Starting local media stream...');
         await startLocalStream(true, true);
-        console.log('🎥 [Classroom] Local media stream started successfully');
       } catch (err) {
         console.error('❌ [Classroom] Failed to start media:', err);
       }
@@ -1018,7 +999,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // When student info is known and local stream is ready, tutor initiates offer
   useEffect(() => {
     if (studentInfo?.id && localStream) {
-      console.log('👨‍🏫 Initiating offer to student:', studentInfo.id);
       createOffer();
     }
   }, [studentInfo?.id, localStream, createOffer]);
@@ -1032,13 +1012,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         if (localVideoRef.current && localVideoRef.current.srcObject !== localStream) {
           localVideoRef.current.srcObject = localStream;
           localVideoRef.current.play().catch(() => {});
-          console.log('📹 [Classroom] Local stream attached to main video');
           attached = true;
         }
         if (localPipRef.current && localPipRef.current.srcObject !== localStream) {
           localPipRef.current.srcObject = localStream;
           localPipRef.current.play().catch(() => {});
-          console.log('📹 [Classroom] Local stream attached to PiP video');
           attached = true;
         }
         // Update stream ID to force re-render if needed
@@ -1050,13 +1028,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
           remoteVideoRef.current.srcObject = remoteStream;
           remoteVideoRef.current.play().catch(() => {});
-          console.log('📺 [Classroom] Remote stream attached to main video');
           attached = true;
         }
         if (remotePipRef.current && remotePipRef.current.srcObject !== remoteStream) {
           remotePipRef.current.srcObject = remoteStream;
           remotePipRef.current.play().catch(() => {});
-          console.log('📺 [Classroom] Remote stream attached to PiP video');
           attached = true;
         }
         // Update stream ID to force re-render if needed
@@ -1235,7 +1211,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       });
       // Stop typing indicator when message is sent
       socket.emit('chat:typing', { isTyping: false });
-      console.log('📤 [Classroom] Sent message:', message.trim(), fileData.fileName ? `with file: ${fileData.fileName}` : '');
     } catch (error) {
       console.error('Failed to send message:', error);
       setIsUploading(false);
@@ -1323,7 +1298,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   el.srcObject = remoteStream;
                   el.muted = !audioEnabled;
                   el.play().catch(() => {});
-                  console.log('🎬 Remote Main: Stream attached');
                 }
               }}
               autoPlay 
@@ -1404,7 +1378,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   el.srcObject = remoteStream;
                   el.muted = !audioEnabled;
                   el.play().catch(() => {});
-                  console.log('🎬 Remote PiP: Stream attached');
                 }
               }}
               style={{ display: !isSwapped && remoteStream ? 'block' : 'none' }}

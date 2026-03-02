@@ -46,10 +46,8 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
         throw new Error('Failed to get wallet address. Please try again.');
       }
 
-      console.log('Connected wallet address:', walletAddress);
 
       // Step 3: Request nonce from backend (SIWE flow)
-      console.log('Requesting nonce for SIWE...');
       const nonceResponse = await requestWalletNonce(walletAddress);
       
       if (!nonceResponse.success || !nonceResponse.message) {
@@ -57,14 +55,12 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
       }
 
       // Step 4: Sign the message with the wallet
-      console.log('Signing message with wallet...');
       const signature = await account.signMessage({ message: nonceResponse.message });
       
       if (!signature) {
         throw new Error('Failed to sign authentication message. Please try again.');
       }
 
-      console.log('Message signed successfully');
 
       // Step 5: Authenticate with backend using signature
       const result = await loginByWallet({
@@ -76,7 +72,6 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
       if (result.status === 'not_found') {
         // Wallet doesn't exist - redirect to registration
         // Store signature info for registration
-        console.log('Wallet not found, needs registration');
         localStorage.setItem('fxv_pending_wallet', walletAddress);
         localStorage.setItem('fxv_pending_signature', signature);
         localStorage.setItem('fxv_pending_message', nonceResponse.message);
@@ -87,7 +82,6 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
 
       if (result.status === 'incomplete_registration') {
         // Wallet exists but profile incomplete
-        console.log('Incomplete registration, missing fields:', result.missingFields);
         localStorage.setItem('fxv_pending_wallet', walletAddress);
         localStorage.setItem('fxv_pending_signature', signature);
         localStorage.setItem('fxv_pending_message', nonceResponse.message);
@@ -97,7 +91,6 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
       }
 
       // Full authentication successful
-      console.log('Wallet login successful:', result.user);
       onSuccess?.();
       onClose();
     } catch (err: any) {

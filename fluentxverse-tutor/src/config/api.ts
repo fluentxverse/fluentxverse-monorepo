@@ -11,7 +11,6 @@ const getApiBaseUrl = () => {
   // 1. First priority: explicit env var (set at build time)
   const envUrl = (import.meta.env.VITE_API_URL || '').trim();
   if (envUrl) {
-    console.log('[API Config] Using VITE_API_URL:', envUrl);
     return normalizeBaseUrl(envUrl);
   }
 
@@ -24,20 +23,17 @@ const getApiBaseUrl = () => {
     const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
     
     if (isProduction) {
-      console.log('[API Config] Detected production domain, using:', PRODUCTION_API_URL);
       return PRODUCTION_API_URL;
     }
 
     // Local dev: backend runs on 8765 over http.
     if (isLocalhost) {
-      console.log('[API Config] Localhost detected, using: http://localhost:8765');
       return 'http://localhost:8765';
     }
 
     // Unknown environment: match the current protocol to avoid mixed content
     // This handles LAN access (e.g., 192.168.x.x) during development
     const fallbackUrl = `${protocol}//${hostname}:8765`;
-    console.log('[API Config] Unknown environment, using fallback:', fallbackUrl);
     return fallbackUrl;
   }
 

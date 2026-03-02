@@ -26,7 +26,6 @@ export const useNotifications = () => {
       try {
         const io = (window as any).io;
         if (!io) {
-          console.warn('Socket.IO not available');
           setIsLoading(false);
           return;
         }
@@ -37,7 +36,6 @@ export const useNotifications = () => {
         });
 
         socketRef.current.on('connect', () => {
-          console.log('🔌 Socket connected for student');
           socketRef.current.emit('notification:subscribe');
         });
 

@@ -4,10 +4,9 @@ import './SettingsModal.css';
 import './SettingsModal.extra.css';
 import './SettingsModal.align.css';
 import { useAuthContext } from '../../context/AuthContext';
-import { listRegions, PSGCRegion, PSGCProvince, PSGCCity } from '../../data/ph_psgc';
+import { listRegions, type PSGCRegion, type PSGCProvince, type PSGCCity } from '../../data/ph_psgc';
 import { updatePersonalInfo, updateEmail, updatePassword, getPersonalInfo } from '../../api/auth.api';
 import { tutorApi } from '../../api/tutor.api';
-import univData from '../../data/univ.json';
 
 // Helper type alias for municipalities (same as PSGCCity)
 
@@ -55,7 +54,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [region, setRegion] = useState(''); // stores region code
   const [province, setProvince] = useState(''); // stores province code
   const [city, setCity] = useState(''); // stores city code
-  const regionsData: PSGCRegion[] = listRegions();
+  const [regionsData, setRegionsData] = useState<PSGCRegion[]>([]);
   const selectedRegion = regionsData.find(r => r.code === region);
   const provincesForRegion: PSGCProvince[] = selectedRegion?.provinces || [];
   const municipalitiesForRegion: PSGCCity[] = selectedRegion?.municipalities || [];
@@ -73,8 +72,15 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [teachingExperience, setTeachingExperience] = useState('');
   const [teachingQualifications, setTeachingQualifications] = useState<string[]>([]);
 
-  // Universities list
-  const universities = univData.universitiesAndColleges;
+  // Universities list (lazy-loaded)
+  const [universities, setUniversities] = useState<{ text: string; value: string }[]>([]);
+
+  // Lazy-load PSGC regions and university data when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    listRegions().then(setRegionsData);
+    import('../../data/univ.json').then(m => setUniversities(m.default.universitiesAndColleges));
+  }, [isOpen]);
   const filteredUniversities = useMemo(() => {
     if (!schoolSearchQuery.trim()) return universities.slice(0, 50); // Show first 50 by default
     const query = schoolSearchQuery.toLowerCase();
@@ -371,7 +377,6 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
 
   if (!isOpen) return null;
 
-  console.log(user)
   // Extract user info
   const firstName = user?.firstName || '';
   const lastName = user?.lastName || '';

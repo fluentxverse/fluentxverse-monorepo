@@ -84,11 +84,9 @@ const SpeakingExamPage = () => {
   // ============================================================================
   
   const requestMicPermission = async () => {
-    console.log('🎤 Requesting microphone permission...');
     
     // Check if we already have a stream
     if (streamRef.current) {
-      console.log('✅ Stream already exists, setting up audio context');
       setMicPermission('granted');
       setupAudioContext(streamRef.current);
       return;
@@ -99,15 +97,12 @@ const SpeakingExamPage = () => {
       if (navigator.permissions) {
         try {
           const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-          console.log('📋 Current permission state:', permissionStatus.state);
         } catch (e) {
           // permissions.query might not support microphone in all browsers
-          console.log('📋 Could not query permission state');
         }
       }
       
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log('✅ Microphone permission granted');
       streamRef.current = stream;
       setMicPermission('granted');
       setupAudioContext(stream);
@@ -184,7 +179,6 @@ const SpeakingExamPage = () => {
   // ============================================================================
 
   const startRecording = async () => {
-    console.log('🎙️ Starting recording for task:', currentTaskIndex + 1);
     
     // Clear any existing timer first to prevent race conditions
     if (timerRef.current) {
@@ -231,7 +225,6 @@ const SpeakingExamPage = () => {
       
       // Start recording phase
       const taskTime = currentTask?.timeLimit || 30;
-      console.log('⏱️ Recording for', taskTime, 'seconds');
       setTimeRemaining(taskTime);
       setPhase('recording');
       
@@ -259,7 +252,6 @@ const SpeakingExamPage = () => {
   };
 
   const stopRecordingAndAdvance = async () => {
-    console.log('🛑 Stopping recording and advancing...');
     
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -267,7 +259,6 @@ const SpeakingExamPage = () => {
     }
     
     if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
-      console.log('⚠️ No active recording, advancing without saving');
       advanceToNextTask();
       return;
     }
@@ -279,13 +270,11 @@ const SpeakingExamPage = () => {
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const duration = Math.round((Date.now() - recordingStartRef.current) / 1000);
-        console.log('📼 Recording captured:', duration, 'seconds, size:', audioBlob.size);
         
         // Convert to base64 for submission
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64 = reader.result as string;
-          console.log('📦 Base64 converted, length:', base64.length);
           
           const recording: TaskRecording = {
             taskId: currentTask?.id || 0,
@@ -304,7 +293,6 @@ const SpeakingExamPage = () => {
     // Update recordings state
     const updatedRecordings = [...recordings, newRecording];
     setRecordings(updatedRecordings);
-    console.log('📝 Total recordings so far:', updatedRecordings.length);
     
     mediaRecorderRef.current = null;
     advanceToNextTask(updatedRecordings);
@@ -314,11 +302,9 @@ const SpeakingExamPage = () => {
     if (!exam) return;
     
     const nextIndex = currentTaskIndex + 1;
-    console.log('➡️ Advancing to task', nextIndex + 1, 'of', exam.tasks.length);
     
     if (nextIndex >= exam.tasks.length) {
       // All tasks completed - submit exam with passed recordings
-      console.log('✅ All tasks completed, submitting exam with', currentRecordings?.length || recordings.length, 'recordings');
       submitExam(currentRecordings || recordings);
     } else {
       // Move to next task
@@ -332,7 +318,6 @@ const SpeakingExamPage = () => {
   // ============================================================================
 
   const startMicTest = () => {
-    console.log('🔧 Starting mic test...');
     setPhase('mic-test');
     requestMicPermission();
   };
@@ -432,7 +417,6 @@ const SpeakingExamPage = () => {
     }
     
     const prepTime = PREP_TIME[task.type];
-    console.log('📋 Starting prep phase for', prepTime, 'seconds');
     setTimeRemaining(prepTime);
     setPhase('prep');
     
@@ -448,14 +432,12 @@ const SpeakingExamPage = () => {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
-        console.log('📋 Prep time finished, starting recording');
         setTimeout(() => startRecording(), 0);
       }
     }, 1000);
   };
 
   const skipPrepTime = () => {
-    console.log('⏭️ Skipping prep time');
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -467,7 +449,6 @@ const SpeakingExamPage = () => {
   const submitExam = async (recordingsToSubmit: TaskRecording[]) => {
     if (!exam || !user?.userId) return;
     
-    console.log('📤 Submitting exam with', recordingsToSubmit.length, 'recordings');
     setPhase('submitting');
     stopStream();
     

@@ -246,7 +246,6 @@ const StudentProfilePage = () => {
       try {
         const result = await getLastViewedLesson();
         if (result.success && result.data) {
-          console.log('[StudentProfile] Loaded last viewed lesson:', result.data);
           setLastViewedCourse(result.data.courseId);
           // For now, we can only get lessonNumber, title, and goal from the API
           // Level, chapter, and skill will need to be fetched when we load the lessons
@@ -260,7 +259,6 @@ const StudentProfilePage = () => {
             goal: result.data.goal
           });
         } else {
-          console.log('[StudentProfile] No last viewed lesson found or error:', result.error);
         }
       } catch (error) {
         console.error('[StudentProfile] Failed to load last viewed lesson:', error);

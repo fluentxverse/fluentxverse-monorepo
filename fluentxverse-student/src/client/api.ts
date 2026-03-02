@@ -21,12 +21,6 @@ api.interceptors.response.use(
 		const receivedAt = new Date().toISOString();
 		const totalMs = endTime - (meta.startTime || endTime);
 
-		// Console log for developers
-		// eslint-disable-next-line no-console
-		console.log(
-			`[API Timing] ${response.config.method?.toUpperCase()} ${response.config.url}, sent: ${meta.sentAt}, received: ${receivedAt}, total: ${totalMs.toFixed(0)} ms`
-		);
-
 		// Emit a browser event so UI can display the latest timing
 		if (typeof window !== 'undefined') {
 			window.dispatchEvent(

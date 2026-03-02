@@ -59,9 +59,7 @@ const HomePage = () => {
       
       try {
         setActivityLoading(true);
-        console.log('Fetching recent activity...');
         const data = await scheduleApi.getStudentActivity(50); // Get more items for pagination
-        console.log('Recent activity received:', data.length, 'items');
         setRecentActivity(data);
       } catch (err: any) {
         console.error('Failed to fetch recent activity:', err);

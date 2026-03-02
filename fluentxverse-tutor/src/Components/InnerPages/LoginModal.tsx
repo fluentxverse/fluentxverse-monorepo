@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'preact/hooks';
+import type { FunctionComponent, JSX } from 'preact';
 import './LoginModal.css';
 import { useAuthContext } from '../../context/AuthContext';
 import { useLocation } from 'wouter';
@@ -9,7 +10,7 @@ interface LoginModalProps {
   onClose: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
+const LoginModal: FunctionComponent<LoginModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +18,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: JSX.TargetedEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please enter both email and password.');
@@ -27,14 +28,11 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     setLoading(true);
     
     try {
-      console.log('Attempting login...');
       await login(email, password);
-      console.log('Login successful, navigating...');
       onClose();
       // Use client-side navigation instead of full page reload
       setLocation('/home');
     } catch (err: any) {
-      console.error('Login error:', err);
       setLoading(false);
       setError(err.message || 'Invalid credentials');
     }
@@ -53,7 +51,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           <div className="modal-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
         </div>
         <h2 className="modal-title">Login to Your Account</h2>
-        <p className="modal-subtitle">Unlock your farm’s secrets and log in to get growing!</p>
+        <p className="modal-subtitle">Welcome back! Log in to continue teaching.</p>
         <form className="modal-form" onSubmit={handleSubmit}>
           <input
             type="email"

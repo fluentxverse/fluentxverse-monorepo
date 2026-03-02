@@ -50,7 +50,6 @@ export default defineConfig({
 					'pages-profile': [
 						'./src/pages/StudentProfilePage.tsx',
 						'./src/pages/TutorProfilePage.tsx',
-						'./src/pages/StudentDashboard.tsx',
 					],
 					'pages-materials': [
 						'./src/pages/MaterialsPage.tsx',

@@ -37,7 +37,6 @@ export const useNotifications = () => {
         connectSocket();
         socketInitialized.current = true;
       } catch (error) {
-        console.warn('Socket already initialized');
       }
     }
 
@@ -45,23 +44,12 @@ export const useNotifications = () => {
     try {
       const socket = getSocket();
       
-      console.log('🔌 Socket connected, subscribing to notifications...');
-      console.log('🔌 Socket ID:', socket.id);
       
       // Subscribe to notification room
       socket.emit('notification:subscribe');
-      console.log('🔌 Notification subscription emitted');
 
       // Listen for new notifications
       socket.on('notification:new', (notification: Notification) => {
-        console.log('🔔 ============ NEW NOTIFICATION RECEIVED ============');
-        console.log('🔔 Notification ID:', notification.id);
-        console.log('🔔 Title:', notification.title);
-        console.log('🔔 Message:', notification.message);
-        console.log('🔔 Type:', notification.type);
-        console.log('🔔 Timestamp:', notification.timestamp);
-        console.log('🔔 Full notification object:', notification);
-        console.log('🔔 ===================================================');
         
         addNotification(notification);
         
@@ -76,8 +64,6 @@ export const useNotifications = () => {
 
       // Listen for notification list
       socket.on('notification:list', (data: { notifications: Notification[]; unreadCount: number }) => {
-        console.log('📋 Notification list received:', data.notifications.length, 'notifications');
-        console.log('📋 Unread count:', data.unreadCount);
         
         // Update store with initial data
         useNotificationStore.setState({
@@ -121,7 +107,6 @@ export const useNotifications = () => {
         socket.off('notification:delete');
       };
     } catch (error) {
-      console.warn('Socket not connected, falling back to HTTP');
       // Fallback to HTTP polling
       fetchNotifications();
     }

@@ -45,7 +45,6 @@ export const getTicketBalance = async (walletAddress: string): Promise<TicketBal
     const result = await response.json();
     
     if (result.success) {
-      console.log('[TicketService] Got balance from server:', result.data);
       return result.data;
     } else {
       console.error('[TicketService] Server error:', result.error);
@@ -97,11 +96,6 @@ export const transferTicketForBooking = async (account: Account, tier: TicketTie
     const tokenId = BigInt(tokenIdStr);
     const contract = getTicketContract();
 
-    console.log(`[TicketService] Transferring ${quantity} ${tier} ticket(s) to vault...`);
-    console.log(`[TicketService] From: ${account.address}`);
-    console.log(`[TicketService] To: ${VAULT_WALLET_ADDRESS}`);
-    console.log(`[TicketService] TokenId: ${tokenId}`);
-    console.log(`[TicketService] Available balance: ${availableBalance}`);
 
     // Create the transfer transaction
     const transaction = safeTransferFrom({
@@ -119,8 +113,6 @@ export const transferTicketForBooking = async (account: Account, tier: TicketTie
       transaction,
     });
 
-    console.log(`[TicketService] ✅ Transfer successful!`);
-    console.log(`[TicketService] Transaction hash: ${receipt.transactionHash}`);
 
     return {
       success: true,

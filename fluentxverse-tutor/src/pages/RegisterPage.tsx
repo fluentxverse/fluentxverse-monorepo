@@ -57,7 +57,6 @@ const RegisterPage = () => {
         mobileNumber: String(formData.mobile || '').trim(),
       };
       
-      console.log('[Register] Sending payload:', { ...payload, password: '***' });
       
       const result = await register(payload);
       

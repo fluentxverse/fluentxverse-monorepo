@@ -77,7 +77,6 @@ export const globalToast = {
     if (globalToastContext) {
       globalToastContext.showSuccess(message, duration);
     } else {
-      console.log('Toast (not mounted):', message);
     }
   },
   error: (message: string, duration?: number) => {
@@ -91,7 +90,6 @@ export const globalToast = {
     if (globalToastContext) {
       globalToastContext.showInfo(message, duration);
     } else {
-      console.log('Toast (not mounted):', message);
     }
   },
   warning: (message: string, duration?: number) => {
