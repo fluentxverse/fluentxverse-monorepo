@@ -1244,7 +1244,7 @@ function LessonAnalytics({
   lesson: LessonMaterial; 
   onClose: () => void;
 }) {
-  const skillColors: Record<Skill, string> = {
+  const skillColors: Record<string, string> = {
     speaking: '#3b82f6',
     listening: '#8b5cf6',
     reading: '#10b981',

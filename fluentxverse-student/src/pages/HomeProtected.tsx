@@ -3,7 +3,7 @@ import { useAuthContext } from '@/context/AuthContext';
 import HomePage from './HomePage';
 
 const HomeProtected = () => {
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, initialLoading: loading } = useAuthContext();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {

@@ -267,11 +267,11 @@ export const youngLearnersRoute = new Elysia({ prefix: '/young-learners' })
       
       try {
         const adminName = adminPayload.firstName || adminPayload.givenName || adminPayload.email || 'Admin';
-        const input: CreateYoungLearnersInput = {
+        const input = {
           ...body,
           createdBy: adminPayload.userId,
           createdByName: adminName,
-        };
+        } as CreateYoungLearnersInput;
         
         const lesson = await youngLearnersService.create(input);
         return { success: true, lesson };

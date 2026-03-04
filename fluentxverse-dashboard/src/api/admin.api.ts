@@ -336,7 +336,7 @@ export const adminApi = {
   async getStudents(params: {
     page?: number;
     limit?: number;
-    status?: 'all' | 'active' | 'inactive';
+    status?: 'all' | 'active' | 'inactive' | 'suspended';
     search?: string;
   }): Promise<{ students: StudentListItem[]; total: number }> {
     const response = await api.get<ApiResponse<{ students: StudentListItem[]; total: number }>>('/admin/students', {

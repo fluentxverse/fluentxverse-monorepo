@@ -826,11 +826,11 @@ class StudentService {
         { studentId }
       );
 
-      if (result.records.length === 0 || !result.records[0].get('courseId')) {
+      if (result.records.length === 0 || !result.records[0]?.get('courseId')) {
         return { success: true, data: null };
       }
 
-      const record = result.records[0];
+      const record = result.records[0]!;
       const lessonData = {
         courseId: record.get('courseId'),
         lessonId: record.get('lessonId'),

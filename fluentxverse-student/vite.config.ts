@@ -64,6 +64,26 @@ export default defineConfig({
 						'./src/pages/PurchaseHistoryPage.tsx',
 						'./src/pages/TicketsPage.tsx',
 					],
+					'pages-daily-dispatch': [
+						'./src/pages/DailyDispatchPage.tsx',
+						'./src/pages/DailyDispatchArticlePage.tsx',
+						'./src/pages/DailyDispatchArchivePage.tsx',
+					],
+					'pages-young-learners': [
+						'./src/pages/YoungLearnersPage.tsx',
+						'./src/pages/YoungLearnersLessonPage.tsx',
+					],
+					'pages-conversational': [
+						'./src/pages/ConversationalSkillsLessonPage.tsx',
+					],
+					'pages-misc': [
+						'./src/pages/HomeProtected.tsx',
+						'./src/pages/InboxPage.tsx',
+						'./src/pages/ContactPage.tsx',
+						'./src/pages/PrivacyPolicy.tsx',
+						'./src/pages/TermsOfService.tsx',
+						'./src/pages/NotFoundPage.tsx',
+					],
 				},
 			},
 		},

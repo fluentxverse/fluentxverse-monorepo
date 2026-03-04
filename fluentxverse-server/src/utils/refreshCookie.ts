@@ -1,19 +1,26 @@
 import type { Cookie } from 'elysia';
 import type { AuthData } from '@/services/auth.services/auth.interface';
-import { verifyAuthToken } from './jwt';
+import { verifyAuthToken, getCookieConfig, type JwtAuthPayload } from './jwt';
+
+export interface CookieAuthPayload extends JwtAuthPayload {
+  sub: string;
+  userId: string;
+  role: string;
+  name?: string;
+}
 
 /**
  * Get auth data from cookie (supports both tutor and student auth)
  * Returns the decoded JWT payload or null if not authenticated
  */
-export async function getAuthFromCookie(cookie: Record<string, Cookie<any>>): Promise<{ sub?: string; userId?: string; role?: string } | null> {
+export async function getAuthFromCookie(cookie: Record<string, Cookie<any>>): Promise<CookieAuthPayload | null> {
   try {
     // Try tutorAuth first
     const tutorAuth = cookie.tutorAuth?.value;
     if (tutorAuth) {
       const decoded = await verifyAuthToken(typeof tutorAuth === 'string' ? tutorAuth : String(tutorAuth));
       if (decoded?.userId) {
-        return { sub: decoded.userId, userId: decoded.userId, role: 'tutor' };
+        return { ...decoded, sub: decoded.userId, userId: decoded.userId, role: 'tutor', name: decoded.firstName || decoded.givenName || decoded.email };
       }
     }
 
@@ -22,7 +29,7 @@ export async function getAuthFromCookie(cookie: Record<string, Cookie<any>>): Pr
     if (studentAuth) {
       const decoded = await verifyAuthToken(typeof studentAuth === 'string' ? studentAuth : String(studentAuth));
       if (decoded?.userId) {
-        return { sub: decoded.userId, userId: decoded.userId, role: 'student' };
+        return { ...decoded, sub: decoded.userId, userId: decoded.userId, role: 'student', name: decoded.firstName || decoded.givenName || decoded.email };
       }
     }
 
@@ -31,7 +38,7 @@ export async function getAuthFromCookie(cookie: Record<string, Cookie<any>>): Pr
     if (adminAuth) {
       const decoded = await verifyAuthToken(typeof adminAuth === 'string' ? adminAuth : String(adminAuth));
       if (decoded?.userId) {
-        return { sub: decoded.userId, userId: decoded.userId, role: 'admin' };
+        return { ...decoded, sub: decoded.userId, userId: decoded.userId, role: 'admin', name: decoded.firstName || decoded.givenName || decoded.email };
       }
     }
 
@@ -64,10 +71,6 @@ export function refreshAuthCookie(cookie: Record<string, Cookie<any>>, authData:
       tier: authData.tier,
       role: authData.role
     }),
-    httpOnly: true,
-    secure: isProduction, // true for HTTPS in production
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 60 * 60, // 1 hour in seconds
-    path: '/'
+    ...getCookieConfig(isProduction),
   });
 }

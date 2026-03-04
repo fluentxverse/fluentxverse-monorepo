@@ -21,28 +21,54 @@ export interface JwtAuthPayload {
   tier?: number;
   role?: string;
   // JWT standard claims
-  iat?: number;  // Issued at
-  exp?: number;  // Expiration
+  sub?: string;   // Subject (often same as userId)
+  name?: string;  // Display name
+  iat?: number;   // Issued at
+  exp?: number;   // Expiration
 }
+
+/**
+ * Detect if the server is running on localhost based on API_PUBLIC_URL.
+ * This allows NODE_ENV=production in Docker while still using correct
+ * cookie settings for local development (no Secure flag, no domain).
+ */
+const isLocalhost = (): boolean => {
+  const apiUrl = process.env.API_PUBLIC_URL || '';
+  return apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1');
+};
 
 // Get cookie domain for production (allows sharing across subdomains)
 const getCookieDomain = (): string | undefined => {
+  // Never set domain for localhost — browser rejects cookies with mismatched domain
+  if (isLocalhost()) return undefined;
+  
   const isProduction = process.env.NODE_ENV === 'production';
-  if (!isProduction) return undefined; // localhost doesn't need domain
+  if (!isProduction) return undefined;
   
   // Use environment variable if set, otherwise default to .fluentxverse.xyz
   return process.env.COOKIE_DOMAIN || '.fluentxverse.xyz';
 };
 
-// Cookie configuration helper
-export const getCookieConfig = (isProduction: boolean) => ({
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? 'none' as const : 'lax' as const,
-  maxAge: 60 * 60, // 1 hour
-  path: '/',
-  domain: getCookieDomain()
-});
+/**
+ * Cookie configuration helper.
+ * Uses API_PUBLIC_URL to decide whether to enable Secure/SameSite=None,
+ * so it works correctly for both local Docker (http://localhost) and
+ * deployed production (https://api.fluentxverse.xyz).
+ */
+export const getCookieConfig = (isProduction: boolean) => {
+  // On localhost, always use development-safe cookie settings
+  // even if NODE_ENV=production (common in Docker setups)
+  const useSecureCookies = isProduction && !isLocalhost();
+  
+  return {
+    httpOnly: true,
+    secure: useSecureCookies,
+    sameSite: useSecureCookies ? 'none' as const : 'lax' as const,
+    maxAge: 60 * 60, // 1 hour
+    path: '/',
+    domain: getCookieDomain()
+  };
+};
 
 // Get JWT secret from environment (with strict validation)
 const getJwtSecret = (): string => {

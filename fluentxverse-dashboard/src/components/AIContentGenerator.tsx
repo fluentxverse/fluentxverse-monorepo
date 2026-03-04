@@ -4,6 +4,7 @@
  */
 import { useState, useEffect } from 'preact/hooks';
 import { generateIntroductionContent, generateEpisodeSummary, type IntroText, type LessonIssue, type LessonGoalStep } from '../api/ai.api';
+import type { Skill } from '../api/lessonMaterial.api';
 import '../styles/AIContentGenerator.css';
 
 export interface IntroductionData {
@@ -37,7 +38,7 @@ const SECTIONS: SectionConfig[] = [
 interface AIContentGeneratorProps {
   topic: string;
   skillLevel: string;
-  skill: 'speaking' | 'listening' | 'reading';
+  skill: Skill;
   currentIntroductionData?: IntroductionData | null;
   onGenerateIntroduction: (data: IntroductionData) => void;
   onGenerateLearn?: (data: any) => void;

@@ -1101,7 +1101,7 @@ function getDisplayName(auth: JwtAuthPayload): string | undefined {
  * Images are uploaded to SeaweedFS and URLs are inserted back into the data
  */
 async function processUploadedImages(
-  form: FormData, 
+  form: any, 
   lessonData: any, 
   basePath: string
 ): Promise<{ lessonData: any; uploadedCount: number }> {
@@ -2428,13 +2428,9 @@ export default new Elysia({ prefix: '/lesson' })
       
       const result = await lessonService.searchLessons({
         query: q,
-        status,
-        authorId,
-        language,
-        level,
-        isTemplate: isTemplate === 'true',
-        isFork: isFork === 'true',
-        sortBy: sortBy || 'created_at',
+        status: status as 'draft' | 'finished' | 'published' | 'archived' | undefined,
+        createdBy: authorId,
+        sortBy: (sortBy as 'created' | 'updated' | 'title') || 'updated',
         sortOrder: (sortOrder as 'asc' | 'desc') || 'desc',
         limit: limit ? parseInt(limit) : 20,
         offset: offset ? parseInt(offset) : 0
@@ -2468,26 +2464,25 @@ export default new Elysia({ prefix: '/lesson' })
       
       for (const lessonId of lessonIds) {
         try {
-          let result;
           switch (action) {
             case 'publish':
-              result = await lessonService.publishLesson(lessonId, auth.sub);
+              await lessonService.publishLesson(lessonId, auth.sub);
               break;
             case 'unpublish':
-              result = await lessonService.unpublishLesson(lessonId, auth.sub);
+              await lessonService.unpublishLesson(lessonId, auth.sub);
               break;
             case 'archive':
-              result = await lessonService.archiveLesson(lessonId, auth.sub);
+              await lessonService.archiveLesson(lessonId, auth.sub);
               break;
             case 'delete':
-              result = await lessonService.deleteLesson(lessonId);
+              await lessonService.deleteLesson(lessonId, auth.sub);
               break;
             default:
-              result = { success: false, error: 'Unknown action' };
+              throw new Error('Unknown action');
           }
-          results.push({ lessonId, success: result.success, error: result.error });
+          results.push({ lessonId, success: true });
         } catch (err) {
-          results.push({ lessonId, success: false, error: 'Operation failed' });
+          results.push({ lessonId, success: false, error: err instanceof Error ? err.message : 'Operation failed' });
         }
       }
       

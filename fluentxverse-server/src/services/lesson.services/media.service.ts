@@ -111,7 +111,7 @@ class LessonMediaService {
       }
 
       // SECURITY: Validate file size
-      const maxSize = this.MAX_FILE_SIZES[metadata.type];
+      const maxSize = this.MAX_FILE_SIZES[metadata.type] ?? 5 * 1024 * 1024; // default 5MB
       if (file.size > maxSize) {
         return { 
           success: false, 

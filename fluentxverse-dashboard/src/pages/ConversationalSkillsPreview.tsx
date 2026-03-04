@@ -244,6 +244,7 @@ interface ApplyTutorStep {
   scripts?: TutorScriptBullet[];
   tips?: TutorTipItem[];
   questions?: TutorQuestion[];
+  prompts?: { text: string }[];
   listeningScript?: string; // Rich text HTML for listening script
 }
 
@@ -251,6 +252,7 @@ interface TriviaTutorStep {
   instruction: string;
   scripts?: TutorScriptBullet[];
   questions?: TutorQuestion[];
+  prompts?: { text: string }[];
 }
 
 interface ApplySectionData {
@@ -294,6 +296,7 @@ interface ExerciseTutorStep {
   scripts?: TutorScriptBullet[];
   tips?: TutorTipItem[];
   answerKey?: TutorAnswerKeyItem[];
+  prompts?: { text: string }[];
 }
 
 interface ExerciseConversation {
@@ -520,7 +523,7 @@ export default function ConversationalSkillsPreview() {
   const { params } = useRoute();
   const [lesson, setLesson] = useState<LessonMaterial | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>('');
   const [previewOverrides, setPreviewOverrides] = useState<{
     backgroundImage?: string;
     overlayColor?: string;

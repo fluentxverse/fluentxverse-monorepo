@@ -598,7 +598,7 @@ const ApplicationsPage = () => {
                       {profile.schoolAttended && (
                         <span className="preview-badge has"><i className="ri-graduation-cap-line"></i> Education</span>
                       )}
-                      {profile.interests?.length > 0 && (
+                      {(profile.interests?.length ?? 0) > 0 && (
                         <span className="preview-badge has"><i className="ri-heart-line"></i> Interests</span>
                       )}
                     </div>
@@ -1018,7 +1018,7 @@ const ApplicationsPage = () => {
                     <p className="missing">Not provided</p>
                   )}
                 </div>
-                {showProfileModal.profileItemStatuses?.interests?.status !== 'approved' && showProfileModal.interests?.length > 0 && (
+                {showProfileModal.profileItemStatuses?.interests?.status !== 'approved' && (showProfileModal.interests?.length ?? 0) > 0 && (
                   <div className="item-actions">
                     <input 
                       type="text" 

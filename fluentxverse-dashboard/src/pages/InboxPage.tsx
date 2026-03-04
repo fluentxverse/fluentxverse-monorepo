@@ -4,7 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import './InboxPage.css';
 
 const InboxPage = () => {
-  const { admin } = useAuthContext();
+  const { user: admin } = useAuthContext();
   const [messages, setMessages] = useState<SystemMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -93,7 +93,7 @@ const InboxPage = () => {
       } else {
         await adminApi.createSystemMessage({
           ...formData,
-          createdBy: admin?.id || 'admin'
+          createdBy: admin?.userId || 'admin'
         });
         setSuccessMessage('Message sent successfully');
       }

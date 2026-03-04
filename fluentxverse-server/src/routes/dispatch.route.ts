@@ -3,7 +3,7 @@
  * API endpoints for managing Daily Dispatch articles (Memgraph :DispatchArticle)
  */
 import { Elysia, t } from 'elysia';
-import { dispatchService } from '../services/dispatch.services/dispatch.service';
+import { dispatchService, type CreateDispatchInput } from '../services/dispatch.services/dispatch.service';
 import { createAdminGuard, createAnyAuthGuard } from '../middleware/auth.middleware';
 
 export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
@@ -235,7 +235,7 @@ export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
       }
       
       try {
-        const article = await dispatchService.update(params.id, body);
+        const article = await dispatchService.update(params.id, body as Partial<CreateDispatchInput>);
         if (!article) {
           set.status = 404;
           return { success: false, error: 'Article not found' };

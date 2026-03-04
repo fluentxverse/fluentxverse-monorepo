@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business English Visual Editor — Design V2 Preview</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ================================================================
+   BUSINESS ENGLISH VISUAL EDITOR — DESIGN V2
+   "Glassmorphism Editorial" — Midnight Blue + Indigo + Emerald
+   ================================================================ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* ── Base Palette ── */
+  --base-deepest:    #06080f;
+  --base-deep:       #0a0e1a;
+  --base-dark:       #0f1424;
+  --base-mid:        #151b2e;
+  --base-surface:    #1a2138;
+  --base-elevated:   #1f2842;
+
+  /* ── Accent: Indigo ── */
+  --indigo-50:  #eef2ff;
+  --indigo-100: #e0e7ff;
+  --indigo-200: #c7d2fe;
+  --indigo-300: #a5b4fc;
+  --indigo-400: #818cf8;
+  --indigo-500: #6366f1;
+  --indigo-600: #4f46e5;
+  --indigo-700: #4338ca;
+  --indigo-900: #312e81;
+
+  /* ── Accent: Emerald ── */
+  --emerald-300: #6ee7b7;
+  --emerald-400: #34d399;
+  --emerald-500: #10b981;
+
+  /* ── Accent: Amber ── */
+  --amber-300: #fcd34d;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+
+  /* ── Accent: Rose ── */
+  --rose-400: #fb7185;
+  --rose-500: #f43f5e;
+
+  /* ── Accent: Sky ── */
+  --sky-300: #7dd3fc;
+  --sky-400: #38bdf8;
+
+  /* ── Text ── */
+  --text-primary:   #e2e8f0;
+  --text-secondary:  #94a3b8;
+  --text-tertiary:   #64748b;
+  --text-muted:      #475569;
+
+  /* ── Glass effect ── */
+  --glass-bg:        rgba(15, 20, 36, .55);
+  --glass-border:    rgba(99, 102, 241, .12);
+  --glass-blur:      16px;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--base-deepest);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Animated mesh background ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 10%, rgba(99, 102, 241, .08) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 80%, rgba(16, 185, 129, .06) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(99, 102, 241, .03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, .22);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, .38); }
+
+/* ================================================================
+   SHELL
+   ================================================================ */
+.editor-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ================================================================
+   TOP BAR
+   ================================================================ */
+.topbar {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 20px;
+  background: rgba(10, 14, 26, .82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(99, 102, 241, .1);
+  flex-shrink: 0;
+  gap: 12px;
+  position: relative;
+  z-index: 10;
+}
+.topbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, var(--indigo-500) 50%, transparent 95%);
+  opacity: .35;
+}
+
+.topbar-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid rgba(99, 102, 241, .15);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: .2s;
+}
+.topbar-back:hover {
+  background: rgba(99, 102, 241, .08);
+  color: var(--indigo-300);
+  border-color: rgba(99, 102, 241, .3);
+}
+.topbar-back i { font-size: 15px; }
+
+.topbar-sep {
+  width: 1px;
+  height: 24px;
+  background: rgba(99, 102, 241, .12);
+  margin: 0 4px;
+}
+
+.topbar-level {
+  background: linear-gradient(135deg, var(--indigo-600), var(--indigo-700));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.topbar-spacer { flex: 1; }
+
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: .5px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.topbar-center i { color: var(--indigo-400); font-size: 14px; }
+
+.topbar-save-status {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.topbar-save-status.saved { color: var(--emerald-400); }
+
+.topbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--indigo-500), var(--indigo-600));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, .25);
+}
+.topbar-btn:hover {
+  background: linear-gradient(135deg, var(--indigo-400), var(--indigo-500));
+  box-shadow: 0 4px 16px rgba(99, 102, 241, .35);
+  transform: translateY(-1px);
+}
+
+/* ================================================================
+   PAGE TABS (replaces sidebar — horizontal tab strip)
+   ================================================================ */
+.page-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 20px;
+  background: rgba(10, 14, 26, .6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(99, 102, 241, .08);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.page-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: .2s;
+  white-space: nowrap;
+  position: relative;
+}
+.page-tab:hover {
+  background: rgba(99, 102, 241, .06);
+  color: var(--text-secondary);
+}
+.page-tab.active {
+  background: rgba(99, 102, 241, .1);
+  color: var(--indigo-300);
+  font-weight: 600;
+}
+.page-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 16px;
+  right: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--indigo-400), var(--indigo-500));
+  box-shadow: 0 0 8px rgba(99, 102, 241, .4);
+}
+
+.page-tab-num {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(99, 102, 241, .08);
+  color: var(--text-muted);
+  transition: .2s;
+}
+.page-tab.active .page-tab-num {
+  background: linear-gradient(135deg, var(--indigo-500), var(--indigo-600));
+  color: #fff;
+  box-shadow: 0 0 8px rgba(99, 102, 241, .3);
+}
+
+/* ================================================================
+   CANVAS — scrollable area for all pages
+   ================================================================ */
+.canvas {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* ================================================================
+   PAGE CARD — glass panel
+   ================================================================ */
+.page-card {
+  width: 100%;
+  max-width: 1160px;
+  background: rgba(15, 20, 36, .65);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, .2),
+    0 0 0 1px rgba(99, 102, 241, .05),
+    inset 0 1px 0 rgba(255, 255, 255, .03);
+  transition: box-shadow .3s, border-color .3s;
+  scroll-margin-top: 32px;
+}
+.page-card:hover {
+  border-color: rgba(99, 102, 241, .18);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, .2),
+    0 0 40px rgba(99, 102, 241, .06),
+    inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+
+/* ── Page Header ── */
+.pg-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 28px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, .06), rgba(16, 185, 129, .03));
+  border-bottom: 1px solid rgba(99, 102, 241, .1);
+  position: relative;
+}
+.pg-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 10%, rgba(99, 102, 241, .2) 50%, transparent 90%);
+}
+
+.pg-header-left { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+
+.pg-header-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.pg-level-number {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--indigo-300), var(--indigo-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(99, 102, 241, .2));
+}
+
+.pg-header-lesson {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pg-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.pg-skill-pill {
+  background: linear-gradient(135deg, var(--indigo-600), var(--indigo-700));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, .2);
+}
+
+.pg-page-num {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Two Column Layout ── */
+.pg-columns {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  min-height: 480px;
+}
+
+.col-main {
+  padding: 28px 32px;
+}
+
+.col-notes {
+  padding: 24px 20px;
+  background: rgba(10, 14, 26, .4);
+  border-left: 1px solid rgba(99, 102, 241, .08);
+  position: relative;
+}
+.col-notes::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -1px; width: 1px; bottom: 0;
+  background: linear-gradient(180deg, var(--indigo-500) 0%, transparent 100%);
+  opacity: .15;
+}
+
+/* ── Section Label ── */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.section-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--indigo-500), var(--indigo-600));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, .3);
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -.3px;
+}
+
+/* ── Sub heading ── */
+.sub-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 24px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(99, 102, 241, .1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sub-heading i { color: var(--indigo-400); font-size: 15px; }
+.sub-heading .jp { font-size: 12px; font-weight: 400; color: var(--text-tertiary); }
+
+/* ── Editable field ── */
+.editable {
+  position: relative;
+  border: 1px dashed transparent;
+  border-radius: var(--radius-sm);
+  padding: 3px 6px;
+  margin: -3px -6px;
+  transition: .2s;
+  cursor: text;
+  min-height: 1.5em;
+}
+.editable:hover {
+  border-color: rgba(99, 102, 241, .25);
+  background: rgba(99, 102, 241, .03);
+}
+.editable:focus {
+  outline: none;
+  border-color: var(--indigo-500);
+  background: rgba(99, 102, 241, .06);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, .1), 0 0 16px rgba(99, 102, 241, .04);
+}
+
+/* ── Goal Box ── */
+.goal-box {
+  background: linear-gradient(135deg, rgba(99, 102, 241, .08), rgba(99, 102, 241, .03));
+  border: 1px solid rgba(99, 102, 241, .15);
+  border-left: 4px solid var(--indigo-500);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.goal-box::after {
+  content: '';
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, .08), transparent);
+}
+
+.goal-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--indigo-400);
+  margin-bottom: 10px;
+}
+.goal-label i { font-size: 13px; }
+
+.goal-en {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.goal-jp {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+/* ── Situation Box ── */
+.situation-box {
+  background: rgba(255, 255, 255, .015);
+  border: 1px solid rgba(99, 102, 241, .1);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.situation-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.situation-label i { color: var(--indigo-400); }
+
+.situation-en {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.situation-jp {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+/* ── Pattern Cards ── */
+.patterns-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pattern-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: rgba(255, 255, 255, .02);
+  border: 1px solid rgba(99, 102, 241, .1);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  transition: .2s;
+  position: relative;
+}
+.pattern-card:hover {
+  border-color: rgba(99, 102, 241, .25);
+  background: rgba(99, 102, 241, .04);
+  transform: translateX(2px);
+}
+.pattern-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 25%; bottom: 25%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, var(--indigo-400), var(--indigo-600));
+  opacity: 0;
+  transition: .2s;
+}
+.pattern-card:hover::before { opacity: 1; }
+
+.pattern-en {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.pattern-jp {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+}
+
+/* ── Vocab Table ── */
+.vocab-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 20px;
+  border: 1px solid rgba(99, 102, 241, .1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.vocab-table th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--indigo-300);
+  text-align: left;
+  padding: 12px 14px;
+  background: rgba(99, 102, 241, .06);
+  border-bottom: 1px solid rgba(99, 102, 241, .12);
+}
+.vocab-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, .03);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.vocab-table tr:last-child td { border-bottom: none; }
+.vocab-table tr:hover td { background: rgba(99, 102, 241, .03); }
+.vocab-table .word {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.vocab-table .pos {
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.vocab-table .trans { color: var(--text-tertiary); }
+
+/* ── Pronunciation Box ── */
+.pronun-box {
+  background: rgba(99, 102, 241, .04);
+  border: 1px solid rgba(99, 102, 241, .12);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+
+.pronun-instruction {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.pronun-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.pronun-col { text-align: center; }
+
+.pronun-symbol {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--indigo-300), var(--indigo-500));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, .15));
+}
+
+.pronun-word-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 14px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+}
+.pronun-word-row:nth-child(odd) { background: rgba(99, 102, 241, .04); }
+.pronun-jp { color: var(--text-muted); font-size: 12px; }
+
+/* ── Practice Steps (timeline) ── */
+.practice-timeline {
+  position: relative;
+  padding-left: 24px;
+}
+.practice-timeline::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--indigo-500), rgba(99, 102, 241, .1));
+  border-radius: 1px;
+}
+
+.step-card {
+  position: relative;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, .02);
+  border: 1px solid rgba(99, 102, 241, .1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: .2s;
+}
+.step-card:hover {
+  border-color: rgba(99, 102, 241, .22);
+  box-shadow: 0 0 20px rgba(99, 102, 241, .04);
+}
+
+.step-dot {
+  position: absolute;
+  left: -24px;
+  top: 14px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo-500), var(--indigo-600));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--base-dark), 0 2px 8px rgba(99, 102, 241, .3);
+  z-index: 2;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, .06), transparent);
+  border-bottom: 1px solid rgba(99, 102, 241, .08);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.step-body {
+  padding: 16px 20px;
+}
+
+.step-instruction {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 10px 14px;
+  background: rgba(99, 102, 241, .04);
+  border-left: 3px solid var(--indigo-500);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 14px;
+}
+
+.step-instruction-jp {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-style: normal;
+}
+
+/* ── Dialogue ── */
+.dialogue {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dl-line {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.dl-line.tutor {
+  background: linear-gradient(135deg, rgba(99, 102, 241, .08), rgba(99, 102, 241, .03));
+  border: 1px solid rgba(99, 102, 241, .1);
+}
+.dl-line.student {
+  background: rgba(255, 255, 255, .025);
+  border: 1px solid rgba(255, 255, 255, .05);
+}
+
+.dl-role {
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 58px;
+  font-size: 12px;
+  letter-spacing: .3px;
+}
+.dl-line.tutor .dl-role { color: var(--indigo-400); }
+.dl-line.student .dl-role { color: var(--emerald-400); }
+
+.dl-text { flex: 1; color: var(--text-secondary); }
+.dl-text-jp { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Challenge Box ── */
+.challenge-box {
+  background: linear-gradient(135deg, rgba(99, 102, 241, .07), rgba(16, 185, 129, .04));
+  border: 1px solid rgba(99, 102, 241, .2);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.challenge-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--indigo-500), var(--emerald-400), var(--indigo-500));
+  background-size: 200% 100%;
+  animation: shimmer 4s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.challenge-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--indigo-300);
+  margin-bottom: 12px;
+}
+.challenge-title i { font-size: 18px; }
+
+.challenge-scenario {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.challenge-scenario-jp {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
+
+/* ── Roleplay Table ── */
+.roleplay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+.roleplay-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--indigo-400);
+  margin-bottom: 6px;
+}
+.roleplay-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+
+/* ── Discussion Category Cards ── */
+.discussion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.disc-cat {
+  background: rgba(255, 255, 255, .02);
+  border: 1px solid rgba(99, 102, 241, .1);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px;
+  transition: .2s;
+  position: relative;
+  overflow: hidden;
+}
+.disc-cat:hover {
+  border-color: rgba(99, 102, 241, .25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .15);
+}
+.disc-cat::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--indigo-400), var(--indigo-600));
+  opacity: 0;
+  transition: .2s;
+}
+.disc-cat:hover::before { opacity: 1; }
+
+.disc-cat-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--indigo-300);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.disc-q {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  padding: 3px 0 3px 18px;
+  position: relative;
+}
+.disc-q-num {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: var(--indigo-500);
+  font-size: 12px;
+}
+
+/* ── Feedback Template ── */
+.feedback-template {
+  background: rgba(0, 0, 0, .2);
+  border: 1px solid rgba(99, 102, 241, .1);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+/* ── Next Lesson ── */
+.next-lesson {
+  background: linear-gradient(135deg, rgba(99, 102, 241, .06), rgba(16, 185, 129, .04));
+  border: 1px solid rgba(99, 102, 241, .12);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  transition: .2s;
+}
+.next-lesson:hover {
+  border-color: rgba(99, 102, 241, .25);
+  background: linear-gradient(135deg, rgba(99, 102, 241, .08), rgba(16, 185, 129, .06));
+}
+.next-lesson i {
+  color: var(--emerald-400);
+  font-size: 22px;
+}
+.next-lesson strong { color: var(--text-primary); }
+.next-lesson-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* ── Hint Box ── */
+.hint-box {
+  background: linear-gradient(135deg, rgba(99, 102, 241, .05), rgba(16, 185, 129, .03));
+  border: 1px solid rgba(99, 102, 241, .15);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-top: 18px;
+}
+.hint-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--indigo-400);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hint-label i { font-size: 13px; }
+.hint-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 13px;
+  padding: 5px 0;
+}
+.hint-en { font-weight: 600; color: var(--text-primary); }
+.hint-jp { color: var(--text-muted); }
+
+/* ── Tutor Notes Panel ── */
+.notes-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--indigo-300);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(99, 102, 241, .15);
+}
+.notes-title i { font-size: 13px; }
+
+.note-card {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, .025);
+  border: 1px solid rgba(99, 102, 241, .08);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  transition: .15s;
+}
+.note-card:hover {
+  border-color: rgba(99, 102, 241, .2);
+  background: rgba(99, 102, 241, .03);
+}
+
+.note-card.script {
+  border-left: 3px solid var(--indigo-500);
+  font-style: italic;
+  color: var(--indigo-200);
+}
+.note-card.instruction {
+  border-left: 3px solid var(--indigo-300);
+}
+.note-card.tip {
+  border-left: 3px solid var(--amber-400);
+  background: rgba(245, 158, 11, .04);
+}
+
+.note-type {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.note-card.script .note-type { color: var(--indigo-500); }
+.note-card.instruction .note-type { color: var(--indigo-300); }
+.note-card.tip .note-type { color: var(--amber-400); }
+
+.note-step-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--indigo-400);
+  margin-bottom: 6px;
+  margin-top: 6px;
+}
+
+.add-btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 8px;
+  border: 1px dashed rgba(99, 102, 241, .15);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: .2s;
+  margin-top: 6px;
+}
+.add-btn-outline:hover {
+  border-color: rgba(99, 102, 241, .35);
+  color: var(--indigo-300);
+  background: rgba(99, 102, 241, .04);
+}
+
+/* ── Guide Questions ── */
+.guide-q-list { display: flex; flex-direction: column; gap: 6px; }
+.guide-q {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, .025);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(99, 102, 241, .08);
+}
+.guide-q-num {
+  font-weight: 700;
+  color: var(--indigo-400);
+  margin-right: 6px;
+}
+
+/* ── Page Footer ── */
+.pg-footer {
+  padding: 12px 28px;
+  border-top: 1px solid rgba(99, 102, 241, .08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, .1);
+}
+.pg-footer-brand {
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--indigo-300), var(--emerald-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Add Button (full width dashed) ── */
+.add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed rgba(99, 102, 241, .12);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: .2s;
+}
+.add-btn:hover {
+  border-color: rgba(99, 102, 241, .3);
+  color: var(--indigo-300);
+  background: rgba(99, 102, 241, .03);
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .pg-columns { grid-template-columns: 1fr; }
+  .col-notes { border-left: none; border-top: 1px solid rgba(99, 102, 241, .08); }
+  .discussion-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Preview Banner ── */
+.preview-ribbon {
+  position: fixed;
+  top: 12px;
+  right: -38px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, var(--emerald-500), var(--emerald-400));
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 50px;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, .3);
+}
+</style>
+</head>
+<body>
+
+<div class="preview-ribbon">PREVIEW</div>
+
+<div class="editor-shell">
+
+  <!-- ════════════════════════════════════════
+       TOP BAR
+       ════════════════════════════════════════ -->
+  <div class="topbar">
+    <button class="topbar-back"><i class="ri-arrow-left-s-line"></i> Back</button>
+    <div class="topbar-sep"></div>
+    <span class="topbar-level">Beginner</span>
+    <span class="topbar-title">Lesson 1: Work Introductions</span>
+    <div class="topbar-center"><i class="ri-edit-2-line"></i> Business English Editor</div>
+    <div class="topbar-spacer"></div>
+    <span class="topbar-save-status saved">✓ Saved</span>
+    <button class="topbar-btn"><i class="ri-save-line"></i> Save</button>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       PAGE TABS (horizontal strip)
+       ════════════════════════════════════════ -->
+  <div class="page-tabs">
+    <button class="page-tab active">
+      <span class="page-tab-num">1</span> Introduce + Present
+    </button>
+    <button class="page-tab">
+      <span class="page-tab-num">2</span> Understand + Vocab
+    </button>
+    <button class="page-tab">
+      <span class="page-tab-num">3</span> Practice 1-2
+    </button>
+    <button class="page-tab">
+      <span class="page-tab-num">4</span> Practice 3-4
+    </button>
+    <button class="page-tab">
+      <span class="page-tab-num">5</span> Challenge
+    </button>
+    <button class="page-tab">
+      <span class="page-tab-num">6</span> Discussion
+    </button>
+    <button class="page-tab">
+      <span class="page-tab-num">7</span> Feedback
+    </button>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       CANVAS
+       ════════════════════════════════════════ -->
+  <div class="canvas">
+
+    <!-- ──────────────── PAGE 1 ──────────────── -->
+    <div class="page-card" id="page1">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 1</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <!-- ① Introduce -->
+          <div class="section-label">
+            <span class="section-num">1</span>
+            <span class="section-title">Introduce</span>
+          </div>
+
+          <div class="goal-box">
+            <div class="goal-label"><i class="ri-focus-3-line"></i> Lesson Goal</div>
+            <div class="goal-en editable" contenteditable>Can introduce yourself and your coworker.</div>
+            <div class="goal-jp editable" contenteditable>自己紹介と同僚の紹介ができるようになる。</div>
+          </div>
+
+          <div class="situation-box">
+            <div class="situation-label"><i class="ri-briefcase-line"></i> Situation and Task</div>
+            <div class="situation-en editable" contenteditable>You have a new coworker. Introduce yourself and your coworker to this person using the patterns below.</div>
+            <div class="situation-jp editable" contenteditable>新しい同僚がいます。以下のパターンを使って自己紹介と同僚の紹介をしましょう。</div>
+          </div>
+
+          <!-- ② Present -->
+          <div class="section-label" style="margin-top: 28px;">
+            <span class="section-num">2</span>
+            <span class="section-title">Present</span>
+          </div>
+
+          <div class="sub-heading"><i class="ri-lightbulb-flash-line"></i> Useful Patterns <span class="jp">よく使うパターン</span></div>
+
+          <div class="patterns-grid">
+            <div class="pattern-card">
+              <span class="pattern-en editable" contenteditable>My name is John.</span>
+              <span class="pattern-jp editable" contenteditable>私の名前はジョンです。</span>
+            </div>
+            <div class="pattern-card">
+              <span class="pattern-en editable" contenteditable>This is Andrew.</span>
+              <span class="pattern-jp editable" contenteditable>こちらが、アンドリューです。</span>
+            </div>
+            <div class="pattern-card">
+              <span class="pattern-en editable" contenteditable>We are coworkers.</span>
+              <span class="pattern-jp editable" contenteditable>私たちは同僚です。</span>
+            </div>
+            <button class="add-btn"><i class="ri-add-line"></i> Add Pattern</button>
+          </div>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Let's start with the lesson goal. Please read the goal for today."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Ask the student to read the goal. Correct pronunciation if needed.
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Let's look at patterns used in introducing yourself and your coworker."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Read the first pattern. Ask the student to repeat.
+          </div>
+          <div class="note-card tip">
+            <div class="note-type">Tip</div>
+            For lower-level students, give simple definitions.
+          </div>
+
+          <div style="display: flex; gap: 4px; margin-top: 10px;">
+            <button class="add-btn-outline"><i class="ri-add-line"></i> Instruction</button>
+            <button class="add-btn-outline"><i class="ri-add-line"></i> Script</button>
+            <button class="add-btn-outline"><i class="ri-add-line"></i> Tip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── PAGE 2 ──────────────── -->
+    <div class="page-card" id="page2">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 2</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <!-- ③ Understand -->
+          <div class="section-label">
+            <span class="section-num">3</span>
+            <span class="section-title">Understand</span>
+          </div>
+
+          <div class="situation-box">
+            <div class="situation-en editable" contenteditable>You can use these patterns to introduce yourself and a coworker.</div>
+            <div class="situation-jp editable" contenteditable>自己紹介や同僚を紹介する際、以下のパターンを使います。</div>
+          </div>
+
+          <div class="patterns-grid">
+            <div class="pattern-card">
+              <span class="pattern-en">My name is John.</span>
+              <span class="pattern-jp">私の名前はジョンです。</span>
+            </div>
+            <div class="pattern-card">
+              <span class="pattern-en">This is Andrew.</span>
+              <span class="pattern-jp">こちらが、アンドリューです。</span>
+            </div>
+            <div class="pattern-card">
+              <span class="pattern-en">We are coworkers.</span>
+              <span class="pattern-jp">私たちは同僚です。</span>
+            </div>
+          </div>
+
+          <!-- Vocabulary -->
+          <div class="sub-heading" style="margin-top: 28px;"><i class="ri-book-2-line"></i> Useful Vocabulary <span class="jp">語彙</span></div>
+
+          <table class="vocab-table">
+            <thead>
+              <tr><th>Word</th><th>Part of Speech</th><th>Translation</th><th>Definition</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="word">pleased</td>
+                <td class="pos">adjective</td>
+                <td class="trans">喜んで</td>
+                <td>very happy</td>
+              </tr>
+              <tr>
+                <td class="word">coworker</td>
+                <td class="pos">noun</td>
+                <td class="trans">同僚</td>
+                <td>someone you work with</td>
+              </tr>
+              <tr>
+                <td class="word">join</td>
+                <td class="pos">verb</td>
+                <td class="trans">加わる</td>
+                <td>to become a member of a group</td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="add-btn"><i class="ri-add-line"></i> Add Vocabulary</button>
+
+          <!-- Pronunciation -->
+          <div class="sub-heading" style="margin-top: 28px;"><i class="ri-volume-up-line"></i> Pronunciation <span class="jp">発音</span></div>
+
+          <div class="pronun-box">
+            <div class="pronun-instruction editable" contenteditable>Let's practice saying words with /æ/ and /ʌ/.</div>
+            <div class="pronun-cols">
+              <div class="pronun-col">
+                <div class="pronun-symbol">/æ/</div>
+                <div class="pronun-word-row"><span>bag</span><span class="pronun-jp">バッグ</span></div>
+                <div class="pronun-word-row"><span>fan</span><span class="pronun-jp">扇風機</span></div>
+                <div class="pronun-word-row"><span>cab</span><span class="pronun-jp">タクシー</span></div>
+                <div class="pronun-word-row"><span>hat</span><span class="pronun-jp">帽子</span></div>
+                <div class="pronun-word-row"><span>lack</span><span class="pronun-jp">欠いている</span></div>
+              </div>
+              <div class="pronun-col">
+                <div class="pronun-symbol">/ʌ/</div>
+                <div class="pronun-word-row"><span>bug</span><span class="pronun-jp">昆虫</span></div>
+                <div class="pronun-word-row"><span>fun</span><span class="pronun-jp">楽しみ</span></div>
+                <div class="pronun-word-row"><span>cub</span><span class="pronun-jp">幼獣</span></div>
+                <div class="pronun-word-row"><span>hut</span><span class="pronun-jp">山小屋</span></div>
+                <div class="pronun-word-row"><span>luck</span><span class="pronun-jp">幸運</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Read each sentence in the table. Ask the student to repeat.
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Correct mispronounced words after reading.
+          </div>
+          <div class="note-card tip">
+            <div class="note-type">Tip</div>
+            For lower-level students, explain how each sentence is used.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── PAGE 3 ──────────────── -->
+    <div class="page-card" id="page3">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 3</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <div class="section-label">
+            <span class="section-num">4</span>
+            <span class="section-title">Practice</span>
+          </div>
+
+          <div class="practice-timeline">
+            <!-- Step 1 -->
+            <div class="step-card">
+              <div class="step-dot">1</div>
+              <div class="step-header">Step 1 — Repeat</div>
+              <div class="step-body">
+                <div class="step-instruction">
+                  Repeat after your tutor.
+                  <div class="step-instruction-jp">講師のあとに繰り返しましょう。</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-card">
+              <div class="step-dot">2</div>
+              <div class="step-header">Step 2 — Fill in the Blanks</div>
+              <div class="step-body">
+                <div class="step-instruction">
+                  Fill in the blanks with the correct pattern.
+                  <div class="step-instruction-jp">適切なパターンを入れましょう。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hint Box -->
+          <div class="hint-box">
+            <div class="hint-label"><i class="ri-lightbulb-line"></i> Useful Patterns</div>
+            <div class="hint-row"><span class="hint-en">My name is John.</span><span class="hint-jp">(私の名前はジョンです。)</span></div>
+            <div class="hint-row"><span class="hint-en">This is Andrew.</span><span class="hint-jp">(こちらが、アンドリューです。)</span></div>
+            <div class="hint-row"><span class="hint-en">We are coworkers.</span><span class="hint-jp">(私たちは同僚です。)</span></div>
+          </div>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+
+          <div class="note-step-title">Step 1 — Repeat</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "I will read each sentence. Please repeat after me."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Adjust the speed according to the student's level.
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Correct mispronounced words after reading.
+          </div>
+
+          <div class="note-step-title">Step 2 — Fill in the Blanks</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Let's practice again."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Read the instruction.
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Please start with the first sentence."
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── PAGE 4 ──────────────── -->
+    <div class="page-card" id="page4">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 4</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <div class="section-label">
+            <span class="section-num">4</span>
+            <span class="section-title">Practice (cont.)</span>
+          </div>
+
+          <div class="practice-timeline">
+            <!-- Step 3 -->
+            <div class="step-card">
+              <div class="step-dot">3</div>
+              <div class="step-header">Step 3 — Dialogue</div>
+              <div class="step-body">
+                <div class="step-instruction">
+                  Read the dialogue with your tutor.
+                  <div class="step-instruction-jp">講師と一緒に会話を読みましょう。</div>
+                </div>
+                <div class="dialogue">
+                  <div class="dl-line tutor">
+                    <span class="dl-role">Tutor:</span>
+                    <div>
+                      <div class="dl-text">Good morning. My name is Evan. It's my first day today.</div>
+                      <div class="dl-text-jp">おはようございます。私の名前はエヴァンです。今日は私にとって初出勤の日です。</div>
+                    </div>
+                  </div>
+                  <div class="dl-line student">
+                    <span class="dl-role">Student:</span>
+                    <div>
+                      <div class="dl-text">Pleased to meet you, Evan. My name is Akihiro. This is Sandra. We are coworkers.</div>
+                      <div class="dl-text-jp">お会いできてうれしいです、エヴァンさん。私の名前は明宏です。こちらはサンドラさんです。私たちは同僚です。</div>
+                    </div>
+                  </div>
+                  <div class="dl-line tutor">
+                    <span class="dl-role">Tutor:</span>
+                    <div>
+                      <div class="dl-text">Pleased to meet you, too, Akihiro and Sandra.</div>
+                      <div class="dl-text-jp">明宏さん、サンドラさん、こちらこそお会いできてうれしいです。</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step-card">
+              <div class="step-dot">4</div>
+              <div class="step-header">Step 4 — Complete the Dialogue</div>
+              <div class="step-body">
+                <div class="step-instruction">
+                  Complete the dialogue.
+                  <div class="step-instruction-jp">会話文を完成させましょう。</div>
+                </div>
+                <div class="dialogue">
+                  <div class="dl-line tutor">
+                    <span class="dl-role">Tutor:</span>
+                    <div>
+                      <div class="dl-text">Hello. My name is Shirley. I'm the new secretary.</div>
+                      <div class="dl-text-jp">こんにちは。私の名前はシャーリーです。私は新しい秘書です。</div>
+                    </div>
+                  </div>
+                  <div class="dl-line student">
+                    <span class="dl-role">Student:</span>
+                    <div>
+                      <div class="dl-text editable" contenteditable>Pleased to meet you, Shirley. ________________. ________________. ________________.</div>
+                      <div class="dl-text-jp">シャーリーさん、お会いできてうれしいです。________________.</div>
+                    </div>
+                  </div>
+                  <div class="dl-line tutor">
+                    <span class="dl-role">Tutor:</span>
+                    <div>
+                      <div class="dl-text">Pleased to meet you, too!</div>
+                      <div class="dl-text-jp">こちらこそ、お会いできてうれしいです。</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-box">
+            <div class="hint-label"><i class="ri-lightbulb-line"></i> Useful Patterns</div>
+            <div class="hint-row"><span class="hint-en">My name is John.</span><span class="hint-jp">(私の名前はジョンです。)</span></div>
+            <div class="hint-row"><span class="hint-en">This is Andrew.</span><span class="hint-jp">(こちらが、アンドリューです。)</span></div>
+            <div class="hint-row"><span class="hint-en">We are coworkers.</span><span class="hint-jp">(私たちは同僚です。)</span></div>
+          </div>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+
+          <div class="note-step-title">Step 3 — Dialogue</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Let's read the dialogue."
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Is it clear?"
+          </div>
+          <div class="note-card tip">
+            <div class="note-type">Tip</div>
+            For lower-level students, first read each line and have them repeat after you. Then, roleplay.
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Great job!"
+          </div>
+
+          <div class="note-step-title">Step 4 — Complete the Dialogue</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Let's do the last practice."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Read the instruction.
+          </div>
+          <div class="note-card tip">
+            <div class="note-type">Tip</div>
+            For lower-level students, ask them to do it step by step.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── PAGE 5 ──────────────── -->
+    <div class="page-card" id="page5">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 5</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <div class="section-label">
+            <span class="section-num">5</span>
+            <span class="section-title">Challenge</span>
+          </div>
+
+          <div class="challenge-box">
+            <div class="challenge-title"><i class="ri-sword-line"></i> Simulation</div>
+            <div class="challenge-scenario editable" contenteditable>A new coworker joins your team. Using today's patterns and the table, introduce yourself and your coworkers. Then, say that you are coworkers.</div>
+            <div class="challenge-scenario-jp editable" contenteditable>新しい同僚があなたのチームに加わります。よく使う文法表現と下の表を使って、自己紹介と同僚の紹介をしましょう。</div>
+          </div>
+
+          <!-- Roleplay -->
+          <div class="situation-box">
+            <div class="situation-label"><i class="ri-user-3-line"></i> Roleplay Assignments</div>
+            <div class="roleplay-grid">
+              <div>
+                <div class="roleplay-section-label">You</div>
+                <div class="roleplay-name editable" contenteditable>Henry</div>
+              </div>
+              <div>
+                <div class="roleplay-section-label">Your Coworkers</div>
+                <div class="roleplay-name editable" contenteditable>Margaret</div>
+                <div class="roleplay-name editable" contenteditable>Edison</div>
+                <div class="roleplay-name editable" contenteditable>Vanessa</div>
+                <div class="roleplay-name editable" contenteditable>Mila</div>
+                <div class="roleplay-name editable" contenteditable>Antonia</div>
+                <button class="add-btn" style="margin-top: 8px; padding: 8px;"><i class="ri-add-line"></i> Add Name</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-box">
+            <div class="hint-label"><i class="ri-lightbulb-line"></i> Useful Patterns</div>
+            <div class="hint-row"><span class="hint-en">My name is John.</span><span class="hint-jp">(私の名前はジョンです。)</span></div>
+            <div class="hint-row"><span class="hint-en">This is Andrew.</span><span class="hint-jp">(こちらが、アンドリューです。)</span></div>
+            <div class="hint-row"><span class="hint-en">We are coworkers.</span><span class="hint-jp">(私たちは同僚です。)</span></div>
+          </div>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Are you ready for the challenge?"
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Read the situation.
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Now, I am your new coworker. I'll start."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Make the discussion as natural as possible.
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Give feedback after finishing the challenge.
+          </div>
+
+          <div class="sub-heading" style="border-bottom: none; margin-bottom: 8px; margin-top: 18px;">
+            <i class="ri-question-line"></i> Guide Questions
+          </div>
+
+          <div class="guide-q-list">
+            <div class="guide-q"><span class="guide-q-num">1.</span> Hi! Nice to meet you. May I know the names of the others, as well?</div>
+            <div class="guide-q"><span class="guide-q-num">2.</span> Do you work with all of them?</div>
+            <div class="guide-q"><span class="guide-q-num">3.</span> Are we teammates?</div>
+            <div class="guide-q"><span class="guide-q-num">4.</span> I see. Do we often have meetings together?</div>
+            <div class="guide-q"><span class="guide-q-num">5.</span> What other things do we do together?</div>
+          </div>
+
+          <button class="add-btn-outline" style="margin-top: 10px;"><i class="ri-add-line"></i> Add Question</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── PAGE 6 ──────────────── -->
+    <div class="page-card" id="page6">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 6</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <div class="section-label">
+            <span class="section-num">5</span>
+            <span class="section-title">Challenge — Discussion</span>
+          </div>
+
+          <div class="situation-box">
+            <div class="situation-en editable" contenteditable>Choose one category, then answer the questions.</div>
+            <div class="situation-jp editable" contenteditable>カテゴリーを一つ選び、質問に答えましょう。</div>
+          </div>
+
+          <div class="discussion-grid">
+            <div class="disc-cat">
+              <div class="disc-cat-title">YOUR BOSS</div>
+              <div class="disc-q"><span class="disc-q-num">1.</span> What is the name of your boss?</div>
+              <div class="disc-q"><span class="disc-q-num">2.</span> What is his/her position in the company?</div>
+              <div class="disc-q"><span class="disc-q-num">3.</span> Is he/she a good boss? Why?</div>
+              <button class="add-btn-outline" style="margin-top: 8px;"><i class="ri-add-line"></i> Add Q</button>
+            </div>
+            <div class="disc-cat">
+              <div class="disc-cat-title">YOUR TEAMMATE</div>
+              <div class="disc-q"><span class="disc-q-num">1.</span> Can you name one of your teammates?</div>
+              <div class="disc-q"><span class="disc-q-num">2.</span> Can you describe him/her?</div>
+              <div class="disc-q"><span class="disc-q-num">3.</span> What is his/her task in the team?</div>
+              <button class="add-btn-outline" style="margin-top: 8px;"><i class="ri-add-line"></i> Add Q</button>
+            </div>
+            <div class="disc-cat">
+              <div class="disc-cat-title">YOUR FAVORITE COWORKER</div>
+              <div class="disc-q"><span class="disc-q-num">1.</span> Who is your favorite coworker?</div>
+              <div class="disc-q"><span class="disc-q-num">2.</span> What do you like about him/her?</div>
+              <div class="disc-q"><span class="disc-q-num">3.</span> What is his/her job?</div>
+              <button class="add-btn-outline" style="margin-top: 8px;"><i class="ri-add-line"></i> Add Q</button>
+            </div>
+          </div>
+          <button class="add-btn"><i class="ri-add-line"></i> Add Category</button>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Now, let's have a discussion."
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Please choose a category you would like to discuss."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Ask the questions under the student's preferred category.
+          </div>
+          <div class="note-card tip">
+            <div class="note-type">Tip</div>
+            If the student can't choose, pick a category. If there is remaining time, let the student choose another category.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── PAGE 7 ──────────────── -->
+    <div class="page-card" id="page7">
+      <div class="pg-header">
+        <div class="pg-header-left">
+          <div class="pg-header-breadcrumb">
+            <span class="pg-level-number">3</span>
+            <span>CHAPTER 1: WORK INTRODUCTIONS</span>
+          </div>
+          <div class="pg-header-lesson">Lesson 1: Introducing Yourself and Your Coworker</div>
+        </div>
+        <div class="pg-header-right">
+          <span class="pg-skill-pill">Speaking</span>
+          <span class="pg-page-num">Page 7</span>
+        </div>
+      </div>
+
+      <div class="pg-columns">
+        <div class="col-main">
+          <div class="section-label">
+            <span class="section-num">6</span>
+            <span class="section-title">Feedback</span>
+          </div>
+
+          <div class="goal-box">
+            <div class="goal-label"><i class="ri-checkbox-circle-line"></i> Lesson Goal Review</div>
+            <div class="goal-en editable" contenteditable>Can introduce yourself and your coworker.</div>
+            <div class="goal-jp editable" contenteditable>自己紹介と同僚の紹介ができるようになる。</div>
+          </div>
+
+          <div class="hint-box">
+            <div class="hint-label"><i class="ri-lightbulb-line"></i> Useful Patterns</div>
+            <div class="hint-row"><span class="hint-en">My name is John.</span><span class="hint-jp">(私の名前はジョンです。)</span></div>
+            <div class="hint-row"><span class="hint-en">This is Andrew.</span><span class="hint-jp">(こちらが、アンドリューです。)</span></div>
+            <div class="hint-row"><span class="hint-en">We are coworkers.</span><span class="hint-jp">(私たちは同僚です。)</span></div>
+          </div>
+
+          <div class="sub-heading" style="margin-top: 28px;"><i class="ri-chat-check-line"></i> Feedback from Tutor</div>
+
+          <div class="feedback-template editable" contenteditable>*OVERALL SCORE*
+Overall: (score)
+- comment
+
+*Vocabulary/Phrases*
+Vocabulary:
+- word/phrase
+- word/phrase
+
+*Grammar*
+Grammar:
+incorrect grammar = correct grammar
+
+*Pronunciation*
+Pronunciation:
+- mispronounced word
+- mispronounced word</div>
+
+          <div class="next-lesson">
+            <i class="ri-arrow-right-circle-line"></i>
+            <div>
+              <div class="next-lesson-label">Next Lesson</div>
+              <div>
+                <span editable contenteditable>CHAPTER 1: WORK INTRODUCTIONS</span>
+                —
+                <strong><span editable contenteditable>Lesson 2: All About Me</span></strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-notes">
+          <div class="notes-title"><i class="ri-book-open-line"></i> Teaching Notes</div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "It's the end of the lesson. Great job! Now, let's review today's lesson goal."
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Ask the student to read the lesson goal.
+          </div>
+          <div class="note-card script">
+            <div class="note-type">Script</div>
+            "Were you able to achieve today's lesson goal?"
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Fill in and send the template below via chat box.
+          </div>
+          <div class="note-card instruction">
+            <div class="note-type">Instruction</div>
+            Practice the mispronounced words with the student.
+          </div>
+          <div class="note-card tip">
+            <div class="note-type">Tip</div>
+            Encourage the student to take the next lesson.
+          </div>
+        </div>
+      </div>
+
+      <div class="pg-footer">
+        <span class="pg-footer-brand">FluentXVerse</span>
+        <span>Business English — Premium Course Material</span>
+      </div>
+    </div>
+
+  </div><!-- /canvas -->
+</div><!-- /editor-shell -->
+
+<!-- Minimal interactivity for preview: tab highlighting -->
+<script>
+  const tabs = document.querySelectorAll('.page-tab');
+  const cards = document.querySelectorAll('.page-card');
+  const canvas = document.querySelector('.canvas');
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      cards[i]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Scroll spy
+  if (canvas) {
+    canvas.addEventListener('scroll', () => {
+      let active = 0;
+      cards.forEach((card, i) => {
+        const rect = card.getBoundingClientRect();
+        if (rect.top <= 200) active = i;
+      });
+      tabs.forEach((t, i) => t.classList.toggle('active', i === active));
+    }, { passive: true });
+  }
+</script>
+
+</body>
+</html>

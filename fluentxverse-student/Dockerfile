@@ -3,6 +3,10 @@ FROM docker.io/oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
+# Build-time Vite env vars (baked into the bundle)
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Copy package files
 COPY package.json bun.lock* ./
 

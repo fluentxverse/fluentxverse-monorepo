@@ -511,7 +511,7 @@ export class AdminService {
         throw new Error('Tutor not found');
       }
 
-      const record = result.records[0];
+      const record = result.records[0]!;
       const pendingChangesStr = record.get('pendingChanges');
       const tutorName = `${record.get('firstName') || ''} ${record.get('lastName') || ''}`.trim();
       
@@ -1951,7 +1951,7 @@ export class AdminService {
         return null;
       }
 
-      const record = result.records[0];
+      const record = result.records[0]!;
       const booking = record.get('b').properties;
       const slot = record.get('slot').properties;
       const tutor = record.get('tutor').properties;
@@ -1983,7 +1983,7 @@ export class AdminService {
           student: booking.attendanceStudent || null
         },
         timestamps: {
-          bookedAt: convertNeo4jDateTimeToISO(booking.bookedAt),
+          bookedAt: convertNeo4jDateTimeToISO(booking.bookedAt) || '',
           completedAt: booking.completedAt ? convertNeo4jDateTimeToISO(booking.completedAt) : null,
           cancelledAt: booking.cancelledAt ? convertNeo4jDateTimeToISO(booking.cancelledAt) : null
         },

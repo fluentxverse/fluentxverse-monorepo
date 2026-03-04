@@ -1,0 +1,9 @@
+node_modules/
+dist/
+Dockerfile
+*.md
+.env*
+.git/
+.gitignore
+test.ts
+biome.json

@@ -851,7 +851,7 @@ export default function TicketsPage() {
                   className="quantity-input"
                   value={quantity}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value) || 1;
+                    const val = parseInt((e.target as HTMLInputElement).value) || 1;
                     setQuantity(Math.max(1, Math.min(100, val)));
                   }}
                   min="1"

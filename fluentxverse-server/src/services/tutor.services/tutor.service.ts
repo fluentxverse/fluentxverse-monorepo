@@ -33,9 +33,9 @@ function convert12hTo24h(time12: string): string {
   const match = time12.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
   if (!match) return time12;
   
-  let hours = parseInt(match[1], 10);
-  const minutes = match[2];
-  const period = match[3].toUpperCase();
+  let hours = parseInt(match[1]!, 10);
+  const minutes = match[2]!;
+  const period = match[3]!.toUpperCase();
   
   if (period === 'PM' && hours !== 12) {
     hours += 12;
@@ -211,8 +211,8 @@ export class TutorService {
 
       // Get total count of tutors matching filter
       // When filtering by time, we need to check slots individually
-      let countQuery: string;
-      let tutorsQuery: string;
+      let countQuery = '';
+      let tutorsQuery = '';
       
       // Always need to check if slots are still bookable (not past and at least 5 min away)
       // So we always need to collect slot data for post-processing
@@ -389,7 +389,7 @@ export class TutorService {
           // Advance date by 1 day
           const nextDay = new Date(dateStr);
           nextDay.setDate(nextDay.getDate() + 1);
-          kstDate = nextDay.toISOString().split('T')[0];
+          kstDate = nextDay.toISOString().split('T')[0]!;
         }
         
         const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -849,7 +849,8 @@ export class TutorService {
         preferredLearningStyle: studentData.preferredLearningStyle,
         availability: studentData.availability ? JSON.parse(studentData.availability) : [],
         country: studentData.country,
-        timezone: studentData.timezone || 'GMT+8 (Philippine Time)'
+        timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
+        lessonPreferences: studentData.lessonPreferences ? JSON.parse(studentData.lessonPreferences) : null
       };
       
       return profileData;

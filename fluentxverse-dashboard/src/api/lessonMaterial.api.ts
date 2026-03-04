@@ -8,8 +8,8 @@ import apiClient from './apiClient';
 // TYPES
 // ============================================================================
 
-export type Skill = 'speaking' | 'listening' | 'reading';
-export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED';
+export type Skill = 'speaking' | 'listening' | 'reading' | 'writing';
+export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED' | 'HIGH BEGINNER' | 'HIGH INTERMEDIATE';
 
 // Introduction Section Types
 export interface IntroText {
@@ -347,6 +347,7 @@ export interface CreateLessonInput {
   course: string;
   level: number;
   chapter: number;
+  chapterName?: string;
   lessonNumber: number;
   skill: Skill;
   lessonName: string;
@@ -378,6 +379,7 @@ export interface LessonMaterial {
   missionData2?: any;
   feedbackData?: any;
   discussionQuestionsData?: any;
+  beData?: any;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -428,6 +430,7 @@ export interface UpdateHeaderInput {
   missionData2?: any;
   feedbackData?: any;
   discussionQuestionsData?: any;
+  beData?: any;
 }
 
 export interface ChapterInfo {

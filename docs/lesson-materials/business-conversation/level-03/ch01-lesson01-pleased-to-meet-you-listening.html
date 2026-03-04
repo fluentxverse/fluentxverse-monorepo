@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FluentXVerse — Business Conversation Level 3 | Listening</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ───────────── CSS Variables ───────────── */
+    :root {
+      --black:        #0a0a0f;
+      --black-light:  #121218;
+      --black-card:   #16161e;
+      --dark-gray:    #1e1e28;
+      --mid-gray:     #2a2a38;
+      --border:       #2f2f40;
+      --text-muted:   #8888a0;
+      --text:         #c8c8d8;
+      --text-bright:  #eeeef4;
+      --white:        #f8f8ff;
+
+      --purple-deep:  #4a1d96;
+      --purple:       #7c3aed;
+      --purple-mid:   #8b5cf6;
+      --purple-light: #a78bfa;
+      --purple-glow:  rgba(124, 58, 237, 0.15);
+      --purple-border:rgba(124, 58, 237, 0.35);
+
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose:  #fb7185;
+
+      --font-body:  'Inter', system-ui, sans-serif;
+      --font-display:'Space Grotesk', 'Inter', sans-serif;
+
+      --page-w: 210mm;
+      --page-h: 297mm;
+    }
+
+    /* ───────────── Reset & Base ───────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      font-size: 10.5pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: #08080d;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ───────────── Page Container ───────────── */
+    .page {
+      width: var(--page-w);
+      min-height: var(--page-h);
+      margin: 20px auto;
+      background: var(--black);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      page-break-after: always;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE 1 — COVER / TITLE PAGE
+       ═══════════════════════════════════════════ */
+
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: var(--page-h);
+      padding: 0;
+      background:
+        radial-gradient(ellipse at 20% 0%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(74, 29, 150, 0.12) 0%, transparent 50%),
+        var(--black);
+    }
+
+    /* Top bar */
+    .cover-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 36px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cover-topbar .brand {
+      font-family: var(--font-display);
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.5px;
+    }
+    .cover-topbar .brand span { color: var(--purple-mid); }
+    .cover-topbar .course-badge {
+      font-size: 7.5pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--purple-light);
+      background: var(--purple-glow);
+      border: 1px solid var(--purple-border);
+      padding: 5px 14px;
+      border-radius: 100px;
+    }
+
+    /* Center hero */
+    .cover-hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 48px;
+    }
+    .cover-level {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 9pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--purple-light);
+      margin-bottom: 16px;
+    }
+    .cover-level .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--purple);
+    }
+    .cover-chapter {
+      font-family: var(--font-display);
+      font-size: 12pt;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+    .cover-title {
+      font-family: var(--font-display);
+      font-size: 28pt;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .cover-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .cover-subtitle {
+      font-size: 10.5pt;
+      color: var(--text-muted);
+      max-width: 380px;
+      line-height: 1.7;
+    }
+
+    /* Skill type strip */
+    .cover-skill-strip {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 32px;
+    }
+    .skill-pill {
+      font-size: 8pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 6px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--dark-gray);
+    }
+    .skill-pill.active {
+      color: var(--white);
+      background: var(--purple);
+      border-color: var(--purple);
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Bottom bar */
+    .cover-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 36px;
+      border-top: 1px solid var(--border);
+      font-size: 7.5pt;
+      color: var(--text-muted);
+    }
+    .cover-bottom .page-indicator {
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--purple-light);
+    }
+
+    /* ═══════════════════════════════════════════
+       CONTENT PAGES — SHARED STYLES
+       ═══════════════════════════════════════════ */
+
+    .content-page {
+      display: flex;
+      flex-direction: column;
+      min-height: var(--page-h);
+      background:
+        radial-gradient(ellipse at 90% 5%, rgba(124, 58, 237, 0.06) 0%, transparent 40%),
+        var(--black);
+    }
+
+    /* Page header stripe */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 32px;
+      background: var(--black-light);
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .page-header .brand-sm {
+      font-family: var(--font-display);
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .page-header .brand-sm span { color: var(--purple-mid); }
+    .page-header .divider {
+      width: 1px; height: 18px;
+      background: var(--border);
+    }
+    .page-header .chapter-label {
+      font-size: 7.5pt;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .page-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .page-header .skill-tag {
+      font-size: 7pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--purple-light);
+      background: var(--purple-glow);
+      border: 1px solid var(--purple-border);
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+    .page-header .page-num {
+      font-family: var(--font-display);
+      font-size: 8pt;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Main body area — two-column split */
+    .page-body {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      flex: 1;
+    }
+
+    /* ── Right: Tutor Guide Panel ── */
+    .teaching-notes {
+      background: var(--black-light);
+      border-left: 1px solid var(--border);
+      order: 2;
+      padding: 28px 22px;
+      font-size: 8.5pt;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .tn-label {
+      font-family: var(--font-display);
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--purple-light);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tn-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .tn-script {
+      background: var(--dark-gray);
+      border-right: 3px solid var(--purple);
+      border-left: none;
+      padding: 10px 14px;
+      border-radius: 6px 0 0 6px;
+      margin-bottom: 14px;
+      font-style: italic;
+      color: var(--text);
+      font-size: 8.5pt;
+    }
+    .tn-instruction {
+      margin-bottom: 10px;
+      padding-left: 14px;
+      position: relative;
+    }
+    .tn-instruction::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--purple-mid);
+      font-weight: 700;
+    }
+    .tn-note {
+      background: rgba(251, 191, 36, 0.06);
+      border: 1px solid rgba(251, 191, 36, 0.15);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-top: 12px;
+      font-size: 8pt;
+      color: var(--accent-amber);
+    }
+    .tn-note strong { color: var(--accent-amber); }
+
+    /* ── Left: Student Material Panel ── */
+    .student-material {
+      padding: 32px 32px;
+      order: 1;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .section-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--purple), var(--purple-deep));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--white);
+      flex-shrink: 0;
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
+    }
+    .section-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .section-name {
+      font-family: var(--font-display);
+      font-size: 14pt;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.2;
+    }
+    .section-desc {
+      font-size: 8pt;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Goal Card */
+    .goal-card {
+      background: var(--black-card);
+      border: 1px solid var(--purple-border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .goal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+    }
+    .goal-card-label {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--purple-light);
+      margin-bottom: 8px;
+    }
+    .goal-card-text {
+      font-size: 11pt;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.5;
+    }
+    .goal-card-jp {
+      font-size: 8.5pt;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Situation Card */
+    .situation-card {
+      background: var(--dark-gray);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .situation-card-label {
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent-amber);
+      margin-bottom: 8px;
+    }
+    .situation-card-text {
+      font-size: 10pt;
+      color: var(--text-bright);
+      line-height: 1.6;
+    }
+    .situation-card-jp {
+      font-size: 8.5pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* Pattern Box */
+    .pattern-box {
+      background: var(--black-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .pattern-box-header {
+      font-family: var(--font-display);
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pattern-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(47, 47, 64, 0.5);
+    }
+    .pattern-item:last-child { border-bottom: none; }
+    .pattern-num {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      background: var(--purple-glow);
+      border: 1px solid var(--purple-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 8pt;
+      font-weight: 700;
+      color: var(--purple-light);
+      flex-shrink: 0;
+    }
+    .pattern-content {
+      flex: 1;
+    }
+    .pattern-en {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 2px;
+    }
+    .pattern-en .highlight {
+      color: var(--purple-light);
+      text-decoration: underline;
+      text-decoration-color: var(--purple-border);
+      text-underline-offset: 3px;
+    }
+    .pattern-jp {
+      font-size: 8pt;
+      color: var(--text-muted);
+    }
+    .pattern-usage {
+      font-size: 7.5pt;
+      color: var(--accent-green);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Vocabulary Grid */
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .vocab-card {
+      background: var(--dark-gray);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .vocab-word {
+      font-family: var(--font-display);
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .vocab-phonetic {
+      font-size: 7.5pt;
+      color: var(--purple-light);
+      margin-bottom: 6px;
+    }
+    .vocab-pos {
+      font-size: 7pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .vocab-def {
+      font-size: 8pt;
+      color: var(--text);
+    }
+    .vocab-jp {
+      font-size: 7.5pt;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Pronunciation Box */
+    .pronunciation-box {
+      background: var(--black-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .pronunciation-box-header {
+      font-family: var(--font-display);
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .pronunciation-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .pronunciation-col {
+      background: var(--dark-gray);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .pronunciation-col-header {
+      font-family: var(--font-display);
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--purple-light);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .pronunciation-word {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 9.5pt;
+      color: var(--text);
+    }
+    .pronunciation-word span:last-child {
+      color: var(--text-muted);
+      font-size: 8pt;
+    }
+
+    /* Practice Steps */
+    .step-card {
+      background: var(--black-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .step-badge {
+      font-family: var(--font-display);
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--purple-light);
+      background: var(--purple-glow);
+      border: 1px solid var(--purple-border);
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+    .step-title {
+      font-family: var(--font-display);
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .step-instruction {
+      font-size: 9pt;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      padding-left: 2px;
+    }
+
+    /* Practice Table */
+    .practice-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+    .practice-table th {
+      background: var(--mid-gray);
+      font-family: var(--font-display);
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--purple-light);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .practice-table td {
+      background: var(--dark-gray);
+      padding: 10px 14px;
+      font-size: 9.5pt;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+    }
+    .practice-table tr:last-child td { border-bottom: none; }
+    .practice-table .blank {
+      color: var(--purple-light);
+      border-bottom: 2px dashed var(--purple-border);
+      padding-bottom: 1px;
+      min-width: 100px;
+      display: inline-block;
+    }
+
+    /* Dialogue Box */
+    .dialogue-box {
+      background: var(--dark-gray);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .dialogue-line {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .dialogue-line:last-child { margin-bottom: 0; }
+    .dialogue-role {
+      font-family: var(--font-display);
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 56px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .dialogue-role.tutor { color: var(--purple-light); }
+    .dialogue-role.student { color: var(--accent-green); }
+    .dialogue-text {
+      font-size: 9.5pt;
+      color: var(--text-bright);
+      line-height: 1.6;
+    }
+    .dialogue-text .fill-blank {
+      display: inline-block;
+      min-width: 120px;
+      border-bottom: 2px dashed var(--purple-border);
+      margin: 0 2px;
+    }
+
+    /* Challenge Card */
+    .challenge-card {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(74, 29, 150, 0.06));
+      border: 1px solid var(--purple-border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .challenge-situation {
+      font-size: 10pt;
+      color: var(--text-bright);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .challenge-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--purple-border);
+    }
+    .challenge-table th {
+      background: var(--purple-deep);
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+    .challenge-table td {
+      background: var(--black-card);
+      padding: 8px 14px;
+      font-size: 9.5pt;
+      color: var(--text);
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .challenge-table tr:last-child td { border-bottom: none; }
+
+    /* Discussion */
+    .discussion-category {
+      background: var(--dark-gray);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+    }
+    .discussion-category-title {
+      font-family: var(--font-display);
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--purple-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .discussion-q {
+      font-size: 9pt;
+      color: var(--text);
+      padding: 4px 0 4px 16px;
+      position: relative;
+    }
+    .discussion-q::before {
+      content: attr(data-num) '.';
+      position: absolute;
+      left: 0;
+      color: var(--purple-mid);
+      font-weight: 600;
+    }
+
+    /* Feedback Template */
+    .feedback-template {
+      background: var(--black-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .feedback-template-header {
+      background: var(--mid-gray);
+      padding: 12px 20px;
+      font-family: var(--font-display);
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .feedback-section {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .feedback-section:last-child { border-bottom: none; }
+    .feedback-section-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .feedback-section-label.score { color: var(--purple-light); }
+    .feedback-section-label.vocab { color: var(--accent-green); }
+    .feedback-section-label.grammar { color: var(--accent-amber); }
+    .feedback-section-label.pronunciation { color: var(--accent-rose); }
+    .feedback-blank-line {
+      border-bottom: 1px dashed var(--border);
+      height: 24px;
+      margin-bottom: 4px;
+    }
+
+    /* Hint / Key Expressions reminder bar at bottom of some pages */
+    .key-expressions-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 14px 32px;
+      background: var(--black-light);
+      border-top: 1px solid var(--border);
+      font-size: 8pt;
+    }
+    .key-exp-label {
+      font-weight: 700;
+      color: var(--purple-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    .key-exp-item {
+      color: var(--text);
+    }
+    .key-exp-item strong { color: var(--white); font-weight: 600; }
+
+    /* Page footer */
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 32px;
+      border-top: 1px solid var(--border);
+      font-size: 7pt;
+      color: var(--text-muted);
+    }
+    .page-footer .confidential {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-rose);
+    }
+
+    /* Next Lesson box */
+    .next-lesson-box {
+      background: var(--dark-gray);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .next-lesson-arrow {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: var(--purple-glow);
+      border: 1px solid var(--purple-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14pt;
+      color: var(--purple-light);
+      flex-shrink: 0;
+    }
+    .next-lesson-label {
+      font-size: 7pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+    .next-lesson-title {
+      font-family: var(--font-display);
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    /* ───────────── Print Styles ───────────── */
+    @media print {
+      body { background: none; }
+      .page {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 1 — COVER
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-topbar">
+      <div class="brand">Fluent<span>X</span>Verse</div>
+      <div class="course-badge">Business Conversation</div>
+    </div>
+
+    <div class="cover-hero">
+      <div class="cover-level">
+        <span class="dot"></span> Level 3 — Beginner <span class="dot"></span>
+      </div>
+      <div class="cover-chapter">Chapter 1 &mdash; Work Introductions</div>
+      <div class="cover-title">Pleased to <em>Meet You</em></div>
+      <div class="cover-subtitle">
+        Learn how to introduce yourself and your coworker
+        in a professional business setting.
+      </div>
+      <div class="cover-skill-strip">
+        <span class="skill-pill active">Listening</span>
+        <span class="skill-pill">Speaking</span>
+        <span class="skill-pill">Reading</span>
+      </div>
+    </div>
+
+    <div class="cover-bottom">
+      <span>Lesson 1 of 6 &bull; Estimated time: 25 minutes</span>
+      <span class="page-indicator">1 / 7</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 2 — ① INTRODUCE
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="brand-sm">Fluent<span>X</span>Verse</div>
+        <div class="divider"></div>
+        <div class="chapter-label">Ch.1 &mdash; Work Introductions</div>
+      </div>
+      <div class="page-header-right">
+        <div class="skill-tag">Listening</div>
+        <div class="page-num">2 / 7</div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Teaching Notes -->
+      <div class="teaching-notes">
+        <div class="tn-label">Tutor Guide</div>
+
+        <div class="tn-script">
+          "Today, we're going to talk about introducing yourself and your coworker."
+        </div>
+
+        <div class="tn-instruction">Read the lesson goal aloud.</div>
+        <div class="tn-instruction">Ask the student to repeat the goal.</div>
+        <div class="tn-instruction">Confirm understanding: "Is it clear?"</div>
+
+        <div style="margin-top: 20px;"></div>
+
+        <div class="tn-script">
+          "A new coworker joins your team. Introduce yourself and another coworker to him/her."
+        </div>
+
+        <div class="tn-instruction">Read the situation clearly.</div>
+        <div class="tn-instruction">Ask: "Is it clear?"</div>
+        <div class="tn-instruction">Transition: "Let's go to the next part."</div>
+
+        <div class="tn-note">
+          <strong>Note:</strong> For Listening lessons, focus on the student's understanding. Use a slow speaking pace and repeat sections twice or more if needed.
+        </div>
+      </div>
+
+      <!-- Student Material -->
+      <div class="student-material">
+        <div class="section-header">
+          <div class="section-number">1</div>
+          <div class="section-meta">
+            <div class="section-name">Set the Scene</div>
+            <div class="section-desc">Lesson Goal &amp; Situation</div>
+          </div>
+        </div>
+
+        <div class="goal-card">
+          <div class="goal-card-label">&#x1F3AF; Today's Goal</div>
+          <div class="goal-card-text">
+            Can introduce yourself and your coworker.
+          </div>
+          <div class="goal-card-jp">
+            自己紹介と同僚の紹介ができるようになる。
+          </div>
+        </div>
+
+        <div class="situation-card">
+          <div class="situation-card-label">&#x1F4BC; Situation &amp; Task</div>
+          <div class="situation-card-text">
+            A new coworker joins your team. Introduce yourself
+            and another coworker to him/her.
+          </div>
+          <div class="situation-card-jp">
+            あなたのチームに新しい社員が配属されました。まずあなたが自己紹介をしてから、チームのメンバーを彼/彼女に紹介しましょう。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="confidential">Premium Course &mdash; Certified Tutors Only</span>
+      <span>&copy; FluentXVerse Business Conversation</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 3 — ② PRESENT + ③ UNDERSTAND
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="brand-sm">Fluent<span>X</span>Verse</div>
+        <div class="divider"></div>
+        <div class="chapter-label">Ch.1 &mdash; Work Introductions</div>
+      </div>
+      <div class="page-header-right">
+        <div class="skill-tag">Listening</div>
+        <div class="page-num">3 / 7</div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Teaching Notes -->
+      <div class="teaching-notes">
+        <div class="tn-label">Tutor Guide</div>
+
+        <div class="tn-script">
+          "Let's look at patterns used in introducing yourself and your coworker."
+        </div>
+
+        <div class="tn-instruction">Read each pattern aloud. Ask the student to repeat.</div>
+        <div class="tn-instruction">Explain when to use each pattern.</div>
+        <div class="tn-instruction">Ask: "Do you have any questions about the patterns?"</div>
+
+        <div style="margin-top: 20px;"></div>
+        <div class="tn-label">Word Bank Notes</div>
+
+        <div class="tn-script">
+          "Now, we have the useful vocabulary."
+        </div>
+        <div class="tn-instruction">Read each word. Ask the student to repeat.</div>
+        <div class="tn-instruction">For lower-level students, give simple definitions.</div>
+        <div class="tn-instruction">Send pronunciation guides via chat if needed:
+          <br /><br />
+          <code>pleased [pleezd]</code><br />
+          <code>coworker [KOH-wur-ker]</code><br />
+          <code>join [join]</code>
+        </div>
+      </div>
+
+      <!-- Student Material -->
+      <div class="student-material">
+        <div class="section-header">
+          <div class="section-number">2</div>
+          <div class="section-meta">
+            <div class="section-name">Explore</div>
+            <div class="section-desc">Target Expressions</div>
+          </div>
+        </div>
+
+        <div class="pattern-box">
+          <div class="pattern-box-header">Key Expressions</div>
+          <div class="pattern-item">
+            <div class="pattern-num">1</div>
+            <div class="pattern-content">
+              <div class="pattern-en"><span class="highlight">My name is</span> John.</div>
+              <div class="pattern-jp">私の名前はジョンです。</div>
+              <div class="pattern-usage">&#x2192; Use this to introduce yourself</div>
+            </div>
+          </div>
+          <div class="pattern-item">
+            <div class="pattern-num">2</div>
+            <div class="pattern-content">
+              <div class="pattern-en"><span class="highlight">This is</span> Andrew.</div>
+              <div class="pattern-jp">こちらが、アンドリューです。</div>
+              <div class="pattern-usage">&#x2192; Use this to introduce someone</div>
+            </div>
+          </div>
+          <div class="pattern-item">
+            <div class="pattern-num">3</div>
+            <div class="pattern-content">
+              <div class="pattern-en"><span class="highlight">We are</span> coworkers.</div>
+              <div class="pattern-jp">私たちは同僚です。</div>
+              <div class="pattern-usage">&#x2192; Use this to say you work together</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top: 8px;">
+          <div class="section-number">3</div>
+          <div class="section-meta">
+            <div class="section-name">Break It Down</div>
+            <div class="section-desc">Word Bank &amp; Sounds</div>
+          </div>
+        </div>
+
+        <div class="vocab-grid">
+          <div class="vocab-card">
+            <div class="vocab-word">pleased</div>
+            <div class="vocab-phonetic">/pliːzd/</div>
+            <div class="vocab-pos">adjective</div>
+            <div class="vocab-def">very happy</div>
+            <div class="vocab-jp">喜んで</div>
+          </div>
+          <div class="vocab-card">
+            <div class="vocab-word">coworker</div>
+            <div class="vocab-phonetic">/ˈkoʊˌwɜːrkər/</div>
+            <div class="vocab-pos">noun</div>
+            <div class="vocab-def">someone you work with</div>
+            <div class="vocab-jp">同僚</div>
+          </div>
+          <div class="vocab-card">
+            <div class="vocab-word">join</div>
+            <div class="vocab-phonetic">/dʒɔɪn/</div>
+            <div class="vocab-pos">verb</div>
+            <div class="vocab-def">to become a member of a group</div>
+            <div class="vocab-jp">加わる</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-expressions-bar">
+      <span class="key-exp-label">Patterns</span>
+      <span class="key-exp-item"><strong>My name is</strong> ___.</span>
+      <span class="key-exp-item"><strong>This is</strong> ___.</span>
+      <span class="key-exp-item"><strong>We are</strong> ___.</span>
+    </div>
+
+    <div class="page-footer">
+      <span class="confidential">Premium Course &mdash; Certified Tutors Only</span>
+      <span>&copy; FluentXVerse Business Conversation</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 4 — ③ UNDERSTAND (cont.) — Pronunciation
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="brand-sm">Fluent<span>X</span>Verse</div>
+        <div class="divider"></div>
+        <div class="chapter-label">Ch.1 &mdash; Work Introductions</div>
+      </div>
+      <div class="page-header-right">
+        <div class="skill-tag">Listening</div>
+        <div class="page-num">4 / 7</div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Teaching Notes -->
+      <div class="teaching-notes">
+        <div class="tn-label">Tutor Guide</div>
+
+        <div class="tn-script">
+          "Let's practice saying words with /æ/ and /ʌ/."
+        </div>
+
+        <div class="tn-instruction">Teach the student how to pronounce /æ/ and /ʌ/ using mouth movements.</div>
+        <div class="tn-instruction">Read each word, then ask the student to repeat.</div>
+        <div class="tn-instruction">Correct mispronounced words after reading.</div>
+        <div class="tn-instruction">Ask: "Do you have any questions?"</div>
+        <div class="tn-instruction">Transition: "Let's go to the next part, Practice."</div>
+
+        <div class="tn-note">
+          <strong>Tip:</strong> For /æ/, the mouth opens wider (like "cat"). For /ʌ/, the mouth is more relaxed (like "cup").
+        </div>
+
+        <div style="margin-top: 20px;"></div>
+
+        <div class="tn-label">Accuracy Check</div>
+        <div class="tn-script">
+          "Now, let's read the patterns in the table."
+        </div>
+        <div class="tn-instruction">Read each sentence in the table. Ask the student to repeat.</div>
+        <div class="tn-instruction">Correct mispronounced words after reading.</div>
+        <div class="tn-instruction">For lower-level students, explain how each sentence is used.</div>
+      </div>
+
+      <!-- Student Material -->
+      <div class="student-material">
+        <div class="section-header">
+          <div class="section-number">3</div>
+          <div class="section-meta">
+            <div class="section-name">Break It Down</div>
+            <div class="section-desc">Pronunciation Focus</div>
+          </div>
+        </div>
+
+        <div class="pronunciation-box">
+          <div class="pronunciation-box-header">Minimal Pairs: /æ/ vs /ʌ/</div>
+          <div class="pronunciation-columns">
+            <div class="pronunciation-col">
+              <div class="pronunciation-col-header">/æ/</div>
+              <div class="pronunciation-word"><span>bag</span><span>バッグ</span></div>
+              <div class="pronunciation-word"><span>fan</span><span>扇風機</span></div>
+              <div class="pronunciation-word"><span>hat</span><span>帽子</span></div>
+              <div class="pronunciation-word"><span>cab</span><span>タクシー</span></div>
+              <div class="pronunciation-word"><span>lack</span><span>欠いている</span></div>
+            </div>
+            <div class="pronunciation-col">
+              <div class="pronunciation-col-header">/ʌ/</div>
+              <div class="pronunciation-word"><span>bug</span><span>昆虫</span></div>
+              <div class="pronunciation-word"><span>fun</span><span>楽しみ</span></div>
+              <div class="pronunciation-word"><span>hut</span><span>山小屋</span></div>
+              <div class="pronunciation-word"><span>cub</span><span>幼獣</span></div>
+              <div class="pronunciation-word"><span>luck</span><span>幸運</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pattern-box">
+          <div class="pattern-box-header">Pattern Comprehension Table</div>
+          <table class="practice-table">
+            <tr>
+              <th>Pattern</th>
+              <th>Example</th>
+              <th>Japanese</th>
+            </tr>
+            <tr>
+              <td>My name is ___.</td>
+              <td>My name is John.</td>
+              <td style="font-size:8pt;color:var(--text-muted)">私の名前はジョンです。</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>My name is Carter.</td>
+              <td style="font-size:8pt;color:var(--text-muted)">私の名前はカーターです。</td>
+            </tr>
+            <tr>
+              <td>This is ___.</td>
+              <td>This is Andrew.</td>
+              <td style="font-size:8pt;color:var(--text-muted)">こちらはアンドリューです。</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>This is Carol.</td>
+              <td style="font-size:8pt;color:var(--text-muted)">こちらはキャロルです。</td>
+            </tr>
+            <tr>
+              <td>We are ___.</td>
+              <td>We are coworkers.</td>
+              <td style="font-size:8pt;color:var(--text-muted)">私たちは同僚です。</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>We are teammates.</td>
+              <td style="font-size:8pt;color:var(--text-muted)">私たちはチームメイトです。</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-expressions-bar">
+      <span class="key-exp-label">Patterns</span>
+      <span class="key-exp-item"><strong>My name is</strong> ___.</span>
+      <span class="key-exp-item"><strong>This is</strong> ___.</span>
+      <span class="key-exp-item"><strong>We are</strong> ___.</span>
+    </div>
+
+    <div class="page-footer">
+      <span class="confidential">Premium Course &mdash; Certified Tutors Only</span>
+      <span>&copy; FluentXVerse Business Conversation</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 5 — ④ PRACTICE (Steps 1–4)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="brand-sm">Fluent<span>X</span>Verse</div>
+        <div class="divider"></div>
+        <div class="chapter-label">Ch.1 &mdash; Work Introductions</div>
+      </div>
+      <div class="page-header-right">
+        <div class="skill-tag">Listening</div>
+        <div class="page-num">5 / 7</div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Teaching Notes -->
+      <div class="teaching-notes">
+        <div class="tn-label">Tutor Guide</div>
+
+        <div class="tn-script">"Let's practice today's patterns."</div>
+
+        <div style="margin-top:10px;font-weight:600;color:var(--white);font-size:8pt;">Step 1 — Repeat</div>
+        <div class="tn-instruction">Read each sentence. Ask the student to repeat.</div>
+        <div class="tn-instruction">Adjust speed according to the student's level.</div>
+        <div class="tn-instruction">Correct mispronounced words after reading.</div>
+
+        <div style="margin-top:14px;font-weight:600;color:var(--white);font-size:8pt;">Step 2 — Fill in the Blanks</div>
+        <div class="tn-instruction">Read the instruction to the student.</div>
+        <div class="tn-instruction">For lower-level students, explain that column 1 uses "My name is," column 2 uses "This is," and the bottom uses "We are."</div>
+
+        <div style="margin-top:14px;font-weight:600;color:var(--white);font-size:8pt;">Step 3 — Dialogue</div>
+        <div class="tn-instruction">Read the dialogue with the student.</div>
+        <div class="tn-instruction">For lower-level students, read each line first and have them repeat. Then role-play.</div>
+
+        <div style="margin-top:14px;font-weight:600;color:var(--white);font-size:8pt;">Step 4 — Complete</div>
+        <div class="tn-instruction">Read the instruction. Ask: "Is it clear?"</div>
+        <div class="tn-instruction">For lower-level students, guide step by step.</div>
+      </div>
+
+      <!-- Student Material -->
+      <div class="student-material">
+        <div class="section-header">
+          <div class="section-number">4</div>
+          <div class="section-meta">
+            <div class="section-name">Hands-On</div>
+            <div class="section-desc">Master the Expressions</div>
+          </div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-badge">Step 1</div>
+            <div class="step-title">Repeat After Your Tutor</div>
+          </div>
+          <div class="step-instruction">講師のあとに繰り返しましょう。</div>
+          <table class="practice-table">
+            <tr>
+              <th>Introducing Yourself</th>
+              <th>Introducing Your Coworker</th>
+            </tr>
+            <tr><td>My name is Chen.</td><td>This is Robert.</td></tr>
+            <tr><td>My name is Ronald.</td><td>This is Janette.</td></tr>
+            <tr><td>My name is Esther.</td><td>This is Tony.</td></tr>
+            <tr><td>My name is Rachelle.</td><td>This is Carol.</td></tr>
+            <tr><td>My name is Arthur.</td><td>This is Hiro.</td></tr>
+          </table>
+          <div style="text-align:center;padding:8px 0;font-size:9.5pt;color:var(--text);">We are coworkers. &nbsp;&bull;&nbsp; We are teammates.</div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-badge">Step 2</div>
+            <div class="step-title">Fill in the Blanks</div>
+          </div>
+          <div class="step-instruction">Fill in with "My name is," "This is," or "We are." ／ 「My name is」「This is」「We are」のいずれかを入れましょう。</div>
+          <table class="practice-table">
+            <tr>
+              <th>Introducing Yourself</th>
+              <th>Introducing Your Coworker</th>
+            </tr>
+            <tr><td><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> Chen.</td><td><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> Robert.</td></tr>
+            <tr><td><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> Ronald.</td><td><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> Janette.</td></tr>
+            <tr><td><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> Esther.</td><td><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> Tony.</td></tr>
+          </table>
+          <div style="text-align:center;padding:8px 0;font-size:9.5pt;color:var(--text);"><span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> coworkers. &nbsp;&bull;&nbsp; <span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> teammates.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-expressions-bar">
+      <span class="key-exp-label">Patterns</span>
+      <span class="key-exp-item"><strong>My name is</strong> ___.</span>
+      <span class="key-exp-item"><strong>This is</strong> ___.</span>
+      <span class="key-exp-item"><strong>We are</strong> ___.</span>
+    </div>
+
+    <div class="page-footer">
+      <span class="confidential">Premium Course &mdash; Certified Tutors Only</span>
+      <span>&copy; FluentXVerse Business Conversation</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 6 — ④ PRACTICE (Steps 3–4) + ⑤ CHALLENGE
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="brand-sm">Fluent<span>X</span>Verse</div>
+        <div class="divider"></div>
+        <div class="chapter-label">Ch.1 &mdash; Work Introductions</div>
+      </div>
+      <div class="page-header-right">
+        <div class="skill-tag">Listening</div>
+        <div class="page-num">6 / 7</div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Teaching Notes -->
+      <div class="teaching-notes">
+        <div class="tn-label">Tutor Guide — Hands-On</div>
+
+        <div style="font-weight:600;color:var(--white);font-size:8pt;">Step 3 — Dialogue</div>
+        <div class="tn-instruction">Read the dialogue with the student.</div>
+        <div class="tn-instruction">For lower-level students, read each line first, then role-play.</div>
+
+        <div style="margin-top:14px;font-weight:600;color:var(--white);font-size:8pt;">Step 4 — Complete</div>
+        <div class="tn-instruction">Ask: "Is it clear?"</div>
+        <div class="tn-instruction">Guide lower-level students step by step.</div>
+
+        <div style="margin-top: 24px;"></div>
+        <div class="tn-label">Tutor Guide — Go Live</div>
+
+        <div class="tn-script">"Are you ready for the challenge?"</div>
+        <div class="tn-instruction">Make the discussion as natural as possible.</div>
+        <div class="tn-instruction">Start: "Hello! My name's (your name). What's your name?"</div>
+        <div class="tn-instruction">Guide questions: 1) May I know the names of the others? 2) Do you work with all of them? 3) Are we teammates?</div>
+        <div class="tn-instruction">End: "Nice to meet you all!"</div>
+        <div class="tn-instruction">Give feedback after finishing.</div>
+
+        <div class="tn-note">
+          <strong>Important:</strong> This must be a real-life simulation, distinct from Practice. Corrections should only be done after the exercise.
+        </div>
+      </div>
+
+      <!-- Student Material -->
+      <div class="student-material">
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-badge">Step 3</div>
+            <div class="step-title">Read the Dialogue</div>
+          </div>
+          <div class="step-instruction">講師と一緒に会話を読みましょう。</div>
+          <div class="dialogue-box">
+            <div class="dialogue-line">
+              <div class="dialogue-role tutor">Tutor</div>
+              <div class="dialogue-text">Good morning. My name is Evan. It's my first day today.</div>
+            </div>
+            <div class="dialogue-line">
+              <div class="dialogue-role student">Student</div>
+              <div class="dialogue-text">Pleased to meet you, Evan. My name is Akihiro. This is Sandra. We are coworkers.</div>
+            </div>
+            <div class="dialogue-line">
+              <div class="dialogue-role tutor">Tutor</div>
+              <div class="dialogue-text">Pleased to meet you, too, Akihiro and Sandra.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+          <div class="step-header">
+            <div class="step-badge">Step 4</div>
+            <div class="step-title">Complete the Dialogue</div>
+          </div>
+          <div class="step-instruction">会話文を完成させましょう。</div>
+          <div class="dialogue-box">
+            <div class="dialogue-line">
+              <div class="dialogue-role tutor">Tutor</div>
+              <div class="dialogue-text">Hello. My name is Shirley. I'm the new secretary.</div>
+            </div>
+            <div class="dialogue-line">
+              <div class="dialogue-role student">Student</div>
+              <div class="dialogue-text">Pleased to meet you, Shirley. <span class="fill-blank">&nbsp;</span>. This is <span class="fill-blank">&nbsp;</span>. We are <span class="fill-blank">&nbsp;</span>.</div>
+            </div>
+            <div class="dialogue-line">
+              <div class="dialogue-role tutor">Tutor</div>
+              <div class="dialogue-text">Pleased to meet you, too!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Challenge -->
+        <div class="section-header" style="margin-top: 12px;">
+          <div class="section-number">5</div>
+          <div class="section-meta">
+            <div class="section-name">Go Live</div>
+            <div class="section-desc">Real-World Simulation</div>
+          </div>
+        </div>
+
+        <div class="challenge-card">
+          <div class="challenge-situation">
+            A new coworker joins your team. Using today's patterns and the table below, introduce yourself and your coworkers. Then, say that you are coworkers.
+          </div>
+          <table class="challenge-table">
+            <tr>
+              <th>You</th>
+              <th>Your Coworkers</th>
+            </tr>
+            <tr>
+              <td rowspan="5" style="vertical-align:middle;font-weight:700;color:var(--purple-light);">Henry</td>
+              <td>Margaret</td>
+            </tr>
+            <tr><td>Edison</td></tr>
+            <tr><td>Vanessa</td></tr>
+            <tr><td>Mila</td></tr>
+            <tr><td>Antonia</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-expressions-bar">
+      <span class="key-exp-label">Patterns</span>
+      <span class="key-exp-item"><strong>My name is</strong> ___.</span>
+      <span class="key-exp-item"><strong>This is</strong> ___.</span>
+      <span class="key-exp-item"><strong>We are</strong> ___.</span>
+    </div>
+
+    <div class="page-footer">
+      <span class="confidential">Premium Course &mdash; Certified Tutors Only</span>
+      <span>&copy; FluentXVerse Business Conversation</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 7 — DISCUSSION + ⑥ FEEDBACK
+     ══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="brand-sm">Fluent<span>X</span>Verse</div>
+        <div class="divider"></div>
+        <div class="chapter-label">Ch.1 &mdash; Work Introductions</div>
+      </div>
+      <div class="page-header-right">
+        <div class="skill-tag">Listening</div>
+        <div class="page-num">7 / 7</div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <!-- Teaching Notes -->
+      <div class="teaching-notes">
+        <div class="tn-label">Tutor Guide — Discussion</div>
+
+        <div class="tn-script">"Now, let's have a discussion."</div>
+        <div class="tn-instruction">Ask the student to choose a category.</div>
+        <div class="tn-instruction">If the student can't choose, pick one.</div>
+        <div class="tn-instruction">If time remains, let the student choose another category.</div>
+
+        <div style="margin-top: 24px;"></div>
+        <div class="tn-label">Tutor Guide — Wrap-Up</div>
+
+        <div class="tn-script">"It's the end of the lesson. Great job!"</div>
+        <div class="tn-instruction">Ask the student to read the lesson goal.</div>
+        <div class="tn-instruction">Ask: "Were you able to achieve today's lesson goal?"</div>
+        <div class="tn-instruction">Ask the student to read the patterns.</div>
+        <div class="tn-instruction">Fill in and send the feedback template via chat.</div>
+        <div class="tn-instruction">Practice mispronounced words with the student.</div>
+        <div class="tn-instruction">Encourage the next lesson: "To do better, I suggest you take the next lesson."</div>
+      </div>
+
+      <!-- Student Material -->
+      <div class="student-material">
+        <div class="section-header">
+          <div class="section-number">5</div>
+          <div class="section-meta">
+            <div class="section-name">Go Live</div>
+            <div class="section-desc">Discussion Questions</div>
+          </div>
+        </div>
+
+        <div style="font-size:9pt;color:var(--text-muted);margin-bottom:14px;">Choose one category, then answer the questions. ／ カテゴリーを一つ選び、質問に答えましょう。</div>
+
+        <div class="discussion-category">
+          <div class="discussion-category-title">I. Your Boss</div>
+          <div class="discussion-q" data-num="1">What is the name of your boss?</div>
+          <div class="discussion-q" data-num="2">What is his/her position in the company?</div>
+          <div class="discussion-q" data-num="3">Is he/she a good boss? Why?</div>
+        </div>
+
+        <div class="discussion-category">
+          <div class="discussion-category-title">II. Your Teammate</div>
+          <div class="discussion-q" data-num="1">Can you name one of your teammates?</div>
+          <div class="discussion-q" data-num="2">Can you describe him/her?</div>
+          <div class="discussion-q" data-num="3">What is his/her task in the team?</div>
+        </div>
+
+        <div class="discussion-category">
+          <div class="discussion-category-title">III. Your Favorite Coworker</div>
+          <div class="discussion-q" data-num="1">Who is your favorite coworker?</div>
+          <div class="discussion-q" data-num="2">What do you like about him/her?</div>
+          <div class="discussion-q" data-num="3">What is his/her job?</div>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="section-header" style="margin-top: 20px;">
+          <div class="section-number">6</div>
+          <div class="section-meta">
+            <div class="section-name">Wrap-Up</div>
+            <div class="section-desc">Review &amp; Performance</div>
+          </div>
+        </div>
+
+        <div class="feedback-template">
+          <div class="feedback-template-header">Tutor Feedback Template</div>
+          <div class="feedback-section">
+            <div class="feedback-section-label score">Overall Score</div>
+            <div class="feedback-blank-line"></div>
+            <div class="feedback-blank-line"></div>
+          </div>
+          <div class="feedback-section">
+            <div class="feedback-section-label vocab">Vocabulary / Phrases</div>
+            <div class="feedback-blank-line"></div>
+            <div class="feedback-blank-line"></div>
+          </div>
+          <div class="feedback-section">
+            <div class="feedback-section-label grammar">Grammar</div>
+            <div class="feedback-blank-line"></div>
+            <div class="feedback-blank-line"></div>
+          </div>
+          <div class="feedback-section">
+            <div class="feedback-section-label pronunciation">Pronunciation</div>
+            <div class="feedback-blank-line"></div>
+            <div class="feedback-blank-line"></div>
+          </div>
+        </div>
+
+        <!-- Next Lesson -->
+        <div class="next-lesson-box">
+          <div class="next-lesson-arrow">&#x2192;</div>
+          <div>
+            <div class="next-lesson-label">Next Lesson</div>
+            <div class="next-lesson-title">Chapter 1: Work Introductions &mdash; Speaking 1: All About Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span class="confidential">Premium Course &mdash; Certified Tutors Only</span>
+      <span>&copy; FluentXVerse Business Conversation</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

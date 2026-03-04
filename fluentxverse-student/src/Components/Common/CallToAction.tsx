@@ -1,3 +1,4 @@
+import { FunctionComponent } from 'preact';
 import './CallToAction.css';
 
 interface CallToActionProps {
@@ -10,7 +11,7 @@ interface CallToActionProps {
   className?: string;
 }
 
-const CallToAction: React.FC<CallToActionProps> = ({
+const CallToAction: FunctionComponent<CallToActionProps> = ({
   title = "Ready to Transform Your Farming Experience?",
   subtitle = "Join hundreds of farmers already benefiting from our innovative solutions",
   primaryButtonText = "Get in Touch",

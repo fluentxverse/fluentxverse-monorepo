@@ -16,7 +16,10 @@ export type NotificationType =
   | 'message'
   | 'minting_started'
   | 'minting_success'
-  | 'minting_failed';
+  | 'minting_failed'
+  | 'profile_change_submitted'
+  | 'profile_change_approved'
+  | 'profile_change_rejected';
 
 export interface Notification {
   id: string;
@@ -46,6 +49,10 @@ export interface Notification {
     supply?: number;
     mintType?: 'create' | 'additional';
     errorMessage?: string;
+    // Profile change data
+    itemKey?: string;
+    rejectionReason?: string;
+    reason?: string;
   };
 }
 

@@ -120,6 +120,10 @@ export default function LessonMaterialMakerPage() {
       location.route('/discussion-questions-editor');
       return;
     }
+    if (template.id === 'business-english') {
+      location.route('/business-english-editor');
+      return;
+    }
     
     setSelectedTemplate(template);
     const data = createConversationalTemplate(); // For now, use conversational for all
@@ -277,6 +281,12 @@ function TemplateSelector({
                   window.location.href = '/conversational-skills-editor';
                 } else if (t.id === 'daily-dispatch') {
                   window.location.href = '/daily-dispatch';
+                } else if (t.id === 'business-english') {
+                  window.location.href = '/business-english-editor';
+                } else if (t.id === 'young-learners') {
+                  window.location.href = '/young-learners-editor';
+                } else if (t.id === 'discussion-questions') {
+                  window.location.href = '/discussion-questions-editor';
                 } else {
                   onSelect(t);
                 }

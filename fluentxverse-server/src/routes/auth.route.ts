@@ -84,7 +84,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       // Rate limit login attempts to prevent brute force attacks
       const clientIp = getClientIp(request);
       const rateLimitResult = await rateLimitMiddleware(clientIp, 'auth', set as any);
-      if (rateLimitResult) return rateLimitResult;
+      if (rateLimitResult) return { ...rateLimitResult, user: null };
       
       try {
         const authService = new AuthService();

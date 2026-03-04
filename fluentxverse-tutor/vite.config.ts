@@ -43,7 +43,7 @@ export default defineConfig({
 				manualChunks: {
 					// Vendor chunks - split large dependencies
 					'vendor-preact': ['preact', 'preact/hooks', 'preact-iso'],
-					'vendor-ui': ['zustand', 'wouter'],
+					'vendor-ui': ['zustand'],
 					'vendor-pdf': ['pdfjs-dist'],
 					// Feature-based chunks
 					'pages-auth': [
@@ -71,6 +71,29 @@ export default defineConfig({
 					'pages-schedule': [
 						'./src/pages/SchedulePage.tsx',
 						'./src/pages/InterviewBookingPage.tsx',
+					],
+					'pages-daily-dispatch': [
+						'./src/pages/DailyDispatchPage.tsx',
+						'./src/pages/DailyDispatchArticlePage.tsx',
+						'./src/pages/DailyDispatchArchivePage.tsx',
+					],
+					'pages-young-learners': [
+						'./src/pages/YoungLearnersPage.tsx',
+						'./src/pages/YoungLearnersLessonPage.tsx',
+					],
+					'pages-conversational': [
+						'./src/pages/ConversationalSkillsLessonPage.tsx',
+					],
+					'pages-misc': [
+						'./src/pages/HomeProtected.tsx',
+						'./src/pages/NotificationsPage.tsx',
+						'./src/pages/InboxPage.tsx',
+						'./src/pages/ContactUsPage.tsx',
+						'./src/pages/AboutUsPage.tsx',
+						'./src/pages/BecomeTutorPage.tsx',
+						'./src/pages/PrivacyPolicy.tsx',
+						'./src/pages/TermsOfService.tsx',
+						'./src/pages/NotFoundPage.tsx',
 					],
 				},
 			},

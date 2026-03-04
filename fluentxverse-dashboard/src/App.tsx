@@ -33,6 +33,8 @@ import YoungLearnersVisualEditor from './pages/YoungLearnersVisualEditor';
 import YoungLearnersPreview from './pages/YoungLearnersPreview';
 import DiscussionQuestionsEditorPage from './pages/DiscussionQuestionsEditorPage';
 import DiscussionQuestionsVisualEditor from './pages/DiscussionQuestionsVisualEditor';
+import BusinessEnglishEditorPage from './pages/BusinessEnglishEditorPage';
+import BusinessEnglishVisualEditor from './pages/BusinessEnglishVisualEditor';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -172,6 +174,18 @@ const AppContent = () => {
     );
   }
 
+  // Business English visual editor - standalone (fullscreen)
+  if (path.startsWith('/business-english-visual-editor')) {
+    if (!isAuthenticated) {
+      return <LoginPage />;
+    }
+    return (
+      <Router>
+        <Route path="/business-english-visual-editor/:id" component={BusinessEnglishVisualEditor} />
+      </Router>
+    );
+  }
+
   // Discussion Questions visual editor - standalone (fullscreen)
   if (path.startsWith('/discussion-questions-visual-editor')) {
     if (!isAuthenticated) {
@@ -214,6 +228,7 @@ const AppContent = () => {
         <Route path="/daily-dispatch-preview/:id" component={DailyDispatchPreviewPage} />
         <Route path="/young-learners-editor" component={YoungLearnersEditorPage} />
         <Route path="/discussion-questions-editor" component={DiscussionQuestionsEditorPage} />
+        <Route path="/business-english-editor" component={BusinessEnglishEditorPage} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />

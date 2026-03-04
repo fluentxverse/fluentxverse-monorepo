@@ -1,0 +1,17 @@
+node_modules/
+dist/
+tests/
+scripts/
+*.md
+docker-compose.yml
+Dockerfile*
+init.sql
+migrate-inbox.sql
+nginx.conf
+.env*
+.git/
+.gitignore
+AUTO_DEPLOY_SETUP.md
+CLOUDFLARE_TUNNEL_SETUP.md
+README.md
+fluentxverse-webhook.service

@@ -13,6 +13,8 @@ interface AuthUser {
   email: string;
   givenName: string;
   familyName?: string;
+  firstName?: string;
+  lastName?: string;
   birthDate?: string;
   mobileNumber?: string;
   smartWalletAddress?: string;

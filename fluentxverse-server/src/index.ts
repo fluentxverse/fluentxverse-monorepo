@@ -100,6 +100,7 @@ const app = new Elysia({
       };
     }
   })
+  // @ts-expect-error - Elysia type conflict from monorepo hoisting (runtime works correctly)
   .use(swagger({
     documentation: {
       info: {

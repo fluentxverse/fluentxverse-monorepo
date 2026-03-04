@@ -43,7 +43,7 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         }
         
         // Update the participant for this user type (replaces any previous)
-        memParticipants[sessionId][userType] = { 
+        (memParticipants[sessionId] as any)[userType] = { 
           user_id: userId, 
           socket_id: socket.id, 
           user_type: userType 

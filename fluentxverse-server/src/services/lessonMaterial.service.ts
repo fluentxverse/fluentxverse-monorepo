@@ -9,9 +9,9 @@ import neo4j from 'neo4j-driver';
 // TYPES
 // ============================================================================
 
-export type Skill = 'speaking' | 'listening' | 'reading';
+export type Skill = 'speaking' | 'listening' | 'reading' | 'writing';
 
-export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED';
+export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED' | 'HIGH BEGINNER' | 'HIGH INTERMEDIATE';
 
 // Introduction Section Types
 export interface IntroText {
@@ -300,6 +300,7 @@ export interface LessonMaterial {
   missionData2?: any;
   feedbackData?: any;
   discussionQuestionsData?: any;
+  beData?: any;
   createdBy: string;
   createdByName: string;
   createdAt: string;
@@ -350,7 +351,7 @@ export interface UpdateHeaderInput {
   missionData2?: any;
   feedbackData?: any;
   discussionQuestionsData?: any;
-  discussionQuestionsData?: any;
+  beData?: any;
 }
 
 // ============================================================================
@@ -507,6 +508,18 @@ function transformLesson(record: any): LessonMaterial {
       console.error('Failed to parse discussionQuestionsData:', e);
     }
   }
+
+  // Parse beData (Business English lesson sections) from JSON string if present
+  let beData: any | undefined;
+  if (props.beData) {
+    try {
+      beData = typeof props.beData === 'string' 
+        ? JSON.parse(props.beData) 
+        : props.beData;
+    } catch (e) {
+      console.error('Failed to parse beData:', e);
+    }
+  }
   
   return {
     id: props.id,
@@ -532,6 +545,7 @@ function transformLesson(record: any): LessonMaterial {
     missionData2,
     feedbackData,
     discussionQuestionsData,
+    beData,
     createdBy: props.createdBy,
     createdByName: props.createdByName || '',
     createdAt: props.createdAt,
@@ -852,6 +866,11 @@ export const lessonMaterialService = {
       if (input.discussionQuestionsData !== undefined) {
         setClauses.push('l.discussionQuestionsData = $discussionQuestionsData');
         params.discussionQuestionsData = JSON.stringify(input.discussionQuestionsData);
+      }
+
+      if (input.beData !== undefined) {
+        setClauses.push('l.beData = $beData');
+        params.beData = JSON.stringify(input.beData);
       }
       
       const result = await session.run(

@@ -254,7 +254,7 @@ const NotFound = () => {
               href={link.href}
               onClick={(e) => {
                 e.preventDefault();
-                setLocation(link.href);
+                route(link.href);
               }}
               style={{
                 color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : '#64748b',

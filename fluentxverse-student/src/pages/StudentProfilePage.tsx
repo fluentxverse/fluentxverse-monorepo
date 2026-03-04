@@ -217,7 +217,7 @@ const StudentProfilePage = () => {
               }
             }
           }));
-          setLessons(transformedLessons);
+          setLessons(transformedLessons as Lesson[]);
         }
       } else {
         // Use regular lesson endpoint for other courses

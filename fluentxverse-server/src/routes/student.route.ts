@@ -95,7 +95,7 @@ const Student = new Elysia({ name: "student" })
     const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
                      request.headers.get('x-real-ip') || 'unknown';
     const rateLimitResult = await rateLimitMiddleware(clientIp, 'auth', set as any);
-    if (rateLimitResult) return rateLimitResult;
+    if (rateLimitResult) return { ...rateLimitResult, user: null };
     
     try {
       const studentService = new StudentService();

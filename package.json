@@ -6,19 +6,22 @@
     "fluentxverse-tutor",
     "fluentxverse-student",
     "fluentxverse-server",
-    "fluentxverse-dashboard"
+    "fluentxverse-dashboard",
+    "fluentxverse-site"
   ],
   "scripts": {
     "dev:tutor": "cd fluentxverse-tutor && bun run dev",
     "dev:student": "cd fluentxverse-student && bun run dev",
     "dev:server": "cd fluentxverse-server && bun run dev",
     "dev:dashboard": "cd fluentxverse-dashboard && bun run dev",
+    "dev:site": "cd fluentxverse-site && bun run dev",
     "dev:all": "concurrently \"bun run dev:server\" \"bun run dev:tutor\" \"bun run dev:student\" \"bun run dev:dashboard\"",
     "build:tutor": "cd fluentxverse-tutor && bun run build",
     "build:student": "cd fluentxverse-student && bun run build",
     "build:server": "cd fluentxverse-server && bunx tsc --noEmit",
     "build:dashboard": "cd fluentxverse-dashboard && bun run build",
-    "build:all": "bun run build:server && bun run build:tutor && bun run build:student && bun run build:dashboard",
+    "build:site": "cd fluentxverse-site && bun run build",
+    "build:all": "bun run build:server && bun run build:tutor && bun run build:student && bun run build:dashboard && bun run build:site",
     "install:all": "bun install && cd fluentxverse-tutor && bun install && cd ../fluentxverse-student && bun install && cd ../fluentxverse-server && bun install && cd ../fluentxverse-dashboard && bun install"
   },
   "devDependencies": {

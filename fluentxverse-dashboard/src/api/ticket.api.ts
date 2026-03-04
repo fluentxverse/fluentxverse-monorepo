@@ -119,5 +119,6 @@ export async function getTicketImageUrl(tier: TicketTier): Promise<string> {
     throw new Error(response.data.error || 'Failed to get ticket image');
   }
 
-  return `${API_BASE_URL}${response.data.data!.url}`;
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+      return `${baseUrl}${response.data.data!.url}`;
 }

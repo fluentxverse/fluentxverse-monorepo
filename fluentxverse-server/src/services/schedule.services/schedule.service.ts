@@ -1897,7 +1897,7 @@ export class ScheduleService {
         throw new Error('Booking not found or you do not have access to this lesson');
       }
 
-      const record = result.records[0];
+      const record = result.records[0]!;
       
       // Extract slotDateTime (stored as Neo4j DateTime)
       const slotDateTime = record.get('slotDateTime');

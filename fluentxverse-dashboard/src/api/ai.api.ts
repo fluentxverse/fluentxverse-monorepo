@@ -45,7 +45,7 @@ export interface GenerateIntroductionResponse {
 export async function generateIntroductionContent(
   topic: string,
   skillLevel: string,
-  skill: 'speaking' | 'listening' | 'reading',
+  skill: 'speaking' | 'listening' | 'reading' | 'writing',
   customPrompt?: string,
   currentContent?: any,
   baseInstructions?: string,

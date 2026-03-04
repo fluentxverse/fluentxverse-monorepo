@@ -305,7 +305,7 @@ export const youngLearnersService = {
         return null;
       }
       
-      return transformLesson(result.records[0].get('l'));
+      return transformLesson(result.records[0]!.get('l'));
     } finally {
       await session.close();
     }
@@ -455,7 +455,7 @@ export const youngLearnersService = {
         return null;
       }
       
-      return transformLesson(result.records[0].get('l'));
+      return transformLesson(result.records[0]!.get('l'));
     } finally {
       await session.close();
     }
@@ -592,7 +592,7 @@ export const youngLearnersService = {
         return null;
       }
       
-      const unitLabel = result.records[0].get('unitLabel');
+      const unitLabel = result.records[0]!.get('unitLabel');
       if (unitLabel) {
         const match = unitLabel.match(/Unit \d+:\s*(.*)/);
         return match ? match[1] : null;

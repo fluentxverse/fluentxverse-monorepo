@@ -39,6 +39,17 @@ export interface TutorProfile extends Tutor {
   repeatStudents?: number;
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
   profileSubmittedAt?: string;
+  currentProficiency?: string;
+  teachingQualifications?: string[];
+  lessonPreferences?: {
+    preferCameraOn?: boolean;
+    errorCorrection?: string;
+    otherRequests?: string;
+  };
+  profileItemStatuses?: Record<string, string>;
+  profileRejectionReason?: string;
+  pendingProfileChanges?: any[];
+  hasPendingChanges?: boolean;
 }
 
 export interface TutorFilters {

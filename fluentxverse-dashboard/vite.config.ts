@@ -30,4 +30,60 @@ export default defineConfig({
       '@api': path.resolve(__dirname, 'src/api'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-preact': ['preact', 'preact/hooks', 'preact-iso'],
+          'vendor-network': ['axios', 'socket.io-client'],
+          'pages-core': [
+            './src/pages/DashboardPage.tsx',
+            './src/pages/LoginPage.tsx',
+          ],
+          'pages-users': [
+            './src/pages/TutorsPage.tsx',
+            './src/pages/StudentsPage.tsx',
+            './src/pages/ApplicationsPage.tsx',
+            './src/pages/AdminsPage.tsx',
+          ],
+          'pages-operations': [
+            './src/pages/SessionsPage.tsx',
+            './src/pages/TicketsPage.tsx',
+            './src/pages/AnalyticsPage.tsx',
+            './src/pages/InboxPage.tsx',
+            './src/pages/SettingsPage.tsx',
+          ],
+          'pages-interviews': [
+            './src/pages/InterviewSchedulePage.tsx',
+            './src/pages/InterviewRoomPage.tsx',
+          ],
+          'pages-lesson-material': [
+            './src/pages/LessonMaterialMakerPage.tsx',
+            './src/pages/LessonMaterialViewPage.tsx',
+          ],
+          'pages-conversational': [
+            './src/pages/ConversationalSkillsEditorPage.tsx',
+            './src/pages/ConversationalSkillsPreview.tsx',
+            './src/pages/ConversationalSkillsVisualEditor.tsx',
+          ],
+          'pages-daily-dispatch': [
+            './src/pages/DailyDispatchEditorPage.tsx',
+            './src/pages/DailyDispatchPreviewPage.tsx',
+            './src/pages/DailyDispatchArchivePage.tsx',
+            './src/pages/DailyDispatchStudentPage.tsx',
+          ],
+          'pages-young-learners': [
+            './src/pages/YoungLearnersEditorPage.tsx',
+            './src/pages/YoungLearnersVisualEditor.tsx',
+            './src/pages/YoungLearnersPreview.tsx',
+          ],
+          'pages-discussion': [
+            './src/pages/DiscussionQuestionsEditorPage.tsx',
+            './src/pages/DiscussionQuestionsVisualEditor.tsx',
+          ],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 });

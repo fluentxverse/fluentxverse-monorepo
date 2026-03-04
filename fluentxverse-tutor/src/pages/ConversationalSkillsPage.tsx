@@ -56,7 +56,7 @@ const ConversationalSkillsPage = () => {
             }
           }
         }));
-        setLessons(transformedLessons);
+        setLessons(transformedLessons as Lesson[]);
       } else {
         setError(result.error || 'Failed to load lessons');
       }

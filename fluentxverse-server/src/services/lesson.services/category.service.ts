@@ -284,16 +284,13 @@ class LessonTagService {
    * Assign tags to a lesson
    */
   async assignTagsToLesson(lessonId: string, tagIds: string[]): Promise<{ success: boolean; error?: string }> {
-    const client = await pool.connect();
     try {
-      await client.query('BEGIN');
-
       // Remove existing tags
-      await client.query(`DELETE FROM lesson_tag_assignments WHERE lesson_id = $1`, [lessonId]);
+      await pool.query(`DELETE FROM lesson_tag_assignments WHERE lesson_id = $1`, [lessonId]);
 
       // Add new tags
       for (const tagId of tagIds) {
-        await client.query(`
+        await pool.query(`
           INSERT INTO lesson_tag_assignments (lesson_id, tag_id)
           VALUES ($1, $2)
           ON CONFLICT DO NOTHING
@@ -301,20 +298,16 @@ class LessonTagService {
       }
 
       // Update usage counts
-      await client.query(`
+      await pool.query(`
         UPDATE lesson_tags SET usage_count = (
           SELECT COUNT(*) FROM lesson_tag_assignments WHERE tag_id = lesson_tags.id
         )
       `);
 
-      await client.query('COMMIT');
       return { success: true };
     } catch (error: unknown) {
-      await client.query('ROLLBACK');
       const message = error instanceof Error ? error.message : 'Unknown error';
       return { success: false, error: message };
-    } finally {
-      client.release();
     }
   }
 

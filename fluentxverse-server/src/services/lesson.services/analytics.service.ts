@@ -392,7 +392,7 @@ class LessonAnalyticsService {
     const result = await pool.query(`
       SELECT lesson_id FROM lesson_bookmarks WHERE user_id = $1 ORDER BY created_at DESC
     `, [userId]);
-    return result.rows.map(r => r.lesson_id);
+    return result.rows.map((r: any) => r.lesson_id);
   }
 
   /**
