@@ -22,6 +22,8 @@ import {
   type LessonMaterial,
 } from '../api/lessonMaterial.api';
 import { toast } from '../Components/Toast/Toast';
+import { BEAIContentGenerator } from '../components/BEAIContentGenerator';
+import type { BESectionType } from '../api/ai.api';
 import './BusinessEnglishVisualEditor.css';
 
 // ============================================================================
@@ -994,6 +996,103 @@ export default function BusinessEnglishVisualEditor() {
 
   return (
     <div className={`beve ${theme}`}>
+      {/* AI Content Generator Widget */}
+      <BEAIContentGenerator
+        level={lesson.level}
+        chapter={lesson.chapter}
+        lessonNumber={lesson.lessonNumber}
+        lessonName={lessonName}
+        goalTextEn={goalTextEn}
+        goalTextJp={goalTextJp}
+        chapterName={chapterName}
+        currentPresentData={{
+          patterns: beData.present.patterns,
+          vocabulary: beData.present.vocabulary.map(v => ({ word: v.word, pos: v.pos, translation: v.translation })),
+        }}
+        sectionStatus={{
+          introduce: !!(beData.introduce.goalEn && beData.introduce.situationEn),
+          present: !!(beData.present.patterns.length > 0 && beData.present.patterns[0].en),
+          understand: !!(beData.understand.fillRows.length > 0),
+          practice: !!(beData.practice.steps.length > 0 && beData.practice.steps[0].instructionEn),
+          challenge: !!(beData.challenge.scenarioEn),
+          discussion: !!(beData.discussion.categories.length > 0 && beData.discussion.categories[0].title),
+          feedback: !!(beData.feedback.goalReviewEn),
+        }}
+        onGenerateIntroduce={(data) => {
+          updateSection('introduce', {
+            goalEn: data.goalEn || beData.introduce.goalEn,
+            goalJp: data.goalJp || beData.introduce.goalJp,
+            situationEn: data.situationEn || '',
+            situationJp: data.situationJp || '',
+            taskEn: data.taskEn || '',
+            taskJp: data.taskJp || '',
+            tutorNotes: data.tutorNotes || beData.introduce.tutorNotes,
+          });
+          if (data.goalEn) setGoalTextEn(data.goalEn);
+          if (data.goalJp) setGoalTextJp(data.goalJp);
+        }}
+        onGeneratePresent={(data) => {
+          updateSection('present', {
+            patterns: data.patterns || beData.present.patterns,
+            vocabulary: data.vocabulary || beData.present.vocabulary,
+            pronunciation: data.pronunciation || beData.present.pronunciation,
+            tutorNotes: data.tutorNotes || beData.present.tutorNotes,
+          });
+        }}
+        onGenerateUnderstand={(data) => {
+          updateSection('understand', {
+            instruction: data.instruction || '',
+            instructionJp: data.instructionJp || '',
+            fillRows: data.fillRows || [],
+            tutorNotes: data.tutorNotes || beData.understand.tutorNotes,
+          });
+        }}
+        onGeneratePractice={(data) => {
+          setBeData(prev => ({
+            ...prev,
+            practice: {
+              steps: (data.steps || []).map((s: any, i: number) => ({
+                title: s.title || `Step ${i + 1}`,
+                instructionEn: s.instructionEn || '',
+                instructionJp: s.instructionJp || '',
+                content: s.content || '',
+                dialogue: s.dialogue,
+                tutorNotes: s.tutorNotes || [],
+              })),
+            },
+          }));
+          triggerAutosave();
+        }}
+        onGenerateChallenge={(data) => {
+          updateSection('challenge', {
+            scenarioEn: data.scenarioEn || '',
+            scenarioJp: data.scenarioJp || '',
+            guideQuestions: data.guideQuestions || [],
+            roleplayTable: data.roleplayTable,
+            tutorNotes: data.tutorNotes || beData.challenge.tutorNotes,
+          });
+        }}
+        onGenerateDiscussion={(data) => {
+          updateSection('discussion', {
+            instructionEn: data.instructionEn || '',
+            instructionJp: data.instructionJp || '',
+            categories: data.categories || [],
+            tutorNotes: data.tutorNotes || beData.discussion.tutorNotes,
+          });
+        }}
+        onGenerateFeedback={(data) => {
+          updateSection('feedback', {
+            goalReviewEn: data.goalReviewEn || goalTextEn,
+            goalReviewJp: data.goalReviewJp || goalTextJp,
+            feedbackTemplate: data.feedbackTemplate || beData.feedback.feedbackTemplate,
+            nextLessonLabel: data.nextLessonLabel || beData.feedback.nextLessonLabel,
+            nextLessonName: data.nextLessonName || beData.feedback.nextLessonName,
+            tutorNotes: data.tutorNotes || beData.feedback.tutorNotes,
+          });
+        }}
+        currentSectionData={(section: BESectionType) => beData[section]}
+      />
+
       {/* Toolbar */}
       <div className="beve-toolbar">
         <div className="beve-toolbar-left">

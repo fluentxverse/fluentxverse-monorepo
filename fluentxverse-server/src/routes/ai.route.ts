@@ -2,7 +2,7 @@
  * AI Routes - Grammar checking and language assistance
  */
 import { Elysia, t } from 'elysia';
-import { checkGrammar, getVocabularyDefinition, getPronunciation, generateIntroductionContent, generateDiscussionQuestions, generateCourseStructure, generateLessonStructure } from '../services/ai.service';
+import { checkGrammar, getVocabularyDefinition, getPronunciation, generateIntroductionContent, generateDiscussionQuestions, generateCourseStructure, generateLessonStructure, generateBusinessEnglishContent } from '../services/ai.service';
 import { createAdminGuard, createTutorGuard } from '../middleware/auth.middleware';
 
 export const aiRoute = new Elysia({ prefix: '/ai' })
@@ -485,6 +485,76 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         tags: ['AI'],
         summary: 'Generate lesson names and goals for a chapter',
         description: 'Uses AI to generate lesson names, English goals, and Japanese goals for all 10 lessons in a chapter.',
+      },
+    }
+  )
+  // ============================================================================
+  // GENERATE BUSINESS ENGLISH CONTENT (Admin only)
+  // Section-by-section content for PCPP lessons
+  // ============================================================================
+  .post(
+    '/generate-be-content',
+    async ({ body, cookie, set }) => {
+      const adminPayload = await createAdminGuard(cookie, set);
+      if (!adminPayload) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      try {
+        const result = await generateBusinessEnglishContent(
+          body.section,
+          body.level,
+          body.chapter,
+          body.lessonNumber,
+          body.lessonName,
+          body.goalTextEn,
+          body.goalTextJp,
+          body.chapterName,
+          body.customPrompt,
+          body.currentContent,
+          body.generationMode,
+          body.currentPresentData
+        );
+        return { success: true, data: result };
+      } catch (error) {
+        console.error('BE content generation failed:', error);
+        set.status = 500;
+        return {
+          success: false,
+          error: 'Failed to generate Business English content. Please try again.',
+        };
+      }
+    },
+    {
+      body: t.Object({
+        section: t.Union([
+          t.Literal('introduce'),
+          t.Literal('present'),
+          t.Literal('understand'),
+          t.Literal('practice'),
+          t.Literal('challenge'),
+          t.Literal('discussion'),
+          t.Literal('feedback'),
+        ]),
+        level: t.Number({ minimum: 1, maximum: 10 }),
+        chapter: t.Number({ minimum: 1, maximum: 10 }),
+        lessonNumber: t.Number({ minimum: 1, maximum: 10 }),
+        lessonName: t.String({ minLength: 1, maxLength: 500 }),
+        goalTextEn: t.String({ maxLength: 500 }),
+        goalTextJp: t.String({ maxLength: 500 }),
+        chapterName: t.String({ maxLength: 500 }),
+        customPrompt: t.Optional(t.Nullable(t.String({ maxLength: 2000 }))),
+        currentContent: t.Optional(t.Nullable(t.Any())),
+        generationMode: t.Optional(t.Nullable(t.Union([t.Literal('new'), t.Literal('improve')]))),
+        currentPresentData: t.Optional(t.Nullable(t.Object({
+          patterns: t.Optional(t.Array(t.Object({ en: t.String(), jp: t.String() }))),
+          vocabulary: t.Optional(t.Array(t.Object({ word: t.String(), pos: t.String(), translation: t.String() }))),
+        }))),
+      }),
+      detail: {
+        tags: ['AI'],
+        summary: 'Generate Business English lesson section content',
+        description: 'Uses AI to generate content for a specific section of a Business English PCPP lesson.',
       },
     }
   );

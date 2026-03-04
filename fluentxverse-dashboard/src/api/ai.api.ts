@@ -339,3 +339,68 @@ export async function generateLessonStructure(
     };
   }
 }
+
+// ============================================================================
+// BUSINESS ENGLISH CONTENT GENERATION
+// ============================================================================
+
+export type BESectionType = 'introduce' | 'present' | 'understand' | 'practice' | 'challenge' | 'discussion' | 'feedback';
+
+export interface GenerateBEContentResponse {
+  success: boolean;
+  data?: {
+    introduce?: any;
+    present?: any;
+    understand?: any;
+    practice?: any;
+    challenge?: any;
+    discussion?: any;
+    feedback?: any;
+  };
+  error?: string;
+}
+
+/**
+ * Generate Business English PCPP lesson content for a specific section
+ */
+export async function generateBusinessEnglishContent(
+  section: BESectionType,
+  level: number,
+  chapter: number,
+  lessonNumber: number,
+  lessonName: string,
+  goalTextEn: string,
+  goalTextJp: string,
+  chapterName: string,
+  customPrompt?: string | null,
+  currentContent?: any | null,
+  generationMode?: 'new' | 'improve' | null,
+  currentPresentData?: {
+    patterns?: Array<{ en: string; jp: string }>;
+    vocabulary?: Array<{ word: string; pos: string; translation: string }>;
+  } | null,
+): Promise<GenerateBEContentResponse> {
+  try {
+    const response = await apiClient.post('/ai/generate-be-content', {
+      section,
+      level,
+      chapter,
+      lessonNumber,
+      lessonName,
+      goalTextEn: goalTextEn || '',
+      goalTextJp: goalTextJp || '',
+      chapterName: chapterName || '',
+      customPrompt: customPrompt || null,
+      currentContent: currentContent || null,
+      generationMode: generationMode || null,
+      currentPresentData: currentPresentData || null,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error generating BE content:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate Business English content',
+    };
+  }
+}
