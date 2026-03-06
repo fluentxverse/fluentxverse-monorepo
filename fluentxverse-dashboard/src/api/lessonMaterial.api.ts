@@ -8,7 +8,7 @@ import apiClient from './apiClient';
 // TYPES
 // ============================================================================
 
-export type Skill = 'speaking' | 'listening' | 'reading' | 'writing';
+export type Skill = 'speaking' | 'listening' | 'reading' | 'writing' | 'review';
 export type LevelBadge = 'STARTER' | 'BEGINNER' | 'ELEMENTARY' | 'INTERMEDIATE' | 'ADVANCED' | 'HIGH BEGINNER' | 'HIGH INTERMEDIATE';
 
 // Introduction Section Types

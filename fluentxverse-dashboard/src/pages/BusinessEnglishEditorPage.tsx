@@ -57,17 +57,15 @@ const LESSONS = Array.from({ length: 10 }, (_, i) => i + 1);
 /** All levels have 5 chapters */
 const getChaptersForLevel = (_level: number): number[] => CHAPTERS;
 
-/** Skills vary by level — writing is added at level 6+ */
-const getSkillsForLevel = (level: number): { value: Skill; label: string }[] => {
-  const base: { value: Skill; label: string }[] = [
-    { value: 'listening', label: 'Listening' },
-    { value: 'speaking', label: 'Speaking' },
-    { value: 'reading', label: 'Reading' },
-  ];
-  if (level >= 6) {
-    base.push({ value: 'writing', label: 'Writing' });
-  }
-  return base;
+/**
+ * Hardcoded skill cycle per lesson number within a chapter.
+ * Pattern: Listening → Reading → Speaking → Speaking → Review (repeats)
+ * Same for ALL levels (3–10).
+ */
+const SKILL_CYCLE: Skill[] = ['listening', 'reading', 'speaking', 'speaking', 'review'];
+
+const getSkillForLesson = (lessonNumber: number): Skill => {
+  return SKILL_CYCLE[(lessonNumber - 1) % SKILL_CYCLE.length];
 };
 
 /** Flat skill list for analytics (superset) */
@@ -76,6 +74,7 @@ const ALL_SKILLS: { value: Skill; label: string }[] = [
   { value: 'speaking', label: 'Speaking' },
   { value: 'reading', label: 'Reading' },
   { value: 'writing', label: 'Writing' },
+  { value: 'review', label: 'Review' },
 ];
 
 const LEVEL_BADGES: Record<number, string> = {
@@ -344,23 +343,21 @@ export default function BusinessEnglishEditorPage() {
 
   const handleAcceptLessons = async () => {
     if (!lessonPreview) return;
-    const skills = getSkillsForLevel(lessonPreview.level).map((s) => s.value);
     try {
       for (const lesson of lessonPreview.lessons) {
-        for (const skill of skills) {
-          const exists = await checkDuplicate(COURSE_ID, lessonPreview.level, lessonPreview.chapter, lesson.lessonNumber, skill);
-          if (exists) continue;
-          await createLesson({
-            course: COURSE_ID,
-            level: lessonPreview.level,
-            chapter: lessonPreview.chapter,
-            lessonNumber: lesson.lessonNumber,
-            skill,
-            lessonName: lesson.lessonName,
-            goalTextEn: lesson.goalTextEn,
-            goalTextJp: lesson.goalTextJp,
-          });
-        }
+        const skill = getSkillForLesson(lesson.lessonNumber);
+        const exists = await checkDuplicate(COURSE_ID, lessonPreview.level, lessonPreview.chapter, lesson.lessonNumber, skill);
+        if (exists) continue;
+        await createLesson({
+          course: COURSE_ID,
+          level: lessonPreview.level,
+          chapter: lessonPreview.chapter,
+          lessonNumber: lesson.lessonNumber,
+          skill,
+          lessonName: lesson.lessonName,
+          goalTextEn: lesson.goalTextEn,
+          goalTextJp: lesson.goalTextJp,
+        });
       }
       await loadLessons();
       setLessonPreview(null);
@@ -456,13 +453,12 @@ export default function BusinessEnglishEditorPage() {
     const listeningCount = lessons.filter((l) => l.skill === 'listening').length;
     const readingCount = lessons.filter((l) => l.skill === 'reading').length;
     const writingCount = lessons.filter((l) => l.skill === 'writing').length;
+    const reviewCount = lessons.filter((l) => l.skill === 'review').length;
     const totalLessons = lessons.length;
-    // Capacity: levels 3-5 have 3 skills × 10 lessons × 5 chapters = 150 each
-    //           levels 6-10 have 4 skills × 10 lessons × 5 chapters = 200 each
-    const totalCapacity = 3 * (3 * 10 * 5) + 5 * (4 * 10 * 5); // 450 + 1000 = 1450
+    // Capacity: 8 levels × 5 chapters × 10 lessons = 400 total
+    const totalCapacity = LEVELS.length * 5 * 10; // 400
     const completedLevels = LEVELS.filter((lv) => {
-      const skillCount = lv >= 6 ? 4 : 3;
-      return getLevelTotalLessons(lv) >= skillCount * 10 * 5;
+      return getLevelTotalLessons(lv) >= 10 * 5; // 50 lessons per level
     }).length;
     const progressPercent = totalCapacity > 0 ? Math.round((totalLessons / totalCapacity) * 100) : 0;
 
@@ -472,6 +468,7 @@ export default function BusinessEnglishEditorPage() {
       listeningCount,
       readingCount,
       writingCount,
+      reviewCount,
       completedLevels,
       totalCapacity,
       progressPercent,
@@ -837,11 +834,13 @@ export default function BusinessEnglishEditorPage() {
                                     ) : (
                                       <div className="cse-empty-chapter">
                                         <span>No lessons yet</span>
-                                        <button className="cse-add-lesson-btn" onClick={() => setShowCreateModal(true)}>
-                                          <i className="ri-add-line" />
-                                          Add Lesson
-                                        </button>
                                       </div>
+                                    )}
+                                    {chapterLessons.length < 10 && (
+                                      <button className="cse-add-lesson-btn" onClick={() => setShowCreateModal(true)}>
+                                        <i className="ri-add-line" />
+                                        Add Lesson
+                                      </button>
                                     )}
                                   </div>
                                 </>
@@ -931,7 +930,7 @@ function BECreateLessonModal({
     level: 3,
     chapter: 1,
     lessonNumber: 1,
-    skill: 'listening' as Skill,
+    skill: getSkillForLesson(1),
     lessonName: '',
     goalTextEn: '',
     goalTextJp: '',
@@ -958,8 +957,7 @@ function BECreateLessonModal({
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     if (duplicateWarning) {
-      toast.error('This lesson combination already exists');
-      return;
+      if (!confirm(`${duplicateWarning}. Do you want to create it anyway?`)) return;
     }
     if (!form.lessonName || !form.goalTextEn || !form.goalTextJp) {
       toast.error('Please fill in all fields');
@@ -972,8 +970,6 @@ function BECreateLessonModal({
       setLoading(false);
     }
   };
-
-  const availableSkills = getSkillsForLevel(form.level);
 
   return (
     <div className="cse-modal-overlay" onClick={onClose}>
@@ -994,13 +990,7 @@ function BECreateLessonModal({
                   value={form.level}
                   onChange={(e) => {
                     const newLevel = parseInt((e.target as HTMLSelectElement).value);
-                    const skills = getSkillsForLevel(newLevel);
-                    const skillExists = skills.some((s) => s.value === form.skill);
-                    setForm({
-                      ...form,
-                      level: newLevel,
-                      skill: skillExists ? form.skill : skills[0].value,
-                    });
+                    setForm({ ...form, level: newLevel });
                   }}
                 >
                   {LEVELS.map((l) => (
@@ -1027,7 +1017,10 @@ function BECreateLessonModal({
                 <label>Lesson</label>
                 <select
                   value={form.lessonNumber}
-                  onChange={(e) => setForm({ ...form, lessonNumber: parseInt((e.target as HTMLSelectElement).value) })}
+                  onChange={(e) => {
+                    const num = parseInt((e.target as HTMLSelectElement).value);
+                    setForm({ ...form, lessonNumber: num, skill: getSkillForLesson(num) });
+                  }}
                 >
                   {LESSONS.map((l) => (
                     <option key={l} value={l}>
@@ -1038,16 +1031,10 @@ function BECreateLessonModal({
               </div>
               <div className="cse-form-field">
                 <label>Skill</label>
-                <select
-                  value={form.skill}
-                  onChange={(e) => setForm({ ...form, skill: (e.target as HTMLSelectElement).value as Skill })}
-                >
-                  {availableSkills.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="cse-skill-display">
+                  <span className={`cse-skill-dot cse-skill-${form.skill}`} />
+                  {form.skill.charAt(0).toUpperCase() + form.skill.slice(1)}
+                </div>
               </div>
             </div>
 
@@ -1098,7 +1085,7 @@ function BECreateLessonModal({
             <button type="button" className="cse-btn-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="cse-btn-primary bee-btn-primary" disabled={loading || !!duplicateWarning}>
+            <button type="submit" className="cse-btn-primary bee-btn-primary" disabled={loading}>
               {loading ? 'Creating…' : 'Create Lesson'}
             </button>
           </div>
@@ -1122,6 +1109,7 @@ function BECourseAnalytics({
     listeningCount: number;
     readingCount: number;
     writingCount: number;
+    reviewCount: number;
     completedLevels: number;
     totalCapacity: number;
     progressPercent: number;
@@ -1167,6 +1155,7 @@ function BECourseAnalytics({
             { key: 'speaking', label: 'Speaking', count: stats.speakingCount },
             { key: 'reading', label: 'Reading', count: stats.readingCount },
             { key: 'writing', label: 'Writing', count: stats.writingCount },
+            { key: 'review', label: 'Review', count: stats.reviewCount },
           ].map((item) => (
             <div className="cse-skill-bar-item" key={item.key}>
               <div className="cse-skill-bar-header">
@@ -1543,7 +1532,6 @@ function BELessonPreviewModal({
   onChange: (updated: { level: number; chapter: number; lessons: LessonStructureItem[] }) => void;
 }) {
   const [saving, setSaving] = useState(false);
-  const skills = getSkillsForLevel(preview.level);
 
   const handleAccept = async () => {
     setSaving(true);
@@ -1574,13 +1562,19 @@ function BELessonPreviewModal({
           ) : (
             <>
               <p className="cse-ai-review-hint">
-                Review and edit the generated lessons. Accepting will create lessons for all {skills.length} skills
-                ({skills.map((s) => s.label).join(', ')}). Existing lessons will be skipped.
+                Review and edit the generated lessons. Each lesson's skill is auto-assigned:
+                Listening → Reading → Speaking → Speaking → Review (repeating). Existing lessons will be skipped.
               </p>
               <div className="cse-ai-lessons-list">
                 {preview.lessons.map((lesson, idx) => (
                   <div className="cse-ai-lesson-card" key={lesson.lessonNumber}>
-                    <div className="cse-ai-lesson-num">Lesson {lesson.lessonNumber}</div>
+                    <div className="cse-ai-lesson-num">
+                      Lesson {lesson.lessonNumber}
+                      <span className={`cse-skill-dot cse-skill-${getSkillForLesson(lesson.lessonNumber)}`} style={{ marginLeft: 8 }} />
+                      <span style={{ fontSize: 11, fontWeight: 500, color: '#a1a1aa', marginLeft: 4 }}>
+                        {getSkillForLesson(lesson.lessonNumber).charAt(0).toUpperCase() + getSkillForLesson(lesson.lessonNumber).slice(1)}
+                      </span>
+                    </div>
                     <div className="cse-form-row cse-form-row-2">
                       <div className="cse-form-field">
                         <label>Lesson Name</label>

@@ -45,8 +45,16 @@
   background-color: #f59e0b;
 }
 
+.cse-skill-dot.cse-skill-review {
+  background-color: #06b6d4;
+}
+
 .cse-skill-bar-fill.writing {
   background: #f59e0b;
+}
+
+.cse-skill-bar-fill.review {
+  background: #06b6d4;
 }
 
 .cse-skill-tag[data-skill="writing"] {
@@ -104,4 +112,21 @@
   font-weight: 600;
   color: #047857;
   margin-left: 4px;
+}
+
+/* ========================================
+   SKILL DISPLAY (read-only in modal)
+   ======================================== */
+.cse-skill-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e8;
+  letter-spacing: 0.2px;
 }

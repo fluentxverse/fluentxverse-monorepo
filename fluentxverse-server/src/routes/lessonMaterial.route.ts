@@ -61,7 +61,7 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         level: t.Number({ minimum: 1, maximum: 10 }),
         chapter: t.Number({ minimum: 1, maximum: 5 }),
         lessonNumber: t.Number({ minimum: 1, maximum: 10 }),
-        skill: t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading')]),
+        skill: t.Union([t.Literal('speaking'), t.Literal('listening'), t.Literal('reading'), t.Literal('review')]),
         chapterName: t.Optional(t.String()),
         lessonName: t.String({ minLength: 1 }),
         goalTextEn: t.String(),

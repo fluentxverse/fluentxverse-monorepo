@@ -30,7 +30,7 @@ import './BusinessEnglishVisualEditor.css';
 // TYPE DEFINITIONS
 // ============================================================================
 
-type LessonType = 'READING' | 'SPEAKING' | 'LISTENING' | 'WRITING';
+type LessonType = 'READING' | 'SPEAKING' | 'LISTENING' | 'WRITING' | 'REVIEW';
 interface PatternItem { en: string; jp: string; }
 interface VocabItem { word: string; pos: string; translation: string; definition?: string; pronunciation?: string; }
 interface PronunColumn { symbol: string; words: { en: string; jp: string }[]; }
