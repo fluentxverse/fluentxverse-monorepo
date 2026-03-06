@@ -524,6 +524,44 @@
   box-shadow: 0 2px 8px rgba(109, 40, 217, .25);
 }
 
+.beve-header-row2-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Lesson Type Selector ────────────────────────────── */
+.beve-lesson-type-select {
+  appearance: none;
+  background: rgba(124, 58, 237, .15);
+  border: 1px solid rgba(124, 58, 237, .35);
+  color: #a78bfa;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 3px 22px 3px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a78bfa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  transition: border-color .15s, background .15s;
+}
+.beve-lesson-type-select:hover {
+  border-color: #a78bfa;
+  background-color: rgba(124, 58, 237, .22);
+}
+.beve-lesson-type-select:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, .2);
+}
+.beve-lesson-type-select option {
+  background: #1e1b2e;
+  color: #d4d4d8;
+}
+
 .beve-page-number {
   font-size: 11px;
   color: #71717a;
@@ -539,29 +577,146 @@
 .beve-col-student {
   padding: 28px 32px;
   background: #141420;
-  border-right: 1px solid rgba(124, 58, 237, .12);
+  border-right: none;
   min-width: 0;
   overflow: hidden;
 }
 
 .beve-col-tutor {
-  padding: 22px 24px;
-  background: linear-gradient(180deg, #110f1c, #0f0d18);
+  padding: 28px 16px 16px;
+  background: #ffffff;
+  color: #2c3040;
   min-width: 0;
+  position: relative;
 }
 
 .beve-col-tutor-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  color: #fff;
+  margin: 0 0 16px;
+  padding: 10px 16px;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  /* Same base as page header */
+  background:
+    linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255,255,255,.018) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,.018) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.018) 75%),
+    repeating-linear-gradient(
+      -55deg,
+      transparent 0px, transparent 18px,
+      rgba(124, 58, 237, .06) 18px, rgba(124, 58, 237, .06) 20px,
+      transparent 20px, transparent 38px
+    ),
+    radial-gradient(ellipse at 15% 50%, rgba(124, 58, 237, .15) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 30%, rgba(139, 92, 246, .12) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Cdefs%3E%3Cstyle%3Eline,polyline%7Bfill:none;stroke:rgba(124,58,237,0.18);stroke-width:1.4%7Dcircle%7Bfill:rgba(124,58,237,0.22)%7D%3C/style%3E%3C/defs%3E%3Cline x1='0' y1='30' x2='40' y2='30'/%3E%3Cpolyline points='40,30 50,20 90,20'/%3E%3Ccircle cx='90' cy='20' r='2.5'/%3E%3Cline x1='90' y1='20' x2='130' y2='20'/%3E%3Cpolyline points='130,20 140,30 170,30'/%3E%3Ccircle cx='170' cy='30' r='2'/%3E%3Cline x1='170' y1='30' x2='200' y2='30'/%3E%3Cline x1='20' y1='70' x2='60' y2='70'/%3E%3Cpolyline points='60,70 70,80 110,80'/%3E%3Ccircle cx='110' cy='80' r='2.5'/%3E%3Cline x1='110' y1='80' x2='150' y2='80'/%3E%3Cpolyline points='150,80 160,70 200,70'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, #0a0614 0%, #110b20 30%, #0d0818 60%, #12091f 100%);
+  background-size:
+    4px 4px, 4px 4px, 4px 4px, 4px 4px,
+    100% 100%,
+    100% 100%, 100% 100%,
+    200px 100px,
+    100% 100%;
+  border: 1px solid rgba(124, 58, 237, .2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25), 0 0 12px rgba(124, 58, 237, .08);
+}
+.beve-col-tutor-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #7c3aed, #a78bfa, #7c3aed);
+  opacity: .5;
+}
+.beve-col-tutor-title i {
+  font-size: 14px;
   color: #a78bfa;
-  margin-bottom: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(124, 58, 237, .25);
 }
 
-/* ─── Section Banner — Chevron Step Indicator ─────────── */
+/* ─── Tutor Column Dark-on-White Overrides ──────────── */
+/* These elements are normally styled for dark bg but appear inside the white tutor column */
+.beve-col-tutor .beve-sub-heading {
+  color: #1e1e2e;
+  border-bottom-color: #e0e4ee;
+}
+.beve-col-tutor .beve-sub-heading i { color: #7c3aed; }
+.beve-col-tutor .beve-sub-heading .jp-label { color: #9ca3af; }
+
+.beve-col-tutor .beve-guide-q {
+  color: #2c3040;
+  background: #f8f9fc;
+  border-color: #e0e4ee;
+}
+.beve-col-tutor .beve-guide-q span {
+  color: #7c3aed !important;
+}
+
+.beve-col-tutor .beve-editable:hover {
+  border-color: rgba(124, 58, 237, .25);
+  background: rgba(124, 58, 237, .03);
+}
+.beve-col-tutor .beve-editable:focus {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, .05);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+}
+
+.beve-col-tutor .beve-rich-input {
+  color: #2c3040;
+  caret-color: #2c3040;
+}
+.beve-col-tutor .beve-rich-input:hover {
+  border-color: rgba(124, 58, 237, .25);
+  background: rgba(124, 58, 237, .03);
+}
+.beve-col-tutor .beve-rich-input:focus {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, .05);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+  color: #1a1e2e;
+}
+.beve-col-tutor .beve-rich-input strong,
+.beve-col-tutor .beve-rich-input b {
+  color: #7c3aed;
+}
+.beve-col-tutor .beve-rich-input u {
+  text-decoration-color: rgba(124, 58, 237, .4);
+}
+.beve-col-tutor .beve-rich-placeholder:empty::before {
+  color: #9ca3af;
+}
+.beve-col-tutor .beve-rich-hint {
+  color: #9ca3af;
+}
+.beve-col-tutor .beve-rich-hint kbd {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #7c3aed;
+}
+
+.beve-col-tutor .beve-icon-btn {
+  background: rgba(0, 0, 0, .04);
+  color: #6b7080;
+  border-color: transparent;
+}
+.beve-col-tutor .beve-icon-btn:hover {
+  background: rgba(0, 0, 0, .08);
+  color: #3f4050;
+}
+.beve-col-tutor .beve-icon-btn.danger:hover {
+  background: rgba(239, 68, 68, .1);
+  color: #dc2626;
+}/* ─── Section Banner — Chevron Step Indicator ─────────── */
 .beve-section-banner {
   display: flex;
   align-items: center;
@@ -719,6 +874,90 @@
   border-color: #7c3aed;
   background: rgba(124, 58, 237, .08);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, .12), 0 0 12px rgba(124, 58, 237, .06);
+}
+
+/* ─── Rich Text Input ─────────────────────────────────── */
+.beve-rich-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.beve-rich-input {
+  width: 100%;
+  font-size: inherit;
+  color: inherit;
+  border: 1px dashed transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  line-height: 1.6;
+  outline: none;
+  transition: all .2s ease;
+  min-height: 1.5em;
+  cursor: text;
+}
+
+.beve-rich-input:hover {
+  border-color: rgba(124, 58, 237, .3);
+  background: rgba(124, 58, 237, .04);
+}
+
+.beve-rich-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, .08);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .12), 0 0 12px rgba(124, 58, 237, .06);
+}
+
+.beve-rich-placeholder:empty::before {
+  content: attr(data-placeholder);
+  color: #52525b;
+  pointer-events: none;
+  font-style: italic;
+}
+
+.beve-rich-input strong,
+.beve-rich-input b {
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.beve-rich-input em,
+.beve-rich-input i:not([class]) {
+  font-style: italic;
+  color: inherit;
+}
+
+.beve-rich-input u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(167, 139, 250, .5);
+}
+
+.beve-rich-hint {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #52525b;
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+  user-select: none;
+}
+
+.beve-rich-wrap:focus-within .beve-rich-hint {
+  opacity: 1;
+}
+
+.beve-rich-hint kbd {
+  display: inline-block;
+  padding: 0 3px;
+  background: rgba(124, 58, 237, .1);
+  border: 1px solid rgba(124, 58, 237, .2);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 9px;
+  color: #a78bfa;
 }
 
 /* ─── Goal Box ────────────────────────────────────────── */
@@ -956,6 +1195,22 @@
   background-clip: text;
   margin-bottom: 10px;
 }
+.beve-pronun-symbol.beve-editable:hover {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-color: rgba(124, 58, 237, .3);
+}
+.beve-pronun-symbol.beve-editable:focus {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .12), 0 0 12px rgba(124, 58, 237, .06);
+}
 
 .beve-pronun-words {
   display: flex;
@@ -974,6 +1229,68 @@
 }
 .beve-pronun-word:nth-child(odd) {
   background: rgba(124, 58, 237, .06);
+}
+
+/* ─── Modular Block Wrapper ───────────────────────────── */
+.beve-block-wrapper {
+  position: relative;
+  margin-top: 24px;
+  padding: 4px 0 0;
+}
+.beve-block-wrapper:first-child { margin-top: 0; }
+
+.beve-block-remove-btn {
+  position: absolute;
+  top: 2px;
+  right: -4px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgba(239, 68, 68, .08);
+  color: #ef4444;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all .2s ease;
+}
+.beve-block-wrapper:hover .beve-block-remove-btn {
+  opacity: 1;
+}
+.beve-block-remove-btn:hover {
+  background: rgba(239, 68, 68, .18);
+  border-color: rgba(239, 68, 68, .3);
+  transform: scale(1.08);
+}
+
+.beve-block-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 18px;
+  margin-top: 16px;
+  border: 2px dashed rgba(124, 58, 237, .2);
+  border-radius: 10px;
+  background: rgba(124, 58, 237, .02);
+  color: #a78bfa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+.beve-block-add-btn:first-child { margin-top: 24px; }
+.beve-block-add-btn:hover {
+  border-color: rgba(124, 58, 237, .4);
+  background: rgba(124, 58, 237, .06);
+  color: #7c3aed;
+}
+.beve-block-add-btn i {
+  font-size: 16px;
 }
 
 /* ─── Practice Steps ──────────────────────────────────── */
@@ -1222,59 +1539,84 @@
 .beve-tutor-notes {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .beve-tutor-note {
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, .03);
-  border: 1px solid rgba(124, 58, 237, .1);
-  border-radius: 8px;
+  padding: 8px 10px 8px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
   font-size: 13px;
-  line-height: 1.5;
-  color: #d4d4d8;
+  line-height: 1.6;
+  color: #2c3040;
   position: relative;
-  transition: all .2s ease;
+  transition: background .15s ease;
+  border-bottom: 1px solid #eaedf3;
+}
+.beve-tutor-note:last-of-type {
+  border-bottom: none;
 }
 .beve-tutor-note:hover {
-  border-color: rgba(124, 58, 237, .25);
-  background: rgba(124, 58, 237, .04);
+  background: #f5f7fc;
 }
 
 .beve-tutor-note.script {
-  border-left: 3px solid #7c3aed;
   font-style: italic;
-  color: #c4b5fd;
+  color: #1a2540;
+  padding-left: 14px;
+}
+.beve-tutor-note.script::before {
+  content: '\25B8';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  color: #3a5090;
+  font-size: 13px;
+  font-style: normal;
 }
 
 .beve-tutor-note.instruction {
-  border-left: 3px solid #a78bfa;
+  padding-left: 14px;
+}
+.beve-tutor-note.instruction::before {
+  content: '\2022';
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  color: #3a5090;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .beve-tutor-note.tip {
-  border-left: 3px solid #fbbf24;
-  background: rgba(251, 191, 36, .05);
+  background: #fef9e7;
+  border-left: 3px solid #e6a817;
+  border-radius: 4px;
+  border-bottom: none;
+  margin: 4px 0;
+  padding-left: 12px;
 }
 
 .beve-tutor-note-type {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: .5px;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.beve-tutor-note.script .beve-tutor-note-type { color: #7c3aed; }
-.beve-tutor-note.instruction .beve-tutor-note-type { color: #a78bfa; }
-.beve-tutor-note.tip .beve-tutor-note-type { color: #fbbf24; }
+.beve-tutor-note.script .beve-tutor-note-type { color: #5a6fa0; }
+.beve-tutor-note.instruction .beve-tutor-note-type { color: #5a6fa0; }
+.beve-tutor-note.tip .beve-tutor-note-type { color: #b8860b; }
 
 .beve-tutor-note-actions {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 4px;
+  right: 4px;
   display: flex;
   gap: 2px;
   opacity: 0;
-  transition: .2s;
+  transition: .15s;
 }
 .beve-tutor-note:hover .beve-tutor-note-actions { opacity: 1; }
 
@@ -1284,20 +1626,20 @@
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 7px;
-  border: 1px dashed rgba(124, 58, 237, .2);
-  border-radius: 6px;
+  padding: 6px;
+  border: 1px dashed #c5cad6;
+  border-radius: 4px;
   background: transparent;
-  color: #71717a;
+  color: #8992a4;
   font-size: 11px;
   cursor: pointer;
-  transition: all .2s ease;
-  margin-top: 4px;
+  transition: all .15s ease;
+  margin-top: 2px;
 }
 .beve-tutor-add-note:hover {
-  border-color: rgba(124, 58, 237, .4);
-  color: #a78bfa;
-  background: rgba(124, 58, 237, .04);
+  border-color: #7889ac;
+  color: #3a5090;
+  background: #f5f7fc;
 }
 
 /* ─── Fill-in-blank Table ─────────────────────────────── */
@@ -1320,6 +1662,114 @@
   min-width: 100px;
   color: #a78bfa;
   font-weight: 600;
+}
+
+/* ─── Pattern Drill Tables ────────────────────────────── */
+.beve-pattern-drills {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.beve-drill-card {
+  background: rgba(124, 58, 237, .04);
+  border: 1px solid rgba(124, 58, 237, .15);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.beve-drill-header {
+  padding: 12px 16px 8px;
+  position: relative;
+}
+
+.beve-drill-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+
+.beve-drill-label-jp {
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+.beve-drill-template {
+  padding: 8px 16px;
+  background: rgba(124, 58, 237, .08);
+  border-top: 1px solid rgba(124, 58, 237, .1);
+  border-bottom: 1px solid rgba(124, 58, 237, .1);
+  font-size: 14px;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+.beve-drill-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.beve-drill-table td {
+  padding: 6px 16px;
+  border-bottom: 1px solid rgba(124, 58, 237, .08);
+  font-size: 13px;
+  color: #d4d4d8;
+  vertical-align: top;
+}
+.beve-drill-table td:nth-child(2) {
+  color: #71717a;
+  font-size: 12px;
+}
+.beve-drill-table tr:last-child td { border-bottom: none; }
+
+/* ─── Word Box (Practice Steps) ───────────────────────── */
+.beve-word-box {
+  background: linear-gradient(135deg, rgba(76, 29, 149, .08), rgba(124, 58, 237, .04));
+  border: 1px dashed rgba(124, 58, 237, .3);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.beve-word-box-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: #a78bfa;
+  margin-bottom: 10px;
+}
+.beve-word-box-label i { margin-right: 4px; }
+
+.beve-word-box-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.beve-word-box-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(124, 58, 237, .12);
+  border: 1px solid rgba(124, 58, 237, .25);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4d4d8;
+}
+.beve-word-box-item .beve-editable {
+  min-width: 24px;
+  outline: none;
+}
+
+.beve-word-box-trans {
+  font-size: 11px;
+  font-weight: 400;
+  color: #71717a;
 }
 
 /* ─── Hint Box (reference patterns) ───────────────────── */
@@ -1593,7 +2043,9 @@
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 900px) {
   .beve-columns { grid-template-columns: 1fr; }
-  .beve-col-tutor { border-top: 1px solid rgba(124, 58, 237, .15); }
+  .beve-col-tutor {
+    border-top: 2px solid #627aa8;
+  }
   .beve-col-student { border-right: none; }
   .beve-sidebar { width: 170px; min-width: 170px; }
 }
@@ -1717,16 +2169,18 @@
 /* ─── Two Columns ─────────────────────────────────────── */
 .beve.light .beve-col-student {
   background: #fff;
-  border-right: 1px solid #e8e0f5;
+  border-right: none;
 }
 
 .beve.light .beve-col-tutor {
-  background: linear-gradient(180deg, #faf9fe, #f5f3fb);
+  background: #ffffff;
 }
 
 .beve.light .beve-col-tutor-title {
-  color: #7c3aed;
-  border-bottom-color: #e0d9f0;
+  color: #fff;
+}
+.beve.light .beve-col-tutor-title i {
+  color: #a78bfa;
 }
 
 /* ─── Section Banner (light) ──────────────────────────── */
@@ -1773,6 +2227,35 @@
   border-color: #7c3aed;
   background: rgba(124, 58, 237, .05);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, .1), 0 0 8px rgba(124, 58, 237, .04);
+}
+
+/* ─── Rich Text Input (light) ─────────────────────────── */
+.beve.light .beve-rich-input:hover {
+  border-color: rgba(124, 58, 237, .25);
+  background: rgba(124, 58, 237, .03);
+}
+.beve.light .beve-rich-input:focus {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, .05);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1), 0 0 8px rgba(124, 58, 237, .04);
+}
+.beve.light .beve-rich-placeholder:empty::before {
+  color: #9ca3af;
+}
+.beve.light .beve-rich-input strong,
+.beve.light .beve-rich-input b {
+  color: #7c3aed;
+}
+.beve.light .beve-rich-input u {
+  text-decoration-color: rgba(124, 58, 237, .4);
+}
+.beve.light .beve-rich-hint {
+  color: #9ca3af;
+}
+.beve.light .beve-rich-hint kbd {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #7c3aed;
 }
 
 /* ─── Goal Box ────────────────────────────────────────── */
@@ -1852,8 +2335,42 @@
 }
 .beve.light .beve-pronun-title { color: #3f3f50; }
 .beve.light .beve-pronun-word { color: #3f3f50; }
+.beve.light .beve-pronun-symbol.beve-editable:hover {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-color: rgba(124, 58, 237, .25);
+}
+.beve.light .beve-pronun-symbol.beve-editable:focus {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1), 0 0 8px rgba(124, 58, 237, .04);
+}
 .beve.light .beve-pronun-word:nth-child(odd) {
   background: rgba(124, 58, 237, .04);
+}
+
+/* ─── Modular Block Wrapper (light) ───────────────────── */
+.beve.light .beve-block-remove-btn {
+  background: rgba(239, 68, 68, .06);
+}
+.beve.light .beve-block-remove-btn:hover {
+  background: rgba(239, 68, 68, .14);
+  border-color: rgba(239, 68, 68, .25);
+}
+.beve.light .beve-block-add-btn {
+  border-color: rgba(124, 58, 237, .15);
+  background: rgba(124, 58, 237, .02);
+  color: #7c3aed;
+}
+.beve.light .beve-block-add-btn:hover {
+  border-color: rgba(124, 58, 237, .35);
+  background: rgba(124, 58, 237, .05);
+  color: #6d28d9;
 }
 
 /* ─── Practice Steps ──────────────────────────────────── */
@@ -1928,34 +2445,49 @@
 /* ─── Tutor Notes ─────────────────────────────────────── */
 .beve.light .beve-tutor-note {
   background: #fff;
-  border-color: #e0d9f0;
+  border-color: #d8cef0;
   color: #3f3f50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
 }
 .beve.light .beve-tutor-note:hover {
-  border-color: rgba(124, 58, 237, .2);
-  background: rgba(124, 58, 237, .02);
+  border-color: rgba(124, 58, 237, .3);
+  background: #faf8ff;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, .08);
 }
 .beve.light .beve-tutor-note.script {
-  border-left-color: #7c3aed;
+  border-left: 4px solid #7c3aed;
   color: #5b21b6;
+  background: rgba(124, 58, 237, .04);
 }
-.beve.light .beve-tutor-note.instruction { border-left-color: #8b5cf6; }
+.beve.light .beve-tutor-note.instruction {
+  border-left: 4px solid #3b82f6;
+  background: rgba(59, 130, 246, .03);
+}
 .beve.light .beve-tutor-note.tip {
-  border-left-color: #f59e0b;
+  border-left: 4px solid #f59e0b;
   background: #fffbeb;
 }
-.beve.light .beve-tutor-note.script .beve-tutor-note-type { color: #7c3aed; }
-.beve.light .beve-tutor-note.instruction .beve-tutor-note-type { color: #8b5cf6; }
-.beve.light .beve-tutor-note.tip .beve-tutor-note-type { color: #d97706; }
+.beve.light .beve-tutor-note.script .beve-tutor-note-type {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, .08);
+}
+.beve.light .beve-tutor-note.instruction .beve-tutor-note-type {
+  color: #2563eb;
+  background: rgba(37, 99, 235, .08);
+}
+.beve.light .beve-tutor-note.tip .beve-tutor-note-type {
+  color: #d97706;
+  background: rgba(217, 119, 6, .08);
+}
 
 .beve.light .beve-tutor-add-note {
-  border-color: rgba(124, 58, 237, .15);
-  color: #9ca3af;
+  border-color: #c5cad6;
+  color: #8992a4;
 }
 .beve.light .beve-tutor-add-note:hover {
-  border-color: rgba(124, 58, 237, .3);
-  color: #7c3aed;
-  background: rgba(124, 58, 237, .03);
+  border-color: #7889ac;
+  color: #3a5090;
+  background: #f5f7fc;
 }
 
 /* ─── Fill-in-blank Table ─────────────────────────────── */
@@ -1968,6 +2500,52 @@
   border-color: rgba(124, 58, 237, .15);
   color: #7c3aed;
 }
+
+/* ─── Lesson Type Selector (light) ────────────────────── */
+.beve.light .beve-lesson-type-select {
+  background: rgba(124, 58, 237, .06);
+  border-color: #d0c4f0;
+  color: #7c3aed;
+}
+.beve.light .beve-lesson-type-select:hover {
+  border-color: #7c3aed;
+  background: rgba(124, 58, 237, .1);
+}
+.beve.light .beve-lesson-type-select option {
+  background: #fff;
+  color: #3f3f50;
+}
+
+/* ─── Pattern Drill Tables (light) ────────────────────── */
+.beve.light .beve-drill-card {
+  background: rgba(124, 58, 237, .02);
+  border-color: #e0d9f0;
+}
+.beve.light .beve-drill-label { color: #1e1e2e; }
+.beve.light .beve-drill-label-jp { color: #9ca3af; }
+.beve.light .beve-drill-template {
+  background: rgba(124, 58, 237, .05);
+  border-color: #e0d9f0;
+  color: #7c3aed;
+}
+.beve.light .beve-drill-table td {
+  border-color: #f0ecf7;
+  color: #3f3f50;
+}
+.beve.light .beve-drill-table td:nth-child(2) { color: #9ca3af; }
+
+/* ─── Word Box (light) ────────────────────────────────── */
+.beve.light .beve-word-box {
+  background: linear-gradient(135deg, rgba(124, 58, 237, .03), rgba(167, 139, 250, .01));
+  border-color: #d0c4f0;
+}
+.beve.light .beve-word-box-label { color: #7c3aed; }
+.beve.light .beve-word-box-item {
+  background: rgba(124, 58, 237, .06);
+  border-color: #d0c4f0;
+  color: #3f3f50;
+}
+.beve.light .beve-word-box-trans { color: #9ca3af; }
 
 /* ─── Hint Box ────────────────────────────────────────── */
 .beve.light .beve-hint-box {
@@ -2015,5 +2593,285 @@
 
 /* ─── Responsive Light ────────────────────────────────── */
 @media (max-width: 900px) {
-  .beve.light .beve-col-tutor { border-top-color: #e0d9f0; }
+  .beve.light .beve-col-tutor {
+    border-top: 2px solid #627aa8;
+  }
 }
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVITY BLOCKS — shared styles
+   ══════════════════════════════════════════════════════════ */
+
+.beve-activity-blocks-area { margin-top: 20px; }
+
+.beve-activity-block {
+  background: rgba(124, 58, 237, 0.06);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.beve-activity-header {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.12);
+}
+.beve-activity-header > i { font-size: 18px; color: #a78bfa; flex-shrink: 0; }
+.beve-activity-header .beve-activity-title {
+  flex: 1; font-size: 14px; font-weight: 700; color: #e0e0e8;
+  padding: 2px 6px; border-radius: 4px;
+}
+.beve-activity-header .beve-activity-title:hover { background: rgba(255,255,255,0.05); }
+.beve-activity-header .beve-icon-btn.danger { opacity: 0; transition: opacity .2s; }
+.beve-activity-block:hover .beve-activity-header .beve-icon-btn.danger { opacity: 1; }
+
+/* ─── Add Activity Button & Dropdown ─── */
+.beve-add-activity-wrap { position: relative; margin-top: 12px; }
+.beve-add-activity-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 18px; border: 2px dashed rgba(124, 58, 237, 0.25); border-radius: 10px;
+  background: rgba(124, 58, 237, 0.04); color: #a78bfa; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.beve-add-activity-btn:hover { border-color: #a78bfa; background: rgba(124, 58, 237, 0.10); }
+.beve-add-activity-btn i { font-size: 18px; }
+
+.beve-add-activity-dropdown {
+  position: absolute; bottom: 100%; left: 0; right: 0;
+  background: #1e1e2e; border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 10px;
+  padding: 6px; margin-bottom: 4px; z-index: 50;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.beve-add-activity-option {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  border: none; border-radius: 6px; background: transparent;
+  color: #d4d4dc; font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: background .15s;
+}
+.beve-add-activity-option:hover { background: rgba(124, 58, 237, 0.15); color: #fff; }
+.beve-add-activity-option i { font-size: 16px; color: #a78bfa; }
+
+/* ─── Matching Table ─── */
+.beve-matching-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.beve-matching-table th {
+  font-size: 10px; font-weight: 700; color: #a78bfa; text-transform: uppercase;
+  letter-spacing: .4px; padding: 4px 8px; text-align: left;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+}
+.beve-matching-table td { padding: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+/* ─── Multiple Choice ─── */
+.beve-mcq-item {
+  position: relative; margin-bottom: 12px; padding: 10px 12px;
+  background: rgba(0,0,0,0.15); border-radius: 8px;
+}
+.beve-mcq-question { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.beve-mcq-num { font-size: 14px; font-weight: 700; color: #a78bfa; flex-shrink: 0; }
+.beve-mcq-options { display: flex; flex-direction: column; gap: 4px; padding-left: 20px; }
+.beve-mcq-option {
+  display: flex; align-items: center; gap: 6px; padding: 4px 8px;
+  border-radius: 6px; transition: background .15s;
+}
+.beve-mcq-option.correct { background: rgba(34, 197, 94, 0.08); }
+.beve-mcq-radio {
+  background: none; border: none; cursor: pointer; color: #71717a; font-size: 16px; padding: 0;
+}
+.beve-mcq-option.correct .beve-mcq-radio { color: #22c55e; }
+
+/* ─── Sentence Reorder ─── */
+.beve-reorder-item {
+  position: relative; margin-bottom: 10px; padding: 10px 12px;
+  background: rgba(0,0,0,0.15); border-radius: 8px;
+}
+.beve-reorder-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.beve-reorder-label {
+  font-size: 10px; font-weight: 700; color: #a78bfa; text-transform: uppercase;
+  width: 55px; flex-shrink: 0;
+}
+
+/* ─── Error Correction ─── */
+.beve-error-item {
+  position: relative; margin-bottom: 10px; padding: 10px 12px;
+  background: rgba(0,0,0,0.15); border-radius: 8px;
+}
+.beve-error-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.beve-error-label {
+  font-size: 14px; font-weight: 700; width: 20px; text-align: center; flex-shrink: 0;
+}
+.beve-error-row:nth-child(1) .beve-error-label { color: #ef4444; }
+.beve-error-row:nth-child(2) .beve-error-label { color: #22c55e; }
+.beve-error-row:nth-child(3) .beve-error-label { color: #71717a; }
+
+/* ─── Dialogue Completion ─── */
+.beve-dialogue-slot {
+  margin-bottom: 6px; padding: 8px 12px; border-radius: 8px;
+  border-left: 3px solid #71717a;
+}
+.beve-dialogue-slot.tutor { border-left-color: #a78bfa; background: rgba(124, 58, 237, 0.05); }
+.beve-dialogue-slot.student { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+.beve-dialogue-slot.blank { border-left-style: dashed; opacity: .85; }
+.beve-dialogue-slot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.beve-dialogue-role-select {
+  font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #d4d4dc;
+}
+.beve-dialogue-blank-toggle {
+  font-size: 10px; padding: 2px 8px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #71717a; cursor: pointer;
+}
+.beve-dialogue-blank-toggle.active { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+
+/* ─── True/False ─── */
+.beve-tf-item { margin-bottom: 8px; }
+.beve-tf-statement { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.beve-tf-num { font-size: 13px; font-weight: 700; color: #a78bfa; flex-shrink: 0; }
+.beve-tf-answer { display: flex; align-items: center; gap: 4px; padding-left: 20px; }
+.beve-tf-btn {
+  font-size: 11px; font-weight: 600; padding: 3px 14px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.15); color: #71717a;
+  cursor: pointer; transition: all .15s;
+}
+.beve-tf-btn.active { background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.3); }
+
+/* ─── Reading Passage ─── */
+.beve-reading-passage {
+  background: rgba(0,0,0,0.15); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+  min-height: 80px; font-size: 13px; line-height: 1.6;
+}
+.beve-reading-questions { padding-top: 6px; }
+.beve-reading-q { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 6px; }
+.beve-reading-q-num { font-size: 13px; font-weight: 700; color: #a78bfa; flex-shrink: 0; padding-top: 2px; }
+
+/* ─── Categorization ─── */
+.beve-categorize-grid { display: grid; gap: 10px; margin-bottom: 8px; }
+.beve-categorize-col {
+  background: rgba(0,0,0,0.12); border-radius: 8px; padding: 10px 12px;
+}
+.beve-categorize-col-header {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+  padding-bottom: 6px; border-bottom: 1px solid rgba(124, 58, 237, 0.12);
+  font-weight: 700; font-size: 13px;
+}
+.beve-categorize-item {
+  display: flex; align-items: center; gap: 4px; margin-bottom: 4px;
+  padding: 3px 6px; background: rgba(124, 58, 237, 0.06); border-radius: 5px;
+}
+
+/* ─── Page 7 Read-Only Reference ─── */
+.beve-readonly-ref {
+  background: rgba(124, 58, 237, 0.04);
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  pointer-events: none; user-select: text;
+}
+.beve-readonly-ref .beve-goal-label {
+  display: flex; align-items: center;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: #a78bfa; margin-bottom: 8px;
+}
+.beve-readonly-ref .beve-goal-en { font-size: 15px; font-weight: 600; color: #e0e0e8; margin-bottom: 2px; }
+.beve-readonly-ref .beve-goal-jp { font-size: 13px; color: #a1a1aa; }
+
+.beve-key-expr-ref { margin-top: 0; }
+.beve-key-expr-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.beve-key-expr-num { font-size: 14px; font-weight: 700; color: #a78bfa; flex-shrink: 0; padding-top: 1px; }
+.beve-key-expr-en { font-size: 14px; font-weight: 600; color: #e0e0e8; }
+.beve-key-expr-jp { font-size: 12px; color: #a1a1aa; margin-top: 1px; }
+
+/* ══════════════════════════════════════════════════════════
+   ACTIVITY BLOCKS — light theme overrides
+   ══════════════════════════════════════════════════════════ */
+.beve.light .beve-activity-block { background: rgba(124, 58, 237, 0.04); border-color: rgba(124, 58, 237, 0.15); }
+.beve.light .beve-activity-header .beve-activity-title { color: #1e1e2e; }
+.beve.light .beve-activity-header .beve-activity-title:hover { background: rgba(0,0,0,0.04); }
+.beve.light .beve-add-activity-dropdown { background: #fff; border-color: rgba(124, 58, 237, 0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+.beve.light .beve-add-activity-option { color: #3f3f50; }
+.beve.light .beve-add-activity-option:hover { background: rgba(124, 58, 237, 0.08); color: #1e1e2e; }
+.beve.light .beve-mcq-item,
+.beve.light .beve-reorder-item,
+.beve.light .beve-error-item { background: rgba(0,0,0,0.03); }
+.beve.light .beve-mcq-option.correct { background: rgba(34, 197, 94, 0.06); }
+.beve.light .beve-dialogue-role-select { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.12); color: #3f3f50; }
+.beve.light .beve-tf-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); color: #71717a; }
+.beve.light .beve-tf-btn.active { background: rgba(34, 197, 94, 0.1); color: #16a34a; border-color: rgba(34, 197, 94, 0.25); }
+.beve.light .beve-reading-passage { background: rgba(0,0,0,0.03); }
+.beve.light .beve-categorize-col { background: rgba(0,0,0,0.03); }
+.beve.light .beve-categorize-item { background: rgba(124, 58, 237, 0.04); }
+.beve.light .beve-readonly-ref { background: rgba(124, 58, 237, 0.03); border-color: rgba(124, 58, 237, 0.10); }
+.beve.light .beve-readonly-ref .beve-goal-en { color: #1e1e2e; }
+.beve.light .beve-readonly-ref .beve-goal-jp { color: #6b6b80; }
+.beve.light .beve-key-expr-en { color: #1e1e2e; }
+.beve.light .beve-key-expr-jp { color: #6b6b80; }
+.beve.light .beve-matching-table td { border-bottom-color: rgba(0,0,0,0.05); }
+
+/* ══════════════════════════════════════════════════════════
+   IMAGE BLOCK — adaptive square grid (1-4)
+   ══════════════════════════════════════════════════════════ */
+
+.beve-img-grid {
+  display: grid; gap: 10px;
+  width: 100%;
+}
+
+/* 1 image — single big square */
+.beve-img-grid.beve-img-single { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
+/* 2 images — side by side */
+.beve-img-grid.beve-img-double { grid-template-columns: 1fr 1fr; }
+/* 3 images — 2 top, 1 centered bottom */
+.beve-img-grid.beve-img-triple {
+  grid-template-columns: 1fr 1fr;
+}
+.beve-img-grid.beve-img-triple .beve-img-cell:nth-child(3) {
+  grid-column: 1 / -1; max-width: calc(50% - 5px); justify-self: center;
+}
+/* 4 images — 2x2 */
+.beve-img-grid.beve-img-quad { grid-template-columns: 1fr 1fr; }
+
+.beve-img-cell { display: flex; flex-direction: column; align-items: center; }
+
+.beve-img-square {
+  position: relative; width: 100%; aspect-ratio: 1 / 1;
+  border-radius: 12px; overflow: hidden;
+  background: rgba(0,0,0,0.15); border: 2px solid rgba(124, 58, 237, 0.12);
+  transition: border-color .2s;
+}
+.beve-img-square:hover { border-color: rgba(124, 58, 237, 0.35); }
+
+.beve-img-square img {
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+}
+
+.beve-img-remove {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+  border: none; border-radius: 50%; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 16px; cursor: pointer;
+  opacity: 0; transition: opacity .2s;
+}
+.beve-img-square:hover .beve-img-remove { opacity: 1; }
+.beve-img-remove:hover { background: rgba(239, 68, 68, 0.8); }
+
+.beve-img-label {
+  margin-top: 6px; width: 100%; text-align: center;
+  font-size: 12px; color: #a1a1aa; padding: 2px 4px;
+  border-radius: 4px;
+}
+.beve-img-label:hover { background: rgba(255,255,255,0.05); }
+
+.beve-img-add-btn {
+  margin-top: 10px;
+}
+
+/* ─── Image block light overrides ─── */
+.beve.light .beve-img-square { background: rgba(0,0,0,0.04); border-color: rgba(124, 58, 237, 0.10); }
+.beve.light .beve-img-square:hover { border-color: rgba(124, 58, 237, 0.3); }
+.beve.light .beve-img-remove { background: rgba(0,0,0,0.45); }
+.beve.light .beve-img-label { color: #6b6b80; }
+.beve.light .beve-img-label:hover { background: rgba(0,0,0,0.03); }
