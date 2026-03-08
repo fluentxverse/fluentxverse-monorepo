@@ -31,10 +31,10 @@ import './BusinessEnglishVisualEditor.css';
 // ============================================================================
 
 type LessonType = 'READING' | 'SPEAKING' | 'LISTENING' | 'WRITING' | 'REVIEW';
-interface PatternItem { en: string; kr: string; }
+interface PatternItem { en: string; jp: string; }
 interface VocabItem { word: string; pos: string; translation: string; definition?: string; pronunciation?: string; }
-interface PronunColumn { symbol: string; words: { en: string; kr: string }[]; }
-interface DialogueLine { role: 'tutor' | 'student'; en: string; kr: string; }
+interface PronunColumn { symbol: string; words: { en: string; jp: string }[]; }
+interface DialogueLine { role: 'tutor' | 'student'; en: string; jp: string; }
 interface FillRow { parts: { text: string; isBlank: boolean }[]; }
 interface DiscussionCategory { title: string; questions: string[]; }
 interface TutorNote { type: 'instruction' | 'script' | 'tip'; text: string; }
@@ -42,7 +42,7 @@ interface GuideQuestion { text: string; }
 interface PatternDrill {
   label: string; labelKr: string;
   template: string;
-  examples: { en: string; kr: string }[];
+  examples: { en: string; jp: string }[];
 }
 interface WordBoxItem { word: string; translation?: string; }
 
@@ -87,7 +87,7 @@ const ACTIVITY_BLOCK_META: Record<ActivityBlockType, { label: string; labelKr: s
   trueFalse: { label: 'True / False', labelKr: '참/거짓', icon: 'ri-checkbox-line' },
   readingPassage: { label: 'Reading Passage', labelKr: '독해', icon: 'ri-article-line' },
   categorization: { label: 'Categorization', labelKr: '분류', icon: 'ri-layout-grid-line' },
-  image: { label: 'Image', labelKr: '이미지', icon: 'ri-image-line' },
+  image: { label: 'Image', labelKr: '画像', icon: 'ri-image-line' },
 };
 
 interface BELessonData {
@@ -150,9 +150,9 @@ const DEFAULT_BE_DATA: BELessonData = {
   hiddenBlocks: [],
   introduce: {
     goalEn: 'Can introduce yourself and your coworker.',
-    goalKr: '자기소개와 동료 소개를 할 수 있게 된다.',
+    goalKr: '\u81EA\u5DF1\u7D39\u4ECB\u3068\u540C\u50DA\u306E\u7D39\u4ECB\u304C\u3067\u304D\u308B\u3088\u3046\u306B\u306A\u308B\u3002',
     situationEn: 'A new coworker joins your team. Introduce yourself and another coworker to him/her.',
-    situationKr: '당신의 팀에 새로운 직원이 배치되었습니다. 먼저 자기소개를 한 후 팀원을 그/그녀에게 소개해 봅시다.',
+    situationKr: '\u3042\u306A\u305F\u306E\u30C1\u30FC\u30E0\u306B\u3001\u65B0\u3057\u3044\u793E\u54E1\u304C\u914D\u5C5E\u3055\u308C\u307E\u3057\u305F\u3002\u307E\u305A\u3042\u306A\u305F\u304C\u81EA\u5DF1\u7D39\u4ECB\u3092\u3057\u3066\u304B\u3089\u3001\u30C1\u30FC\u30E0\u306E\u30E1\u30F3\u30D0\u30FC\u3092\u5F7C/\u5F7C\u5973\u306B\u7D39\u4ECB\u3057\u307E\u3057\u3087\u3046\u3002',
     taskEn: '', taskKr: '',
     tutorNotes: [
       { type: 'script', text: '"Today, we\'re going to talk about introducing yourself and your coworker."' },
@@ -164,20 +164,20 @@ const DEFAULT_BE_DATA: BELessonData = {
   },
   present: {
     patterns: [
-      { en: 'My name is John.', kr: '제 이름은 존입니다.' },
-      { en: 'This is Andrew.', kr: '이쪽은 앤드류입니다.' },
-      { en: 'We are coworkers.', kr: '우리는 동료입니다.' },
+      { en: 'My name is John.', jp: '\u79C1\u306E\u540D\u524D\u306F\u30B8\u30E7\u30F3\u3067\u3059\u3002' },
+      { en: 'This is Andrew.', jp: '\u3053\u3061\u3089\u304C\u3001\u30A2\u30F3\u30C9\u30EA\u30E5\u30FC\u3067\u3059\u3002' },
+      { en: 'We are coworkers.', jp: '\u79C1\u305F\u3061\u306F\u540C\u50DA\u3067\u3059\u3002' },
     ],
     vocabulary: [
-      { word: 'pleased', pos: 'adjective', translation: '기꺼이', definition: 'very happy', pronunciation: '[pleezd]' },
-      { word: 'coworker', pos: 'noun', translation: '동료', definition: 'someone you work with', pronunciation: '[KOH-wur-ker]' },
-      { word: 'join', pos: 'verb', translation: '합류하다', definition: 'to become a member of a group', pronunciation: '[join]' },
+      { word: 'pleased', pos: 'adjective', translation: '\u559C\u3093\u3067', definition: 'very happy', pronunciation: '[pleezd]' },
+      { word: 'coworker', pos: 'noun', translation: '\u540C\u50DA', definition: 'someone you work with', pronunciation: '[KOH-wur-ker]' },
+      { word: 'join', pos: 'verb', translation: '\u52A0\u308F\u308B', definition: 'to become a member of a group', pronunciation: '[join]' },
     ],
     pronunciation: {
       instruction: "Let's practice saying words with /\u00E6/ and /\u028C/.",
       instructionKr: '\u767A\u97F3',
-      left: { symbol: '/\u00E6/', words: [{ en: 'bag', kr: '가방' },{ en: 'fan', kr: '선풍기' },{ en: 'cab', kr: '택시' },{ en: 'hat', kr: '모자' },{ en: 'lack', kr: '부족한' }] },
-      right: { symbol: '/\u028C/', words: [{ en: 'bug', kr: '벌레' },{ en: 'fun', kr: '재미' },{ en: 'cub', kr: '새끼' },{ en: 'hut', kr: '오두막' },{ en: 'luck', kr: '행운' }] },
+      left: { symbol: '/\u00E6/', words: [{ en: 'bag', jp: '\u30D0\u30C3\u30B0' },{ en: 'fan', jp: '\u6247\u98A8\u6A5F' },{ en: 'cab', jp: '\u30BF\u30AF\u30B7\u30FC' },{ en: 'hat', jp: '\u5E3D\u5B50' },{ en: 'lack', jp: '\u6B20\u3044\u3066\u3044\u308B' }] },
+      right: { symbol: '/\u028C/', words: [{ en: 'bug', jp: '\u6606\u866B' },{ en: 'fun', jp: '\u697D\u3057\u307F' },{ en: 'cub', jp: '\u5E7C\u7363' },{ en: 'hut', jp: '\u5C71\u5C0F\u5C4B' },{ en: 'luck', jp: '\u5E78\u904B' }] },
     },
     tutorNotes: [
       { type: 'script', text: '"Let\'s look at patterns used in introducing yourself and your coworker."' },
@@ -189,7 +189,7 @@ const DEFAULT_BE_DATA: BELessonData = {
   },
   understand: {
     instruction: 'You can use these patterns to introduce yourself and a coworker.',
-    instructionKr: '자기소개나 동료를 소개할 때 다음 패턴을 사용합니다.',
+    instructionKr: '\u81EA\u5DF1\u7D39\u4ECB\u3084\u540C\u50DA\u3092\u7D39\u4ECB\u3059\u308B\u969B\u3001\u4EE5\u4E0B\u306E\u30D1\u30BF\u30FC\u30F3\u3092\u4F7F\u3044\u307E\u3059\u3002',
     fillRows: [],
     patternDrills: [],
     activityBlocks: [],
@@ -204,7 +204,7 @@ const DEFAULT_BE_DATA: BELessonData = {
       {
         title: 'Step 1 \u2014 Repeat',
         instructionEn: 'Repeat after your tutor.',
-        instructionKr: '선생님을 따라 반복하세요.',
+        instructionKr: '\u8B1B\u5E2B\u306E\u3042\u3068\u306B\u7E70\u308A\u8FD4\u3057\u307E\u3057\u3087\u3046\u3002',
         content: '',
         tutorNotes: [
           { type: 'script', text: '"I will read each sentence. Please repeat after me."' },
@@ -215,7 +215,7 @@ const DEFAULT_BE_DATA: BELessonData = {
       {
         title: 'Step 2 \u2014 Fill in the Blanks',
         instructionEn: 'Fill in the blanks with the correct pattern.',
-        instructionKr: '적절한 패턴을 넣으세요.',
+        instructionKr: '\u9069\u5207\u306A\u30D1\u30BF\u30FC\u30F3\u3092\u5165\u308C\u307E\u3057\u3087\u3046\u3002',
         content: '',
         tutorNotes: [
           { type: 'script', text: '"Let\'s practice again."' },
@@ -226,12 +226,12 @@ const DEFAULT_BE_DATA: BELessonData = {
       {
         title: 'Step 3 \u2014 Dialogue',
         instructionEn: 'Read the dialogue with your tutor.',
-        instructionKr: '선생님과 함께 대화를 읽어 봅시다.',
+        instructionKr: '\u8B1B\u5E2B\u3068\u4E00\u7DD2\u306B\u4F1A\u8A71\u3092\u8AAD\u307F\u307E\u3057\u3087\u3046\u3002',
         content: '',
         dialogue: [
-          { role: 'tutor', en: 'Good morning. My name is Evan. It\'s my first day today.', kr: '안녕하세요. 제 이름은 에반입니다. 오늘은 제 첫 출근 날입니다.' },
-          { role: 'student', en: 'Pleased to meet you, Evan. My name is Akihiro. This is Sandra. We are coworkers.', kr: '만나서 반갑습니다, 에반 씨. 제 이름은 아키히로입니다. 이쪽은 산드라입니다. 우리는 동료입니다.' },
-          { role: 'tutor', en: 'Pleased to meet you, too, Akihiro and Sandra.', kr: '아키히로 씨, 산드라 씨, 저도 반갑습니다.' },
+          { role: 'tutor', en: 'Good morning. My name is Evan. It\'s my first day today.', jp: '\u304A\u306F\u3088\u3046\u3054\u3056\u3044\u307E\u3059\u3002\u79C1\u306E\u540D\u524D\u306F\u30A8\u30F4\u30A1\u30F3\u3067\u3059\u3002\u4ECA\u65E5\u306F\u79C1\u306B\u3068\u3063\u3066\u521D\u51FA\u52E4\u306E\u65E5\u3067\u3059\u3002' },
+          { role: 'student', en: 'Pleased to meet you, Evan. My name is Akihiro. This is Sandra. We are coworkers.', jp: '\u304A\u4F1A\u3044\u3067\u304D\u3066\u3046\u308C\u3057\u3044\u3067\u3059\u3001\u30A8\u30F4\u30A1\u30F3\u3055\u3093\u3002\u79C1\u306E\u540D\u524D\u306F\u660E\u5B8F\u3067\u3059\u3002\u3053\u3061\u3089\u306F\u30B5\u30F3\u30C9\u30E9\u3055\u3093\u3067\u3059\u3002\u79C1\u305F\u3061\u306F\u540C\u50DA\u3067\u3059\u3002' },
+          { role: 'tutor', en: 'Pleased to meet you, too, Akihiro and Sandra.', jp: '\u660E\u5B8F\u3055\u3093\u3001\u30B5\u30F3\u30C9\u30E9\u3055\u3093\u3001\u3053\u3061\u3089\u3053\u305D\u304A\u4F1A\u3044\u3067\u304D\u3066\u3046\u308C\u3057\u3044\u3067\u3059\u3002' },
         ],
         tutorNotes: [
           { type: 'script', text: '"Let\'s read the dialogue."' },
@@ -243,12 +243,12 @@ const DEFAULT_BE_DATA: BELessonData = {
       {
         title: 'Step 4 \u2014 Complete the Dialogue',
         instructionEn: 'Complete the dialogue.',
-        instructionKr: '대화문을 완성하세요.',
+        instructionKr: '\u4F1A\u8A71\u6587\u3092\u5B8C\u6210\u3055\u305B\u307E\u3057\u3087\u3046\u3002',
         content: '',
         dialogue: [
-          { role: 'tutor', en: 'Hello. My name is Shirley. I\'m the new secretary.', kr: '안녕하세요. 제 이름은 셜리입니다. 저는 새로운 비서입니다.' },
-          { role: 'student', en: 'Pleased to meet you, Shirley. ________________. ________________. ________________.', kr: '셜리 씨, 만나서 반갑습니다. ________________.' },
-          { role: 'tutor', en: 'Pleased to meet you, too!', kr: '저도 만나서 반갑습니다.' },
+          { role: 'tutor', en: 'Hello. My name is Shirley. I\'m the new secretary.', jp: '\u3053\u3093\u306B\u3061\u306F\u3002\u79C1\u306E\u540D\u524D\u306F\u30B7\u30E3\u30FC\u30EA\u30FC\u3067\u3059\u3002\u79C1\u306F\u65B0\u3057\u3044\u79D8\u66F8\u3067\u3059\u3002' },
+          { role: 'student', en: 'Pleased to meet you, Shirley. ________________. ________________. ________________.', jp: '\u30B7\u30E3\u30FC\u30EA\u30FC\u3055\u3093\u3001\u304A\u4F1A\u3044\u3067\u304D\u3066\u3046\u308C\u3057\u3044\u3067\u3059\u3002________________.' },
+          { role: 'tutor', en: 'Pleased to meet you, too!', jp: '\u3053\u3061\u3089\u3053\u305D\u3001\u304A\u4F1A\u3044\u3067\u304D\u3066\u3046\u308C\u3057\u3044\u3067\u3059\u3002' },
         ],
         tutorNotes: [
           { type: 'script', text: '"Let\'s do the last practice."' },
@@ -261,7 +261,7 @@ const DEFAULT_BE_DATA: BELessonData = {
   },
   challenge: {
     scenarioEn: 'A new coworker joins your team. Using today\'s patterns and the table, introduce yourself and your coworkers. Then, say that you are coworkers.',
-    scenarioKr: '새로운 동료가 당신의 팀에 합류합니다. 자주 쓰는 문법 표현과 아래 표를 사용하여 자기소개와 동료 소개를 해 봅시다.',
+    scenarioKr: '\u65B0\u3057\u3044\u540C\u50DA\u304C\u3042\u306A\u305F\u306E\u30C1\u30FC\u30E0\u306B\u52A0\u308F\u308A\u307E\u3059\u3002\u3088\u304F\u4F7F\u3046\u6587\u6CD5\u8868\u73FE\u3068\u4E0B\u306E\u8868\u3092\u4F7F\u3063\u3066\u3001\u81EA\u5DF1\u7D39\u4ECB\u3068\u540C\u50DA\u306E\u7D39\u4ECB\u3092\u3057\u307E\u3057\u3087\u3046\u3002',
     guideQuestions: [
       { text: 'Hi! Nice to meet you. May I know the names of the others, as well?' },
       { text: 'Do you work with all of them?' },
@@ -281,7 +281,7 @@ const DEFAULT_BE_DATA: BELessonData = {
   },
   discussion: {
     instructionEn: 'Choose one category, then answer the questions.',
-    instructionKr: '카테고리를 하나 선택하고 질문에 답해 봅시다.',
+    instructionKr: '\u30AB\u30C6\u30B4\u30EA\u30FC\u3092\u4E00\u3064\u9078\u3073\u3001\u8CEA\u554F\u306B\u7B54\u3048\u307E\u3057\u3087\u3046\u3002',
     categories: [
       { title: 'YOUR BOSS', questions: ['What is the name of your boss?', 'What is his/her position in the company?', 'Is he/she a good boss? Why?'] },
       { title: 'YOUR TEAMMATE', questions: ['Can you name one of your teammates?', 'Can you describe him/her?', 'What is his/her task in the team?'] },
@@ -297,7 +297,7 @@ const DEFAULT_BE_DATA: BELessonData = {
   },
   feedback: {
     goalReviewEn: 'Can introduce yourself and your coworker.',
-    goalReviewKr: '자기소개와 동료 소개를 할 수 있게 된다.',
+    goalReviewKr: '\u81EA\u5DF1\u7D39\u4ECB\u3068\u540C\u50DA\u306E\u7D39\u4ECB\u304C\u3067\u304D\u308B\u3088\u3046\u306B\u306A\u308B\u3002',
     feedbackTemplate: '*OVERALL SCORE*\nOverall: (score)\n- comment\n\n*Vocabulary/Phrases*\nVocabulary:\n- word/phrase\n- word/phrase\n\n*Grammar*\nGrammar:\nincorrect grammar = correct grammar\n\n*Pronunciation*\nPronunciation:\n- mispronounced word\n- mispronounced word',
     nextLessonLabel: 'CHAPTER 1: WORK INTRODUCTIONS',
     nextLessonName: 'Lesson 2: All About Me',
@@ -345,11 +345,10 @@ interface BERichTextInputProps {
   placeholder?: string;
   className?: string;
   singleLine?: boolean;
-  compact?: boolean;
   style?: Record<string, any>;
 }
 
-function BERichTextInput({ value, onChange, placeholder, className = '', singleLine = true, compact = false, style }: BERichTextInputProps) {
+function BERichTextInput({ value, onChange, placeholder, className = '', singleLine = true, style }: BERichTextInputProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [hasFocus, setHasFocus] = useState(false);
 
@@ -382,25 +381,22 @@ function BERichTextInput({ value, onChange, placeholder, className = '', singleL
     document.execCommand('insertText', false, text);
   };
 
-  // Normalize \n → <br> so line breaks render properly in contentEditable
-  const normalizedValue = (value || '').replace(/\n/g, '<br>');
-
   useEffect(() => {
-    if (ref.current && !hasFocus && ref.current.innerHTML !== normalizedValue) {
-      ref.current.innerHTML = normalizedValue;
+    if (ref.current && !hasFocus && ref.current.innerHTML !== value) {
+      ref.current.innerHTML = value || '';
     }
-  }, [normalizedValue, hasFocus]);
+  }, [value, hasFocus]);
 
   useEffect(() => {
     if (ref.current && !ref.current.innerHTML) {
-      ref.current.innerHTML = normalizedValue;
+      ref.current.innerHTML = value || '';
     }
   }, []);
 
   const showPlaceholder = !value && !hasFocus;
 
   return (
-    <div className={`beve-rich-wrap ${compact ? 'beve-rich-compact' : ''} ${className}`}>
+    <div className={`beve-rich-wrap ${className}`}>
       <div
         ref={ref}
         className={`beve-rich-input ${showPlaceholder ? 'beve-rich-placeholder' : ''}`}
@@ -414,11 +410,9 @@ function BERichTextInput({ value, onChange, placeholder, className = '', singleL
         spellcheck={false}
         style={style}
       />
-      {!compact && (
-        <div className="beve-rich-hint">
-          <kbd>Ctrl</kbd>+<kbd>B</kbd> bold · <kbd>Ctrl</kbd>+<kbd>I</kbd> italic · <kbd>Ctrl</kbd>+<kbd>U</kbd> underline
-        </div>
-      )}
+      <div className="beve-rich-hint">
+        <kbd>Ctrl</kbd>+<kbd>B</kbd> bold · <kbd>Ctrl</kbd>+<kbd>I</kbd> italic · <kbd>Ctrl</kbd>+<kbd>U</kbd> underline
+      </div>
     </div>
   );
 }
@@ -452,7 +446,7 @@ export default function BusinessEnglishVisualEditor() {
   const [chapterName, setChapterName] = useState('');
   const [lessonName, setLessonName] = useState('');
   const [goalTextEn, setGoalTextEn] = useState('');
-  const [goalTextJp, setGoalTextJp] = useState('');
+  const [goalTextKr, setGoalTextKr] = useState('');
   const [beData, setBeData] = useState<BELessonData>(DEFAULT_BE_DATA);
 
   // Refs for scroll-to navigation
@@ -470,7 +464,7 @@ export default function BusinessEnglishVisualEditor() {
       setChapterName(data.chapterName || '');
       setLessonName(data.lessonName || '');
       setGoalTextEn(data.goalTextEn || '');
-      setGoalTextJp(data.goalTextJp || '');
+      setGoalTextKr(data.goalTextKr || '');
       const skillType = (data.skill?.toUpperCase() || 'READING') as LessonType;
       const merged = { ...DEFAULT_BE_DATA, lessonType: skillType, ...(data.beData || {}) };
       setBeData(merged);
@@ -517,7 +511,7 @@ export default function BusinessEnglishVisualEditor() {
     setSaving(true);
     try {
       await updateLessonHeader(lesson.id, {
-        chapterName, lessonName, goalTextEn, goalTextJp,
+        chapterName, lessonName, goalTextEn, goalTextKr,
         beData: beData as any,
       });
       hasUnsavedChangesRef.current = false;
@@ -651,8 +645,8 @@ export default function BusinessEnglishVisualEditor() {
       <div className="beve-hint-patterns">
         {beData.present.patterns.map((p, i) => (
           <div key={i} className="beve-hint-pattern">
-            <span className="beve-hint-en" dangerouslySetInnerHTML={{ __html: p.en }} />
-            <span className="beve-hint-kr" dangerouslySetInnerHTML={{ __html: `(${p.kr})` }} />
+            <span className="beve-hint-en">{p.en}</span>
+            <span className="beve-hint-jp">({p.jp})</span>
           </div>
         ))}
       </div>
@@ -676,7 +670,7 @@ export default function BusinessEnglishVisualEditor() {
             <BERichTextInput value={step.instructionEn}
               onChange={(html) => { const steps = [...beData.practice.steps]; steps[si] = { ...steps[si], instructionEn: html }; updateSection('practice', { steps }); }}
               placeholder="Instruction (English)" />
-            <BERichTextInput className="beve-step-instruction-kr" value={step.instructionKr} compact
+            <BERichTextInput className="beve-step-instruction-jp" value={step.instructionKr}
               onChange={(html) => { const steps = [...beData.practice.steps]; steps[si] = { ...steps[si], instructionKr: html }; updateSection('practice', { steps }); }}
               placeholder="지시 (한국어)" />
           </div>
@@ -693,15 +687,15 @@ export default function BusinessEnglishVisualEditor() {
                     <BERichTextInput className="beve-dialogue-text" value={line.en}
                       onChange={(html) => { const steps = [...beData.practice.steps]; const dlg = [...(steps[si].dialogue || [])]; dlg[li] = { ...dlg[li], en: html }; steps[si] = { ...steps[si], dialogue: dlg }; updateSection('practice', { steps }); }}
                       placeholder="English dialogue…" />
-                    <BERichTextInput className="beve-dialogue-text-kr" value={line.kr}
-                      onChange={(html) => { const steps = [...beData.practice.steps]; const dlg = [...(steps[si].dialogue || [])]; dlg[li] = { ...dlg[li], kr: html }; steps[si] = { ...steps[si], dialogue: dlg }; updateSection('practice', { steps }); }}
+                    <BERichTextInput className="beve-dialogue-text-jp" value={line.jp}
+                      onChange={(html) => { const steps = [...beData.practice.steps]; const dlg = [...(steps[si].dialogue || [])]; dlg[li] = { ...dlg[li], jp: html }; steps[si] = { ...steps[si], dialogue: dlg }; updateSection('practice', { steps }); }}
                       placeholder="한국어 번역…" />
                   </div>
                 </div>
               ))}
               <button className="beve-add-btn" style={{ marginTop: 6 }} onClick={() => {
                 const steps = [...beData.practice.steps];
-                const dlg = [...(steps[si].dialogue || []), { role: 'student' as const, en: '', kr: '' }];
+                const dlg = [...(steps[si].dialogue || []), { role: 'student' as const, en: '', jp: '' }];
                 steps[si] = { ...steps[si], dialogue: dlg };
                 updateSection('practice', { steps });
               }}><i className="ri-add-line" /> Add Line</button>
@@ -1214,6 +1208,7 @@ export default function BusinessEnglishVisualEditor() {
 
   const renderPageFooter = () => (
     <div className="beve-page-footer">
+      <div className="beve-footer-glow" />
       <div className="beve-footer-content">
         <div className="beve-footer-left">
           <span className="beve-page-footer-brand"><span className="brand-fluent">Fluent</span><span className="brand-x">X</span><span className="brand-verse">Verse</span></span>
@@ -1244,28 +1239,28 @@ export default function BusinessEnglishVisualEditor() {
             <div className="beve-goal-label">Lesson Goal</div>
             <BERichTextInput className="beve-goal-en" value={beData.introduce.goalEn}
               onChange={(html) => updateSection('introduce', { goalEn: html })} placeholder="Goal (English)" />
-            <BERichTextInput className="beve-goal-kr" value={beData.introduce.goalKr} compact
+            <BERichTextInput className="beve-goal-jp" value={beData.introduce.goalKr}
               onChange={(html) => updateSection('introduce', { goalKr: html })} placeholder="목표 (한국어)" />
           </div>
           <div className="beve-situation-box">
             <div className="beve-situation-label"><i className="ri-briefcase-line" /> Situation and Task</div>
             <BERichTextInput className="beve-situation-en" value={beData.introduce.situationEn} singleLine={false}
               onChange={(html) => updateSection('introduce', { situationEn: html })} placeholder="Situation (English)" />
-            <BERichTextInput className="beve-situation-kr" value={beData.introduce.situationKr} singleLine={false} compact
+            <BERichTextInput className="beve-situation-jp" value={beData.introduce.situationKr} singleLine={false}
               onChange={(html) => updateSection('introduce', { situationKr: html })} placeholder="상황 (한국어)" />
           </div>
 
           {/* ② Present — Key Expressions */}
           {renderSectionBanner(2, 'KEY EXPRESSIONS')}
-          <div className="beve-sub-heading">Key Expressions <span className="kr-label">{'핵심 표현'}</span></div>
+          <div className="beve-sub-heading">Key Expressions <span className="jp-label">{'よく使うフレーズ'}</span></div>
           <div className="beve-patterns-grid">
             {beData.present.patterns.map((p, i) => (
               <div key={i} className="beve-pattern-card">
               <BERichTextInput className="beve-pattern-en" value={p.en}
                   onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], en: html }; updateSection('present', { patterns: updated }); }}
                   placeholder="Pattern (English)" />
-                <BERichTextInput className="beve-pattern-kr" value={p.kr} compact
-                  onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], kr: html }; updateSection('present', { patterns: updated }); }}
+                <BERichTextInput className="beve-pattern-jp" value={p.jp}
+                  onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], jp: html }; updateSection('present', { patterns: updated }); }}
                   placeholder="패턴 (한국어)" />
                 <div className="beve-pattern-actions">
                   <button className="beve-icon-btn danger" onClick={() => { updateSection('present', { patterns: beData.present.patterns.filter((_, idx) => idx !== i) }); }}>
@@ -1273,7 +1268,7 @@ export default function BusinessEnglishVisualEditor() {
                 </div>
               </div>
             ))}
-            <button className="beve-add-btn" onClick={() => { updateSection('present', { patterns: [...beData.present.patterns, { en: '', kr: '' }] }); }}>
+            <button className="beve-add-btn" onClick={() => { updateSection('present', { patterns: [...beData.present.patterns, { en: '', jp: '' }] }); }}>
               <i className="ri-add-line" /> Add Pattern</button>
           </div>
         </div>
@@ -1298,7 +1293,7 @@ export default function BusinessEnglishVisualEditor() {
           <div className="beve-situation-box">
             <BERichTextInput className="beve-situation-en" value={beData.understand.instruction} singleLine={false}
               onChange={(html) => updateSection('understand', { instruction: html })} placeholder="Comprehension instruction (English)" />
-            <BERichTextInput className="beve-situation-kr" value={beData.understand.instructionKr} singleLine={false} compact
+            <BERichTextInput className="beve-situation-jp" value={beData.understand.instructionKr} singleLine={false}
               onChange={(html) => updateSection('understand', { instructionKr: html })} placeholder="지시 (한국어)" />
           </div>
           </BlockWrapper>
@@ -1307,8 +1302,8 @@ export default function BusinessEnglishVisualEditor() {
           <div className="beve-patterns-grid">
             {beData.present.patterns.map((p, i) => (
               <div key={i} className="beve-pattern-card">
-                <span className="beve-pattern-en" dangerouslySetInnerHTML={{ __html: p.en }} />
-                <span className="beve-pattern-kr" dangerouslySetInnerHTML={{ __html: p.kr }} />
+                <span className="beve-pattern-en">{p.en}</span>
+                <span className="beve-pattern-jp">{p.jp}</span>
               </div>
             ))}
           </div>
@@ -1324,7 +1319,7 @@ export default function BusinessEnglishVisualEditor() {
                     <BERichTextInput className="beve-drill-label" value={drill.label}
                       onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], label: html }; updateSection('understand', { patternDrills: drills }); }}
                       placeholder="Pattern usage description" singleLine />
-                    <BERichTextInput className="beve-drill-label-kr" value={drill.labelKr}
+                    <BERichTextInput className="beve-drill-label-jp" value={drill.labelKr}
                       onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], labelKr: html }; updateSection('understand', { patternDrills: drills }); }}
                       placeholder="설명 (한국어)" singleLine />
                     <button className="beve-icon-btn danger" style={{ position: 'absolute', top: 6, right: 6 }}
@@ -1343,8 +1338,8 @@ export default function BusinessEnglishVisualEditor() {
                           <td><BERichTextInput value={ex.en}
                             onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], en: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
                             placeholder="Example (English)" singleLine /></td>
-                          <td><BERichTextInput value={ex.kr}
-                            onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], kr: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
+                          <td><BERichTextInput value={ex.jp}
+                            onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], jp: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
                             placeholder="예문 (한국어)" singleLine /></td>
                           <td style={{ width: 30 }}><button className="beve-icon-btn danger"
                             onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: drills[di].examples.filter((_, idx) => idx !== ei) }; updateSection('understand', { patternDrills: drills }); }}>
@@ -1354,21 +1349,21 @@ export default function BusinessEnglishVisualEditor() {
                     </tbody>
                   </table>
                   <button className="beve-add-btn" style={{ marginTop: 6 }}
-                    onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: [...drills[di].examples, { en: '', kr: '' }] }; updateSection('understand', { patternDrills: drills }); }}>
+                    onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: [...drills[di].examples, { en: '', jp: '' }] }; updateSection('understand', { patternDrills: drills }); }}>
                     <i className="ri-add-line" /> Add Example</button>
                 </div>
               ))}
             </div>
           )}
           <button className="beve-add-btn" style={{ marginBottom: 8 }}
-            onClick={() => { updateSection('understand', { patternDrills: [...beData.understand.patternDrills, { label: '', labelKr: '', template: '', examples: [{ en: '', kr: '' }] }] }); }}>
+            onClick={() => { updateSection('understand', { patternDrills: [...beData.understand.patternDrills, { label: '', labelKr: '', template: '', examples: [{ en: '', jp: '' }] }] }); }}>
             <i className="ri-add-line" /> Add Pattern Drill</button>
           </BlockWrapper>
 
           {/* Fill-in-the-blank Exercise */}
           <BlockWrapper blockId="fillBlanks" label="Fill in the Blanks" icon="ri-edit-box-line">
           <div className="beve-sub-heading" style={{ marginTop: 0 }}>
-            <i className="ri-edit-box-line" /> Fill in the Blanks <span className="kr-label">{'빈칸 채우기'}</span>
+            <i className="ri-edit-box-line" /> Fill in the Blanks <span className="jp-label">{'\u7A74\u57CB\u3081'}</span>
           </div>
           {beData.understand.fillRows.length > 0 ? (
             <table className="beve-fill-table">
@@ -1437,7 +1432,7 @@ export default function BusinessEnglishVisualEditor() {
 
           {/* Useful Vocabulary */}
           <BlockWrapper blockId="vocabulary" label="Word Bank" icon="ri-book-2-line">
-          <div className="beve-sub-heading" style={{ marginTop: 0 }}>Word Bank <span className="kr-label">{'단어장'}</span></div>
+          <div className="beve-sub-heading" style={{ marginTop: 0 }}>Word Bank <span className="jp-label">{'単語集'}</span></div>
           <table className="beve-vocab-table">
             <thead><tr><th>Word</th><th>Part of Speech</th><th>Translation</th><th>Definition</th><th style={{ width: 40 }} /></tr></thead>
             <tbody>
@@ -1451,7 +1446,7 @@ export default function BusinessEnglishVisualEditor() {
                     placeholder="POS" /></td>
                   <td><BERichTextInput className="beve-vocab-translation" value={v.translation}
                     onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], translation: html }; updateSection('present', { vocabulary: u }); }}
-                    placeholder="번역" /></td>
+                    placeholder="翻訳" /></td>
                   <td><BERichTextInput value={v.definition || ''}
                     onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], definition: html }; updateSection('present', { vocabulary: u }); }}
                     placeholder="Definition" /></td>
@@ -1467,7 +1462,7 @@ export default function BusinessEnglishVisualEditor() {
 
           {/* Pronunciation */}
           <BlockWrapper blockId="soundPractice" label="Sound Practice" icon="ri-volume-up-line">
-          <div className="beve-sub-heading" style={{ marginTop: 0 }}>Sound Practice <span className="kr-label">{beData.present.pronunciation.instructionKr}</span></div>
+          <div className="beve-sub-heading" style={{ marginTop: 0 }}>Sound Practice <span className="jp-label">{beData.present.pronunciation.instructionKr}</span></div>
           <div className="beve-pronun-box">
             <BERichTextInput className="beve-pronun-title" value={beData.present.pronunciation.instruction}
               onChange={(html) => { updateSection('present', { pronunciation: { ...beData.present.pronunciation, instruction: html } }); }}
@@ -1488,8 +1483,8 @@ export default function BusinessEnglishVisualEditor() {
                             dangerouslySetInnerHTML={{ __html: w.en }} />
                           <span style={{ color: '#71717a', fontSize: 12 }}>
                             <span className="beve-editable" contentEditable
-                              onBlur={(e) => { const words = [...col.words]; words[i] = { ...words[i], kr: (e.target as HTMLElement).innerText }; updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, words } } }); }}
-                              dangerouslySetInnerHTML={{ __html: w.kr }} />
+                              onBlur={(e) => { const words = [...col.words]; words[i] = { ...words[i], jp: (e.target as HTMLElement).innerText }; updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, words } } }); }}
+                              dangerouslySetInnerHTML={{ __html: w.jp }} />
                           </span>
                         </div>
                       ))}
@@ -1540,7 +1535,7 @@ export default function BusinessEnglishVisualEditor() {
       {renderPageHeader(4)}
       <div className="beve-columns">
         <div className="beve-col-student">
-          {renderSectionBanner(4, 'DRILL (CONTINUATION)')}
+          {renderSectionBanner(4, 'DRILL (CONT.)')}
           {page4StepIndices.length > 0 ? (
             page4StepIndices.map(i => renderPracticeStep(i))
           ) : (
@@ -1587,7 +1582,7 @@ export default function BusinessEnglishVisualEditor() {
             <div className="beve-challenge-title"><i className="ri-sword-line" /> Simulation</div>
             <BERichTextInput className="beve-challenge-scenario" value={beData.challenge.scenarioEn}
               onChange={(html) => updateSection('challenge', { scenarioEn: html })} placeholder="Simulation scenario (English)" />
-            <BERichTextInput className="beve-challenge-scenario-kr" value={beData.challenge.scenarioKr}
+            <BERichTextInput className="beve-challenge-scenario-jp" value={beData.challenge.scenarioKr}
               onChange={(html) => updateSection('challenge', { scenarioKr: html })} placeholder="시뮬레이션 시나리오 (한국어)" />
           </div>
 
@@ -1668,8 +1663,8 @@ export default function BusinessEnglishVisualEditor() {
           <div className="beve-situation-box">
             <BERichTextInput className="beve-situation-en" value={beData.discussion.instructionEn}
               onChange={(html) => updateSection('discussion', { instructionEn: html })} placeholder="Discussion instruction (English)" />
-            <BERichTextInput className="beve-situation-kr" value={beData.discussion.instructionKr} compact
-              onChange={(html) => updateSection('discussion', { instructionKr: html })} placeholder="토론 지시 (한국어)" />
+            <BERichTextInput className="beve-situation-jp" value={beData.discussion.instructionKr}
+              onChange={(html) => updateSection('discussion', { instructionKr: html })} placeholder="ディスカッション지시 (한국어)" />
           </div>
           <div className="beve-discussion-categories">
             {beData.discussion.categories.map((cat, ci) => (
@@ -1715,7 +1710,7 @@ export default function BusinessEnglishVisualEditor() {
           <div className="beve-goal-box beve-readonly-ref">
             <div className="beve-goal-label"><i className="ri-bookmark-line" style={{ marginRight: 4 }} /> Lesson Goal</div>
             <div className="beve-goal-en" dangerouslySetInnerHTML={{ __html: beData.introduce.goalEn || '<em style="color:#71717a">Goal not set — edit on Page 1</em>' }} />
-            <div className="beve-goal-kr" dangerouslySetInnerHTML={{ __html: beData.introduce.goalKr || '<em style="color:#71717a">목표 미설정</em>' }} />
+            <div className="beve-goal-jp" dangerouslySetInnerHTML={{ __html: beData.introduce.goalKr || '<em style="color:#71717a">ゴール未設定</em>' }} />
           </div>
 
           {/* Key Expressions — read-only mirror from Page 1 present.patterns */}
@@ -1726,7 +1721,7 @@ export default function BusinessEnglishVisualEditor() {
                 <span className="beve-key-expr-num">{i + 1}.</span>
                 <div>
                   <div className="beve-key-expr-en" dangerouslySetInnerHTML={{ __html: p.en || '' }} />
-                  <div className="beve-key-expr-kr" dangerouslySetInnerHTML={{ __html: p.kr || '' }} />
+                  <div className="beve-key-expr-jp" dangerouslySetInnerHTML={{ __html: p.jp || '' }} />
                 </div>
               </div>
             )) : (
@@ -1784,7 +1779,7 @@ export default function BusinessEnglishVisualEditor() {
         lessonNumber={lesson.lessonNumber}
         lessonName={lessonName}
         goalTextEn={goalTextEn}
-        goalTextJp={goalTextJp}
+        goalTextKr={goalTextKr}
         chapterName={chapterName}
         currentPresentData={{
           patterns: beData.present.patterns,
@@ -1810,7 +1805,7 @@ export default function BusinessEnglishVisualEditor() {
             tutorNotes: data.tutorNotes || beData.introduce.tutorNotes,
           });
           if (data.goalEn) setGoalTextEn(data.goalEn);
-          if (data.goalKr) setGoalTextJp(data.goalKr);
+          if (data.goalKr) setGoalTextKr(data.goalKr);
         }}
         onGeneratePresent={(data) => {
           updateSection('present', {
@@ -1865,7 +1860,7 @@ export default function BusinessEnglishVisualEditor() {
         onGenerateFeedback={(data) => {
           updateSection('feedback', {
             goalReviewEn: data.goalReviewEn || goalTextEn,
-            goalReviewKr: data.goalReviewKr || goalTextJp,
+            goalReviewKr: data.goalReviewKr || goalTextKr,
             feedbackTemplate: data.feedbackTemplate || beData.feedback.feedbackTemplate,
             nextLessonLabel: data.nextLessonLabel || beData.feedback.nextLessonLabel,
             nextLessonName: data.nextLessonName || beData.feedback.nextLessonName,

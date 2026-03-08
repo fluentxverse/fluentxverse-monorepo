@@ -376,7 +376,7 @@ export async function generateBusinessEnglishContent(
   currentContent?: any | null,
   generationMode?: 'new' | 'improve' | null,
   currentPresentData?: {
-    patterns?: Array<{ en: string; jp: string }>;
+    patterns?: Array<{ en: string; kr: string }>;
     vocabulary?: Array<{ word: string; pos: string; translation: string }>;
   } | null,
 ): Promise<GenerateBEContentResponse> {

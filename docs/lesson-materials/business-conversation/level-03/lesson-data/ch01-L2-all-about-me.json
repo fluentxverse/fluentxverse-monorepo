@@ -1,0 +1,556 @@
+{
+  "chapterName": "Work Introductions",
+  "lessonName": "All About Me",
+  "goalTextEn": "Can read and understand a simple self-introduction profile.",
+  "goalTextKr": "간단한 자기소개 프로필을 읽고 이해할 수 있다.",
+  "beData": {
+    "lessonType": "READING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can read and understand a simple self-introduction profile.",
+      "goalKr": "간단한 자기소개 프로필을 읽고 이해할 수 있다.",
+      "situationEn": "You read a short profile card that a new coworker shared with the team. Use the information to learn about them.",
+      "situationKr": "새 동료가 팀에 공유한 짧은 프로필 카드를 읽습니다. 그 정보를 활용하여 그들에 대해 알아봅시다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we're going to practice reading about people. We will read a profile card.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "For Reading lessons, let the student try reading first. Help with pronunciation after."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>I am from</b> Tokyo.",
+          "kr": "저는 도쿄 출신입니다."
+        },
+        {
+          "en": "<b>I live in</b> Osaka.",
+          "kr": "저는 오사카에 살고 있습니다."
+        },
+        {
+          "en": "<b>I like</b> reading.",
+          "kr": "저는 독서를 좋아합니다."
+        },
+        {
+          "en": "<b>My hobby is</b> cooking.",
+          "kr": "제 취미는 요리입니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "hometown",
+          "pos": "noun",
+          "translation": "고향",
+          "definition": "the city or town where you were born or grew up",
+          "pronunciation": "/ˈhoʊmˌtaʊn/"
+        },
+        {
+          "word": "hobby",
+          "pos": "noun",
+          "translation": "취미",
+          "definition": "an activity you enjoy doing in your free time",
+          "pronunciation": "/ˈhɑːbi/"
+        },
+        {
+          "word": "favorite",
+          "pos": "adjective",
+          "translation": "좋아하는",
+          "definition": "the one you like the most",
+          "pronunciation": "/ˈfeɪvərɪt/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice hearing the difference between /ɪ/ (short) and /iː/ (long).",
+        "instructionKr": "/ɪ/ (짧은 소리)와 /iː/ (긴 소리)의 차이를 연습합시다.",
+        "left": {
+          "symbol": "/ɪ/",
+          "words": [
+            {
+              "en": "live",
+              "kr": "살다"
+            },
+            {
+              "en": "his",
+              "kr": "그의"
+            },
+            {
+              "en": "it",
+              "kr": "그것"
+            },
+            {
+              "en": "sit",
+              "kr": "앉다"
+            },
+            {
+              "en": "bit",
+              "kr": "조금"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "/iː/",
+          "words": [
+            {
+              "en": "read",
+              "kr": "읽다"
+            },
+            {
+              "en": "he",
+              "kr": "그"
+            },
+            {
+              "en": "eat",
+              "kr": "먹다"
+            },
+            {
+              "en": "seat",
+              "kr": "자리"
+            },
+            {
+              "en": "beat",
+              "kr": "치다"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's look at patterns used when talking about yourself.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Explain when to use each pattern."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's learn some useful vocabulary.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each vocabulary word and definition. Ask the student to repeat."
+        },
+        {
+          "type": "tip",
+          "text": "For lower-level students, use the Japanese translation first, then the English definition."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Read the profile card below. Then answer the comprehension questions.",
+      "instructionKr": "아래 프로필 카드를 읽어 봅시다. 그런 다음 질문에 답하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "I am from",
+              "isBlank": true
+            },
+            {
+              "text": " Nagoya.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I live in",
+              "isBlank": true
+            },
+            {
+              "text": " Tokyo now.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I like",
+              "isBlank": true
+            },
+            {
+              "text": " playing soccer.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "My hobby is",
+              "isBlank": true
+            },
+            {
+              "text": " photography.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Saying where you're from",
+          "labelKr": "출신지 말하기",
+          "template": "I am from ___.",
+          "examples": [
+            {
+              "en": "I am from Nagoya.",
+              "kr": "저는 나고야 출신입니다."
+            },
+            {
+              "en": "I am from New York.",
+              "kr": "저는 뉴욕 출신입니다."
+            }
+          ]
+        },
+        {
+          "label": "Saying where you live",
+          "labelKr": "사는 곳 말하기",
+          "template": "I live in ___.",
+          "examples": [
+            {
+              "en": "I live in Tokyo.",
+              "kr": "저는 도쿄에 살고 있습니다."
+            },
+            {
+              "en": "I live in London.",
+              "kr": "저는 런던에 살고 있습니다."
+            }
+          ]
+        },
+        {
+          "label": "Talking about hobbies",
+          "labelKr": "취미에 대해 이야기하기",
+          "template": "I like ___. / My hobby is ___.",
+          "examples": [
+            {
+              "en": "I like reading.",
+              "kr": "저는 독서를 좋아합니다."
+            },
+            {
+              "en": "My hobby is cooking.",
+              "kr": "제 취미는 요리입니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [
+        {
+          "type": "readingPassage",
+          "id": "rp-profile-1",
+          "title": "Profile Card: Kenji Tanaka",
+          "titleKr": "프로필 카드: 타나카 켄지",
+          "passage": "Hello! My name is Kenji Tanaka. I am from Nagoya. I live in Tokyo now. I work at ABC Corporation. I am an accountant. I like playing soccer on weekends. My favorite food is ramen. My hobby is photography. Nice to meet you!",
+          "questions": [
+            {
+              "question": "Where is Kenji from?",
+              "questionKr": "켄지는 어디 출신인가요?"
+            },
+            {
+              "question": "Where does Kenji live now?",
+              "questionKr": "켄지는 지금 어디에 살고 있나요?"
+            },
+            {
+              "question": "What is Kenji's job?",
+              "questionKr": "켄지의 직업은 무엇인가요?"
+            },
+            {
+              "question": "What does Kenji like doing on weekends?",
+              "questionKr": "켄지는 주말에 뭘 하는 걸 좋아하나요?"
+            },
+            {
+              "question": "What is Kenji's hobby?",
+              "questionKr": "켄지의 취미는 무엇인가요?"
+            }
+          ]
+        }
+      ],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the profile card aloud."
+        },
+        {
+          "type": "instruction",
+          "text": "Help with pronunciation of difficult words."
+        },
+        {
+          "type": "instruction",
+          "text": "After reading, ask the comprehension questions one by one."
+        },
+        {
+          "type": "tip",
+          "text": "If the student cannot answer, point to the relevant sentence in the profile."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 — Read & Repeat",
+          "instructionEn": "Read each sentence from the profile card. Repeat after your tutor.",
+          "instructionKr": "프로필 카드의 각 문장을 읽어 봅시다. 선생님을 따라 반복하세요.",
+          "content": "1. My name is Kenji Tanaka.<br>2. I am from Nagoya.<br>3. I live in Tokyo now.<br>4. I work at ABC Corporation.<br>5. I am an accountant.<br>6. I like playing soccer on weekends.<br>7. My favorite food is ramen.<br>8. My hobby is photography.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each sentence. Ask the student to repeat."
+            },
+            {
+              "type": "instruction",
+              "text": "Focus on clear pronunciation of key words."
+            },
+            {
+              "type": "tip",
+              "text": "Adjust speed to the student's level. Repeat sentences as needed."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 — Fill in the Profile",
+          "instructionEn": "Fill in the missing information about Kenji.",
+          "instructionKr": "켄지에 대한 정보를 채워 봅시다.",
+          "content": "Name: _______________<br>Hometown: _______________<br>Lives in: _______________<br>Company: _______________<br>Job: _______________<br>Hobby: _______________<br>Favorite food: _______________",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Ask the student to fill in each blank from memory or by re-reading the profile."
+            },
+            {
+              "type": "tip",
+              "text": "For lower-level students, let them look at the profile card while filling in."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 — Read a Second Profile",
+          "instructionEn": "Read the second profile card with your tutor.",
+          "instructionKr": "두 번째 프로필 카드를 선생님과 함께 읽어 봅시다.",
+          "content": "Hello! My name is Maria Santos. I am from Manila. I live in Yokohama. I work at XYZ Trading. I am a sales assistant. I like watching movies. My favorite movie is Titanic. My hobby is baking. Nice to meet you!",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Who is this person?",
+              "kr": "이 사람은 누구인가요?"
+            },
+            {
+              "role": "student",
+              "en": "Her name is Maria Santos.",
+              "kr": "그녀의 이름은 마리아 산토스입니다."
+            },
+            {
+              "role": "tutor",
+              "en": "Where is she from?",
+              "kr": "그녀는 어디 출신인가요?"
+            },
+            {
+              "role": "student",
+              "en": "She is from Manila.",
+              "kr": "그녀는 마닐라 출신입니다."
+            },
+            {
+              "role": "tutor",
+              "en": "What is her hobby?",
+              "kr": "그녀의 취미는 무엇인가요?"
+            },
+            {
+              "role": "student",
+              "en": "Her hobby is baking.",
+              "kr": "그녀의 취미는 베이킹입니다."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Ask the student to read the profile aloud first."
+            },
+            {
+              "type": "instruction",
+              "text": "Then ask the comprehension questions in the dialogue."
+            },
+            {
+              "type": "tip",
+              "text": "If the student answers in single words, encourage full sentences: 'She is from Manila.'"
+            }
+          ]
+        },
+        {
+          "title": "Step 4 — Complete Your Own Profile",
+          "instructionEn": "Complete your own profile card using the patterns.",
+          "instructionKr": "패턴을 사용하여 자신의 프로필 카드를 완성하세요.",
+          "content": "My name is _______________.<br>I am from _______________.<br>I live in _______________.<br>I work at _______________.<br>I am a/an _______________.<br>I like _______________.<br>My favorite ___ is _______________.<br>My hobby is _______________.",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Now, let's make your own profile card!\""
+            },
+            {
+              "type": "instruction",
+              "text": "Help the student fill in each blank with their own information."
+            },
+            {
+              "type": "instruction",
+              "text": "After completing, ask the student to read the full profile aloud."
+            },
+            {
+              "type": "tip",
+              "text": "For lower-level students, do it one line at a time."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Your tutor will read you a new profile card. Listen, then answer questions about the person without looking at the text.",
+      "scenarioKr": "선생님이 새로운 프로필 카드를 읽습니다. 텍스트를 보지 않고 그 사람에 대한 질문에 답하세요.",
+      "guideQuestions": [
+        {
+          "text": "What is the person's name?"
+        },
+        {
+          "text": "Where are they from?"
+        },
+        {
+          "text": "Where do they live now?"
+        },
+        {
+          "text": "What is their job?"
+        },
+        {
+          "text": "What do they like? What is their hobby?"
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Are you ready for the challenge?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read this profile to the student (they should NOT look at the screen): 'Hello! My name is David Kim. I am from Seoul. I live in Sendai. I work at Global Tech. I am an engineer. I like hiking. My hobby is playing guitar. Nice to meet you!'"
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the guide questions. The student answers from memory."
+        },
+        {
+          "type": "instruction",
+          "text": "Give feedback after finishing."
+        },
+        {
+          "type": "tip",
+          "text": "Read the profile twice if the student needs it. This combines reading skills with listening."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category, then answer the questions.",
+      "instructionKr": "카테고리를 하나 선택하고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "ABOUT YOU",
+          "questions": [
+            "Where are you from?",
+            "Where do you live now?",
+            "What is your favorite food?"
+          ]
+        },
+        {
+          "title": "YOUR HOBBIES",
+          "questions": [
+            "What do you like doing on weekends?",
+            "What is your hobby?",
+            "Do you have any new hobbies you want to try?"
+          ]
+        },
+        {
+          "title": "YOUR COWORKER",
+          "questions": [
+            "Can you tell me about a coworker?",
+            "Where is he/she from?",
+            "What does he/she like?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, let's have a discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to choose a category."
+        },
+        {
+          "type": "tip",
+          "text": "If the student can't choose, pick one. Encourage full sentences."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can read and understand a simple self-introduction profile.",
+      "goalReviewKr": "간단한 자기소개 프로필을 읽고 이해할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Reading Comprehension*<br>Reading:<br>- Could answer questions correctly: (yes/partially/no)<br>- Reading speed: (good/needs practice)<br><br>*Vocabulary / Phrases*<br>Vocabulary:<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>Pronunciation:<br>- mispronounced word<br>- mispronounced word",
+      "nextLessonLabel": "CHAPTER 1: WORK INTRODUCTIONS",
+      "nextLessonName": "Lesson 3: Tell Me About Yourself",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"It's the end of the lesson. Great job!\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the lesson goal."
+        },
+        {
+          "type": "script",
+          "text": "\"Were you able to achieve today's lesson goal?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send the feedback template via chat."
+        },
+        {
+          "type": "instruction",
+          "text": "Practice mispronounced words with the student."
+        },
+        {
+          "type": "tip",
+          "text": "Encourage the next lesson."
+        }
+      ]
+    }
+  }
+}

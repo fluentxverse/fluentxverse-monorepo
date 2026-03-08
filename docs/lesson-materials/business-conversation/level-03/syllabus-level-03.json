@@ -1,0 +1,1031 @@
+{
+  "level": 3,
+  "badge": "Beginner",
+  "toeic": "10-220",
+  "description": "Foundation business English for absolute beginners. Students learn survival-level workplace communication: introductions, describing their job, basic office interactions, simple requests, and essential phone/email phrases.",
+  "skillCycle": [
+    "listening",
+    "reading",
+    "speaking",
+    "speaking",
+    "review"
+  ],
+  "chapters": [
+    {
+      "chapter": 1,
+      "theme": "Work Introductions",
+      "description": "Learn to introduce yourself, your coworkers, and talk about basic personal/professional information.",
+      "lessons": [
+        {
+          "lesson": 1,
+          "skill": "listening",
+          "name": "Pleased to Meet You",
+          "goalEn": "Can introduce yourself and your coworker.",
+          "targetPatterns": [
+            "My name is ___.",
+            "This is ___.",
+            "We are ___."
+          ],
+          "vocabulary": [
+            "pleased",
+            "coworker",
+            "join"
+          ],
+          "pronunciation": "/æ/ vs /ʌ/",
+          "situation": "A new coworker joins your team. Introduce yourself and another coworker to him/her.",
+          "notes": "Reference lesson exists: ch01-lesson01-pleased-to-meet-you-listening.html",
+          "goalKr": "자기소개와 동료 소개를 할 수 있게 된다."
+        },
+        {
+          "lesson": 2,
+          "skill": "reading",
+          "name": "All About Me",
+          "goalEn": "Can read and understand a simple self-introduction profile.",
+          "targetPatterns": [
+            "I am from ___.",
+            "I live in ___.",
+            "I like ___."
+          ],
+          "vocabulary": [
+            "hometown",
+            "hobby",
+            "favorite"
+          ],
+          "pronunciation": "/ɪ/ vs /iː/",
+          "situation": "You read a short profile card that a new coworker shared with the team.",
+          "goalKr": "간단한 자기소개 프로필을 읽고 이해할 수 있다."
+        },
+        {
+          "lesson": 3,
+          "skill": "speaking",
+          "name": "Tell Me About Yourself",
+          "goalEn": "Can talk about yourself using basic personal information.",
+          "targetPatterns": [
+            "I am ___.",
+            "I work at ___.",
+            "I am from ___."
+          ],
+          "vocabulary": [
+            "company",
+            "position",
+            "years"
+          ],
+          "pronunciation": "/r/ vs /l/",
+          "situation": "At a welcome lunch, your new coworkers ask you about yourself.",
+          "goalKr": "기본적인 개인 정보를 사용하여 자신에 대해 말할 수 있다."
+        },
+        {
+          "lesson": 4,
+          "skill": "speaking",
+          "name": "Who's Who?",
+          "goalEn": "Can introduce team members and describe their roles.",
+          "targetPatterns": [
+            "This is ___. He/She is ___.",
+            "He/She works in ___.",
+            "We work together."
+          ],
+          "vocabulary": [
+            "manager",
+            "team",
+            "department"
+          ],
+          "pronunciation": "/θ/ vs /s/",
+          "situation": "A client visits your office. Introduce your team members to the client.",
+          "goalKr": "팀원을 소개하고 역할을 설명할 수 있다."
+        },
+        {
+          "lesson": 5,
+          "skill": "review",
+          "name": "First Impressions",
+          "goalEn": "Can use self-introductions and team introductions confidently.",
+          "targetPatterns": [
+            "My name is ___.",
+            "This is ___.",
+            "I work at/in ___."
+          ],
+          "vocabulary": [
+            "pleased",
+            "coworker",
+            "company",
+            "manager",
+            "department"
+          ],
+          "pronunciation": "Review: /æ/, /ʌ/, /ɪ/, /iː/",
+          "situation": "Review scenarios: meeting new coworkers, reading profiles, introducing team members.",
+          "reviewScope": "Lessons 1-4",
+          "goalKr": "자기소개와 팀 소개를 자신 있게 할 수 있다."
+        },
+        {
+          "lesson": 6,
+          "skill": "listening",
+          "name": "Nice Office!",
+          "goalEn": "Can understand when someone describes their workplace.",
+          "targetPatterns": [
+            "Our office is ___.",
+            "There is/are ___.",
+            "It's on the ___ floor."
+          ],
+          "vocabulary": [
+            "floor",
+            "meeting room",
+            "break room"
+          ],
+          "pronunciation": "/ɑː/ vs /ɔː/",
+          "situation": "A coworker gives you a tour of the office on your first day.",
+          "goalKr": "직장에 대해 이야기하는 것을 들을 수 있다."
+        },
+        {
+          "lesson": 7,
+          "skill": "reading",
+          "name": "The Company Directory",
+          "goalEn": "Can read simple employee profiles in a company directory.",
+          "targetPatterns": [
+            "___ is in the ___ department.",
+            "___ has been here for ___ years.",
+            "Contact: ___"
+          ],
+          "vocabulary": [
+            "directory",
+            "extension",
+            "contact"
+          ],
+          "pronunciation": "/dʒ/ vs /tʃ/",
+          "situation": "You look at the company directory to learn about your new colleagues.",
+          "goalKr": "사원 명부의 간단한 프로필을 읽을 수 있다."
+        },
+        {
+          "lesson": 8,
+          "skill": "speaking",
+          "name": "Where Are You From?",
+          "goalEn": "Can ask and answer questions about personal background.",
+          "targetPatterns": [
+            "Where are you from?",
+            "How long have you worked here?",
+            "What do you do?"
+          ],
+          "vocabulary": [
+            "originally",
+            "experience",
+            "background"
+          ],
+          "pronunciation": "/w/ vs /v/",
+          "situation": "During a coffee break, you chat with a coworker and learn about each other.",
+          "goalKr": "개인 경력에 대해 질문하거나 대답할 수 있다."
+        },
+        {
+          "lesson": 9,
+          "skill": "speaking",
+          "name": "Let's Keep in Touch",
+          "goalEn": "Can exchange contact information with a coworker.",
+          "targetPatterns": [
+            "My email is ___.",
+            "My phone number is ___.",
+            "Can I have your ___?"
+          ],
+          "vocabulary": [
+            "email",
+            "phone number",
+            "business card"
+          ],
+          "pronunciation": "Numbers & email addresses",
+          "situation": "After meeting new coworkers, you want to exchange contact information.",
+          "goalKr": "동료와 연락처를 교환할 수 있다."
+        },
+        {
+          "lesson": 10,
+          "skill": "review",
+          "name": "Our New Team",
+          "goalEn": "Can handle all basic introduction and networking conversations.",
+          "targetPatterns": [
+            "My name is ___.",
+            "I work in ___.",
+            "My email is ___."
+          ],
+          "vocabulary": [
+            "floor",
+            "directory",
+            "extension",
+            "email",
+            "background"
+          ],
+          "pronunciation": "Review: all Chapter 1 sounds",
+          "situation": "Comprehensive review: team introductions, office tour, exchanging contact info.",
+          "reviewScope": "Lessons 6-9",
+          "goalKr": "기본적인 소개와 네트워킹 대화에 대응할 수 있다."
+        }
+      ]
+    },
+    {
+      "chapter": 2,
+      "theme": "Office Basics",
+      "description": "Learn to navigate and describe the office environment, ask for and give simple directions, and talk about office equipment.",
+      "lessons": [
+        {
+          "lesson": 1,
+          "skill": "listening",
+          "name": "Where Is the Printer?",
+          "goalEn": "Can understand simple directions inside an office.",
+          "targetPatterns": [
+            "It's next to ___.",
+            "Go straight and turn ___.",
+            "It's on your ___."
+          ],
+          "vocabulary": [
+            "next to",
+            "across from",
+            "between"
+          ],
+          "pronunciation": "/ð/ vs /d/",
+          "situation": "You need to find the printer. A coworker gives you directions.",
+          "goalKr": "사무실 내 간단한 길 안내를 들을 수 있다."
+        },
+        {
+          "lesson": 2,
+          "skill": "reading",
+          "name": "The Office Map",
+          "goalEn": "Can read and understand a simple office floor plan.",
+          "targetPatterns": [
+            "The ___ is on the ___ floor.",
+            "Room ___ is near ___.",
+            "___ is located in ___."
+          ],
+          "vocabulary": [
+            "elevator",
+            "stairs",
+            "entrance"
+          ],
+          "pronunciation": "/eɪ/ vs /ɛ/",
+          "situation": "You look at the office floor plan to find different rooms and facilities.",
+          "goalKr": "간단한 사무실 층 지도를 읽고 이해할 수 있다."
+        },
+        {
+          "lesson": 3,
+          "skill": "speaking",
+          "name": "Can You Help Me Find It?",
+          "goalEn": "Can ask for directions to places in the office.",
+          "targetPatterns": [
+            "Excuse me, where is ___?",
+            "How do I get to ___?",
+            "Is it near ___?"
+          ],
+          "vocabulary": [
+            "excuse me",
+            "looking for",
+            "find"
+          ],
+          "pronunciation": "/h/ (silent vs pronounced)",
+          "situation": "It's your second day. You need to find the break room, supply closet, and HR office.",
+          "goalKr": "사무실 내 장소로 가는 길을 물을 수 있다."
+        },
+        {
+          "lesson": 4,
+          "skill": "speaking",
+          "name": "It's Over There",
+          "goalEn": "Can give simple directions to places in the office.",
+          "targetPatterns": [
+            "Go down the hall.",
+            "Turn left/right at ___.",
+            "It's the ___ door on your ___."
+          ],
+          "vocabulary": [
+            "hallway",
+            "corner",
+            "straight ahead"
+          ],
+          "pronunciation": "/l/ at end of words",
+          "situation": "A new employee asks you for directions to different rooms.",
+          "goalKr": "사무실 내 장소로의 간단한 길 안내를 할 수 있다."
+        },
+        {
+          "lesson": 5,
+          "skill": "review",
+          "name": "Office Tour",
+          "goalEn": "Can ask for and give directions confidently in the office.",
+          "targetPatterns": [
+            "Where is ___?",
+            "Go straight and ___.",
+            "It's next to ___."
+          ],
+          "vocabulary": [
+            "elevator",
+            "hallway",
+            "next to",
+            "across from",
+            "corner"
+          ],
+          "pronunciation": "Review: /ð/, /eɪ/, /h/, /l/",
+          "situation": "Give a complete office tour to a visitor, then answer their questions.",
+          "reviewScope": "Lessons 1-4",
+          "goalKr": "사무실 내에서 자신 있게 길 안내 질문과 답변을 할 수 있다."
+        },
+        {
+          "lesson": 6,
+          "skill": "listening",
+          "name": "How Does This Work?",
+          "goalEn": "Can understand simple instructions for using office equipment.",
+          "targetPatterns": [
+            "First, ___. Then, ___.",
+            "Press the ___ button.",
+            "Don't forget to ___."
+          ],
+          "vocabulary": [
+            "press",
+            "button",
+            "screen"
+          ],
+          "pronunciation": "/p/ vs /b/",
+          "situation": "A coworker explains how to use the copy machine and coffee maker.",
+          "goalKr": "사무 기기의 간단한 사용법 설명을 들을 수 있다."
+        },
+        {
+          "lesson": 7,
+          "skill": "reading",
+          "name": "Office Rules",
+          "goalEn": "Can read and understand basic office rules and signs.",
+          "targetPatterns": [
+            "Please ___.",
+            "Do not ___.",
+            "___ is not allowed."
+          ],
+          "vocabulary": [
+            "allowed",
+            "prohibited",
+            "policy"
+          ],
+          "pronunciation": "/aʊ/ vs /oʊ/",
+          "situation": "You read the office building rules posted on the bulletin board.",
+          "goalKr": "기본적인 사무실 규칙과 표지판을 읽고 이해할 수 있다."
+        },
+        {
+          "lesson": 8,
+          "skill": "speaking",
+          "name": "I Need Some Supplies",
+          "goalEn": "Can ask for basic office supplies.",
+          "targetPatterns": [
+            "Do you have ___?",
+            "Can I borrow ___?",
+            "Where can I find ___?"
+          ],
+          "vocabulary": [
+            "stapler",
+            "pen",
+            "notebook"
+          ],
+          "pronunciation": "/n/ vs /ŋ/",
+          "situation": "You need supplies for a meeting but don't know where they are kept.",
+          "goalKr": "기본적인 사무용품을 요청할 수 있다."
+        },
+        {
+          "lesson": 9,
+          "skill": "speaking",
+          "name": "My Desk, My Space",
+          "goalEn": "Can describe your workspace and what's on your desk.",
+          "targetPatterns": [
+            "On my desk, there is ___.",
+            "I keep ___ in ___.",
+            "My desk is near ___."
+          ],
+          "vocabulary": [
+            "drawer",
+            "shelf",
+            "monitor"
+          ],
+          "pronunciation": "/ʃ/ vs /s/",
+          "situation": "You video call a friend and describe your new office workspace.",
+          "goalKr": "자신의 작업 공간과 책상 위를 설명할 수 있다."
+        },
+        {
+          "lesson": 10,
+          "skill": "review",
+          "name": "Setting Up Shop",
+          "goalEn": "Can navigate the office, use equipment, and describe your workspace.",
+          "targetPatterns": [
+            "First, ___.",
+            "Can I borrow ___?",
+            "On my desk, there is ___."
+          ],
+          "vocabulary": [
+            "press",
+            "button",
+            "stapler",
+            "drawer",
+            "monitor"
+          ],
+          "pronunciation": "Review: all Chapter 2 sounds",
+          "situation": "Comprehensive review: giving directions, explaining equipment, describing your desk.",
+          "reviewScope": "Lessons 6-9",
+          "goalKr": "사무실 내를 돌아다니고, 기기를 사용하며, 작업 공간을 설명할 수 있다."
+        }
+      ]
+    },
+    {
+      "chapter": 3,
+      "theme": "Daily Routines",
+      "description": "Learn to talk about your daily work schedule, tell time, describe what you do at work, and discuss simple plans.",
+      "lessons": [
+        {
+          "lesson": 1,
+          "skill": "listening",
+          "name": "What Time Is It?",
+          "goalEn": "Can understand when someone talks about time and schedules.",
+          "targetPatterns": [
+            "It's ___ o'clock.",
+            "The meeting is at ___.",
+            "From ___ to ___."
+          ],
+          "vocabulary": [
+            "o'clock",
+            "half past",
+            "quarter"
+          ],
+          "pronunciation": "/t/ vs /d/ (final position)",
+          "situation": "Your manager tells you about today's schedule and meeting times.",
+          "goalKr": "시간과 일정에 대한 대화를 들을 수 있다."
+        },
+        {
+          "lesson": 2,
+          "skill": "reading",
+          "name": "Today's Schedule",
+          "goalEn": "Can read a simple daily work schedule.",
+          "targetPatterns": [
+            "At ___, I ___.",
+            "___ starts at ___.",
+            "Lunch is from ___ to ___."
+          ],
+          "vocabulary": [
+            "schedule",
+            "appointment",
+            "break"
+          ],
+          "pronunciation": "/sk/ vs /ʃ/ (schedule)",
+          "situation": "You look at the team schedule board to see what's planned for the day.",
+          "goalKr": "간단한 하루 일정을 읽을 수 있다."
+        },
+        {
+          "lesson": 3,
+          "skill": "speaking",
+          "name": "My Typical Day",
+          "goalEn": "Can describe your daily work routine.",
+          "targetPatterns": [
+            "I usually ___.",
+            "In the morning, I ___.",
+            "After lunch, I ___."
+          ],
+          "vocabulary": [
+            "usually",
+            "sometimes",
+            "always"
+          ],
+          "pronunciation": "Stress in time words",
+          "situation": "A coworker asks what your typical workday looks like.",
+          "goalKr": "매일의 업무 루틴을 설명할 수 있다."
+        },
+        {
+          "lesson": 4,
+          "skill": "speaking",
+          "name": "Are You Free Tomorrow?",
+          "goalEn": "Can talk about simple future plans and availability.",
+          "targetPatterns": [
+            "Are you free on ___?",
+            "I have ___ at ___.",
+            "Sorry, I'm busy on ___."
+          ],
+          "vocabulary": [
+            "free",
+            "busy",
+            "available"
+          ],
+          "pronunciation": "/f/ vs /v/",
+          "situation": "A coworker wants to have lunch together. You check your schedule.",
+          "goalKr": "간단한 일정과 가용 시간에 대해 말할 수 있다."
+        },
+        {
+          "lesson": 5,
+          "skill": "review",
+          "name": "Time Management",
+          "goalEn": "Can discuss schedules, routines, and availability confidently.",
+          "targetPatterns": [
+            "The meeting is at ___.",
+            "I usually ___.",
+            "Are you free on ___?"
+          ],
+          "vocabulary": [
+            "schedule",
+            "usually",
+            "available",
+            "appointment",
+            "break"
+          ],
+          "pronunciation": "Review: time-related sounds",
+          "situation": "Coordinate a team lunch: discuss schedules, check availability, set a time.",
+          "reviewScope": "Lessons 1-4",
+          "goalKr": "일정, 루틴, 가용 시간에 대해 자신 있게 말할 수 있다."
+        },
+        {
+          "lesson": 6,
+          "skill": "listening",
+          "name": "What Do You Do?",
+          "goalEn": "Can understand when someone talks about their job responsibilities.",
+          "targetPatterns": [
+            "I ___ every day.",
+            "My job is to ___.",
+            "I'm in charge of ___."
+          ],
+          "vocabulary": [
+            "responsible",
+            "task",
+            "in charge of"
+          ],
+          "pronunciation": "/ʒ/ (charge, usually)",
+          "situation": "During a team meeting, each person describes what they do.",
+          "goalKr": "업무 내용에 대한 대화를 들을 수 있다."
+        },
+        {
+          "lesson": 7,
+          "skill": "reading",
+          "name": "Job Descriptions",
+          "goalEn": "Can read simple job descriptions and understand the main duties.",
+          "targetPatterns": [
+            "The ___ is responsible for ___.",
+            "Duties include ___.",
+            "Reports to ___."
+          ],
+          "vocabulary": [
+            "duties",
+            "responsible",
+            "report to"
+          ],
+          "pronunciation": "/juː/ vs /uː/",
+          "situation": "You read job postings on the company intranet to understand different roles.",
+          "goalKr": "간단한 직무 내용을 읽고 주요 업무를 이해할 수 있다."
+        },
+        {
+          "lesson": 8,
+          "skill": "speaking",
+          "name": "I'm Working on It",
+          "goalEn": "Can talk about what you are doing now at work.",
+          "targetPatterns": [
+            "I'm working on ___.",
+            "I'm preparing ___.",
+            "I'm waiting for ___."
+          ],
+          "vocabulary": [
+            "project",
+            "prepare",
+            "deadline"
+          ],
+          "pronunciation": "-ing endings",
+          "situation": "Your manager asks what you're currently working on.",
+          "goalKr": "지금 하고 있는 일에 대해 말할 수 있다."
+        },
+        {
+          "lesson": 9,
+          "skill": "speaking",
+          "name": "See You Tomorrow!",
+          "goalEn": "Can say goodbye and talk about tomorrow's plan.",
+          "targetPatterns": [
+            "See you tomorrow.",
+            "Tomorrow, I will ___.",
+            "Have a good evening."
+          ],
+          "vocabulary": [
+            "tomorrow",
+            "weekend",
+            "evening"
+          ],
+          "pronunciation": "/ɒ/ vs /oʊ/ (tomorrow)",
+          "situation": "It's the end of the workday. You say goodbye to your coworkers.",
+          "goalKr": "작별 인사를 하고 내일 일정에 대해 말할 수 있다."
+        },
+        {
+          "lesson": 10,
+          "skill": "review",
+          "name": "A Day in the Life",
+          "goalEn": "Can describe a full workday from arrival to departure.",
+          "targetPatterns": [
+            "My job is to ___.",
+            "I'm working on ___.",
+            "See you tomorrow."
+          ],
+          "vocabulary": [
+            "responsible",
+            "project",
+            "deadline",
+            "weekend",
+            "evening"
+          ],
+          "pronunciation": "Review: all Chapter 3 sounds",
+          "situation": "Describe your entire workday to a friend: what you do, current projects, end-of-day plans.",
+          "reviewScope": "Lessons 6-9",
+          "goalKr": "출근부터 퇴근까지 하루 업무를 설명할 수 있다."
+        }
+      ]
+    },
+    {
+      "chapter": 4,
+      "theme": "Making Requests",
+      "description": "Learn to make polite requests, ask for help, offer assistance, and handle simple workplace problems.",
+      "lessons": [
+        {
+          "lesson": 1,
+          "skill": "listening",
+          "name": "Can You Help Me?",
+          "goalEn": "Can understand simple requests for help at work.",
+          "targetPatterns": [
+            "Can you ___?",
+            "Could you please ___?",
+            "Would you mind ___?"
+          ],
+          "vocabulary": [
+            "help",
+            "favor",
+            "sure"
+          ],
+          "pronunciation": "Intonation in questions",
+          "situation": "Coworkers ask you for small favors throughout the day.",
+          "goalKr": "직장에서 간단한 도움 요청 표현을 들을 수 있다."
+        },
+        {
+          "lesson": 2,
+          "skill": "reading",
+          "name": "The Request Email",
+          "goalEn": "Can read a simple email asking for something.",
+          "targetPatterns": [
+            "I would like to ___.",
+            "Please send me ___.",
+            "Thank you for your help."
+          ],
+          "vocabulary": [
+            "request",
+            "attachment",
+            "reply"
+          ],
+          "pronunciation": "/k/ vs /g/",
+          "situation": "You receive an email from your manager with a simple request.",
+          "goalKr": "부탁하는 간단한 이메일을 읽고 이해할 수 있다."
+        },
+        {
+          "lesson": 3,
+          "skill": "speaking",
+          "name": "I Need a Hand",
+          "goalEn": "Can ask a coworker for simple help.",
+          "targetPatterns": [
+            "Can you help me with ___?",
+            "I need help with ___.",
+            "Is it okay if ___?"
+          ],
+          "vocabulary": [
+            "assist",
+            "support",
+            "appreciate"
+          ],
+          "pronunciation": "/æ/ stress in 'can' vs 'can't'",
+          "situation": "You're having trouble with the printer and need a coworker's help.",
+          "goalKr": "동료에게 간단한 도움을 요청할 수 있다."
+        },
+        {
+          "lesson": 4,
+          "skill": "speaking",
+          "name": "Sure, No Problem!",
+          "goalEn": "Can accept or politely decline a request.",
+          "targetPatterns": [
+            "Sure, I can do that.",
+            "Sorry, I'm a little busy right now.",
+            "How about later?"
+          ],
+          "vocabulary": [
+            "of course",
+            "unfortunately",
+            "later"
+          ],
+          "pronunciation": "Polite intonation (rising)",
+          "situation": "Different coworkers ask you for help. You accept some and politely decline others.",
+          "goalKr": "요청을 수락하거나 정중하게 거절할 수 있다."
+        },
+        {
+          "lesson": 5,
+          "skill": "review",
+          "name": "Happy to Help",
+          "goalEn": "Can make and respond to workplace requests confidently.",
+          "targetPatterns": [
+            "Can you ___?",
+            "I need help with ___.",
+            "Sure, no problem."
+          ],
+          "vocabulary": [
+            "help",
+            "favor",
+            "assist",
+            "appreciate",
+            "unfortunately"
+          ],
+          "pronunciation": "Review: question intonation",
+          "situation": "Role-play: handle multiple requests in one busy morning.",
+          "reviewScope": "Lessons 1-4",
+          "goalKr": "직장에서의 요청과 응답을 자신 있게 할 수 있다."
+        },
+        {
+          "lesson": 6,
+          "skill": "listening",
+          "name": "There's a Problem",
+          "goalEn": "Can understand when someone describes a simple workplace problem.",
+          "targetPatterns": [
+            "The ___ isn't working.",
+            "I think there's a problem with ___.",
+            "We need to fix ___."
+          ],
+          "vocabulary": [
+            "broken",
+            "problem",
+            "fix"
+          ],
+          "pronunciation": "/ɪz/ vs /z/ (isn't, is)",
+          "situation": "Your coworker calls IT support to report a problem. You listen to the call.",
+          "goalKr": "간단한 직장 문제 설명을 들을 수 있다."
+        },
+        {
+          "lesson": 7,
+          "skill": "reading",
+          "name": "The Maintenance Notice",
+          "goalEn": "Can read a simple office notice about maintenance or repairs.",
+          "targetPatterns": [
+            "___ will be closed on ___.",
+            "Please use ___ instead.",
+            "We apologize for ___."
+          ],
+          "vocabulary": [
+            "maintenance",
+            "notice",
+            "apologize"
+          ],
+          "pronunciation": "/eɪ/ in 'maintenance'",
+          "situation": "A notice is posted: the elevator will be closed for maintenance this week.",
+          "goalKr": "유지보수 및 수리에 관한 간단한 공지를 읽을 수 있다."
+        },
+        {
+          "lesson": 8,
+          "skill": "speaking",
+          "name": "Something's Wrong",
+          "goalEn": "Can explain a simple problem at work.",
+          "targetPatterns": [
+            "___ is not working.",
+            "I can't ___.",
+            "Can someone help me with ___?"
+          ],
+          "vocabulary": [
+            "broken",
+            "error",
+            "restart"
+          ],
+          "pronunciation": "Stress in negative contractions (can't, isn't, don't)",
+          "situation": "Your computer isn't working. You call IT to explain the problem.",
+          "goalKr": "직장의 간단한 문제를 설명할 수 있다."
+        },
+        {
+          "lesson": 9,
+          "skill": "speaking",
+          "name": "Let Me Help You",
+          "goalEn": "Can offer help and give simple solutions.",
+          "targetPatterns": [
+            "Let me help you.",
+            "Try ___.",
+            "You should ___."
+          ],
+          "vocabulary": [
+            "try",
+            "suggest",
+            "solution"
+          ],
+          "pronunciation": "Friendly intonation",
+          "situation": "A new coworker is struggling. You offer help and walk them through a solution.",
+          "goalKr": "도움을 제안하거나 간단한 해결책을 제시할 수 있다."
+        },
+        {
+          "lesson": 10,
+          "skill": "review",
+          "name": "Problem Solved!",
+          "goalEn": "Can report problems, offer help, and find solutions at work.",
+          "targetPatterns": [
+            "___ isn't working.",
+            "Let me help you.",
+            "Try ___."
+          ],
+          "vocabulary": [
+            "broken",
+            "error",
+            "maintenance",
+            "suggest",
+            "solution"
+          ],
+          "pronunciation": "Review: all Chapter 4 sounds",
+          "situation": "A busy day with multiple small problems: printer jams, schedule mix-ups, lost supplies.",
+          "reviewScope": "Lessons 6-9",
+          "goalKr": "문제 보고, 도움 제안, 해결책 제시를 할 수 있다."
+        }
+      ]
+    },
+    {
+      "chapter": 5,
+      "theme": "Phone & Email",
+      "description": "Learn basic phone manners, simple email writing, taking messages, and confirming information in writing.",
+      "lessons": [
+        {
+          "lesson": 1,
+          "skill": "listening",
+          "name": "Who's Calling?",
+          "goalEn": "Can understand a simple phone call at work.",
+          "targetPatterns": [
+            "This is ___ speaking.",
+            "May I speak to ___?",
+            "One moment, please."
+          ],
+          "vocabulary": [
+            "speaking",
+            "hold on",
+            "transfer"
+          ],
+          "pronunciation": "Phone voice clarity",
+          "situation": "The office phone rings. Listen to who is calling and what they want.",
+          "goalKr": "직장에서의 간단한 전화를 들을 수 있다."
+        },
+        {
+          "lesson": 2,
+          "skill": "reading",
+          "name": "You've Got Mail",
+          "goalEn": "Can read and understand a simple work email.",
+          "targetPatterns": [
+            "Dear ___,",
+            "I am writing to ___.",
+            "Best regards, ___"
+          ],
+          "vocabulary": [
+            "subject",
+            "regards",
+            "forward"
+          ],
+          "pronunciation": "/ər/ in 'regard', 'forward'",
+          "situation": "You open your inbox and read a short email from your manager about tomorrow's meeting.",
+          "goalKr": "간단한 업무 이메일을 읽고 이해할 수 있다."
+        },
+        {
+          "lesson": 3,
+          "skill": "speaking",
+          "name": "Hello, This Is...",
+          "goalEn": "Can answer the phone and identify yourself.",
+          "targetPatterns": [
+            "Hello, this is ___.",
+            "How can I help you?",
+            "Let me check for you."
+          ],
+          "vocabulary": [
+            "call",
+            "dial",
+            "extension"
+          ],
+          "pronunciation": "Clear /h/ at start of words",
+          "situation": "The phone rings at your desk. Answer it professionally and help the caller.",
+          "goalKr": "전화를 받아 자신의 이름을 말할 수 있다."
+        },
+        {
+          "lesson": 4,
+          "skill": "speaking",
+          "name": "Can I Take a Message?",
+          "goalEn": "Can take and leave a simple phone message.",
+          "targetPatterns": [
+            "Can I take a message?",
+            "Please tell ___ that ___.",
+            "I'll let ___ know."
+          ],
+          "vocabulary": [
+            "message",
+            "callback",
+            "available"
+          ],
+          "pronunciation": "Connected speech: 'Can I' → /kænaɪ/",
+          "situation": "A call comes in for your manager who is in a meeting. Take a message.",
+          "goalKr": "간단한 전화 메시지를 받거나 남길 수 있다."
+        },
+        {
+          "lesson": 5,
+          "skill": "review",
+          "name": "Ring Ring!",
+          "goalEn": "Can handle basic phone conversations at work.",
+          "targetPatterns": [
+            "This is ___ speaking.",
+            "Can I take a message?",
+            "I'll let ___ know."
+          ],
+          "vocabulary": [
+            "transfer",
+            "extension",
+            "message",
+            "callback",
+            "available"
+          ],
+          "pronunciation": "Review: phone clarity",
+          "situation": "A morning of phone calls: answer, transfer, take messages, call back.",
+          "reviewScope": "Lessons 1-4",
+          "goalKr": "기본적인 전화 응대를 할 수 있다."
+        },
+        {
+          "lesson": 6,
+          "skill": "listening",
+          "name": "Please Confirm",
+          "goalEn": "Can understand when someone confirms details by phone or email.",
+          "targetPatterns": [
+            "Just to confirm, ___.",
+            "Is that correct?",
+            "Let me repeat that."
+          ],
+          "vocabulary": [
+            "confirm",
+            "correct",
+            "repeat"
+          ],
+          "pronunciation": "Stress on key info words",
+          "situation": "A colleague calls to confirm the time and place for tomorrow's meeting.",
+          "goalKr": "전화나 이메일로 세부 사항을 확인하는 대화를 들을 수 있다."
+        },
+        {
+          "lesson": 7,
+          "skill": "reading",
+          "name": "Reply All",
+          "goalEn": "Can read an email thread and follow the conversation.",
+          "targetPatterns": [
+            "Thank you for your email.",
+            "As discussed, ___.",
+            "Please see attached."
+          ],
+          "vocabulary": [
+            "attached",
+            "regarding",
+            "discussed"
+          ],
+          "pronunciation": "/ɪd/ vs /d/ vs /t/ (-ed endings)",
+          "situation": "Read a short email thread between your manager and a client about a schedule change.",
+          "goalKr": "이메일 주고받기를 읽고 대화 흐름을 따라갈 수 있다."
+        },
+        {
+          "lesson": 8,
+          "skill": "speaking",
+          "name": "Short and Sweet",
+          "goalEn": "Can compose a simple reply email out loud.",
+          "targetPatterns": [
+            "Thank you for ___.",
+            "I will ___ by ___.",
+            "Please let me know if ___."
+          ],
+          "vocabulary": [
+            "deadline",
+            "update",
+            "let me know"
+          ],
+          "pronunciation": "Professional tone",
+          "situation": "Your tutor reads you an email. You compose your reply out loud.",
+          "goalKr": "간단한 답장 이메일 내용을 구두로 작성할 수 있다."
+        },
+        {
+          "lesson": 9,
+          "skill": "speaking",
+          "name": "I'm Sorry, Could You Repeat That?",
+          "goalEn": "Can ask someone to repeat or clarify information.",
+          "targetPatterns": [
+            "Could you repeat that?",
+            "Sorry, I didn't catch ___.",
+            "Do you mean ___?"
+          ],
+          "vocabulary": [
+            "clarify",
+            "understand",
+            "spell"
+          ],
+          "pronunciation": "Polite question rising tone",
+          "situation": "On a phone call, you can't hear clearly. Ask the caller to repeat and spell things.",
+          "goalKr": "상대방에게 다시 말해 달라고 하거나 확인을 요청할 수 있다."
+        },
+        {
+          "lesson": 10,
+          "skill": "review",
+          "name": "Staying Connected",
+          "goalEn": "Can handle basic phone and email communication at work.",
+          "targetPatterns": [
+            "Just to confirm, ___.",
+            "Thank you for ___.",
+            "Could you repeat that?"
+          ],
+          "vocabulary": [
+            "confirm",
+            "attached",
+            "deadline",
+            "clarify",
+            "update"
+          ],
+          "pronunciation": "Review: all Chapter 5 sounds",
+          "situation": "Final simulation: receive a call, take a message, read an email, compose a reply, confirm details.",
+          "reviewScope": "Lessons 6-9",
+          "goalKr": "기본적인 전화와 이메일 커뮤니케이션을 할 수 있다."
+        }
+      ]
+    }
+  ]
+}

@@ -584,8 +584,8 @@
 
 .beve-col-tutor {
   padding: 28px 16px 16px;
-  background: #ffffff;
-  color: #2c3040;
+  background: #13111d;
+  color: #d4d4d8;
   min-width: 0;
   position: relative;
 }
@@ -643,79 +643,78 @@
   color: #a78bfa;
 }
 
-/* ─── Tutor Column Dark-on-White Overrides ──────────── */
-/* These elements are normally styled for dark bg but appear inside the white tutor column */
+/* ─── Tutor Column Overrides (dark mode) ────────────── */
 .beve-col-tutor .beve-sub-heading {
-  color: #1e1e2e;
-  border-bottom-color: #e0e4ee;
+  color: #d4d4d8;
+  border-bottom-color: rgba(124, 58, 237, .15);
 }
-.beve-col-tutor .beve-sub-heading i { color: #7c3aed; }
-.beve-col-tutor .beve-sub-heading .jp-label { color: #9ca3af; }
+.beve-col-tutor .beve-sub-heading i { color: #a78bfa; }
+.beve-col-tutor .beve-sub-heading .kr-label { color: #71717a; }
 
 .beve-col-tutor .beve-guide-q {
-  color: #2c3040;
-  background: #f8f9fc;
-  border-color: #e0e4ee;
+  color: #d4d4d8;
+  background: rgba(124, 58, 237, .06);
+  border-color: rgba(124, 58, 237, .15);
 }
 .beve-col-tutor .beve-guide-q span {
-  color: #7c3aed !important;
+  color: #a78bfa !important;
 }
 
 .beve-col-tutor .beve-editable:hover {
-  border-color: rgba(124, 58, 237, .25);
-  background: rgba(124, 58, 237, .03);
+  border-color: rgba(124, 58, 237, .3);
+  background: rgba(124, 58, 237, .06);
 }
 .beve-col-tutor .beve-editable:focus {
   border-color: #7c3aed;
-  background: rgba(124, 58, 237, .05);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+  background: rgba(124, 58, 237, .08);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .12);
 }
 
 .beve-col-tutor .beve-rich-input {
-  color: #2c3040;
-  caret-color: #2c3040;
+  color: #d4d4d8;
+  caret-color: #d4d4d8;
 }
 .beve-col-tutor .beve-rich-input:hover {
-  border-color: rgba(124, 58, 237, .25);
-  background: rgba(124, 58, 237, .03);
+  border-color: rgba(124, 58, 237, .3);
+  background: rgba(124, 58, 237, .06);
 }
 .beve-col-tutor .beve-rich-input:focus {
   border-color: #7c3aed;
-  background: rgba(124, 58, 237, .05);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
-  color: #1a1e2e;
+  background: rgba(124, 58, 237, .08);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .12);
+  color: #e4e4e7;
 }
 .beve-col-tutor .beve-rich-input strong,
 .beve-col-tutor .beve-rich-input b {
-  color: #7c3aed;
+  color: #a78bfa;
 }
 .beve-col-tutor .beve-rich-input u {
-  text-decoration-color: rgba(124, 58, 237, .4);
+  text-decoration-color: rgba(167, 139, 250, .5);
 }
 .beve-col-tutor .beve-rich-placeholder:empty::before {
-  color: #9ca3af;
+  color: #52525b;
 }
 .beve-col-tutor .beve-rich-hint {
-  color: #9ca3af;
+  color: #52525b;
 }
 .beve-col-tutor .beve-rich-hint kbd {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
-  color: #7c3aed;
+  background: rgba(124, 58, 237, .1);
+  border-color: rgba(124, 58, 237, .2);
+  color: #a78bfa;
 }
 
 .beve-col-tutor .beve-icon-btn {
-  background: rgba(0, 0, 0, .04);
-  color: #6b7080;
+  background: rgba(255, 255, 255, .04);
+  color: #a1a1aa;
   border-color: transparent;
 }
 .beve-col-tutor .beve-icon-btn:hover {
-  background: rgba(0, 0, 0, .08);
-  color: #3f4050;
+  background: rgba(255, 255, 255, .08);
+  color: #d4d4d8;
 }
 .beve-col-tutor .beve-icon-btn.danger:hover {
-  background: rgba(239, 68, 68, .1);
-  color: #dc2626;
+  background: rgba(239, 68, 68, .12);
+  color: #f87171;
 }/* ─── Section Banner — Chevron Step Indicator ─────────── */
 .beve-section-banner {
   display: flex;
@@ -960,6 +959,23 @@
   color: #a78bfa;
 }
 
+/* ─── Compact Korean translation inputs ───────────────── */
+.beve-rich-compact .beve-rich-input {
+  padding: 1px 4px;
+  margin: 0;
+  min-height: 1.2em;
+  border-color: transparent;
+}
+.beve-rich-compact .beve-rich-input:hover {
+  border-color: rgba(124, 58, 237, .15);
+  background: rgba(124, 58, 237, .02);
+}
+.beve-rich-compact .beve-rich-input:focus {
+  border-color: rgba(124, 58, 237, .4);
+  background: rgba(124, 58, 237, .04);
+  box-shadow: none;
+}
+
 /* ─── Goal Box ────────────────────────────────────────── */
 .beve-goal-box {
   background: linear-gradient(135deg, rgba(76, 29, 149, .1), rgba(124, 58, 237, .05));
@@ -986,7 +1002,7 @@
   margin-bottom: 4px;
 }
 
-.beve-goal-jp {
+.beve-goal-kr {
   font-size: 13px;
   color: #71717a;
 }
@@ -1017,7 +1033,7 @@
   line-height: 1.6;
 }
 
-.beve-situation-jp {
+.beve-situation-kr {
   font-size: 13px;
   color: #71717a;
   line-height: 1.6;
@@ -1055,7 +1071,7 @@
   color: #e4e4e7;
 }
 
-.beve-pattern-jp {
+.beve-pattern-kr {
   font-size: 13px;
   color: #a1a1aa;
   display: flex;
@@ -1354,7 +1370,7 @@
   border-left: 3px solid #7c3aed;
 }
 
-.beve-step-instruction-jp {
+.beve-step-instruction-kr {
   font-size: 12px;
   color: #71717a;
   margin-top: 4px;
@@ -1403,7 +1419,7 @@
   color: #d4d4d8;
 }
 
-.beve-dialogue-text-jp {
+.beve-dialogue-text-kr {
   font-size: 12px;
   color: #71717a;
   margin-top: 2px;
@@ -1446,7 +1462,7 @@
   margin-bottom: 10px;
 }
 
-.beve-challenge-scenario-jp {
+.beve-challenge-scenario-kr {
   font-size: 13px;
   color: #71717a;
   line-height: 1.6;
@@ -1549,21 +1565,21 @@
   border-radius: 0;
   font-size: 13px;
   line-height: 1.6;
-  color: #2c3040;
+  color: #d4d4d8;
   position: relative;
   transition: background .15s ease;
-  border-bottom: 1px solid #eaedf3;
+  border-bottom: 1px solid rgba(124, 58, 237, .1);
 }
 .beve-tutor-note:last-of-type {
   border-bottom: none;
 }
 .beve-tutor-note:hover {
-  background: #f5f7fc;
+  background: rgba(124, 58, 237, .06);
 }
 
 .beve-tutor-note.script {
   font-style: italic;
-  color: #1a2540;
+  color: #c4b5fd;
   padding-left: 14px;
 }
 .beve-tutor-note.script::before {
@@ -1571,7 +1587,7 @@
   position: absolute;
   left: 0;
   top: 9px;
-  color: #3a5090;
+  color: #a78bfa;
   font-size: 13px;
   font-style: normal;
 }
@@ -1584,13 +1600,13 @@
   position: absolute;
   left: 2px;
   top: 8px;
-  color: #3a5090;
+  color: #a78bfa;
   font-size: 16px;
   font-weight: 700;
 }
 
 .beve-tutor-note.tip {
-  background: #fef9e7;
+  background: rgba(230, 168, 23, .08);
   border-left: 3px solid #e6a817;
   border-radius: 4px;
   border-bottom: none;
@@ -1605,9 +1621,9 @@
   text-transform: uppercase;
   margin-bottom: 3px;
 }
-.beve-tutor-note.script .beve-tutor-note-type { color: #5a6fa0; }
-.beve-tutor-note.instruction .beve-tutor-note-type { color: #5a6fa0; }
-.beve-tutor-note.tip .beve-tutor-note-type { color: #b8860b; }
+.beve-tutor-note.script .beve-tutor-note-type { color: #a78bfa; }
+.beve-tutor-note.instruction .beve-tutor-note-type { color: #a78bfa; }
+.beve-tutor-note.tip .beve-tutor-note-type { color: #fbbf24; }
 
 .beve-tutor-note-actions {
   position: absolute;
@@ -1627,19 +1643,19 @@
   gap: 4px;
   width: 100%;
   padding: 6px;
-  border: 1px dashed #c5cad6;
+  border: 1px dashed rgba(124, 58, 237, .25);
   border-radius: 4px;
   background: transparent;
-  color: #8992a4;
+  color: #71717a;
   font-size: 11px;
   cursor: pointer;
   transition: all .15s ease;
   margin-top: 2px;
 }
 .beve-tutor-add-note:hover {
-  border-color: #7889ac;
-  color: #3a5090;
-  background: #f5f7fc;
+  border-color: rgba(124, 58, 237, .5);
+  color: #a78bfa;
+  background: rgba(124, 58, 237, .06);
 }
 
 /* ─── Fill-in-blank Table ─────────────────────────────── */
@@ -1691,7 +1707,7 @@
   color: #d4d4d8;
 }
 
-.beve-drill-label-jp {
+.beve-drill-label-kr {
   font-size: 11px;
   color: #71717a;
   margin-top: 2px;
@@ -1809,7 +1825,7 @@
   color: #e4e4e7;
 }
 
-.beve-hint-jp { color: #71717a; }
+.beve-hint-kr { color: #71717a; }
 
 /* ─── Footer ──────────────────────────────────────────── */
 .beve-page-footer {
@@ -1819,23 +1835,88 @@
   font-size: 11px;
   color: #71717a;
   background:
-    /* carbon fiber weave */
-    linear-gradient(45deg, rgba(255,255,255,.015) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255,255,255,.015) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(255,255,255,.015) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.015) 75%),
-    /* base gradient */
-    linear-gradient(180deg, #0f0d1a 0%, #0a0816 100%);
-  background-size: 4px 4px, 4px 4px, 4px 4px, 4px 4px, 100% 100%;
+    /* Carbon fiber weave */
+    linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255,255,255,.018) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255,255,255,.018) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.018) 75%),
+    /* Diagonal purple streaks */
+    repeating-linear-gradient(
+      -55deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(124, 58, 237, .06) 18px,
+      rgba(124, 58, 237, .06) 20px,
+      transparent 20px,
+      transparent 38px
+    ),
+    /* Soft purple glow patches */
+    radial-gradient(ellipse at 15% 50%, rgba(124, 58, 237, .12) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 30%, rgba(139, 92, 246, .1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(76, 29, 149, .08) 0%, transparent 50%),
+    /* Circuit board paths */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Cdefs%3E%3Cstyle%3Eline,polyline%7Bfill:none;stroke:rgba(124,58,237,0.18);stroke-width:1.4%7Dcircle%7Bfill:rgba(124,58,237,0.22)%7D%3C/style%3E%3C/defs%3E%3Cline x1='0' y1='30' x2='40' y2='30'/%3E%3Cpolyline points='40,30 50,20 90,20'/%3E%3Ccircle cx='90' cy='20' r='2.5'/%3E%3Cline x1='90' y1='20' x2='130' y2='20'/%3E%3Cpolyline points='130,20 140,30 170,30'/%3E%3Ccircle cx='170' cy='30' r='2'/%3E%3Cline x1='170' y1='30' x2='200' y2='30'/%3E%3Cline x1='20' y1='70' x2='60' y2='70'/%3E%3Cpolyline points='60,70 70,80 110,80'/%3E%3Ccircle cx='110' cy='80' r='2.5'/%3E%3Cline x1='110' y1='80' x2='150' y2='80'/%3E%3Cpolyline points='150,80 160,70 200,70'/%3E%3Ccircle cx='60' cy='70' r='2'/%3E%3Cline x1='45' y1='0' x2='45' y2='15'/%3E%3Cpolyline points='45,15 55,25'/%3E%3Cline x1='155' y1='100' x2='155' y2='85'/%3E%3Cpolyline points='155,85 145,75'/%3E%3Ccircle cx='45' cy='50' r='1.5'/%3E%3Cline x1='45' y1='50' x2='80' y2='50'/%3E%3Ccircle cx='80' cy='50' r='2'/%3E%3Cline x1='80' y1='50' x2='120' y2='50'/%3E%3Cpolyline points='120,50 130,40 160,40'/%3E%3Ccircle cx='160' cy='40' r='1.5'/%3E%3C/svg%3E"),
+    /* Gear pattern — large */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cdefs%3E%3Cstyle%3Epath%7Bfill:none;stroke:rgba(124,58,237,0.16);stroke-width:1.6%7Dcircle%7Bfill:none;stroke:rgba(124,58,237,0.16);stroke-width:1.6%7D%3C/style%3E%3C/defs%3E%3Ccircle cx='60' cy='60' r='20'/%3E%3Ccircle cx='60' cy='60' r='8'/%3E%3Cpath d='M60 36 L57 28 L63 28Z'/%3E%3Cpath d='M60 84 L57 92 L63 92Z'/%3E%3Cpath d='M36 60 L28 57 L28 63Z'/%3E%3Cpath d='M84 60 L92 57 L92 63Z'/%3E%3Cpath d='M43 43 L37 37 L42 35Z'/%3E%3Cpath d='M77 77 L83 83 L78 85Z'/%3E%3Cpath d='M77 43 L83 37 L85 42Z'/%3E%3Cpath d='M43 77 L37 83 L35 78Z'/%3E%3Cpath d='M55 37 L53 29 L57 28Z'/%3E%3Cpath d='M65 83 L67 91 L63 92Z'/%3E%3Cpath d='M37 55 L29 53 L28 57Z'/%3E%3Cpath d='M83 65 L91 67 L92 63Z'/%3E%3C/svg%3E"),
+    /* Gear pattern — small offset */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cdefs%3E%3Cstyle%3Epath%7Bfill:none;stroke:rgba(139,92,246,0.14);stroke-width:1.3%7Dcircle%7Bfill:none;stroke:rgba(139,92,246,0.14);stroke-width:1.3%7D%3C/style%3E%3C/defs%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3Ccircle cx='40' cy='40' r='5'/%3E%3Cpath d='M40 23L38 17 42 17Z'/%3E%3Cpath d='M40 57L38 63 42 63Z'/%3E%3Cpath d='M23 40L17 38 17 42Z'/%3E%3Cpath d='M57 40L63 38 63 42Z'/%3E%3Cpath d='M28 28L23 23 27 22Z'/%3E%3Cpath d='M52 52L57 57 53 58Z'/%3E%3Cpath d='M52 28L57 23 58 27Z'/%3E%3Cpath d='M28 52L23 57 22 53Z'/%3E%3C/svg%3E"),
+    /* Base gradient */
+    linear-gradient(135deg, #0a0614 0%, #110b20 30%, #0d0818 60%, #12091f 100%);
+  background-size:
+    4px 4px, 4px 4px, 4px 4px, 4px 4px,
+    100% 100%,
+    100% 100%, 100% 100%, 100% 100%,
+    200px 100px,
+    120px 120px,
+    80px 80px,
+    100% 100%;
+  background-position:
+    0 0, 0 0, 0 0, 0 0,
+    0 0,
+    0 0, 0 0, 0 0,
+    0 0,
+    left 30px bottom -10px,
+    left 100px top -5px,
+    0 0;
+  background-repeat:
+    repeat, repeat, repeat, repeat,
+    no-repeat,
+    no-repeat, no-repeat, no-repeat,
+    repeat,
+    repeat,
+    repeat,
+    no-repeat;
   overflow: hidden;
 }
 
-/* glowing top edge */
-.beve-footer-glow {
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #7c3aed 20%, #a78bfa 50%, #7c3aed 80%, transparent 100%);
-  opacity: .6;
+.beve-page-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(124, 58, 237, .04) 20%,
+      rgba(139, 92, 246, .07) 40%,
+      rgba(76, 29, 149, .05) 60%,
+      rgba(124, 58, 237, .03) 80%,
+      transparent 100%
+    );
+  pointer-events: none;
 }
+
+.beve-page-footer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, .5), rgba(139, 92, 246, .6), rgba(124, 58, 237, .5), transparent);
+  box-shadow: 0 0 8px rgba(124, 58, 237, .3);
+}
+
+/* glowing top edge now handled by ::after pseudo-element */
 
 .beve-footer-content {
   display: flex;
@@ -1971,7 +2052,7 @@
 
 .beve-sub-heading i { color: #a78bfa; }
 
-.beve-sub-heading .jp-label {
+.beve-sub-heading .kr-label {
   font-size: 12px;
   font-weight: 400;
   color: #71717a;
@@ -2174,6 +2255,57 @@
 
 .beve.light .beve-col-tutor {
   background: #ffffff;
+  color: #2c3040;
+}
+
+.beve.light .beve-col-tutor .beve-sub-heading {
+  color: #1e1e2e;
+  border-bottom-color: #e0e4ee;
+}
+.beve.light .beve-col-tutor .beve-sub-heading i { color: #7c3aed; }
+.beve.light .beve-col-tutor .beve-sub-heading .kr-label { color: #9ca3af; }
+
+.beve.light .beve-col-tutor .beve-guide-q {
+  color: #2c3040;
+  background: #f8f9fc;
+  border-color: #e0e4ee;
+}
+.beve.light .beve-col-tutor .beve-guide-q span { color: #7c3aed !important; }
+
+.beve.light .beve-col-tutor .beve-rich-input {
+  color: #2c3040;
+  caret-color: #2c3040;
+}
+.beve.light .beve-col-tutor .beve-rich-input:hover {
+  border-color: rgba(124, 58, 237, .25);
+  background: rgba(124, 58, 237, .03);
+}
+.beve.light .beve-col-tutor .beve-rich-input:focus {
+  color: #1a1e2e;
+  background: rgba(124, 58, 237, .05);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+}
+.beve.light .beve-col-tutor .beve-rich-input strong,
+.beve.light .beve-col-tutor .beve-rich-input b { color: #7c3aed; }
+.beve.light .beve-col-tutor .beve-rich-placeholder:empty::before { color: #9ca3af; }
+.beve.light .beve-col-tutor .beve-rich-hint { color: #9ca3af; }
+.beve.light .beve-col-tutor .beve-rich-hint kbd {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #7c3aed;
+}
+
+.beve.light .beve-col-tutor .beve-icon-btn {
+  background: rgba(0, 0, 0, .04);
+  color: #6b7080;
+}
+.beve.light .beve-col-tutor .beve-icon-btn:hover {
+  background: rgba(0, 0, 0, .08);
+  color: #3f4050;
+}
+.beve.light .beve-col-tutor .beve-icon-btn.danger:hover {
+  background: rgba(239, 68, 68, .1);
+  color: #dc2626;
 }
 
 .beve.light .beve-col-tutor-title {
@@ -2266,7 +2398,7 @@
 }
 .beve.light .beve-goal-label { color: #7c3aed; }
 .beve.light .beve-goal-en { color: #1e1e2e; }
-.beve.light .beve-goal-jp { color: #6b6b80; }
+.beve.light .beve-goal-kr { color: #6b6b80; }
 
 /* ─── Situation Box ───────────────────────────────────── */
 .beve.light .beve-situation-box {
@@ -2276,7 +2408,7 @@
 .beve.light .beve-situation-label { color: #3f3f50; }
 .beve.light .beve-situation-label i { color: #7c3aed; }
 .beve.light .beve-situation-en { color: #3f3f50; }
-.beve.light .beve-situation-jp { color: #6b6b80; }
+.beve.light .beve-situation-kr { color: #6b6b80; }
 
 /* ─── Pattern Cards ───────────────────────────────────── */
 .beve.light .beve-pattern-card {
@@ -2289,7 +2421,7 @@
   box-shadow: 0 0 8px rgba(124, 58, 237, .04);
 }
 .beve.light .beve-pattern-en { color: #1e1e2e; }
-.beve.light .beve-pattern-jp { color: #6b6b80; }
+.beve.light .beve-pattern-kr { color: #6b6b80; }
 
 /* ─── Icon & Add Buttons ─────────────────────────────── */
 .beve.light .beve-icon-btn { color: #9ca3af; }
@@ -2388,7 +2520,7 @@
   color: #6b6b80;
   border-left-color: #7c3aed;
 }
-.beve.light .beve-step-instruction-jp { color: #9ca3af; }
+.beve.light .beve-step-instruction-kr { color: #9ca3af; }
 
 /* ─── Dialogue Box ────────────────────────────────────── */
 .beve.light .beve-dialogue-line.tutor {
@@ -2402,7 +2534,7 @@
 .beve.light .beve-dialogue-role { color: #7c3aed; }
 .beve.light .beve-dialogue-line.student .beve-dialogue-role { color: #3f3f50; }
 .beve.light .beve-dialogue-text { color: #3f3f50; }
-.beve.light .beve-dialogue-text-jp { color: #9ca3af; }
+.beve.light .beve-dialogue-text-kr { color: #9ca3af; }
 
 /* ─── Challenge Box ───────────────────────────────────── */
 .beve.light .beve-challenge-box {
@@ -2414,7 +2546,7 @@
 }
 .beve.light .beve-challenge-title { color: #7c3aed; }
 .beve.light .beve-challenge-scenario { color: #3f3f50; }
-.beve.light .beve-challenge-scenario-jp { color: #6b6b80; }
+.beve.light .beve-challenge-scenario-kr { color: #6b6b80; }
 
 /* ─── Discussion Categories ───────────────────────────── */
 .beve.light .beve-disc-cat {
@@ -2446,9 +2578,11 @@
 .beve.light .beve-tutor-note {
   background: #fff;
   border-color: #d8cef0;
+  border-bottom: 1px solid #eaedf3;
   color: #3f3f50;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
 }
+.beve.light .beve-tutor-note:last-of-type { border-bottom: none; }
 .beve.light .beve-tutor-note:hover {
   border-color: rgba(124, 58, 237, .3);
   background: #faf8ff;
@@ -2459,6 +2593,8 @@
   color: #5b21b6;
   background: rgba(124, 58, 237, .04);
 }
+.beve.light .beve-tutor-note.script::before { color: #3a5090; }
+.beve.light .beve-tutor-note.instruction::before { color: #3a5090; }
 .beve.light .beve-tutor-note.instruction {
   border-left: 4px solid #3b82f6;
   background: rgba(59, 130, 246, .03);
@@ -2522,7 +2658,7 @@
   border-color: #e0d9f0;
 }
 .beve.light .beve-drill-label { color: #1e1e2e; }
-.beve.light .beve-drill-label-jp { color: #9ca3af; }
+.beve.light .beve-drill-label-kr { color: #9ca3af; }
 .beve.light .beve-drill-template {
   background: rgba(124, 58, 237, .05);
   border-color: #e0d9f0;
@@ -2554,7 +2690,7 @@
 }
 .beve.light .beve-hint-label { color: #7c3aed; }
 .beve.light .beve-hint-en { color: #1e1e2e; }
-.beve.light .beve-hint-jp { color: #6b6b80; }
+.beve.light .beve-hint-kr { color: #6b6b80; }
 
 /* ─── Guide Questions ─────────────────────────────────── */
 .beve.light .beve-guide-q {
@@ -2569,7 +2705,7 @@
   border-bottom-color: #e0d9f0;
 }
 .beve.light .beve-sub-heading i { color: #7c3aed; }
-.beve.light .beve-sub-heading .jp-label { color: #9ca3af; }
+.beve.light .beve-sub-heading .kr-label { color: #9ca3af; }
 
 /* ─── Next Lesson Box ─────────────────────────────────── */
 .beve.light .beve-next-lesson {
@@ -2775,13 +2911,13 @@
   color: #a78bfa; margin-bottom: 8px;
 }
 .beve-readonly-ref .beve-goal-en { font-size: 15px; font-weight: 600; color: #e0e0e8; margin-bottom: 2px; }
-.beve-readonly-ref .beve-goal-jp { font-size: 13px; color: #a1a1aa; }
+.beve-readonly-ref .beve-goal-kr { font-size: 13px; color: #a1a1aa; }
 
 .beve-key-expr-ref { margin-top: 0; }
 .beve-key-expr-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
 .beve-key-expr-num { font-size: 14px; font-weight: 700; color: #a78bfa; flex-shrink: 0; padding-top: 1px; }
 .beve-key-expr-en { font-size: 14px; font-weight: 600; color: #e0e0e8; }
-.beve-key-expr-jp { font-size: 12px; color: #a1a1aa; margin-top: 1px; }
+.beve-key-expr-kr { font-size: 12px; color: #a1a1aa; margin-top: 1px; }
 
 /* ══════════════════════════════════════════════════════════
    ACTIVITY BLOCKS — light theme overrides
@@ -2804,9 +2940,9 @@
 .beve.light .beve-categorize-item { background: rgba(124, 58, 237, 0.04); }
 .beve.light .beve-readonly-ref { background: rgba(124, 58, 237, 0.03); border-color: rgba(124, 58, 237, 0.10); }
 .beve.light .beve-readonly-ref .beve-goal-en { color: #1e1e2e; }
-.beve.light .beve-readonly-ref .beve-goal-jp { color: #6b6b80; }
+.beve.light .beve-readonly-ref .beve-goal-kr { color: #6b6b80; }
 .beve.light .beve-key-expr-en { color: #1e1e2e; }
-.beve.light .beve-key-expr-jp { color: #6b6b80; }
+.beve.light .beve-key-expr-kr { color: #6b6b80; }
 .beve.light .beve-matching-table td { border-bottom-color: rgba(0,0,0,0.05); }
 
 /* ══════════════════════════════════════════════════════════

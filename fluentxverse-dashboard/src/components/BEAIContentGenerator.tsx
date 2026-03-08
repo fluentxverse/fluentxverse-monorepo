@@ -39,7 +39,7 @@ export interface BEAIContentGeneratorProps {
   chapterName: string;
   // Current data for cross-section cohesion
   currentPresentData?: {
-    patterns?: Array<{ en: string; jp: string }>;
+    patterns?: Array<{ en: string; kr: string }>;
     vocabulary?: Array<{ word: string; pos: string; translation: string }>;
   };
   // Section status — which sections have content

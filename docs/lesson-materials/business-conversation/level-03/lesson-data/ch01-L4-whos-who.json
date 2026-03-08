@@ -1,0 +1,527 @@
+{
+  "chapterName": "Work Introductions",
+  "lessonName": "Who's Who?",
+  "goalTextEn": "Can introduce your teammates and describe their roles.",
+  "goalTextKr": "팀원을 소개하고 역할을 설명할 수 있다.",
+  "beData": {
+    "lessonType": "SPEAKING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can introduce your teammates and describe their roles.",
+      "goalKr": "팀원을 소개하고 역할을 설명할 수 있다.",
+      "situationEn": "A new employee has joined your team. Your manager asks you to introduce the team members. Tell the new person about everyone.",
+      "situationKr": "팀에 새 직원이 들어왔습니다. 상사가 팀원들을 소개해 달라고 합니다. 새 사람에게 모든 사람에 대해 알려주세요.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, you'll practice introducing other people — your teammates. Let's learn how to say who they are and what they do.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Remind the student: Lessons 1-2 were about 'I'. Now it's about 'he/she/they'."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>This is</b> Kenji. <b>He is</b> our accountant.",
+          "kr": "이쪽은 켄지입니다. 그는 우리의 경리 담당입니다."
+        },
+        {
+          "en": "<b>She works in</b> the marketing department.",
+          "kr": "그녀는 마케팅부에서 일하고 있습니다."
+        },
+        {
+          "en": "<b>We work together</b> in the sales team.",
+          "kr": "우리는 영업팀에서 함께 일하고 있습니다."
+        },
+        {
+          "en": "<b>He/She is in charge of</b> customer support.",
+          "kr": "그/그녀는 고객 지원을 담당하고 있습니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "in charge of",
+          "pos": "phrase",
+          "translation": "~을/를 담당하고 있는",
+          "definition": "responsible for something",
+          "pronunciation": "/ɪn tʃɑːrdʒ ʌv/"
+        },
+        {
+          "word": "colleague",
+          "pos": "noun",
+          "translation": "동료",
+          "definition": "a person you work with",
+          "pronunciation": "/ˈkɑːliːɡ/"
+        },
+        {
+          "word": "manager",
+          "pos": "noun",
+          "translation": "매니저",
+          "definition": "a person who leads a team",
+          "pronunciation": "/ˈmænɪdʒər/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice hearing the difference between /θ/ (th) and /s/.",
+        "instructionKr": "/θ/ (th)와 /s/의 차이를 연습합시다.",
+        "left": {
+          "symbol": "/θ/",
+          "words": [
+            {
+              "en": "this",
+              "kr": "이것"
+            },
+            {
+              "en": "think",
+              "kr": "생각하다"
+            },
+            {
+              "en": "three",
+              "kr": "3"
+            },
+            {
+              "en": "thank",
+              "kr": "감사하다"
+            },
+            {
+              "en": "thing",
+              "kr": "것"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "/s/",
+          "words": [
+            {
+              "en": "six",
+              "kr": "6"
+            },
+            {
+              "en": "sink",
+              "kr": "싱크대"
+            },
+            {
+              "en": "see",
+              "kr": "보다"
+            },
+            {
+              "en": "some",
+              "kr": "몇 개"
+            },
+            {
+              "en": "sing",
+              "kr": "노래하다"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's look at phrases for introducing other people.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Explain 'This is' is used for introducing someone in person."
+        },
+        {
+          "type": "script",
+          "text": "\"Now let's learn some useful words.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Teach each vocabulary word. Ask the student to use it in a sentence."
+        },
+        {
+          "type": "tip",
+          "text": "For Japanese learners, 'colleague' is often confused with 'college'. Practice both."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 패턴을 넣으세요. 그런 다음 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "This is",
+              "isBlank": true
+            },
+            {
+              "text": " Yuki. She is our designer.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "He works in",
+              "isBlank": true
+            },
+            {
+              "text": " the IT department.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "She is in charge of",
+              "isBlank": true
+            },
+            {
+              "text": " training.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "We work together",
+              "isBlank": true
+            },
+            {
+              "text": " in the planning team.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Introducing someone",
+          "labelKr": "사람을 소개하기",
+          "template": "This is ___. He/She is ___.",
+          "examples": [
+            {
+              "en": "This is Kenji. He is our accountant.",
+              "kr": "이쪽은 켄지입니다. 그는 경리 담당입니다."
+            },
+            {
+              "en": "This is Maria. She is our new intern.",
+              "kr": "이쪽은 마리아입니다. 그녀는 새로운 인턴입니다."
+            }
+          ]
+        },
+        {
+          "label": "Describing someone's department",
+          "labelKr": "누군가의 부서를 설명하기",
+          "template": "He/She works in the ___ department.",
+          "examples": [
+            {
+              "en": "She works in the marketing department.",
+              "kr": "그녀는 마케팅부에서 일하고 있습니다."
+            },
+            {
+              "en": "He works in the sales department.",
+              "kr": "그는 영업부에서 일하고 있습니다."
+            }
+          ]
+        },
+        {
+          "label": "Describing responsibilities",
+          "labelKr": "책임을 설명하기",
+          "template": "He/She is in charge of ___.",
+          "examples": [
+            {
+              "en": "She is in charge of customer support.",
+              "kr": "그녀는 고객 지원을 담당하고 있습니다."
+            },
+            {
+              "en": "He is in charge of quality control.",
+              "kr": "그는 품질 관리를 담당하고 있습니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Ask the student to fill in the blanks, then practice the drills."
+        },
+        {
+          "type": "tip",
+          "text": "Ensure the student uses he/she correctly — practice if needed."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 — Repeat the Introductions",
+          "instructionEn": "Listen and repeat each introduction.",
+          "instructionKr": "소개문을 듣고 반복하세요.",
+          "content": "1. This is Kenji. He is our accountant. He works in the finance department.<br>2. This is Maria. She is a sales assistant. She works in the sales department.<br>3. This is David. He is our IT manager. He is in charge of the company network.<br>4. This is Yuki. She is our designer. She works in the marketing department.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each set of sentences. Ask the student to repeat."
+            },
+            {
+              "type": "instruction",
+              "text": "Focus on smooth delivery — linking the sentences naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Practice 'This is' — make sure 'th' is clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 — Complete the Introduction",
+          "instructionEn": "Fill in the blanks to complete the introductions.",
+          "instructionKr": "빈칸을 채워 소개문을 완성하세요.",
+          "content": "1. This is Naomi. She is our _______________. She works in the _______________ department.<br>2. This is Takeshi. He is a _______________. He is in charge of _______________.<br>3. This is Lisa. She is our _______________. She works in the _______________ department.<br>4. This is (your colleague). He/She is _______________. He/She works in _______________.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "For items 1-3, the student can use any reasonable job/department."
+            },
+            {
+              "type": "instruction",
+              "text": "For item 4, the student uses a real colleague's information."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage creativity. There's no single correct answer for 1-3."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 — Team Introduction Dialogue",
+          "instructionEn": "Practice the dialogue with your tutor. You are introducing team members to a new employee.",
+          "instructionKr": "선생님과 대화를 연습하세요. 신입사원에게 팀원들을 소개하고 있습니다.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Hi! I'm the new employee. Can you tell me about the team?",
+              "kr": "안녕하세요! 신입사원입니다. 팀에 대해 알려주실 수 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "Sure! This is Kenji. He is our accountant.",
+              "kr": "물론이죠! 이쪽은 켄지입니다. 그는 경리 담당입니다."
+            },
+            {
+              "role": "tutor",
+              "en": "Nice to meet you, Kenji. And who is she?",
+              "kr": "만나서 반갑습니다, 켄지. 그녀는 누구인가요?"
+            },
+            {
+              "role": "student",
+              "en": "This is Maria. She works in the sales department.",
+              "kr": "이쪽은 마리아입니다. 그녀는 영업부에서 일하고 있습니다."
+            },
+            {
+              "role": "tutor",
+              "en": "What about that man?",
+              "kr": "저 남성은요?"
+            },
+            {
+              "role": "student",
+              "en": "That is David. He is our IT manager. He is in charge of the company network.",
+              "kr": "저쪽은 데이비드입니다. 그는 IT 매니저이고, 회사 네트워크를 담당하고 있습니다."
+            },
+            {
+              "role": "tutor",
+              "en": "Your team is great! Do you all work together?",
+              "kr": "좋은 팀이네요! 모두 함께 일하고 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes, we work together in the Tokyo office.",
+              "kr": "네, 도쿄 오피스에서 함께 일하고 있습니다."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Practice the dialogue. Encourage the student to speak in full sentences."
+            },
+            {
+              "type": "instruction",
+              "text": "After the first run, try it again without looking at the screen."
+            },
+            {
+              "type": "tip",
+              "text": "If the student is ready, add extra questions like 'What department does she work in?'"
+            }
+          ]
+        },
+        {
+          "title": "Step 4 — Introduce Your Real Team",
+          "instructionEn": "Introduce 3 of your real colleagues or classmates to your tutor. Use the patterns you learned.",
+          "instructionKr": "실제 동료나 반 친구 3명을 선생님에게 소개하세요. 배운 패턴을 사용하세요.",
+          "content": "For each person, say:<br>- This is ___.<br>- He/She is a/an ___.<br>- He/She works in the ___ department.<br>- He/She is in charge of ___.",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Now, introduce 3 of your real colleagues to me. Pretend I'm new at your company!\""
+            },
+            {
+              "type": "instruction",
+              "text": "Let the student speak freely. Help if they get stuck."
+            },
+            {
+              "type": "instruction",
+              "text": "After each introduction, ask a follow-up question: 'What department?' or 'Is he/she nice?'"
+            },
+            {
+              "type": "tip",
+              "text": "If the student doesn't have colleagues, they can introduce friends or family members."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "You are at a company event. A client asks you to introduce your team. Introduce at least 4 people with their names, roles, and departments.",
+      "scenarioKr": "회사 행사에 있습니다. 고객이 팀 소개를 요청했습니다. 최소 4명의 이름, 역할, 부서를 소개하세요.",
+      "guideQuestions": [
+        {
+          "text": "Who is the first person? What is their role?"
+        },
+        {
+          "text": "Who works in the sales department?"
+        },
+        {
+          "text": "Who is in charge of the biggest project?"
+        },
+        {
+          "text": "Introduce someone you work closely with."
+        },
+        {
+          "text": "Ask the client to introduce themselves too!"
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time! I'm a client visiting your company. Please introduce your team to me.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Play the client. React naturally: 'Oh, nice to meet them!' 'What does she do?'"
+        },
+        {
+          "type": "instruction",
+          "text": "The student should introduce at least 4 people."
+        },
+        {
+          "type": "tip",
+          "text": "If the student introduces 4+ people smoothly with 'This is / He works in / She is in charge of', they've achieved the goal."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category, then answer the questions.",
+      "instructionKr": "카테고리를 하나 선택하고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "YOUR TEAM",
+          "questions": [
+            "How many people are on your team?",
+            "What does your team do?",
+            "Who has worked there the longest?"
+          ]
+        },
+        {
+          "title": "YOUR MANAGER",
+          "questions": [
+            "What is your manager like?",
+            "What is he/she in charge of?",
+            "Do you like your manager?"
+          ]
+        },
+        {
+          "title": "IDEAL COLLEAGUES",
+          "questions": [
+            "What makes a good colleague?",
+            "Do you prefer working alone or in a team?",
+            "What's the best thing about your team?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's have a discussion about your team.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to choose a category."
+        },
+        {
+          "type": "tip",
+          "text": "Encourage the student to use today's patterns in their answers."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can introduce your teammates and describe their roles.",
+      "goalReviewKr": "팀원을 소개하고 역할을 설명할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Speaking Fluency*<br>Fluency:<br>- Could introduce teammates smoothly: (yes/partially/no)<br>- Used 'This is / He works in / She is in charge of' correctly: (yes/partially/no)<br><br>*Vocabulary / Phrases*<br>Vocabulary:<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>Pronunciation:<br>- mispronounced word<br>- mispronounced word",
+      "nextLessonLabel": "CHAPTER 1: WORK INTRODUCTIONS",
+      "nextLessonName": "Lesson 5: First Impressions",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Excellent work today!\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the lesson goal."
+        },
+        {
+          "type": "script",
+          "text": "\"Were you able to achieve today's lesson goal?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send the feedback template."
+        },
+        {
+          "type": "instruction",
+          "text": "Practice mispronounced words."
+        },
+        {
+          "type": "tip",
+          "text": "Encourage next lesson: 'Next time, we'll review everything from Lessons 1-4!'"
+        }
+      ]
+    }
+  }
+}

@@ -1071,12 +1071,12 @@ function BECreateLessonModal({
               />
             </div>
             <div className="cse-form-field">
-              <label>Lesson Goal (Japanese)</label>
+              <label>Lesson Goal (Korean)</label>
               <input
                 type="text"
                 value={form.goalTextJp}
                 onChange={(e) => setForm({ ...form, goalTextJp: (e.target as HTMLInputElement).value })}
-                placeholder="e.g., ビジネスシーンで自己紹介ができる。"
+                placeholder="e.g., 비즈니스 상황에서 자기소개를 할 수 있다."
               />
             </div>
           </div>
@@ -1602,7 +1602,7 @@ function BELessonPreviewModal({
                       </div>
                     </div>
                     <div className="cse-form-field">
-                      <label>Goal (Japanese)</label>
+                      <label>Goal (Korean)</label>
                       <input
                         type="text"
                         value={lesson.goalTextJp}
