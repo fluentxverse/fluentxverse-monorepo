@@ -472,7 +472,33 @@ export default function BusinessEnglishVisualEditor() {
       setGoalTextEn(data.goalTextEn || '');
       setGoalTextJp(data.goalTextJp || '');
       const skillType = (data.skill?.toUpperCase() || 'READING') as LessonType;
-      const merged = { ...DEFAULT_BE_DATA, lessonType: skillType, ...(data.beData || {}) };
+      const merged: any = { ...DEFAULT_BE_DATA, lessonType: skillType, ...(data.beData || {}) };
+
+      // Deep-normalize nested sections so UI can safely call .map() on arrays
+      merged.present = { ...DEFAULT_BE_DATA.present, ...(merged.present || {}) };
+      merged.present.patterns = merged.present.patterns || DEFAULT_BE_DATA.present.patterns;
+      merged.present.vocabulary = merged.present.vocabulary || DEFAULT_BE_DATA.present.vocabulary;
+      merged.present.pronunciation = { ...DEFAULT_BE_DATA.present.pronunciation, ...(merged.present.pronunciation || {}) };
+
+      merged.understand = { ...DEFAULT_BE_DATA.understand, ...(merged.understand || {}) };
+      merged.understand.fillRows = merged.understand.fillRows || DEFAULT_BE_DATA.understand.fillRows;
+      merged.understand.patternDrills = merged.understand.patternDrills || DEFAULT_BE_DATA.understand.patternDrills;
+      merged.understand.activityBlocks = merged.understand.activityBlocks || DEFAULT_BE_DATA.understand.activityBlocks;
+
+      merged.practice = { ...DEFAULT_BE_DATA.practice, ...(merged.practice || {}) };
+      merged.practice.steps = merged.practice.steps || DEFAULT_BE_DATA.practice.steps;
+      merged.practice.activityBlocks = merged.practice.activityBlocks || DEFAULT_BE_DATA.practice.activityBlocks;
+
+      merged.challenge = { ...DEFAULT_BE_DATA.challenge, ...(merged.challenge || {}) };
+      merged.challenge.guideQuestions = merged.challenge.guideQuestions || DEFAULT_BE_DATA.challenge.guideQuestions;
+      merged.challenge.activityBlocks = merged.challenge.activityBlocks || DEFAULT_BE_DATA.challenge.activityBlocks;
+
+      merged.discussion = { ...DEFAULT_BE_DATA.discussion, ...(merged.discussion || {}) };
+      merged.discussion.categories = merged.discussion.categories || DEFAULT_BE_DATA.discussion.categories;
+      merged.discussion.activityBlocks = merged.discussion.activityBlocks || DEFAULT_BE_DATA.discussion.activityBlocks;
+
+      merged.feedback = { ...DEFAULT_BE_DATA.feedback, ...(merged.feedback || {}) };
+
       setBeData(merged);
     } catch (e: any) {
       setError(e?.message || 'Failed to load lesson');
@@ -649,7 +675,7 @@ export default function BusinessEnglishVisualEditor() {
     <div className="beve-hint-box">
       <div className="beve-hint-label">Key Expressions</div>
       <div className="beve-hint-patterns">
-        {beData.present.patterns.map((p, i) => (
+        {(beData.present.patterns || []).map((p, i) => (
           <div key={i} className="beve-hint-pattern">
             <span className="beve-hint-en" dangerouslySetInnerHTML={{ __html: p.en }} />
             <span className="beve-hint-kr" dangerouslySetInnerHTML={{ __html: `(${p.kr})` }} />
@@ -754,7 +780,7 @@ export default function BusinessEnglishVisualEditor() {
           return (
             <div key={si}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginTop: si > indices[0] ? 12 : 0, marginBottom: 6 }}>{step.title}</div>
-              {step.tutorNotes.map((note, ni) => (
+              {(step.tutorNotes || []).map((note, ni) => (
                 <div key={ni} className={`beve-tutor-note ${note.type}`}>
                   <div className="beve-tutor-note-type"><i className={noteIcon[note.type] || 'ri-file-text-line'} /> {note.type}</div>
                   <BERichTextInput value={note.text}
@@ -890,7 +916,7 @@ export default function BusinessEnglishVisualEditor() {
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
       <table className="beve-matching-table"><thead><tr><th>Left</th><th>Right</th><th style={{ width: 30 }} /></tr></thead><tbody>
-        {block.pairs.map((p, i) => (
+        {(block.pairs || []).map((p, i) => (
           <tr key={i}>
             <td><BERichTextInput value={p.left} onChange={(html) => { const pairs = [...block.pairs]; pairs[i] = { ...pairs[i], left: html }; updateActivityBlock(section, block.id, { pairs } as any); }} placeholder="Item" singleLine /></td>
             <td><BERichTextInput value={p.right} onChange={(html) => { const pairs = [...block.pairs]; pairs[i] = { ...pairs[i], right: html }; updateActivityBlock(section, block.id, { pairs } as any); }} placeholder="Match" singleLine /></td>
@@ -898,7 +924,7 @@ export default function BusinessEnglishVisualEditor() {
           </tr>
         ))}
       </tbody></table>
-      <button className="beve-add-btn" onClick={() => updateActivityBlock(section, block.id, { pairs: [...block.pairs, { left: '', right: '' }] } as any)}><i className="ri-add-line" /> Add Pair</button>
+      <button className="beve-add-btn" onClick={() => updateActivityBlock(section, block.id, { pairs: [...(block.pairs || []), { left: '', right: '' }] } as any)}><i className="ri-add-line" /> Add Pair</button>
     </div>
   );
 
@@ -910,23 +936,23 @@ export default function BusinessEnglishVisualEditor() {
           onChange={(html) => updateActivityBlock(section, block.id, { title: html } as any)} placeholder="Title" singleLine />
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
-      {block.items.map((item, qi) => (
+      {(block.items || []).map((item, qi) => (
         <div key={qi} className="beve-mcq-item">
           <div className="beve-mcq-question">
             <span className="beve-mcq-num">{qi + 1}.</span>
             <BERichTextInput value={item.question} onChange={(html) => { const items = [...block.items]; items[qi] = { ...items[qi], question: html }; updateActivityBlock(section, block.id, { items } as any); }} placeholder="Question" singleLine />
           </div>
           <div className="beve-mcq-options">
-            {item.options.map((opt, oi) => (
+            {(item.options || []).map((opt, oi) => (
               <div key={oi} className={`beve-mcq-option${opt.isCorrect ? ' correct' : ''}`}>
-                <button className="beve-mcq-radio" onClick={() => { const items = [...block.items]; items[qi] = { ...items[qi], options: items[qi].options.map((o, idx) => ({ ...o, isCorrect: idx === oi })) }; updateActivityBlock(section, block.id, { items } as any); }}>
+                  <button className="beve-mcq-radio" onClick={() => { const items = [...block.items]; items[qi] = { ...items[qi], options: ((items[qi].options) || []).map((o, idx) => ({ ...o, isCorrect: idx === oi })) }; updateActivityBlock(section, block.id, { items } as any); }}>
                   <i className={opt.isCorrect ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'} />
                 </button>
-                <BERichTextInput value={opt.text} onChange={(html) => { const items = [...block.items]; const options = [...items[qi].options]; options[oi] = { ...options[oi], text: html }; items[qi] = { ...items[qi], options }; updateActivityBlock(section, block.id, { items } as any); }} placeholder={`Option ${String.fromCharCode(65 + oi)}`} singleLine />
+                <BERichTextInput value={opt.text} onChange={(html) => { const items = [...block.items]; const options = [...((items[qi].options) || [])]; options[oi] = { ...options[oi], text: html }; items[qi] = { ...items[qi], options }; updateActivityBlock(section, block.id, { items } as any); }} placeholder={`Option ${String.fromCharCode(65 + oi)}`} singleLine />
                 <button className="beve-icon-btn danger" style={{ width: 18, height: 18, fontSize: 10 }} onClick={() => { const items = [...block.items]; items[qi] = { ...items[qi], options: items[qi].options.filter((_, idx) => idx !== oi) }; updateActivityBlock(section, block.id, { items } as any); }}><i className="ri-close-line" /></button>
               </div>
             ))}
-            <button className="beve-add-btn" style={{ fontSize: 11 }} onClick={() => { const items = [...block.items]; items[qi] = { ...items[qi], options: [...items[qi].options, { text: '', isCorrect: false }] }; updateActivityBlock(section, block.id, { items } as any); }}><i className="ri-add-line" /> Add Option</button>
+            <button className="beve-add-btn" style={{ fontSize: 11 }} onClick={() => { const items = [...block.items]; items[qi] = { ...items[qi], options: [...((items[qi].options) || []), { text: '', isCorrect: false }] }; updateActivityBlock(section, block.id, { items } as any); }}><i className="ri-add-line" /> Add Option</button>
           </div>
           <button className="beve-icon-btn danger" style={{ position: 'absolute', top: 4, right: 4 }} onClick={() => { updateActivityBlock(section, block.id, { items: block.items.filter((_, idx) => idx !== qi) } as any); }}><i className="ri-delete-bin-line" /></button>
         </div>
@@ -943,7 +969,7 @@ export default function BusinessEnglishVisualEditor() {
           onChange={(html) => updateActivityBlock(section, block.id, { title: html } as any)} placeholder="Title" singleLine />
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
-      {block.items.map((item, i) => (
+      {(block.items || []).map((item, i) => (
         <div key={i} className="beve-reorder-item">
           <div className="beve-reorder-row"><span className="beve-reorder-label">Jumbled:</span><BERichTextInput value={item.jumbled} onChange={(html) => { const items = [...block.items]; items[i] = { ...items[i], jumbled: html }; updateActivityBlock(section, block.id, { items } as any); }} placeholder="the / is / weather / today / nice" singleLine /></div>
           <div className="beve-reorder-row"><span className="beve-reorder-label">Answer:</span><BERichTextInput value={item.answer} onChange={(html) => { const items = [...block.items]; items[i] = { ...items[i], answer: html }; updateActivityBlock(section, block.id, { items } as any); }} placeholder="The weather is nice today" singleLine /></div>
@@ -962,7 +988,7 @@ export default function BusinessEnglishVisualEditor() {
           onChange={(html) => updateActivityBlock(section, block.id, { title: html } as any)} placeholder="Title" singleLine />
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
-      {block.items.map((item, i) => (
+      {(block.items || []).map((item, i) => (
         <div key={i} className="beve-error-item">
           <div className="beve-error-row"><span className="beve-error-label">\u2717</span><BERichTextInput value={item.sentence} onChange={(html) => { const items = [...block.items]; items[i] = { ...items[i], sentence: html }; updateActivityBlock(section, block.id, { items } as any); }} placeholder="Sentence with error" singleLine /></div>
           <div className="beve-error-row"><span className="beve-error-label">\u2713</span><BERichTextInput value={item.corrected} onChange={(html) => { const items = [...block.items]; items[i] = { ...items[i], corrected: html }; updateActivityBlock(section, block.id, { items } as any); }} placeholder="Corrected sentence" singleLine /></div>
@@ -982,7 +1008,7 @@ export default function BusinessEnglishVisualEditor() {
           onChange={(html) => updateActivityBlock(section, block.id, { title: html } as any)} placeholder="Title" singleLine />
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
-      {block.slots.map((slot, i) => (
+      {(block.slots || []).map((slot, i) => (
         <div key={i} className={`beve-dialogue-slot ${slot.role}${slot.isBlank ? ' blank' : ''}`}>
           <div className="beve-dialogue-slot-header">
             <select className="beve-dialogue-role-select" value={slot.role} onChange={(e) => { const slots = [...block.slots]; slots[i] = { ...slots[i], role: (e.target as HTMLSelectElement).value as 'tutor' | 'student' }; updateActivityBlock(section, block.id, { slots } as any); }}>
@@ -994,7 +1020,7 @@ export default function BusinessEnglishVisualEditor() {
           <BERichTextInput value={slot.text} onChange={(html) => { const slots = [...block.slots]; slots[i] = { ...slots[i], text: html }; updateActivityBlock(section, block.id, { slots } as any); }} placeholder={slot.isBlank ? 'Answer (hidden from student)' : 'Dialogue line'} />
         </div>
       ))}
-      <button className="beve-add-btn" onClick={() => updateActivityBlock(section, block.id, { slots: [...block.slots, { role: 'student', text: '', isBlank: true }] } as any)}><i className="ri-add-line" /> Add Line</button>
+      <button className="beve-add-btn" onClick={() => updateActivityBlock(section, block.id, { slots: [...(block.slots || []), { role: 'student', text: '', isBlank: true }] } as any)}><i className="ri-add-line" /> Add Line</button>
     </div>
   );
 
@@ -1006,7 +1032,7 @@ export default function BusinessEnglishVisualEditor() {
           onChange={(html) => updateActivityBlock(section, block.id, { title: html } as any)} placeholder="Title" singleLine />
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
-      {block.items.map((item, i) => (
+      {(block.items || []).map((item, i) => (
         <div key={i} className="beve-tf-item">
           <div className="beve-tf-statement">
             <span className="beve-tf-num">{i + 1}.</span>
@@ -1035,7 +1061,7 @@ export default function BusinessEnglishVisualEditor() {
         <BERichTextInput value={block.passage} onChange={(html) => updateActivityBlock(section, block.id, { passage: html } as any)} placeholder="Paste or type the reading passage here (email, memo, article, etc.)" />
       </div>
       <div className="beve-reading-questions">
-        {block.questions.map((q, i) => (
+        {(block.questions || []).map((q, i) => (
           <div key={i} className="beve-reading-q">
             <span className="beve-reading-q-num">{i + 1}.</span>
             <BERichTextInput value={q.question} onChange={(html) => { const questions = [...block.questions]; questions[i] = { ...questions[i], question: html }; updateActivityBlock(section, block.id, { questions } as any); }} placeholder="Comprehension question" singleLine />
@@ -1055,14 +1081,14 @@ export default function BusinessEnglishVisualEditor() {
           onChange={(html) => updateActivityBlock(section, block.id, { title: html } as any)} placeholder="Title" singleLine />
         <button className="beve-icon-btn danger" onClick={() => removeActivityBlock(section, block.id)}><i className="ri-delete-bin-line" /></button>
       </div>
-      <div className="beve-categorize-grid" style={{ gridTemplateColumns: `repeat(${block.categories.length}, 1fr)` }}>
-        {block.categories.map((cat, ci) => (
+      <div className="beve-categorize-grid" style={{ gridTemplateColumns: `repeat(${(block.categories || []).length}, 1fr)` }}>
+        {(block.categories || []).map((cat, ci) => (
           <div key={ci} className="beve-categorize-col">
             <div className="beve-categorize-col-header">
               <BERichTextInput value={cat.name} onChange={(html) => { const categories = [...block.categories]; categories[ci] = { ...categories[ci], name: html }; updateActivityBlock(section, block.id, { categories } as any); }} placeholder="Category" singleLine />
               <button className="beve-icon-btn danger" style={{ width: 18, height: 18, fontSize: 10 }} onClick={() => { updateActivityBlock(section, block.id, { categories: block.categories.filter((_, idx) => idx !== ci) } as any); }}><i className="ri-close-line" /></button>
             </div>
-            {cat.items.map((item, ii) => (
+            {(cat.items || []).map((item, ii) => (
               <div key={ii} className="beve-categorize-item">
                 <BERichTextInput value={item} onChange={(html) => { const categories = [...block.categories]; const items = [...categories[ci].items]; items[ii] = html; categories[ci] = { ...categories[ci], items }; updateActivityBlock(section, block.id, { categories } as any); }} placeholder="Item" singleLine />
                 <button className="beve-icon-btn danger" style={{ width: 16, height: 16, fontSize: 9 }} onClick={() => { const categories = [...block.categories]; categories[ci] = { ...categories[ci], items: categories[ci].items.filter((_, idx) => idx !== ii) }; updateActivityBlock(section, block.id, { categories } as any); }}><i className="ri-close-line" /></button>
@@ -1108,7 +1134,7 @@ export default function BusinessEnglishVisualEditor() {
         </div>
         {count > 0 ? (
           <div className={`beve-img-grid beve-img-${layoutClass}`}>
-            {block.images.map((img, i) => (
+            {(block.images || []).map((img, i) => (
               <div key={i} className="beve-img-cell">
                 <div className="beve-img-square">
                   <img src={img.src} alt={img.label || `Image ${i + 1}`} />
@@ -1124,7 +1150,7 @@ export default function BusinessEnglishVisualEditor() {
           </div>
         ) : null}
         {count < 4 && (
-          <button className="beve-add-btn beve-img-add-btn" onClick={() => handleImageUpload(section, block.id, block.images)}>
+          <button className="beve-add-btn beve-img-add-btn" onClick={() => handleImageUpload(section, block.id, (block.images || []))}>
             <i className="ri-image-add-line" /> Add Image {count > 0 ? `(${count}/4)` : ''}
           </button>
         )}
