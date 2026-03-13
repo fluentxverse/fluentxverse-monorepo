@@ -1,0 +1,473 @@
+{
+  "chapterName": "Networking Basics",
+  "lessonName": "Welcome to the Team",
+  "goalTextEn": "Can understand a simple workplace introduction and small talk.",
+  "goalTextKr": "직장에서의 간단한 소개와 스몰토크를 들을 수 있다.",
+  "beData": {
+    "lessonType": "LISTENING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can understand a simple workplace introduction and small talk.",
+      "goalKr": "직장에서의 간단한 소개와 스몰토크를 들을 수 있다.",
+      "situationEn": "On your first day, you meet coworkers who introduce themselves and make small talk.",
+      "situationKr": "첫 출근 날, 동료들이 자기소개를 하고 간단한 스몰토크를 합니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can understand a simple workplace introduction and small talk..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Encourage the student to speak in full sentences with a polite tone."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>Nice to meet you.</b>",
+          "kr": "만나서 반갑습니다."
+        },
+        {
+          "en": "<b>Welcome to the team.</b>",
+          "kr": "팀에 오신 것을 환영합니다."
+        },
+        {
+          "en": "<b>How was your weekend?</b>",
+          "kr": "주말 어땠어요?"
+        },
+        {
+          "en": "<b>Let me introduce myself.</b> I'm Minji.",
+          "kr": "자기소개하겠습니다. 저는 민지입니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "welcome",
+          "pos": "adjective",
+          "translation": "환영하는",
+          "definition": "showing pleasure that someone has arrived",
+          "pronunciation": "/ˈwelkəm/"
+        },
+        {
+          "word": "team",
+          "pos": "noun",
+          "translation": "팀",
+          "definition": "a group of people who work together",
+          "pronunciation": "/tiːm/"
+        },
+        {
+          "word": "introduce",
+          "pos": "verb",
+          "translation": "소개하다",
+          "definition": "to tell someone your name or present someone to others",
+          "pronunciation": "/ˌɪntrəˈduːs/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice polite question intonation (friendly, not flat).",
+        "instructionKr": "정중한 질문 억양을 연습해 봅시다. (친절하게)",
+        "left": {
+          "symbol": "Questions (rising)",
+          "words": [
+            {
+              "en": "How was your weekend?",
+              "kr": "주말 어땠어요?"
+            },
+            {
+              "en": "How are you today?",
+              "kr": "오늘 기분 어때요?"
+            },
+            {
+              "en": "Are you new here?",
+              "kr": "여기 새로 오셨어요?"
+            },
+            {
+              "en": "Is this your first day?",
+              "kr": "첫날이세요?"
+            },
+            {
+              "en": "Do you need any help?",
+              "kr": "도움 필요하세요?"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Statements (falling)",
+          "words": [
+            {
+              "en": "Nice to meet you.",
+              "kr": "만나서 반갑습니다."
+            },
+            {
+              "en": "Welcome to the team.",
+              "kr": "환영합니다."
+            },
+            {
+              "en": "I'm Minji.",
+              "kr": "저는 민지입니다."
+            },
+            {
+              "en": "I work in Sales.",
+              "kr": "영업부에서 일해요."
+            },
+            {
+              "en": "Thank you.",
+              "kr": "감사합니다."
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Focus on polite tone and clear key words."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "Nice to meet",
+              "isBlank": true
+            },
+            {
+              "text": " you.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Welcome to",
+              "isBlank": true
+            },
+            {
+              "text": " the team.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "How was your",
+              "isBlank": true
+            },
+            {
+              "text": " weekend?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Let me introduce",
+              "isBlank": true
+            },
+            {
+              "text": " myself.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Greeting",
+          "labelKr": "인사",
+          "template": "Nice to meet you. / Welcome to the team.",
+          "examples": [
+            {
+              "en": "Nice to meet you.",
+              "kr": "만나서 반갑습니다."
+            },
+            {
+              "en": "Welcome to the team.",
+              "kr": "팀에 오신 것을 환영합니다."
+            }
+          ]
+        },
+        {
+          "label": "Small talk question",
+          "labelKr": "스몰토크 질문",
+          "template": "How was your ___?",
+          "examples": [
+            {
+              "en": "How was your weekend?",
+              "kr": "주말 어땠어요?"
+            },
+            {
+              "en": "How was your trip?",
+              "kr": "여행 어땠어요?"
+            }
+          ]
+        },
+        {
+          "label": "Self-introduction opener",
+          "labelKr": "자기소개 시작",
+          "template": "Let me introduce myself. I'm ___.",
+          "examples": [
+            {
+              "en": "Let me introduce myself. I'm Minji.",
+              "kr": "자기소개하겠습니다. 저는 민지입니다."
+            },
+            {
+              "en": "Let me introduce myself. I'm Alex.",
+              "kr": "자기소개하겠습니다. 저는 알렉스입니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Keep the student speaking in full sentences."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Nice to meet you.<br>2. Welcome to the team.<br>3. Let me introduce myself. I'm Minji.<br>4. I'm in the marketing department.<br>5. How was your weekend?<br>6. It was good. Thank you.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly. Student repeats."
+            },
+            {
+              "type": "tip",
+              "text": "Correct one key pronunciation point at a time."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines with your own information.",
+          "instructionKr": "자신의 정보로 완성하세요.",
+          "content": "1. Nice to meet you.<br>2. Welcome to the team.<br>3. Let me introduce myself. I'm _______________.<br>4. I'm in the _______________ department.<br>5. How was your _______________?<br>6. It was _______________. Thank you.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage realistic names, departments, and tasks."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Hi! Welcome to the team.",
+              "kr": "안녕하세요! 팀에 오신 것을 환영합니다."
+            },
+            {
+              "role": "student",
+              "en": "Nice to meet you.",
+              "kr": "만나서 반갑습니다."
+            },
+            {
+              "role": "tutor",
+              "en": "Let me introduce myself. I'm James.",
+              "kr": "자기소개하겠습니다. 저는 제임스입니다."
+            },
+            {
+              "role": "student",
+              "en": "Let me introduce myself. I'm (your name).",
+              "kr": "자기소개하겠습니다. 저는 (이름)입니다."
+            },
+            {
+              "role": "tutor",
+              "en": "How was your weekend?",
+              "kr": "주말 어땠어요?"
+            },
+            {
+              "role": "student",
+              "en": "It was good, thank you.",
+              "kr": "좋았어요, 감사합니다."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Switch roles if time allows."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Greet politely<br>- Introduce yourself with name + department<br>- Ask one small-talk question<br>- Answer with a full sentence<br>- Close with thank you",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Speak without notes. Keep it natural.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "You meet two coworkers on your first day. Understand their introductions and respond politely.",
+      "scenarioKr": "첫날에 동료 2명을 만납니다. 소개를 듣고 정중하게 응답하세요.",
+      "guideQuestions": [
+        {
+          "text": "Use a greeting and a welcome line."
+        },
+        {
+          "text": "Introduce yourself with name + department."
+        },
+        {
+          "text": "Ask one small-talk question."
+        },
+        {
+          "text": "Respond to one small-talk question."
+        },
+        {
+          "text": "Keep a friendly tone."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's patterns naturally.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = polite tone + correct patterns + clear meaning."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "FIRST DAY",
+          "questions": [
+            "Do you remember your first day at work?",
+            "What was difficult on the first day?",
+            "Who helped you the most?"
+          ]
+        },
+        {
+          "title": "SMALL TALK",
+          "questions": [
+            "Do you like small talk?",
+            "What small-talk topics are safe at work?",
+            "What topics should you avoid?"
+          ]
+        },
+        {
+          "title": "TEAM CULTURE",
+          "questions": [
+            "Is your team formal or casual?",
+            "How do people greet each other?",
+            "Do you introduce yourself to new people?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can understand a simple workplace introduction and small talk.",
+      "goalReviewKr": "직장에서의 간단한 소개와 스몰토크를 들을 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 1: NETWORKING BASICS",
+      "nextLessonName": "Lesson 2: Your Role Profile",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

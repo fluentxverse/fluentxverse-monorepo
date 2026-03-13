@@ -1,0 +1,473 @@
+{
+  "chapterName": "Networking Basics",
+  "lessonName": "What Do You Do Here?",
+  "goalTextEn": "Can explain your job and responsibilities using simple professional phrases.",
+  "goalTextKr": "간단한 전문 표현으로 자신의 업무와 책임을 설명할 수 있다.",
+  "beData": {
+    "lessonType": "SPEAKING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can explain your job and responsibilities using simple professional phrases.",
+      "goalKr": "간단한 전문 표현으로 자신의 업무와 책임을 설명할 수 있다.",
+      "situationEn": "A coworker asks about your job. You explain what you do in 3–5 sentences.",
+      "situationKr": "동료가 어떤 일을 하는지 묻습니다. 3~5문장으로 설명하세요.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can explain your job and responsibilities using simple professional phrases..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Encourage the student to speak in full sentences with a polite tone."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>I work in</b> Customer Support.",
+          "kr": "저는 고객지원팀에서 일합니다."
+        },
+        {
+          "en": "<b>I handle</b> customer questions.",
+          "kr": "저는 고객 문의를 처리합니다."
+        },
+        {
+          "en": "<b>I am responsible for</b> weekly reports.",
+          "kr": "저는 주간 보고서를 담당합니다."
+        },
+        {
+          "en": "<b>I support</b> the sales team.",
+          "kr": "저는 영업팀을 지원합니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "handle",
+          "pos": "verb",
+          "translation": "처리하다",
+          "definition": "to deal with a task or problem",
+          "pronunciation": "/ˈhændl/"
+        },
+        {
+          "word": "support",
+          "pos": "verb",
+          "translation": "지원하다",
+          "definition": "to help a person or team",
+          "pronunciation": "/səˈpɔːrt/"
+        },
+        {
+          "word": "task",
+          "pos": "noun",
+          "translation": "업무",
+          "definition": "a piece of work to do",
+          "pronunciation": "/tæsk/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice word stress for key job words.",
+        "instructionKr": "중요한 직무 단어의 강세를 연습합시다.",
+        "left": {
+          "symbol": "Stress",
+          "words": [
+            {
+              "en": "re-SPON-si-ble",
+              "kr": "responsible (강세)"
+            },
+            {
+              "en": "SUP-port",
+              "kr": "support (강세)"
+            },
+            {
+              "en": "HAN-dle",
+              "kr": "handle (강세)"
+            },
+            {
+              "en": "RE-port",
+              "kr": "report (강세)"
+            },
+            {
+              "en": "CUS-to-mer",
+              "kr": "customer (강세)"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Practice",
+          "words": [
+            {
+              "en": "I handle customer questions.",
+              "kr": "고객 문의를 처리합니다."
+            },
+            {
+              "en": "I am responsible for reports.",
+              "kr": "보고서를 담당합니다."
+            },
+            {
+              "en": "I support the sales team.",
+              "kr": "영업팀을 지원합니다."
+            },
+            {
+              "en": "I work in HR.",
+              "kr": "인사팀에서 일합니다."
+            },
+            {
+              "en": "My main task is emails.",
+              "kr": "주요 업무는 이메일입니다."
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Focus on polite tone and clear key words."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "I work in",
+              "isBlank": true
+            },
+            {
+              "text": " IT.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I handle",
+              "isBlank": true
+            },
+            {
+              "text": " customer calls.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I am responsible for",
+              "isBlank": true
+            },
+            {
+              "text": " schedules.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I support",
+              "isBlank": true
+            },
+            {
+              "text": " the manager.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Department",
+          "labelKr": "부서",
+          "template": "I work in ___.",
+          "examples": [
+            {
+              "en": "I work in Customer Support.",
+              "kr": "고객지원팀에서 일합니다."
+            },
+            {
+              "en": "I work in Finance.",
+              "kr": "재무팀에서 일합니다."
+            }
+          ]
+        },
+        {
+          "label": "Tasks",
+          "labelKr": "업무",
+          "template": "I handle ___.",
+          "examples": [
+            {
+              "en": "I handle customer questions.",
+              "kr": "고객 문의를 처리합니다."
+            },
+            {
+              "en": "I handle invoices.",
+              "kr": "인보이스를 처리합니다."
+            }
+          ]
+        },
+        {
+          "label": "Responsibility",
+          "labelKr": "담당",
+          "template": "I am responsible for ___.",
+          "examples": [
+            {
+              "en": "I am responsible for weekly reports.",
+              "kr": "주간 보고서를 담당합니다."
+            },
+            {
+              "en": "I am responsible for scheduling.",
+              "kr": "일정 관리를 담당합니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Keep the student speaking in full sentences."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. I work in Customer Support.<br>2. I handle customer questions.<br>3. I support the sales team.<br>4. I am responsible for weekly reports.<br>5. My main task is answering emails.<br>6. Nice to meet you.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly. Student repeats."
+            },
+            {
+              "type": "tip",
+              "text": "Correct one key pronunciation point at a time."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines with your own information.",
+          "instructionKr": "자신의 정보로 완성하세요.",
+          "content": "1. I work in _______________.<br>2. I handle _______________.<br>3. I support _______________.<br>4. I am responsible for _______________.<br>5. My main task is _______________.<br>6. Nice to meet you.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage realistic names, departments, and tasks."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "So, what do you do here?",
+              "kr": "여기서 어떤 일을 하세요?"
+            },
+            {
+              "role": "student",
+              "en": "I work in (your department).",
+              "kr": "저는 (부서)에서 일해요."
+            },
+            {
+              "role": "tutor",
+              "en": "What do you handle?",
+              "kr": "무엇을 처리하세요?"
+            },
+            {
+              "role": "student",
+              "en": "I handle (your task).",
+              "kr": "저는 (업무)를 처리해요."
+            },
+            {
+              "role": "tutor",
+              "en": "What are you responsible for?",
+              "kr": "담당 업무는 무엇인가요?"
+            },
+            {
+              "role": "student",
+              "en": "I am responsible for (your responsibility).",
+              "kr": "저는 (담당 업무)를 맡고 있어요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Switch roles if time allows."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Say your department<br>- Say 2 tasks you handle<br>- Say 1 responsibility<br>- Use one support sentence<br>- Speak 5+ sentences",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Speak without notes. Keep it natural.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Introduce yourself to a new coworker and explain your job in 6 sentences.",
+      "scenarioKr": "새 동료에게 자기소개하고 6문장으로 업무를 설명하세요.",
+      "guideQuestions": [
+        {
+          "text": "Use all three target patterns."
+        },
+        {
+          "text": "Use one extra detail (tools/clients)."
+        },
+        {
+          "text": "Speak clearly with correct stress."
+        },
+        {
+          "text": "Answer one follow-up question."
+        },
+        {
+          "text": "Close politely."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's patterns naturally.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = polite tone + correct patterns + clear meaning."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "RESPONSIBILITIES",
+          "questions": [
+            "What responsibility is most important?",
+            "Do you have clear priorities?",
+            "Do you share tasks with teammates?"
+          ]
+        },
+        {
+          "title": "DAILY TASKS",
+          "questions": [
+            "What task takes the most time?",
+            "Do you like your main task?",
+            "What task is difficult in English?"
+          ]
+        },
+        {
+          "title": "CAREER",
+          "questions": [
+            "How did you start this job?",
+            "What skill do you want to improve?",
+            "What is your next career goal?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can explain your job and responsibilities using simple professional phrases.",
+      "goalReviewKr": "간단한 전문 표현으로 자신의 업무와 책임을 설명할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 1: NETWORKING BASICS",
+      "nextLessonName": "Lesson 4: Let Me Introduce You",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

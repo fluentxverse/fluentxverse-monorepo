@@ -1,0 +1,511 @@
+{
+  "chapterName": "Daily Routines",
+  "lessonName": "Time Management",
+  "goalTextEn": "Can discuss schedules, routines, and availability confidently.",
+  "goalTextKr": "일정, 루틴, 가용 시간에 대해 자신 있게 대화할 수 있다.",
+  "beData": {
+    "lessonType": "REVIEW",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can discuss schedules, routines, and availability confidently.",
+      "goalKr": "일정, 루틴, 가용 시간에 대해 자신 있게 대화할 수 있다.",
+      "situationEn": "Coordinate a team lunch: discuss schedules, check availability, set a time.",
+      "situationKr": "팀 점심을 조율합니다. 일정을 확인하고 가용 시간을 묻고 시간을 정합니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can discuss schedules, routines, and availability confidently..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Keep the pace steady. Encourage full sentences."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>The meeting is at</b> 10:30.",
+          "kr": "회의는 10시 30분에 있습니다."
+        },
+        {
+          "en": "<b>I usually</b> take lunch at 12.",
+          "kr": "저는 보통 12시에 점심을 먹습니다."
+        },
+        {
+          "en": "<b>Are you free on</b> Thursday?",
+          "kr": "목요일에 시간 되세요?"
+        },
+        {
+          "en": "<b>Lunch is from</b> 12 <b>to</b> 1.",
+          "kr": "점심은 12시부터 1시까지입니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "schedule",
+          "pos": "noun",
+          "translation": "일정",
+          "definition": "a plan of times and tasks",
+          "pronunciation": "/ˈskedʒuːl/"
+        },
+        {
+          "word": "usually",
+          "pos": "adverb",
+          "translation": "보통",
+          "definition": "most of the time",
+          "pronunciation": "/ˈjuːʒuəli/"
+        },
+        {
+          "word": "available",
+          "pos": "adjective",
+          "translation": "가능한",
+          "definition": "free to do something",
+          "pronunciation": "/əˈveɪləbəl/"
+        },
+        {
+          "word": "appointment",
+          "pos": "noun",
+          "translation": "약속",
+          "definition": "a planned meeting",
+          "pronunciation": "/əˈpɔɪntmənt/"
+        },
+        {
+          "word": "break",
+          "pos": "noun",
+          "translation": "휴식",
+          "definition": "a short rest time",
+          "pronunciation": "/breɪk/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Review: time-related sounds and stress (Chapter 3).",
+        "instructionKr": "복습: 시간 관련 발음과 강세를 연습합시다. (3챕터)",
+        "left": {
+          "symbol": "Review A",
+          "words": [
+            {
+              "en": "meet",
+              "kr": "final /t/"
+            },
+            {
+              "en": "need",
+              "kr": "final /d/"
+            },
+            {
+              "en": "schedule",
+              "kr": "/sk/"
+            },
+            {
+              "en": "toDAY",
+              "kr": "stress"
+            },
+            {
+              "en": "free",
+              "kr": "/f/"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Review B",
+          "words": [
+            {
+              "en": "break",
+              "kr": "/eɪ/"
+            },
+            {
+              "en": "share",
+              "kr": "/ʃ/"
+            },
+            {
+              "en": "aVAILable",
+              "kr": "/v/"
+            },
+            {
+              "en": "afTERnoon",
+              "kr": "stress"
+            },
+            {
+              "en": "appointment",
+              "kr": "syllables"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Correct only 1-2 key issues each round."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣으고 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "The meeting is at",
+              "isBlank": true
+            },
+            {
+              "text": " 10:30.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "At",
+              "isBlank": true
+            },
+            {
+              "text": " 9:00, I check emails.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Are you free on",
+              "isBlank": true
+            },
+            {
+              "text": " Thursday?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Lunch is from",
+              "isBlank": true
+            },
+            {
+              "text": " 12 to 1.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Sorry, I'm busy on",
+              "isBlank": true
+            },
+            {
+              "text": " Friday.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Schedule review",
+          "labelKr": "일정 복습",
+          "template": "At ___, I ___. / ___ starts at ___.",
+          "examples": [
+            {
+              "en": "At 9:00, I check emails. The meeting starts at 10:30.",
+              "kr": "9시에 이메일을 확인하고 10시 30분에 회의가 시작됩니다."
+            }
+          ]
+        },
+        {
+          "label": "Routine review",
+          "labelKr": "루틴 복습",
+          "template": "I usually ___. In the morning, I ___. After lunch, I ___.",
+          "examples": [
+            {
+              "en": "I usually start at 9. In the morning, I check tasks. After lunch, I join meetings.",
+              "kr": "보통 9시에 시작하고, 아침에는 업무를 확인하며, 점심 후에는 회의에 참석합니다."
+            }
+          ]
+        },
+        {
+          "label": "Availability review",
+          "labelKr": "가용 시간 복습",
+          "template": "Are you free on ___? I have ___ at ___. I am available after ___.",
+          "examples": [
+            {
+              "en": "Are you free on Thursday? I have a meeting at 1. I am available after 2.",
+              "kr": "목요일에 시간 되세요? 1시에 회의가 있고 2시 이후는 가능해요."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions and faster pace in the second round."
+        },
+        {
+          "type": "tip",
+          "text": "If stuck, give the first word or time as a hint."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라하세요.",
+          "content": "1. The meeting is at 10:30.<br>2. At 9:00, I check emails.<br>3. I usually take lunch at 12.<br>4. Are you free on Thursday?<br>5. Sorry, I'm busy on Friday.<br>6. Let's meet from 12 to 1.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line. Student repeats with correct rhythm."
+            },
+            {
+              "type": "instruction",
+              "text": "Quickly fix the key pronunciation focus for this lesson."
+            },
+            {
+              "type": "tip",
+              "text": "Keep the student speaking more than you."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines with your own information.",
+          "instructionKr": "자신의 상황으로 빈칸을 채우세요.",
+          "content": "1. The meeting is at _______________.<br>2. At _______________, I _______________.<br>3. I usually _______________.<br>4. Are you free on _______________?<br>5. Sorry, I'm busy on _______________.<br>6. Let's meet from _______________ to _______________.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "instruction",
+              "text": "Ask 1-2 follow-up questions to extend answers."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage realistic times and tasks."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "We need to plan a team lunch this week.",
+              "kr": "이번 주에 팀 점심을 잡아야 합니다."
+            },
+            {
+              "role": "student",
+              "en": "OK. The meeting is at 10:30, so lunchtime is better.",
+              "kr": "좋아요. 10시 30분에 회의가 있으니 점심이 더 나아요."
+            },
+            {
+              "role": "tutor",
+              "en": "Are you free on Thursday?",
+              "kr": "목요일에 시간 되세요?"
+            },
+            {
+              "role": "student",
+              "en": "I have an appointment at 1, but I'm available after 2.",
+              "kr": "1시에 약속이 있지만 2시 이후는 가능해요."
+            },
+            {
+              "role": "tutor",
+              "en": "How about 12:15?",
+              "kr": "12시 15분은 어떠요?"
+            },
+            {
+              "role": "student",
+              "en": "Sounds good. Let's meet from 12:15 to 1.",
+              "kr": "좋아요. 12시 15분부터 1시까지 만나요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once without reading."
+            },
+            {
+              "type": "instruction",
+              "text": "Switch roles if time allows."
+            },
+            {
+              "type": "tip",
+              "text": "Focus on clarity and speed."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Mention one fixed meeting time<br>- Describe your usual lunch time<br>- Ask about availability<br>- Offer an alternative time<br>- Confirm the final plan",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Speak without notes. Try to connect your sentences.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Do not interrupt. Take notes and give feedback after."
+            },
+            {
+              "type": "instruction",
+              "text": "Give one grammar correction and one pronunciation correction."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Final review: plan a lunch by combining schedule lines, routine statements, and availability questions.",
+      "scenarioKr": "최종 복습: 일정, 루틴, 가용 질문을 함께 사용하여 점심 시간을 잡아보세요.",
+      "guideQuestions": [
+        {
+          "text": "Use at least 6 sentences."
+        },
+        {
+          "text": "Use one 'At ___, I ___' line."
+        },
+        {
+          "text": "Use one routine line with 'usually'."
+        },
+        {
+          "text": "Use one availability question."
+        },
+        {
+          "text": "Finalize a time range (from...to...)."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's patterns naturally.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask follow-up questions to test flexibility."
+        },
+        {
+          "type": "tip",
+          "text": "Success = correct key patterns + clear times + smooth flow."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "TIME MANAGEMENT",
+          "questions": [
+            "How do you manage your schedule?",
+            "What wastes time at work?",
+            "How do you stay organized?"
+          ]
+        },
+        {
+          "title": "TEAM COORDINATION",
+          "questions": [
+            "Is it hard to find a common time?",
+            "Do you prefer short meetings?",
+            "How do you communicate schedule changes?"
+          ]
+        },
+        {
+          "title": "NEXT CHAPTER",
+          "questions": [
+            "When do you need to make requests at work?",
+            "What requests do you make often?",
+            "Do you feel comfortable asking for help?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        },
+        {
+          "type": "tip",
+          "text": "Prompt reuse of target patterns."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can discuss schedules, routines, and availability confidently.",
+      "goalReviewKr": "일정, 루틴, 가용 시간에 대해 자신 있게 대화할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 4: MAKING REQUESTS",
+      "nextLessonName": "Lesson 1: Can You Help Me?",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Nice work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

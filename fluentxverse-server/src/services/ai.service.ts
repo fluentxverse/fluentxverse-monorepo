@@ -3982,7 +3982,7 @@ COURSE OVERVIEW:
 - Business Conversation is a PREMIUM course for certified tutors.
 - PCPP = Present, Comprehend, Practice, Produce (Levels 3-9). Level 10 uses Task-Based.
 - Lessons are 25 minutes. Focus: Output and Production.
-- All content is bilingual: English + Japanese translations.
+- All content is bilingual: English + Korean translations.
 
 TOEIC LEVEL MAPPING:
 - Level 3 (Beginner): TOEIC 10-220. Simple vocabulary, short sentences. Listening/Speaking/Reading only.
@@ -3992,67 +3992,77 @@ TOEIC LEVEL MAPPING:
 - Level 10 (Advanced): TOEIC 945+. Task-Based approach. Full autonomy.
 
 PCPP SECTION STRUCTURE:
-1. INTRODUCE: Lesson goal (EN+JP), Situation (EN+JP), Task description
-2. PRESENT: Useful Patterns (EN+JP pairs), Vocabulary (word, pos, translation, definition, pronunciation), Pronunciation drills
+1. INTRODUCE: Lesson goal (EN+KR), Situation (EN+KR), Task description
+2. PRESENT: Useful Patterns (EN+KR pairs), Vocabulary (word, pos, translation, definition, pronunciation), Pronunciation drills
 3. UNDERSTAND: Comprehension instruction, fill-in-the-blank exercises from patterns
 4. PRACTICE: 4 progressive steps — Repeat, Fill Blanks, Dialogue (with roleplay), Complete Dialogue
 5. CHALLENGE: Real-life simulation scenario with guide questions and roleplay table
+   - IMPORTANT: Tutor Notes for CHALLENGE must be a concise step-by-step playbook the tutor can follow without improvising.
+   - Tutor Notes must follow the "Teaching Notes" standard: a sequence of short notes where:
+     - SCRIPT = exact words the tutor says out loud (MUST be wrapped in quotes)
+     - INSTRUCTION = what the tutor should do (NO dialogue)
+     - TIP = reminders / best practices
+   - Interleave SCRIPT and INSTRUCTION notes (script, instruction, script, instruction...). Avoid long paragraphs: split into multiple notes.
+   - Cover: starting the challenge, setting roles/context, opening the roleplay, guiding with questions, closing, and giving feedback after finishing.
 6. DISCUSSION: Category-based discussion questions (3 categories, 3 questions each)
 7. FEEDBACK: Goal review, feedback template, next lesson teaser
 
 CRITICAL RULES:
 - NEVER use emoji or special symbols in content
-- All Japanese translations must be natural, not machine-translated
+- Do not use em dashes or en dashes. Use a normal hyphen '-' or a period instead.
+- All Korean translations must be natural, not machine-translated
 - Patterns should be practical business expressions students can use immediately
-- Vocabulary must include: word, part of speech, Japanese translation, English definition, pronunciation guide
+- Vocabulary must include: word, part of speech, Korean translation, English definition, pronunciation guide
 - Practice dialogues must feel like real workplace conversations
 - Challenge scenarios must be realistic business situations
+- Use English names only (e.g., Alex, Emma, David). Avoid Korean/Japanese/Vietnamese names.
+- For CHALLENGE tutorNotes: provide a concise scripted flow (not hints). Use 5-8 notes total, mostly SCRIPT + INSTRUCTION, plus 1 TIP reminding corrections happen only after the simulation. Each note should be one short sentence.
 - Discussion questions should encourage students to share personal work experiences
 - Always return ONLY valid JSON — no markdown, no code fences, no explanation text`,
 });
 
 export interface BEGenerationResult {
   introduce?: {
-    goalEn: string; goalJp: string;
-    situationEn: string; situationJp: string;
-    taskEn: string; taskJp: string;
+    goalEn: string; goalKr: string;
+    situationEn: string; situationKr: string;
+    taskEn: string; taskKr: string;
     tutorNotes: Array<{ type: string; text: string }>;
   };
   present?: {
-    patterns: Array<{ en: string; jp: string }>;
+    patterns: Array<{ en: string; kr: string }>;
     vocabulary: Array<{ word: string; pos: string; translation: string; definition: string; pronunciation: string }>;
     pronunciation: {
-      instruction: string; instructionJp: string;
-      left: { symbol: string; words: Array<{ en: string; jp: string }> };
-      right: { symbol: string; words: Array<{ en: string; jp: string }> };
+      instruction: string; instructionKr: string;
+      left: { symbol: string; words: Array<{ en: string; kr: string }> };
+      right: { symbol: string; words: Array<{ en: string; kr: string }> };
     };
     tutorNotes: Array<{ type: string; text: string }>;
   };
   understand?: {
-    instruction: string; instructionJp: string;
+    instruction: string; instructionKr: string;
     fillRows: Array<{ parts: Array<{ text: string; isBlank: boolean }> }>;
     tutorNotes: Array<{ type: string; text: string }>;
   };
   practice?: {
     steps: Array<{
-      title: string; instructionEn: string; instructionJp: string;
-      content: string; dialogue?: Array<{ role: string; en: string; jp: string }>;
+      title: string; instructionEn: string; instructionKr: string;
+      content: string; dialogue?: Array<{ role: string; en: string; kr: string }>;
       tutorNotes: Array<{ type: string; text: string }>;
     }>;
   };
   challenge?: {
-    scenarioEn: string; scenarioJp: string;
+    scenarioEn: string; scenarioKr: string;
     guideQuestions: Array<{ text: string }>;
     roleplayTable?: { you: string; coworkers: string[] };
     tutorNotes: Array<{ type: string; text: string }>;
   };
   discussion?: {
-    instructionEn: string; instructionJp: string;
+    instructionEn: string; instructionKr: string;
     categories: Array<{ title: string; questions: string[] }>;
     tutorNotes: Array<{ type: string; text: string }>;
   };
   feedback?: {
-    goalReviewEn: string; goalReviewJp: string;
+    goalReviewEn: string; goalReviewKr: string;
     feedbackTemplate: string;
     nextLessonLabel: string; nextLessonName: string;
     tutorNotes: Array<{ type: string; text: string }>;
@@ -4077,7 +4087,7 @@ export const generateBusinessEnglishContent = async (
   currentContent?: any | null,
   generationMode?: 'new' | 'improve' | null,
   currentPresentData?: {
-    patterns?: Array<{ en: string; jp: string }>;
+    patterns?: Array<{ en: string; kr: string }>;
     vocabulary?: Array<{ word: string; pos: string; translation: string }>;
   } | null,
 ): Promise<BEGenerationResult> => {
@@ -4110,14 +4120,14 @@ Complexity: ${complexityDesc}
 Chapter ${chapter}: ${chapterName}
 Lesson ${lessonNumber}: ${lessonName}
 Lesson Goal (EN): ${goalTextEn}
-Lesson Goal (JP): ${goalTextJp}`;
+Lesson Goal (KR): ${goalTextJp}`;
 
   // Build cross-section cohesion context from Present data
   const buildPresentContext = (): string => {
     if (!currentPresentData) return '';
     const parts: string[] = [];
     if (currentPresentData.patterns?.length) {
-      parts.push('PATTERNS already taught:\n' + currentPresentData.patterns.map(p => `  - "${p.en}" (${p.jp})`).join('\n'));
+      parts.push('PATTERNS already taught:\n' + currentPresentData.patterns.map(p => `  - "${p.en}" (${p.kr})`).join('\n'));
     }
     if (currentPresentData.vocabulary?.length) {
       parts.push('VOCABULARY already taught:\n' + currentPresentData.vocabulary.map(v => `  - ${v.word} (${v.pos}) — ${v.translation}`).join('\n'));
@@ -4130,18 +4140,31 @@ Lesson Goal (JP): ${goalTextJp}`;
 
   // ===== INTRODUCE SECTION =====
   if (section === 'introduce') {
+    const introNotesRule = level <= 3
+      ? `LEVEL 3 TUTOR NOTES RULE:
+- Use EXACTLY 4 tutorNotes total (no TIP).
+- Tutor only speaks English. Do NOT instruct reading Korean or Japanese.
+- Use a simple flow like the sample: INSTRUCTION (read + repeat), SCRIPT (lesson goal), SCRIPT (situation), SCRIPT ("Is it clear?").
+- Do NOT include extra prompts like "Ask the student who they will introduce..." or "what the visitor needs to know."
+- Final check line must be exactly: "Is it clear?"
+- Each note should be one short sentence.`
+      : `TUTOR NOTES RULE:
+- Use the same 4-note order: INSTRUCTION (read + repeat), SCRIPT (lesson goal), SCRIPT (situation), SCRIPT ("Is it clear?").
+- Tutor only speaks English. Do NOT instruct reading Korean or Japanese.
+- Each note should be one short sentence.`;
     let prompt = `${lessonContext}
 
 Generate the INTRODUCE section for this Business English lesson.
 
 REQUIREMENTS:
-1. goalEn & goalJp: The lesson goal. Use the provided goal or improve it to be more specific.
-2. situationEn & situationJp: A realistic workplace scenario (2-3 sentences) that sets up the lesson context.
-3. taskEn & taskJp: What the student needs to do in this situation (1-2 sentences).
+1. goalEn & goalKr: The lesson goal. Use the provided goal or improve it to be more specific.
+2. situationEn & situationKr: A realistic workplace scenario (2-3 sentences) that sets up the lesson context.
+3. taskEn & taskKr: What the student needs to do in this situation (1-2 sentences).
 4. tutorNotes: 4-6 tutor notes with types "instruction", "script", or "tip".
    - Scripts should be exact words the tutor says (in quotes).
    - Instructions tell the tutor what to do.
    - Tips are helpful reminders.
+${introNotesRule}
 
 The situation must feel like a real workplace event relevant to the lesson topic.
 
@@ -4151,9 +4174,9 @@ ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following exis
 Return ONLY JSON:
 {
   "introduce": {
-    "goalEn": "...", "goalJp": "...",
-    "situationEn": "...", "situationJp": "...",
-    "taskEn": "...", "taskJp": "...",
+    "goalEn": "...", "goalKr": "...",
+    "situationEn": "...", "situationKr": "...",
+    "taskEn": "...", "taskKr": "...",
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
   }
 }`;
@@ -4165,18 +4188,56 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE introduce response:', text); }
     const intro = parsed.introduce || {};
+    const normalizedIntroNotes = (intro.tutorNotes || []).map((n: any) => ({
+      type: n.type || 'instruction',
+      text: n.text || '',
+    }));
+    const introNotes = (() => {
+      const disallowedInstruction = (note: any) => {
+        if (note.type !== 'instruction') return false;
+        const text = (note.text || '').toLowerCase();
+        return text.includes('korean')
+          || text.includes('japanese')
+          || text.includes('한국어')
+          || text.includes('일본어')
+          || text.includes('who they will introduce')
+          || text.includes('visitor needs')
+          || (text.includes('visitor') && text.includes('ask the student'))
+          || text.includes('model one simple example');
+      };
+
+      const containsKorean = (text: string) => /[가-힣]/.test(text || '');
+      const filtered = normalizedIntroNotes.filter((n: any) => !disallowedInstruction(n) && !containsKorean(n.text || ''));
+      let mainNotes = filtered.filter((n: any) => n.type !== 'tip');
+
+      // Enforce "Is it clear?" as the final script line
+      mainNotes = mainNotes.map((n: any) => {
+        if (n.type !== 'script') return n;
+        const text = (n.text || '').replace(/"/g, '').trim().toLowerCase();
+        if (text.startsWith('is it clear')) {
+          return { ...n, text: '"Is it clear?"' };
+        }
+        return n;
+      });
+
+      const goalLine = intro.goalEn || goalTextEn;
+      const situationLine = intro.situationEn || '';
+      return [
+        { type: 'instruction', text: 'Read the goal and ask the student to repeat after you.' },
+        { type: 'script', text: `"Today's goal: ${goalLine}."` },
+        { type: 'script', text: situationLine ? `"Situation: ${situationLine}"` : '"Situation: Please imagine the workplace setting."'},
+        { type: 'script', text: '"Is it clear?"' },
+      ];
+    })();
     return {
       introduce: {
         goalEn: intro.goalEn || goalTextEn,
-        goalJp: intro.goalJp || goalTextJp,
+        goalKr: intro.goalKr || intro.goalJp || goalTextJp,
         situationEn: intro.situationEn || '',
-        situationJp: intro.situationJp || '',
+        situationKr: intro.situationKr || intro.situationJp || '',
         taskEn: intro.taskEn || '',
-        taskJp: intro.taskJp || '',
-        tutorNotes: (intro.tutorNotes || []).map((n: any) => ({
-          type: n.type || 'instruction',
-          text: n.text || '',
-        })),
+        taskKr: intro.taskKr || intro.taskJp || '',
+        tutorNotes: introNotes,
       },
     };
   }
@@ -4185,31 +4246,42 @@ Return ONLY JSON:
   if (section === 'present') {
     const patternCount = currentContent?.patterns?.length || 3;
     const vocabCount = currentContent?.vocabulary?.length || 3;
+    const perPatternNotes = patternCount * 3;
+    const levelTutorNotesRule = level <= 3
+      ? `LEVEL 3 TUTOR NOTES RULE (MUST FOLLOW):
+- Use a concise flow like the reference:
+  - Opening SCRIPT: "Let's look at patterns used in this lesson."
+  - For EACH pattern: one INSTRUCTION (read pattern + ask repeat) + one SCRIPT (short usage).
+  - Closing SCRIPT: "Do you have any questions about the patterns?" + "Let's go to the next page."
+- Keep each note to one short sentence. No extra explanations.`
+      : `For Levels 4+, keep tutorNotes concise (4-6 short notes) and include a brief usage explanation for each pattern.`;
 
     let prompt = `${lessonContext}
 
 Generate the PRESENT section for this Business English lesson.
 
 REQUIREMENTS:
-1. patterns: Exactly ${patternCount} useful English patterns with Japanese translations.
+1. patterns: Exactly ${patternCount} useful English patterns with Korean translations.
    - These are KEY EXPRESSIONS students will use throughout the lesson.
    - Must be practical phrases used in the workplace scenario.
-   - Example: { "en": "My name is John.", "jp": "私の名前はジョンです。" }
+   - Do NOT use blanks like "____". Use proper noun placeholders instead (e.g., Alex, Emma, Apex Corp).
+   - Example: { "en": "My name is John.", "kr": "저는 존입니다." }
 
 2. vocabulary: Exactly ${vocabCount} vocabulary items, each with:
    - word: The English word/phrase
    - pos: Part of speech (noun, verb, adjective, adverb, phrase)
-   - translation: Japanese translation
+   - translation: Korean translation
    - definition: Simple English definition (max 8 words)
    - pronunciation: Phonetic guide in brackets, stressed syllable CAPITALIZED
 
 3. pronunciation: Two columns of minimal pairs or related sounds.
-   - instruction & instructionJp: What to practice (e.g., "Let's practice /æ/ and /ʌ/.")
-   - left: { symbol: "/sound/", words: [{ en: "word", jp: "日本語" }] } — 5 words
-   - right: { symbol: "/sound/", words: [{ en: "word", jp: "日本語" }] } — 5 words
+   - instruction & instructionKr: What to practice (e.g., "Let's practice /æ/ and /ʌ/.")
+   - left: { symbol: "/sound/", words: [{ en: "word", kr: "한국어" }] } — 5 words
+   - right: { symbol: "/sound/", words: [{ en: "word", kr: "한국어" }] } — 5 words
    - Choose sounds that appear in this lesson's vocabulary/patterns.
 
-4. tutorNotes: 4-6 tutor notes.
+4. tutorNotes: Concise notes that guide the tutor clearly.
+${levelTutorNotesRule}
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
 ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content:\n${JSON.stringify(currentContent)}` : ''}
@@ -4217,12 +4289,12 @@ ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following exis
 Return ONLY JSON:
 {
   "present": {
-    "patterns": [{ "en": "...", "jp": "..." }],
+    "patterns": [{ "en": "...", "kr": "..." }],
     "vocabulary": [{ "word": "...", "pos": "...", "translation": "...", "definition": "...", "pronunciation": "..." }],
     "pronunciation": {
-      "instruction": "...", "instructionJp": "...",
-      "left": { "symbol": "...", "words": [{ "en": "...", "jp": "..." }] },
-      "right": { "symbol": "...", "words": [{ "en": "...", "jp": "..." }] }
+      "instruction": "...", "instructionKr": "...",
+      "left": { "symbol": "...", "words": [{ "en": "...", "kr": "..." }] },
+      "right": { "symbol": "...", "words": [{ "en": "...", "kr": "..." }] }
     },
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
   }
@@ -4235,30 +4307,109 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE present response:', text); }
     const present = parsed.present || {};
+    const stripTags = (text: string) => (text || '').replace(/<[^>]*>/g, '').trim();
+    const replacePatternPlaceholders = (text: string) => {
+      let out = text || '';
+      const replacements: Array<[RegExp, string]> = [
+        [/\(your name\)|\[name\]|\{name\}/gi, 'Alex'],
+        [/\(your coworker\)|\(your teammate\)|\(coworker\)|\(teammate\)|\[coworker\]|\[teammate\]/gi, 'Emma'],
+        [/\(your manager\)|\(manager\)|\[manager\]/gi, 'Ms. Carter'],
+        [/\(your company\)|\(company\)|\(firm\)|\(office\)|\[company\]/gi, 'Apex Corp'],
+        [/\(your department\)|\(department\)|\[department\]/gi, 'Sales'],
+        [/\(your position\)|\(position\)|\(job\)|\(role\)|\[position\]/gi, 'Marketing Manager'],
+        [/\(your email\)|\(email\)|\[email\]/gi, 'alex@apex.com'],
+        [/\(your phone\)|\(phone\)|\[phone\]/gi, '555-1234'],
+      ];
+      replacements.forEach(([pattern, replacement]) => {
+        out = out.replace(pattern, replacement);
+      });
+
+      if (/_{2,}/.test(out)) {
+        const lower = stripTags(out).toLowerCase();
+        let fill = 'Alex';
+        if (lower.includes('work at') || lower.includes('company') || lower.includes('firm')) fill = 'Apex Corp';
+        else if (lower.includes('department') || lower.includes('sales') || lower.includes('marketing')) fill = 'Sales';
+        else if (lower.includes('manager')) fill = 'Ms. Carter';
+        else if (lower.includes('position') || lower.includes('role') || lower.includes('job')) fill = 'Marketing Manager';
+        else if (lower.includes('email')) fill = 'alex@apex.com';
+        else if (lower.includes('phone') || lower.includes('call')) fill = '555-1234';
+        else if (lower.includes('from')) fill = 'Boston';
+        out = out.replace(/_{2,}/g, fill);
+      }
+
+      return out;
+    };
+
+    const patterns = (present.patterns || []).slice(0, patternCount).map((p: any) => ({
+      en: replacePatternPlaceholders(p.en || ''),
+      kr: p.kr || p.jp || '',
+    }));
+    const vocabulary = (present.vocabulary || []).slice(0, vocabCount).map((v: any) => ({
+      word: v.word || '', pos: v.pos || '', translation: v.translation || '',
+      definition: v.definition || '', pronunciation: v.pronunciation || '',
+    }));
+    const pronunciation = {
+      instruction: present.pronunciation?.instruction || '',
+      instructionKr: present.pronunciation?.instructionKr || present.pronunciation?.instructionJp || '',
+      left: {
+        symbol: present.pronunciation?.left?.symbol || '/æ/',
+        words: (present.pronunciation?.left?.words || []).slice(0, 5).map((w: any) => ({ en: w.en || '', kr: w.kr || w.jp || '' })),
+      },
+      right: {
+        symbol: present.pronunciation?.right?.symbol || '/ʌ/',
+        words: (present.pronunciation?.right?.words || []).slice(0, 5).map((w: any) => ({ en: w.en || '', kr: w.kr || w.jp || '' })),
+      },
+    };
+
+    const normalizeNote = (n: any) => ({ type: n.type || 'instruction', text: n.text || '' });
+    const ordinal = (index: number) => {
+      if (index === 1) return 'first';
+      if (index === 2) return 'second';
+      if (index === 3) return 'third';
+      if (index === 4) return 'fourth';
+      if (index === 5) return 'fifth';
+      return `${index}th`;
+    };
+    const usageFromPattern = (patternText: string) => {
+      const p = stripTags(patternText).toLowerCase();
+      if (p.includes('my name')) return 'say your name';
+      if (p.includes('this is') && p.includes('teammate')) return 'introduce a teammate';
+      if (p.includes('this is')) return 'introduce someone';
+      if (p.includes('we are') || p.includes("we're")) return 'say you work together';
+      if (p.includes('works in') || p.includes('work in')) return 'say what department the person works in';
+      if (p.includes('is our manager') || p.includes('is my manager')) return 'say the person\'s role or title';
+      if (p.includes('i work at')) return 'say where you work';
+      if (p.includes("i'm a") || p.includes('i am a')) return 'say your job';
+      if (p.includes('i am from')) return 'say where you are from';
+      if (p.includes('i have worked') || p.includes("i've worked")) return 'say how long you have worked';
+      if (p.includes('sure') || p.includes('i can help')) return 'accept the request';
+      if (p.includes('no problem') || p.includes("i can't") || p.includes('cannot')) return 'respond to a request';
+      if (p.includes('please') && (p.includes('help') || p.includes('send') || p.includes('check') || p.includes('review'))) return 'make a polite request';
+      if (p.includes('can i speak to')) return 'ask to speak to someone';
+      if (p.includes('may i speak to')) return 'ask to speak to someone';
+      if (p.includes('could you')) return 'make a polite request';
+      if (p.includes('can you')) return 'make a request';
+      return 'describe the person';
+    };
+
+    const tutorNotes = level <= 3
+      ? [
+          { type: 'script', text: '"Let\'s look at patterns used in this lesson."' },
+          ...patterns.flatMap((p, i) => ([
+            { type: 'instruction', text: `Read the ${ordinal(i + 1)} pattern. Ask the student to repeat.` },
+            { type: 'script', text: `"Use this to ${usageFromPattern(p.en)}."` },
+          ])),
+          { type: 'script', text: '"Do you have any questions about the patterns?"' },
+          { type: 'script', text: '"Let\'s go to the next page."' },
+        ]
+      : (present.tutorNotes || []).map(normalizeNote);
+
     return {
       present: {
-        patterns: (present.patterns || []).slice(0, patternCount).map((p: any) => ({
-          en: p.en || '', jp: p.jp || '',
-        })),
-        vocabulary: (present.vocabulary || []).slice(0, vocabCount).map((v: any) => ({
-          word: v.word || '', pos: v.pos || '', translation: v.translation || '',
-          definition: v.definition || '', pronunciation: v.pronunciation || '',
-        })),
-        pronunciation: {
-          instruction: present.pronunciation?.instruction || '',
-          instructionJp: present.pronunciation?.instructionJp || '',
-          left: {
-            symbol: present.pronunciation?.left?.symbol || '/æ/',
-            words: (present.pronunciation?.left?.words || []).slice(0, 5).map((w: any) => ({ en: w.en || '', jp: w.jp || '' })),
-          },
-          right: {
-            symbol: present.pronunciation?.right?.symbol || '/ʌ/',
-            words: (present.pronunciation?.right?.words || []).slice(0, 5).map((w: any) => ({ en: w.en || '', jp: w.jp || '' })),
-          },
-        },
-        tutorNotes: (present.tutorNotes || []).map((n: any) => ({
-          type: n.type || 'instruction', text: n.text || '',
-        })),
+        patterns,
+        vocabulary,
+        pronunciation,
+        tutorNotes,
       },
     };
   }
@@ -4273,7 +4424,7 @@ Generate the UNDERSTAND section for this Business English lesson.
 This section tests whether the student comprehends the patterns from the PRESENT section.
 
 REQUIREMENTS:
-1. instruction & instructionJp: A clear bilingual instruction explaining the exercise.
+1. instruction & instructionKr: A clear bilingual instruction explaining the exercise.
    Example: "You can use these patterns to introduce yourself and a coworker."
 
 2. fillRows: 4-6 fill-in-the-blank sentences that test understanding of the patterns.
@@ -4291,7 +4442,7 @@ ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following exis
 Return ONLY JSON:
 {
   "understand": {
-    "instruction": "...", "instructionJp": "...",
+    "instruction": "...", "instructionKr": "...",
     "fillRows": [{ "parts": [{ "text": "...", "isBlank": true|false }] }],
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
   }
@@ -4307,7 +4458,7 @@ Return ONLY JSON:
     return {
       understand: {
         instruction: und.instruction || '',
-        instructionJp: und.instructionJp || '',
+        instructionKr: und.instructionKr || und.instructionJp || '',
         fillRows: (und.fillRows || []).map((row: any) => ({
           parts: (row.parts || []).map((p: any) => ({
             text: p.text || '', isBlank: !!p.isBlank,
@@ -4336,9 +4487,9 @@ Step 4 — Complete the Dialogue: A partial dialogue where the student fills in 
 
 REQUIREMENTS FOR EACH STEP:
 1. title: "Step 1 - Repeat", "Step 2 - Fill in the Blanks", "Step 3 - Dialogue", "Step 4 - Complete the Dialogue"
-2. instructionEn & instructionJp: Bilingual instructions.
+2. instructionEn & instructionKr: Bilingual instructions.
 3. content: Additional text content if needed (can be empty).
-4. dialogue (Steps 3 & 4 only): Array of { role: "tutor"|"student", en: "...", jp: "..." }
+4. dialogue (Steps 3 & 4 only): Array of { role: "tutor"|"student", en: "...", kr: "..." }
    - Step 3: Full dialogue with both roles speaking
    - Step 4: Student lines have blanks (________________) that they must fill in
 5. tutorNotes: 3-4 notes per step with practical guidance.
@@ -4354,28 +4505,28 @@ Return ONLY JSON:
     "steps": [
       {
         "title": "Step 1 - Repeat",
-        "instructionEn": "...", "instructionJp": "...",
+        "instructionEn": "...", "instructionKr": "...",
         "content": "",
         "tutorNotes": [{ "type": "...", "text": "..." }]
       },
       {
         "title": "Step 2 - Fill in the Blanks",
-        "instructionEn": "...", "instructionJp": "...",
+        "instructionEn": "...", "instructionKr": "...",
         "content": "",
         "tutorNotes": [{ "type": "...", "text": "..." }]
       },
       {
         "title": "Step 3 - Dialogue",
-        "instructionEn": "...", "instructionJp": "...",
+        "instructionEn": "...", "instructionKr": "...",
         "content": "",
-        "dialogue": [{ "role": "tutor|student", "en": "...", "jp": "..." }],
+        "dialogue": [{ "role": "tutor|student", "en": "...", "kr": "..." }],
         "tutorNotes": [{ "type": "...", "text": "..." }]
       },
       {
         "title": "Step 4 - Complete the Dialogue",
-        "instructionEn": "...", "instructionJp": "...",
+        "instructionEn": "...", "instructionKr": "...",
         "content": "",
-        "dialogue": [{ "role": "tutor|student", "en": "...", "jp": "..." }],
+        "dialogue": [{ "role": "tutor|student", "en": "...", "kr": "..." }],
         "tutorNotes": [{ "type": "...", "text": "..." }]
       }
     ]
@@ -4394,10 +4545,10 @@ Return ONLY JSON:
         steps: (practice.steps || []).slice(0, 4).map((s: any, i: number) => ({
           title: s.title || `Step ${i + 1}`,
           instructionEn: s.instructionEn || '',
-          instructionJp: s.instructionJp || '',
+          instructionKr: s.instructionKr || s.instructionJp || '',
           content: s.content || '',
           dialogue: s.dialogue ? s.dialogue.map((d: any) => ({
-            role: d.role || 'tutor', en: d.en || '', jp: d.jp || '',
+            role: d.role || 'tutor', en: d.en || '', kr: d.kr || d.jp || '',
           })) : undefined,
           tutorNotes: (s.tutorNotes || []).map((n: any) => ({
             type: n.type || 'instruction', text: n.text || '',
@@ -4417,7 +4568,7 @@ Generate the CHALLENGE section for this Business English lesson.
 This is a real-life SIMULATION where the student applies everything they've learned.
 
 REQUIREMENTS:
-1. scenarioEn & scenarioJp: A detailed workplace scenario (2-3 sentences) that gives the student a clear task.
+1. scenarioEn & scenarioKr: A detailed workplace scenario (2-3 sentences) that gives the student a clear task.
    The student must use the patterns and vocabulary from the lesson.
 
 2. guideQuestions: 5-6 questions the tutor asks to guide the roleplay conversation.
@@ -4428,7 +4579,21 @@ REQUIREMENTS:
    - "you": One name for the student's character
    - "coworkers": 5-6 character names for the scenario
 
-4. tutorNotes: 4-5 notes guiding the tutor through the challenge.
+4. tutorNotes: 5-8 notes guiding the tutor through the challenge.
+   - These tutor notes MUST be clear enough to run the simulation, but concise.
+   - Include 5-8 tutor notes total.
+   - Tutor Notes must follow the "Teaching Notes" standard used in our best lessons: short SCRIPT lines interleaved with INSTRUCTION notes.
+   - Interleave SCRIPT and INSTRUCTION notes (script, instruction, script, instruction...). TIP should be the last note.
+   - NEVER put spoken dialogue inside an INSTRUCTION note. Anything the tutor says out loud must be a SCRIPT note.
+   - Keep each note to one short sentence. Avoid long instruction blocks or lists.
+   - Scripts should be exact tutor lines in quotes, covering the full flow:
+     - Start the challenge (e.g., "Are you ready for the challenge?")
+     - Set roles and context
+     - Roleplay opening line(s)
+     - 1-2 guiding prompts during the conversation (do not restate every guide question)
+     - Closing line
+     - Instruction to give feedback after finishing
+   - Include 1 TIP: corrections happen only after the simulation.
 
 The challenge must test PRODUCTION — can the student use what they learned in a realistic situation?
 
@@ -4438,7 +4603,7 @@ ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following exis
 Return ONLY JSON:
 {
   "challenge": {
-    "scenarioEn": "...", "scenarioJp": "...",
+    "scenarioEn": "...", "scenarioKr": "...",
     "guideQuestions": [{ "text": "..." }],
     "roleplayTable": { "you": "...", "coworkers": ["..."] },
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
@@ -4452,10 +4617,19 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE challenge response:', text); }
     const challenge = parsed.challenge || {};
+    const normalizedNotes = (challenge.tutorNotes || []).map((n: any) => ({
+      type: n.type || 'instruction', text: n.text || '',
+    }));
+    const tipNotes = normalizedNotes.filter((n: any) => n.type === 'tip');
+    const mainNotes = normalizedNotes.filter((n: any) => n.type !== 'tip');
+    const trimmedMain = mainNotes.slice(0, 7);
+    const trimmedNotes = tipNotes.length
+      ? [...trimmedMain, tipNotes[tipNotes.length - 1]]
+      : trimmedMain;
     return {
       challenge: {
         scenarioEn: challenge.scenarioEn || '',
-        scenarioJp: challenge.scenarioJp || '',
+        scenarioKr: challenge.scenarioKr || challenge.scenarioJp || '',
         guideQuestions: (challenge.guideQuestions || []).map((q: any) => ({
           text: q.text || '',
         })),
@@ -4463,9 +4637,7 @@ Return ONLY JSON:
           you: challenge.roleplayTable.you || '',
           coworkers: challenge.roleplayTable.coworkers || [],
         } : undefined,
-        tutorNotes: (challenge.tutorNotes || []).map((n: any) => ({
-          type: n.type || 'instruction', text: n.text || '',
-        })),
+        tutorNotes: trimmedNotes,
       },
     };
   }
@@ -4480,7 +4652,7 @@ Generate the DISCUSSION section for this Business English lesson.
 This section encourages the student to share personal experiences related to the topic.
 
 REQUIREMENTS:
-1. instructionEn & instructionJp: Clear bilingual instructions.
+1. instructionEn & instructionKr: Clear bilingual instructions.
    Example: "Choose one category, then answer the questions."
 
 2. categories: EXACTLY 3 discussion categories, each with:
@@ -4498,7 +4670,7 @@ ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following exis
 Return ONLY JSON:
 {
   "discussion": {
-    "instructionEn": "...", "instructionJp": "...",
+    "instructionEn": "...", "instructionKr": "...",
     "categories": [{ "title": "...", "questions": ["..."] }],
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
   }
@@ -4514,7 +4686,7 @@ Return ONLY JSON:
     return {
       discussion: {
         instructionEn: disc.instructionEn || '',
-        instructionJp: disc.instructionJp || '',
+        instructionKr: disc.instructionKr || disc.instructionJp || '',
         categories: (disc.categories || []).slice(0, 3).map((c: any) => ({
           title: c.title || '',
           questions: (c.questions || []).slice(0, 3),
@@ -4533,7 +4705,7 @@ Return ONLY JSON:
 Generate the FEEDBACK section for this Business English lesson.
 
 REQUIREMENTS:
-1. goalReviewEn & goalReviewJp: Restate the lesson goal for review.
+1. goalReviewEn & goalReviewKr: Restate the lesson goal for review.
 2. feedbackTemplate: A text template the tutor sends via chat. Format:
    *OVERALL SCORE*
    Overall: (score)
@@ -4563,7 +4735,7 @@ ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following exis
 Return ONLY JSON:
 {
   "feedback": {
-    "goalReviewEn": "...", "goalReviewJp": "...",
+    "goalReviewEn": "...", "goalReviewKr": "...",
     "feedbackTemplate": "...",
     "nextLessonLabel": "...", "nextLessonName": "...",
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
@@ -4580,7 +4752,7 @@ Return ONLY JSON:
     return {
       feedback: {
         goalReviewEn: fb.goalReviewEn || goalTextEn,
-        goalReviewJp: fb.goalReviewJp || goalTextJp,
+        goalReviewKr: fb.goalReviewKr || fb.goalReviewJp || goalTextJp,
         feedbackTemplate: fb.feedbackTemplate || '',
         nextLessonLabel: fb.nextLessonLabel || `CHAPTER ${chapter}: ${chapterName.toUpperCase()}`,
         nextLessonName: fb.nextLessonName || `Lesson ${lessonNumber + 1}: Next Topic`,

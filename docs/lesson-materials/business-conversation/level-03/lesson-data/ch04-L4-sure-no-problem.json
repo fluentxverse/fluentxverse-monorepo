@@ -1,0 +1,473 @@
+{
+  "chapterName": "Making Requests",
+  "lessonName": "Sure, No Problem!",
+  "goalTextEn": "Can accept or politely decline a request.",
+  "goalTextKr": "요청을 수락하거나 정중하게 거절할 수 있다.",
+  "beData": {
+    "lessonType": "SPEAKING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can accept or politely decline a request.",
+      "goalKr": "요청을 수락하거나 정중하게 거절할 수 있다.",
+      "situationEn": "Different coworkers ask you for help. You accept some and politely decline others.",
+      "situationKr": "여러 동료가 도움을 요청합니다. 어떤 요청은 수락하고 어떤 요청은 정중히 거절합니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can accept or politely decline a request..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Aim for polite tone and complete sentences."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>Sure, I can do that.</b>",
+          "kr": "네, 할 수 있어요."
+        },
+        {
+          "en": "<b>Sorry, I'm a little busy right now.</b>",
+          "kr": "죄송하지만 지금은 조금 바빠요."
+        },
+        {
+          "en": "<b>How about later?</b>",
+          "kr": "나중에 어때요?"
+        },
+        {
+          "en": "<b>Unfortunately</b>, I can't today.",
+          "kr": "아쉽게도 오늘은 못 해요."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "of course",
+          "pos": "phrase",
+          "translation": "물론",
+          "definition": "certainly; yes",
+          "pronunciation": "/əv kɔːrs/"
+        },
+        {
+          "word": "unfortunately",
+          "pos": "adverb",
+          "translation": "불행히도",
+          "definition": "used when something is not possible",
+          "pronunciation": "/ʌnˈfɔːrtʃənətli/"
+        },
+        {
+          "word": "later",
+          "pos": "adverb",
+          "translation": "나중에",
+          "definition": "at a time in the future",
+          "pronunciation": "/ˈleɪtər/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice polite rising intonation when declining.",
+        "instructionKr": "거절할 때 정중한 상승 억양을 연습합시다.",
+        "left": {
+          "symbol": "Accept (steady)",
+          "words": [
+            {
+              "en": "Sure, I can do that.",
+              "kr": "네, 할 수 있어요."
+            },
+            {
+              "en": "Of course.",
+              "kr": "물론이죠."
+            },
+            {
+              "en": "No problem.",
+              "kr": "문제없어요."
+            },
+            {
+              "en": "I'll do it now.",
+              "kr": "지금 할게요."
+            },
+            {
+              "en": "OK, I'll help you.",
+              "kr": "네, 도와드릴게요."
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Decline (rising ↑)",
+          "words": [
+            {
+              "en": "Sorry, I'm a little busy right now.",
+              "kr": "죄송하지만 지금은 조금 바빠요."
+            },
+            {
+              "en": "How about later?",
+              "kr": "나중에 어때요?"
+            },
+            {
+              "en": "Can I do it after lunch?",
+              "kr": "점심 후에 해도 될까요?"
+            },
+            {
+              "en": "Is tomorrow OK?",
+              "kr": "내일 괜찮을까요?"
+            },
+            {
+              "en": "I can't right now.",
+              "kr": "지금은 못 해요."
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Keep corrections short and focused."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "Sure,",
+              "isBlank": true
+            },
+            {
+              "text": " I can do that.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Sorry, I'm a little",
+              "isBlank": true
+            },
+            {
+              "text": " busy right now.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "How about",
+              "isBlank": true
+            },
+            {
+              "text": " later?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Unfortunately,",
+              "isBlank": true
+            },
+            {
+              "text": " I can't today.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Accepting",
+          "labelKr": "수락하기",
+          "template": "Sure, I can do that. / Of course.",
+          "examples": [
+            {
+              "en": "Sure, I can do that.",
+              "kr": "네, 할 수 있어요."
+            },
+            {
+              "en": "Of course. No problem.",
+              "kr": "물론이죠. 문제없어요."
+            }
+          ]
+        },
+        {
+          "label": "Polite decline",
+          "labelKr": "정중한 거절",
+          "template": "Sorry, I'm busy right now. / Unfortunately, I can't.",
+          "examples": [
+            {
+              "en": "Sorry, I'm a little busy right now.",
+              "kr": "죄송하지만 지금은 조금 바빠요."
+            },
+            {
+              "en": "Unfortunately, I can't today.",
+              "kr": "아쉽게도 오늘은 못 해요."
+            }
+          ]
+        },
+        {
+          "label": "Offer alternative",
+          "labelKr": "대안 제시",
+          "template": "How about later? / Is tomorrow OK?",
+          "examples": [
+            {
+              "en": "How about later?",
+              "kr": "나중에 어때요?"
+            },
+            {
+              "en": "Is tomorrow OK?",
+              "kr": "내일 괜찮을까요?"
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Focus on polite tone and correct pattern choice."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Sure, I can do that.<br>2. Of course. No problem.<br>3. Sorry, I'm a little busy right now.<br>4. How about later?<br>5. Unfortunately, I can't today.<br>6. Is tomorrow OK?",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly and model polite intonation."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage the student to sound friendly, not flat."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines for your workplace.",
+          "instructionKr": "자신의 직장 상황에 맞게 완성하세요.",
+          "content": "1. Sure, I can _______________.<br>2. Of course. No problem.<br>3. Sorry, I'm a little busy _______________.<br>4. How about _______________?<br>5. Unfortunately, I can't _______________.<br>6. Is _______________ OK?",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Use realistic tasks: emails, printing, checking files."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Can you help me move these boxes?",
+              "kr": "이 상자들 옮기는 것 좀 도와줄 수 있어요?"
+            },
+            {
+              "role": "student",
+              "en": "Sure, I can do that.",
+              "kr": "네, 할 수 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "Can you check this report now?",
+              "kr": "지금 이 보고서 확인해 줄 수 있어요?"
+            },
+            {
+              "role": "student",
+              "en": "Sorry, I'm a little busy right now. How about later?",
+              "kr": "죄송하지만 지금은 조금 바빠요. 나중에 어때요?"
+            },
+            {
+              "role": "tutor",
+              "en": "OK. How about after lunch?",
+              "kr": "좋아요. 점심 후는 어때요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes, that works. Thanks!",
+              "kr": "네, 괜찮아요. 감사합니다!"
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Keep responses short and clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Accept one request<br>- Decline one request politely<br>- Offer an alternative time<br>- Use unfortunately/sorry once<br>- End the conversation smoothly",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Try to handle requests naturally, like a real office.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Handle 4 requests in a row. Accept 2 and decline 2 politely with alternatives.",
+      "scenarioKr": "연속으로 4개의 요청을 처리하세요. 2개는 수락하고 2개는 정중히 거절하며 대안을 제시하세요.",
+      "guideQuestions": [
+        {
+          "text": "Accept two requests clearly."
+        },
+        {
+          "text": "Decline two requests politely."
+        },
+        {
+          "text": "Offer alternatives for both declines."
+        },
+        {
+          "text": "Use rising intonation for questions."
+        },
+        {
+          "text": "Stay friendly."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's request patterns naturally.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = polite requests + clear responses + good flow."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "SAYING NO",
+          "questions": [
+            "Is it hard to say no?",
+            "What is a polite way to decline?",
+            "Do you offer alternatives?"
+          ]
+        },
+        {
+          "title": "BUSY DAYS",
+          "questions": [
+            "When are you busiest?",
+            "How do you prioritize requests?",
+            "Do you multitask?"
+          ]
+        },
+        {
+          "title": "HELPFUL CULTURE",
+          "questions": [
+            "Do coworkers help each other?",
+            "What help is common?",
+            "How do you thank someone?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can accept or politely decline a request.",
+      "goalReviewKr": "요청을 수락하거나 정중하게 거절할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 4: MAKING REQUESTS",
+      "nextLessonName": "Lesson 5: Happy to Help",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

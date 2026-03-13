@@ -1,0 +1,501 @@
+{
+  "chapterName": "Office Basics",
+  "lessonName": "Where Is the Printer?",
+  "goalTextEn": "Can understand simple directions inside an office.",
+  "goalTextKr": "사무실 내 간단한 길 안내를 들을 수 있다.",
+  "beData": {
+    "lessonType": "LISTENING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can understand simple directions inside an office.",
+      "goalKr": "사무실 내 간단한 길 안내를 들을 수 있다.",
+      "situationEn": "You need to find the printer. A coworker gives you directions.",
+      "situationKr": "프린터를 찾아야 합니다. 동료가 길을 안내해 줍니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can understand simple directions inside an office..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation and check understanding."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's move to the next part.\""
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>It's next to</b> the meeting room.",
+          "kr": "회의실 옆에 있습니다."
+        },
+        {
+          "en": "<b>Go straight and turn</b> left.",
+          "kr": "곧장 가서 왼쪽으로 도세요."
+        },
+        {
+          "en": "<b>It's on your</b> right.",
+          "kr": "오른쪽에 있습니다."
+        },
+        {
+          "en": "<b>It's across from</b> the elevator.",
+          "kr": "엘리베이터 맞은편에 있습니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "next to",
+          "pos": "preposition",
+          "translation": "~옆에",
+          "definition": "at the side of something",
+          "pronunciation": "/nekst tuː/"
+        },
+        {
+          "word": "across from",
+          "pos": "preposition",
+          "translation": "~맞은편에",
+          "definition": "on the opposite side of",
+          "pronunciation": "/əˈkrɔːs frəm/"
+        },
+        {
+          "word": "between",
+          "pos": "preposition",
+          "translation": "~사이에",
+          "definition": "in the middle of two places",
+          "pronunciation": "/bɪˈtwiːn/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice /ð/ and /d/ in direction words.",
+        "instructionKr": "경로 표현에서 /ð/와 /d/를 연습합시다.",
+        "left": {
+          "symbol": "/ð/",
+          "words": [
+            {
+              "en": "this",
+              "kr": "이것"
+            },
+            {
+              "en": "that",
+              "kr": "저것"
+            },
+            {
+              "en": "there",
+              "kr": "거기"
+            },
+            {
+              "en": "they",
+              "kr": "그들"
+            },
+            {
+              "en": "those",
+              "kr": "그것들"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "/d/",
+          "words": [
+            {
+              "en": "desk",
+              "kr": "책상"
+            },
+            {
+              "en": "door",
+              "kr": "문"
+            },
+            {
+              "en": "down",
+              "kr": "아래로"
+            },
+            {
+              "en": "day",
+              "kr": "날"
+            },
+            {
+              "en": "do",
+              "kr": "하다"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's look at key expressions for today's lesson.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud and ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Keep correction short and positive. Focus on one sound at a time."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "It's next to",
+              "isBlank": true
+            },
+            {
+              "text": " the break room.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Go straight and turn",
+              "isBlank": true
+            },
+            {
+              "text": " right.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "It's on your",
+              "isBlank": true
+            },
+            {
+              "text": " left.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "It's across from",
+              "isBlank": true
+            },
+            {
+              "text": " the stairs.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Asking where",
+          "labelKr": "장소 묻기",
+          "template": "Where is ___? It's next to ___.",
+          "examples": [
+            {
+              "en": "Where is the printer? It's next to HR.",
+              "kr": "프린터가 어디예요? HR 옆에 있어요."
+            },
+            {
+              "en": "Where is the meeting room? It's next to the kitchen.",
+              "kr": "회의실이 어디예요? 탕비실 옆에 있어요."
+            }
+          ]
+        },
+        {
+          "label": "Following directions",
+          "labelKr": "길안내 따라하기",
+          "template": "Go straight and turn ___.",
+          "examples": [
+            {
+              "en": "Go straight and turn left.",
+              "kr": "곧장 가서 왼쪽으로 도세요."
+            },
+            {
+              "en": "Go straight and turn right.",
+              "kr": "곧장 가서 오른쪽으로 도세요."
+            }
+          ]
+        },
+        {
+          "label": "Location words",
+          "labelKr": "위치 표현",
+          "template": "It's on your ___. / It's across from ___.",
+          "examples": [
+            {
+              "en": "It's on your right.",
+              "kr": "오른쪽에 있어요."
+            },
+            {
+              "en": "It's across from the elevator.",
+              "kr": "엘리베이터 맞은편에 있어요."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Ask the student to complete each blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run pattern drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "If needed, provide the first word as a hint."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 말하세요.",
+          "content": "1. Excuse me, where is the printer?<br>2. Go straight and turn left.<br>3. It is next to the meeting room.<br>4. It is on your right.<br>5. Thank you for your help.<br>6. You are welcome.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each sentence clearly. Student repeats."
+            },
+            {
+              "type": "instruction",
+              "text": "Correct pronunciation after every 2-3 lines."
+            },
+            {
+              "type": "tip",
+              "text": "Model natural pace, not word-by-word pacing."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Fill in Your Own Information",
+          "instructionEn": "Complete the lines using your own context.",
+          "instructionKr": "자신의 상황에 맞게 빈칸을 채우세요.",
+          "content": "1. Excuse me, where is the _______________.<br>2. Go straight and turn _______________.<br>3. It is next to _______________.<br>4. It is on your _______________.<br>5. It is across from _______________.<br>6. Thanks for your help.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student complete all lines before speaking."
+            },
+            {
+              "type": "instruction",
+              "text": "Ask the student to read all completed lines aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage realistic details from the student's own workplace."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this mini-dialogue with your tutor.",
+          "instructionKr": "선생님과 미니 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Excuse me, where is the printer?",
+              "kr": "실례합니다, 프린터가 어디에 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "Go straight and turn left.",
+              "kr": "곧장 가서 왼쪽으로 도세요."
+            },
+            {
+              "role": "tutor",
+              "en": "Is it near the kitchen?",
+              "kr": "탕비실 근처인가요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes. It is next to the kitchen.",
+              "kr": "네, 탕비실 옆에 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "Thank you!",
+              "kr": "감사합니다!"
+            },
+            {
+              "role": "student",
+              "en": "You are welcome.",
+              "kr": "천만에요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do one guided run, then one natural run without reading."
+            },
+            {
+              "type": "instruction",
+              "text": "Switch roles if time allows."
+            },
+            {
+              "type": "tip",
+              "text": "Focus on communication flow over perfect grammar."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking Task",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Ask where one office place is<br>- Give two direction steps<br>- Use one location phrase (next to/across from)<br>- Confirm left or right<br>- Close politely",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Now speak without notes. Try to connect your ideas naturally.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Let the student finish before giving corrections."
+            },
+            {
+              "type": "instruction",
+              "text": "Give concise feedback on one grammar point and one pronunciation point."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "A visitor asks you where three places are: the printer, meeting room, and pantry. Give clear directions each time.",
+      "scenarioKr": "방문객이 프린터, 회의실, 탕비실 위치를 묻습니다. 각각 명확하게 길안내하세요.",
+      "guideQuestions": [
+        {
+          "text": "Tell where each place is."
+        },
+        {
+          "text": "Use \"go straight and turn...\" at least once."
+        },
+        {
+          "text": "Use \"next to\" or \"across from\"."
+        },
+        {
+          "text": "Say \"left\" or \"right\" correctly."
+        },
+        {
+          "text": "Check if the listener understands."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's patterns in a realistic office situation.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Act as coworker/visitor and ask follow-up questions."
+        },
+        {
+          "type": "instruction",
+          "text": "Track if the student can complete the task without heavy prompts."
+        },
+        {
+          "type": "tip",
+          "text": "Success = clear message, correct key patterns, and polite tone."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고른 뒤 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "OFFICE DIRECTIONS",
+          "questions": [
+            "Is your office easy to navigate?",
+            "Which room is hardest to find?",
+            "Do you use signs or ask people?"
+          ]
+        },
+        {
+          "title": "HELPING COWORKERS",
+          "questions": [
+            "Do coworkers ask you for directions?",
+            "How do you explain clearly?",
+            "What words are useful for directions?"
+          ]
+        },
+        {
+          "title": "FIRST WEEK AT WORK",
+          "questions": [
+            "What places did you need to find first?",
+            "Who helped you most?",
+            "What place did you forget?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now let's have a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Let the student choose one category and discuss for 3-5 minutes."
+        },
+        {
+          "type": "tip",
+          "text": "Prompt the student to reuse today's patterns naturally."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can understand simple directions inside an office.",
+      "goalReviewKr": "사무실 내 간단한 길 안내를 들을 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 2: OFFICE BASICS",
+      "nextLessonName": "Lesson 2: The Office Map",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Great job today. Let's review your progress.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the lesson goal one more time."
+        },
+        {
+          "type": "instruction",
+          "text": "Complete and share the feedback template."
+        },
+        {
+          "type": "tip",
+          "text": "Keep feedback specific and actionable."
+        }
+      ]
+    }
+  }
+}

@@ -547,7 +547,10 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         currentContent: t.Optional(t.Nullable(t.Any())),
         generationMode: t.Optional(t.Nullable(t.Union([t.Literal('new'), t.Literal('improve')]))),
         currentPresentData: t.Optional(t.Nullable(t.Object({
-          patterns: t.Optional(t.Array(t.Object({ en: t.String(), jp: t.String() }))),
+          patterns: t.Optional(t.Array(t.Union([
+            t.Object({ en: t.String(), kr: t.String() }),
+            t.Object({ en: t.String(), jp: t.String() }),
+          ]))),
           vocabulary: t.Optional(t.Array(t.Object({ word: t.String(), pos: t.String(), translation: t.String() }))),
         }))),
       }),

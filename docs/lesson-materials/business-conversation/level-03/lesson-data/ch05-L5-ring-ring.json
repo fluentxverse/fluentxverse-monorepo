@@ -1,0 +1,487 @@
+{
+  "chapterName": "Phone & Email",
+  "lessonName": "Ring Ring!",
+  "goalTextEn": "Can handle basic phone conversations at work.",
+  "goalTextKr": "기본적인 전화 응대를 할 수 있다.",
+  "beData": {
+    "lessonType": "REVIEW",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can handle basic phone conversations at work.",
+      "goalKr": "기본적인 전화 응대를 할 수 있다.",
+      "situationEn": "A morning of phone calls: answer, transfer, take messages, call back.",
+      "situationKr": "바쁜 아침 전화 상황: 받기, 연결하기, 메시지 받기, 다시 전화하기.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can handle basic phone conversations at work..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "On the phone, clarity is more important than speed."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>This is</b> Mina <b>speaking</b>.",
+          "kr": "미나입니다."
+        },
+        {
+          "en": "<b>Can I take a message?</b>",
+          "kr": "메시지 남겨 드릴까요?"
+        },
+        {
+          "en": "<b>I'll let</b> him <b>know.</b>",
+          "kr": "전해 드릴게요."
+        },
+        {
+          "en": "<b>One moment, please.</b>",
+          "kr": "잠시만 기다려 주세요."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "transfer",
+          "pos": "verb",
+          "translation": "연결하다",
+          "definition": "to connect a call to another person",
+          "pronunciation": "/trænˈsfɜːr/"
+        },
+        {
+          "word": "extension",
+          "pos": "noun",
+          "translation": "내선",
+          "definition": "an internal number",
+          "pronunciation": "/ɪkˈstenʃən/"
+        },
+        {
+          "word": "message",
+          "pos": "noun",
+          "translation": "메시지",
+          "definition": "information for someone",
+          "pronunciation": "/ˈmesɪdʒ/"
+        },
+        {
+          "word": "callback",
+          "pos": "noun",
+          "translation": "회신 전화",
+          "definition": "a return call",
+          "pronunciation": "/ˈkɔːlbæk/"
+        },
+        {
+          "word": "available",
+          "pos": "adjective",
+          "translation": "가능한",
+          "definition": "free to talk",
+          "pronunciation": "/əˈveɪləbəl/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Review: clear phone voice and polite intonation.",
+        "instructionKr": "복습: 또박또박한 전화 목소리와 정중한 억양을 연습합시다.",
+        "left": {
+          "symbol": "Requests (up)",
+          "words": [
+            {
+              "en": "May I speak to Mr. Lee?",
+              "kr": "이 과장님과 통화할 수 있을까요?"
+            },
+            {
+              "en": "Can I take a message?",
+              "kr": "메시지 남겨 드릴까요?"
+            },
+            {
+              "en": "Can he call you back?",
+              "kr": "다시 전화드려도 될까요?"
+            },
+            {
+              "en": "What's your extension?",
+              "kr": "내선 번호가 어떻게 되시나요?"
+            },
+            {
+              "en": "Could you repeat that?",
+              "kr": "다시 말씀해 주실래요?"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Responses",
+          "words": [
+            {
+              "en": "One moment, please.",
+              "kr": "잠시만 기다려 주세요."
+            },
+            {
+              "en": "Please hold on.",
+              "kr": "잠시만요."
+            },
+            {
+              "en": "I will transfer you.",
+              "kr": "연결해 드리겠습니다."
+            },
+            {
+              "en": "I'll let him know.",
+              "kr": "전해 드릴게요."
+            },
+            {
+              "en": "Thank you for calling.",
+              "kr": "전화 주셔서 감사합니다."
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key phone and email phrases.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Model polite tone and clear speech."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "This is",
+              "isBlank": true
+            },
+            {
+              "text": " Mina speaking.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "May I speak to",
+              "isBlank": true
+            },
+            {
+              "text": " Mr. Lee?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Can I take",
+              "isBlank": true
+            },
+            {
+              "text": " a message?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I'll let",
+              "isBlank": true
+            },
+            {
+              "text": " him know.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "One moment,",
+              "isBlank": true
+            },
+            {
+              "text": " please.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Answer + transfer",
+          "labelKr": "받기 + 연결",
+          "template": "This is ___ speaking. One moment, please. I will transfer you.",
+          "examples": [
+            {
+              "en": "This is Mina speaking. One moment, please. I will transfer you.",
+              "kr": "미나입니다. 잠시만요. 연결해 드리겠습니다."
+            }
+          ]
+        },
+        {
+          "label": "Take a message",
+          "labelKr": "메시지 받기",
+          "template": "Can I take a message? Please tell ___ that ___.",
+          "examples": [
+            {
+              "en": "Can I take a message? Please tell James that I called.",
+              "kr": "메시지 남겨 드릴까요? 전화드렸다고 제임스에게 전해 주세요."
+            }
+          ]
+        },
+        {
+          "label": "Callback",
+          "labelKr": "회신",
+          "template": "Can he call you back? I'll let ___ know.",
+          "examples": [
+            {
+              "en": "Can he call you back at 3? I'll let him know.",
+              "kr": "3시에 다시 전화드려도 될까요? 전해 드릴게요."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Focus on correct pattern choice and clarity."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Hello. This is Mina speaking.<br>2. May I speak to Mr. Lee?<br>3. One moment, please. Please hold on.<br>4. I will transfer you to extension 204.<br>5. Can I take a message?<br>6. I'll let him know.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly and model phone voice."
+            },
+            {
+              "type": "tip",
+              "text": "Remind the student to slow down and articulate."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines using your own context.",
+          "instructionKr": "자신의 상황으로 완성하세요.",
+          "content": "1. Hello. This is _______________ speaking.<br>2. May I speak to _______________?<br>3. One moment, please. Please hold on.<br>4. I will transfer you to extension _______________.<br>5. Can I take a message?<br>6. I'll let _______________ know.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Use realistic names, departments, and times."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Hello, may I speak to your manager?",
+              "kr": "안녕하세요, 매니저와 통화할 수 있을까요?"
+            },
+            {
+              "role": "student",
+              "en": "Hello. This is Mina speaking. One moment, please.",
+              "kr": "안녕하세요. 미나입니다. 잠시만요."
+            },
+            {
+              "role": "tutor",
+              "en": "Is he available?",
+              "kr": "지금 통화 가능하신가요?"
+            },
+            {
+              "role": "student",
+              "en": "He is in a meeting. Can I take a message?",
+              "kr": "회의 중입니다. 메시지 남겨 드릴까요?"
+            },
+            {
+              "role": "tutor",
+              "en": "Yes. Please tell him I will call back at 3.",
+              "kr": "네. 3시에 다시 전화하겠다고 전해 주세요."
+            },
+            {
+              "role": "student",
+              "en": "OK. I'll let him know.",
+              "kr": "네. 전해 드릴게요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Keep phone responses short and clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Handle one transfer<br>- Handle one message<br>- Confirm one callback time<br>- Use polite phone voice<br>- Close the call",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Try a realistic phone/email role-play.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Role-play a busy morning: 4 calls. Answer, transfer, take a message, and confirm callback details.",
+      "scenarioKr": "바쁜 아침 롤플레이: 4통의 전화를 처리합니다. 받기, 연결, 메시지, 회신 정보를 모두 처리하세요.",
+      "guideQuestions": [
+        {
+          "text": "Use at least three target patterns."
+        },
+        {
+          "text": "Do one transfer sentence."
+        },
+        {
+          "text": "Take one message with details (name + time)."
+        },
+        {
+          "text": "Confirm at least one number (time/extension)."
+        },
+        {
+          "text": "Stay polite and clear."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Keep your phone voice clear.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = clear intent + polite patterns + correct key details."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "PHONE REVIEW",
+          "questions": [
+            "Which phrase is easiest?",
+            "Which is hardest?",
+            "What will you practice again?"
+          ]
+        },
+        {
+          "title": "REAL CALLS",
+          "questions": [
+            "What calls do you get at work?",
+            "Do you take messages often?",
+            "Do you prefer phone or email?"
+          ]
+        },
+        {
+          "title": "NEXT STEP",
+          "questions": [
+            "What business English do you want next?",
+            "Do you want more email writing practice?",
+            "Do you want more phone role-plays?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can handle basic phone conversations at work.",
+      "goalReviewKr": "기본적인 전화 응대를 할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 5: COMPLETE",
+      "nextLessonName": "Next: Level 3 complete",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

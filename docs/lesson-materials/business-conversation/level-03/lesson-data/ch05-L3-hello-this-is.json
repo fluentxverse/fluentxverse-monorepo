@@ -1,0 +1,473 @@
+{
+  "chapterName": "Phone & Email",
+  "lessonName": "Hello, This Is...",
+  "goalTextEn": "Can answer the phone and identify yourself.",
+  "goalTextKr": "전화를 받아 자신의 이름을 말할 수 있다.",
+  "beData": {
+    "lessonType": "SPEAKING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can answer the phone and identify yourself.",
+      "goalKr": "전화를 받아 자신의 이름을 말할 수 있다.",
+      "situationEn": "The phone rings at your desk. Answer it professionally and help the caller.",
+      "situationKr": "자리에 있는 전화가 울립니다. 정중하게 받고 전화를 도와주세요.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can answer the phone and identify yourself..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "On the phone, clarity is more important than speed."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>Hello, this is</b> Mina.",
+          "kr": "안녕하세요, 미나입니다."
+        },
+        {
+          "en": "<b>How can I help you?</b>",
+          "kr": "무엇을 도와드릴까요?"
+        },
+        {
+          "en": "<b>Let me check for you.</b>",
+          "kr": "확인해 드릴게요."
+        },
+        {
+          "en": "<b>What's your extension?</b>",
+          "kr": "내선 번호가 어떻게 되시나요?"
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "call",
+          "pos": "noun/verb",
+          "translation": "전화/전화하다",
+          "definition": "a phone conversation; to phone someone",
+          "pronunciation": "/kɔːl/"
+        },
+        {
+          "word": "dial",
+          "pos": "verb",
+          "translation": "번호를 누르다",
+          "definition": "to press numbers to call someone",
+          "pronunciation": "/daɪl/"
+        },
+        {
+          "word": "extension",
+          "pos": "noun",
+          "translation": "내선",
+          "definition": "an internal phone number in a company",
+          "pronunciation": "/ɪkˈstenʃən/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice clear /h/ at the start of words.",
+        "instructionKr": "단어 첫소리 /h/를 분명히 연습합시다.",
+        "left": {
+          "symbol": "/h/ heard",
+          "words": [
+            {
+              "en": "hello",
+              "kr": "안녕하세요"
+            },
+            {
+              "en": "help",
+              "kr": "돕다"
+            },
+            {
+              "en": "hold",
+              "kr": "기다리다"
+            },
+            {
+              "en": "how",
+              "kr": "어떻게"
+            },
+            {
+              "en": "here",
+              "kr": "여기"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "silent h",
+          "words": [
+            {
+              "en": "hour",
+              "kr": "시간"
+            },
+            {
+              "en": "honest",
+              "kr": "솔직한"
+            },
+            {
+              "en": "heir",
+              "kr": "상속자"
+            },
+            {
+              "en": "honor",
+              "kr": "존경"
+            },
+            {
+              "en": "herb",
+              "kr": "허브"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key phone and email phrases.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Model polite tone and clear speech."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "Hello, this is",
+              "isBlank": true
+            },
+            {
+              "text": " Mina.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "How can I",
+              "isBlank": true
+            },
+            {
+              "text": " help you?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Let me",
+              "isBlank": true
+            },
+            {
+              "text": " check for you.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "What's your",
+              "isBlank": true
+            },
+            {
+              "text": " extension?",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Answering the phone",
+          "labelKr": "전화 받기",
+          "template": "Hello, this is ___.",
+          "examples": [
+            {
+              "en": "Hello, this is Mina.",
+              "kr": "안녕하세요, 미나입니다."
+            },
+            {
+              "en": "Hello, this is the front desk.",
+              "kr": "안녕하세요, 안내 데스크입니다."
+            }
+          ]
+        },
+        {
+          "label": "Helping line",
+          "labelKr": "도움 표현",
+          "template": "How can I help you? / Let me check for you.",
+          "examples": [
+            {
+              "en": "How can I help you?",
+              "kr": "무엇을 도와드릴까요?"
+            },
+            {
+              "en": "Let me check for you.",
+              "kr": "확인해 드릴게요."
+            }
+          ]
+        },
+        {
+          "label": "Extensions",
+          "labelKr": "내선",
+          "template": "What's your extension? / My extension is ___.",
+          "examples": [
+            {
+              "en": "What's your extension?",
+              "kr": "내선 번호가 어떻게 되시나요?"
+            },
+            {
+              "en": "My extension is 204.",
+              "kr": "제 내선은 204입니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Focus on correct pattern choice and clarity."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Hello, this is Mina.<br>2. How can I help you?<br>3. Let me check for you.<br>4. May I have your name?<br>5. What's your extension?<br>6. Thank you for calling.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly and model phone voice."
+            },
+            {
+              "type": "tip",
+              "text": "Remind the student to slow down and articulate."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines using your own context.",
+          "instructionKr": "자신의 상황으로 완성하세요.",
+          "content": "1. Hello, this is _______________.<br>2. How can I help you?<br>3. Let me check _______________.<br>4. May I have your _______________?<br>5. What's your extension?<br>6. Thank you for calling.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Use realistic names, departments, and times."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Hello, may I speak to James?",
+              "kr": "안녕하세요, 제임스와 통화할 수 있을까요?"
+            },
+            {
+              "role": "student",
+              "en": "Hello, this is Mina. One moment, please.",
+              "kr": "안녕하세요, 미나입니다. 잠시만요."
+            },
+            {
+              "role": "tutor",
+              "en": "Thanks. I have a question about the meeting.",
+              "kr": "감사합니다. 회의에 대해 질문이 있어요."
+            },
+            {
+              "role": "student",
+              "en": "How can I help you?",
+              "kr": "무엇을 도와드릴까요?"
+            },
+            {
+              "role": "tutor",
+              "en": "What time is the meeting?",
+              "kr": "회의는 몇 시예요?"
+            },
+            {
+              "role": "student",
+              "en": "Let me check for you. It is at 10 AM.",
+              "kr": "확인해 드릴게요. 오전 10시입니다."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Keep phone responses short and clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Answer with your name<br>- Ask how you can help<br>- Say one hold sentence<br>- Give one piece of info<br>- Close politely",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Try a realistic phone/email role-play.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Answer two calls: one is a simple question, one is a transfer request. Handle both professionally.",
+      "scenarioKr": "전화 2통을 받습니다: 1통은 질문, 1통은 연결 요청입니다. 정중하게 처리하세요.",
+      "guideQuestions": [
+        {
+          "text": "Use \"Hello, this is ...\" once."
+        },
+        {
+          "text": "Use \"How can I help you?\" once."
+        },
+        {
+          "text": "Use one \"Let me check\" sentence."
+        },
+        {
+          "text": "Use one hold sentence."
+        },
+        {
+          "text": "Close the call politely."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Keep your phone voice clear.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = clear intent + polite patterns + correct key details."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "PHONE CONFIDENCE",
+          "questions": [
+            "Are you nervous on the phone?",
+            "What do you do when you do not understand?",
+            "Do you ask people to repeat?"
+          ]
+        },
+        {
+          "title": "EXTENSIONS",
+          "questions": [
+            "Does your company use extensions?",
+            "Do you know your extension?",
+            "How do you transfer calls?"
+          ]
+        },
+        {
+          "title": "PROFESSIONAL TONE",
+          "questions": [
+            "What is a professional greeting?",
+            "Do you smile when you talk?",
+            "Do you speak slower on the phone?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can answer the phone and identify yourself.",
+      "goalReviewKr": "전화를 받아 자신의 이름을 말할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 5: PHONE & EMAIL",
+      "nextLessonName": "Lesson 4: Can I Take a Message?",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

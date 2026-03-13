@@ -1329,17 +1329,6 @@ export default function BusinessEnglishVisualEditor() {
           </div>
           </BlockWrapper>
 
-          <BlockWrapper blockId="comprehensionPatterns" label="Key Expression Cards" icon="ri-file-list-3-line">
-          <div className="beve-patterns-grid">
-            {beData.present.patterns.map((p, i) => (
-              <div key={i} className="beve-pattern-card">
-                <span className="beve-pattern-en" dangerouslySetInnerHTML={{ __html: p.en }} />
-                <span className="beve-pattern-kr" dangerouslySetInnerHTML={{ __html: p.kr }} />
-              </div>
-            ))}
-          </div>
-          </BlockWrapper>
-
           {/* Pattern Drill Tables */}
           <BlockWrapper blockId="patternDrills" label="Pattern Drills" icon="ri-table-line">
           {beData.understand.patternDrills.length > 0 && (

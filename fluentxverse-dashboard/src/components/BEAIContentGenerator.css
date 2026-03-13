@@ -82,9 +82,10 @@
 .beai-panel {
   position: fixed;
   right: 18px;
-  top: 60px;
-  width: 380px;
-  max-height: calc(100vh - 100px);
+  top: 40px;
+  width: 540px;
+  max-width: calc(100vw - 36px);
+  max-height: calc(100vh - 80px);
   background: var(--beai-bg);
   border-radius: var(--beai-radius);
   border: 1px solid var(--beai-border);
@@ -104,7 +105,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: linear-gradient(135deg, #1a1530, #251e42);
   border-bottom: 1px solid var(--beai-border);
 }
@@ -117,17 +118,17 @@
 
 .beai-header-left > i {
   color: var(--beai-accent);
-  font-size: 20px;
+  font-size: 24px;
 }
 
 .beai-header-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--beai-text-bright);
 }
 
 .beai-header-subtitle {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--beai-accent);
   background: var(--beai-accent-subtle);
   padding: 2px 6px;
@@ -141,7 +142,7 @@
   background: none;
   border: none;
   color: var(--beai-text-dim);
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -157,29 +158,35 @@
  * SECTION TABS
  * ============================================================================ */
 .beai-section-tabs {
-  display: flex;
-  gap: 2px;
-  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 12px 14px;
   background: var(--beai-surface);
   border-bottom: 1px solid var(--beai-border);
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 230px;
 }
 
-.beai-section-tabs::-webkit-scrollbar { height: 0; }
+.beai-section-tabs::-webkit-scrollbar { width: 4px; height: 0; }
+.beai-section-tabs::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.25); border-radius: 2px; }
 
 .beai-section-tab {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 8px;
+  padding: 10px 12px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
   color: var(--beai-text-dim);
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: normal;
+  width: 100%;
+  justify-content: space-between;
   transition: all 0.2s;
   position: relative;
 }
@@ -204,12 +211,12 @@
 }
 
 .beai-tab-num {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.06);
   color: inherit;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -222,11 +229,14 @@
 }
 
 .beai-tab-label {
-  font-size: 10px;
+  font-size: 12px;
+  flex: 1;
+  text-align: left;
+  line-height: 1.2;
 }
 
 .beai-tab-check {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--beai-green);
 }
 
@@ -234,7 +244,7 @@
  * CONTENT AREA
  * ============================================================================ */
 .beai-content {
-  padding: 12px 14px;
+  padding: 14px 16px;
   overflow-y: auto;
   flex: 1;
   display: flex;
@@ -251,7 +261,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--beai-surface);
   border-radius: 8px;
   border: 1px solid var(--beai-border);
@@ -259,18 +269,18 @@
 
 .beai-section-info > i {
   color: var(--beai-accent);
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .beai-section-info strong {
   display: block;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--beai-text-bright);
 }
 
 .beai-section-desc {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--beai-text-dim);
   margin-top: 1px;
 }
@@ -278,7 +288,7 @@
 /* Progress bar */
 .beai-progress-bar {
   position: relative;
-  height: 20px;
+  height: 22px;
   background: var(--beai-surface);
   border-radius: 10px;
   overflow: hidden;
@@ -297,7 +307,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--beai-text);
 }
@@ -318,12 +328,12 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border: none;
   border-radius: 6px;
   background: transparent;
   color: var(--beai-text-dim);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -354,7 +364,7 @@
 }
 
 .beai-prompt-label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--beai-text-dim);
   display: flex;
   align-items: center;
@@ -365,15 +375,15 @@
 
 .beai-prompt-input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--beai-border);
   border-radius: 6px;
   background: var(--beai-surface);
   color: var(--beai-text);
-  font-size: 12px;
+  font-size: 13px;
   font-family: inherit;
   resize: vertical;
-  min-height: 36px;
+  min-height: 44px;
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
@@ -398,7 +408,7 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 6px;
   color: #fca5a5;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .beai-error i { color: var(--beai-red); font-size: 14px; }
@@ -425,7 +435,7 @@
 }
 
 .beai-batch-text {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--beai-text-dim);
   text-align: center;
 }
@@ -444,7 +454,7 @@
   padding: 8px 10px;
   background: var(--beai-surface);
   border-bottom: 1px solid var(--beai-border);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--beai-text-bright);
 }
@@ -464,7 +474,7 @@
 .beai-preview-content::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 2px; }
 
 .beai-preview-json {
-  font-size: 10px;
+  font-size: 11px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   color: var(--beai-text);
   background: rgba(0, 0, 0, 0.3);
@@ -490,10 +500,10 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -529,8 +539,8 @@
 
 .beai-btn-generate {
   width: 100%;
-  padding: 10px 16px;
-  font-size: 13px;
+  padding: 12px 16px;
+  font-size: 14px;
   background: linear-gradient(135deg, var(--beai-accent-dim), var(--beai-accent));
   color: #fff;
   border: none;
@@ -558,8 +568,8 @@
 
 .beai-btn-batch {
   width: 100%;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
   background: var(--beai-surface);
   color: var(--beai-text);
   border: 1px solid var(--beai-border);

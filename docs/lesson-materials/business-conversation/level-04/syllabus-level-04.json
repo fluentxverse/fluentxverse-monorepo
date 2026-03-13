@@ -1,0 +1,120 @@
+{
+  "level": 4,
+  "badge": "High Beginner",
+  "toeic": "225-545",
+  "description": "High-beginner business English for building confidence. Students learn clearer self-introductions, basic networking, explaining roles and responsibilities, and introducing people in a professional way.",
+  "skillCycle": [
+    "listening",
+    "reading",
+    "speaking",
+    "speaking",
+    "review"
+  ],
+  "chapters": [
+    {
+      "chapter": 1,
+      "theme": "Networking Basics",
+      "description": "Introduce yourself professionally, explain your role, and handle simple networking conversations.",
+      "lessons": [
+        {
+          "lesson": 1,
+          "skill": "listening",
+          "name": "Welcome to the Team",
+          "goalEn": "Can understand a simple workplace introduction and small talk.",
+          "targetPatterns": [
+            "Nice to meet you.",
+            "How was your weekend?",
+            "Let me introduce myself."
+          ],
+          "vocabulary": [
+            "welcome",
+            "team",
+            "new"
+          ],
+          "pronunciation": "Polite question intonation",
+          "situation": "On your first day, you meet coworkers who introduce themselves and make small talk.",
+          "goalKr": "직장에서의 간단한 소개와 스몰토크를 들을 수 있다."
+        },
+        {
+          "lesson": 2,
+          "skill": "reading",
+          "name": "Your Role Profile",
+          "goalEn": "Can read a short role profile and understand basic job information.",
+          "targetPatterns": [
+            "I work in the ___ department.",
+            "My role is ___.",
+            "I am responsible for ___."
+          ],
+          "vocabulary": [
+            "role",
+            "responsible for",
+            "department"
+          ],
+          "pronunciation": "/r/ and /l/ in role-related words",
+          "situation": "You read a short profile card about a coworker’s job and responsibilities.",
+          "goalKr": "짧은 직무 소개를 읽고 기본적인 직무 정보를 이해할 수 있다."
+        },
+        {
+          "lesson": 3,
+          "skill": "speaking",
+          "name": "What Do You Do Here?",
+          "goalEn": "Can explain your job and responsibilities using simple professional phrases.",
+          "targetPatterns": [
+            "I work in ___.",
+            "I handle ___.",
+            "I am responsible for ___."
+          ],
+          "vocabulary": [
+            "handle",
+            "support",
+            "main task"
+          ],
+          "pronunciation": "Stress in key words (RE-spon-si-ble / HAN-dle)",
+          "situation": "A coworker asks about your job. You explain what you do in 3–5 sentences.",
+          "goalKr": "간단한 전문 표현으로 자신의 업무와 책임을 설명할 수 있다."
+        },
+        {
+          "lesson": 4,
+          "skill": "speaking",
+          "name": "Let Me Introduce You",
+          "goalEn": "Can introduce two people and say why they should talk.",
+          "targetPatterns": [
+            "This is ___.",
+            "He/She works on ___.",
+            "You should talk to ___ about ___."
+          ],
+          "vocabulary": [
+            "introduce",
+            "project",
+            "in charge of"
+          ],
+          "pronunciation": "Linking in \"talk to\" and \"should\"",
+          "situation": "At an office event, you introduce a coworker to a visitor and connect them.",
+          "goalKr": "두 사람을 소개하고 왜 이야기해야 하는지 말할 수 있다."
+        },
+        {
+          "lesson": 5,
+          "skill": "review",
+          "name": "First Networking Day",
+          "goalEn": "Can handle basic introductions, role explanations, and simple networking smoothly.",
+          "targetPatterns": [
+            "Let me introduce myself.",
+            "I am responsible for ___.",
+            "You should talk to ___ about ___."
+          ],
+          "vocabulary": [
+            "welcome",
+            "role",
+            "handle",
+            "project",
+            "responsible for"
+          ],
+          "pronunciation": "Review: polite intonation + word stress",
+          "situation": "Role-play: meet 2 people, introduce yourself, explain your role, and introduce them to each other.",
+          "reviewScope": "Lessons 1-4",
+          "goalKr": "소개, 직무 설명, 네트워킹을 자연스럽게 할 수 있다."
+        }
+      ]
+    }
+  ]
+}

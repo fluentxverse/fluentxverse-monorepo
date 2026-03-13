@@ -1,0 +1,469 @@
+{
+  "chapterName": "Making Requests",
+  "lessonName": "The Request Email",
+  "goalTextEn": "Can read a simple email asking for something.",
+  "goalTextKr": "부탁하는 간단한 이메일을 읽고 이해할 수 있다.",
+  "beData": {
+    "lessonType": "READING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can read a simple email asking for something.",
+      "goalKr": "부탁하는 간단한 이메일을 읽고 이해할 수 있다.",
+      "situationEn": "You receive an email from your manager with a simple request.",
+      "situationKr": "매니저로부터 간단한 요청이 담긴 이메일을 받았습니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can read a simple email asking for something..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Aim for polite tone and complete sentences."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>I would like to</b> request the report.",
+          "kr": "보고서를 요청하고 싶습니다."
+        },
+        {
+          "en": "<b>Please send me</b> the file.",
+          "kr": "파일을 보내 주세요."
+        },
+        {
+          "en": "<b>Thank you for your help.</b>",
+          "kr": "도움 주셔서 감사합니다."
+        },
+        {
+          "en": "<b>Please reply</b> by 3 PM.",
+          "kr": "오후 3시까지 답장해 주세요."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "request",
+          "pos": "noun/verb",
+          "translation": "요청/요청하다",
+          "definition": "to ask for something politely",
+          "pronunciation": "/rɪˈkwest/"
+        },
+        {
+          "word": "attachment",
+          "pos": "noun",
+          "translation": "첨부파일",
+          "definition": "a file sent with an email",
+          "pronunciation": "/əˈtætʃmənt/"
+        },
+        {
+          "word": "reply",
+          "pos": "verb",
+          "translation": "답장하다",
+          "definition": "to answer an email or message",
+          "pronunciation": "/rɪˈplaɪ/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice /k/ and /g/.",
+        "instructionKr": "/k/와 /g/ 발음을 연습합시다.",
+        "left": {
+          "symbol": "/k/",
+          "words": [
+            {
+              "en": "call",
+              "kr": "전화하다"
+            },
+            {
+              "en": "copy",
+              "kr": "복사"
+            },
+            {
+              "en": "check",
+              "kr": "확인하다"
+            },
+            {
+              "en": "request",
+              "kr": "요청"
+            },
+            {
+              "en": "kind",
+              "kr": "친절한"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "/g/",
+          "words": [
+            {
+              "en": "go",
+              "kr": "가다"
+            },
+            {
+              "en": "give",
+              "kr": "주다"
+            },
+            {
+              "en": "again",
+              "kr": "다시"
+            },
+            {
+              "en": "good",
+              "kr": "좋은"
+            },
+            {
+              "en": "agree",
+              "kr": "동의하다"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Keep corrections short and focused."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "I would like to",
+              "isBlank": true
+            },
+            {
+              "text": " request the updated file.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Please send me",
+              "isBlank": true
+            },
+            {
+              "text": " the attachment.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Thank you for your",
+              "isBlank": true
+            },
+            {
+              "text": " help.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Please reply",
+              "isBlank": true
+            },
+            {
+              "text": " by 5 PM.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Email request",
+          "labelKr": "이메일 요청",
+          "template": "I would like to ___.",
+          "examples": [
+            {
+              "en": "I would like to request the report.",
+              "kr": "보고서를 요청하고 싶습니다."
+            },
+            {
+              "en": "I would like to confirm the schedule.",
+              "kr": "일정을 확인하고 싶습니다."
+            }
+          ]
+        },
+        {
+          "label": "Direct request line",
+          "labelKr": "요청 문장",
+          "template": "Please send me ___.",
+          "examples": [
+            {
+              "en": "Please send me the file.",
+              "kr": "파일을 보내 주세요."
+            },
+            {
+              "en": "Please send me the link.",
+              "kr": "링크를 보내 주세요."
+            }
+          ]
+        },
+        {
+          "label": "Closing",
+          "labelKr": "마무리",
+          "template": "Thank you for your help.",
+          "examples": [
+            {
+              "en": "Thank you for your help.",
+              "kr": "도움 주셔서 감사합니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Focus on polite tone and correct pattern choice."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Subject: Request<br>2. Hi team,<br>3. I would like to request the updated report.<br>4. Please send me the file as an attachment.<br>5. Please reply by 3 PM.<br>6. Thank you for your help.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly and model polite intonation."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage the student to sound friendly, not flat."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines for your workplace.",
+          "instructionKr": "자신의 직장 상황에 맞게 완성하세요.",
+          "content": "1. I would like to _______________.<br>2. Please send me _______________.<br>3. Please reply by _______________.<br>4. Thank you for your help.<br>5. Best regards,<br>6. (Your name)",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Use realistic tasks: emails, printing, checking files."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Did you get the manager's email?",
+              "kr": "매니저 이메일 받았어요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes. It says, \"Please send me the file.\"",
+              "kr": "네. \"파일을 보내 주세요\"라고 되어 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "Is there an attachment?",
+              "kr": "첨부파일이 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes, there is an attachment.",
+              "kr": "네, 첨부파일이 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "When do you need to reply?",
+              "kr": "언제까지 답장해야 하나요?"
+            },
+            {
+              "role": "student",
+              "en": "By 3 PM.",
+              "kr": "오후 3시까지요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Keep responses short and clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Read the request lines clearly<br>- Identify what is requested<br>- Identify the deadline<br>- Say if there is an attachment<br>- Summarize in 1 sentence",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Try to handle requests naturally, like a real office.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Read a short request email and explain what you need to do.",
+      "scenarioKr": "짧은 요청 이메일을 읽고 무엇을 해야 하는지 설명하세요.",
+      "guideQuestions": [
+        {
+          "text": "Say what the manager wants."
+        },
+        {
+          "text": "Say what to send."
+        },
+        {
+          "text": "Say the deadline time."
+        },
+        {
+          "text": "Use one target pattern sentence."
+        },
+        {
+          "text": "Confirm the next action."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's request patterns naturally.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = polite requests + clear responses + good flow."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "EMAIL HABITS",
+          "questions": [
+            "Do you check email often?",
+            "Do you prefer email or chat?",
+            "What makes an email clear?"
+          ]
+        },
+        {
+          "title": "REQUESTS",
+          "questions": [
+            "What do you request by email?",
+            "Do you use polite phrases?",
+            "How do you follow up?"
+          ]
+        },
+        {
+          "title": "ATTACHMENTS",
+          "questions": [
+            "Do you forget attachments sometimes?",
+            "How do you name files?",
+            "Do you send links or files?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can read a simple email asking for something.",
+      "goalReviewKr": "부탁하는 간단한 이메일을 읽고 이해할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 4: MAKING REQUESTS",
+      "nextLessonName": "Lesson 3: I Need a Hand",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

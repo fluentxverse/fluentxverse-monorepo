@@ -1,0 +1,473 @@
+{
+  "chapterName": "Phone & Email",
+  "lessonName": "You've Got Mail",
+  "goalTextEn": "Can read and understand a simple work email.",
+  "goalTextKr": "간단한 업무 이메일을 읽고 이해할 수 있다.",
+  "beData": {
+    "lessonType": "READING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can read and understand a simple work email.",
+      "goalKr": "간단한 업무 이메일을 읽고 이해할 수 있다.",
+      "situationEn": "You open your inbox and read a short email from your manager about tomorrow's meeting.",
+      "situationKr": "받은 편지함에서 내일 회의에 대한 매니저의 짧은 이메일을 읽습니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can read and understand a simple work email..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "On the phone, clarity is more important than speed."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>Dear</b> Mina,",
+          "kr": "미나님께,"
+        },
+        {
+          "en": "<b>I am writing to</b> confirm tomorrow's meeting.",
+          "kr": "내일 회의를 확인드리기 위해 메일드립니다."
+        },
+        {
+          "en": "<b>Best regards,</b><br>James",
+          "kr": "감사합니다(마무리),\n제임스"
+        },
+        {
+          "en": "<b>Subject:</b> Meeting Reminder",
+          "kr": "제목: 회의 리마인더"
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "subject",
+          "pos": "noun",
+          "translation": "제목",
+          "definition": "the topic line of an email",
+          "pronunciation": "/ˈsʌbdʒekt/"
+        },
+        {
+          "word": "regards",
+          "pos": "noun",
+          "translation": "안부/인사(마무리)",
+          "definition": "a polite closing in an email",
+          "pronunciation": "/rɪˈɡɑːrdz/"
+        },
+        {
+          "word": "forward",
+          "pos": "verb",
+          "translation": "전달하다",
+          "definition": "to send an email to another person",
+          "pronunciation": "/ˈfɔːrwərd/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice /ər/ in 'regards' and 'forward'.",
+        "instructionKr": "'regards', 'forward'에서 /ər/ 소리를 연습합시다.",
+        "left": {
+          "symbol": "/ər/",
+          "words": [
+            {
+              "en": "regards",
+              "kr": "마무리 인사"
+            },
+            {
+              "en": "forward",
+              "kr": "전달하다"
+            },
+            {
+              "en": "confirm",
+              "kr": "확인하다"
+            },
+            {
+              "en": "person",
+              "kr": "사람"
+            },
+            {
+              "en": "server",
+              "kr": "서버"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "No /ər/",
+          "words": [
+            {
+              "en": "reply",
+              "kr": "답장하다"
+            },
+            {
+              "en": "email",
+              "kr": "이메일"
+            },
+            {
+              "en": "file",
+              "kr": "파일"
+            },
+            {
+              "en": "meeting",
+              "kr": "회의"
+            },
+            {
+              "en": "today",
+              "kr": "오늘"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key phone and email phrases.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Model polite tone and clear speech."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "Dear",
+              "isBlank": true
+            },
+            {
+              "text": " Alex,",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I am writing to",
+              "isBlank": true
+            },
+            {
+              "text": " confirm tomorrow's meeting.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Best",
+              "isBlank": true
+            },
+            {
+              "text": " regards,",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Subject:",
+              "isBlank": true
+            },
+            {
+              "text": " Meeting Reminder",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Email opening",
+          "labelKr": "이메일 시작",
+          "template": "Dear ___,",
+          "examples": [
+            {
+              "en": "Dear Mina,",
+              "kr": "미나님께,"
+            },
+            {
+              "en": "Dear Team,",
+              "kr": "팀 여러분께,"
+            }
+          ]
+        },
+        {
+          "label": "Purpose line",
+          "labelKr": "목적 문장",
+          "template": "I am writing to ___.",
+          "examples": [
+            {
+              "en": "I am writing to confirm the meeting.",
+              "kr": "회의 확인을 위해 메일드립니다."
+            },
+            {
+              "en": "I am writing to ask a question.",
+              "kr": "질문드리기 위해 메일드립니다."
+            }
+          ]
+        },
+        {
+          "label": "Closing",
+          "labelKr": "이메일 마무리",
+          "template": "Best regards, ___",
+          "examples": [
+            {
+              "en": "Best regards, James",
+              "kr": "감사합니다, 제임스"
+            },
+            {
+              "en": "Best regards, Mina",
+              "kr": "감사합니다, 미나"
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Focus on correct pattern choice and clarity."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Subject: Meeting Reminder<br>2. Dear Mina,<br>3. I am writing to confirm tomorrow's meeting.<br>4. The meeting is at 10:00 AM.<br>5. Please reply if you have questions.<br>6. Best regards, James",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly and model phone voice."
+            },
+            {
+              "type": "tip",
+              "text": "Remind the student to slow down and articulate."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines using your own context.",
+          "instructionKr": "자신의 상황으로 완성하세요.",
+          "content": "1. Subject: _______________<br>2. Dear _______________,<br>3. I am writing to _______________.<br>4. The meeting is at _______________.<br>5. Please _______________.<br>6. Best regards, _______________",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Use realistic names, departments, and times."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Can you read the email subject?",
+              "kr": "이메일 제목을 읽어 주실래요?"
+            },
+            {
+              "role": "student",
+              "en": "Subject: Meeting Reminder.",
+              "kr": "제목: 회의 리마인더."
+            },
+            {
+              "role": "tutor",
+              "en": "What is the email about?",
+              "kr": "이메일 내용이 뭐예요?"
+            },
+            {
+              "role": "student",
+              "en": "It is to confirm tomorrow's meeting.",
+              "kr": "내일 회의를 확인하는 메일이에요."
+            },
+            {
+              "role": "tutor",
+              "en": "How does it end?",
+              "kr": "어떻게 마무리하나요?"
+            },
+            {
+              "role": "student",
+              "en": "Best regards, James.",
+              "kr": "감사합니다, 제임스."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Keep phone responses short and clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Say the subject line<br>- Say who the email is to<br>- Say the purpose (writing to...)<br>- Say the closing line<br>- Summarize in 1 sentence",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Try a realistic phone/email role-play.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Read a short email and explain the main point and the action you need to take.",
+      "scenarioKr": "짧은 이메일을 읽고 핵심 내용과 해야 할 행동을 설명하세요.",
+      "guideQuestions": [
+        {
+          "text": "Identify the subject."
+        },
+        {
+          "text": "Identify the purpose sentence."
+        },
+        {
+          "text": "Identify the time or deadline."
+        },
+        {
+          "text": "Use one pattern: \"I am writing to ...\""
+        },
+        {
+          "text": "State your next action (reply/forward)."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Keep your phone voice clear.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = clear intent + polite patterns + correct key details."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "EMAIL STYLE",
+          "questions": [
+            "Do you use Dear in emails?",
+            "Do you write short or long emails?",
+            "What makes an email professional?"
+          ]
+        },
+        {
+          "title": "INBOX",
+          "questions": [
+            "How many emails do you get a day?",
+            "Do you reply quickly?",
+            "Do you forward emails often?"
+          ]
+        },
+        {
+          "title": "MEETING EMAILS",
+          "questions": [
+            "Do you send meeting reminders?",
+            "What details should be included?",
+            "Do you prefer email or calendar invites?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can read and understand a simple work email.",
+      "goalReviewKr": "간단한 업무 이메일을 읽고 이해할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 5: PHONE & EMAIL",
+      "nextLessonName": "Lesson 3: Hello, This Is...",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

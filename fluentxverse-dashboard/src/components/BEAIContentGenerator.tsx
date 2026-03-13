@@ -28,6 +28,90 @@ const SECTIONS: SectionConfig[] = [
   { id: 'feedback', label: 'Wrap-Up', number: 7, icon: 'ri-checkbox-circle-line', description: 'Review & feedback template' },
 ];
 
+const coalesceText = (primary: any, fallback: any) => (primary || fallback);
+
+const normalizeSectionData = (section: BESectionType, data: any) => {
+  if (!data || typeof data !== 'object') return data;
+
+  switch (section) {
+    case 'introduce':
+      return {
+        ...data,
+        goalKr: coalesceText(data.goalKr, data.goalJp),
+        situationKr: coalesceText(data.situationKr, data.situationJp),
+        taskKr: coalesceText(data.taskKr, data.taskJp),
+      };
+    case 'present':
+      return {
+        ...data,
+        patterns: Array.isArray(data.patterns)
+          ? data.patterns.map((p: any) => ({ ...p, kr: coalesceText(p.kr, p.jp) }))
+          : data.patterns,
+        pronunciation: data.pronunciation
+          ? {
+              ...data.pronunciation,
+              instructionKr: coalesceText(data.pronunciation.instructionKr, data.pronunciation.instructionJp),
+              left: data.pronunciation.left
+                ? {
+                    ...data.pronunciation.left,
+                    words: Array.isArray(data.pronunciation.left.words)
+                      ? data.pronunciation.left.words.map((w: any) => ({ ...w, kr: coalesceText(w.kr, w.jp) }))
+                      : data.pronunciation.left.words,
+                  }
+                : data.pronunciation.left,
+              right: data.pronunciation.right
+                ? {
+                    ...data.pronunciation.right,
+                    words: Array.isArray(data.pronunciation.right.words)
+                      ? data.pronunciation.right.words.map((w: any) => ({ ...w, kr: coalesceText(w.kr, w.jp) }))
+                      : data.pronunciation.right.words,
+                  }
+                : data.pronunciation.right,
+            }
+          : data.pronunciation,
+      };
+    case 'understand':
+      return {
+        ...data,
+        instructionKr: coalesceText(data.instructionKr, data.instructionJp),
+      };
+    case 'practice':
+      return {
+        ...data,
+        steps: Array.isArray(data.steps)
+          ? data.steps.map((s: any) => ({ ...s, instructionKr: coalesceText(s.instructionKr, s.instructionJp) }))
+          : data.steps,
+      };
+    case 'challenge':
+      return {
+        ...data,
+        scenarioKr: coalesceText(data.scenarioKr, data.scenarioJp),
+      };
+    case 'discussion':
+      return {
+        ...data,
+        instructionKr: coalesceText(data.instructionKr, data.instructionJp),
+      };
+    case 'feedback':
+      return {
+        ...data,
+        goalReviewKr: coalesceText(data.goalReviewKr, data.goalReviewJp),
+      };
+    default:
+      return data;
+  }
+};
+
+const normalizeBEContent = (data: any) => {
+  if (!data || typeof data !== 'object') return data;
+  const normalized: any = { ...data };
+  (['introduce', 'present', 'understand', 'practice', 'challenge', 'discussion', 'feedback'] as BESectionType[])
+    .forEach((section) => {
+      if (data[section]) normalized[section] = normalizeSectionData(section, data[section]);
+    });
+  return normalized;
+};
+
 export interface BEAIContentGeneratorProps {
   // Lesson metadata
   level: number;
@@ -107,6 +191,7 @@ export function BEAIContentGenerator({
     setError('');
 
     try {
+      const shouldGeneratePresentWithWarmup = activeSection === 'introduce' && !sectionStatus.present && generationMode === 'new';
       const currentContent = generationMode === 'improve' && currentSectionData
         ? currentSectionData(activeSection) : null;
 
@@ -130,7 +215,32 @@ export function BEAIContentGenerator({
         throw new Error(response.error || 'Failed to generate content');
       }
 
-      setGeneratedContent(response.data);
+      let mergedData = response.data;
+      if (shouldGeneratePresentWithWarmup) {
+        try {
+          const presentResp = await generateBusinessEnglishContent(
+            'present',
+            level,
+            chapter,
+            lessonNumber,
+            lessonName,
+            goalTextEn,
+            goalTextJp,
+            chapterName,
+            customPrompt || null,
+            null,
+            'new',
+            null,
+          );
+          if (presentResp.success && presentResp.data?.present) {
+            mergedData = { ...mergedData, present: presentResp.data.present };
+          }
+        } catch (presentErr) {
+          console.error('Warm-up present generation error:', presentErr);
+        }
+      }
+
+      setGeneratedContent(normalizeBEContent(mergedData));
       setGeneratedSection(activeSection);
       setShowPreview(true);
     } catch (err: any) {
@@ -174,7 +284,8 @@ export function BEAIContentGenerator({
         );
 
         if (response.success && response.data) {
-          const data = response.data[sec.id];
+          const normalized = normalizeBEContent(response.data);
+          const data = normalized[sec.id];
           if (data) insertSectionContent(sec.id, data);
         }
       } catch (err) {
@@ -205,6 +316,9 @@ export function BEAIContentGenerator({
       const data = generatedContent[generatedSection];
       if (data) {
         insertSectionContent(generatedSection, data);
+        if (generatedSection === 'introduce' && generatedContent.present && !sectionStatus.present) {
+          insertSectionContent('present', generatedContent.present);
+        }
         setShowPreview(false);
         setGeneratedContent(null);
       }

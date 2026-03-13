@@ -1,0 +1,501 @@
+{
+  "chapterName": "Office Basics",
+  "lessonName": "The Office Map",
+  "goalTextEn": "Can read and understand a simple office floor plan.",
+  "goalTextKr": "간단한 사무실 층 지도를 읽고 이해할 수 있다.",
+  "beData": {
+    "lessonType": "READING",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can read and understand a simple office floor plan.",
+      "goalKr": "간단한 사무실 층 지도를 읽고 이해할 수 있다.",
+      "situationEn": "You look at the office floor plan to find different rooms and facilities.",
+      "situationKr": "여러 공간을 찾기 위해 사무실 층 지도를 보고 있습니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can read and understand a simple office floor plan..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation and check understanding."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's move to the next part.\""
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>The pantry is on</b> the 2nd floor.",
+          "kr": "탕비실은 2층에 있습니다."
+        },
+        {
+          "en": "<b>Room 203 is near</b> the elevator.",
+          "kr": "203호는 엘리베이터 근처에 있습니다."
+        },
+        {
+          "en": "<b>The HR office is located in</b> Building A.",
+          "kr": "HR 사무실은 A동에 위치해 있습니다."
+        },
+        {
+          "en": "<b>The training room is between</b> the lab and the lounge.",
+          "kr": "교육실은 실험실과 라운지 사이에 있습니다."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "elevator",
+          "pos": "noun",
+          "translation": "엘리베이터",
+          "definition": "a machine that moves people between floors",
+          "pronunciation": "/ˈelɪveɪtər/"
+        },
+        {
+          "word": "stairs",
+          "pos": "noun",
+          "translation": "계단",
+          "definition": "steps for going up or down floors",
+          "pronunciation": "/sterz/"
+        },
+        {
+          "word": "entrance",
+          "pos": "noun",
+          "translation": "입구",
+          "definition": "the door or way to go into a place",
+          "pronunciation": "/ˈentrəns/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Let's practice /eɪ/ and /ɛ/.",
+        "instructionKr": "/eɪ/와 /ɛ/를 연습합시다.",
+        "left": {
+          "symbol": "/eɪ/",
+          "words": [
+            {
+              "en": "stairs",
+              "kr": "계단"
+            },
+            {
+              "en": "main",
+              "kr": "주된"
+            },
+            {
+              "en": "name",
+              "kr": "이름"
+            },
+            {
+              "en": "same",
+              "kr": "같은"
+            },
+            {
+              "en": "gate",
+              "kr": "문"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "/ɛ/",
+          "words": [
+            {
+              "en": "desk",
+              "kr": "책상"
+            },
+            {
+              "en": "left",
+              "kr": "왼쪽"
+            },
+            {
+              "en": "next",
+              "kr": "다음"
+            },
+            {
+              "en": "best",
+              "kr": "최고"
+            },
+            {
+              "en": "pen",
+              "kr": "펜"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's look at key expressions for today's lesson.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud and ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Keep correction short and positive. Focus on one sound at a time."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "The office is on",
+              "isBlank": true
+            },
+            {
+              "text": " the 5th floor.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Room 301 is near",
+              "isBlank": true
+            },
+            {
+              "text": " the stairs.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "The HR office is located in",
+              "isBlank": true
+            },
+            {
+              "text": " Building B.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "The pantry is between",
+              "isBlank": true
+            },
+            {
+              "text": " the lounge and copy room.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Floor information",
+          "labelKr": "층 정보",
+          "template": "The ___ is on the ___ floor.",
+          "examples": [
+            {
+              "en": "The meeting room is on the 3rd floor.",
+              "kr": "회의실은 3층에 있습니다."
+            },
+            {
+              "en": "The cafeteria is on the 1st floor.",
+              "kr": "구내식당은 1층에 있습니다."
+            }
+          ]
+        },
+        {
+          "label": "Room location",
+          "labelKr": "호실 위치",
+          "template": "Room ___ is near ___.",
+          "examples": [
+            {
+              "en": "Room 204 is near the elevator.",
+              "kr": "204호는 엘리베이터 근처에 있습니다."
+            },
+            {
+              "en": "Room 110 is near the entrance.",
+              "kr": "110호는 입구 근처에 있습니다."
+            }
+          ]
+        },
+        {
+          "label": "Building location",
+          "labelKr": "건물 위치",
+          "template": "___ is located in ___.",
+          "examples": [
+            {
+              "en": "The support desk is located in Building A.",
+              "kr": "지원 데스크는 A동에 있습니다."
+            },
+            {
+              "en": "The lab is located in Building C.",
+              "kr": "실험실은 C동에 있습니다."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Ask the student to complete each blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run pattern drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "If needed, provide the first word as a hint."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 말하세요.",
+          "content": "1. The entrance is on the first floor.<br>2. The elevator is next to the entrance.<br>3. Room 204 is near the stairs.<br>4. The pantry is between the lounge and copy room.<br>5. The HR office is in Building A.<br>6. Please check the map before asking.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each sentence clearly. Student repeats."
+            },
+            {
+              "type": "instruction",
+              "text": "Correct pronunciation after every 2-3 lines."
+            },
+            {
+              "type": "tip",
+              "text": "Model natural pace, not word-by-word pacing."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Fill in Your Own Information",
+          "instructionEn": "Complete the lines using your own context.",
+          "instructionKr": "자신의 상황에 맞게 빈칸을 채우세요.",
+          "content": "1. The _______________ is on the _______________ floor.<br>2. Room _______________ is near _______________.<br>3. The _______________ is located in _______________.<br>4. The _______________ is between _______________ and _______________.<br>5. The elevator is next to _______________.<br>6. Please follow the map signs.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student complete all lines before speaking."
+            },
+            {
+              "type": "instruction",
+              "text": "Ask the student to read all completed lines aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage realistic details from the student's own workplace."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this mini-dialogue with your tutor.",
+          "instructionKr": "선생님과 미니 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Can you read this map for me?",
+              "kr": "지도를 읽어 주시겠어요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes. The pantry is on the 2nd floor.",
+              "kr": "네, 탕비실은 2층에 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "Where is Room 203?",
+              "kr": "203호는 어디에 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "It is near the elevator.",
+              "kr": "엘리베이터 근처에 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "Great. Where is the HR office?",
+              "kr": "좋아요. HR 사무실은요?"
+            },
+            {
+              "role": "student",
+              "en": "It is located in Building A.",
+              "kr": "A동에 위치해 있어요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do one guided run, then one natural run without reading."
+            },
+            {
+              "type": "instruction",
+              "text": "Switch roles if time allows."
+            },
+            {
+              "type": "tip",
+              "text": "Focus on communication flow over perfect grammar."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking Task",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Read one floor location sentence<br>- Read one room number sentence<br>- Use near/next to/between<br>- Use building name<br>- Speak clearly and slowly",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Now speak without notes. Try to connect your ideas naturally.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Let the student finish before giving corrections."
+            },
+            {
+              "type": "instruction",
+              "text": "Give concise feedback on one grammar point and one pronunciation point."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Your manager gives you a printed office map. Explain the location of four places to a new employee.",
+      "scenarioKr": "매니저가 사무실 지도를 주었습니다. 새 직원에게 네 곳의 위치를 설명하세요.",
+      "guideQuestions": [
+        {
+          "text": "Explain at least four places."
+        },
+        {
+          "text": "Use room numbers and floor numbers."
+        },
+        {
+          "text": "Use one sentence with \"between\"."
+        },
+        {
+          "text": "Use one sentence with \"located in\"."
+        },
+        {
+          "text": "Check the listener's understanding."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's patterns in a realistic office situation.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Act as coworker/visitor and ask follow-up questions."
+        },
+        {
+          "type": "instruction",
+          "text": "Track if the student can complete the task without heavy prompts."
+        },
+        {
+          "type": "tip",
+          "text": "Success = clear message, correct key patterns, and polite tone."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고른 뒤 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "USING MAPS",
+          "questions": [
+            "Do you prefer maps or asking people?",
+            "What signs are useful in offices?",
+            "Are office maps clear in your country?"
+          ]
+        },
+        {
+          "title": "OFFICE BUILDINGS",
+          "questions": [
+            "How many floors is your building?",
+            "Where is your team area?",
+            "What room do you use most?"
+          ]
+        },
+        {
+          "title": "READING SIGNS",
+          "questions": [
+            "Do you read English signs quickly?",
+            "Which words are difficult?",
+            "How can you improve reading speed?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now let's have a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Let the student choose one category and discuss for 3-5 minutes."
+        },
+        {
+          "type": "tip",
+          "text": "Prompt the student to reuse today's patterns naturally."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can read and understand a simple office floor plan.",
+      "goalReviewKr": "간단한 사무실 층 지도를 읽고 이해할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 2: OFFICE BASICS",
+      "nextLessonName": "Lesson 3: Can You Help Me Find It?",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Great job today. Let's review your progress.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the lesson goal one more time."
+        },
+        {
+          "type": "instruction",
+          "text": "Complete and share the feedback template."
+        },
+        {
+          "type": "tip",
+          "text": "Keep feedback specific and actionable."
+        }
+      ]
+    }
+  }
+}

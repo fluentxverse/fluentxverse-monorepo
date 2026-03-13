@@ -1,14 +1,14 @@
 {
   "chapterName": "Work Introductions",
   "lessonName": "Tell Me About Yourself",
-  "goalTextEn": "Can talk about yourself using simple self-introduction phrases.",
-  "goalTextKr": "간단한 자기소개 표현을 사용하여 자기 자신에 대해 이야기할 수 있다.",
+  "goalTextEn": "Can talk about yourself using basic personal and job information.",
+  "goalTextKr": "기본적인 개인 정보와 직무 정보를 사용해 자기소개를 할 수 있다.",
   "beData": {
     "lessonType": "SPEAKING",
     "hiddenBlocks": [],
     "introduce": {
-      "goalEn": "Can talk about yourself using simple self-introduction phrases.",
-      "goalKr": "간단한 자기소개 표현을 사용하여 자기 자신에 대해 이야기할 수 있다.",
+      "goalEn": "Can talk about yourself using basic personal and job information.",
+      "goalKr": "기본적인 개인 정보와 직무 정보를 사용해 자기소개를 할 수 있다.",
       "situationEn": "It's your first time meeting your teammates at a new company. Everyone is taking turns introducing themselves. Now it's your turn!",
       "situationKr": "새 회사에서 팀원들을 처음 만납니다. 모두가 차례대로 자기소개를 하고 있습니다. 당신 차례입니다!",
       "taskEn": "",
@@ -55,31 +55,35 @@
           "kr": "저는 삿포로 출신입니다."
         },
         {
-          "en": "<b>I like</b> traveling.",
-          "kr": "저는 여행을 좋아합니다."
+          "en": "<b>I am a</b> sales assistant.",
+          "kr": "저는 영업 보조입니다."
+        },
+        {
+          "en": "<b>I have worked here for</b> 2 years.",
+          "kr": "저는 여기서 2년 동안 일했습니다."
         }
       ],
       "vocabulary": [
         {
-          "word": "department",
+          "word": "company",
           "pos": "noun",
-          "translation": "부서",
-          "definition": "a section of a company (e.g., sales, marketing)",
-          "pronunciation": "/dɪˈpɑːrtmənt/"
+          "translation": "회사",
+          "definition": "a business organization where people work",
+          "pronunciation": "/ˈkʌmpəni/"
         },
         {
-          "word": "team",
+          "word": "position",
           "pos": "noun",
-          "translation": "팀",
-          "definition": "a group of people who work together",
-          "pronunciation": "/tiːm/"
+          "translation": "직책",
+          "definition": "your job title or role in a company",
+          "pronunciation": "/pəˈzɪʃən/"
         },
         {
-          "word": "introduce",
-          "pos": "verb",
-          "translation": "소개하다",
-          "definition": "to tell someone your name and information about yourself",
-          "pronunciation": "/ˌɪntrəˈduːs/"
+          "word": "years",
+          "pos": "noun",
+          "translation": "년(근무 기간)",
+          "definition": "the amount of time you have worked or lived somewhere",
+          "pronunciation": "/jɪrz/"
         }
       ],
       "pronunciation": {
@@ -89,24 +93,24 @@
           "symbol": "/l/",
           "words": [
             {
-              "en": "like",
-              "kr": "좋아하는"
-            },
-            {
-              "en": "live",
-              "kr": "살다"
+              "en": "light",
+              "kr": "빛"
             },
             {
               "en": "long",
               "kr": "긴"
             },
             {
-              "en": "light",
-              "kr": "빛"
+              "en": "play",
+              "kr": "놀다"
             },
             {
-              "en": "lead",
-              "kr": "이끌다"
+              "en": "glass",
+              "kr": "유리"
+            },
+            {
+              "en": "collect",
+              "kr": "수집하다"
             }
           ]
         },
@@ -118,20 +122,20 @@
               "kr": "올바른"
             },
             {
-              "en": "river",
-              "kr": "강"
-            },
-            {
               "en": "wrong",
               "kr": "틀린"
             },
             {
-              "en": "write",
-              "kr": "쓰다"
+              "en": "pray",
+              "kr": "기도하다"
             },
             {
-              "en": "read",
-              "kr": "읽다"
+              "en": "grass",
+              "kr": "잔디"
+            },
+            {
+              "en": "correct",
+              "kr": "정확한"
             }
           ]
         }
@@ -206,11 +210,23 @@
         {
           "parts": [
             {
-              "text": "I like",
+              "text": "I am a",
               "isBlank": true
             },
             {
-              "text": " playing tennis.",
+              "text": " sales assistant.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I have worked here for",
+              "isBlank": true
+            },
+            {
+              "text": " 2 years.",
               "isBlank": false
             }
           ]
@@ -248,17 +264,28 @@
           ]
         },
         {
-          "label": "Talking about yourself",
-          "labelKr": "자기 자신에 대해 이야기하기",
-          "template": "I am from ___. / I like ___.",
+          "label": "Talking about your background",
+          "labelKr": "배경 정보 말하기",
+          "template": "I am from ___. / I am a ___.",
           "examples": [
             {
               "en": "I am from Sapporo.",
               "kr": "저는 삿포로 출신입니다."
             },
             {
-              "en": "I like traveling.",
-              "kr": "저는 여행을 좋아합니다."
+              "en": "I am a sales assistant.",
+              "kr": "저는 영업 보조입니다."
+            }
+          ]
+        },
+        {
+          "label": "Saying your work experience",
+          "labelKr": "근무 기간 말하기",
+          "template": "I have worked here for ___ years.",
+          "examples": [
+            {
+              "en": "I have worked here for 2 years.",
+              "kr": "저는 여기서 2년 동안 일했습니다."
             }
           ]
         }
@@ -281,7 +308,7 @@
           "title": "Step 1 — Repeat After Me",
           "instructionEn": "Listen and repeat each self-introduction sentence.",
           "instructionKr": "자기소개 문장을 듣고 반복하세요.",
-          "content": "1. Hi, I'm Yuki.<br>2. I work at Global Corp.<br>3. I'm in the marketing department.<br>4. I am from Sapporo.<br>5. I like traveling.<br>6. Nice to meet you!",
+          "content": "1. Hi, I'm Yuki.<br>2. I work at Global Corp.<br>3. I am a sales assistant.<br>4. I am from Sapporo.<br>5. I have worked here for 2 years.<br>6. Nice to meet you!",
           "tutorNotes": [
             {
               "type": "instruction",
@@ -301,7 +328,7 @@
           "title": "Step 2 — Fill in Your Introduction",
           "instructionEn": "Complete these sentences with your own information.",
           "instructionKr": "자기 정보로 이 문장들을 완성하세요.",
-          "content": "1. Hi, I'm _______________.<br>2. I work at _______________.<br>3. I'm in the _______________ department.<br>4. I am from _______________.<br>5. I like _______________.<br>6. Nice to meet you!",
+          "content": "1. Hi, I'm _______________.<br>2. I work at _______________.<br>3. I am a/an _______________.<br>4. I am from _______________.<br>5. I have worked here for _______________ years.<br>6. Nice to meet you!",
           "tutorNotes": [
             {
               "type": "instruction",
@@ -344,23 +371,23 @@
             },
             {
               "role": "tutor",
-              "en": "What department are you in?",
-              "kr": "어느 부서에 계세요?"
+              "en": "What is your position?",
+              "kr": "직책이 무엇인가요?"
             },
             {
               "role": "student",
-              "en": "I'm in the (your department) department.",
-              "kr": "저는 (부서명)부에 있습니다."
+              "en": "I am a/an (your position).",
+              "kr": "저는 (직책)입니다."
             },
             {
               "role": "tutor",
-              "en": "What do you like to do in your free time?",
-              "kr": "자유 시간에 뭘 하는 걸 좋아하세요?"
+              "en": "How long have you worked here?",
+              "kr": "여기서 얼마나 일하셨어요?"
             },
             {
               "role": "student",
-              "en": "I like (your hobby).",
-              "kr": "저는 (취미)을/를 좋아합니다."
+              "en": "I have worked here for (number) years.",
+              "kr": "저는 여기서 (숫자)년 동안 일했습니다."
             }
           ],
           "tutorNotes": [
@@ -382,7 +409,7 @@
           "title": "Step 4 — Free Introduction",
           "instructionEn": "Introduce yourself to your tutor without looking at any notes. Try to say at least 5 sentences.",
           "instructionKr": "메모를 보지 않고 선생님에게 자기소개를 하세요. 5문장 이상 말해 보세요.",
-          "content": "Include:<br>- Your name<br>- Where you're from<br>- Where you work / what you do<br>- Your department<br>- Something you like / your hobby",
+          "content": "Include:<br>- Your name<br>- Where you're from<br>- Where you work<br>- Your position<br>- How many years you have worked there",
           "tutorNotes": [
             {
               "type": "script",
@@ -416,10 +443,10 @@
           "text": "Tell them where you're from."
         },
         {
-          "text": "Tell them about your job / department."
+          "text": "Tell them about your company and position."
         },
         {
-          "text": "Tell them something you like."
+          "text": "Tell them how many years you have worked there."
         },
         {
           "text": "Ask them a question too!"
@@ -441,7 +468,7 @@
         },
         {
           "type": "instruction",
-          "text": "Play Teammate 3 (casual): 'Nice to meet you! What department are you in?'"
+          "text": "Play Teammate 3 (casual): 'Nice to meet you! What is your position?'"
         },
         {
           "type": "tip",
@@ -495,8 +522,8 @@
       ]
     },
     "feedback": {
-      "goalReviewEn": "Can talk about yourself using simple self-introduction phrases.",
-      "goalReviewKr": "간단한 자기소개 표현을 사용하여 자기 자신에 대해 이야기할 수 있다.",
+      "goalReviewEn": "Can talk about yourself using basic personal and job information.",
+      "goalReviewKr": "기본적인 개인 정보와 직무 정보를 사용해 자기소개를 할 수 있다.",
       "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Speaking Fluency*<br>Fluency:<br>- Could introduce themselves smoothly: (yes/partially/no)<br>- Spoke in full sentences: (yes/no)<br><br>*Vocabulary / Phrases*<br>Vocabulary:<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>Pronunciation:<br>- mispronounced word<br>- mispronounced word",
       "nextLessonLabel": "CHAPTER 1: WORK INTRODUCTIONS",
       "nextLessonName": "Lesson 4: Who's Who?",

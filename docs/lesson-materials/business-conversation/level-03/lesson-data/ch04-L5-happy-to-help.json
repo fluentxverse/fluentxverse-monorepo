@@ -1,0 +1,491 @@
+{
+  "chapterName": "Making Requests",
+  "lessonName": "Happy to Help",
+  "goalTextEn": "Can make and respond to workplace requests confidently.",
+  "goalTextKr": "직장에서의 요청과 응답을 자신 있게 할 수 있다.",
+  "beData": {
+    "lessonType": "REVIEW",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can make and respond to workplace requests confidently.",
+      "goalKr": "직장에서의 요청과 응답을 자신 있게 할 수 있다.",
+      "situationEn": "Role-play: handle multiple requests in one busy morning.",
+      "situationKr": "롤플레이: 바쁜 아침에 여러 요청을 처리합니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can make and respond to workplace requests confidently..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Aim for polite tone and complete sentences."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>Can you</b> send this?",
+          "kr": "이것 보내 주실 수 있나요?"
+        },
+        {
+          "en": "<b>I need help with</b> the printer.",
+          "kr": "프린터에 도움이 필요해요."
+        },
+        {
+          "en": "<b>Sure, no problem.</b>",
+          "kr": "물론이죠. 문제없어요."
+        },
+        {
+          "en": "<b>Sorry, I'm a little busy right now.</b>",
+          "kr": "죄송하지만 지금은 조금 바빠요."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "help",
+          "pos": "noun/verb",
+          "translation": "도움/돕다",
+          "definition": "assistance; to assist",
+          "pronunciation": "/help/"
+        },
+        {
+          "word": "favor",
+          "pos": "noun",
+          "translation": "부탁",
+          "definition": "something you do to help someone",
+          "pronunciation": "/ˈfeɪvər/"
+        },
+        {
+          "word": "assist",
+          "pos": "verb",
+          "translation": "도와주다",
+          "definition": "to help",
+          "pronunciation": "/əˈsɪst/"
+        },
+        {
+          "word": "appreciate",
+          "pos": "verb",
+          "translation": "감사하다",
+          "definition": "to be thankful for",
+          "pronunciation": "/əˈpriːʃieɪt/"
+        },
+        {
+          "word": "unfortunately",
+          "pos": "adverb",
+          "translation": "불행히도",
+          "definition": "used to decline",
+          "pronunciation": "/ʌnˈfɔːrtʃənətli/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Review: question intonation for requests.",
+        "instructionKr": "복습: 부탁할 때 질문 억양을 연습합시다.",
+        "left": {
+          "symbol": "Request (↑)",
+          "words": [
+            {
+              "en": "Can you help me?",
+              "kr": "도와주실 수 있나요?"
+            },
+            {
+              "en": "Could you please check this?",
+              "kr": "이것 좀 확인해 주실래요?"
+            },
+            {
+              "en": "Would you mind sending this?",
+              "kr": "이것 보내 주실 수 있나요?"
+            },
+            {
+              "en": "How about later?",
+              "kr": "나중에 어때요?"
+            },
+            {
+              "en": "Is tomorrow OK?",
+              "kr": "내일 괜찮을까요?"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Response",
+          "words": [
+            {
+              "en": "Sure. No problem.",
+              "kr": "물론이죠. 문제없어요."
+            },
+            {
+              "en": "Of course.",
+              "kr": "물론이죠."
+            },
+            {
+              "en": "Sorry, I'm busy right now.",
+              "kr": "죄송하지만 지금은 바빠요."
+            },
+            {
+              "en": "Unfortunately, I can't today.",
+              "kr": "아쉽게도 오늘은 못 해요."
+            },
+            {
+              "en": "Thanks for your help.",
+              "kr": "도와줘서 고마워요."
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Keep corrections short and focused."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "Can you",
+              "isBlank": true
+            },
+            {
+              "text": " check this file?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Could you please",
+              "isBlank": true
+            },
+            {
+              "text": " call the client?",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I need help with",
+              "isBlank": true
+            },
+            {
+              "text": " the printer.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Sure,",
+              "isBlank": true
+            },
+            {
+              "text": " no problem.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "Sorry, I'm a little busy",
+              "isBlank": true
+            },
+            {
+              "text": " right now.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Requests (review)",
+          "labelKr": "요청 (복습)",
+          "template": "Can you ___? / Could you please ___? / Would you mind ___?",
+          "examples": [
+            {
+              "en": "Could you please print this?",
+              "kr": "이것 좀 출력해 주실 수 있나요?"
+            }
+          ]
+        },
+        {
+          "label": "Asking for help (review)",
+          "labelKr": "도움 요청 (복습)",
+          "template": "I need help with ___. / Can you help me with ___?",
+          "examples": [
+            {
+              "en": "I need help with the printer.",
+              "kr": "프린터에 도움이 필요해요."
+            }
+          ]
+        },
+        {
+          "label": "Responding (review)",
+          "labelKr": "응답 (복습)",
+          "template": "Sure. / Sorry, I'm busy right now. / How about later?",
+          "examples": [
+            {
+              "en": "Sure, no problem.",
+              "kr": "물론이죠. 문제없어요."
+            },
+            {
+              "en": "Sorry, I'm busy right now. How about later?",
+              "kr": "죄송하지만 지금은 바빠요. 나중에 어때요?"
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Focus on polite tone and correct pattern choice."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Could you please send this email?<br>2. I need help with the printer.<br>3. Sure, no problem.<br>4. Sorry, I'm a little busy right now.<br>5. How about later?<br>6. Thank you. I appreciate it.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly and model polite intonation."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage the student to sound friendly, not flat."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines for your workplace.",
+          "instructionKr": "자신의 직장 상황에 맞게 완성하세요.",
+          "content": "1. Could you please _______________?<br>2. I need help with _______________.<br>3. Sure, no problem.<br>4. Sorry, I'm a little busy right now.<br>5. How about _______________?<br>6. Thank you. I appreciate it.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Use realistic tasks: emails, printing, checking files."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Good morning. Can you help me with a quick favor?",
+              "kr": "좋은 아침이에요. 작은 부탁 하나 도와줄 수 있어요?"
+            },
+            {
+              "role": "student",
+              "en": "Sure, no problem. What is it?",
+              "kr": "물론이죠. 무엇인가요?"
+            },
+            {
+              "role": "tutor",
+              "en": "Could you please send this email to the team?",
+              "kr": "이 이메일을 팀에 보내 주실 수 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "Yes. I'll send it now.",
+              "kr": "네. 지금 보낼게요."
+            },
+            {
+              "role": "tutor",
+              "en": "Another request: the printer is not working. Can you check it?",
+              "kr": "또 하나요: 프린터가 안 돼요. 확인해 줄 수 있어요?"
+            },
+            {
+              "role": "student",
+              "en": "Sorry, I'm a little busy right now. How about later?",
+              "kr": "죄송하지만 지금은 조금 바빠요. 나중에 어때요?"
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Keep responses short and clear."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Handle at least 3 requests<br>- Accept at least 1 request<br>- Decline at least 1 request politely<br>- Offer an alternative time<br>- Use a thank-you closing",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Try to handle requests naturally, like a real office.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Busy morning role-play: make requests, ask for help, accept, and decline with alternatives.",
+      "scenarioKr": "바쁜 아침 롤플레이: 요청하기, 도움 요청하기, 수락/거절하기, 대안 제시하기를 모두 해보세요.",
+      "guideQuestions": [
+        {
+          "text": "Use at least three request sentences."
+        },
+        {
+          "text": "Use one \"I need help with\" sentence."
+        },
+        {
+          "text": "Use one accept sentence."
+        },
+        {
+          "text": "Use one decline + alternative."
+        },
+        {
+          "text": "Keep polite intonation."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's request patterns naturally.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = polite requests + clear responses + good flow."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "REVIEW",
+          "questions": [
+            "Which request pattern feels easiest?",
+            "Which is hardest?",
+            "What will you practice next?"
+          ]
+        },
+        {
+          "title": "REAL WORK",
+          "questions": [
+            "What requests do you make in real life?",
+            "How do you respond when busy?",
+            "Do you prefer email or face-to-face requests?"
+          ]
+        },
+        {
+          "title": "NEXT CHAPTER",
+          "questions": [
+            "Do you answer phones at work?",
+            "What phone phrases are important?",
+            "Do you feel confident with phone English?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can make and respond to workplace requests confidently.",
+      "goalReviewKr": "직장에서의 요청과 응답을 자신 있게 할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 5: PHONE & EMAIL",
+      "nextLessonName": "Lesson 1: Who's Calling?",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}

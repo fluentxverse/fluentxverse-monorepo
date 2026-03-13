@@ -1555,16 +1555,17 @@
 .beve-tutor-notes {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
 .beve-tutor-note {
-  padding: 8px 10px 8px 14px;
+  padding: 4px 6px 4px 10px;
   background: transparent;
   border: none;
   border-radius: 0;
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 11.5px;
+  line-height: 1.35;
+  font-weight: 500;
   color: #d4d4d8;
   position: relative;
   transition: background .15s ease;
@@ -1580,28 +1581,29 @@
 .beve-tutor-note.script {
   font-style: italic;
   color: #c4b5fd;
-  padding-left: 14px;
+  padding-left: 12px;
+  font-weight: 500;
 }
 .beve-tutor-note.script::before {
   content: '\25B8';
   position: absolute;
   left: 0;
-  top: 9px;
+  top: 4px;
   color: #a78bfa;
-  font-size: 13px;
+  font-size: 12px;
   font-style: normal;
 }
 
 .beve-tutor-note.instruction {
-  padding-left: 14px;
+  padding-left: 12px;
 }
 .beve-tutor-note.instruction::before {
   content: '\2022';
   position: absolute;
   left: 2px;
-  top: 8px;
+  top: 4px;
   color: #a78bfa;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -1610,27 +1612,34 @@
   border-left: 3px solid #e6a817;
   border-radius: 4px;
   border-bottom: none;
-  margin: 4px 0;
-  padding-left: 12px;
+  margin: 1px 0;
+  padding-left: 8px;
 }
 
 .beve-tutor-note-type {
-  font-size: 9px;
+  font-size: 7px;
   font-weight: 700;
   letter-spacing: .5px;
   text-transform: uppercase;
-  margin-bottom: 3px;
+  margin-bottom: 1px;
 }
 .beve-tutor-note.script .beve-tutor-note-type { color: #a78bfa; }
 .beve-tutor-note.instruction .beve-tutor-note-type { color: #a78bfa; }
 .beve-tutor-note.tip .beve-tutor-note-type { color: #fbbf24; }
 
+.beve-tutor-note .beve-rich-input {
+  line-height: 1.35;
+  padding: 0 2px;
+  margin: 0 -2px;
+  min-height: 1.1em;
+}
+
 .beve-tutor-note-actions {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 1px;
+  right: 1px;
   display: flex;
-  gap: 2px;
+  gap: 1px;
   opacity: 0;
   transition: .15s;
 }
@@ -1642,15 +1651,15 @@
   justify-content: center;
   gap: 4px;
   width: 100%;
-  padding: 6px;
+  padding: 3px;
   border: 1px dashed rgba(124, 58, 237, .25);
   border-radius: 4px;
   background: transparent;
   color: #71717a;
-  font-size: 11px;
+  font-size: 9px;
   cursor: pointer;
   transition: all .15s ease;
-  margin-top: 2px;
+  margin-top: 0;
 }
 .beve-tutor-add-note:hover {
   border-color: rgba(124, 58, 237, .5);

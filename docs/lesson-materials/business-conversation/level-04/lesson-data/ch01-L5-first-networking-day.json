@@ -1,0 +1,487 @@
+{
+  "chapterName": "Networking Basics",
+  "lessonName": "First Networking Day",
+  "goalTextEn": "Can handle basic introductions, role explanations, and simple networking smoothly.",
+  "goalTextKr": "소개, 직무 설명, 네트워킹을 자연스럽게 할 수 있다.",
+  "beData": {
+    "lessonType": "REVIEW",
+    "hiddenBlocks": [],
+    "introduce": {
+      "goalEn": "Can handle basic introductions, role explanations, and simple networking smoothly.",
+      "goalKr": "소개, 직무 설명, 네트워킹을 자연스럽게 할 수 있다.",
+      "situationEn": "Role-play: meet 2 people, introduce yourself, explain your role, and introduce them to each other.",
+      "situationKr": "롤플레이: 두 사람을 만나 자기소개, 직무 설명, 그리고 서로 소개하기를 합니다.",
+      "taskEn": "",
+      "taskKr": "",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Today, we will practice can handle basic introductions, role explanations, and simple networking smoothly..\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the lesson goal aloud. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Is it clear?\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the situation. Check the student understands."
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next part.\""
+        },
+        {
+          "type": "tip",
+          "text": "Encourage the student to speak in full sentences with a polite tone."
+        }
+      ]
+    },
+    "present": {
+      "patterns": [
+        {
+          "en": "<b>Let me introduce myself.</b>",
+          "kr": "자기소개하겠습니다."
+        },
+        {
+          "en": "<b>I am responsible for</b> client emails.",
+          "kr": "저는 고객 이메일을 담당합니다."
+        },
+        {
+          "en": "<b>I handle</b> schedules.",
+          "kr": "저는 일정을 처리합니다."
+        },
+        {
+          "en": "<b>You should talk to</b> Jisoo <b>about</b> the project.",
+          "kr": "프로젝트에 대해 지수님과 이야기해 보세요."
+        }
+      ],
+      "vocabulary": [
+        {
+          "word": "role",
+          "pos": "noun",
+          "translation": "역할",
+          "definition": "your position or function at work",
+          "pronunciation": "/roʊl/"
+        },
+        {
+          "word": "handle",
+          "pos": "verb",
+          "translation": "처리하다",
+          "definition": "to deal with tasks",
+          "pronunciation": "/ˈhændl/"
+        },
+        {
+          "word": "responsible for",
+          "pos": "phrase",
+          "translation": "~을/를 담당하는",
+          "definition": "in charge of",
+          "pronunciation": "/rɪˈspɑnsəbəl fɔːr/"
+        },
+        {
+          "word": "project",
+          "pos": "noun",
+          "translation": "프로젝트",
+          "definition": "a planned work activity",
+          "pronunciation": "/ˈprɑːdʒekt/"
+        },
+        {
+          "word": "welcome",
+          "pos": "adjective",
+          "translation": "환영하는",
+          "definition": "showing pleasure that someone has arrived",
+          "pronunciation": "/ˈwelkəm/"
+        }
+      ],
+      "pronunciation": {
+        "instruction": "Review: polite intonation + word stress.",
+        "instructionKr": "복습: 정중한 억양과 단어 강세를 연습합시다.",
+        "left": {
+          "symbol": "Intonation",
+          "words": [
+            {
+              "en": "How was your weekend?",
+              "kr": "질문 억양"
+            },
+            {
+              "en": "Nice to meet you.",
+              "kr": "문장 억양"
+            },
+            {
+              "en": "Do you need any help?",
+              "kr": "질문 억양"
+            },
+            {
+              "en": "Welcome to the team.",
+              "kr": "문장 억양"
+            },
+            {
+              "en": "Is this your first day?",
+              "kr": "질문 억양"
+            }
+          ]
+        },
+        "right": {
+          "symbol": "Stress",
+          "words": [
+            {
+              "en": "re-SPON-si-ble",
+              "kr": "responsible"
+            },
+            {
+              "en": "HAN-dle",
+              "kr": "handle"
+            },
+            {
+              "en": "IN-tro-duce",
+              "kr": "introduce"
+            },
+            {
+              "en": "PRO-ject",
+              "kr": "project"
+            },
+            {
+              "en": "DE-part-ment",
+              "kr": "department"
+            }
+          ]
+        }
+      },
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Let's learn the key patterns for today.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read each pattern aloud. Ask the student to repeat."
+        },
+        {
+          "type": "instruction",
+          "text": "Teach vocabulary with short examples."
+        },
+        {
+          "type": "script",
+          "text": "\"Now, let's practice pronunciation.\""
+        },
+        {
+          "type": "tip",
+          "text": "Focus on polite tone and clear key words."
+        }
+      ]
+    },
+    "understand": {
+      "instruction": "Fill in the blanks with the correct pattern. Then practice the pattern drills.",
+      "instructionKr": "빈칸에 올바른 표현을 넣고, 패턴 드릴을 연습하세요.",
+      "fillRows": [
+        {
+          "parts": [
+            {
+              "text": "Let me introduce",
+              "isBlank": true
+            },
+            {
+              "text": " myself.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I work in",
+              "isBlank": true
+            },
+            {
+              "text": " Sales.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I am responsible for",
+              "isBlank": true
+            },
+            {
+              "text": " reports.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "I handle",
+              "isBlank": true
+            },
+            {
+              "text": " schedules.",
+              "isBlank": false
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "text": "You should talk to",
+              "isBlank": true
+            },
+            {
+              "text": " Jisoo about the project.",
+              "isBlank": false
+            }
+          ]
+        }
+      ],
+      "patternDrills": [
+        {
+          "label": "Self intro (review)",
+          "labelKr": "자기소개(복습)",
+          "template": "Let me introduce myself. I'm ___. I work in ___.",
+          "examples": [
+            {
+              "en": "Let me introduce myself. I'm Minji. I work in Marketing.",
+              "kr": "자기소개하겠습니다. 저는 민지이고 마케팅팀에서 일합니다."
+            }
+          ]
+        },
+        {
+          "label": "Role (review)",
+          "labelKr": "직무(복습)",
+          "template": "My role is ___. I am responsible for ___.",
+          "examples": [
+            {
+              "en": "My role is sales support. I am responsible for client emails.",
+              "kr": "제 역할은 영업 지원이고 고객 이메일을 담당합니다."
+            }
+          ]
+        },
+        {
+          "label": "Connect (review)",
+          "labelKr": "연결(복습)",
+          "template": "This is ___. You should talk to ___ about ___.",
+          "examples": [
+            {
+              "en": "This is Jisoo. You should talk to her about the project.",
+              "kr": "이쪽은 지수입니다. 프로젝트에 대해 지수님과 이야기해 보세요."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "instruction",
+          "text": "Do the fill-in-the-blank first."
+        },
+        {
+          "type": "instruction",
+          "text": "Run drills with substitutions."
+        },
+        {
+          "type": "tip",
+          "text": "Keep the student speaking in full sentences."
+        }
+      ]
+    },
+    "practice": {
+      "steps": [
+        {
+          "title": "Step 1 - Repeat After Me",
+          "instructionEn": "Listen and repeat each sentence.",
+          "instructionKr": "문장을 듣고 따라 하세요.",
+          "content": "1. Let me introduce myself. I'm Minji.<br>2. I work in the marketing department.<br>3. I handle schedules and emails.<br>4. I am responsible for weekly reports.<br>5. This is Jisoo. She works on the new website.<br>6. You should talk to her about the design.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Read each line clearly. Student repeats."
+            },
+            {
+              "type": "tip",
+              "text": "Correct one key pronunciation point at a time."
+            }
+          ]
+        },
+        {
+          "title": "Step 2 - Personalize It",
+          "instructionEn": "Complete the lines with your own information.",
+          "instructionKr": "자신의 정보로 완성하세요.",
+          "content": "1. Let me introduce myself. I'm _______________.<br>2. I work in the _______________ department.<br>3. I handle _______________ and _______________.<br>4. I am responsible for _______________.<br>5. This is _______________. He/She works on _______________.<br>6. You should talk to him/her about _______________.",
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Have the student fill in first, then read aloud."
+            },
+            {
+              "type": "tip",
+              "text": "Encourage realistic names, departments, and tasks."
+            }
+          ]
+        },
+        {
+          "title": "Step 3 - Dialogue Practice",
+          "instructionEn": "Practice this dialogue with your tutor.",
+          "instructionKr": "선생님과 대화를 연습하세요.",
+          "dialogue": [
+            {
+              "role": "tutor",
+              "en": "Hi, nice to meet you. What do you do here?",
+              "kr": "안녕하세요. 만나서 반갑습니다. 여기서 어떤 일을 하세요?"
+            },
+            {
+              "role": "student",
+              "en": "Let me introduce myself. I'm (name).",
+              "kr": "자기소개하겠습니다. 저는 (이름)입니다."
+            },
+            {
+              "role": "tutor",
+              "en": "What are you responsible for?",
+              "kr": "담당 업무는 무엇인가요?"
+            },
+            {
+              "role": "student",
+              "en": "I am responsible for (responsibility).",
+              "kr": "저는 (담당 업무)를 맡고 있어요."
+            },
+            {
+              "role": "tutor",
+              "en": "Can you introduce me to someone?",
+              "kr": "누군가 소개해 주실 수 있나요?"
+            },
+            {
+              "role": "student",
+              "en": "Sure. This is (coworker). You should talk to them about (topic).",
+              "kr": "물론이죠. 이쪽은 (동료)입니다. (주제)에 대해 이야기해 보세요."
+            }
+          ],
+          "tutorNotes": [
+            {
+              "type": "instruction",
+              "text": "Do it once reading, then once naturally."
+            },
+            {
+              "type": "tip",
+              "text": "Switch roles if time allows."
+            }
+          ]
+        },
+        {
+          "title": "Step 4 - Free Speaking",
+          "instructionEn": "Speak freely using at least 5 sentences.",
+          "instructionKr": "5문장 이상으로 자유롭게 말하세요.",
+          "content": "Include:<br>- Meet 2 people<br>- Introduce yourself clearly<br>- Explain your role with 2 patterns<br>- Introduce another person<br>- Connect them with a reason",
+          "tutorNotes": [
+            {
+              "type": "script",
+              "text": "\"Speak without notes. Keep it natural.\""
+            },
+            {
+              "type": "instruction",
+              "text": "Give feedback after the student finishes."
+            }
+          ]
+        }
+      ],
+      "activityBlocks": []
+    },
+    "challenge": {
+      "scenarioEn": "Busy networking: meet two coworkers and one visitor. Introduce yourself, explain your role, and connect the visitor to the right person.",
+      "scenarioKr": "바쁜 네트워킹: 동료 2명과 방문자 1명을 만납니다. 자기소개, 직무 설명, 방문자를 적절한 사람에게 연결하세요.",
+      "guideQuestions": [
+        {
+          "text": "Use at least 6 sentences."
+        },
+        {
+          "text": "Use \"responsible for\" once."
+        },
+        {
+          "text": "Use \"handle\" once."
+        },
+        {
+          "text": "Use \"This is\" once."
+        },
+        {
+          "text": "Use \"You should talk to\" once."
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Challenge time. Use today's patterns naturally.\""
+        },
+        {
+          "type": "tip",
+          "text": "Success = polite tone + correct patterns + clear meaning."
+        }
+      ]
+    },
+    "discussion": {
+      "instructionEn": "Choose one category and answer the questions.",
+      "instructionKr": "카테고리를 하나 고르고 질문에 답하세요.",
+      "categories": [
+        {
+          "title": "CONFIDENCE",
+          "questions": [
+            "Are you confident introducing yourself in English?",
+            "What is hardest: listening or speaking?",
+            "How can you practice more?"
+          ]
+        },
+        {
+          "title": "WORKPLACE INTRO",
+          "questions": [
+            "What info do you include in intros?",
+            "Do you mention responsibilities?",
+            "Do you use small talk at work?"
+          ]
+        },
+        {
+          "title": "NEXT CHAPTER",
+          "questions": [
+            "What office English do you need next?",
+            "Do you take calls or write emails?",
+            "Do you want more meeting English?"
+          ]
+        }
+      ],
+      "activityBlocks": [],
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Now, a short discussion.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Discuss for 3-5 minutes."
+        }
+      ]
+    },
+    "feedback": {
+      "goalReviewEn": "Can handle basic introductions, role explanations, and simple networking smoothly.",
+      "goalReviewKr": "소개, 직무 설명, 네트워킹을 자연스럽게 할 수 있다.",
+      "feedbackTemplate": "*OVERALL SCORE*<br>Overall: (score)<br>- comment<br><br>*Goal Check*<br>- Achieved lesson goal: (yes/partially/no)<br><br>*Pattern Usage*<br>- pattern 1<br>- pattern 2<br><br>*Vocabulary*<br>- word/phrase<br>- word/phrase<br><br>*Pronunciation*<br>- issue<br>- issue<br><br>*Next Steps*<br>- recommendation",
+      "nextLessonLabel": "CHAPTER 1: COMPLETE",
+      "nextLessonName": "Next: Chapter 2",
+      "tutorNotes": [
+        {
+          "type": "script",
+          "text": "\"Good work. Let's review your goal.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the goal again."
+        },
+        {
+          "type": "instruction",
+          "text": "Fill in and send feedback."
+        }
+      ]
+    }
+  }
+}
