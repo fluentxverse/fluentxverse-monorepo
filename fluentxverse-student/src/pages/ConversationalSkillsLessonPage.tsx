@@ -137,10 +137,10 @@ interface LearnSectionData {
 }
 
 // ============================================================================
-// STEP B SECTION TYPES (Speak Your Mind / Grammar Tip / Pronunciation / Exercise)
+// STEP B SECTION TYPES (Speak Your Mind / Grammar Tip / Pronunciation)
 // ============================================================================
 
-type StepBType = 'speak-your-mind' | 'grammar-tip' | 'pronunciation' | 'exercise';
+type StepBType = 'speak-your-mind' | 'grammar-tip' | 'pronunciation';
 
 interface ConversationSpeaker {
   image: string;
@@ -191,27 +191,11 @@ interface StepBPronunciationData {
   tutorSteps: TutorStep[];
 }
 
-interface StepBExerciseConversation {
-  speakerImage: string;
-  speechBubble: string;
-  position: 'left' | 'right';
-}
-
-interface StepBExerciseData {
-  stepName: string;
-  duration: string;
-  instruction: string;
-  instructionTranslation?: string;
-  conversations: StepBExerciseConversation[];
-  tutorSteps: TutorStep[];
-}
-
 interface StepBData {
   stepType: StepBType;
   speakYourMind?: SpeakYourMindData;
   grammarTip?: GrammarTipData;
   pronunciation?: StepBPronunciationData;
-  exercise?: StepBExerciseData;
 }
 
 // ============================================================================
@@ -310,6 +294,15 @@ interface ChangeExerciseItem {
   sentence: string;
 }
 
+interface CompareExerciseItem {
+  sentence: string;
+}
+
+interface CompareImageItem {
+  image: string;
+  label: string;
+}
+
 interface InfoBoxColumn {
   header: string;
   rows: string[];
@@ -322,6 +315,7 @@ interface InfoBoxData {
 }
 
 type ExerciseStepAType = 'rephrase' | 'choose' | 'change';
+type ExerciseStepBType = 'conversation' | 'multiple-choice' | 'speech' | 'compare';
 
 interface ExerciseSectionData {
   sectionNumber: number;
@@ -354,7 +348,7 @@ interface ExerciseSectionData {
   tutorSteps: ExerciseTutorStep[];
   // Step B (optional)
   hasStepB?: boolean;
-  stepBType?: 'conversation' | 'multiple-choice' | 'speech';
+  stepBType?: ExerciseStepBType;
   stepBName?: string;
   stepBInstruction?: string;
   stepBInstructionTranslation?: string;
@@ -366,10 +360,14 @@ interface ExerciseSectionData {
   // Step B - Speech type
   speechSpeakerImage?: string;
   speechContent?: string;
+  // Step B - Compare type
+  compareWordBox?: string[];
+  compareImages?: CompareImageItem[];
+  compareExample?: string;
+  compareItems?: CompareExerciseItem[];
   // Step B - Tutor steps
   stepBTutorSteps?: ExerciseTutorStep[];
-
-  exampleImage: any
+  exampleImage?: string;
 }
 
 // ============================================================================
@@ -1885,6 +1883,53 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                     </div>
                     <div className="csp-speech-bubble"><p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} /></div>
                   </div>
+                </div>
+              )}
+
+              {data.stepBType === 'compare' && (
+                <div className="csp-stepb-compare">
+                  {(data.compareWordBox || []).length > 0 && (
+                    <div className="csp-expression-box csp-compare-word-box">
+                      {(data.compareWordBox || []).map((word, wordIdx) => (
+                        <span key={wordIdx} className="csp-expression-item">{word}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {(data.compareImages || []).length > 0 && (
+                    <div className="csp-compare-images">
+                      {(data.compareImages || []).map((item, imageIdx) => (
+                        <div key={imageIdx} className="csp-compare-image-card">
+                          <div className="csp-compare-image">
+                            {item.image ? (
+                              <img src={item.image} alt={item.label || `Compare option ${imageIdx + 1}`} />
+                            ) : (
+                              <div className="csp-image-placeholder"><span className="csp-placeholder-dims">160 × 120</span></div>
+                            )}
+                          </div>
+                          <p className="csp-compare-image-label">{item.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {data.compareExample && (
+                    <p className="csp-compare-example">
+                      <span className="csp-arrow">→</span>
+                      <span dangerouslySetInnerHTML={{ __html: data.compareExample }} />
+                    </p>
+                  )}
+
+                  {(data.compareItems || []).length > 0 && (
+                    <div className="csp-compare-items">
+                      {(data.compareItems || []).map((item, compareIdx) => (
+                        <div key={compareIdx} className="csp-compare-item">
+                          <span className="csp-item-number">{compareIdx + 1}.</span>
+                          <span className="csp-item-sentence" dangerouslySetInnerHTML={{ __html: item.sentence }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

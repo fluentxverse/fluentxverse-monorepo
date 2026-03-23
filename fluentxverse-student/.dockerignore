@@ -3,6 +3,7 @@ dist/
 Dockerfile
 *.md
 .env*
+!.env.production
 .git/
 .gitignore
 test.ts

@@ -482,7 +482,11 @@ export default function BusinessEnglishVisualEditor() {
 
       merged.understand = { ...DEFAULT_BE_DATA.understand, ...(merged.understand || {}) };
       merged.understand.fillRows = merged.understand.fillRows || DEFAULT_BE_DATA.understand.fillRows;
-      merged.understand.patternDrills = merged.understand.patternDrills || DEFAULT_BE_DATA.understand.patternDrills;
+      merged.understand.patternDrills = (merged.understand.patternDrills || DEFAULT_BE_DATA.understand.patternDrills).map((drill: any) => {
+        const examples = Array.isArray(drill.examples) ? [...drill.examples] : [];
+        while (examples.length < 5) examples.push({ en: '', kr: '' });
+        return { ...drill, examples };
+      });
       merged.understand.activityBlocks = merged.understand.activityBlocks || DEFAULT_BE_DATA.understand.activityBlocks;
 
       merged.practice = { ...DEFAULT_BE_DATA.practice, ...(merged.practice || {}) };
@@ -1376,78 +1380,15 @@ export default function BusinessEnglishVisualEditor() {
             </div>
           )}
           <button className="beve-add-btn" style={{ marginBottom: 8 }}
-            onClick={() => { updateSection('understand', { patternDrills: [...beData.understand.patternDrills, { label: '', labelKr: '', template: '', examples: [{ en: '', kr: '' }] }] }); }}>
+            onClick={() => {
+              updateSection('understand', {
+                patternDrills: [
+                  ...beData.understand.patternDrills,
+                  { label: '', labelKr: '', template: '', examples: Array.from({ length: 5 }, () => ({ en: '', kr: '' })) },
+                ],
+              });
+            }}>
             <i className="ri-add-line" /> Add Pattern Drill</button>
-          </BlockWrapper>
-
-          {/* Fill-in-the-blank Exercise */}
-          <BlockWrapper blockId="fillBlanks" label="Fill in the Blanks" icon="ri-edit-box-line">
-          <div className="beve-sub-heading" style={{ marginTop: 0 }}>
-            <i className="ri-edit-box-line" /> Fill in the Blanks <span className="kr-label">{'빈칸 채우기'}</span>
-          </div>
-          {beData.understand.fillRows.length > 0 ? (
-            <table className="beve-fill-table">
-              <tbody>
-                {beData.understand.fillRows.map((row, ri) => (
-                  <tr key={ri}>
-                    {row.parts.map((part, pi) => (
-                      <td key={pi} className={part.isBlank ? 'blank' : ''}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span className="beve-editable" contentEditable
-                            onBlur={(e) => {
-                              const rows = [...beData.understand.fillRows];
-                              const parts = [...rows[ri].parts];
-                              parts[pi] = { ...parts[pi], text: (e.target as HTMLElement).innerText };
-                              rows[ri] = { ...rows[ri], parts };
-                              updateSection('understand', { fillRows: rows });
-                            }}
-                            dangerouslySetInnerHTML={{ __html: part.isBlank ? (part.text || '________') : part.text }} />
-                          <button className="beve-icon-btn" title={part.isBlank ? 'Make text' : 'Make blank'}
-                            onClick={() => {
-                              const rows = [...beData.understand.fillRows];
-                              const parts = [...rows[ri].parts];
-                              parts[pi] = { ...parts[pi], isBlank: !parts[pi].isBlank };
-                              rows[ri] = { ...rows[ri], parts };
-                              updateSection('understand', { fillRows: rows });
-                            }}
-                            style={{ flexShrink: 0, width: 20, height: 20, fontSize: 11 }}>
-                            <i className={part.isBlank ? 'ri-text' : 'ri-space'} />
-                          </button>
-                        </div>
-                      </td>
-                    ))}
-                    <td style={{ width: 70 }}>
-                      <div style={{ display: 'flex', gap: 2 }}>
-                        <button className="beve-icon-btn" title="Add cell"
-                          onClick={() => {
-                            const rows = [...beData.understand.fillRows];
-                            rows[ri] = { ...rows[ri], parts: [...rows[ri].parts, { text: '', isBlank: false }] };
-                            updateSection('understand', { fillRows: rows });
-                          }}><i className="ri-add-line" /></button>
-                        <button className="beve-icon-btn danger" title="Remove row"
-                          onClick={() => {
-                            updateSection('understand', { fillRows: beData.understand.fillRows.filter((_, idx) => idx !== ri) });
-                          }}><i className="ri-delete-bin-line" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div style={{ fontSize: 13, color: '#71717a', padding: '12px 0', fontStyle: 'italic' }}>
-              No fill-in-the-blank rows yet. Add rows below or use the AI generator.
-            </div>
-          )}
-          <button className="beve-add-btn" style={{ marginBottom: 20 }} onClick={() => {
-            updateSection('understand', {
-              fillRows: [...beData.understand.fillRows, { parts: [
-                { text: '', isBlank: false }, { text: '', isBlank: true }, { text: '', isBlank: false }
-              ] }]
-            });
-          }}>
-            <i className="ri-add-line" /> Add Fill Row
-          </button>
           </BlockWrapper>
 
           {/* Useful Vocabulary */}
@@ -1836,10 +1777,18 @@ export default function BusinessEnglishVisualEditor() {
           });
         }}
         onGenerateUnderstand={(data) => {
+          const normalizedDrills = Array.isArray(data.patternDrills || beData.understand.patternDrills)
+            ? (data.patternDrills || beData.understand.patternDrills).map((drill: any) => {
+                const examples = Array.isArray(drill.examples) ? [...drill.examples] : [];
+                while (examples.length < 5) examples.push({ en: '', kr: '' });
+                return { ...drill, examples: examples.slice(0, 5) };
+              })
+            : beData.understand.patternDrills;
           updateSection('understand', {
             instruction: data.instruction || '',
             instructionKr: data.instructionKr || '',
             fillRows: data.fillRows || [],
+            patternDrills: normalizedDrills,
             tutorNotes: data.tutorNotes || beData.understand.tutorNotes,
           });
         }}

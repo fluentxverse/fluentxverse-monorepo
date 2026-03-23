@@ -4040,6 +4040,7 @@ export interface BEGenerationResult {
   };
   understand?: {
     instruction: string; instructionKr: string;
+    patternDrills: Array<{ label: string; labelKr: string; template: string; examples: Array<{ en: string; kr: string }> }>;
     fillRows: Array<{ parts: Array<{ text: string; isBlank: boolean }> }>;
     tutorNotes: Array<{ type: string; text: string }>;
   };
@@ -4427,14 +4428,24 @@ REQUIREMENTS:
 1. instruction & instructionKr: A clear bilingual instruction explaining the exercise.
    Example: "You can use these patterns to introduce yourself and a coworker."
 
-2. fillRows: 4-6 fill-in-the-blank sentences that test understanding of the patterns.
+2. patternDrills: 2-3 drill blocks that practice the patterns.
+   - Each block: label, labelKr, template with a blank "___", and exactly 5 examples (en/kr).
+   - Examples must be complete sentences (no blanks).
+   - Within each drill, vary sentence structure across the 5 examples. Do not repeat the same clause in all five.
+     Use at least 3 different structures, e.g., "is on the ___ team", "works in ___", "is in ___",
+     "is part of ___", "belongs to ___", "Our ___ is ___".
+   - Use English names only in examples.
+
+3. fillRows: 4-6 fill-in-the-blank sentences that test understanding of the patterns.
    Each row has "parts" — an array of objects with "text" and "isBlank".
    - isBlank: true means the student fills it in
    - isBlank: false means it's pre-filled text
+   - Each row MUST include at least one blank part.
+   - For blank parts, leave text empty so blanks are visible (do not include the answer).
    Example: { "parts": [{ "text": "My name ", "isBlank": false }, { "text": "is", "isBlank": true }, { "text": " John.", "isBlank": false }] }
 
-3. The blanks should test KEY words from the patterns (verbs, key nouns, prepositions).
-4. tutorNotes: 3-4 tutor notes.
+4. The blanks should test KEY words from the patterns (verbs, key nouns, prepositions).
+5. tutorNotes: 3-4 tutor notes.
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
 ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content:\n${JSON.stringify(currentContent)}` : ''}
@@ -4443,6 +4454,7 @@ Return ONLY JSON:
 {
   "understand": {
     "instruction": "...", "instructionKr": "...",
+    "patternDrills": [{ "label": "...", "labelKr": "...", "template": "...", "examples": [{ "en": "...", "kr": "..." }] }],
     "fillRows": [{ "parts": [{ "text": "...", "isBlank": true|false }] }],
     "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
   }
@@ -4455,18 +4467,158 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE understand response:', text); }
     const und = parsed.understand || {};
+    const ensureBlankRow = (parts: Array<{ text: string; isBlank: boolean }>) => {
+      const normalized = parts.map(p => ({ text: p.text || '', isBlank: !!p.isBlank }));
+      const hasBlank = normalized.some(p => p.isBlank);
+      if (hasBlank) {
+        return normalized.map(p => (p.isBlank ? { ...p, text: '' } : p));
+      }
+
+      const sentence = normalized.map(p => p.text).join('').trim();
+      if (!sentence) return [{ text: '', isBlank: true }];
+
+      const deptMatch = sentence.match(/\b([A-Z][a-z]+|HR|IT|Sales|Marketing|Finance|Design|Support)\b/g);
+      let target = deptMatch ? deptMatch[deptMatch.length - 1] : '';
+      if (!target) {
+        const lastWordMatch = sentence.match(/^(.*\b)(\w+)(\W*)$/);
+        if (lastWordMatch) {
+          const before = lastWordMatch[1];
+          const word = lastWordMatch[2];
+          const after = lastWordMatch[3];
+          return [
+            { text: before, isBlank: false },
+            { text: '', isBlank: true },
+            { text: after, isBlank: false },
+          ];
+        }
+        return [{ text: sentence, isBlank: false }, { text: '', isBlank: true }];
+      }
+
+      const idx = sentence.lastIndexOf(target);
+      const before = sentence.slice(0, idx);
+      const after = sentence.slice(idx + target.length);
+      return [
+        { text: before, isBlank: false },
+        { text: '', isBlank: true },
+        { text: after, isBlank: false },
+      ];
+    };
+
+    const buildFallbackFillRows = () => {
+      const rows: Array<{ parts: Array<{ text: string; isBlank: boolean }> }> = [];
+      const patterns = (currentPresentData?.patterns || []).slice(0, 4);
+      const safePatterns = patterns.length ? patterns : [
+        { en: 'This is Alex.', kr: '이쪽은 알렉스예요.' },
+        { en: 'She works in Sales.', kr: '그녀는 영업팀에서 일해요.' },
+        { en: 'He is our manager.', kr: '그는 우리 매니저예요.' },
+        { en: 'We work together.', kr: '우리는 함께 일해요.' },
+      ];
+
+      safePatterns.forEach((p) => {
+        const text = (p.en || '').replace(/<[^>]*>/g, '').trim();
+        if (!text) return;
+        const words = text.split(' ');
+        if (words.length < 3) return;
+        const blankIndex = Math.max(1, Math.min(words.length - 2, 1));
+        const before = words.slice(0, blankIndex).join(' ') + ' ';
+        const after = words.slice(blankIndex + 1).join(' ');
+        rows.push({
+          parts: [
+            { text: before, isBlank: false },
+            { text: '', isBlank: true },
+            { text: after ? ` ${after}` : '', isBlank: false },
+          ],
+        });
+      });
+      return rows;
+    };
+
+    const ensureFiveExamples = (examples: any[]) => {
+      const normalized = Array.isArray(examples) ? examples.map((ex: any) => ({
+        en: ex.en || '',
+        kr: ex.kr || ex.jp || '',
+      })) : [];
+      const trimmed = normalized.slice(0, 5);
+      while (trimmed.length < 5) trimmed.push({ en: '', kr: '' });
+      return trimmed;
+    };
+
+    const normalizePatternDrills = (drills: any[]) => {
+      const list = Array.isArray(drills) ? drills : [];
+      return list.slice(0, 3).map((d: any) => ({
+        label: d.label || '',
+        labelKr: d.labelKr || d.labelJp || '',
+        template: d.template || '',
+        examples: ensureFiveExamples(d.examples || []),
+      }));
+    };
+
+    const buildFallbackPatternDrills = () => ([
+      {
+        label: 'Introducing someone',
+        labelKr: '사람 소개하기',
+        template: 'This is ___.',
+        examples: ensureFiveExamples([
+          { en: 'This is Alex.', kr: '이쪽은 알렉스예요.' },
+          { en: 'This is Emma.', kr: '이쪽은 엠마예요.' },
+          { en: 'This is David.', kr: '이쪽은 데이비드예요.' },
+          { en: 'This is Olivia.', kr: '이쪽은 올리비아예요.' },
+          { en: 'This is Ryan.', kr: '이쪽은 라이언예요.' },
+        ]),
+      },
+      {
+        label: 'Describing someone\'s department',
+        labelKr: '부서 말하기',
+        template: 'He/She works in the ___ department.',
+        examples: ensureFiveExamples([
+          { en: 'She is on the marketing team.', kr: '그녀는 마케팅 팀에 있어요.' },
+          { en: 'He works in the sales department.', kr: '그는 영업 부서에서 일해요.' },
+          { en: 'Alex is in the IT department.', kr: '알렉스는 IT 부서에 있어요.' },
+          { en: 'Emma is part of the design team.', kr: '엠마는 디자인 팀 소속이에요.' },
+          { en: 'David belongs to the finance team.', kr: '데이비드는 재무 팀 소속이에요.' },
+        ]),
+      },
+      {
+        label: 'Describing someone\'s role',
+        labelKr: '역할 말하기',
+        template: 'He/She is our ___.',
+        examples: ensureFiveExamples([
+          { en: 'Emma is our manager.', kr: '엠마는 우리 매니저예요.' },
+          { en: 'Our manager is Olivia.', kr: '우리 매니저는 올리비아예요.' },
+          { en: 'James is our team leader.', kr: '제임스는 우리 팀 리더예요.' },
+          { en: 'Sophia is the supervisor.', kr: '소피아는 관리자예요.' },
+          { en: 'Ethan is the department head.', kr: '이선은 부서장이에요.' },
+        ]),
+      },
+    ]);
+
+    const ensureInstruction = (text: string) => text && text.trim()
+      ? text
+      : 'Fill in the blanks with the correct pattern.';
+
+    const mappedPatternDrills = normalizePatternDrills(und.patternDrills || []);
+    const fallbackPatternDrills = buildFallbackPatternDrills();
+    const finalPatternDrills = mappedPatternDrills.length >= 2
+      ? mappedPatternDrills
+      : [...mappedPatternDrills, ...fallbackPatternDrills].slice(0, 3);
+
+    const mappedFillRows = (und.fillRows || []).map((row: any) => ({
+      parts: ensureBlankRow((row.parts || []).map((p: any) => ({
+        text: p.text || '', isBlank: !!p.isBlank,
+      }))),
+    }));
+
     return {
       understand: {
-        instruction: und.instruction || '',
+        instruction: ensureInstruction(und.instruction || ''),
         instructionKr: und.instructionKr || und.instructionJp || '',
-        fillRows: (und.fillRows || []).map((row: any) => ({
-          parts: (row.parts || []).map((p: any) => ({
-            text: p.text || '', isBlank: !!p.isBlank,
-          })),
-        })),
-        tutorNotes: (und.tutorNotes || []).map((n: any) => ({
-          type: n.type || 'instruction', text: n.text || '',
-        })),
+        patternDrills: finalPatternDrills,
+        fillRows: mappedFillRows.length > 0 ? mappedFillRows : buildFallbackFillRows(),
+        tutorNotes: (und.tutorNotes || []).length > 0
+          ? (und.tutorNotes || []).map((n: any) => ({
+              type: n.type || 'instruction', text: n.text || '',
+            }))
+          : [{ type: 'instruction', text: 'Ask the student to complete the blanks.' }],
       },
     };
   }

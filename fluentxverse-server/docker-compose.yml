@@ -219,10 +219,6 @@ services:
     build:
       context: ../fluentxverse-student
       dockerfile: Dockerfile
-      args:
-        # Public HTTPS API origin (baked into the Vite build)
-        # IMPORTANT: Hardcoded to ensure consistent builds via webhook
-        VITE_API_URL: https://api.fluentxverse.xyz
     container_name: fluentxverse-student
     restart: unless-stopped
     ports:

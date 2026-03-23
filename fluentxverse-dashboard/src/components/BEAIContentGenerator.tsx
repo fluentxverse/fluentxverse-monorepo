@@ -74,6 +74,15 @@ const normalizeSectionData = (section: BESectionType, data: any) => {
       return {
         ...data,
         instructionKr: coalesceText(data.instructionKr, data.instructionJp),
+        patternDrills: Array.isArray(data.patternDrills)
+          ? data.patternDrills.map((d: any) => ({
+              ...d,
+              labelKr: coalesceText(d.labelKr, d.labelJp),
+              examples: Array.isArray(d.examples)
+                ? d.examples.map((ex: any) => ({ ...ex, kr: coalesceText(ex.kr, ex.jp) }))
+                : d.examples,
+            }))
+          : data.patternDrills,
       };
     case 'practice':
       return {
