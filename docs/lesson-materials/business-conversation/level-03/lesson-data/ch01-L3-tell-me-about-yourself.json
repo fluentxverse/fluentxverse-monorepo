@@ -43,16 +43,16 @@
     "present": {
       "patterns": [
         {
-          "en": "<b>I am</b> Yuki. / <b>I'm</b> Yuki.",
-          "kr": "저는 유키입니다."
+          "en": "<b>I am</b> Minji. / <b>I'm</b> Minji.",
+          "kr": "저는 민지입니다."
         },
         {
           "en": "<b>I work at</b> Global Corp.",
           "kr": "저는 글로벌코프에서 일하고 있습니다."
         },
         {
-          "en": "<b>I am from</b> Sapporo.",
-          "kr": "저는 삿포로 출신입니다."
+          "en": "<b>I am from</b> Busan.",
+          "kr": "저는 부산 출신입니다."
         },
         {
           "en": "<b>I am a</b> sales assistant.",
@@ -159,7 +159,7 @@
         },
         {
           "type": "instruction",
-          "text": "For Japanese learners, /l/ and /r/ are often confused. Practice slowly."
+          "text": "Some learners confuse /l/ and /r/. Practice slowly and clearly."
         },
         {
           "type": "tip",
@@ -178,7 +178,7 @@
               "isBlank": true
             },
             {
-              "text": " Kenji.",
+              "text": " Daniel.",
               "isBlank": false
             }
           ]
@@ -202,7 +202,7 @@
               "isBlank": true
             },
             {
-              "text": " Osaka.",
+              "text": " Incheon.",
               "isBlank": false
             }
           ]
@@ -239,12 +239,12 @@
           "template": "I am ___. / I'm ___.",
           "examples": [
             {
-              "en": "I am Yuki.",
-              "kr": "저는 유키입니다."
+              "en": "I am Minji.",
+              "kr": "저는 민지입니다."
             },
             {
-              "en": "I'm Tanaka.",
-              "kr": "저는 타나카입니다."
+              "en": "I'm Kim.",
+              "kr": "저는 김입니다."
             }
           ]
         },
@@ -269,8 +269,8 @@
           "template": "I am from ___. / I am a ___.",
           "examples": [
             {
-              "en": "I am from Sapporo.",
-              "kr": "저는 삿포로 출신입니다."
+              "en": "I am from Busan.",
+              "kr": "저는 부산 출신입니다."
             },
             {
               "en": "I am a sales assistant.",
@@ -293,12 +293,68 @@
       "activityBlocks": [],
       "tutorNotes": [
         {
+          "type": "script",
+          "text": "\"Now we're going to practice four sentence patterns for introducing yourself in business English.\""
+        },
+        {
+          "type": "script",
+          "text": "\"First, let's read the name pattern: 'I am ___. / I'm ___.'\""
+        },
+        {
           "type": "instruction",
-          "text": "Ask the student to fill in the blanks, then practice the pattern drills."
+          "text": "Read each example in the first table. Ask the student to repeat each sentence."
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to fill in the blank with their real name, then say the full sentence aloud."
+        },
+        {
+          "type": "script",
+          "text": "\"Next, let's read the pattern for saying where you work: 'I work at ___.'\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the examples. Ask the student to repeat, then complete the sentence with their real company, team, bank, store, or office."
+        },
+        {
+          "type": "script",
+          "text": "\"Now let's practice the background pattern: 'I am from ___.' / 'I am a ___.'\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to answer with real information when possible: hometown and job title or work role."
+        },
+        {
+          "type": "script",
+          "text": "\"Finally, let's read the work experience pattern: 'I have worked here for ___ years.'\""
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to use a real number of months or years and say the sentence in one smooth line."
+        },
+        {
+          "type": "instruction",
+          "text": "After the blanks, do the pattern drills one by one. Read each pattern, ask the student to repeat, then ask for one more original example."
         },
         {
           "type": "tip",
-          "text": "If a student struggles, give them the first letter as a hint."
+          "text": "Correct pronunciation after the student finishes a full answer. Focus especially on name, company, hometown, and job-title words."
+        },
+        {
+          "type": "tip",
+          "text": "For lower-level students, give one model sentence first and let them change only one part."
+        },
+        {
+          "type": "tip",
+          "text": "If the student is not working now, let them use a recent workplace, school, or a realistic office role."
+        },
+        {
+          "type": "script",
+          "text": "\"Do you have any questions about these patterns?\""
+        },
+        {
+          "type": "script",
+          "text": "\"Great. Let's go to the next part.\""
         }
       ]
     },
@@ -308,7 +364,7 @@
           "title": "Step 1 — Repeat After Me",
           "instructionEn": "Listen and repeat each self-introduction sentence.",
           "instructionKr": "자기소개 문장을 듣고 반복하세요.",
-          "content": "1. Hi, I'm Yuki.<br>2. I work at Global Corp.<br>3. I am a sales assistant.<br>4. I am from Sapporo.<br>5. I have worked here for 2 years.<br>6. Nice to meet you!",
+          "content": "1. Hi, I'm Minji.<br>2. I work at Global Corp.<br>3. I am a sales assistant.<br>4. I am from Busan.<br>5. I have worked here for 2 years.<br>6. Nice to meet you!",
           "tutorNotes": [
             {
               "type": "instruction",
@@ -351,8 +407,8 @@
           "dialogue": [
             {
               "role": "tutor",
-              "en": "Hi! Welcome to the team. I'm Naomi.",
-              "kr": "안녕하세요! 팀에 오신 것을 환영합니다. 저는 나오미입니다."
+              "en": "Hi! Welcome to the team. I'm Grace.",
+              "kr": "안녕하세요! 팀에 오신 것을 환영합니다. 저는 그레이스입니다."
             },
             {
               "role": "student",

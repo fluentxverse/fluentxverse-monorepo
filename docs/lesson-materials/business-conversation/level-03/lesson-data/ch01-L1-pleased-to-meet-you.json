@@ -143,11 +143,27 @@
         },
         {
           "type": "instruction",
-          "text": "Read each pattern aloud. Ask the student to repeat."
+          "text": "Read the first pattern. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Use this to introduce yourself.\""
         },
         {
           "type": "instruction",
-          "text": "Explain when to use each pattern."
+          "text": "Read the second pattern. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Use this to introduce someone.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the third pattern. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Use this to say that you work together.\""
         },
         {
           "type": "script",
@@ -155,15 +171,7 @@
         },
         {
           "type": "script",
-          "text": "\"Now, we have the useful vocabulary.\""
-        },
-        {
-          "type": "instruction",
-          "text": "Read each word. Ask the student to repeat."
-        },
-        {
-          "type": "tip",
-          "text": "For lower-level students, give simple definitions. Send pronunciation guides via chat if needed: pleased [pleezd], coworker [KOH-wur-ker], join [join]."
+          "text": "\"Let's go to the next page.\""
         }
       ]
     },
@@ -337,7 +345,7 @@
           "title": "Step 1 — Repeat After Your Tutor",
           "instructionEn": "Repeat after your tutor.",
           "instructionKr": "선생님을 따라 반복하세요.",
-          "content": "<b>Introducing Yourself → Introducing Your Coworker</b><br><br>My name is Chen. → This is Robert.<br>My name is Ronald. → This is Janette.<br>My name is Esther. → This is Tony.<br>My name is Rachelle. → This is Carol.<br>My name is Arthur. → This is Hiro.<br><br><b>We are coworkers. • We are teammates.</b>",
+          "content": "<b>Introducing Yourself → Introducing Your Coworker</b><br><br>My name is Chen. → This is Robert.<br>My name is Ronald. → This is Janette.<br>My name is Esther. → This is Tony.<br>My name is Rachelle. → This is Carol.<br>My name is Arthur. → This is Jisoo.<br><br><b>We are coworkers. • We are teammates.</b>",
           "tutorNotes": [
             {
               "type": "script",
@@ -386,13 +394,13 @@
             },
             {
               "role": "student",
-              "en": "Pleased to meet you, Evan. My name is Akihiro. This is Sandra. We are coworkers.",
-              "kr": "만나서 반갑습니다, 에반 씨. 제 이름은 아키히로입니다. 이쪽은 산드라 씨입니다. 우리는 동료입니다."
+              "en": "Pleased to meet you, Evan. My name is Minho. This is Sandra. We are coworkers.",
+              "kr": "만나서 반갑습니다, 에반 씨. 제 이름은 민호입니다. 이쪽은 산드라 씨입니다. 우리는 동료입니다."
             },
             {
               "role": "tutor",
-              "en": "Pleased to meet you, too, Akihiro and Sandra.",
-              "kr": "아키히로 씨, 산드라 씨, 저도 만나서 반갑습니다."
+              "en": "Pleased to meet you, too, Minho and Sandra.",
+              "kr": "민호 씨, 산드라 씨, 저도 만나서 반갑습니다."
             }
           ],
           "tutorNotes": [
@@ -460,7 +468,7 @@
         }
       ],
       "roleplayTable": {
-        "you": "Henry",
+        "you": "Your own name",
         "coworkers": [
           "Margaret",
           "Edison",

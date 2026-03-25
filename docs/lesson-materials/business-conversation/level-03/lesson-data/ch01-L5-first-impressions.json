@@ -172,7 +172,7 @@
         },
         {
           "type": "instruction",
-          "text": "Do a quick vocabulary quiz — say the Japanese, student says the English."
+          "text": "Do a quick vocabulary quiz — say the Korean, student says the English."
         },
         {
           "type": "tip",
@@ -191,7 +191,7 @@
               "isBlank": true
             },
             {
-              "text": " Yuki. Nice to meet you.",
+              "text": " Minji. Nice to meet you.",
               "isBlank": false
             }
           ]
@@ -203,7 +203,7 @@
               "isBlank": true
             },
             {
-              "text": " Osaka.",
+              "text": " Busan.",
               "isBlank": false
             },
             {
@@ -211,7 +211,7 @@
               "isBlank": true
             },
             {
-              "text": " Tokyo.",
+              "text": " Seoul.",
               "isBlank": false
             }
           ]
@@ -223,7 +223,7 @@
               "isBlank": true
             },
             {
-              "text": " Kenji.",
+              "text": " Daniel.",
               "isBlank": false
             },
             {
@@ -288,8 +288,8 @@
           "template": "I am ___. I am from ___. I work at ___. I like ___.",
           "examples": [
             {
-              "en": "I am Yuki. I am from Sapporo. I work at Global Corp. I like traveling.",
-              "kr": "저는 유키입니다. 삿포로 출신입니다. 글로벌코프에서 일하고 있습니다. 여행을 좋아합니다."
+              "en": "I am Minji. I am from Busan. I work at Global Corp. I like traveling.",
+              "kr": "저는 민지입니다. 부산 출신입니다. 글로벌코프에서 일하고 있습니다. 여행을 좋아합니다."
             }
           ]
         },
@@ -299,8 +299,8 @@
           "template": "This is ___. He/She is ___. He/She works in ___.",
           "examples": [
             {
-              "en": "This is Kenji. He is our accountant. He works in the finance department.",
-              "kr": "이쪽은 켄지입니다. 그는 경리 담당입니다. 그는 경리부에서 일하고 있습니다."
+              "en": "This is Daniel. He is our accountant. He works in the finance department.",
+              "kr": "이쪽은 다니엘입니다. 그는 경리 담당입니다. 그는 경리부에서 일하고 있습니다."
             }
           ]
         }
@@ -347,11 +347,11 @@
           "title": "Step 2 — Profile Exchange",
           "instructionEn": "Read this profile, then introduce this person to your tutor.",
           "instructionKr": "이 프로필을 읽은 다음, 이 사람을 선생님에게 소개하세요.",
-          "content": "Profile: Akiko Suzuki<br>- From: Kobe<br>- Lives in: Yokohama<br>- Company: Star Electronics<br>- Department: Engineering<br>- Job: Software engineer<br>- In charge of: Mobile app development<br>- Hobby: Yoga<br><br>Introduce Akiko:<br>\"This is Akiko Suzuki. She is from Kobe. She lives in Yokohama. She works at Star Electronics. She is a software engineer in the engineering department. She is in charge of mobile app development. She likes yoga.\"",
+          "content": "Profile: Sujin Lee<br>- From: Daegu<br>- Lives in: Daejeon<br>- Company: Star Electronics<br>- Department: Engineering<br>- Job: Software engineer<br>- In charge of: Mobile app development<br>- Hobby: Yoga<br><br>Introduce Sujin:<br>\"This is Sujin Lee. She is from Daegu. She lives in Daejeon. She works at Star Electronics. She is a software engineer in the engineering department. She is in charge of mobile app development. She likes yoga.\"",
           "tutorNotes": [
             {
               "type": "instruction",
-              "text": "Show the profile. Ask the student to introduce Akiko using the patterns."
+              "text": "Show the profile. Ask the student to introduce Sujin using the patterns."
             },
             {
               "type": "instruction",
@@ -432,7 +432,7 @@
           "title": "Step 4 — Presentation: Your Team",
           "instructionEn": "Give a short presentation (1-2 minutes). Introduce yourself and your team to the class.",
           "instructionKr": "짧은 프레젠테이션 (1~2분)을 해 봅시다. 반에 자기 자신과 팀을 소개하세요.",
-          "content": "Your presentation should include:<br>1. Introduce yourself (name, hometown, company, hobby)<br>2. Introduce 2-3 team members (name, role, department, responsibility)<br>3. Describe your team (we work together in...)<br><br>Example:<br>\"Hello! My name is Yuki. I am from Sapporo. I work at Global Corp.<br>This is Kenji. He is our accountant. He works in the finance department.<br>This is Maria. She is a sales assistant. She is in charge of our online store.<br>We work together in the Tokyo office. Nice to meet you all!\"",
+          "content": "Your presentation should include:<br>1. Introduce yourself (name, hometown, company, hobby)<br>2. Introduce 2-3 team members (name, role, department, responsibility)<br>3. Describe your team (we work together in...)<br><br>Example:<br>\"Hello! My name is Minji. I am from Busan. I work at Global Corp.<br>This is Daniel. He is our accountant. He works in the finance department.<br>This is Maria. She is a sales assistant. She is in charge of our online store.<br>We work together in the Seoul office. Nice to meet you all!\"",
           "tutorNotes": [
             {
               "type": "script",
@@ -480,7 +480,7 @@
         },
         {
           "type": "instruction",
-          "text": "As new employee: 'Hi! I'm Tomoko. I just joined. Can you introduce the team?'"
+          "text": "As new employee: 'Hi! I'm Claire. I just joined. Can you introduce the team?'"
         },
         {
           "type": "instruction",

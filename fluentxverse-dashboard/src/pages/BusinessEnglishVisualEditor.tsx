@@ -269,7 +269,7 @@ const DEFAULT_BE_DATA: BELessonData = {
       { text: 'I see. Do we often have meetings together?' },
       { text: 'What other things do we do together?' },
     ],
-    roleplayTable: { you: 'Henry', coworkers: ['Margaret', 'Edison', 'Vanessa', 'Mila', 'Antonia'] },
+    roleplayTable: { you: 'Your own name', coworkers: ['Margaret', 'Edison', 'Vanessa', 'Mila', 'Antonia'] },
     activityBlocks: [],
     tutorNotes: [
       { type: 'script', text: '"Are you ready for the challenge?"' },
@@ -326,7 +326,7 @@ const PCPP_PAGES = [
   { key: 'page7', num: '7', label: 'Feedback' },
 ] as const;
 
-const AUTOSAVE_DELAY_MS = 5000;
+const AUTOSAVE_DELAY_MS = 10000;
 
 const LEVEL_BADGES: Record<number, string> = {
   3: 'BEGINNER', 4: 'HIGH BEGINNER', 5: 'HIGH BEGINNER',
@@ -458,6 +458,25 @@ export default function BusinessEnglishVisualEditor() {
   // Refs for scroll-to navigation
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const latestSavePayloadRef = useRef({
+    lesson: null as LessonMaterial | null,
+    chapterName: '',
+    lessonName: '',
+    goalTextEn: '',
+    goalTextJp: '',
+    beData: DEFAULT_BE_DATA as BELessonData,
+  });
+
+  useEffect(() => {
+    latestSavePayloadRef.current = {
+      lesson,
+      chapterName,
+      lessonName,
+      goalTextEn,
+      goalTextJp,
+      beData,
+    };
+  }, [lesson, chapterName, lessonName, goalTextEn, goalTextJp, beData]);
 
   // ---- Load ----
   useEffect(() => { if (id) loadLesson(id); }, [id]);
@@ -535,31 +554,66 @@ export default function BusinessEnglishVisualEditor() {
   };
 
   // ---- Autosave ----
-  const triggerAutosave = useCallback(() => {
-    hasUnsavedChangesRef.current = true;
-    setAutosaveStatus('pending');
-    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-    autosaveTimerRef.current = setTimeout(() => { saveAll(); }, AUTOSAVE_DELAY_MS);
-  }, []);
+  const saveAll = useCallback(async () => {
+    const current = latestSavePayloadRef.current;
 
-  const saveAll = async () => {
-    if (!lesson) return;
+    if (!current.lesson) {
+      setAutosaveStatus('idle');
+      return;
+    }
+
     setSaving(true);
     try {
-      await updateLessonHeader(lesson.id, {
-        chapterName, lessonName, goalTextEn, goalTextJp,
-        beData: beData as any,
+      await updateLessonHeader(current.lesson.id, {
+        chapterName: current.chapterName,
+        lessonName: current.lessonName,
+        goalTextEn: current.goalTextEn,
+        goalTextJp: current.goalTextJp,
+        beData: current.beData as any,
       });
       hasUnsavedChangesRef.current = false;
       setAutosaveStatus('saved');
       setTimeout(() => setAutosaveStatus('idle'), 3000);
-    } catch { toast.error('Failed to save'); }
+    } catch {
+      setAutosaveStatus('idle');
+      toast.error('Failed to save');
+    }
     finally { setSaving(false); }
-  };
+  }, []);
+
+  const triggerAutosave = useCallback(() => {
+    hasUnsavedChangesRef.current = true;
+    setAutosaveStatus('pending');
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      if (hasUnsavedChangesRef.current) {
+        saveAll();
+      }
+    }, AUTOSAVE_DELAY_MS);
+  }, [saveAll]);
 
   const handleManualSave = () => {
     if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     saveAll();
+  };
+
+  useEffect(() => {
+    return () => {
+      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
+    };
+  }, []);
+
+  const handleOpenPreview = () => {
+    if (!lesson) return;
+    sessionStorage.setItem(`business-english-preview-${lesson.id}`, JSON.stringify({
+      chapterName,
+      lessonName,
+      goalTextEn,
+      goalTextJp,
+      theme,
+      beData,
+    }));
+    window.open(`/business-english-preview/${lesson.id}`, '_blank');
   };
 
   // ---- Generic updaters ----
@@ -1266,50 +1320,58 @@ export default function BusinessEnglishVisualEditor() {
   const renderPage1 = () => (
     <div className="beve-page" id="beve-page1" ref={(el) => { pageRefs.current['page1'] = el; }}>
       {renderPageHeader(1)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {/* ① Introduce */}
-          {renderSectionBanner(1, 'WARM-UP')}
-          <div className="beve-goal-box">
-            <div className="beve-goal-label">Lesson Goal</div>
-            <BERichTextInput className="beve-goal-en" value={beData.introduce.goalEn}
-              onChange={(html) => updateSection('introduce', { goalEn: html })} placeholder="Goal (English)" />
-            <BERichTextInput className="beve-goal-kr" value={beData.introduce.goalKr} compact
-              onChange={(html) => updateSection('introduce', { goalKr: html })} placeholder="목표 (한국어)" />
+      <div className="beve-page-sections">
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            {/* ① Introduce */}
+            {renderSectionBanner(1, 'WARM-UP')}
+            <div className="beve-goal-box">
+              <div className="beve-goal-label">Lesson Goal</div>
+              <BERichTextInput className="beve-goal-en" value={beData.introduce.goalEn}
+                onChange={(html) => updateSection('introduce', { goalEn: html })} placeholder="Goal (English)" />
+              <BERichTextInput className="beve-goal-kr" value={beData.introduce.goalKr} compact
+                onChange={(html) => updateSection('introduce', { goalKr: html })} placeholder="목표 (한국어)" />
+            </div>
+            <div className="beve-situation-box">
+              <div className="beve-situation-label"><i className="ri-briefcase-line" /> Situation and Task</div>
+              <BERichTextInput className="beve-situation-en" value={beData.introduce.situationEn} singleLine={false}
+                onChange={(html) => updateSection('introduce', { situationEn: html })} placeholder="Situation (English)" />
+              <BERichTextInput className="beve-situation-kr" value={beData.introduce.situationKr} singleLine={false} compact
+                onChange={(html) => updateSection('introduce', { situationKr: html })} placeholder="상황 (한국어)" />
+            </div>
           </div>
-          <div className="beve-situation-box">
-            <div className="beve-situation-label"><i className="ri-briefcase-line" /> Situation and Task</div>
-            <BERichTextInput className="beve-situation-en" value={beData.introduce.situationEn} singleLine={false}
-              onChange={(html) => updateSection('introduce', { situationEn: html })} placeholder="Situation (English)" />
-            <BERichTextInput className="beve-situation-kr" value={beData.introduce.situationKr} singleLine={false} compact
-              onChange={(html) => updateSection('introduce', { situationKr: html })} placeholder="상황 (한국어)" />
-          </div>
-
-          {/* ② Present — Key Expressions */}
-          {renderSectionBanner(2, 'KEY EXPRESSIONS')}
-          <div className="beve-sub-heading">Key Expressions <span className="kr-label">{'핵심 표현'}</span></div>
-          <div className="beve-patterns-grid">
-            {beData.present.patterns.map((p, i) => (
-              <div key={i} className="beve-pattern-card">
-              <BERichTextInput className="beve-pattern-en" value={p.en}
-                  onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], en: html }; updateSection('present', { patterns: updated }); }}
-                  placeholder="Pattern (English)" />
-                <BERichTextInput className="beve-pattern-kr" value={p.kr} compact
-                  onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], kr: html }; updateSection('present', { patterns: updated }); }}
-                  placeholder="패턴 (한국어)" />
-                <div className="beve-pattern-actions">
-                  <button className="beve-icon-btn danger" onClick={() => { updateSection('present', { patterns: beData.present.patterns.filter((_, idx) => idx !== i) }); }}>
-                    <i className="ri-delete-bin-line" /></button>
-                </div>
-              </div>
-            ))}
-            <button className="beve-add-btn" onClick={() => { updateSection('present', { patterns: [...beData.present.patterns, { en: '', kr: '' }] }); }}>
-              <i className="ri-add-line" /> Add Pattern</button>
+          <div className="beve-col-tutor">
+            {renderTutorNotes('introduce')}
           </div>
         </div>
-        <div className="beve-col-tutor">
-          {renderTutorNotes('introduce')}
-          <div style={{ marginTop: 20 }}>{renderTutorNotes('present')}</div>
+
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            {/* ② Present — Key Expressions */}
+            {renderSectionBanner(2, 'KEY EXPRESSIONS')}
+            <div className="beve-sub-heading">Key Expressions <span className="kr-label">{'핵심 표현'}</span></div>
+            <div className="beve-patterns-grid">
+              {beData.present.patterns.map((p, i) => (
+                <div key={i} className="beve-pattern-card">
+                <BERichTextInput className="beve-pattern-en" value={p.en}
+                    onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], en: html }; updateSection('present', { patterns: updated }); }}
+                    placeholder="Pattern (English)" />
+                  <BERichTextInput className="beve-pattern-kr" value={p.kr} compact
+                    onChange={(html) => { const updated = [...beData.present.patterns]; updated[i] = { ...updated[i], kr: html }; updateSection('present', { patterns: updated }); }}
+                    placeholder="패턴 (한국어)" />
+                  <div className="beve-pattern-actions">
+                    <button className="beve-icon-btn danger" onClick={() => { updateSection('present', { patterns: beData.present.patterns.filter((_, idx) => idx !== i) }); }}>
+                      <i className="ri-delete-bin-line" /></button>
+                  </div>
+                </div>
+              ))}
+              <button className="beve-add-btn" onClick={() => { updateSection('present', { patterns: [...beData.present.patterns, { en: '', kr: '' }] }); }}>
+                <i className="ri-add-line" /> Add Pattern</button>
+            </div>
+          </div>
+          <div className="beve-col-tutor">
+            {renderTutorNotes('present')}
+          </div>
         </div>
       </div>
       {renderPageFooter()}
@@ -1855,13 +1917,23 @@ export default function BusinessEnglishVisualEditor() {
           <i className="ri-edit-line" /> Business English Editor
         </div>
         <div className="beve-toolbar-right">
+          <button className="beve-toolbar-btn" onClick={handleOpenPreview}>
+            <i className="ri-eye-line" />
+            Preview
+          </button>
           <button className="beve-toolbar-btn" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
             <i className={theme === 'dark' ? 'ri-sun-line' : 'ri-moon-line'} />
             {theme === 'dark' ? 'Light' : 'Dark'}
           </button>
-          <span className={`beve-save-status ${autosaveStatus}`}>
-            {autosaveStatus === 'pending' ? 'Unsaved changes\u2026' : autosaveStatus === 'saved' ? '\u2713 Saved' : ''}
-          </span>
+          {autosaveStatus !== 'idle' && (
+            <span
+              className={`beve-save-status ${autosaveStatus}`}
+              title={autosaveStatus === 'pending' ? 'Autosaving changes...' : 'All changes saved'}
+            >
+              <i className={autosaveStatus === 'pending' ? 'ri-loader-4-line' : 'ri-check-line'} />
+              {autosaveStatus === 'pending' ? 'Autosaving…' : 'All changes saved'}
+            </span>
+          )}
           <button className="beve-toolbar-btn" onClick={handleManualSave} disabled={saving}>
             <i className={saving ? 'ri-loader-4-line' : 'ri-save-line'} />
             {saving ? 'Saving\u2026' : 'Save'}

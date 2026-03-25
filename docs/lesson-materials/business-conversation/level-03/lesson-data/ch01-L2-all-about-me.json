@@ -43,20 +43,16 @@
     "present": {
       "patterns": [
         {
-          "en": "<b>I am from</b> Tokyo.",
-          "kr": "저는 도쿄 출신입니다."
+          "en": "<b>I am from</b> Busan.",
+          "kr": "저는 부산 출신입니다."
         },
         {
-          "en": "<b>I live in</b> Osaka.",
-          "kr": "저는 오사카에 살고 있습니다."
+          "en": "<b>I live in</b> Seoul.",
+          "kr": "저는 서울에 살고 있습니다."
         },
         {
-          "en": "<b>I like</b> reading.",
-          "kr": "저는 독서를 좋아합니다."
-        },
-        {
-          "en": "<b>My hobby is</b> cooking.",
-          "kr": "제 취미는 요리입니다."
+          "en": "<b>I work at</b> Global Corp.",
+          "kr": "저는 글로벌 코프에서 일합니다."
         }
       ],
       "vocabulary": [
@@ -143,23 +139,35 @@
         },
         {
           "type": "instruction",
-          "text": "Read each pattern aloud. Ask the student to repeat."
-        },
-        {
-          "type": "instruction",
-          "text": "Explain when to use each pattern."
+          "text": "Read the first pattern. Ask the student to repeat."
         },
         {
           "type": "script",
-          "text": "\"Now, let's learn some useful vocabulary.\""
+          "text": "\"Use this to say where you are from.\""
         },
         {
           "type": "instruction",
-          "text": "Read each vocabulary word and definition. Ask the student to repeat."
+          "text": "Read the second pattern. Ask the student to repeat."
         },
         {
-          "type": "tip",
-          "text": "For lower-level students, use the Japanese translation first, then the English definition."
+          "type": "script",
+          "text": "\"Use this to say where you live now.\""
+        },
+        {
+          "type": "instruction",
+          "text": "Read the third pattern. Ask the student to repeat."
+        },
+        {
+          "type": "script",
+          "text": "\"Use this to say where you work.\""
+        },
+        {
+          "type": "script",
+          "text": "\"Do you have any questions about the patterns?\""
+        },
+        {
+          "type": "script",
+          "text": "\"Let's go to the next page.\""
         }
       ]
     },
@@ -174,7 +182,7 @@
               "isBlank": true
             },
             {
-              "text": " Nagoya.",
+              "text": " Busan.",
               "isBlank": false
             }
           ]
@@ -186,7 +194,7 @@
               "isBlank": true
             },
             {
-              "text": " Tokyo now.",
+              "text": " Seoul now.",
               "isBlank": false
             }
           ]
@@ -223,8 +231,8 @@
           "template": "I am from ___.",
           "examples": [
             {
-              "en": "I am from Nagoya.",
-              "kr": "저는 나고야 출신입니다."
+              "en": "I am from Busan.",
+              "kr": "저는 부산 출신입니다."
             },
             {
               "en": "I am from New York.",
@@ -238,8 +246,8 @@
           "template": "I live in ___.",
           "examples": [
             {
-              "en": "I live in Tokyo.",
-              "kr": "저는 도쿄에 살고 있습니다."
+              "en": "I live in Seoul.",
+              "kr": "저는 서울에 살고 있습니다."
             },
             {
               "en": "I live in London.",
@@ -267,29 +275,29 @@
         {
           "type": "readingPassage",
           "id": "rp-profile-1",
-          "title": "Profile Card: Kenji Tanaka",
-          "titleKr": "프로필 카드: 타나카 켄지",
-          "passage": "Hello! My name is Kenji Tanaka. I am from Nagoya. I live in Tokyo now. I work at ABC Corporation. I am an accountant. I like playing soccer on weekends. My favorite food is ramen. My hobby is photography. Nice to meet you!",
+          "title": "Profile Card: Minji Kim",
+          "titleKr": "프로필 카드: 김민지",
+          "passage": "Hello! My name is Minji Kim. I am from Busan. I live in Seoul now. I work at ABC Corporation. I am an accountant. I like playing soccer on weekends. My favorite food is bibimbap. My hobby is photography. Nice to meet you!",
           "questions": [
             {
-              "question": "Where is Kenji from?",
-              "questionKr": "켄지는 어디 출신인가요?"
+              "question": "Where is Minji from?",
+              "questionKr": "민지는 어디 출신인가요?"
             },
             {
-              "question": "Where does Kenji live now?",
-              "questionKr": "켄지는 지금 어디에 살고 있나요?"
+              "question": "Where does Minji live now?",
+              "questionKr": "민지는 지금 어디에 살고 있나요?"
             },
             {
-              "question": "What is Kenji's job?",
-              "questionKr": "켄지의 직업은 무엇인가요?"
+              "question": "What is Minji's job?",
+              "questionKr": "민지의 직업은 무엇인가요?"
             },
             {
-              "question": "What does Kenji like doing on weekends?",
-              "questionKr": "켄지는 주말에 뭘 하는 걸 좋아하나요?"
+              "question": "What does Minji like doing on weekends?",
+              "questionKr": "민지는 주말에 뭘 하는 걸 좋아하나요?"
             },
             {
-              "question": "What is Kenji's hobby?",
-              "questionKr": "켄지의 취미는 무엇인가요?"
+              "question": "What is Minji's hobby?",
+              "questionKr": "민지의 취미는 무엇인가요?"
             }
           ]
         }
@@ -319,7 +327,7 @@
           "title": "Step 1 — Read & Repeat",
           "instructionEn": "Read each sentence from the profile card. Repeat after your tutor.",
           "instructionKr": "프로필 카드의 각 문장을 읽어 봅시다. 선생님을 따라 반복하세요.",
-          "content": "1. My name is Kenji Tanaka.<br>2. I am from Nagoya.<br>3. I live in Tokyo now.<br>4. I work at ABC Corporation.<br>5. I am an accountant.<br>6. I like playing soccer on weekends.<br>7. My favorite food is ramen.<br>8. My hobby is photography.",
+          "content": "1. My name is Minji Kim.<br>2. I am from Busan.<br>3. I live in Seoul now.<br>4. I work at ABC Corporation.<br>5. I am an accountant.<br>6. I like playing soccer on weekends.<br>7. My favorite food is bibimbap.<br>8. My hobby is photography.",
           "tutorNotes": [
             {
               "type": "instruction",
@@ -337,8 +345,8 @@
         },
         {
           "title": "Step 2 — Fill in the Profile",
-          "instructionEn": "Fill in the missing information about Kenji.",
-          "instructionKr": "켄지에 대한 정보를 채워 봅시다.",
+          "instructionEn": "Fill in the missing information about Minji.",
+          "instructionKr": "민지에 대한 정보를 채워 봅시다.",
           "content": "Name: _______________<br>Hometown: _______________<br>Lives in: _______________<br>Company: _______________<br>Job: _______________<br>Hobby: _______________<br>Favorite food: _______________",
           "tutorNotes": [
             {
@@ -355,7 +363,7 @@
           "title": "Step 3 — Read a Second Profile",
           "instructionEn": "Read the second profile card with your tutor.",
           "instructionKr": "두 번째 프로필 카드를 선생님과 함께 읽어 봅시다.",
-          "content": "Hello! My name is Maria Santos. I am from Manila. I live in Yokohama. I work at XYZ Trading. I am a sales assistant. I like watching movies. My favorite movie is Titanic. My hobby is baking. Nice to meet you!",
+          "content": "Hello! My name is Maria Santos. I am from Manila. I live in Incheon now. I work at XYZ Trading. I am a sales assistant. I like watching movies. My favorite movie is Titanic. My hobby is baking. Nice to meet you!",
           "dialogue": [
             {
               "role": "tutor",
@@ -458,7 +466,7 @@
         },
         {
           "type": "instruction",
-          "text": "Read this profile to the student (they should NOT look at the screen): 'Hello! My name is David Kim. I am from Seoul. I live in Sendai. I work at Global Tech. I am an engineer. I like hiking. My hobby is playing guitar. Nice to meet you!'"
+          "text": "Read this profile to the student (they should NOT look at the screen): 'Hello! My name is David Kim. I am from Seoul. I live in Daejeon now. I work at Global Tech. I am an engineer. I like hiking. My hobby is playing guitar. Nice to meet you!'"
         },
         {
           "type": "instruction",

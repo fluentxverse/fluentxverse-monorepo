@@ -5,6 +5,8 @@
 
 /* ─── Reset & Page Shell ─────────────────────────────── */
 .beve {
+  --beve-tutor-sticky-top: 24px;
+  --beve-tutor-sticky-bottom-gap: 24px;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -135,12 +137,36 @@
 }
 
 .beve-save-status {
-  font-size: 11px;
-  color: #71717a;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .04);
+  font-size: 12px;
+  font-weight: 600;
+  color: #a1a1aa;
   margin-right: 4px;
+  white-space: nowrap;
+}
+.beve-save-status i {
+  font-size: 14px;
+}
+.beve-save-status.pending {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, .28);
+  background: rgba(251, 191, 36, .08);
+}
+.beve-save-status.pending i {
+  animation: spin 1s linear infinite;
 }
 .beve-save-status.saved { color: #34d399; }
-.beve-save-status.pending { color: #fbbf24; }
+.beve-save-status.saved {
+  border-color: rgba(52, 211, 153, .26);
+  background: rgba(52, 211, 153, .08);
+}
 
 /* ─── Main Body: Sidebar + Canvas ────────────────────── */
 .beve-body {
@@ -574,6 +600,21 @@
   min-height: 500px;
 }
 
+.beve-page-sections {
+  display: flex;
+  flex-direction: column;
+}
+
+.beve-page-section {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  align-items: start;
+}
+
+.beve-page-section + .beve-page-section {
+  border-top: 1px solid rgba(124, 58, 237, .08);
+}
+
 .beve-col-student {
   padding: 28px 32px;
   background: #141420;
@@ -587,7 +628,21 @@
   background: #13111d;
   color: #d4d4d8;
   min-width: 0;
-  position: relative;
+  position: sticky;
+  top: var(--beve-tutor-sticky-top);
+  align-self: start;
+  max-height: calc(100vh - var(--beve-tutor-sticky-top) - var(--beve-tutor-sticky-bottom-gap));
+  overflow-y: auto;
+}
+
+.beve-col-tutor::-webkit-scrollbar { width: 8px; }
+.beve-col-tutor::-webkit-scrollbar-track { background: transparent; }
+.beve-col-tutor::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, .25);
+  border-radius: 999px;
+}
+.beve-col-tutor::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, .4);
 }
 
 .beve-col-tutor-title {
@@ -2133,8 +2188,13 @@
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 900px) {
   .beve-columns { grid-template-columns: 1fr; }
+  .beve-page-section { grid-template-columns: 1fr; }
   .beve-col-tutor {
     border-top: 2px solid #627aa8;
+    position: static;
+    top: auto;
+    max-height: none;
+    overflow: visible;
   }
   .beve-col-student { border-right: none; }
   .beve-sidebar { width: 170px; min-width: 170px; }
@@ -2197,9 +2257,21 @@
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
 
-.beve.light .beve-save-status { color: #9ca3af; }
-.beve.light .beve-save-status.saved { color: #059669; }
-.beve.light .beve-save-status.pending { color: #d97706; }
+.beve.light .beve-save-status {
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, .08);
+  background: rgba(0, 0, 0, .03);
+}
+.beve.light .beve-save-status.saved {
+  color: #059669;
+  border-color: rgba(5, 150, 105, .2);
+  background: rgba(5, 150, 105, .08);
+}
+.beve.light .beve-save-status.pending {
+  color: #d97706;
+  border-color: rgba(217, 119, 6, .18);
+  background: rgba(217, 119, 6, .08);
+}
 
 /* ─── Sidebar ─────────────────────────────────────────── */
 .beve.light .beve-sidebar {

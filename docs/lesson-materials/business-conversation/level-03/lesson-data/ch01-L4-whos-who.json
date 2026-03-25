@@ -43,8 +43,8 @@
     "present": {
       "patterns": [
         {
-          "en": "<b>This is</b> Kenji. <b>He is</b> our accountant.",
-          "kr": "이쪽은 켄지입니다. 그는 우리의 경리 담당입니다."
+          "en": "<b>This is</b> Daniel. <b>He is</b> our accountant.",
+          "kr": "이쪽은 다니엘입니다. 그는 우리의 경리 담당입니다."
         },
         {
           "en": "<b>She works in</b> the marketing department.",
@@ -159,7 +159,7 @@
         },
         {
           "type": "tip",
-          "text": "For Japanese learners, 'colleague' is often confused with 'college'. Practice both."
+          "text": "Some learners confuse 'colleague' and 'college'. Practice both clearly."
         }
       ]
     },
@@ -174,7 +174,7 @@
               "isBlank": true
             },
             {
-              "text": " Yuki. She is our designer.",
+              "text": " Minji. She is our designer.",
               "isBlank": false
             }
           ]
@@ -223,8 +223,8 @@
           "template": "This is ___. He/She is ___.",
           "examples": [
             {
-              "en": "This is Kenji. He is our accountant.",
-              "kr": "이쪽은 켄지입니다. 그는 경리 담당입니다."
+              "en": "This is Daniel. He is our accountant.",
+              "kr": "이쪽은 다니엘입니다. 그는 경리 담당입니다."
             },
             {
               "en": "This is Maria. She is our new intern.",
@@ -281,7 +281,7 @@
           "title": "Step 1 — Repeat the Introductions",
           "instructionEn": "Listen and repeat each introduction.",
           "instructionKr": "소개문을 듣고 반복하세요.",
-          "content": "1. This is Kenji. He is our accountant. He works in the finance department.<br>2. This is Maria. She is a sales assistant. She works in the sales department.<br>3. This is David. He is our IT manager. He is in charge of the company network.<br>4. This is Yuki. She is our designer. She works in the marketing department.",
+          "content": "1. This is Daniel. He is our accountant. He works in the finance department.<br>2. This is Maria. She is a sales assistant. She works in the sales department.<br>3. This is David. He is our IT manager. He is in charge of the company network.<br>4. This is Minji. She is our designer. She works in the marketing department.",
           "tutorNotes": [
             {
               "type": "instruction",
@@ -301,7 +301,7 @@
           "title": "Step 2 — Complete the Introduction",
           "instructionEn": "Fill in the blanks to complete the introductions.",
           "instructionKr": "빈칸을 채워 소개문을 완성하세요.",
-          "content": "1. This is Naomi. She is our _______________. She works in the _______________ department.<br>2. This is Takeshi. He is a _______________. He is in charge of _______________.<br>3. This is Lisa. She is our _______________. She works in the _______________ department.<br>4. This is (your colleague). He/She is _______________. He/She works in _______________.",
+          "content": "1. This is Grace. She is our _______________. She works in the _______________ department.<br>2. This is Joon. He is a _______________. He is in charge of _______________.<br>3. This is Lisa. She is our _______________. She works in the _______________ department.<br>4. This is (your colleague). He/She is _______________. He/She works in _______________.",
           "tutorNotes": [
             {
               "type": "instruction",
@@ -329,13 +329,13 @@
             },
             {
               "role": "student",
-              "en": "Sure! This is Kenji. He is our accountant.",
-              "kr": "물론이죠! 이쪽은 켄지입니다. 그는 경리 담당입니다."
+              "en": "Sure! This is Daniel. He is our accountant.",
+              "kr": "물론이죠! 이쪽은 다니엘입니다. 그는 경리 담당입니다."
             },
             {
               "role": "tutor",
-              "en": "Nice to meet you, Kenji. And who is she?",
-              "kr": "만나서 반갑습니다, 켄지. 그녀는 누구인가요?"
+              "en": "Nice to meet you, Daniel. And who is she?",
+              "kr": "만나서 반갑습니다, 다니엘. 그녀는 누구인가요?"
             },
             {
               "role": "student",
@@ -359,8 +359,8 @@
             },
             {
               "role": "student",
-              "en": "Yes, we work together in the Tokyo office.",
-              "kr": "네, 도쿄 오피스에서 함께 일하고 있습니다."
+              "en": "Yes, we work together in the Seoul office.",
+              "kr": "네, 서울 오피스에서 함께 일하고 있습니다."
             }
           ],
           "tutorNotes": [

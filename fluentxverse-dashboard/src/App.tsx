@@ -34,6 +34,7 @@ import YoungLearnersPreview from './pages/YoungLearnersPreview';
 import DiscussionQuestionsEditorPage from './pages/DiscussionQuestionsEditorPage';
 import DiscussionQuestionsVisualEditor from './pages/DiscussionQuestionsVisualEditor';
 import BusinessEnglishEditorPage from './pages/BusinessEnglishEditorPage';
+import BusinessEnglishPreview from './pages/BusinessEnglishPreview';
 import BusinessEnglishVisualEditor from './pages/BusinessEnglishVisualEditor';
 
 // Loading spinner component
@@ -186,6 +187,18 @@ const AppContent = () => {
     );
   }
 
+  // Business English preview page - standalone
+  if (path.startsWith('/business-english-preview')) {
+    if (!isAuthenticated) {
+      return <LoginPage />;
+    }
+    return (
+      <Router>
+        <Route path="/business-english-preview/:id" component={BusinessEnglishPreview} />
+      </Router>
+    );
+  }
+
   // Discussion Questions visual editor - standalone (fullscreen)
   if (path.startsWith('/discussion-questions-visual-editor')) {
     if (!isAuthenticated) {
@@ -229,6 +242,7 @@ const AppContent = () => {
         <Route path="/young-learners-editor" component={YoungLearnersEditorPage} />
         <Route path="/discussion-questions-editor" component={DiscussionQuestionsEditorPage} />
         <Route path="/business-english-editor" component={BusinessEnglishEditorPage} />
+        <Route path="/business-english-preview/:id" component={BusinessEnglishPreview} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />
