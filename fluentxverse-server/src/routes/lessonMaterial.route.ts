@@ -50,9 +50,10 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         });
         
         return { success: true, lesson };
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error creating lesson:', error);
-        return { success: false, error: 'Failed to create lesson' };
+        set.status = 400;
+        return { success: false, error: error?.message || 'Failed to create lesson' };
       }
     },
     {

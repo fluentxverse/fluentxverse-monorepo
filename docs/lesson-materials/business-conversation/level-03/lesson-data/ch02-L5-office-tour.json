@@ -482,11 +482,15 @@
         },
         {
           "type": "instruction",
-          "text": "Let the student choose one category and discuss for 3-5 minutes."
+          "text": "Read the instruction."
         },
         {
-          "type": "tip",
-          "text": "Prompt the student to reuse today's patterns naturally."
+          "type": "instruction",
+          "text": "Ask the student to choose a category."
+        },
+        {
+          "type": "instruction",
+          "text": "You can ask follow-up questions and have a natural conversation with the student until the time for feedback."
         }
       ]
     },

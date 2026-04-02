@@ -319,7 +319,8 @@ export async function generateLessonStructure(
   levelTopic: string,
   chapterTheme: string,
   chapterName: string,
-  customPrompt?: string | null
+  customPrompt?: string | null,
+  course?: string | null
 ): Promise<GenerateLessonStructureResponse> {
   try {
     const response = await apiClient.post('/ai/generate-lesson-structure', {
@@ -329,6 +330,7 @@ export async function generateLessonStructure(
       chapterTheme,
       chapterName,
       customPrompt: customPrompt || null,
+      course: course || null,
     });
     return response.data;
   } catch (error: any) {

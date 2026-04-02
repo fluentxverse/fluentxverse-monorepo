@@ -460,7 +460,8 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
           body.levelTopic,
           body.chapterTheme,
           body.chapterName,
-          body.customPrompt
+          body.customPrompt,
+          body.course
         );
         return { success: true, data: result };
       } catch (error) {
@@ -480,11 +481,12 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
         chapterTheme: t.String(),
         chapterName: t.String(),
         customPrompt: t.Optional(t.Nullable(t.String())),
+        course: t.Optional(t.Nullable(t.String())),
       }),
       detail: {
         tags: ['AI'],
         summary: 'Generate lesson names and goals for a chapter',
-        description: 'Uses AI to generate lesson names, English goals, and Japanese goals for all 10 lessons in a chapter.',
+        description: 'Uses AI to generate chapter lesson names and goals. Business English uses a fixed 5-lesson chapter sequence.',
       },
     }
   )

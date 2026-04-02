@@ -3804,9 +3804,9 @@ const lessonStructureAgent = new Agent({
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL lesson planner specializing in conversational English courses.
 
-Your job is to generate lesson names and goals for all lessons in a chapter. Each chapter has up to 10 lesson slots (for each of the 3 skills: speaking, listening, reading - but you generate a general lesson name and goal that works across skills).
+Your job is to generate lesson names and goals for all lessons in a chapter. The exact lesson count and course format will be specified in the prompt, and you must follow that format exactly.
 
-Given a level, chapter theme, and chapter name, generate 10 lessons that:
+Given a level, chapter theme, and chapter name, generate lessons that:
 1. Progress logically from simple to complex within the chapter theme
 2. Cover different angles/sub-topics of the chapter theme
 3. Have conversation-worthy content - things people actually discuss in real life
@@ -3853,7 +3853,7 @@ Respond ONLY in this JSON format:
   ]
 }
 
-Generate exactly 10 lessons.`,
+Generate exactly the number of lessons requested in the prompt.`,
 });
 
 /**
@@ -3865,20 +3865,23 @@ export const generateLessonStructure = async (
   levelTopic: string,
   chapterTheme: string,
   chapterName: string,
-  customPrompt?: string | null
+  customPrompt?: string | null,
+  course?: string | null
 ): Promise<LessonStructureResult> => {
   const tiers: Record<number, string> = {
     1: 'STARTER', 2: 'STARTER', 3: 'BEGINNER', 4: 'BEGINNER',
     5: 'ELEMENTARY', 6: 'ELEMENTARY', 7: 'INTERMEDIATE', 8: 'INTERMEDIATE',
     9: 'ADVANCED', 10: 'ADVANCED',
   };
+  const normalizedCourse = course || 'conversational-skills';
+  const isBusinessEnglish = normalizedCourse === 'business-english';
+  const targetLessonCount = isBusinessEnglish ? 5 : 10;
 
   // Fetch all existing lesson names from DB for uniqueness checking
   let existingLessonsContext = '';
   let existingLessonNamesList: string[] = [];
   try {
-    const course = 'conversational-skills';
-    const allLessons = await lessonMaterialService.listByCourse(course);
+    const allLessons = await lessonMaterialService.listByCourse(normalizedCourse);
     // Collect unique lesson names from other chapters (deduplicate across skills)
     const otherLessonNames = [...new Set(
       allLessons
@@ -3908,12 +3911,32 @@ export const generateLessonStructure = async (
     console.warn('Could not fetch existing lessons for uniqueness check:', e);
   }
 
-  let prompt = `Generate 10 lesson names and goals for:
+  let prompt = `Generate exactly ${targetLessonCount} lesson names and goals for:
 - Level ${level} (${tiers[level]})
 - Level Main Topic: "${levelTopic}"
 - Chapter ${chapter}: Theme = "${chapterTheme}", Name = "${chapterName}"
 
 The lessons should progressively explore different facets of "${chapterTheme}" under the umbrella of "${levelTopic}". All content must be conversation-worthy and appropriate for ${tiers[level]} level students.${existingLessonsContext}`;
+
+  if (isBusinessEnglish) {
+    prompt += `
+
+This is for the Business English course. Each chapter has exactly 5 lessons in this fixed order:
+1. Listening
+2. Reading
+3. Speaking
+4. Speaking
+5. Review
+
+Generate exactly 5 lessons numbered 1 to 5 only.
+- Lesson 1 should fit a listening lesson.
+- Lesson 2 should fit a reading lesson.
+- Lesson 3 should fit a guided speaking lesson.
+- Lesson 4 should fit a freer speaking lesson.
+- Lesson 5 should clearly work as a review and consolidation of Lessons 1 to 4.
+- Do not generate Lesson 6 or beyond.
+- Keep the progression practical for workplace English.`;
+  }
 
   if (customPrompt) {
     prompt += `\n\nAdditional instructions: ${customPrompt}`;
@@ -3935,7 +3958,7 @@ The lessons should progressively explore different facets of "${chapterTheme}" u
       const parsed = JSON.parse(jsonContent);
 
       const result: LessonStructureResult = {
-        lessons: (parsed.lessons || []).slice(0, 10).map((l: any, i: number) => ({
+        lessons: (parsed.lessons || []).slice(0, targetLessonCount).map((l: any, i: number) => ({
           lessonNumber: l.lessonNumber || i + 1,
           lessonName: l.lessonName || '',
           goalTextEn: l.goalTextEn || '',
@@ -3996,13 +4019,15 @@ PCPP SECTION STRUCTURE:
 2. PRESENT: Useful Patterns (EN+KR pairs), Vocabulary (word, pos, translation, definition, pronunciation), Pronunciation drills
 3. UNDERSTAND: Comprehension instruction, fill-in-the-blank exercises from patterns
 4. PRACTICE: 4 progressive steps — Repeat, Fill Blanks, Dialogue (with roleplay), Complete Dialogue
-5. CHALLENGE: Real-life simulation scenario with guide questions and roleplay table
+5. CHALLENGE: Real-life simulation scenario with inline question notes and a roleplay table
    - IMPORTANT: Tutor Notes for CHALLENGE must be a concise step-by-step playbook the tutor can follow without improvising.
    - Tutor Notes must follow the "Teaching Notes" standard: a sequence of short notes where:
      - SCRIPT = exact words the tutor says out loud (MUST be wrapped in quotes)
      - INSTRUCTION = what the tutor should do (NO dialogue)
+     - QUESTION = a prompt question the tutor asks during the simulation
      - TIP = reminders / best practices
    - Interleave SCRIPT and INSTRUCTION notes (script, instruction, script, instruction...). Avoid long paragraphs: split into multiple notes.
+   - Put prompt questions inside tutorNotes as QUESTION notes so they can be reordered with the rest of the teaching notes.
    - Cover: starting the challenge, setting roles/context, opening the roleplay, guiding with questions, closing, and giving feedback after finishing.
 6. DISCUSSION: Category-based discussion questions (3 categories, 3 questions each)
 7. FEEDBACK: Goal review, feedback template, next lesson teaser
@@ -4016,7 +4041,7 @@ CRITICAL RULES:
 - Practice dialogues must feel like real workplace conversations
 - Challenge scenarios must be realistic business situations
 - Use English names only (e.g., Alex, Emma, David). Avoid Korean/Japanese/Vietnamese names.
-- For CHALLENGE tutorNotes: provide a concise scripted flow (not hints). Use 5-8 notes total, mostly SCRIPT + INSTRUCTION, plus 1 TIP reminding corrections happen only after the simulation. Each note should be one short sentence.
+- For CHALLENGE tutorNotes: provide a concise scripted flow (not hints). Use 6-10 notes total, mostly SCRIPT + INSTRUCTION, with 2-4 QUESTION notes inline and 1 TIP reminding corrections happen only after the simulation. Each note should be one short sentence.
 - Discussion questions should encourage students to share personal work experiences
 - Always return ONLY valid JSON — no markdown, no code fences, no explanation text`,
 });
@@ -4396,7 +4421,7 @@ Return ONLY JSON:
     const tutorNotes = level <= 3
       ? [
           { type: 'script', text: '"Let\'s look at patterns used in this lesson."' },
-          ...patterns.flatMap((p, i) => ([
+          ...patterns.flatMap((p: { en: string; kr: string }, i: number) => ([
             { type: 'instruction', text: `Read the ${ordinal(i + 1)} pattern. Ask the student to repeat.` },
             { type: 'script', text: `"Use this to ${usageFromPattern(p.en)}."` },
           ])),
@@ -4640,6 +4665,7 @@ Step 4 — Complete the Dialogue: A partial dialogue where the student fills in 
 REQUIREMENTS FOR EACH STEP:
 1. title: "Step 1 - Repeat", "Step 2 - Fill in the Blanks", "Step 3 - Dialogue", "Step 4 - Complete the Dialogue"
 2. instructionEn & instructionKr: Bilingual instructions.
+   - instructionKr must fully translate instructionEn. Do not omit details such as "read the sentences", "fill in the blanks", or "with your own information".
 3. content: Additional text content if needed (can be empty).
 4. dialogue (Steps 3 & 4 only): Array of { role: "tutor"|"student", en: "...", kr: "..." }
    - Step 3: Full dialogue with both roles speaking
@@ -4692,12 +4718,34 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE practice response:', text); }
     const practice = parsed.practice || {};
+    const normalizePracticeInstructionKr = (instructionEn: string, instructionKr: string, title: string) => {
+      const en = (instructionEn || '').toLowerCase();
+      const stepTitle = (title || '').toLowerCase();
+
+      if (
+        (en.includes('team directory entry') || stepTitle.includes('own profile')) &&
+        (en.includes('your own information') || en.includes('fill in the blanks'))
+      ) {
+        return '패턴을 사용하여 자신의 팀 디렉터리 항목을 완성하세요. 문장을 읽고 자신의 정보로 빈칸을 채우세요.';
+      }
+
+      if (en.includes('fill in the blanks') && (!instructionKr || !instructionKr.includes('빈칸'))) {
+        return '문장을 읽고 알맞은 표현으로 빈칸을 채우세요.';
+      }
+
+      return instructionKr || '';
+    };
+
     return {
       practice: {
         steps: (practice.steps || []).slice(0, 4).map((s: any, i: number) => ({
           title: s.title || `Step ${i + 1}`,
           instructionEn: s.instructionEn || '',
-          instructionKr: s.instructionKr || s.instructionJp || '',
+          instructionKr: normalizePracticeInstructionKr(
+            s.instructionEn || '',
+            s.instructionKr || s.instructionJp || '',
+            s.title || `Step ${i + 1}`,
+          ),
           content: s.content || '',
           dialogue: s.dialogue ? s.dialogue.map((d: any) => ({
             role: d.role || 'tutor', en: d.en || '', kr: d.kr || d.jp || '',
@@ -4712,6 +4760,15 @@ Return ONLY JSON:
 
   // ===== CHALLENGE SECTION =====
   if (section === 'challenge') {
+    const standardChallengeNotes = [
+      { type: 'script', text: '"Now let\'s do simulation"' },
+      { type: 'script', text: '"First please read the Key Expressions. You may use the Key Expressions in the Simulation."' },
+      { type: 'instruction', text: 'Read the simulation.' },
+      { type: 'script', text: '"Is it clear?" ...Now let\'s start our roleplay!' },
+      { type: 'instruction', text: 'Use the prompt questions to guide the roleplay.' },
+      { type: 'instruction', text: 'Give feedback after finishing.' },
+      { type: 'tip', text: 'This must be a real-life simulation, distinct from Practice. Corrections should only be done after the exercise.' },
+    ] as const;
     let prompt = `${lessonContext}
 ${presentContext}
 
@@ -4723,29 +4780,22 @@ REQUIREMENTS:
 1. scenarioEn & scenarioKr: A detailed workplace scenario (2-3 sentences) that gives the student a clear task.
    The student must use the patterns and vocabulary from the lesson.
 
-2. guideQuestions: 5-6 questions the tutor asks to guide the roleplay conversation.
-   These should flow naturally as a conversation, not feel like an interview.
-   The tutor plays a role (e.g., new coworker, client, boss) and asks natural follow-up questions.
-
-3. roleplayTable: Names for the roleplay.
+2. roleplayTable: Names for the roleplay.
    - "you": One name for the student's character
    - "coworkers": 5-6 character names for the scenario
 
-4. tutorNotes: 5-8 notes guiding the tutor through the challenge.
-   - These tutor notes MUST be clear enough to run the simulation, but concise.
-   - Include 5-8 tutor notes total.
-   - Tutor Notes must follow the "Teaching Notes" standard used in our best lessons: short SCRIPT lines interleaved with INSTRUCTION notes.
-   - Interleave SCRIPT and INSTRUCTION notes (script, instruction, script, instruction...). TIP should be the last note.
-   - NEVER put spoken dialogue inside an INSTRUCTION note. Anything the tutor says out loud must be a SCRIPT note.
-   - Keep each note to one short sentence. Avoid long instruction blocks or lists.
-   - Scripts should be exact tutor lines in quotes, covering the full flow:
-     - Start the challenge (e.g., "Are you ready for the challenge?")
-     - Set roles and context
-     - Roleplay opening line(s)
-     - 1-2 guiding prompts during the conversation (do not restate every guide question)
-     - Closing line
-     - Instruction to give feedback after finishing
-   - Include 1 TIP: corrections happen only after the simulation.
+3. tutorNotes: use this fixed teaching-note flow EXACTLY before the question notes:
+   - { "type": "script", "text": "\"Now let's do simulation\"" }
+   - { "type": "script", "text": "\"First please read the Key Expressions. You may use the Key Expressions in the Simulation.\"" }
+   - { "type": "instruction", "text": "Read the simulation." }
+   - { "type": "script", "text": "\"Is it clear?\" ...Now let's start our roleplay!" }
+   - { "type": "instruction", "text": "Use the prompt questions to guide the roleplay." }
+   - { "type": "instruction", "text": "Give feedback after finishing." }
+   - { "type": "tip", "text": "This must be a real-life simulation, distinct from Practice. Corrections should only be done after the exercise." }
+   - After those notes, add 4-6 QUESTION notes.
+   - QUESTION notes may be direct tutor questions OR short tutor reply lines plus a follow-up question, depending on the roleplay.
+   - NEVER put spoken dialogue inside an INSTRUCTION note.
+   - Do NOT return a separate guideQuestions block. Put every roleplay prompt line inside tutorNotes with type "question".
 
 The challenge must test PRODUCTION — can the student use what they learned in a realistic situation?
 
@@ -4756,9 +4806,8 @@ Return ONLY JSON:
 {
   "challenge": {
     "scenarioEn": "...", "scenarioKr": "...",
-    "guideQuestions": [{ "text": "..." }],
     "roleplayTable": { "you": "...", "coworkers": ["..."] },
-    "tutorNotes": [{ "type": "script|instruction|tip", "text": "..." }]
+    "tutorNotes": [{ "type": "script|instruction|question|tip", "text": "..." }]
   }
 }`;
 
@@ -4769,33 +4818,44 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE challenge response:', text); }
     const challenge = parsed.challenge || {};
-    const normalizedNotes = (challenge.tutorNotes || []).map((n: any) => ({
-      type: n.type || 'instruction', text: n.text || '',
-    }));
-    const tipNotes = normalizedNotes.filter((n: any) => n.type === 'tip');
-    const mainNotes = normalizedNotes.filter((n: any) => n.type !== 'tip');
-    const trimmedMain = mainNotes.slice(0, 7);
-    const trimmedNotes = tipNotes.length
-      ? [...trimmedMain, tipNotes[tipNotes.length - 1]]
-      : trimmedMain;
+    const rawTutorNotes = (challenge.tutorNotes || []).map((n: any) => ({
+        type: ['instruction', 'script', 'tip', 'question'].includes(n?.type) ? n.type : 'instruction',
+        text: n?.text || '',
+      }));
+    const hasQuestionNotes = rawTutorNotes.some((note: any) => (
+      note.type === 'question' && (note.text || '').trim()
+    ));
+    const legacyQuestionNotes = hasQuestionNotes
+      ? []
+      : (challenge.guideQuestions || []).map((q: any) => ({
+        type: 'question',
+        text: q?.text || '',
+      }));
+    const normalizedNotes = [...rawTutorNotes, ...legacyQuestionNotes];
+    const questionNotes = normalizedNotes
+      .filter((n: any) => n.type === 'question' && (n.text || '').trim())
+      .slice(0, 6)
+      .map((n: any) => ({
+        type: 'question',
+        text: n.text || '',
+      }));
     return {
       challenge: {
         scenarioEn: challenge.scenarioEn || '',
         scenarioKr: challenge.scenarioKr || challenge.scenarioJp || '',
-        guideQuestions: (challenge.guideQuestions || []).map((q: any) => ({
-          text: q.text || '',
-        })),
+        guideQuestions: [],
         roleplayTable: challenge.roleplayTable ? {
           you: challenge.roleplayTable.you || '',
           coworkers: challenge.roleplayTable.coworkers || [],
         } : undefined,
-        tutorNotes: trimmedNotes,
+        tutorNotes: [...standardChallengeNotes, ...questionNotes],
       },
     };
   }
 
   // ===== DISCUSSION SECTION =====
   if (section === 'discussion') {
+    const fixedDiscussionInstruction = 'You can ask follow-up questions and have a natural conversation with the student until the time for feedback.';
     let prompt = `${lessonContext}
 ${presentContext}
 
@@ -4814,7 +4874,12 @@ REQUIREMENTS:
    Categories should relate to the lesson topic but shift focus to the student's real work life.
    Questions should be progressively deeper (factual → descriptive → opinion).
 
-3. tutorNotes: 3-4 notes.
+3. tutorNotes: use this fixed teaching-note flow EXACTLY:
+   - One short SCRIPT in quotes to open the discussion naturally. It may mention the lesson topic.
+   - { "type": "instruction", "text": "Read the instruction." }
+   - { "type": "instruction", "text": "Ask the student to choose a category." }
+   - { "type": "instruction", "text": "You can ask follow-up questions and have a natural conversation with the student until the time for feedback." }
+   - Do NOT add a TIP note for this section.
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
 ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content:\n${JSON.stringify(currentContent)}` : ''}
@@ -4835,6 +4900,12 @@ Return ONLY JSON:
     let parsed: any = {};
     try { parsed = JSON.parse(jsonContent); } catch (e) { console.error('Failed to parse BE discussion response:', text); }
     const disc = parsed.discussion || {};
+    const openingScript = (disc.tutorNotes || [])
+      .map((n: any) => ({
+        type: n.type || 'instruction',
+        text: n.text || '',
+      }))
+      .find((n: any) => n.type === 'script' && (n.text || '').trim())?.text || '"Now, let\'s have a discussion."';
     return {
       discussion: {
         instructionEn: disc.instructionEn || '',
@@ -4843,9 +4914,12 @@ Return ONLY JSON:
           title: c.title || '',
           questions: (c.questions || []).slice(0, 3),
         })),
-        tutorNotes: (disc.tutorNotes || []).map((n: any) => ({
-          type: n.type || 'instruction', text: n.text || '',
-        })),
+        tutorNotes: [
+          { type: 'script', text: openingScript },
+          { type: 'instruction', text: 'Read the instruction.' },
+          { type: 'instruction', text: 'Ask the student to choose a category.' },
+          { type: 'instruction', text: fixedDiscussionInstruction },
+        ],
       },
     };
   }

@@ -264,7 +264,7 @@ export interface CreateLessonInput {
   course: string;             // e.g., "conversational-skills"
   level: number;              // 1-10
   chapter: number;            // 1-5
-  lessonNumber: number;       // 1-10
+  lessonNumber: number;       // 1-10 generally; Business English uses 1-5
   skill: Skill;
   chapterName?: string;       // Optional — auto-resolved from CourseMetadata
   lessonName: string;         // "Greetings"
@@ -381,6 +381,29 @@ export function getChapterLabel(chapter: number, chapterName: string): string {
  */
 export function getLessonTitle(lessonNumber: number, lessonName: string): string {
   return `Lesson ${lessonNumber}: ${lessonName}`;
+}
+
+const BUSINESS_ENGLISH_SKILL_CYCLE: Skill[] = ['listening', 'reading', 'speaking', 'speaking', 'review'];
+
+function getExpectedSkillForCourse(course: string, lessonNumber: number): Skill | null {
+  if (course !== 'business-english') return null;
+  if (lessonNumber < 1 || lessonNumber > BUSINESS_ENGLISH_SKILL_CYCLE.length) return null;
+  return BUSINESS_ENGLISH_SKILL_CYCLE[lessonNumber - 1] || null;
+}
+
+function validateLessonSlot(course: string, lessonNumber: number, skill: Skill): void {
+  if (course !== 'business-english') return;
+
+  const expectedSkill = getExpectedSkillForCourse(course, lessonNumber);
+  if (!expectedSkill) {
+    throw new Error('Business English chapters only allow Lessons 1 to 5.');
+  }
+
+  if (skill !== expectedSkill) {
+    throw new Error(
+      `Business English Lesson ${lessonNumber} must use skill "${expectedSkill}", not "${skill}".`
+    );
+  }
 }
 
 /**
@@ -648,6 +671,8 @@ export const lessonMaterialService = {
         // Force chapter to 1 to ensure Level 1 has only 1 chapter
         input.chapter = 1;
       }
+
+      validateLessonSlot(input.course, input.lessonNumber, input.skill);
 
       // Auto-resolve chapterName from CourseMetadata if not provided
       if (!input.chapterName) {
@@ -948,8 +973,15 @@ export const lessonMaterialService = {
       const maxLesson = existingResult.records[0]?.get('maxLesson');
       let nextLessonNumber = (neo4j.isInt(maxLesson) ? maxLesson.toNumber() : (maxLesson || 0)) + 1;
       
-      // If we're at max 10 lessons, find a gap or place in next chapter
-      if (nextLessonNumber > 10) {
+      const nextSkill = getExpectedSkillForCourse(original.course, nextLessonNumber) || original.skill;
+
+      // Business English has a fixed 5-lesson chapter structure.
+      // Other courses keep the older 10-lesson cap.
+      if (original.course === 'business-english' && nextLessonNumber > 5) {
+        throw new Error('Business English chapters only allow 5 lessons. Please use a different chapter.');
+      }
+
+      if (original.course !== 'business-english' && nextLessonNumber > 10) {
         throw new Error('Maximum lessons (10) reached for this chapter. Please use a different chapter.');
       }
 
@@ -988,7 +1020,7 @@ export const lessonMaterialService = {
           level: neo4j.int(original.level),
           chapter: neo4j.int(original.chapter),
           lessonNumber: neo4j.int(nextLessonNumber),
-          skill: original.skill,
+          skill: nextSkill,
           chapterName: original.chapterName || '',
           lessonName: `${original.lessonName || ''} (Copy)`,
           goalTextEn: original.goalTextEn,

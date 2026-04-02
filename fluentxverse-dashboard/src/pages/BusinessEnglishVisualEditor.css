@@ -297,7 +297,7 @@
     0 2px 8px rgba(0, 0, 0, .3),
     0 8px 32px rgba(0, 0, 0, .15),
     0 0 0 1px rgba(124, 58, 237, .06);
-  overflow: hidden;
+  overflow: visible;
   flex-shrink: 0;
   scroll-margin-top: 28px;
   transition: box-shadow .3s ease;
@@ -609,6 +609,10 @@
   display: grid;
   grid-template-columns: 1fr 340px;
   align-items: start;
+}
+
+.beve-page-section.beve-page-section-full {
+  grid-template-columns: 1fr;
 }
 
 .beve-page-section + .beve-page-section {
@@ -1613,6 +1617,51 @@
   gap: 3px;
 }
 
+.beve-practice-note-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.beve-practice-note-group {
+  border: 1px solid rgba(124, 58, 237, .16);
+  border-radius: 10px;
+  padding: 0 8px 6px;
+  background: rgba(33, 24, 54, .4);
+}
+
+.beve-practice-note-group-header {
+  padding: 8px 0 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(124, 58, 237, .12);
+}
+
+.beve-practice-note-group-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  margin-bottom: 4px;
+}
+
+.beve-practice-note-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a78bfa;
+  margin-bottom: 0;
+}
+
+.beve-practice-note-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a78bfa;
+  margin: 0 0 8px;
+}
+
 .beve-tutor-note {
   padding: 4px 6px 4px 10px;
   background: transparent;
@@ -1631,6 +1680,10 @@
 }
 .beve-tutor-note:hover {
   background: rgba(124, 58, 237, .06);
+}
+.beve-tutor-note.drag-over {
+  background: rgba(124, 58, 237, .10);
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .45);
 }
 
 .beve-tutor-note.script {
@@ -1671,16 +1724,54 @@
   padding-left: 8px;
 }
 
+.beve-tutor-note.question {
+  padding-left: 12px;
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, .04);
+}
+.beve-tutor-note.question::before {
+  content: '?';
+  position: absolute;
+  left: 2px;
+  top: 4px;
+  color: #a78bfa;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .beve-tutor-note-type {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 7px;
   font-weight: 700;
   letter-spacing: .5px;
   text-transform: uppercase;
   margin-bottom: 1px;
 }
+.beve-tutor-note-drag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: #71717a;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+.beve-tutor-note-drag:active {
+  cursor: grabbing;
+}
+.beve-tutor-note-drag:hover {
+  color: #a78bfa;
+  background: rgba(124, 58, 237, .08);
+}
 .beve-tutor-note.script .beve-tutor-note-type { color: #a78bfa; }
 .beve-tutor-note.instruction .beve-tutor-note-type { color: #a78bfa; }
 .beve-tutor-note.tip .beve-tutor-note-type { color: #fbbf24; }
+.beve-tutor-note.question .beve-tutor-note-type { color: #a78bfa; }
 
 .beve-tutor-note .beve-rich-input {
   line-height: 1.35;
@@ -1689,16 +1780,36 @@
   min-height: 1.1em;
 }
 
+.beve-tutor-note .beve-rich-hint {
+  display: none;
+}
+
+.beve-tutor-note .beve-rich-input strong,
+.beve-tutor-note .beve-rich-input b {
+  color: inherit;
+}
+
+.beve-tutor-note .beve-rich-input u {
+  text-decoration-color: currentColor;
+}
+
 .beve-tutor-note-actions {
   position: absolute;
   top: 1px;
   right: 1px;
   display: flex;
   gap: 1px;
-  opacity: 0;
+  opacity: .72;
   transition: .15s;
 }
-.beve-tutor-note:hover .beve-tutor-note-actions { opacity: 1; }
+.beve-tutor-note:hover .beve-tutor-note-actions,
+.beve-tutor-note:focus-within .beve-tutor-note-actions { opacity: 1; }
+
+.beve-icon-btn:disabled {
+  opacity: .35;
+  cursor: default;
+  pointer-events: none;
+}
 
 .beve-tutor-add-note {
   display: flex;
@@ -2086,18 +2197,71 @@
 .beve-guide-questions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .beve-guide-q {
-  font-size: 13px;
+  font-size: 12px;
   color: #d4d4d8;
-  line-height: 1.5;
-  padding: 8px 12px;
+  line-height: 1.35;
+  padding: 6px 8px;
   background: rgba(255, 255, 255, .03);
   border-radius: 6px;
   border: 1px solid rgba(124, 58, 237, .1);
+}
+.beve-guide-q-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.beve-guide-q-num {
+  font-weight: 700;
+  color: #7c3aed;
+  margin-top: 1px;
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.beve-guide-q .beve-rich-input {
+  font-size: 12px;
+  line-height: 1.35;
+  min-height: 1.1em;
+  padding: 0 2px;
+  margin: 0 -2px;
+}
+
+.beve-guide-q .beve-rich-hint {
+  display: none;
+}
+
+.beve-col-tutor .beve-guide-q .beve-rich-input,
+.beve-col-tutor .beve-guide-q .beve-rich-input strong,
+.beve-col-tutor .beve-guide-q .beve-rich-input b {
+  color: #a78bfa;
+  caret-color: #a78bfa;
+}
+
+.beve-col-tutor .beve-guide-q .beve-rich-input:hover,
+.beve-col-tutor .beve-guide-q .beve-rich-input:focus {
+  background: transparent;
+  box-shadow: none;
+}
+.beve-guide-q-delete {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.beve-guide-q-actions {
+  display: flex;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.beve-challenge-tail-notes {
+  margin-top: 10px;
 }
 
 /* ─── Subsection Heading ──────────────────────────────── */
@@ -2669,6 +2833,10 @@
   background: #faf8ff;
   box-shadow: 0 2px 8px rgba(124, 58, 237, .08);
 }
+.beve.light .beve-tutor-note.drag-over {
+  background: #f4eeff;
+  box-shadow: inset 0 0 0 1px rgba(124, 58, 237, .25);
+}
 .beve.light .beve-tutor-note.script {
   border-left: 4px solid #7c3aed;
   color: #5b21b6;
@@ -2684,6 +2852,11 @@
   border-left: 4px solid #f59e0b;
   background: #fffbeb;
 }
+.beve.light .beve-tutor-note.question {
+  border-left: 4px solid #8b5cf6;
+  color: #6d28d9;
+  background: rgba(124, 58, 237, .05);
+}
 .beve.light .beve-tutor-note.script .beve-tutor-note-type {
   color: #7c3aed;
   background: rgba(124, 58, 237, .08);
@@ -2696,6 +2869,16 @@
   color: #d97706;
   background: rgba(217, 119, 6, .08);
 }
+.beve.light .beve-tutor-note.question .beve-tutor-note-type {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, .08);
+}
+.beve.light .beve-tutor-note-drag {
+  color: #9ca3af;
+}
+.beve.light .beve-tutor-note-drag:hover {
+  color: #7c3aed;
+}
 
 .beve.light .beve-tutor-add-note {
   border-color: #c5cad6;
@@ -2705,6 +2888,28 @@
   border-color: #7889ac;
   color: #3a5090;
   background: #f5f7fc;
+}
+
+.beve.light .beve-practice-note-group {
+  border-color: #d8cef0;
+  background: #fcfbff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+
+.beve.light .beve-practice-note-group-header {
+  border-bottom-color: #e6def6;
+}
+
+.beve.light .beve-practice-note-group-eyebrow {
+  color: #6d5db2;
+}
+
+.beve.light .beve-practice-note-group-title {
+  color: #7c3aed;
+}
+
+.beve.light .beve-practice-note-panel-title {
+  color: #7c3aed;
 }
 
 /* ─── Fill-in-blank Table ─────────────────────────────── */
@@ -2778,6 +2983,13 @@
   color: #3f3f50;
   background: #fafafe;
   border-color: #e0d9f0;
+}
+
+.beve.light .beve-col-tutor .beve-guide-q .beve-rich-input,
+.beve.light .beve-col-tutor .beve-guide-q .beve-rich-input strong,
+.beve.light .beve-col-tutor .beve-guide-q .beve-rich-input b {
+  color: #7c3aed;
+  caret-color: #7c3aed;
 }
 
 /* ─── Sub Heading ─────────────────────────────────────── */

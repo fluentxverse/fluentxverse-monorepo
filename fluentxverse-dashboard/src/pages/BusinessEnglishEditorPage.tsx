@@ -1,7 +1,7 @@
 /**
  * BusinessEnglishEditorPage
  * No-code editor for creating Business English lesson materials
- * Hierarchical view: Levels 3–10 → 5 Chapters → 10 Lessons per chapter
+ * Hierarchical view: Levels 3–10 → 5 Chapters → 5 Lessons per chapter
  *
  * Syllabus:
  *   Level 3       — Beginner         (TOEIC 10-220)   Listening, Speaking, Reading
@@ -52,14 +52,14 @@ import './BusinessEnglishEditorPage.css';
 const COURSE_ID = 'business-english';
 const LEVELS = [3, 4, 5, 6, 7, 8, 9, 10];
 const CHAPTERS = Array.from({ length: 5 }, (_, i) => i + 1);
-const LESSONS = Array.from({ length: 10 }, (_, i) => i + 1);
+const LESSONS = Array.from({ length: 5 }, (_, i) => i + 1);
 
 /** All levels have 5 chapters */
 const getChaptersForLevel = (_level: number): number[] => CHAPTERS;
 
 /**
  * Hardcoded skill cycle per lesson number within a chapter.
- * Pattern: Listening → Reading → Speaking → Speaking → Review (repeats)
+ * Fixed order: Listening → Reading → Speaking → Speaking → Review
  * Same for ALL levels (3–10).
  */
 const SKILL_CYCLE: Skill[] = ['listening', 'reading', 'speaking', 'speaking', 'review'];
@@ -327,10 +327,12 @@ export default function BusinessEnglishEditorPage() {
         chapter,
         levelTopic,
         chapterMeta.theme,
-        chapterMeta.name
+        chapterMeta.name,
+        null,
+        COURSE_ID
       );
       if (result.success && result.data) {
-        setLessonPreview({ level, chapter, lessons: result.data.lessons });
+        setLessonPreview({ level, chapter, lessons: result.data.lessons.slice(0, LESSONS.length) });
       } else {
         toast.error(result.error || 'Failed to generate lessons');
       }
@@ -344,7 +346,7 @@ export default function BusinessEnglishEditorPage() {
   const handleAcceptLessons = async () => {
     if (!lessonPreview) return;
     try {
-      for (const lesson of lessonPreview.lessons) {
+      for (const lesson of lessonPreview.lessons.slice(0, LESSONS.length)) {
         const skill = getSkillForLesson(lesson.lessonNumber);
         const exists = await checkDuplicate(COURSE_ID, lessonPreview.level, lessonPreview.chapter, lesson.lessonNumber, skill);
         if (exists) continue;
@@ -455,10 +457,10 @@ export default function BusinessEnglishEditorPage() {
     const writingCount = lessons.filter((l) => l.skill === 'writing').length;
     const reviewCount = lessons.filter((l) => l.skill === 'review').length;
     const totalLessons = lessons.length;
-    // Capacity: 8 levels × 5 chapters × 10 lessons = 400 total
-    const totalCapacity = LEVELS.length * 5 * 10; // 400
+    // Capacity: 8 levels × 5 chapters × 5 lessons = 200 total
+    const totalCapacity = LEVELS.length * 5 * 5; // 200
     const completedLevels = LEVELS.filter((lv) => {
-      return getLevelTotalLessons(lv) >= 10 * 5; // 50 lessons per level
+      return getLevelTotalLessons(lv) >= 5 * 5; // 25 lessons per level
     }).length;
     const progressPercent = totalCapacity > 0 ? Math.round((totalLessons / totalCapacity) * 100) : 0;
 
@@ -634,7 +636,7 @@ export default function BusinessEnglishEditorPage() {
                                   {chapterTheme && <span className="cse-chapter-theme">{chapterTheme}</span>}
                                   {chapterName && <span className="cse-chapter-name">{chapterName}</span>}
                                 </div>
-                                <span className="cse-chapter-count">{getChapterLessonCount(level, chapter)}/10</span>
+                                <span className="cse-chapter-count">{getChapterLessonCount(level, chapter)}/5</span>
                               </button>
 
                               {/* Chapter Meta Editors */}
@@ -1562,8 +1564,9 @@ function BELessonPreviewModal({
           ) : (
             <>
               <p className="cse-ai-review-hint">
-                Review and edit the generated lessons. Each lesson's skill is auto-assigned:
-                Listening → Reading → Speaking → Speaking → Review (repeating). Existing lessons will be skipped.
+                Review and edit the generated lessons. Each lesson's skill is auto-assigned in the fixed
+                Business English order: Listening → Reading → Speaking → Speaking → Review.
+                Existing lessons will be skipped.
               </p>
               <div className="cse-ai-lessons-list">
                 {preview.lessons.map((lesson, idx) => (

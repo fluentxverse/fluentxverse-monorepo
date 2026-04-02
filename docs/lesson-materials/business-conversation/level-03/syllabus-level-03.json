@@ -19,7 +19,7 @@
         {
           "lesson": 1,
           "skill": "listening",
-          "name": "Pleased to Meet You",
+          "name": "Introducing Your Team",
           "goalEn": "Can introduce yourself and your coworker.",
           "targetPatterns": [
             "My name is ___.",
@@ -27,9 +27,9 @@
             "We are ___."
           ],
           "vocabulary": [
-            "pleased",
-            "coworker",
-            "join"
+            "introduce",
+            "teammate",
+            "first day"
           ],
           "pronunciation": "/æ/ vs /ʌ/",
           "situation": "A new coworker joins your team. Introduce yourself and another coworker to him/her.",
@@ -39,21 +39,21 @@
         {
           "lesson": 2,
           "skill": "reading",
-          "name": "All About Me",
-          "goalEn": "Can read and understand a simple self-introduction profile.",
+          "name": "A New Coworker",
+          "goalEn": "Can read and understand simple information about a coworker.",
           "targetPatterns": [
-            "I am from ___.",
             "I live in ___.",
+            "I work at ___.",
             "I like ___."
           ],
           "vocabulary": [
-            "hometown",
+            "accountant",
             "hobby",
-            "favorite"
+            "weekend"
           ],
           "pronunciation": "/ɪ/ vs /iː/",
-          "situation": "You read a short profile card that a new coworker shared with the team.",
-          "goalKr": "간단한 자기소개 프로필을 읽고 이해할 수 있다."
+          "situation": "You open the team directory and read a short entry about a new coworker.",
+          "goalKr": "동료에 대한 간단한 정보를 읽고 이해할 수 있다."
         },
         {
           "lesson": 3,
@@ -78,20 +78,22 @@
           "lesson": 4,
           "skill": "speaking",
           "name": "Who's Who?",
-          "goalEn": "Can introduce team members and describe their roles.",
+          "goalEn": "Can ask about team members and their roles.",
           "targetPatterns": [
-            "This is ___. He/She is ___.",
-            "He/She works in ___.",
-            "We work together."
+            "What department does ___ work in?",
+            "What team is ___ part of?",
+            "What is ___ in charge of?",
+            "Do you work with ___?",
+            "Who should I talk to about ___?"
           ],
           "vocabulary": [
-            "manager",
-            "team",
-            "department"
+            "department",
+            "responsibility",
+            "project team"
           ],
-          "pronunciation": "/θ/ vs /s/",
-          "situation": "A client visits your office. Introduce your team members to the client.",
-          "goalKr": "팀원을 소개하고 역할을 설명할 수 있다."
+          "pronunciation": "/w/ vs /v/",
+          "situation": "You are joining a new project team. Ask a coworker questions about team members and what they do.",
+          "goalKr": "팀원과 역할에 대해 질문할 수 있다."
         },
         {
           "lesson": 5,

@@ -5,7 +5,7 @@ import { initDriver, getDriver, closeDriver } from '../src/db/memgraph';
 
 const sourcePath = path.resolve(
   process.cwd(),
-  '../docs/lesson-materials/business-conversation/level-03/lesson-data/ch01-L2-all-about-me.json',
+  '../docs/lesson-materials/business-conversation/level-03/lesson-data/ch01-L1-pleased-to-meet-you.json',
 );
 
 async function main() {
@@ -27,14 +27,14 @@ async function main() {
         chapter: $chapter,
         lessonNumber: $lessonNumber
       })
-      RETURN l.id AS id, l.skill AS skill
+      RETURN l.id AS id
       ORDER BY l.updatedAt DESC
       LIMIT 1`,
       {
         course: 'business-english',
         level: neo4j.int(3),
         chapter: neo4j.int(1),
-        lessonNumber: neo4j.int(2),
+        lessonNumber: neo4j.int(1),
       },
     );
 
@@ -75,8 +75,10 @@ async function main() {
       JSON.stringify(
         {
           lessonId,
-          patternCount: verified.present?.patterns?.length ?? 0,
-          tutorNoteCount: verified.present?.tutorNotes?.length ?? 0,
+          patternDrillExampleCounts: (verified.understand?.patternDrills || []).map((drill: any) => ({
+            label: drill.label,
+            examples: drill.examples?.length ?? 0,
+          })),
         },
         null,
         2,

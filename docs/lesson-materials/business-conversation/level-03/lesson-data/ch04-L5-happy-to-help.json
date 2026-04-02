@@ -462,7 +462,15 @@
         },
         {
           "type": "instruction",
-          "text": "Discuss for 3-5 minutes."
+          "text": "Read the instruction."
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to choose a category."
+        },
+        {
+          "type": "instruction",
+          "text": "You can ask follow-up questions and have a natural conversation with the student until the time for feedback."
         }
       ]
     },

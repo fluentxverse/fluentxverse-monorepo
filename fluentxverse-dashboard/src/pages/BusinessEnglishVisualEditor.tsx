@@ -37,7 +37,12 @@ interface PronunColumn { symbol: string; words: { en: string; kr: string }[]; }
 interface DialogueLine { role: 'tutor' | 'student'; en: string; kr: string; }
 interface FillRow { parts: { text: string; isBlank: boolean }[]; }
 interface DiscussionCategory { title: string; questions: string[]; }
-interface TutorNote { type: 'instruction' | 'script' | 'tip'; text: string; }
+type UnderstandTutorGroup = 'comprehension' | 'wordBank' | 'soundPractice' | 'activityBlocks';
+type TutorNoteType = 'instruction' | 'script' | 'tip' | 'question';
+interface TutorNote { type: TutorNoteType; text: string; group?: UnderstandTutorGroup | string; }
+type TutorNoteDragState =
+  | { kind: 'section'; section: string; index: number; group?: string }
+  | { kind: 'practice'; stepIndex: number; index: number };
 interface GuideQuestion { text: string; }
 interface PatternDrill {
   label: string; labelKr: string;
@@ -45,6 +50,134 @@ interface PatternDrill {
   examples: { en: string; kr: string }[];
 }
 interface WordBoxItem { word: string; translation?: string; }
+
+const stripHtmlForTutorGrouping = (value: string = '') =>
+  value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+const normalizeTutorNoteType = (type: string = 'instruction'): TutorNoteType =>
+  ['instruction', 'script', 'tip', 'question'].includes(type)
+    ? (type as TutorNoteType)
+    : 'instruction';
+
+const TUTOR_NOTE_ICONS: Record<TutorNoteType, string> = {
+  instruction: 'ri-file-list-3-line',
+  script: 'ri-chat-quote-line',
+  tip: 'ri-lightbulb-line',
+  question: 'ri-question-line',
+};
+
+const normalizeUnderstandTutorNotes = (notes: TutorNote[] = []): TutorNote[] => {
+  let currentGroup: UnderstandTutorGroup = 'comprehension';
+
+  return notes.map((note) => {
+    if (note.group) return note;
+
+    const text = stripHtmlForTutorGrouping(note.text);
+
+    if (
+      text.includes('word bank') ||
+      text.includes('read each word') ||
+      text.includes('read the word') ||
+      text.includes('definition') ||
+      text.includes('meaning')
+    ) {
+      currentGroup = 'wordBank';
+    } else if (
+      text.includes('sound practice') ||
+      text.includes('pronunciation') ||
+      text.includes('pronounce') ||
+      text.includes('mouth') ||
+      /\/[^/\s]{1,12}\//.test(text)
+    ) {
+      currentGroup = 'soundPractice';
+    } else if (
+      text.includes('profile card') ||
+      text.includes('read the profile card') ||
+      text.includes('team directory') ||
+      text.includes('directory entry') ||
+      text.includes('read the entry') ||
+      text.includes('comprehension question') ||
+      text.includes('ask the questions one by one') ||
+      text.includes('ask the comprehension questions') ||
+      text.includes('read the passage')
+    ) {
+      currentGroup = 'activityBlocks';
+    } else if (
+      text.includes('pattern drill') ||
+      text.includes('patterns') ||
+      text.includes('pattern') ||
+      text.includes('table') ||
+      text.includes('sentence')
+    ) {
+      currentGroup = 'comprehension';
+    }
+
+    return { ...note, group: currentGroup };
+  });
+};
+
+const normalizeChallengeTutorNotes = (
+  notes: TutorNote[] = [],
+  guideQuestions: GuideQuestion[] = [],
+): TutorNote[] => {
+  const normalizedNotes = (Array.isArray(notes) ? notes : []).map((note) => ({
+    ...note,
+    type: normalizeTutorNoteType(note?.type),
+    text: note?.text || '',
+  })).filter((note, index, arr) => {
+    if (note.type !== 'question') return true;
+    const normalizedText = stripHtmlForTutorGrouping(note.text);
+    if (!normalizedText) return true;
+    return arr.findIndex((candidate) => (
+      normalizeTutorNoteType(candidate?.type) === 'question' &&
+      stripHtmlForTutorGrouping(candidate?.text || '') === normalizedText
+    )) === index;
+  });
+
+  const hasQuestionNotes = normalizedNotes.some((note) => (
+    note.type === 'question' && stripHtmlForTutorGrouping(note.text)
+  ));
+
+  if (hasQuestionNotes) {
+    return normalizedNotes;
+  }
+
+  const existingQuestionTexts = new Set(
+    normalizedNotes
+      .filter((note) => note.type === 'question')
+      .map((note) => stripHtmlForTutorGrouping(note.text))
+      .filter(Boolean),
+  );
+
+  const legacyQuestionNotes = (Array.isArray(guideQuestions) ? guideQuestions : []).reduce<TutorNote[]>((acc, question) => {
+    const text = question?.text || '';
+    const normalizedText = stripHtmlForTutorGrouping(text);
+
+    if (normalizedText && existingQuestionTexts.has(normalizedText)) {
+      return acc;
+    }
+
+    if (normalizedText) {
+      existingQuestionTexts.add(normalizedText);
+    }
+
+    acc.push({ type: 'question', text });
+    return acc;
+  }, []);
+
+  return [...normalizedNotes, ...legacyQuestionNotes];
+};
+
+const getQuestionNoteOrdinal = (notes: TutorNote[] = [], index: number) =>
+  notes
+    .slice(0, index + 1)
+    .filter((note) => normalizeTutorNoteType(note?.type) === 'question')
+    .length;
 
 // ─── Activity Block Types ─────────────────────────────────
 type ActivityBlockType = 'matching' | 'multipleChoice' | 'sentenceReorder' | 'errorCorrection' | 'dialogueCompletion' | 'trueFalse' | 'readingPassage' | 'categorization' | 'image';
@@ -140,6 +273,8 @@ interface BELessonData {
     tutorNotes: TutorNote[];
   };
 }
+
+type PracticeStepData = BELessonData['practice']['steps'][number];
 
 // ============================================================================
 // DEFAULTS
@@ -300,7 +435,7 @@ const DEFAULT_BE_DATA: BELessonData = {
     goalReviewKr: '자기소개와 동료 소개를 할 수 있게 된다.',
     feedbackTemplate: '*OVERALL SCORE*\nOverall: (score)\n- comment\n\n*Vocabulary/Phrases*\nVocabulary:\n- word/phrase\n- word/phrase\n\n*Grammar*\nGrammar:\nincorrect grammar = correct grammar\n\n*Pronunciation*\nPronunciation:\n- mispronounced word\n- mispronounced word',
     nextLessonLabel: 'CHAPTER 1: WORK INTRODUCTIONS',
-    nextLessonName: 'Lesson 2: All About Me',
+    nextLessonName: 'Lesson 2: A New Coworker',
     tutorNotes: [
       { type: 'script', text: '"It\'s the end of the lesson. Great job! Now, let\'s review today\'s lesson goal."' },
       { type: 'instruction', text: 'Ask the student to read the lesson goal.' },
@@ -311,6 +446,34 @@ const DEFAULT_BE_DATA: BELessonData = {
     ],
   },
 };
+
+const normalizePracticeInstructionKr = (instructionEn: string, instructionKr: string, title = '') => {
+  const en = (instructionEn || '').toLowerCase();
+  const stepTitle = (title || '').toLowerCase();
+
+  if (
+    (en.includes('team directory entry') || stepTitle.includes('own profile')) &&
+    (en.includes('your own information') || en.includes('fill in the blanks'))
+  ) {
+    return '패턴을 사용하여 자신의 팀 디렉터리 항목을 완성하세요. 문장을 읽고 자신의 정보로 빈칸을 채우세요.';
+  }
+
+  if (en.includes('fill in the blanks') && (!instructionKr || !instructionKr.includes('빈칸'))) {
+    return '문장을 읽고 알맞은 표현으로 빈칸을 채우세요.';
+  }
+
+  return instructionKr || '';
+};
+
+const normalizePracticeStep = (step: Partial<PracticeStepData>, index: number): PracticeStepData => ({
+  title: step.title || `Step ${index + 1}`,
+  instructionEn: step.instructionEn || '',
+  instructionKr: normalizePracticeInstructionKr(step.instructionEn || '', step.instructionKr || '', step.title || ''),
+  content: step.content || '',
+  dialogue: step.dialogue,
+  wordBox: step.wordBox,
+  tutorNotes: Array.isArray(step.tutorNotes) ? step.tutorNotes : [],
+});
 
 // ============================================================================
 // PAGE NAV CONFIG — matches 7-page PDF structure
@@ -347,6 +510,15 @@ interface BERichTextInputProps {
   singleLine?: boolean;
   compact?: boolean;
   style?: Record<string, any>;
+}
+
+interface BlockWrapperProps {
+  blockId: string;
+  label: string;
+  icon: string;
+  hidden: boolean;
+  onToggle: (blockId: string, hide: boolean, btnEl?: HTMLElement | null) => void;
+  children: any;
 }
 
 function BERichTextInput({ value, onChange, placeholder, className = '', singleLine = true, compact = false, style }: BERichTextInputProps) {
@@ -423,6 +595,33 @@ function BERichTextInput({ value, onChange, placeholder, className = '', singleL
   );
 }
 
+function BlockWrapper({ blockId, label, icon, hidden, onToggle, children }: BlockWrapperProps) {
+  if (hidden) {
+    return (
+      <button
+        className="beve-block-add-btn"
+        data-block-id={blockId}
+        onClick={(e) => onToggle(blockId, false, e.currentTarget as HTMLElement)}
+      >
+        <i className={icon} /> Add {label}
+      </button>
+    );
+  }
+
+  return (
+    <div className="beve-block-wrapper" data-block-id={blockId}>
+      <button
+        className="beve-block-remove-btn"
+        onClick={(e) => onToggle(blockId, true, e.currentTarget as HTMLElement)}
+        title={`Remove ${label}`}
+      >
+        <i className="ri-delete-bin-line" />
+      </button>
+      {children}
+    </div>
+  );
+}
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -454,10 +653,14 @@ export default function BusinessEnglishVisualEditor() {
   const [goalTextEn, setGoalTextEn] = useState('');
   const [goalTextJp, setGoalTextJp] = useState('');
   const [beData, setBeData] = useState<BELessonData>(DEFAULT_BE_DATA);
+  const [draggedTutorNote, setDraggedTutorNote] = useState<TutorNoteDragState | null>(null);
+  const [dragOverTutorNoteKey, setDragOverTutorNoteKey] = useState<string | null>(null);
 
   // Refs for scroll-to navigation
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const page1IntroStudentRef = useRef<HTMLDivElement | null>(null);
+  const [page1IntroTutorMaxHeight, setPage1IntroTutorMaxHeight] = useState<number | null>(null);
   const latestSavePayloadRef = useRef({
     lesson: null as LessonMaterial | null,
     chapterName: '',
@@ -478,6 +681,32 @@ export default function BusinessEnglishVisualEditor() {
     };
   }, [lesson, chapterName, lessonName, goalTextEn, goalTextJp, beData]);
 
+  useEffect(() => {
+    const target = page1IntroStudentRef.current;
+    if (!target) return;
+
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(target.getBoundingClientRect().height);
+      setPage1IntroTutorMaxHeight(nextHeight > 0 ? nextHeight : null);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateHeight);
+      return () => window.removeEventListener('resize', updateHeight);
+    }
+
+    const observer = new ResizeObserver(() => updateHeight());
+    observer.observe(target);
+    window.addEventListener('resize', updateHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [beData.introduce, lessonName, chapterName, theme]);
+
   // ---- Load ----
   useEffect(() => { if (id) loadLesson(id); }, [id]);
 
@@ -492,6 +721,7 @@ export default function BusinessEnglishVisualEditor() {
       setGoalTextJp(data.goalTextJp || '');
       const skillType = (data.skill?.toUpperCase() || 'READING') as LessonType;
       const merged: any = { ...DEFAULT_BE_DATA, lessonType: skillType, ...(data.beData || {}) };
+      const sourceChallengeRoleplayTable = data.beData?.challenge?.roleplayTable;
 
       // Deep-normalize nested sections so UI can safely call .map() on arrays
       merged.present = { ...DEFAULT_BE_DATA.present, ...(merged.present || {}) };
@@ -507,14 +737,26 @@ export default function BusinessEnglishVisualEditor() {
         return { ...drill, examples };
       });
       merged.understand.activityBlocks = merged.understand.activityBlocks || DEFAULT_BE_DATA.understand.activityBlocks;
+      merged.understand.tutorNotes = normalizeUnderstandTutorNotes(merged.understand.tutorNotes || DEFAULT_BE_DATA.understand.tutorNotes);
 
       merged.practice = { ...DEFAULT_BE_DATA.practice, ...(merged.practice || {}) };
-      merged.practice.steps = merged.practice.steps || DEFAULT_BE_DATA.practice.steps;
+      merged.practice.steps = (merged.practice.steps || DEFAULT_BE_DATA.practice.steps).map((step: any, index: number) =>
+        normalizePracticeStep(step, index)
+      );
       merged.practice.activityBlocks = merged.practice.activityBlocks || DEFAULT_BE_DATA.practice.activityBlocks;
 
       merged.challenge = { ...DEFAULT_BE_DATA.challenge, ...(merged.challenge || {}) };
-      merged.challenge.guideQuestions = merged.challenge.guideQuestions || DEFAULT_BE_DATA.challenge.guideQuestions;
+      const normalizedChallengeNotes = normalizeChallengeTutorNotes(
+        merged.challenge.tutorNotes || DEFAULT_BE_DATA.challenge.tutorNotes,
+        merged.challenge.guideQuestions || DEFAULT_BE_DATA.challenge.guideQuestions,
+      );
+      merged.challenge.tutorNotes = normalizedChallengeNotes;
+      merged.challenge.guideQuestions = [];
       merged.challenge.activityBlocks = merged.challenge.activityBlocks || DEFAULT_BE_DATA.challenge.activityBlocks;
+      merged.challenge.roleplayTable =
+        sourceChallengeRoleplayTable !== undefined
+          ? sourceChallengeRoleplayTable
+          : (skillType === 'READING' ? undefined : DEFAULT_BE_DATA.challenge.roleplayTable);
 
       merged.discussion = { ...DEFAULT_BE_DATA.discussion, ...(merged.discussion || {}) };
       merged.discussion.categories = merged.discussion.categories || DEFAULT_BE_DATA.discussion.categories;
@@ -619,18 +861,34 @@ export default function BusinessEnglishVisualEditor() {
   // ---- Generic updaters ----
   type BEObjectSections = { [K in keyof BELessonData]: BELessonData[K] extends object ? K : never }[keyof BELessonData];
   const updateSection = <K extends BEObjectSections>(section: K, updates: Partial<BELessonData[K]>) => {
-    setBeData(prev => ({ ...prev, [section]: { ...(prev[section] as any), ...updates } }));
+    setBeData(prev => {
+      const nextSection: any = { ...(prev[section] as any), ...(updates as any) };
+
+      if (section === 'challenge') {
+        const normalizedTutorNotes = normalizeChallengeTutorNotes(
+          Array.isArray(nextSection.tutorNotes) ? nextSection.tutorNotes : [],
+          Array.isArray(nextSection.guideQuestions) ? nextSection.guideQuestions : [],
+        );
+        nextSection.tutorNotes = normalizedTutorNotes;
+        nextSection.guideQuestions = [];
+      }
+
+      return { ...prev, [section]: nextSection };
+    });
     triggerAutosave();
   };
 
   const updateTutorNotes = (section: BEObjectSections, notes: TutorNote[]) => {
-    setBeData(prev => ({ ...prev, [section]: { ...(prev[section] as any), tutorNotes: notes } }));
-    triggerAutosave();
+    updateSection(section, { tutorNotes: notes } as any);
   };
 
-  const addTutorNote = (section: BEObjectSections, type: TutorNote['type'] = 'instruction') => {
+  const addTutorNote = (
+    section: BEObjectSections,
+    type: TutorNote['type'] = 'instruction',
+    group?: UnderstandTutorGroup,
+  ) => {
     const current = (beData[section] as any).tutorNotes || [];
-    updateTutorNotes(section, [...current, { type, text: '' }]);
+    updateTutorNotes(section, [...current, { type, text: '', ...(group ? { group } : {}) }]);
   };
 
   const removeTutorNote = (section: BEObjectSections, idx: number) => {
@@ -639,11 +897,73 @@ export default function BusinessEnglishVisualEditor() {
     updateTutorNotes(section, current);
   };
 
-  const updateTutorNoteText = (section: BEObjectSections, idx: number, text: string) => {
+  const updateTutorNote = (section: BEObjectSections, idx: number, updates: Partial<TutorNote>) => {
     const current = [...(beData[section] as any).tutorNotes];
-    current[idx] = { ...current[idx], text };
+    current[idx] = { ...current[idx], ...updates };
     updateTutorNotes(section, current);
   };
+
+  const addChallengeQuestionNote = () => {
+    const current = [...(beData.challenge.tutorNotes || [])];
+    const lastQuestionIndex = current.reduce((lastIndex, note, index) => (
+      normalizeTutorNoteType(note?.type) === 'question' ? index : lastIndex
+    ), -1);
+    const insertIndex = lastQuestionIndex >= 0 ? lastQuestionIndex + 1 : current.length;
+    current.splice(insertIndex, 0, { type: 'question', text: '' });
+    updateTutorNotes('challenge', current);
+  };
+
+  const reorderItems = <T,>(items: T[], fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return items;
+    const next = [...items];
+    const [moved] = next.splice(fromIndex, 1);
+    if (typeof moved === 'undefined') return items;
+    next.splice(toIndex, 0, moved);
+    return next;
+  };
+
+  const moveTutorNoteInSection = (section: BEObjectSections, fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const current = [...((beData[section] as any).tutorNotes || [])];
+    updateTutorNotes(section, reorderItems(current, fromIndex, toIndex));
+  };
+
+  const movePracticeTutorNote = (stepIndex: number, fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const steps = [...beData.practice.steps];
+    const noteList = [...(steps[stepIndex]?.tutorNotes || [])];
+    steps[stepIndex] = { ...steps[stepIndex], tutorNotes: reorderItems(noteList, fromIndex, toIndex) };
+    updateSection('practice', { steps });
+  };
+
+  const moveTutorNoteInSectionByOffset = (
+    section: BEObjectSections,
+    fromIndex: number,
+    targetIndex: number | null | undefined,
+  ) => {
+    if (targetIndex === null || typeof targetIndex === 'undefined') return;
+    moveTutorNoteInSection(section, fromIndex, targetIndex);
+  };
+
+  const movePracticeTutorNoteByOffset = (
+    stepIndex: number,
+    fromIndex: number,
+    targetIndex: number | null | undefined,
+  ) => {
+    if (targetIndex === null || typeof targetIndex === 'undefined') return;
+    movePracticeTutorNote(stepIndex, fromIndex, targetIndex);
+  };
+
+  const clearTutorDragState = () => {
+    setDraggedTutorNote(null);
+    setDragOverTutorNoteKey(null);
+  };
+
+  const getSectionTutorNoteKey = (section: string, index: number, group?: string) =>
+    `section:${section}:${group || 'all'}:${index}`;
+
+  const getPracticeTutorNoteKey = (stepIndex: number, index: number) =>
+    `practice:${stepIndex}:${index}`;
 
   // ---- Loading / Error UI ----
   if (loading) return (
@@ -660,39 +980,173 @@ export default function BusinessEnglishVisualEditor() {
   // RENDER HELPERS
   // ========================================================================
 
-  const renderTutorNotes = (section: BEObjectSections) => {
-    const notes: TutorNote[] = (beData[section] as any).tutorNotes || [];
-    const noteIcon = { instruction: 'ri-file-list-3-line', script: 'ri-chat-quote-line', tip: 'ri-lightbulb-line' };
+  const renderTutorNotes = (section: BEObjectSections, group?: UnderstandTutorGroup) => {
+    const rawNotes: TutorNote[] = (beData[section] as any).tutorNotes || [];
+    const notes = section === 'understand' ? normalizeUnderstandTutorNotes(rawNotes) : rawNotes;
+    const noteEntries = notes
+      .map((note, index) => ({ note, index }))
+      .filter(({ note }) => !group || (note.group || 'comprehension') === group);
     return (
       <>
         <div className="beve-col-tutor-title">
           <i className="ri-booklet-line" /> Teaching Notes
         </div>
         <div className="beve-tutor-notes">
-          {notes.map((note, i) => (
-            <div key={i} className={`beve-tutor-note ${note.type}`}>
-              <div className="beve-tutor-note-type">
-                <i className={noteIcon[note.type] || 'ri-file-text-line'} /> {note.type}
+          {noteEntries.map(({ note, index }, notePosition) => {
+            const previousIndex = notePosition > 0 ? noteEntries[notePosition - 1].index : null;
+            const nextIndex = notePosition < noteEntries.length - 1 ? noteEntries[notePosition + 1].index : null;
+            return (
+              <div
+                key={index}
+                className={`beve-tutor-note ${note.type}${dragOverTutorNoteKey === getSectionTutorNoteKey(section, index, group) ? ' drag-over' : ''}`}
+                onDragOver={(e) => {
+                  if (!draggedTutorNote || draggedTutorNote.kind !== 'section') return;
+                  if (draggedTutorNote.section !== section || (draggedTutorNote.group || '') !== (group || '')) return;
+                  e.preventDefault();
+                  if (dragOverTutorNoteKey !== getSectionTutorNoteKey(section, index, group)) {
+                    setDragOverTutorNoteKey(getSectionTutorNoteKey(section, index, group));
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (!draggedTutorNote || draggedTutorNote.kind !== 'section') return;
+                  if (draggedTutorNote.section !== section || (draggedTutorNote.group || '') !== (group || '')) return;
+                  moveTutorNoteInSection(section, draggedTutorNote.index, index);
+                  clearTutorDragState();
+                }}
+              >
+                <div className="beve-tutor-note-type">
+                  <span
+                    className="beve-tutor-note-drag"
+                    draggable
+                    title="Drag to reorder"
+                    onDragStart={(e) => {
+                      const dataTransfer = e.dataTransfer;
+                      if (!dataTransfer) return;
+                      dataTransfer.effectAllowed = 'move';
+                      dataTransfer.setData('text/plain', getSectionTutorNoteKey(section, index, group));
+                      setDraggedTutorNote({ kind: 'section', section, index, group });
+                      setDragOverTutorNoteKey(getSectionTutorNoteKey(section, index, group));
+                    }}
+                    onDragEnd={clearTutorDragState}
+                  >
+                    <i className="ri-draggable" />
+                  </span>
+                  <i className={TUTOR_NOTE_ICONS[note.type] || 'ri-file-text-line'} /> {note.type}
+                </div>
+                <BERichTextInput
+                  value={note.text}
+                  compact
+                  onChange={(html) => updateTutorNote(section, index, { text: html, ...(note.group ? { group: note.group } : {}) })}
+                  placeholder="Type note…"
+                />
+                <div className="beve-tutor-note-actions">
+                  <button
+                    className="beve-icon-btn"
+                    title="Move up"
+                    disabled={previousIndex === null}
+                    onClick={() => moveTutorNoteInSectionByOffset(section, index, previousIndex)}
+                  >
+                    <i className="ri-arrow-up-line" />
+                  </button>
+                  <button
+                    className="beve-icon-btn"
+                    title="Move down"
+                    disabled={nextIndex === null}
+                    onClick={() => moveTutorNoteInSectionByOffset(section, index, nextIndex)}
+                  >
+                    <i className="ri-arrow-down-line" />
+                  </button>
+                  <button className="beve-icon-btn danger" title="Delete note" onClick={() => removeTutorNote(section, index)}>
+                    <i className="ri-delete-bin-line" /></button>
+                </div>
               </div>
-              <BERichTextInput value={note.text} onChange={(html) => updateTutorNoteText(section, i, html)} placeholder="Type note…" />
-              <div className="beve-tutor-note-actions">
-                <button className="beve-icon-btn danger" onClick={() => removeTutorNote(section, i)}>
-                  <i className="ri-delete-bin-line" /></button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div style={{ display: 'flex', gap: 4 }}>
-            <button className="beve-tutor-add-note" onClick={() => addTutorNote(section, 'instruction')}>
+            <button className="beve-tutor-add-note" onClick={() => addTutorNote(section, 'instruction', group)}>
               <i className="ri-add-line" /> Instruction</button>
-            <button className="beve-tutor-add-note" onClick={() => addTutorNote(section, 'script')}>
+            <button className="beve-tutor-add-note" onClick={() => addTutorNote(section, 'script', group)}>
               <i className="ri-add-line" /> Script</button>
-            <button className="beve-tutor-add-note" onClick={() => addTutorNote(section, 'tip')}>
+            <button className="beve-tutor-add-note" onClick={() => addTutorNote(section, 'tip', group)}>
               <i className="ri-add-line" /> Tip</button>
           </div>
         </div>
       </>
     );
   };
+
+  const renderChallengeStandardTutorNote = (
+    note: TutorNote,
+    index: number,
+    previousIndex?: number | null,
+    nextIndex?: number | null,
+  ) => (
+    <div
+      key={index}
+      className={`beve-tutor-note ${note.type}${dragOverTutorNoteKey === getSectionTutorNoteKey('challenge', index) ? ' drag-over' : ''}`}
+      onDragOver={(e) => {
+        if (!draggedTutorNote || draggedTutorNote.kind !== 'section' || draggedTutorNote.section !== 'challenge') return;
+        e.preventDefault();
+        if (dragOverTutorNoteKey !== getSectionTutorNoteKey('challenge', index)) {
+          setDragOverTutorNoteKey(getSectionTutorNoteKey('challenge', index));
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        if (!draggedTutorNote || draggedTutorNote.kind !== 'section' || draggedTutorNote.section !== 'challenge') return;
+        moveTutorNoteInSection('challenge', draggedTutorNote.index, index);
+        clearTutorDragState();
+      }}
+    >
+      <div className="beve-tutor-note-type">
+        <span
+          className="beve-tutor-note-drag"
+          draggable
+          title="Drag to reorder"
+          onDragStart={(e) => {
+            const dataTransfer = e.dataTransfer;
+            if (!dataTransfer) return;
+            dataTransfer.effectAllowed = 'move';
+            dataTransfer.setData('text/plain', getSectionTutorNoteKey('challenge', index));
+            setDraggedTutorNote({ kind: 'section', section: 'challenge', index });
+            setDragOverTutorNoteKey(getSectionTutorNoteKey('challenge', index));
+          }}
+          onDragEnd={clearTutorDragState}
+        >
+          <i className="ri-draggable" />
+        </span>
+        <i className={TUTOR_NOTE_ICONS[note.type] || 'ri-file-text-line'} /> {note.type}
+      </div>
+      <BERichTextInput
+        value={note.text}
+        compact
+        onChange={(html) => updateTutorNote('challenge', index, { text: html })}
+        placeholder="Note text"
+      />
+      <div className="beve-tutor-note-actions">
+        <button
+          className="beve-icon-btn"
+          title="Move up"
+          disabled={previousIndex === null || typeof previousIndex === 'undefined'}
+          onClick={() => moveTutorNoteInSectionByOffset('challenge', index, previousIndex)}
+        >
+          <i className="ri-arrow-up-line" />
+        </button>
+        <button
+          className="beve-icon-btn"
+          title="Move down"
+          disabled={nextIndex === null || typeof nextIndex === 'undefined'}
+          onClick={() => moveTutorNoteInSectionByOffset('challenge', index, nextIndex)}
+        >
+          <i className="ri-arrow-down-line" />
+        </button>
+        <button className="beve-icon-btn danger" title="Delete note" onClick={() => removeTutorNote('challenge', index)}>
+          <i className="ri-delete-bin-line" />
+        </button>
+      </div>
+    </div>
+  );
 
   const renderPageHeader = (pageNum: number) => (
     <div className="beve-page-header">
@@ -826,38 +1280,120 @@ export default function BusinessEnglishVisualEditor() {
     );
   };
 
-  // Helper: render practice step tutor notes
-  const renderPracticeStepNotes = (indices: number[]) => (
-    <>
+  // Helper: render practice step tutor notes as a standalone section panel
+  const renderPracticeStepNotes = (si: number) => {
+    const step = beData.practice.steps[si];
+    if (!step) return (
       <div className="beve-col-tutor-title"><i className="ri-booklet-line" /> Teaching Notes</div>
-      <div className="beve-tutor-notes">
-        {indices.map(si => {
-          const step = beData.practice.steps[si];
-          if (!step) return null;
-          const noteIcon: Record<string, string> = { instruction: 'ri-file-list-3-line', script: 'ri-chat-quote-line', tip: 'ri-lightbulb-line' };
-          return (
-            <div key={si}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', marginTop: si > indices[0] ? 12 : 0, marginBottom: 6 }}>{step.title}</div>
-              {(step.tutorNotes || []).map((note, ni) => (
-                <div key={ni} className={`beve-tutor-note ${note.type}`}>
-                  <div className="beve-tutor-note-type"><i className={noteIcon[note.type] || 'ri-file-text-line'} /> {note.type}</div>
-                  <BERichTextInput value={note.text}
-                    onChange={(html) => { const steps = [...beData.practice.steps]; const notes = [...steps[si].tutorNotes]; notes[ni] = { ...notes[ni], text: html }; steps[si] = { ...steps[si], tutorNotes: notes }; updateSection('practice', { steps }); }}
-                    placeholder="Type note…" />
-                  <div className="beve-tutor-note-actions">
-                    <button className="beve-icon-btn danger" onClick={() => { const steps = [...beData.practice.steps]; const notes = steps[si].tutorNotes.filter((_, idx) => idx !== ni); steps[si] = { ...steps[si], tutorNotes: notes }; updateSection('practice', { steps }); }}>
-                      <i className="ri-delete-bin-line" /></button>
-                  </div>
+    );
+    return (
+      <>
+        <div className="beve-col-tutor-title"><i className="ri-booklet-line" /> Teaching Notes</div>
+        <div className="beve-practice-note-panel-title">{step.title}</div>
+        <div className="beve-tutor-notes">
+          {(step.tutorNotes || []).map((note, ni) => {
+            const previousIndex = ni > 0 ? ni - 1 : null;
+            const nextIndex = ni < step.tutorNotes.length - 1 ? ni + 1 : null;
+            return (
+              <div
+                key={ni}
+                className={`beve-tutor-note ${note.type}${dragOverTutorNoteKey === getPracticeTutorNoteKey(si, ni) ? ' drag-over' : ''}`}
+                onDragOver={(e) => {
+                  if (!draggedTutorNote || draggedTutorNote.kind !== 'practice' || draggedTutorNote.stepIndex !== si) return;
+                  e.preventDefault();
+                  if (dragOverTutorNoteKey !== getPracticeTutorNoteKey(si, ni)) {
+                    setDragOverTutorNoteKey(getPracticeTutorNoteKey(si, ni));
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (!draggedTutorNote || draggedTutorNote.kind !== 'practice' || draggedTutorNote.stepIndex !== si) return;
+                  movePracticeTutorNote(si, draggedTutorNote.index, ni);
+                  clearTutorDragState();
+                }}
+              >
+                <div className="beve-tutor-note-type">
+                  <span
+                    className="beve-tutor-note-drag"
+                    draggable
+                    title="Drag to reorder"
+                    onDragStart={(e) => {
+                      const dataTransfer = e.dataTransfer;
+                      if (!dataTransfer) return;
+                      dataTransfer.effectAllowed = 'move';
+                      dataTransfer.setData('text/plain', getPracticeTutorNoteKey(si, ni));
+                      setDraggedTutorNote({ kind: 'practice', stepIndex: si, index: ni });
+                      setDragOverTutorNoteKey(getPracticeTutorNoteKey(si, ni));
+                    }}
+                    onDragEnd={clearTutorDragState}
+                  >
+                    <i className="ri-draggable" />
+                  </span>
+                  <i className={TUTOR_NOTE_ICONS[note.type] || 'ri-file-text-line'} /> {note.type}
                 </div>
-              ))}
-              <button className="beve-tutor-add-note" onClick={() => { const steps = [...beData.practice.steps]; steps[si] = { ...steps[si], tutorNotes: [...steps[si].tutorNotes, { type: 'instruction', text: '' }] }; updateSection('practice', { steps }); }}>
-                <i className="ri-add-line" /> Add Note</button>
-            </div>
-          );
-        })}
-      </div>
-    </>
-  );
+                <BERichTextInput value={note.text}
+                  compact
+                  onChange={(html) => { const steps = [...beData.practice.steps]; const notes = [...steps[si].tutorNotes]; notes[ni] = { ...notes[ni], text: html }; steps[si] = { ...steps[si], tutorNotes: notes }; updateSection('practice', { steps }); }}
+                  placeholder="Type note…" />
+                <div className="beve-tutor-note-actions">
+                  <button
+                    className="beve-icon-btn"
+                    title="Move up"
+                    disabled={previousIndex === null}
+                    onClick={() => movePracticeTutorNoteByOffset(si, ni, previousIndex)}
+                  >
+                    <i className="ri-arrow-up-line" />
+                  </button>
+                  <button
+                    className="beve-icon-btn"
+                    title="Move down"
+                    disabled={nextIndex === null}
+                    onClick={() => movePracticeTutorNoteByOffset(si, ni, nextIndex)}
+                  >
+                    <i className="ri-arrow-down-line" />
+                  </button>
+                  <button className="beve-icon-btn danger" title="Delete note" onClick={() => { const steps = [...beData.practice.steps]; const notes = steps[si].tutorNotes.filter((_, idx) => idx !== ni); steps[si] = { ...steps[si], tutorNotes: notes }; updateSection('practice', { steps }); }}>
+                    <i className="ri-delete-bin-line" /></button>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              className="beve-tutor-add-note"
+              onClick={() => {
+                const steps = [...beData.practice.steps];
+                steps[si] = { ...steps[si], tutorNotes: [...steps[si].tutorNotes, { type: 'instruction', text: '' }] };
+                updateSection('practice', { steps });
+              }}
+            >
+              <i className="ri-add-line" /> Instruction
+            </button>
+            <button
+              className="beve-tutor-add-note"
+              onClick={() => {
+                const steps = [...beData.practice.steps];
+                steps[si] = { ...steps[si], tutorNotes: [...steps[si].tutorNotes, { type: 'script', text: '' }] };
+                updateSection('practice', { steps });
+              }}
+            >
+              <i className="ri-add-line" /> Script
+            </button>
+            <button
+              className="beve-tutor-add-note"
+              onClick={() => {
+                const steps = [...beData.practice.steps];
+                steps[si] = { ...steps[si], tutorNotes: [...steps[si].tutorNotes, { type: 'tip', text: '' }] };
+                updateSection('practice', { steps });
+              }}
+            >
+              <i className="ri-add-line" /> Tip
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  };
 
   // ========================================================================
   // MODULAR BLOCK WRAPPER — togglable add/remove for content blocks
@@ -889,27 +1425,6 @@ export default function BusinessEnglishVisualEditor() {
         }
       });
     }
-  };
-
-  const BlockWrapper = ({ blockId, label, icon, children }: { blockId: string; label: string; icon: string; children: any }) => {
-    if (isBlockHidden(blockId)) {
-      return (
-        <button className="beve-block-add-btn" data-block-id={blockId}
-          onClick={(e) => toggleBlock(blockId, false, e.currentTarget as HTMLElement)}>
-          <i className={icon} /> Add {label}
-        </button>
-      );
-    }
-    return (
-      <div className="beve-block-wrapper" data-block-id={blockId}>
-        <button className="beve-block-remove-btn"
-          onClick={(e) => toggleBlock(blockId, true, e.currentTarget as HTMLElement)}
-          title={`Remove ${label}`}>
-          <i className="ri-delete-bin-line" />
-        </button>
-        {children}
-      </div>
-    );
   };
 
   // ========================================================================
@@ -1322,7 +1837,7 @@ export default function BusinessEnglishVisualEditor() {
       {renderPageHeader(1)}
       <div className="beve-page-sections">
         <div className="beve-page-section">
-          <div className="beve-col-student">
+          <div className="beve-col-student" ref={page1IntroStudentRef}>
             {/* ① Introduce */}
             {renderSectionBanner(1, 'WARM-UP')}
             <div className="beve-goal-box">
@@ -1340,7 +1855,10 @@ export default function BusinessEnglishVisualEditor() {
                 onChange={(html) => updateSection('introduce', { situationKr: html })} placeholder="상황 (한국어)" />
             </div>
           </div>
-          <div className="beve-col-tutor">
+          <div
+            className="beve-col-tutor"
+            style={page1IntroTutorMaxHeight ? { maxHeight: `${page1IntroTutorMaxHeight}px` } : undefined}
+          >
             {renderTutorNotes('introduce')}
           </div>
         </div>
@@ -1378,150 +1896,170 @@ export default function BusinessEnglishVisualEditor() {
     </div>
   );
 
-  /** PAGE 2: ③ Understand (Table) + Useful Vocabulary + Pronunciation */
+  /** PAGE 2: ③ Understand + Word Bank + Sound Practice + Activity */
   const renderPage2 = () => (
     <div className="beve-page" id="beve-page2" ref={(el) => { pageRefs.current['page2'] = el; }}>
       {renderPageHeader(2)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {/* ③ Understand */}
-          {renderSectionBanner(3, 'COMPREHENSION')}
-          <BlockWrapper blockId="comprehensionIntro" label="Comprehension Intro" icon="ri-question-line">
-          <div className="beve-situation-box">
-            <BERichTextInput className="beve-situation-en" value={beData.understand.instruction} singleLine={false}
-              onChange={(html) => updateSection('understand', { instruction: html })} placeholder="Comprehension instruction (English)" />
-            <BERichTextInput className="beve-situation-kr" value={beData.understand.instructionKr} singleLine={false} compact
-              onChange={(html) => updateSection('understand', { instructionKr: html })} placeholder="지시 (한국어)" />
-          </div>
-          </BlockWrapper>
+      <div className="beve-page-sections">
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            {renderSectionBanner(3, 'COMPREHENSION')}
+            <BlockWrapper blockId="comprehensionIntro" label="Comprehension Intro" icon="ri-question-line" hidden={isBlockHidden('comprehensionIntro')} onToggle={toggleBlock}>
+              <div className="beve-situation-box">
+                <BERichTextInput className="beve-situation-en" value={beData.understand.instruction} singleLine={false}
+                  onChange={(html) => updateSection('understand', { instruction: html })} placeholder="Comprehension instruction (English)" />
+                <BERichTextInput className="beve-situation-kr" value={beData.understand.instructionKr} singleLine={false} compact
+                  onChange={(html) => updateSection('understand', { instructionKr: html })} placeholder="지시 (한국어)" />
+              </div>
+            </BlockWrapper>
 
-          {/* Pattern Drill Tables */}
-          <BlockWrapper blockId="patternDrills" label="Pattern Drills" icon="ri-table-line">
-          {beData.understand.patternDrills.length > 0 && (
-            <div className="beve-pattern-drills">
-              {beData.understand.patternDrills.map((drill, di) => (
-                <div key={di} className="beve-drill-card">
-                  <div className="beve-drill-header">
-                    <BERichTextInput className="beve-drill-label" value={drill.label}
-                      onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], label: html }; updateSection('understand', { patternDrills: drills }); }}
-                      placeholder="Pattern usage description" singleLine />
-                    <BERichTextInput className="beve-drill-label-kr" value={drill.labelKr}
-                      onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], labelKr: html }; updateSection('understand', { patternDrills: drills }); }}
-                      placeholder="설명 (한국어)" singleLine />
-                    <button className="beve-icon-btn danger" style={{ position: 'absolute', top: 6, right: 6 }}
-                      onClick={() => { updateSection('understand', { patternDrills: beData.understand.patternDrills.filter((_, idx) => idx !== di) }); }}>
-                      <i className="ri-delete-bin-line" /></button>
-                  </div>
-                  <div className="beve-drill-template">
-                    <BERichTextInput value={drill.template}
-                      onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], template: html }; updateSection('understand', { patternDrills: drills }); }}
-                      placeholder="Pattern template (e.g. Welcome to the _____)" singleLine />
-                  </div>
-                  <table className="beve-drill-table">
-                    <tbody>
-                      {drill.examples.map((ex, ei) => (
-                        <tr key={ei}>
-                          <td><BERichTextInput value={ex.en}
-                            onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], en: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
-                            placeholder="Example (English)" singleLine /></td>
-                          <td><BERichTextInput value={ex.kr}
-                            onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], kr: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
-                            placeholder="예문 (한국어)" singleLine /></td>
-                          <td style={{ width: 30 }}><button className="beve-icon-btn danger"
-                            onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: drills[di].examples.filter((_, idx) => idx !== ei) }; updateSection('understand', { patternDrills: drills }); }}>
-                            <i className="ri-delete-bin-line" /></button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <button className="beve-add-btn" style={{ marginTop: 6 }}
-                    onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: [...drills[di].examples, { en: '', kr: '' }] }; updateSection('understand', { patternDrills: drills }); }}>
-                    <i className="ri-add-line" /> Add Example</button>
-                </div>
-              ))}
-            </div>
-          )}
-          <button className="beve-add-btn" style={{ marginBottom: 8 }}
-            onClick={() => {
-              updateSection('understand', {
-                patternDrills: [
-                  ...beData.understand.patternDrills,
-                  { label: '', labelKr: '', template: '', examples: Array.from({ length: 5 }, () => ({ en: '', kr: '' })) },
-                ],
-              });
-            }}>
-            <i className="ri-add-line" /> Add Pattern Drill</button>
-          </BlockWrapper>
-
-          {/* Useful Vocabulary */}
-          <BlockWrapper blockId="vocabulary" label="Word Bank" icon="ri-book-2-line">
-          <div className="beve-sub-heading" style={{ marginTop: 0 }}>Word Bank <span className="kr-label">{'단어장'}</span></div>
-          <table className="beve-vocab-table">
-            <thead><tr><th>Word</th><th>Part of Speech</th><th>Translation</th><th>Definition</th><th style={{ width: 40 }} /></tr></thead>
-            <tbody>
-              {beData.present.vocabulary.map((v, i) => (
-                <tr key={i}>
-                  <td><BERichTextInput className="beve-vocab-word" value={v.word}
-                    onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], word: html }; updateSection('present', { vocabulary: u }); }}
-                    placeholder="Word" /></td>
-                  <td><BERichTextInput className="beve-vocab-pos" value={v.pos}
-                    onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], pos: html }; updateSection('present', { vocabulary: u }); }}
-                    placeholder="POS" /></td>
-                  <td><BERichTextInput className="beve-vocab-translation" value={v.translation}
-                    onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], translation: html }; updateSection('present', { vocabulary: u }); }}
-                    placeholder="번역" /></td>
-                  <td><BERichTextInput value={v.definition || ''}
-                    onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], definition: html }; updateSection('present', { vocabulary: u }); }}
-                    placeholder="Definition" /></td>
-                  <td><button className="beve-icon-btn danger" onClick={() => { updateSection('present', { vocabulary: beData.present.vocabulary.filter((_, idx) => idx !== i) }); }}>
-                    <i className="ri-delete-bin-line" /></button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button className="beve-add-btn" onClick={() => { updateSection('present', { vocabulary: [...beData.present.vocabulary, { word: '', pos: '', translation: '', definition: '' }] }); }}>
-            <i className="ri-add-line" /> Add Vocabulary</button>
-          </BlockWrapper>
-
-          {/* Pronunciation */}
-          <BlockWrapper blockId="soundPractice" label="Sound Practice" icon="ri-volume-up-line">
-          <div className="beve-sub-heading" style={{ marginTop: 0 }}>Sound Practice <span className="kr-label">{beData.present.pronunciation.instructionKr}</span></div>
-          <div className="beve-pronun-box">
-            <BERichTextInput className="beve-pronun-title" value={beData.present.pronunciation.instruction}
-              onChange={(html) => { updateSection('present', { pronunciation: { ...beData.present.pronunciation, instruction: html } }); }}
-              placeholder="Pronunciation instruction" />
-            <div className="beve-pronun-columns">
-              {(['left', 'right'] as const).map(side => {
-                const col = beData.present.pronunciation[side];
-                return (
-                  <div key={side} className="beve-pronun-col">
-                    <div className="beve-pronun-symbol beve-editable" contentEditable
-                      onBlur={(e) => { updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, symbol: (e.target as HTMLElement).innerText } } }); }}
-                      dangerouslySetInnerHTML={{ __html: col.symbol }} />
-                    <div className="beve-pronun-words">
-                      {col.words.map((w, i) => (
-                        <div key={i} className="beve-pronun-word">
-                          <span className="beve-editable" contentEditable
-                            onBlur={(e) => { const words = [...col.words]; words[i] = { ...words[i], en: (e.target as HTMLElement).innerText }; updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, words } } }); }}
-                            dangerouslySetInnerHTML={{ __html: w.en }} />
-                          <span style={{ color: '#71717a', fontSize: 12 }}>
-                            <span className="beve-editable" contentEditable
-                              onBlur={(e) => { const words = [...col.words]; words[i] = { ...words[i], kr: (e.target as HTMLElement).innerText }; updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, words } } }); }}
-                              dangerouslySetInnerHTML={{ __html: w.kr }} />
-                          </span>
-                        </div>
-                      ))}
+            <BlockWrapper blockId="patternDrills" label="Pattern Drills" icon="ri-table-line" hidden={isBlockHidden('patternDrills')} onToggle={toggleBlock}>
+              {beData.understand.patternDrills.length > 0 && (
+                <div className="beve-pattern-drills">
+                  {beData.understand.patternDrills.map((drill, di) => (
+                    <div key={di} className="beve-drill-card">
+                      <div className="beve-drill-header">
+                        <BERichTextInput className="beve-drill-label" value={drill.label}
+                          onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], label: html }; updateSection('understand', { patternDrills: drills }); }}
+                          placeholder="Pattern usage description" singleLine />
+                        <BERichTextInput className="beve-drill-label-kr" value={drill.labelKr}
+                          onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], labelKr: html }; updateSection('understand', { patternDrills: drills }); }}
+                          placeholder="설명 (한국어)" singleLine />
+                        <button className="beve-icon-btn danger" style={{ position: 'absolute', top: 6, right: 6 }}
+                          onClick={() => { updateSection('understand', { patternDrills: beData.understand.patternDrills.filter((_, idx) => idx !== di) }); }}>
+                          <i className="ri-delete-bin-line" /></button>
+                      </div>
+                      <div className="beve-drill-template">
+                        <BERichTextInput value={drill.template}
+                          onChange={(html) => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], template: html }; updateSection('understand', { patternDrills: drills }); }}
+                          placeholder="Pattern template (e.g. Welcome to the _____)" singleLine />
+                      </div>
+                      <table className="beve-drill-table">
+                        <tbody>
+                          {drill.examples.map((ex, ei) => (
+                            <tr key={ei}>
+                              <td><BERichTextInput value={ex.en}
+                                onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], en: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
+                                placeholder="Example (English)" singleLine /></td>
+                              <td><BERichTextInput value={ex.kr}
+                                onChange={(html) => { const drills = [...beData.understand.patternDrills]; const examples = [...drills[di].examples]; examples[ei] = { ...examples[ei], kr: html }; drills[di] = { ...drills[di], examples }; updateSection('understand', { patternDrills: drills }); }}
+                                placeholder="예문 (한국어)" singleLine /></td>
+                              <td style={{ width: 30 }}><button className="beve-icon-btn danger"
+                                onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: drills[di].examples.filter((_, idx) => idx !== ei) }; updateSection('understand', { patternDrills: drills }); }}>
+                                <i className="ri-delete-bin-line" /></button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <button className="beve-add-btn" style={{ marginTop: 6 }}
+                        onClick={() => { const drills = [...beData.understand.patternDrills]; drills[di] = { ...drills[di], examples: [...drills[di].examples, { en: '', kr: '' }] }; updateSection('understand', { patternDrills: drills }); }}>
+                        <i className="ri-add-line" /> Add Example</button>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+                </div>
+              )}
+              <button className="beve-add-btn" style={{ marginBottom: 8 }}
+                onClick={() => {
+                  updateSection('understand', {
+                    patternDrills: [
+                      ...beData.understand.patternDrills,
+                      { label: '', labelKr: '', template: '', examples: Array.from({ length: 5 }, () => ({ en: '', kr: '' })) },
+                    ],
+                  });
+                }}>
+                <i className="ri-add-line" /> Add Pattern Drill</button>
+            </BlockWrapper>
           </div>
-          </BlockWrapper>
-          {renderActivityBlocksArea('understand')}
+          <div className="beve-col-tutor">
+            {renderTutorNotes('understand', 'comprehension')}
+          </div>
         </div>
-        <div className="beve-col-tutor">
-          {renderTutorNotes('understand')}
+
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            <BlockWrapper blockId="vocabulary" label="Word Bank" icon="ri-book-2-line" hidden={isBlockHidden('vocabulary')} onToggle={toggleBlock}>
+              <div className="beve-sub-heading" style={{ marginTop: 0 }}>Word Bank <span className="kr-label">{'단어장'}</span></div>
+              <table className="beve-vocab-table">
+                <thead><tr><th>Word</th><th>Part of Speech</th><th>Translation</th><th>Definition</th><th style={{ width: 40 }} /></tr></thead>
+                <tbody>
+                  {beData.present.vocabulary.map((v, i) => (
+                    <tr key={i}>
+                      <td><BERichTextInput className="beve-vocab-word" value={v.word}
+                        onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], word: html }; updateSection('present', { vocabulary: u }); }}
+                        placeholder="Word" /></td>
+                      <td><BERichTextInput className="beve-vocab-pos" value={v.pos}
+                        onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], pos: html }; updateSection('present', { vocabulary: u }); }}
+                        placeholder="POS" /></td>
+                      <td><BERichTextInput className="beve-vocab-translation" value={v.translation}
+                        onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], translation: html }; updateSection('present', { vocabulary: u }); }}
+                        placeholder="번역" /></td>
+                      <td><BERichTextInput value={v.definition || ''}
+                        onChange={(html) => { const u = [...beData.present.vocabulary]; u[i] = { ...u[i], definition: html }; updateSection('present', { vocabulary: u }); }}
+                        placeholder="Definition" /></td>
+                      <td><button className="beve-icon-btn danger" onClick={() => { updateSection('present', { vocabulary: beData.present.vocabulary.filter((_, idx) => idx !== i) }); }}>
+                        <i className="ri-delete-bin-line" /></button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button className="beve-add-btn" onClick={() => { updateSection('present', { vocabulary: [...beData.present.vocabulary, { word: '', pos: '', translation: '', definition: '' }] }); }}>
+                <i className="ri-add-line" /> Add Vocabulary</button>
+            </BlockWrapper>
+          </div>
+          <div className="beve-col-tutor">
+            {renderTutorNotes('understand', 'wordBank')}
+          </div>
+        </div>
+
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            <BlockWrapper blockId="soundPractice" label="Sound Practice" icon="ri-volume-up-line" hidden={isBlockHidden('soundPractice')} onToggle={toggleBlock}>
+              <div className="beve-sub-heading" style={{ marginTop: 0 }}>Sound Practice <span className="kr-label">{beData.present.pronunciation.instructionKr}</span></div>
+              <div className="beve-pronun-box">
+                <BERichTextInput className="beve-pronun-title" value={beData.present.pronunciation.instruction}
+                  onChange={(html) => { updateSection('present', { pronunciation: { ...beData.present.pronunciation, instruction: html } }); }}
+                  placeholder="Pronunciation instruction" />
+                <div className="beve-pronun-columns">
+                  {(['left', 'right'] as const).map(side => {
+                    const col = beData.present.pronunciation[side];
+                    return (
+                      <div key={side} className="beve-pronun-col">
+                        <div className="beve-pronun-symbol beve-editable" contentEditable
+                          onBlur={(e) => { updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, symbol: (e.target as HTMLElement).innerText } } }); }}
+                          dangerouslySetInnerHTML={{ __html: col.symbol }} />
+                        <div className="beve-pronun-words">
+                          {col.words.map((w, i) => (
+                            <div key={i} className="beve-pronun-word">
+                              <span className="beve-editable" contentEditable
+                                onBlur={(e) => { const words = [...col.words]; words[i] = { ...words[i], en: (e.target as HTMLElement).innerText }; updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, words } } }); }}
+                                dangerouslySetInnerHTML={{ __html: w.en }} />
+                              <span style={{ color: '#71717a', fontSize: 12 }}>
+                                <span className="beve-editable" contentEditable
+                                  onBlur={(e) => { const words = [...col.words]; words[i] = { ...words[i], kr: (e.target as HTMLElement).innerText }; updateSection('present', { pronunciation: { ...beData.present.pronunciation, [side]: { ...col, words } } }); }}
+                                  dangerouslySetInnerHTML={{ __html: w.kr }} />
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </BlockWrapper>
+          </div>
+          <div className="beve-col-tutor">
+            {renderTutorNotes('understand', 'soundPractice')}
+          </div>
+        </div>
+
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            {renderActivityBlocksArea('understand')}
+          </div>
+          <div className="beve-col-tutor">
+            {renderTutorNotes('understand', 'activityBlocks')}
+          </div>
         </div>
       </div>
       {renderPageFooter()}
@@ -1537,15 +2075,23 @@ export default function BusinessEnglishVisualEditor() {
   const renderPage3 = () => (
     <div className="beve-page" id="beve-page3" ref={(el) => { pageRefs.current['page3'] = el; }}>
       {renderPageHeader(3)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {renderSectionBanner(4, 'DRILL')}
-          {page3StepIndices.map(i => renderPracticeStep(i))}
-          {renderHintBox()}
-          {renderActivityBlocksArea('practice')}
-        </div>
-        <div className="beve-col-tutor">
-          {renderPracticeStepNotes(page3StepIndices)}
+      <div className="beve-page-sections">
+        {page3StepIndices.map((i, idx) => (
+          <div key={i} className="beve-page-section">
+            <div className="beve-col-student">
+              {idx === 0 ? renderSectionBanner(4, 'DRILL') : null}
+              {renderPracticeStep(i)}
+            </div>
+            <div className="beve-col-tutor">
+              {renderPracticeStepNotes(i)}
+            </div>
+          </div>
+        ))}
+        <div className="beve-page-section beve-page-section-full">
+          <div className="beve-col-student">
+            {renderHintBox()}
+            {renderActivityBlocksArea('practice')}
+          </div>
         </div>
       </div>
       {renderPageFooter()}
@@ -1556,38 +2102,50 @@ export default function BusinessEnglishVisualEditor() {
   const renderPage4 = () => (
     <div className="beve-page" id="beve-page4" ref={(el) => { pageRefs.current['page4'] = el; }}>
       {renderPageHeader(4)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {renderSectionBanner(4, 'DRILL (CONTINUATION)')}
-          {page4StepIndices.length > 0 ? (
-            page4StepIndices.map(i => renderPracticeStep(i))
-          ) : (
-            <div style={{ fontSize: 13, color: '#71717a', padding: '16px 0', fontStyle: 'italic' }}>
-              <i className="ri-information-line" style={{ marginRight: 6 }} />
-              All practice steps fit on the previous page. Add more steps to populate this page.
+      <div className="beve-page-sections">
+        {page4StepIndices.length > 0 ? page4StepIndices.map((i, idx) => (
+          <div key={i} className="beve-page-section">
+            <div className="beve-col-student">
+              {idx === 0 ? renderSectionBanner(4, 'DRILL (CONTINUATION)') : null}
+              {renderPracticeStep(i)}
             </div>
-          )}
-          <button className="beve-add-btn" style={{ marginTop: 12 }} onClick={() => {
-            const newStep = {
-              title: `Step ${totalSteps + 1}`,
-              instructionEn: '', instructionKr: '',
-              content: '', tutorNotes: [],
-            };
-            setBeData(prev => ({
-              ...prev,
-              practice: { ...prev.practice, steps: [...prev.practice.steps, newStep] },
-            }));
-            triggerAutosave();
-          }}>
-            <i className="ri-add-line" /> Add Practice Step
-          </button>
-          {renderHintBox()}
-          {renderActivityBlocksArea('practice')}
-        </div>
-        <div className="beve-col-tutor">
-          {page4StepIndices.length > 0 ? renderPracticeStepNotes(page4StepIndices) : (
-            <div className="beve-col-tutor-title"><i className="ri-booklet-line" /> Teaching Notes</div>
-          )}
+            <div className="beve-col-tutor">
+              {renderPracticeStepNotes(i)}
+            </div>
+          </div>
+        )) : (
+          <div className="beve-page-section">
+            <div className="beve-col-student">
+              {renderSectionBanner(4, 'DRILL (CONTINUATION)')}
+              <div style={{ fontSize: 13, color: '#71717a', padding: '16px 0', fontStyle: 'italic' }}>
+                <i className="ri-information-line" style={{ marginRight: 6 }} />
+                All practice steps fit on the previous page. Add more steps to populate this page.
+              </div>
+            </div>
+            <div className="beve-col-tutor">
+              <div className="beve-col-tutor-title"><i className="ri-booklet-line" /> Teaching Notes</div>
+            </div>
+          </div>
+        )}
+        <div className="beve-page-section beve-page-section-full">
+          <div className="beve-col-student">
+            <button className="beve-add-btn" style={{ marginTop: 12 }} onClick={() => {
+              const newStep = {
+                title: `Step ${totalSteps + 1}`,
+                instructionEn: '', instructionKr: '',
+                content: '', tutorNotes: [],
+              };
+              setBeData(prev => ({
+                ...prev,
+                practice: { ...prev.practice, steps: [...prev.practice.steps, newStep] },
+              }));
+              triggerAutosave();
+            }}>
+              <i className="ri-add-line" /> Add Practice Step
+            </button>
+            {renderHintBox()}
+            {renderActivityBlocksArea('practice')}
+          </div>
         </div>
       </div>
       {renderPageFooter()}
@@ -1595,7 +2153,25 @@ export default function BusinessEnglishVisualEditor() {
   );
 
   /** PAGE 5: ⑤ Challenge (Simulation) */
-  const renderPage5 = () => (
+  const renderPage5 = () => {
+    const challengeQuestionEntries = beData.challenge.tutorNotes
+      .map((note, index) => ({ note, index }))
+      .filter(({ note }) => normalizeTutorNoteType(note.type) === 'question');
+    const firstQuestionIndex = challengeQuestionEntries.length > 0 ? challengeQuestionEntries[0].index : -1;
+    const challengeLeadingNotes = firstQuestionIndex === -1
+      ? beData.challenge.tutorNotes.map((note, index) => ({ note, index }))
+      : beData.challenge.tutorNotes
+          .slice(0, firstQuestionIndex)
+          .map((note, index) => ({ note, index }))
+          .filter(({ note }) => normalizeTutorNoteType(note.type) !== 'question');
+    const challengeTrailingNotes = firstQuestionIndex === -1
+      ? []
+      : beData.challenge.tutorNotes
+          .slice(firstQuestionIndex)
+          .map((note, offset) => ({ note, index: firstQuestionIndex + offset }))
+          .filter(({ note }) => normalizeTutorNoteType(note.type) !== 'question');
+
+    return (
     <div className="beve-page" id="beve-page5" ref={(el) => { pageRefs.current['page5'] = el; }}>
       {renderPageHeader(5)}
       <div className="beve-columns">
@@ -1610,7 +2186,7 @@ export default function BusinessEnglishVisualEditor() {
           </div>
 
           {beData.challenge.roleplayTable && (
-            <BlockWrapper blockId="roleplayTable" label="Roleplay Table" icon="ri-group-line">
+            <BlockWrapper blockId="roleplayTable" label="Roleplay Table" icon="ri-group-line" hidden={isBlockHidden('roleplayTable')} onToggle={toggleBlock}>
             <div className="beve-situation-box">
               <div className="beve-situation-label">Roleplay Assignments</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
@@ -1634,47 +2210,96 @@ export default function BusinessEnglishVisualEditor() {
             </div>
             </BlockWrapper>
           )}
-          {renderHintBox()}
           {renderActivityBlocksArea('challenge')}
+          {renderHintBox()}
         </div>
         <div className="beve-col-tutor">
           <div className="beve-col-tutor-title"><i className="ri-booklet-line" /> Teaching Notes</div>
           <div className="beve-tutor-notes">
-            {beData.challenge.tutorNotes.map((note, i) => (
-              <div key={i} className={`beve-tutor-note ${note.type}`}>
-                <div className="beve-tutor-note-type"><i className={({'instruction':'ri-file-list-3-line','script':'ri-chat-quote-line','tip':'ri-lightbulb-line'})[note.type] || 'ri-file-text-line'} /> {note.type}</div>
-                <BERichTextInput value={note.text}
-                  onChange={(html) => updateTutorNoteText('challenge', i, html)}
-                  placeholder="Note text" />
-                <div className="beve-tutor-note-actions">
-                  <button className="beve-icon-btn danger" onClick={() => removeTutorNote('challenge', i)}>
-                    <i className="ri-delete-bin-line" /></button>
-                </div>
-              </div>
+            {challengeLeadingNotes.map(({ note, index }, notePosition) => renderChallengeStandardTutorNote(
+              note,
+              index,
+              notePosition > 0 ? challengeLeadingNotes[notePosition - 1].index : null,
+              notePosition < challengeLeadingNotes.length - 1 ? challengeLeadingNotes[notePosition + 1].index : null,
             ))}
+            <div className="beve-sub-heading" style={{ borderBottom: 'none', marginBottom: 6, marginTop: challengeLeadingNotes.length > 0 ? 16 : 0 }}>
+              Prompt Questions
+            </div>
+            <div className="beve-guide-questions">
+              {challengeQuestionEntries.map(({ note, index }, questionIndex) => (
+                <div key={index} className="beve-guide-q">
+                  <div className="beve-guide-q-row">
+                    <span className="beve-guide-q-num">{questionIndex + 1}.</span>
+                    <BERichTextInput
+                      value={note.text}
+                      compact
+                      onChange={(html) => updateTutorNote('challenge', index, { text: html })}
+                      placeholder="Prompt question"
+                    />
+                    <div className="beve-guide-q-actions">
+                      <button
+                        className="beve-icon-btn"
+                        title="Move up"
+                        disabled={questionIndex === 0}
+                        onClick={() => moveTutorNoteInSectionByOffset(
+                          'challenge',
+                          index,
+                          questionIndex > 0 ? challengeQuestionEntries[questionIndex - 1].index : null,
+                        )}
+                      >
+                        <i className="ri-arrow-up-line" />
+                      </button>
+                      <button
+                        className="beve-icon-btn"
+                        title="Move down"
+                        disabled={questionIndex === challengeQuestionEntries.length - 1}
+                        onClick={() => moveTutorNoteInSectionByOffset(
+                          'challenge',
+                          index,
+                          questionIndex < challengeQuestionEntries.length - 1
+                            ? challengeQuestionEntries[questionIndex + 1].index
+                            : null,
+                        )}
+                      >
+                        <i className="ri-arrow-down-line" />
+                      </button>
+                    </div>
+                    <button
+                      className="beve-icon-btn danger beve-guide-q-delete"
+                      title="Delete question"
+                      onClick={() => removeTutorNote('challenge', index)}
+                    >
+                      <i className="ri-delete-bin-line" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button className="beve-tutor-add-note" onClick={addChallengeQuestionNote}>
+                <i className="ri-add-line" /> Add Question
+              </button>
+            </div>
+            {challengeTrailingNotes.length > 0 && (
+              <div className="beve-challenge-tail-notes">
+                {challengeTrailingNotes.map(({ note, index }, notePosition) => renderChallengeStandardTutorNote(
+                  note,
+                  index,
+                  notePosition > 0 ? challengeTrailingNotes[notePosition - 1].index : null,
+                  notePosition < challengeTrailingNotes.length - 1 ? challengeTrailingNotes[notePosition + 1].index : null,
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
               <button className="beve-tutor-add-note" onClick={() => addTutorNote('challenge', 'instruction')}><i className="ri-add-line" /> Instruction</button>
               <button className="beve-tutor-add-note" onClick={() => addTutorNote('challenge', 'script')}><i className="ri-add-line" /> Script</button>
-            </div>
-            <div className="beve-sub-heading" style={{ borderBottom: 'none', marginBottom: 6, marginTop: 16 }}>Prompt Questions</div>
-            <div className="beve-guide-questions">
-              {beData.challenge.guideQuestions.map((q, i) => (
-                <div key={i} className="beve-guide-q">
-                  <span style={{ fontWeight: 700, color: '#7c3aed', marginRight: 6 }}>{i + 1}.</span>
-                  <BERichTextInput value={q.text}
-                    onChange={(html) => { const gq = [...beData.challenge.guideQuestions]; gq[i] = { text: html }; updateSection('challenge', { guideQuestions: gq }); }}
-                    placeholder="Guide question" />
-                </div>
-              ))}
-              <button className="beve-tutor-add-note" onClick={() => { updateSection('challenge', { guideQuestions: [...beData.challenge.guideQuestions, { text: '' }] }); }}>
-                <i className="ri-add-line" /> Add Question</button>
+              <button className="beve-tutor-add-note" onClick={() => addTutorNote('challenge', 'tip')}><i className="ri-add-line" /> Tip</button>
             </div>
           </div>
         </div>
       </div>
       {renderPageFooter()}
     </div>
-  );
+    );
+  };
 
   /** PAGE 6: ⑤ Challenge — Discussion Questions */
   const renderPage6 = () => (
@@ -1755,7 +2380,7 @@ export default function BusinessEnglishVisualEditor() {
             )}
           </div>
 
-          <BlockWrapper blockId="feedbackTemplate" label="Tutor's Review" icon="ri-chat-check-line">
+          <BlockWrapper blockId="feedbackTemplate" label="Tutor's Review" icon="ri-chat-check-line" hidden={isBlockHidden('feedbackTemplate')} onToggle={toggleBlock}>
           <div className="beve-sub-heading" style={{ marginTop: 0 }}><i className="ri-chat-check-line" /> Tutor's Review</div>
           <div className="beve-feedback-template">
             <BERichTextInput value={beData.feedback.feedbackTemplate}
@@ -1763,7 +2388,7 @@ export default function BusinessEnglishVisualEditor() {
               placeholder="Feedback template" style={{ fontFamily: "'Courier New', monospace", whiteSpace: 'pre-wrap' }} />
           </div>
           </BlockWrapper>
-          <BlockWrapper blockId="nextLesson" label="Next Lesson" icon="ri-arrow-right-circle-line">
+          <BlockWrapper blockId="nextLesson" label="Next Lesson" icon="ri-arrow-right-circle-line" hidden={isBlockHidden('nextLesson')} onToggle={toggleBlock}>
           <div className="beve-next-lesson">
             <i className="ri-arrow-right-circle-line" />
             <div>
@@ -1860,24 +2485,30 @@ export default function BusinessEnglishVisualEditor() {
             practice: {
               ...prev.practice,
               steps: (data.steps || []).map((s: any, i: number) => ({
-                title: s.title || `Step ${i + 1}`,
-                instructionEn: s.instructionEn || '',
-                instructionKr: s.instructionKr || '',
-                content: s.content || '',
-                dialogue: s.dialogue,
-                tutorNotes: s.tutorNotes || [],
+                ...normalizePracticeStep({
+                  title: s.title || `Step ${i + 1}`,
+                  instructionEn: s.instructionEn || '',
+                  instructionKr: s.instructionKr || '',
+                  content: s.content || '',
+                  dialogue: s.dialogue,
+                  wordBox: s.wordBox,
+                  tutorNotes: s.tutorNotes || [],
+                }, i),
               })),
             },
           }));
           triggerAutosave();
         }}
         onGenerateChallenge={(data) => {
+          const normalizedTutorNotes = normalizeChallengeTutorNotes(
+            data.tutorNotes || beData.challenge.tutorNotes,
+            [],
+          );
           updateSection('challenge', {
             scenarioEn: data.scenarioEn || '',
             scenarioKr: data.scenarioKr || '',
-            guideQuestions: data.guideQuestions || [],
             roleplayTable: data.roleplayTable,
-            tutorNotes: data.tutorNotes || beData.challenge.tutorNotes,
+            tutorNotes: normalizedTutorNotes,
           });
         }}
         onGenerateDiscussion={(data) => {

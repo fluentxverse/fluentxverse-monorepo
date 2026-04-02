@@ -6,7 +6,8 @@ import './BusinessEnglishPreview.css';
 
 type LessonType = 'READING' | 'SPEAKING' | 'LISTENING' | 'WRITING' | 'REVIEW';
 type ThemeMode = 'dark' | 'light';
-type NoteType = 'instruction' | 'script' | 'tip';
+type NoteType = 'instruction' | 'script' | 'tip' | 'question';
+type UnderstandTutorGroup = 'comprehension' | 'wordBank' | 'soundPractice' | 'activityBlocks';
 type ActivityBlockType =
   | 'matching'
   | 'multipleChoice'
@@ -21,7 +22,71 @@ type ActivityBlockType =
 interface TutorNote {
   type: NoteType;
   text: string;
+  group?: UnderstandTutorGroup | string;
 }
+
+const normalizeTutorNoteType = (type: string = 'instruction'): NoteType =>
+  ['instruction', 'script', 'tip', 'question'].includes(type)
+    ? (type as NoteType)
+    : 'instruction';
+
+const stripHtmlForTutorGrouping = (value: string = '') =>
+  value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+const normalizeUnderstandTutorNotes = (notes: TutorNote[] = []): TutorNote[] => {
+  let currentGroup: UnderstandTutorGroup = 'comprehension';
+
+  return notes.map((note) => {
+    if (note.group) return note;
+
+    const text = stripHtmlForTutorGrouping(note.text);
+
+    if (
+      text.includes('word bank') ||
+      text.includes('read each word') ||
+      text.includes('read the word') ||
+      text.includes('definition') ||
+      text.includes('meaning')
+    ) {
+      currentGroup = 'wordBank';
+    } else if (
+      text.includes('sound practice') ||
+      text.includes('pronunciation') ||
+      text.includes('pronounce') ||
+      text.includes('mouth') ||
+      /\/[^/\s]{1,12}\//.test(text)
+    ) {
+      currentGroup = 'soundPractice';
+    } else if (
+      text.includes('profile card') ||
+      text.includes('read the profile card') ||
+      text.includes('team directory') ||
+      text.includes('directory entry') ||
+      text.includes('read the entry') ||
+      text.includes('comprehension question') ||
+      text.includes('ask the questions one by one') ||
+      text.includes('ask the comprehension questions') ||
+      text.includes('read the passage')
+    ) {
+      currentGroup = 'activityBlocks';
+    } else if (
+      text.includes('pattern drill') ||
+      text.includes('patterns') ||
+      text.includes('pattern') ||
+      text.includes('table') ||
+      text.includes('sentence')
+    ) {
+      currentGroup = 'comprehension';
+    }
+
+    return { ...note, group: currentGroup };
+  });
+};
 
 interface PatternItem {
   en: string;
@@ -61,6 +126,64 @@ interface DialogueLine {
 interface GuideQuestion {
   text: string;
 }
+
+const normalizeChallengeTutorNotes = (
+  notes: TutorNote[] = [],
+  guideQuestions: GuideQuestion[] = [],
+): TutorNote[] => {
+  const normalizedNotes = (Array.isArray(notes) ? notes : []).map((note) => ({
+    ...note,
+    type: normalizeTutorNoteType(note?.type),
+    text: note?.text || '',
+  })).filter((note, index, arr) => {
+    if (note.type !== 'question') return true;
+    const normalizedText = stripHtmlForTutorGrouping(note.text);
+    if (!normalizedText) return false;
+    return arr.findIndex((candidate) => (
+      normalizeTutorNoteType(candidate?.type) === 'question' &&
+      stripHtmlForTutorGrouping(candidate?.text || '') === normalizedText
+    )) === index;
+  });
+
+  const hasQuestionNotes = normalizedNotes.some((note) => (
+    note.type === 'question' && stripHtmlForTutorGrouping(note.text)
+  ));
+
+  if (hasQuestionNotes) {
+    return normalizedNotes;
+  }
+
+  const existingQuestionTexts = new Set(
+    normalizedNotes
+      .filter((note) => note.type === 'question')
+      .map((note) => stripHtmlForTutorGrouping(note.text))
+      .filter(Boolean),
+  );
+
+  const legacyQuestionNotes = (Array.isArray(guideQuestions) ? guideQuestions : []).reduce<TutorNote[]>((acc, question) => {
+    const text = question?.text || '';
+    const normalizedText = stripHtmlForTutorGrouping(text);
+
+    if (normalizedText && existingQuestionTexts.has(normalizedText)) {
+      return acc;
+    }
+
+    if (normalizedText) {
+      existingQuestionTexts.add(normalizedText);
+    }
+
+    acc.push({ type: 'question', text });
+    return acc;
+  }, []);
+
+  return [...normalizedNotes, ...legacyQuestionNotes];
+};
+
+const getQuestionNoteOrdinal = (notes: TutorNote[] = [], index: number) =>
+  notes
+    .slice(0, index + 1)
+    .filter((note) => normalizeTutorNoteType(note?.type) === 'question')
+    .length;
 
 interface DiscussionCategory {
   title: string;
@@ -318,6 +441,7 @@ const noteIcons: Record<NoteType, string> = {
   instruction: 'ri-file-list-3-line',
   script: 'ri-chat-quote-line',
   tip: 'ri-lightbulb-line',
+  question: 'ri-question-line',
 };
 
 const html = (value?: string) => ({ __html: value || '' });
@@ -383,6 +507,10 @@ const mergeWithDefaults = (raw: any): BELessonData => {
         return { ...drill, examples };
       })
     : [];
+  const challengeTutorNotes = normalizeChallengeTutorNotes(
+    Array.isArray(beData.challenge?.tutorNotes) ? beData.challenge.tutorNotes : [],
+    Array.isArray(beData.challenge?.guideQuestions) ? beData.challenge.guideQuestions : [],
+  );
 
   return {
     ...DEFAULT_BE_DATA,
@@ -419,7 +547,7 @@ const mergeWithDefaults = (raw: any): BELessonData => {
       fillRows: beData.understand?.fillRows || [],
       patternDrills,
       activityBlocks: normalizeActivityBlocks(beData.understand?.activityBlocks || []),
-      tutorNotes: Array.isArray(beData.understand?.tutorNotes) ? beData.understand.tutorNotes : [],
+      tutorNotes: normalizeUnderstandTutorNotes(Array.isArray(beData.understand?.tutorNotes) ? beData.understand.tutorNotes : []),
     },
     practice: {
       ...DEFAULT_BE_DATA.practice,
@@ -437,7 +565,6 @@ const mergeWithDefaults = (raw: any): BELessonData => {
     challenge: {
       ...DEFAULT_BE_DATA.challenge,
       ...(beData.challenge || {}),
-      guideQuestions: beData.challenge?.guideQuestions || [],
       roleplayTable: beData.challenge?.roleplayTable
         ? {
             ...beData.challenge.roleplayTable,
@@ -448,7 +575,8 @@ const mergeWithDefaults = (raw: any): BELessonData => {
           }
         : undefined,
       activityBlocks: normalizeActivityBlocks(beData.challenge?.activityBlocks || []),
-      tutorNotes: Array.isArray(beData.challenge?.tutorNotes) ? beData.challenge.tutorNotes : [],
+      guideQuestions: [],
+      tutorNotes: challengeTutorNotes,
     },
     discussion: {
       ...DEFAULT_BE_DATA.discussion,
@@ -498,6 +626,8 @@ export default function BusinessEnglishPreview() {
   const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const page1IntroStudentRef = useRef<HTMLDivElement | null>(null);
+  const [page1IntroTutorMaxHeight, setPage1IntroTutorMaxHeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -535,6 +665,32 @@ export default function BusinessEnglishPreview() {
     canvas.addEventListener('scroll', handleScroll, { passive: true });
     return () => canvas.removeEventListener('scroll', handleScroll);
   }, [loading]);
+
+  useEffect(() => {
+    const target = page1IntroStudentRef.current;
+    if (!target) return;
+
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(target.getBoundingClientRect().height);
+      setPage1IntroTutorMaxHeight(nextHeight > 0 ? nextHeight : null);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateHeight);
+      return () => window.removeEventListener('resize', updateHeight);
+    }
+
+    const observer = new ResizeObserver(() => updateHeight());
+    observer.observe(target);
+    window.addEventListener('resize', updateHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [previewOverrides, lesson, theme, loading]);
 
   const loadLesson = async (lessonId: string) => {
     try {
@@ -696,14 +852,14 @@ export default function BusinessEnglishPreview() {
     </div>
   );
 
-  const renderTutorNotes = (notes: TutorNote[]) => (
+  const renderTutorNotes = (notes: TutorNote[], group?: UnderstandTutorGroup) => (
     <>
       <div className="beve-col-tutor-title">
         <i className="ri-booklet-line" /> Teaching Notes
       </div>
       <div className="beve-tutor-notes">
-        {notes.length > 0 ? (
-          notes.map((note, index) => (
+        {(group ? notes.filter((note) => (note.group || 'comprehension') === group) : notes).length > 0 ? (
+          (group ? notes.filter((note) => (note.group || 'comprehension') === group) : notes).map((note, index) => (
             <div key={index} className={`beve-tutor-note ${note.type}`}>
               <div className="beve-tutor-note-type">
                 <i className={noteIcons[note.type] || 'ri-file-text-line'} /> {note.type}
@@ -975,48 +1131,46 @@ export default function BusinessEnglishPreview() {
     );
   };
 
-  const renderPracticeStepNotes = (indices: number[]) => (
-    <>
-      <div className="beve-col-tutor-title">
-        <i className="ri-booklet-line" /> Teaching Notes
-      </div>
-      <div className="beve-tutor-notes">
-        {indices.length > 0 ? (
-          indices.map((stepIndex) => {
-            const step = beData.practice.steps[stepIndex];
-            if (!step) return null;
+  const renderPracticeStepNotes = (stepIndex: number) => {
+    const step = beData.practice.steps[stepIndex];
+    if (!step) {
+      return (
+        <div className="beve-col-tutor-title">
+          <i className="ri-booklet-line" /> Teaching Notes
+        </div>
+      );
+    }
 
-            return (
-              <div key={stepIndex}>
-                <div className="beve-preview-step-note-title">{step.title}</div>
-                {(step.tutorNotes || []).length > 0 ? (
-                  step.tutorNotes.map((note, noteIndex) => (
-                    <div key={noteIndex} className={`beve-tutor-note ${note.type}`}>
-                      <div className="beve-tutor-note-type">
-                        <i className={noteIcons[note.type] || 'ri-file-text-line'} /> {note.type}
-                      </div>
-                      <StaticHtml className="beve-preview-static-rich" value={note.text} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="beve-preview-empty">No teaching notes for this step yet.</div>
-                )}
+    return (
+      <>
+        <div className="beve-col-tutor-title">
+          <i className="ri-booklet-line" /> Teaching Notes
+        </div>
+        <div className="beve-practice-note-panel-title">{step.title}</div>
+        <div className="beve-tutor-notes">
+          {(step.tutorNotes || []).length > 0 ? (
+            step.tutorNotes.map((note, noteIndex) => (
+              <div key={noteIndex} className={`beve-tutor-note ${note.type}`}>
+                <div className="beve-tutor-note-type">
+                  <i className={noteIcons[note.type] || 'ri-file-text-line'} /> {note.type}
+                </div>
+                <StaticHtml className="beve-preview-static-rich" value={note.text} />
               </div>
-            );
-          })
-        ) : (
-          <div className="beve-preview-empty">No practice steps on this page.</div>
-        )}
-      </div>
-    </>
-  );
+            ))
+          ) : (
+            <div className="beve-preview-empty">No teaching notes for this step yet.</div>
+          )}
+        </div>
+      </>
+    );
+  };
 
   const renderPage1 = () => (
     <div className="beve-page" id="beve-page1" ref={(el) => { pageRefs.current.page1 = el; }}>
       {renderPageHeader(1)}
       <div className="beve-page-sections">
         <div className="beve-page-section">
-          <div className="beve-col-student">
+          <div className="beve-col-student" ref={page1IntroStudentRef}>
             {renderSectionBanner(1, 'WARM-UP')}
             <div className="beve-goal-box">
               <div className="beve-goal-label">Lesson Goal</div>
@@ -1043,7 +1197,10 @@ export default function BusinessEnglishPreview() {
               <StaticHtml className="beve-situation-kr" value={beData.introduce.situationKr} />
             </div>
           </div>
-          <div className="beve-col-tutor">
+          <div
+            className="beve-col-tutor"
+            style={page1IntroTutorMaxHeight ? { maxHeight: `${page1IntroTutorMaxHeight}px` } : undefined}
+          >
             {renderTutorNotes(beData.introduce.tutorNotes)}
           </div>
         </div>
@@ -1079,47 +1236,52 @@ export default function BusinessEnglishPreview() {
   const renderPage2 = () => (
     <div className="beve-page" id="beve-page2" ref={(el) => { pageRefs.current.page2 = el; }}>
       {renderPageHeader(2)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {renderSectionBanner(3, 'COMPREHENSION')}
+      <div className="beve-page-sections">
+        <div className="beve-page-section">
+          <div className="beve-col-student">
+            {renderSectionBanner(3, 'COMPREHENSION')}
 
-          {!isHidden('comprehensionIntro') && (
-            <div className="beve-situation-box">
-              <StaticHtml
-                className="beve-situation-en"
-                value={beData.understand.instruction}
-                emptyText="Comprehension instruction not set"
-              />
-              <StaticHtml className="beve-situation-kr" value={beData.understand.instructionKr} />
-            </div>
-          )}
+            {!isHidden('comprehensionIntro') && (
+              <div className="beve-situation-box">
+                <StaticHtml
+                  className="beve-situation-en"
+                  value={beData.understand.instruction}
+                  emptyText="Comprehension instruction not set"
+                />
+                <StaticHtml className="beve-situation-kr" value={beData.understand.instructionKr} />
+              </div>
+            )}
 
-          {!isHidden('patternDrills') && beData.understand.patternDrills.length > 0 && (
-            <div className="beve-pattern-drills">
-              {beData.understand.patternDrills.map((drill, drillIndex) => (
-                <div key={drillIndex} className="beve-drill-card">
-                  <div className="beve-drill-header">
-                    <StaticHtml className="beve-drill-label" value={drill.label} />
-                    <StaticHtml className="beve-drill-label-kr" value={drill.labelKr} />
+            {!isHidden('patternDrills') && beData.understand.patternDrills.length > 0 && (
+              <div className="beve-pattern-drills">
+                {beData.understand.patternDrills.map((drill, drillIndex) => (
+                  <div key={drillIndex} className="beve-drill-card">
+                    <div className="beve-drill-header">
+                      <StaticHtml className="beve-drill-label" value={drill.label} />
+                      <StaticHtml className="beve-drill-label-kr" value={drill.labelKr} />
+                    </div>
+                    <div className="beve-drill-template" dangerouslySetInnerHTML={html(drill.template)} />
+                    <table className="beve-drill-table">
+                      <tbody>
+                        {drill.examples.map((example, exampleIndex) => (
+                          <tr key={exampleIndex}>
+                            <td dangerouslySetInnerHTML={html(example.en)} />
+                            <td dangerouslySetInnerHTML={html(example.kr)} />
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="beve-drill-template" dangerouslySetInnerHTML={html(drill.template)} />
-                  <table className="beve-drill-table">
-                    <tbody>
-                      {drill.examples.map((example, exampleIndex) => (
-                        <tr key={exampleIndex}>
-                          <td dangerouslySetInnerHTML={html(example.en)} />
-                          <td dangerouslySetInnerHTML={html(example.kr)} />
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="beve-col-tutor">{renderTutorNotes(beData.understand.tutorNotes, 'comprehension')}</div>
+        </div>
 
-          {!isHidden('vocabulary') && beData.present.vocabulary.length > 0 && (
-            <>
+        {!isHidden('vocabulary') && beData.present.vocabulary.length > 0 && (
+          <div className="beve-page-section">
+            <div className="beve-col-student">
               <div className="beve-sub-heading" style={{ marginTop: 0 }}>
                 Word Bank <span className="kr-label">단어장</span>
               </div>
@@ -1143,13 +1305,16 @@ export default function BusinessEnglishPreview() {
                   ))}
                 </tbody>
               </table>
-            </>
-          )}
+            </div>
+            <div className="beve-col-tutor">{renderTutorNotes(beData.understand.tutorNotes, 'wordBank')}</div>
+          </div>
+        )}
 
-          {!isHidden('soundPractice') &&
-            (beData.present.pronunciation.left.words.length > 0 ||
-              beData.present.pronunciation.right.words.length > 0) && (
-              <>
+        {!isHidden('soundPractice') &&
+          (beData.present.pronunciation.left.words.length > 0 ||
+            beData.present.pronunciation.right.words.length > 0) && (
+            <div className="beve-page-section">
+              <div className="beve-col-student">
                 <div className="beve-sub-heading" style={{ marginTop: 0 }}>
                   Sound Practice{' '}
                   <span className="kr-label">{beData.present.pronunciation.instructionKr}</span>
@@ -1179,12 +1344,17 @@ export default function BusinessEnglishPreview() {
                     })}
                   </div>
                 </div>
-              </>
-            )}
+              </div>
+              <div className="beve-col-tutor">{renderTutorNotes(beData.understand.tutorNotes, 'soundPractice')}</div>
+            </div>
+          )}
 
-          {renderActivityBlocksArea(beData.understand.activityBlocks)}
-        </div>
-        <div className="beve-col-tutor">{renderTutorNotes(beData.understand.tutorNotes)}</div>
+        {beData.understand.activityBlocks.length > 0 && (
+          <div className="beve-page-section">
+            <div className="beve-col-student">{renderActivityBlocksArea(beData.understand.activityBlocks)}</div>
+            <div className="beve-col-tutor">{renderTutorNotes(beData.understand.tutorNotes, 'activityBlocks')}</div>
+          </div>
+        )}
       </div>
       {renderPageFooter()}
     </div>
@@ -1193,14 +1363,22 @@ export default function BusinessEnglishPreview() {
   const renderPage3 = () => (
     <div className="beve-page" id="beve-page3" ref={(el) => { pageRefs.current.page3 = el; }}>
       {renderPageHeader(3)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {renderSectionBanner(4, 'DRILL')}
-          {page3StepIndices.map((index) => renderPracticeStep(index))}
-          {beData.present.patterns.length > 0 && renderHintBox()}
-          {renderActivityBlocksArea(beData.practice.activityBlocks)}
+      <div className="beve-page-sections">
+        {page3StepIndices.map((index, idx) => (
+          <div key={index} className="beve-page-section">
+            <div className="beve-col-student">
+              {idx === 0 ? renderSectionBanner(4, 'DRILL') : null}
+              {renderPracticeStep(index)}
+            </div>
+            <div className="beve-col-tutor">{renderPracticeStepNotes(index)}</div>
+          </div>
+        ))}
+        <div className="beve-page-section beve-page-section-full">
+          <div className="beve-col-student">
+            {beData.present.patterns.length > 0 && renderHintBox()}
+            {renderActivityBlocksArea(beData.practice.activityBlocks)}
+          </div>
         </div>
-        <div className="beve-col-tutor">{renderPracticeStepNotes(page3StepIndices)}</div>
       </div>
       {renderPageFooter()}
     </div>
@@ -1209,27 +1387,32 @@ export default function BusinessEnglishPreview() {
   const renderPage4 = () => (
     <div className="beve-page" id="beve-page4" ref={(el) => { pageRefs.current.page4 = el; }}>
       {renderPageHeader(4)}
-      <div className="beve-columns">
-        <div className="beve-col-student">
-          {renderSectionBanner(4, 'DRILL (CONTINUATION)')}
-          {page4StepIndices.length > 0 ? (
-            page4StepIndices.map((index) => renderPracticeStep(index))
-          ) : (
-            <div className="beve-preview-empty">
-              All practice steps fit on the previous page.
+      <div className="beve-page-sections">
+        {page4StepIndices.length > 0 ? (
+          page4StepIndices.map((index, idx) => (
+            <div key={index} className="beve-page-section">
+              <div className="beve-col-student">
+                {idx === 0 ? renderSectionBanner(4, 'DRILL (CONTINUATION)') : null}
+                {renderPracticeStep(index)}
+              </div>
+              <div className="beve-col-tutor">{renderPracticeStepNotes(index)}</div>
             </div>
-          )}
-          {beData.present.patterns.length > 0 && renderHintBox()}
-          {renderActivityBlocksArea(beData.practice.activityBlocks)}
-        </div>
-        <div className="beve-col-tutor">
-          {page4StepIndices.length > 0 ? (
-            renderPracticeStepNotes(page4StepIndices)
-          ) : (
-            <div className="beve-col-tutor-title">
-              <i className="ri-booklet-line" /> Teaching Notes
+          ))
+        ) : (
+          <div className="beve-page-section beve-page-section-full">
+            <div className="beve-col-student">
+              {renderSectionBanner(4, 'DRILL (CONTINUATION)')}
+              <div className="beve-preview-empty">
+                All practice steps fit on the previous page.
+              </div>
             </div>
-          )}
+          </div>
+        )}
+        <div className="beve-page-section beve-page-section-full">
+          <div className="beve-col-student">
+            {beData.present.patterns.length > 0 && renderHintBox()}
+            {renderActivityBlocksArea(beData.practice.activityBlocks)}
+          </div>
         </div>
       </div>
       {renderPageFooter()}
@@ -1237,6 +1420,25 @@ export default function BusinessEnglishPreview() {
   );
 
   const renderPage5 = () => (
+    (() => {
+      const challengeQuestionEntries = beData.challenge.tutorNotes
+        .map((note, index) => ({ note, index }))
+        .filter(({ note }) => normalizeTutorNoteType(note.type) === 'question');
+      const firstQuestionIndex = challengeQuestionEntries.length > 0 ? challengeQuestionEntries[0].index : -1;
+      const challengeLeadingNotes = firstQuestionIndex === -1
+        ? beData.challenge.tutorNotes.map((note, index) => ({ note, index }))
+        : beData.challenge.tutorNotes
+            .slice(0, firstQuestionIndex)
+            .map((note, index) => ({ note, index }))
+            .filter(({ note }) => normalizeTutorNoteType(note.type) !== 'question');
+      const challengeTrailingNotes = firstQuestionIndex === -1
+        ? []
+        : beData.challenge.tutorNotes
+            .slice(firstQuestionIndex)
+            .map((note, offset) => ({ note, index: firstQuestionIndex + offset }))
+            .filter(({ note }) => normalizeTutorNoteType(note.type) !== 'question');
+
+      return (
     <div className="beve-page" id="beve-page5" ref={(el) => { pageRefs.current.page5 = el; }}>
       {renderPageHeader(5)}
       <div className="beve-columns">
@@ -1281,16 +1483,16 @@ export default function BusinessEnglishPreview() {
             </div>
           )}
 
-          {beData.present.patterns.length > 0 && renderHintBox()}
           {renderActivityBlocksArea(beData.challenge.activityBlocks)}
+          {beData.present.patterns.length > 0 && renderHintBox()}
         </div>
         <div className="beve-col-tutor">
           <div className="beve-col-tutor-title">
             <i className="ri-booklet-line" /> Teaching Notes
           </div>
           <div className="beve-tutor-notes">
-            {beData.challenge.tutorNotes.length > 0 ? (
-              beData.challenge.tutorNotes.map((note, index) => (
+            {challengeLeadingNotes.length > 0 ? (
+              challengeLeadingNotes.map(({ note, index }) => (
                 <div key={index} className={`beve-tutor-note ${note.type}`}>
                   <div className="beve-tutor-note-type">
                     <i className={noteIcons[note.type] || 'ri-file-text-line'} /> {note.type}
@@ -1298,31 +1500,41 @@ export default function BusinessEnglishPreview() {
                   <StaticHtml className="beve-preview-static-rich" value={note.text} />
                 </div>
               ))
-            ) : (
+            ) : challengeQuestionEntries.length === 0 && challengeTrailingNotes.length === 0 ? (
               <div className="beve-preview-empty">No teaching notes yet.</div>
-            )}
-            {beData.challenge.guideQuestions.length > 0 && (
+            ) : null}
+            {challengeQuestionEntries.length > 0 && (
               <>
-                <div className="beve-sub-heading" style={{ borderBottom: 'none', marginBottom: 6, marginTop: 16 }}>
+                <div className="beve-sub-heading" style={{ borderBottom: 'none', marginBottom: 6, marginTop: challengeLeadingNotes.length > 0 ? 16 : 0 }}>
                   Prompt Questions
                 </div>
                 <div className="beve-guide-questions">
-                  {beData.challenge.guideQuestions.map((question, index) => (
-                    <div key={index} className="beve-guide-q">
+                  {challengeQuestionEntries.map(({ note }, questionIndex) => (
+                    <div key={questionIndex} className="beve-guide-q">
                       <span style={{ fontWeight: 700, color: '#7c3aed', marginRight: 6 }}>
-                        {index + 1}.
+                        {questionIndex + 1}.
                       </span>
-                      <span dangerouslySetInnerHTML={html(question.text)} />
+                      <span dangerouslySetInnerHTML={html(note.text)} />
                     </div>
                   ))}
                 </div>
               </>
             )}
+            {challengeTrailingNotes.map(({ note, index }) => (
+              <div key={index} className={`beve-tutor-note ${note.type}`}>
+                <div className="beve-tutor-note-type">
+                  <i className={noteIcons[note.type] || 'ri-file-text-line'} /> {note.type}
+                </div>
+                <StaticHtml className="beve-preview-static-rich" value={note.text} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
       {renderPageFooter()}
     </div>
+      );
+    })()
   );
 
   const renderPage6 = () => (

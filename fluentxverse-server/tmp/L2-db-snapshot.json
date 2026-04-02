@@ -549,7 +549,7 @@
     },
     "challenge": {
       "scenarioEn": "During the roleplay, you will be David Kim. You will introduce yourself to another professional. Read your team directory card below.",
-      "scenarioKr": "역할극에서 당신은 데이비드 김입니다. 다른 직장인 한 명에게 자기소개를 합니다. 아래의 팀 디렉터리 카드를 읽어 보세요.",
+      "scenarioKr": "역할극에서 당신은 데이비드 김입니다. 다른 새 동료에게 자기소개를 합니다. 아래의 팀 디렉터리 카드를 읽어 보세요.",
       "guideQuestions": [],
       "activityBlocks": [
         {
@@ -568,11 +568,15 @@
         },
         {
           "type": "script",
-          "text": "\"First please read the Key Expressions. You may use the Key Expressions in the Simulation.\""
+          "text": "\"First please read the Key Expressions. ...You may use they Key Expression in the Simulation.\""
         },
         {
           "type": "instruction",
-          "text": "Read the simulation."
+          "text": "Read the simulation"
+        },
+        {
+          "type": "instruction",
+          "text": "Ask the student to read the team directory."
         },
         {
           "type": "script",
@@ -580,15 +584,11 @@
         },
         {
           "type": "instruction",
-          "text": "Use the prompt questions to guide the roleplay."
-        },
-        {
-          "type": "instruction",
           "text": "Give feedback after finishing."
         },
         {
           "type": "tip",
-          "text": "This must be a real-life simulation, distinct from Practice. Corrections should only be done after the exercise."
+          "text": "If needed, let the student read the entry one more time before the roleplay."
         },
         {
           "type": "question",
@@ -609,6 +609,10 @@
         {
           "type": "question",
           "text": "Wow! I like (Student's hobby) too!"
+        },
+        {
+          "type": "script",
+          "text": "\"Do you have any questions? Keep up the good work. Let's go to the next part."
         }
       ]
     },
@@ -644,20 +648,20 @@
       "activityBlocks": [],
       "tutorNotes": [
         {
+          "text": "\"Now, let's have a discussion.\"",
+          "type": "script"
+        },
+        {
+          "type": "instruction",
+          "text": "Read the instruction"
+        },
+        {
+          "text": "If the student can't choose, pick one. Encourage full sentences.",
+          "type": "tip"
+        },
+        {
           "type": "script",
-          "text": "\"Now, let's have a discussion.\""
-        },
-        {
-          "type": "instruction",
-          "text": "Read the instruction."
-        },
-        {
-          "type": "instruction",
-          "text": "Ask the student to choose a category."
-        },
-        {
-          "type": "instruction",
-          "text": "You can ask follow-up questions and have a natural conversation with the student until the time for feedback."
+          "text": "\"We don't have much time left, so let's do Feedback.\""
         }
       ]
     },
