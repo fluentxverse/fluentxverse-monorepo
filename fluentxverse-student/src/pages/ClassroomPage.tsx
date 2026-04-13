@@ -315,6 +315,62 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     { id: 'young-learners', name: 'Young Learners', icon: '🎨' },
     { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰' },
   ];
+  const isLessonMaterialCourse = (courseId?: string | null) =>
+    courseId === 'conversational-skills' || courseId === 'business-english';
+
+  const transformLessonMaterialToLesson = (lessonMaterial: any): Lesson => {
+    const chapterLabel = lessonMaterial.chapterLabel
+      || (lessonMaterial.chapterName
+        ? `Chapter ${lessonMaterial.chapter}: ${lessonMaterial.chapterName}`
+        : `Chapter ${lessonMaterial.chapter}`);
+    const lessonLabel = lessonMaterial.lessonTitle || `Lesson ${lessonMaterial.lessonNumber}: ${lessonMaterial.lessonName}`;
+
+    return {
+      id: lessonMaterial.id,
+      title: lessonLabel,
+      slug: lessonMaterial.id,
+      status: 'published',
+      parentId: null,
+      forkOf: null,
+      isFork: false,
+      createdBy: lessonMaterial.createdBy || '',
+      createdByName: lessonMaterial.createdByName || null,
+      storagePath: '',
+      createdAt: lessonMaterial.createdAt || '',
+      updatedAt: lessonMaterial.updatedAt || '',
+      publishedAt: lessonMaterial.updatedAt || null,
+      lessonData: {
+        course: lessonMaterial.course,
+        header: {
+          levelBadge: `Level ${lessonMaterial.level || 1}`,
+          chapterLabel,
+          lessonLabel,
+          goalText: lessonMaterial.goalTextEn || '',
+          goalSubtext: lessonMaterial.goalTextJp || '',
+          backgroundImage: lessonMaterial.backgroundImage || '',
+          overlayColor: lessonMaterial.overlayColor || '',
+        }
+      } as Lesson['lessonData'],
+    };
+  };
+
+  const resolveStudentMaterialViewUrl = async (courseId: string | undefined, lessonId: string): Promise<string | null> => {
+    if (courseId === 'conversational-skills') {
+      return `/materials/conversational-skills/${lessonId}`;
+    }
+
+    if (courseId === 'young-learners') {
+      return `/materials/young-learners/lesson/${lessonId}`;
+    }
+
+    if (courseId === 'business-english') {
+      const result = await lessonApi.getLessonMaterialView(lessonId);
+      return result.success ? result.viewUrl || null : null;
+    }
+
+    const result = await lessonApi.getStudentLesson(lessonId);
+    return result.success ? result.viewUrl || null : null;
+  };
   
   // Daily Dispatch state
   const [dispatchArticles, setDispatchArticles] = useState<DispatchArticle[]>([]);
@@ -388,26 +444,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     setLoadingMaterials(true);
     try {
-      // Use lesson-materials endpoint for conversational-skills (Memgraph storage)
-      if (courseId === 'conversational-skills') {
+      // Use lesson-materials endpoint for builder-backed courses
+      if (isLessonMaterialCourse(courseId)) {
         const result = await lessonApi.getPublishedLessonMaterials(courseId);
         if (result.success && result.lessons) {
-          // Transform lesson-materials format to match expected Lesson format
-          const transformedLessons = result.lessons.map((l: any) => ({
-            id: l.id,
-            title: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
-            slug: l.id,
-            status: 'published' as const,
-            lessonData: {
-              header: {
-                levelBadge: l.levelBadge,
-                chapterLabel: l.chapterLabel,
-                lessonLabel: l.lessonTitle,
-                goalText: l.goalTextEn || '',
-              }
-            }
-          })) as Lesson[];
-          setAvailableLessons(transformedLessons);
+          setAvailableLessons(result.lessons.map(transformLessonMaterialToLesson));
         }
       } else {
         // Use regular lesson endpoint for other courses
@@ -469,10 +510,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       // Fetch the lesson viewUrl for iframe display
       setLoadingViewUrl(true);
       try {
-        const result = await lessonApi.getStudentLesson(selectedLesson.id);
-        if (result.success && result.viewUrl) {
-          setLessonViewUrl(result.viewUrl);
-        }
+        const nextViewUrl = await resolveStudentMaterialViewUrl(selectedCourse, selectedLesson.id);
+        setLessonViewUrl(nextViewUrl);
       } catch (err) {
         console.error('Failed to get lesson view URL:', err);
       } finally {
@@ -514,10 +553,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           // Also fetch the lesson viewUrl for iframe display
           if (lessonData.lessonId) {
             try {
-              const lessonResult = await lessonApi.getStudentLesson(lessonData.lessonId);
-              if (lessonResult.success && lessonResult.viewUrl) {
-                setLessonViewUrl(lessonResult.viewUrl);
-              }
+              const nextViewUrl = await resolveStudentMaterialViewUrl(lessonData.courseId, lessonData.lessonId);
+              setLessonViewUrl(nextViewUrl);
             } catch (err) {
               console.error('Failed to get lesson view URL:', err);
             }

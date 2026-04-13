@@ -189,3 +189,32 @@
   }
 }
 
+[data-theme='dark'] .lesson-fullpage,
+[data-theme='dark'] .lesson-content-wrapper,
+[data-theme='dark'] .lesson-fullpage-loading,
+[data-theme='dark'] .lesson-fullpage-error {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .lesson-back-btn {
+  background: rgba(30, 30, 30, 0.92);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .lesson-back-btn:hover {
+  background: var(--fxv-surface);
+  border-color: rgba(124, 184, 255, 0.24);
+  color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .lesson-fullpage-loading p,
+[data-theme='dark'] .lesson-fullpage-error p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .lesson-fullpage-error h3 {
+  color: var(--fxv-text);
+}

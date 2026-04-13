@@ -17,9 +17,29 @@
 }
 
 .materials-container {
-  padding: 28px 120px 48px 28px;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 28px 15px 48px;
+  box-sizing: border-box;
+  position: relative;
+  left: 0;
+}
+
+@media (min-width: 1501px) {
+  .materials-container {
+    width: 1270px;
+    padding: 28px 0 48px;
+    left: calc(50vw - 771px);
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1500px) {
+  .materials-container {
+    width: 1140px;
+    padding: 28px 0 48px;
+    left: calc(50vw - 685px);
+  }
 }
 
 /* Header - matching tickets/schedule page design */
@@ -274,6 +294,8 @@
 @media (max-width: 768px) {
   .materials-container {
     padding: 16px 16px 40px;
+    width: 100%;
+    left: 0;
   }
 
   .materials-header-content h1 {
@@ -311,6 +333,8 @@
 @media (max-width: 480px) {
   .materials-container {
     padding: 12px 15px 30px;
+    width: 100%;
+    left: 0;
   }
 
   .materials-header-content h1 {
@@ -320,4 +344,61 @@
   .materials-header-content p {
     font-size: 0.9rem;
   }
+}
+
+[data-theme='dark'] .materials-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .materials-search input,
+[data-theme='dark'] .category-tab,
+[data-theme='dark'] .course-card {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .materials-page-title,
+[data-theme='dark'] .course-title {
+  color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .materials-page-subtitle,
+[data-theme='dark'] .materials-search i,
+[data-theme='dark'] .course-description,
+[data-theme='dark'] .course-lessons {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .course-meta {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .course-footer {
+  border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark'] .course-rating {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .course-category {
+  color: #a9cfff;
+  background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme='dark'] .materials-search input::placeholder {
+  color: var(--fxv-text-soft);
+}
+
+[data-theme='dark'] .category-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(124, 184, 255, 0.24);
+  color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .course-icon {
+  background: rgba(124, 184, 255, 0.08);
 }

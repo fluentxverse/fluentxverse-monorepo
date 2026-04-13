@@ -31,6 +31,7 @@ import { dispatchRoutes } from './routes/dispatch.route';
 import { youngLearnersRoute } from './routes/youngLearners.route';
 import { aiRoute } from './routes/ai.route';
 import { logger, generateRequestId } from './utils/logger';
+import { getAllowedOrigins, isAllowedOrigin } from './config/cors';
 
 // Initialize databases (async)
 const isProduction = process.env.NODE_ENV === 'production';
@@ -64,22 +65,7 @@ initRedis().catch(err => console.warn('Redis initialization skipped:', err));
 
 // Bun SQL is auto-initialized on import (no need to call getPool)
 
-// Build allowed origins from environment or use defaults for development
-const defaultOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'http://localhost:5176',
-  'https://dashboard.fluentxverse.xyz',
-  // Production domains
-];
-
-const envOrigins = (process.env.FRONTEND_URLS || '')
-  .split(',')
-  .map(o => o.trim())
-  .filter(o => o.length > 0);
-
-const allowedOrigins = envOrigins.length > 0 ? [...new Set([...envOrigins, ...defaultOrigins])] : defaultOrigins;
+const allowedOrigins = getAllowedOrigins(process.env.FRONTEND_URLS || '');
 
 
 // Security: Maximum body size limit (10MB)
@@ -145,20 +131,11 @@ const app = new Elysia({
   .use(cors({
     origin: (request) => {
       const origin = request.headers.get('origin');
-      // Allow requests with no origin (preflight, curl, etc.)
-      if (!origin) return true;
-      // Normalize: strip trailing slash for comparison
-      const normalizedOrigin = origin.replace(/\/$/, '');
-      if (allowedOrigins.some(o => o.replace(/\/$/, '') === normalizedOrigin)) return true;
-      // Also allow http variant when https is allowed (Cloudflare tunnel may send http internally)
-      const httpVariant = normalizedOrigin.replace(/^https:/, 'http:');
-      const httpsVariant = normalizedOrigin.replace(/^http:/, 'https:');
-      if (allowedOrigins.some(o => {
-        const n = o.replace(/\/$/, '');
-        return n === httpVariant || n === httpsVariant;
-      })) return true;
-      console.warn(`⚠️ CORS blocked origin: ${origin}`);
-      return false;
+      const isAllowed = isAllowedOrigin(origin, allowedOrigins);
+      if (!isAllowed && origin) {
+        console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      }
+      return isAllowed;
     },
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
@@ -409,4 +386,3 @@ httpServer.listen(8767, '0.0.0.0', async () => {
     } catch {}
   })();
 });
-

@@ -537,3 +537,33 @@
     grid-template-columns: 1fr;
   }
 }
+
+[data-theme='dark'] .purchase-history-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .purchase-stat-card,
+[data-theme='dark'] .purchase-history-content,
+[data-theme='dark'] .purchase-card {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .purchase-history-title,
+[data-theme='dark'] .purchase-stat-value,
+[data-theme='dark'] .purchase-card-title {
+  color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .purchase-history-subtitle,
+[data-theme='dark'] .purchase-stat-label,
+[data-theme='dark'] .detail-label,
+[data-theme='dark'] .detail-value,
+[data-theme='dark'] .purchase-history-loading p,
+[data-theme='dark'] .purchase-history-error p,
+[data-theme='dark'] .purchase-history-empty {
+  color: var(--fxv-text-muted);
+}

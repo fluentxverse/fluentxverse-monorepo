@@ -6,6 +6,70 @@ import type {
 } from '../types/tutor.types';
 import { client as api } from './utils';
 
+export interface ClassroomVocabularyNote {
+  word: string;
+  definitions: {
+    meaning: string;
+    partOfSpeech: string;
+    koreanNative: string;
+    koreanRomanized: string;
+    vietnameseNative: string;
+    vietnameseRomanized: string;
+  }[];
+  selectedDefinitionIndex: number;
+  isLoading: boolean;
+  showDefinition: boolean;
+  showTranslation: boolean;
+}
+
+export interface ClassroomGrammarNote {
+  youSaid: string;
+  correct: string;
+  simpleExplanation: string;
+  technicalExplanation: string;
+  isLoading: boolean;
+  showExplanation: boolean;
+}
+
+export interface ClassroomPronunciationNote {
+  word: string;
+  phonetic: string;
+  isLoading: boolean;
+  showPhonetic: boolean;
+}
+
+export interface ClassroomNotesRecord {
+  id: string;
+  sessionId: string;
+  tutorId: string;
+  studentId: string | null;
+  materialType: string;
+  materialId: string;
+  courseId: string | null;
+  lessonId: string | null;
+  articleId: string | null;
+  vocabularyItems: ClassroomVocabularyNote[];
+  grammarItems: ClassroomGrammarNote[];
+  pronunciationItems: ClassroomPronunciationNote[];
+  studentComment: string;
+  tutorMemo: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveClassroomNotesInput {
+  materialType: string;
+  materialId: string;
+  courseId?: string | null;
+  lessonId?: string | null;
+  articleId?: string | null;
+  vocabularyItems: ClassroomVocabularyNote[];
+  grammarItems: ClassroomGrammarNote[];
+  pronunciationItems: ClassroomPronunciationNote[];
+  studentComment?: string;
+  tutorMemo?: string;
+}
+
 export const tutorApi = {
   /**
    * Search tutors with filters
@@ -130,6 +194,41 @@ export const tutorApi = {
 
     if (!response.data.success) {
       return null;
+    }
+
+    return response.data.data;
+  },
+
+  getClassroomNotes: async (
+    sessionId: string,
+    materialType: string,
+    materialId: string,
+  ): Promise<ClassroomNotesRecord | null> => {
+    const response = await api.get<{ success: boolean; data: ClassroomNotesRecord | null }>(
+      `/tutor/classroom-notes/${sessionId}`,
+      {
+        params: { materialType, materialId },
+      }
+    );
+
+    if (!response.data.success) {
+      throw new Error('Failed to get classroom notes');
+    }
+
+    return response.data.data;
+  },
+
+  saveClassroomNotes: async (
+    sessionId: string,
+    payload: SaveClassroomNotesInput,
+  ): Promise<ClassroomNotesRecord> => {
+    const response = await api.put<{ success: boolean; data: ClassroomNotesRecord }>(
+      `/tutor/classroom-notes/${sessionId}`,
+      payload
+    );
+
+    if (!response.data.success) {
+      throw new Error('Failed to save classroom notes');
     }
 
     return response.data.data;

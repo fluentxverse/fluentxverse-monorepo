@@ -1,7 +1,6 @@
 import { useLocation } from "wouter";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { JSX } from "preact";
-import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
 import { getExamStatus, getSpeakingExamStatus } from '../../api/exam.api';
@@ -23,7 +22,6 @@ const menuItems: MenuItem[] = [
 
 const SideBar = (): JSX.Element | null => {
   const [location, setLocation] = useLocation();
-  const { isDarkMode, toggleTheme } = useThemeStore();
   const { user } = useAuthContext();
   const [showSettings, setShowSettings] = useState(false);
   const [isCertified, setIsCertified] = useState<boolean | null>(null);
@@ -84,15 +82,6 @@ const SideBar = (): JSX.Element | null => {
   );
 
   // Menu items for the static site
-
-  // Apply dark mode class to the root element
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark-mode');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-    }
-  }, [isDarkMode]);
 
   return (
     <div className="sidebar hidden-on-mobile">

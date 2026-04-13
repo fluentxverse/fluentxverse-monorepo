@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "preact/hooks";
-import { LocationProvider, Router, Route, hydrate, prerender as ssr } from 'preact-iso';
+import { LocationProvider, Router, Route, hydrate, prerender as ssr, useLocation } from 'preact-iso';
 import { ThirdwebProvider, useAutoConnect } from "thirdweb/react";
 
 import Home from './pages/Home';
@@ -16,6 +16,8 @@ import DailyDispatchArticlePage from './pages/DailyDispatchArticlePage';
 import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import ConversationalSkillsLessonPage from './pages/ConversationalSkillsLessonPage';
+import BusinessEnglishPage from './pages/BusinessEnglishPage';
+import BusinessEnglishPreviewPage from './pages/BusinessEnglishPreviewPage';
 import YoungLearnersPage from './pages/YoungLearnersPage';
 import YoungLearnersLessonPage from './pages/YoungLearnersLessonPage';
 import LessonViewPage from './pages/LessonViewPage';
@@ -39,6 +41,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import { useAuthContext } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { useThemeStore } from './context/ThemeContext';
 
 // Performance: Link prefetching on hover
 import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
@@ -48,7 +51,8 @@ import ErrorBoundary from './Components/ErrorBoundary';
 
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
-import "./assets/css/force-light-mode.css";
+import "./assets/css/app-theme.css";
+import "./assets/css/scrollbar.css";
 
 // Initialize prefetching after DOM ready
 if (typeof window !== 'undefined') {
@@ -58,9 +62,12 @@ if (typeof window !== 'undefined') {
 
 
 
-export function AppInner() {
+function AppShell() {
 	const [menuActive, setMenuActive] = useState(false);
 	const { isAuthenticated } = useAuthContext();
+	const { path } = useLocation();
+	const isDarkMode = useThemeStore((state) => state.isDarkMode);
+	const effectiveTheme = path === '/' ? 'light' : (isDarkMode ? 'dark' : 'light');
 	
 	// Auto-connect wallet if user has previously connected
 	// This restores the wallet session on page reload
@@ -101,14 +108,42 @@ export function AppInner() {
 		};
 	}, [handleClick]);
 
+	useEffect(() => {
+		if (typeof document === 'undefined') {
+			return;
+		}
+
+		const root = document.documentElement;
+		const body = document.body;
+		const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+		const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+		const isDarkTheme = effectiveTheme === 'dark';
+
+		root.dataset.theme = effectiveTheme;
+		root.classList.toggle('dark-mode', isDarkTheme);
+		root.style.colorScheme = effectiveTheme;
+
+		if (body) {
+			body.dataset.theme = effectiveTheme;
+			body.classList.toggle('dark-mode', isDarkTheme);
+		}
+
+		if (themeColorMeta) {
+			themeColorMeta.setAttribute('content', isDarkTheme ? '#1a1a1a' : '#0245ae');
+		}
+
+		if (colorSchemeMeta) {
+			colorSchemeMeta.setAttribute('content', 'light dark');
+		}
+	}, [effectiveTheme, path]);
+
 	    return (
-		    <div className="App">
+		    <div className={`App theme-${effectiveTheme}`}>
 				<div className={`offcanvas-wrapper${menuActive ? " active" : ""}`}>
 					{/* Offcanvas content */}
 					<button className="menu-close"></button>
 				</div>
 				<div className={`offcanvas-overly${menuActive ? " active" : ""}`} />
-					<LocationProvider>
 						<main>
 							{/* Session expiry warning modal visible when authenticated */}
 							<SessionExpiryModal isAuthenticated={isAuthenticated} />
@@ -124,6 +159,8 @@ export function AppInner() {
 						<Route path="/materials/daily-dispatch" component={withProtected(DailyDispatchPage)} />
 						<Route path="/materials/daily-dispatch/archives/:month" component={withProtected(DailyDispatchArchivePage)} />
 						<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)} />
+						<Route path="/materials/business-english" component={withProtected(BusinessEnglishPage)} />
+						<Route path="/materials/business-english/:id" component={withProtected(BusinessEnglishPreviewPage)} />
 						<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 						<Route path="/materials/conversational-skills/:id" component={ConversationalSkillsLessonPage} />
 						<Route path="/young-learners" component={withProtected(YoungLearnersPage)} />
@@ -146,8 +183,15 @@ export function AppInner() {
 							<Route path="/:404*" component={NotFoundPage} />
 						</Router>
 					</main>
-			</LocationProvider>
 			</div>
+	);
+}
+
+export function AppInner() {
+	return (
+		<LocationProvider>
+			<AppShell />
+		</LocationProvider>
 	);
 }
 

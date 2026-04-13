@@ -6,10 +6,8 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
 import { useAuthContext } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api';
 import './BrowseTutorsPage.css';
-
-// API URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
 
 // Get ticket image URL from local assets (same as TicketsPage)
 const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {

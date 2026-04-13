@@ -3,6 +3,7 @@ import { useLocation } from 'preact-iso';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
+import { useThemeStore } from '../context/ThemeContext';
 import { scheduleApi } from '../api/schedule.api';
 import { initSocket, getSocket, connectSocket, disconnectSocket } from '../client/socket/socket.client';
 
@@ -32,6 +33,7 @@ const SchedulePage = () => {
   }, []);
 
   const { user } = useAuthContext();
+  const isDarkMode = useThemeStore((state) => state.resolvedTheme === 'dark');
   const { route } = useLocation();
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<Set<string>>(new Set());
   const [attendanceMarked, setAttendanceMarked] = useState<Set<string>>(new Set()); // Track which open slots are marked as present
@@ -58,6 +60,23 @@ const SchedulePage = () => {
   const [bookingToast, setBookingToast] = useState<{ studentName?: string; time: string; date: string } | null>(null);
   const [isConfirming, setIsConfirming] = useState(false); // Loading state for confirm button
   const [showSuccess, setShowSuccess] = useState(false); // Success animation state
+
+  const pageBackground = isDarkMode ? '#1a1a1a' : 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)';
+  const cardBackground = isDarkMode
+    ? 'linear-gradient(135deg, #1e1e1e 0%, #232323 100%)'
+    : 'rgba(255, 255, 255, 0.95)';
+  const cardBackgroundSoft = isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(2, 69, 174, 0.1)';
+  const cardBackgroundMuted = isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(248, 250, 252, 0.8)';
+  const elevatedBackground = isDarkMode ? '#202020' : 'rgba(255, 255, 255, 0.98)';
+  const borderSoft = isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(2, 69, 174, 0.08)';
+  const borderAccentSoft = isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(2, 69, 174, 0.1)';
+  const textPrimary = isDarkMode ? '#f3f4f6' : '#0f172a';
+  const textMuted = isDarkMode ? '#a3a3a3' : '#64748b';
+  const textSoft = isDarkMode ? '#737373' : '#94a3b8';
+  const boxShadowSoft = isDarkMode ? '0 4px 14px rgba(0, 0, 0, 0.16)' : '0 4px 12px rgba(2, 69, 174, 0.3)';
+  const boxShadowCard = isDarkMode ? '0 10px 26px rgba(0, 0, 0, 0.2)' : '0 8px 32px rgba(2, 69, 174, 0.12)';
+  const warningBannerBackground = isDarkMode ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255, 255, 255, 0.9)';
+  const warningBannerText = isDarkMode ? '#fcd34d' : '#92400e';
 
   // Refresh handler
   const handleRefresh = () => {
@@ -669,7 +688,7 @@ const SchedulePage = () => {
       <SideBar />
       <div className="main-content">
         <DashboardHeader user={user || undefined} />
-        <main style={{ padding: '40px 0', background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', minHeight: '100vh' }}>
+        <main style={{ padding: '40px 0', background: pageBackground, minHeight: '100vh' }}>
           <style>{`
             /* Custom scrollbar styling for schedule page */
             .schedule-scrollable::-webkit-scrollbar {
@@ -677,15 +696,15 @@ const SchedulePage = () => {
               height: 8px;
             }
             .schedule-scrollable::-webkit-scrollbar-track {
-              background: rgba(2, 69, 174, 0.1);
+              background: ${isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(2, 69, 174, 0.1)'};
               border-radius: 4px;
             }
             .schedule-scrollable::-webkit-scrollbar-thumb {
-              background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+              background: ${isDarkMode ? 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)' : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)'};
               border-radius: 4px;
             }
             .schedule-scrollable::-webkit-scrollbar-thumb:hover {
-              background: linear-gradient(135deg, #023a8f 0%, #3d8ce6 100%);
+              background: ${isDarkMode ? 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)' : 'linear-gradient(135deg, #023a8f 0%, #3d8ce6 100%)'};
             }
           `}</style>
           <div className="container">
@@ -707,7 +726,7 @@ const SchedulePage = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)'
+                  boxShadow: boxShadowSoft
                 }}>
                   <i className="fas fa-calendar-alt" style={{ color: '#fff', fontSize: '22px' }}></i>
                 </div>
@@ -737,7 +756,7 @@ const SchedulePage = () => {
                     borderRadius: '12px',
                     fontWeight: 700,
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(2, 69, 174, 0.3)',
+                    boxShadow: boxShadowSoft,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -754,7 +773,7 @@ const SchedulePage = () => {
 
             {/* Info Banner */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.9)',
+              background: warningBannerBackground,
               backdropFilter: 'blur(10px)',
               padding: '20px 24px',
               borderRadius: '16px',
@@ -762,7 +781,7 @@ const SchedulePage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
-              boxShadow: '0 4px 20px rgba(251, 191, 36, 0.15)',
+              boxShadow: isDarkMode ? '0 4px 14px rgba(0, 0, 0, 0.16)' : '0 4px 20px rgba(251, 191, 36, 0.15)',
               border: '1px solid rgba(251, 191, 36, 0.3)'
             }}>
               <div style={{
@@ -778,7 +797,7 @@ const SchedulePage = () => {
               }}>
                 <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '22px' }}></i>
               </div>
-              <p style={{ margin: 0, fontSize: '14px', color: '#92400e', lineHeight: '1.6', fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: '14px', color: warningBannerText, lineHeight: '1.6', fontWeight: 500 }}>
                 Students can reserve your lessons 3 minutes before the lesson time starts. Please click refresh to get your latest reservation status.
               </p>
             </div>
@@ -806,7 +825,7 @@ const SchedulePage = () => {
             {/* Loading Indicator */}
             {loading && (
               <div style={{
-                background: 'rgba(2, 69, 174, 0.05)',
+                background: isDarkMode ? 'rgba(59, 130, 246, 0.08)' : 'rgba(2, 69, 174, 0.05)',
                 padding: '16px 20px',
                 borderRadius: '12px',
                 marginBottom: '24px',
@@ -824,12 +843,12 @@ const SchedulePage = () => {
 
             {/* Main Schedule Card */}
             <div style={{
-              background: 'rgba(255, 255, 255, 0.95)',
+              background: cardBackground,
               backdropFilter: 'blur(10px)',
               borderRadius: '24px',
               padding: '32px',
-              boxShadow: '0 8px 32px rgba(2, 69, 174, 0.12)',
-              border: '1px solid rgba(2, 69, 174, 0.08)'
+              boxShadow: boxShadowCard,
+              border: borderSoft
             }}>
               {/* Week Navigation */}
               <div style={{
@@ -838,7 +857,7 @@ const SchedulePage = () => {
                 alignItems: 'center',
                 marginBottom: '24px',
                 paddingBottom: '20px',
-                borderBottom: '2px solid rgba(2, 69, 174, 0.1)'
+                borderBottom: borderAccentSoft
               }}>
                 <button
                   onClick={() => {
@@ -846,14 +865,14 @@ const SchedulePage = () => {
                     setPendingSelections(new Set());
                   }}
                   style={{
-                    background: 'rgba(2, 69, 174, 0.1)',
-                    border: 'none',
+                    background: cardBackgroundSoft,
+                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                     padding: '12px 20px',
                     borderRadius: '12px',
                     cursor: 'pointer',
                     fontSize: '14px',
                     fontWeight: 700,
-                    color: '#0245ae',
+                    color: isDarkMode ? '#93c5fd' : '#0245ae',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -868,7 +887,7 @@ const SchedulePage = () => {
                   margin: 0,
                   fontSize: '20px',
                   fontWeight: 800,
-                  color: '#0245ae',
+                  color: isDarkMode ? '#93c5fd' : '#0245ae',
                   letterSpacing: '0.5px'
                 }}>
                   This Week
@@ -880,14 +899,14 @@ const SchedulePage = () => {
                     setPendingSelections(new Set());
                   }}
                   style={{
-                    background: 'rgba(2, 69, 174, 0.1)',
-                    border: 'none',
+                    background: cardBackgroundSoft,
+                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
                     padding: '12px 20px',
                     borderRadius: '12px',
                     cursor: 'pointer',
                     fontSize: '14px',
                     fontWeight: 700,
-                    color: '#0245ae',
+                    color: isDarkMode ? '#93c5fd' : '#0245ae',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -914,8 +933,8 @@ const SchedulePage = () => {
                     style={{
                       background: selectedPeriod === period 
                         ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-                        : 'rgba(15, 23, 42, 0.05)',
-                      color: selectedPeriod === period ? '#fff' : '#64748b',
+                        : isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.05)',
+                      color: selectedPeriod === period ? '#fff' : textMuted,
                       border: 'none',
                       padding: '10px 24px',
                       borderRadius: '12px',
@@ -926,7 +945,7 @@ const SchedulePage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      boxShadow: selectedPeriod === period ? '0 4px 12px rgba(15, 23, 42, 0.3)' : 'none',
+                      boxShadow: selectedPeriod === period ? (isDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.18)' : '0 4px 12px rgba(15, 23, 42, 0.3)') : 'none',
                       textTransform: 'capitalize'
                     }}
                   >
@@ -960,19 +979,19 @@ const SchedulePage = () => {
                         const { day, month } = formatDate(date);
                         return (
                           <th key={idx} style={{
-                            background: 'rgba(2, 69, 174, 0.08)',
+                            background: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(2, 69, 174, 0.08)',
                             padding: '10px 8px',
                             borderRadius: '10px',
                             textAlign: 'center',
                             minWidth: '80px'
                           }}>
-                            <div style={{ fontWeight: 800, fontSize: '11px', color: '#64748b', marginBottom: '4px', letterSpacing: '0.5px' }}>
+                            <div style={{ fontWeight: 800, fontSize: '11px', color: textMuted, marginBottom: '4px', letterSpacing: '0.5px' }}>
                               {days[idx]}
                             </div>
-                            <div style={{ fontSize: '20px', fontWeight: 900, color: '#0245ae', lineHeight: 1 }}>
+                            <div style={{ fontSize: '20px', fontWeight: 900, color: isDarkMode ? '#93c5fd' : '#0245ae', lineHeight: 1 }}>
                               {day}
                             </div>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748b', marginTop: '2px', letterSpacing: '0.5px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 700, color: textMuted, marginTop: '2px', letterSpacing: '0.5px' }}>
                               {month}
                             </div>
                           </th>
@@ -999,10 +1018,10 @@ const SchedulePage = () => {
                               style={{
                                 width: '100%',
                                 background: availableCount === 0 
-                                  ? 'rgba(148, 163, 184, 0.15)'
-                                  : 'rgba(2, 69, 174, 0.1)',
-                                color: availableCount === 0 ? '#94a3b8' : '#0245ae',
-                                border: availableCount === 0 ? 'none' : '1px dashed rgba(2, 69, 174, 0.3)',
+                                  ? (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(148, 163, 184, 0.15)')
+                                  : cardBackgroundSoft,
+                                color: availableCount === 0 ? textSoft : isDarkMode ? '#93c5fd' : '#0245ae',
+                                border: availableCount === 0 ? 'none' : isDarkMode ? '1px dashed rgba(147, 197, 253, 0.24)' : '1px dashed rgba(2, 69, 174, 0.3)',
                                 padding: '6px 4px',
                                 borderRadius: '6px',
                                 fontSize: '10px',
@@ -1028,12 +1047,12 @@ const SchedulePage = () => {
                     {timeSlots[selectedPeriod].map((time, timeIdx) => (
                       <tr key={timeIdx}>
                         <td style={{
-                          background: 'rgba(248, 250, 252, 0.8)',
+                          background: cardBackgroundMuted,
                           padding: '8px',
                           borderRadius: '8px',
                           fontWeight: 700,
                           fontSize: '12px',
-                          color: '#475569',
+                          color: isDarkMode ? '#d1d5db' : '#475569',
                           textAlign: 'center'
                         }}>
                           {time}
@@ -1062,11 +1081,13 @@ const SchedulePage = () => {
                                     width: '100%',
                                     padding: '10px 6px',
                                     borderRadius: '8px',
-                                    background: 'linear-gradient(90deg, rgba(226, 232, 240, 0.6) 25%, rgba(241, 245, 249, 0.8) 50%, rgba(226, 232, 240, 0.6) 75%)',
+                                    background: isDarkMode
+                                      ? 'linear-gradient(90deg, rgba(38, 38, 38, 0.92) 25%, rgba(58, 58, 58, 0.98) 50%, rgba(38, 38, 38, 0.92) 75%)'
+                                      : 'linear-gradient(90deg, rgba(226, 232, 240, 0.6) 25%, rgba(241, 245, 249, 0.8) 50%, rgba(226, 232, 240, 0.6) 75%)',
                                     backgroundSize: '200% 100%',
                                     animation: 'shimmer 1.5s infinite',
                                     height: '36px',
-                                    border: '1px solid rgba(203, 213, 225, 0.3)'
+                                    border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(203, 213, 225, 0.3)'
                                   }}
                                 />
                               </td>
@@ -1106,7 +1127,7 @@ const SchedulePage = () => {
                                   background: penalty
                                     ? PENALTY_LABELS[penalty.code].bgColor
                                     : isPastOrNear
-                                    ? 'rgba(203, 213, 225, 0.5)'
+                                    ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(203, 213, 225, 0.5)')
                                     : isBookedAndPresent
                                     ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
                                     : isBooked
@@ -1116,11 +1137,11 @@ const SchedulePage = () => {
                                     : isMarkedPresent
                                     ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                                     : isSelected
-                                    ? 'rgba(255, 255, 255, 0.9)'
-                                    : 'rgba(255, 255, 255, 0.9)',
+                                    ? (isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.9)')
+                                    : (isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.9)'),
                                   color: penalty
                                     ? PENALTY_LABELS[penalty.code].color
-                                    : isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? '#94a3b8' : isSelected ? '#10b981' : '#64748b',
+                                    : isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? textSoft : isSelected ? '#10b981' : textMuted,
                                   fontWeight: 800,
                                   fontSize: isBooked || penalty ? '13px' : '11px',
                                   transition: 'all 0.2s ease',
@@ -1134,7 +1155,7 @@ const SchedulePage = () => {
                                     ? '0 2px 8px rgba(245, 158, 11, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.3)'
                                     : isMarkedPresent
                                     ? '0 2px 8px rgba(16, 185, 129, 0.3)'
-                                    : '0 1px 3px rgba(0, 0, 0, 0.05)',
+                                    : isDarkMode ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.05)',
                                   letterSpacing: isBooked || penalty ? '1px' : '0.5px',
                                   border: penalty
                                     ? `2px solid ${PENALTY_LABELS[penalty.code].color}`
@@ -1147,7 +1168,7 @@ const SchedulePage = () => {
                                     : isSelected && !isMarkedPresent
                                     ? '2px solid #10b981' 
                                     : !isSelected && !isPastOrNear
-                                    ? '2px solid rgba(2, 69, 174, 0.1)' 
+                                    ? isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(2, 69, 174, 0.1)' 
                                     : '2px solid transparent',
                                   opacity: isSelected && !canMarkAttend && !isBooked ? 0.5 : 1,
                                   boxSizing: 'border-box'
@@ -1158,8 +1179,8 @@ const SchedulePage = () => {
                                   } else if (isBooked) {
                                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = 'rgba(2, 69, 174, 0.1)';
-                                    e.currentTarget.style.borderColor = 'rgba(2, 69, 174, 0.3)';
+                                    e.currentTarget.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(2, 69, 174, 0.1)';
+                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(147, 197, 253, 0.28)' : 'rgba(2, 69, 174, 0.3)';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
@@ -1168,8 +1189,8 @@ const SchedulePage = () => {
                                   } else if (isBooked) {
                                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                                    e.currentTarget.style.borderColor = 'rgba(2, 69, 174, 0.1)';
+                                    e.currentTarget.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.9)';
+                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(2, 69, 174, 0.1)';
                                   }
                                 }}
                                 title={penalty ? penalty.reason : undefined}
@@ -1190,7 +1211,7 @@ const SchedulePage = () => {
                 <div style={{
                   marginTop: '32px',
                   paddingTop: '24px',
-                  borderTop: '2px solid rgba(2, 69, 174, 0.1)',
+                  borderTop: borderAccentSoft,
                   display: 'flex',
                   gap: '16px',
                   justifyContent: 'center',
@@ -1207,7 +1228,7 @@ const SchedulePage = () => {
                     fontWeight: 800,
                     fontSize: '15px',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.4)',
+                    boxShadow: isDarkMode ? '0 4px 14px rgba(16, 185, 129, 0.22)' : '0 4px 16px rgba(16, 185, 129, 0.4)',
                     letterSpacing: '0.5px',
                     transition: 'all 0.3s ease',
                     display: 'flex',
@@ -1266,9 +1287,9 @@ const SchedulePage = () => {
                     borderRadius: '8px',
                     background: item.color,
                     border: item.border || 'none',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                    boxShadow: isDarkMode ? 'none' : '0 2px 4px rgba(0, 0, 0, 0.1)'
                   }}></div>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>{item.label}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: isDarkMode ? '#d1d5db' : '#475569' }}>{item.label}</span>
                 </div>
               ))}
             </div>
@@ -1276,11 +1297,11 @@ const SchedulePage = () => {
             {/* Penalty Code Reference */}
             <div style={{
               marginTop: '32px',
-              background: 'rgba(255, 255, 255, 0.95)',
+              background: cardBackground,
               borderRadius: '16px',
               padding: '24px',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-              border: '1px solid rgba(2, 69, 174, 0.1)'
+              boxShadow: boxShadowSoft,
+              border: borderSoft
             }}>
               <div style={{
                 display: 'flex',
@@ -1300,10 +1321,10 @@ const SchedulePage = () => {
                   <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '18px' }}></i>
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
+                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: textPrimary }}>
                     Penalty Code Reference
                   </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: textMuted }}>
                     Applied to schedule slots for attendance and compliance tracking
                   </p>
                 </div>
@@ -1381,9 +1402,10 @@ const SchedulePage = () => {
                       display: 'flex',
                       gap: '16px',
                       padding: '16px',
-                      background: item.bgColor,
+                      background: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : item.bgColor,
                       borderRadius: '12px',
-                      border: `1px solid ${item.color}20`,
+                      border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : `1px solid ${item.color}20`,
+                      boxShadow: isDarkMode ? 'inset 0 1px 0 rgba(255, 255, 255, 0.02)' : 'none',
                       alignItems: 'flex-start'
                     }}
                   >
@@ -1399,16 +1421,17 @@ const SchedulePage = () => {
                         fontSize: '12px',
                         color: item.color,
                         letterSpacing: '0.5px',
-                        background: `${item.color}15`,
+                        background: isDarkMode ? `${item.color}1f` : `${item.color}15`,
                         padding: '4px 8px',
-                        borderRadius: '6px'
+                        borderRadius: '6px',
+                        border: isDarkMode ? `1px solid ${item.color}22` : 'none'
                       }}>
                         {item.label}
                       </span>
                       <span style={{
                         fontSize: '9px',
                         fontWeight: 600,
-                        color: item.color,
+                        color: isDarkMode ? '#94a3b8' : item.color,
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px'
                       }}>
@@ -1419,14 +1442,14 @@ const SchedulePage = () => {
                       <div style={{
                         fontWeight: 700,
                         fontSize: '13px',
-                        color: '#0f172a',
+                        color: isDarkMode ? '#f8fafc' : textPrimary,
                         marginBottom: '4px'
                       }}>
                         {item.title}
                       </div>
                       <div style={{
                         fontSize: '12px',
-                        color: '#64748b',
+                        color: isDarkMode ? '#cbd5e1' : textMuted,
                         lineHeight: 1.5
                       }}>
                         {item.description}
@@ -1461,14 +1484,14 @@ const SchedulePage = () => {
         >
           <div
             style={{
-              background: 'rgba(255, 255, 255, 0.98)',
+              background: elevatedBackground,
               backdropFilter: 'blur(10px)',
               borderRadius: '20px',
               padding: '28px',
               maxWidth: '480px',
               width: '100%',
-              boxShadow: '0 20px 60px rgba(2, 69, 174, 0.3)',
-              border: '1px solid rgba(2, 69, 174, 0.1)',
+              boxShadow: isDarkMode ? '0 12px 32px rgba(0, 0, 0, 0.28)' : '0 20px 60px rgba(2, 69, 174, 0.3)',
+              border: borderSoft,
               position: 'relative',
               overflow: 'hidden'
             }}
@@ -1482,7 +1505,7 @@ const SchedulePage = () => {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'rgba(255, 255, 255, 0.98)',
+                background: elevatedBackground,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -1499,7 +1522,7 @@ const SchedulePage = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '16px',
-                  boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
+                  boxShadow: isDarkMode ? '0 4px 14px rgba(16, 185, 129, 0.22)' : '0 8px 24px rgba(16, 185, 129, 0.4)',
                   animation: 'scaleIn 0.4s ease'
                 }}>
                   <i className="fas fa-check" style={{ 
@@ -1512,7 +1535,7 @@ const SchedulePage = () => {
                   margin: 0,
                   fontSize: '20px',
                   fontWeight: 800,
-                  color: '#059669',
+                  color: isDarkMode ? '#6ee7b7' : '#059669',
                   animation: 'fadeInUp 0.4s ease 0.3s both'
                 }}>
                   {bulkAction === 'attendance' 
@@ -1524,7 +1547,7 @@ const SchedulePage = () => {
                 <p style={{
                   margin: '8px 0 0',
                   fontSize: '14px',
-                  color: '#64748b',
+                  color: textMuted,
                   animation: 'fadeInUp 0.4s ease 0.4s both'
                 }}>
                   {pendingSelections.size} slot{pendingSelections.size > 1 ? 's' : ''} updated successfully
@@ -1583,7 +1606,7 @@ const SchedulePage = () => {
                 margin: '0 0 6px',
                 fontSize: '22px',
                 fontWeight: 900,
-                color: '#0f172a',
+                color: textPrimary,
                 letterSpacing: '0.3px'
               }}>
                 {bulkAction === 'attendance' 
@@ -1592,7 +1615,7 @@ const SchedulePage = () => {
                   ? 'Open Selected Slots?' 
                   : 'Close Selected Slots?'}
               </h3>
-              <p style={{ margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: '13px', color: textMuted, fontWeight: 500 }}>
                 You have selected {pendingSelections.size} time slot{pendingSelections.size > 1 ? 's' : ''}
               </p>
             </div>
@@ -1604,7 +1627,7 @@ const SchedulePage = () => {
                   margin: '0 0 12px', 
                   fontSize: '13px', 
                   fontWeight: 800, 
-                  color: '#0245ae',
+                  color: isDarkMode ? '#93c5fd' : '#0245ae',
                   letterSpacing: '0.5px',
                   textTransform: 'uppercase',
                   textAlign: 'center'
@@ -1618,15 +1641,15 @@ const SchedulePage = () => {
                     style={{
                       flex: 1,
                       background: hasBookedSlots()
-                        ? 'rgba(203, 213, 225, 0.3)'
+                        ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(203, 213, 225, 0.3)')
                         : attendanceStatus === 'present' 
                         ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                         : 'rgba(16, 185, 129, 0.1)',
                       color: hasBookedSlots()
-                        ? '#94a3b8'
+                        ? textSoft
                         : attendanceStatus === 'present' ? '#fff' : '#10b981',
                       border: hasBookedSlots()
-                        ? '2px solid rgba(203, 213, 225, 0.3)'
+                        ? (isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(203, 213, 225, 0.3)')
                         : attendanceStatus === 'present' ? 'none' : '2px solid rgba(16, 185, 129, 0.3)',
                       padding: '12px 16px',
                       borderRadius: '10px',
@@ -1639,7 +1662,7 @@ const SchedulePage = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      boxShadow: attendanceStatus === 'present' ? '0 4px 16px rgba(16, 185, 129, 0.4)' : 'none',
+                      boxShadow: attendanceStatus === 'present' ? (isDarkMode ? '0 4px 14px rgba(16, 185, 129, 0.22)' : '0 4px 16px rgba(16, 185, 129, 0.4)') : 'none',
                       opacity: hasBookedSlots() ? 0.5 : 1
                     }}
                   >
@@ -1652,15 +1675,15 @@ const SchedulePage = () => {
                     style={{
                       flex: 1,
                       background: !canChangeToAbsent()
-                        ? 'rgba(203, 213, 225, 0.3)'
+                        ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(203, 213, 225, 0.3)')
                         : attendanceStatus === 'absent' 
                         ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
                         : 'rgba(239, 68, 68, 0.1)',
                       color: !canChangeToAbsent()
-                        ? '#94a3b8'
+                        ? textSoft
                         : attendanceStatus === 'absent' ? '#fff' : '#ef4444',
                       border: !canChangeToAbsent()
-                        ? '2px solid rgba(203, 213, 225, 0.3)'
+                        ? (isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(203, 213, 225, 0.3)')
                         : attendanceStatus === 'absent' ? 'none' : '2px solid rgba(239, 68, 68, 0.3)',
                       padding: '12px 16px',
                       borderRadius: '10px',
@@ -1673,7 +1696,7 @@ const SchedulePage = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      boxShadow: attendanceStatus === 'absent' ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none'
+                      boxShadow: attendanceStatus === 'absent' ? (isDarkMode ? '0 4px 14px rgba(239, 68, 68, 0.22)' : '0 4px 16px rgba(239, 68, 68, 0.4)') : 'none'
                     }}
                   >
                     <i className="fas fa-times-circle" style={{ fontSize: '18px' }}></i>
@@ -1689,7 +1712,7 @@ const SchedulePage = () => {
                 marginBottom: '20px',
                 border: bulkAction === 'open' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)'
               }}>
-                <p style={{ margin: 0, fontSize: '13px', color: '#334155', lineHeight: '1.5', fontWeight: 500, textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '13px', color: isDarkMode ? '#d1d5db' : '#334155', lineHeight: '1.5', fontWeight: 500, textAlign: 'center' }}>
                   {bulkAction === 'open'
                     ? `You are about to open ${pendingSelections.size} time slot${pendingSelections.size > 1 ? 's' : ''}. Students will be able to book these times for lessons.`
                     : `You are about to close ${pendingSelections.size} time slot${pendingSelections.size > 1 ? 's' : ''}. Students will no longer be able to book these times.`}
@@ -1705,7 +1728,7 @@ const SchedulePage = () => {
                 style={{
                   flex: 1,
                   background: 'rgba(100, 116, 139, 0.1)',
-                  color: '#475569',
+                  color: isDarkMode ? '#d1d5db' : '#475569',
                   border: '1px solid rgba(100, 116, 139, 0.2)',
                   padding: '14px',
                   borderRadius: '12px',
@@ -1745,11 +1768,11 @@ const SchedulePage = () => {
                     ? 'none'
                     : bulkAction === 'attendance'
                     ? attendanceStatus === 'present'
-                      ? '0 4px 16px rgba(16, 185, 129, 0.4)'
-                      : '0 4px 16px rgba(239, 68, 68, 0.4)'
-                    : bulkAction === 'open'
-                    ? '0 4px 16px rgba(16, 185, 129, 0.4)'
-                    : '0 4px 16px rgba(239, 68, 68, 0.4)',
+                    ? isDarkMode ? '0 4px 14px rgba(16, 185, 129, 0.22)' : '0 4px 16px rgba(16, 185, 129, 0.4)'
+                    : isDarkMode ? '0 4px 14px rgba(239, 68, 68, 0.22)' : '0 4px 16px rgba(239, 68, 68, 0.4)'
+                  : bulkAction === 'open'
+                    ? isDarkMode ? '0 4px 14px rgba(16, 185, 129, 0.22)' : '0 4px 16px rgba(16, 185, 129, 0.4)'
+                    : isDarkMode ? '0 4px 14px rgba(239, 68, 68, 0.22)' : '0 4px 16px rgba(239, 68, 68, 0.4)',
                   transition: 'all 0.3s ease',
                   opacity: ((bulkAction === 'attendance' && !attendanceStatus) || isConfirming) ? 0.6 : 1,
                   display: 'flex',

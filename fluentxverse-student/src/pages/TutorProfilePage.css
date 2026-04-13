@@ -1493,3 +1493,53 @@
   max-height: 80vh;
   display: block;
 }
+.dark-mode .tutor-profile-page {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+.dark-mode .profile-hero,
+.dark-mode .profile-booking-card,
+.dark-mode .hero-video-section,
+.dark-mode .schedule-table,
+.dark-mode .profile-tabs,
+.dark-mode .content-section {
+  background: var(--fxv-surface);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+.dark-mode .profile-name,
+.dark-mode .video-section-title,
+.dark-mode .booking-card-title,
+.dark-mode .section-title {
+  color: var(--fxv-text);
+}
+
+.dark-mode .profile-bio-short,
+.dark-mode .meta-item,
+.dark-mode .rating-count,
+.dark-mode .booking-card-subtitle,
+.dark-mode .booking-note,
+.dark-mode .section-content,
+.dark-mode .timezone-note {
+  color: var(--fxv-text-muted);
+}
+
+.dark-mode .btn-favorite-star,
+.dark-mode .tab-btn,
+.dark-mode .period-tab,
+.dark-mode .slot {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+.dark-mode .tab-btn.active,
+.dark-mode .period-tab.active,
+.dark-mode .btn-book-trial,
+.dark-mode .btn-buy-tickets {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  border-color: transparent;
+}

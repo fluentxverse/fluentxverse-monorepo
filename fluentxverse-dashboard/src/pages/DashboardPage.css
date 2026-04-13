@@ -330,7 +330,7 @@
 }
 
 /* Dashboard Content Grid */
-.dashboard-content {
+.dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
@@ -343,7 +343,7 @@
 }
 
 /* Make interview cards side by side in their own row */
-.dashboard-content {
+.dashboard-grid {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto auto auto;
 }
@@ -1041,7 +1041,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .dashboard-content {
+  .dashboard-grid {
     grid-template-columns: 1fr;
   }
   

@@ -3,6 +3,8 @@
  * Uses Mastra Agent with OpenAI for grammar correction and explanations
  */
 import { Agent } from "@mastra/core/agent";
+import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
 import { lessonMaterialService } from "./lessonMaterial.service";
 
 // ============================================================================
@@ -13,6 +15,320 @@ import { lessonMaterialService } from "./lessonMaterial.service";
 function sanitizeAIText(text: string): string {
   return text.replace(/—/g, '-').replace(/–/g, '-');
 }
+
+type BELessonSkill = 'listening' | 'reading' | 'speaking' | 'review';
+
+interface BEReferenceLesson {
+  lessonNumber: number;
+  lessonName: string;
+  chapterName: string;
+  goalTextEn: string;
+  goalTextKr: string;
+  lessonType: string;
+  beData: any;
+  source: 'db' | 'file';
+}
+
+const stripHtml = (text: string = '') =>
+  (text || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const getBusinessEnglishLessonSkill = (lessonNumber: number): BELessonSkill => {
+  if (lessonNumber === 1) return 'listening';
+  if (lessonNumber === 2) return 'reading';
+  if (lessonNumber === 5) return 'review';
+  return 'speaking';
+};
+
+const getBusinessEnglishSkillGuidance = (skill: BELessonSkill, level: number): string => {
+  const levelNote = level <= 3
+    ? 'Use very short sentences and highly controlled language.'
+    : 'Keep the language appropriate for the target TOEIC range.';
+
+  if (skill === 'listening') {
+    return `This lesson slot is LISTENING. Build the lesson around listening comprehension first, then guided production. ${levelNote} The tutor should model or read key language first. Practice should move from hearing and repeating to short guided responses.`;
+  }
+
+  if (skill === 'reading') {
+    return `This lesson slot is READING. Build the lesson around understanding written workplace text before speaking. ${levelNote} Use readable materials such as profile cards, team directory entries, emails, schedules, or short notices. Practice and simulation should start from what the student reads.`;
+  }
+
+  if (skill === 'review') {
+    return `This lesson slot is REVIEW. Combine patterns and vocabulary from earlier lessons in the chapter without copying any earlier lesson exactly. ${levelNote} The review should recycle and connect earlier content, not feel like a brand-new topic.`;
+  }
+
+  return `This lesson slot is SPEAKING. Prioritize student production, natural roleplay, and follow-up questions. ${levelNote} Practice should build from controlled speaking to freer speaking.`;
+};
+
+const getBusinessEnglishDocsLessonPath = (level: number, chapter: number, lessonNumber: number) => {
+  const docsRoot = path.resolve(import.meta.dir, '../../..', 'docs', 'lesson-materials', 'business-conversation');
+  const levelDir = `level-${String(level).padStart(2, '0')}`;
+  const lessonPrefix = `ch${String(chapter).padStart(2, '0')}-L${lessonNumber}-`;
+  return { docsRoot, levelDir, lessonPrefix };
+};
+
+const buildReferenceLessonFromRaw = (raw: any, lessonNumber: number, source: 'db' | 'file'): BEReferenceLesson => ({
+  lessonNumber,
+  lessonName: raw.lessonName || '',
+  chapterName: raw.chapterName || '',
+  goalTextEn: raw.goalTextEn || '',
+  goalTextKr: raw.goalTextKr || raw.goalTextJp || '',
+  lessonType: raw.beData?.lessonType || '',
+  beData: raw.beData || {},
+  source,
+});
+
+const summarizeReferencePatterns = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.present?.patterns || [])
+    .slice(0, 3)
+    .map((pattern: any) => `"${stripHtml(pattern?.en || '')}"`)
+    .filter(Boolean)
+    .join(', ');
+
+const summarizeReferenceQuestions = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.challenge?.tutorNotes || [])
+    .filter((note: any) => note?.type === 'question')
+    .slice(0, 4)
+    .map((note: any) => `"${stripHtml(note?.text || '')}"`)
+    .filter(Boolean)
+    .join(', ');
+
+const summarizeDiscussionFlow = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.discussion?.tutorNotes || [])
+    .map((note: any) => `${note?.type || 'instruction'}: ${stripHtml(note?.text || '')}`)
+    .slice(0, 4)
+    .join(' | ');
+
+const summarizePracticeTitles = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.practice?.steps || [])
+    .map((step: any) => stripHtml(step?.title || ''))
+    .filter(Boolean)
+    .join(' | ');
+
+const getReferenceLessonSummary = (lesson: BEReferenceLesson) => {
+  const patterns = summarizeReferencePatterns(lesson);
+  const questions = summarizeReferenceQuestions(lesson);
+  const discussionFlow = summarizeDiscussionFlow(lesson);
+  const practiceTitles = summarizePracticeTitles(lesson);
+
+  return [
+    `Lesson ${lesson.lessonNumber} (${lesson.lessonType || getBusinessEnglishLessonSkill(lesson.lessonNumber).toUpperCase()}): ${lesson.lessonName}`,
+    lesson.goalTextEn ? `Goal: ${lesson.goalTextEn}` : '',
+    patterns ? `Patterns: ${patterns}` : '',
+    practiceTitles ? `Practice shape: ${practiceTitles}` : '',
+    questions ? `Simulation prompt style: ${questions}` : '',
+    discussionFlow ? `Open Talk notes: ${discussionFlow}` : '',
+  ].filter(Boolean).join('\n');
+};
+
+const getFileReferenceLesson = async (level: number, chapter: number, lessonNumber: number): Promise<BEReferenceLesson | null> => {
+  try {
+    const { docsRoot, levelDir, lessonPrefix } = getBusinessEnglishDocsLessonPath(level, chapter, lessonNumber);
+    const lessonDir = path.join(docsRoot, levelDir, 'lesson-data');
+    const fileNames = await readdir(lessonDir);
+    const fileName = fileNames.find((name) => name.startsWith(lessonPrefix) && name.endsWith('.json'));
+    if (!fileName) return null;
+    const raw = JSON.parse(await readFile(path.join(lessonDir, fileName), 'utf8'));
+    return buildReferenceLessonFromRaw(raw, lessonNumber, 'file');
+  } catch {
+    return null;
+  }
+};
+
+const getReferenceLessons = async (
+  level: number,
+  chapter: number,
+  lessonNumber: number,
+): Promise<{ standardLessons: BEReferenceLesson[]; previousLessons: BEReferenceLesson[] }> => {
+  const standardMap = new Map<number, BEReferenceLesson>();
+  const previousMap = new Map<number, BEReferenceLesson>();
+
+  try {
+    const lessons = await lessonMaterialService.listByCourse('business-english');
+    lessons
+      .filter((lesson: any) => lesson.level === level && lesson.chapter === chapter)
+      .forEach((lesson: any) => {
+        const ref = buildReferenceLessonFromRaw({
+          lessonName: lesson.lessonName,
+          chapterName: lesson.chapterName,
+          goalTextEn: lesson.goalTextEn,
+          goalTextJp: lesson.goalTextJp,
+          beData: lesson.beData,
+        }, lesson.lessonNumber, 'db');
+
+        if (lesson.lessonNumber === 1 || lesson.lessonNumber === 2) {
+          standardMap.set(lesson.lessonNumber, ref);
+        }
+        if (lesson.lessonNumber < lessonNumber) {
+          previousMap.set(lesson.lessonNumber, ref);
+        }
+      });
+  } catch {
+    // fall back to files below
+  }
+
+  for (const standardNumber of [1, 2]) {
+    if (!standardMap.has(standardNumber)) {
+      const fileLesson = await getFileReferenceLesson(level, chapter, standardNumber);
+      if (fileLesson) standardMap.set(standardNumber, fileLesson);
+    }
+  }
+
+  for (let previousNumber = 1; previousNumber < lessonNumber; previousNumber += 1) {
+    if (!previousMap.has(previousNumber)) {
+      const fileLesson = await getFileReferenceLesson(level, chapter, previousNumber);
+      if (fileLesson) previousMap.set(previousNumber, fileLesson);
+    }
+  }
+
+  return {
+    standardLessons: Array.from(standardMap.values()).sort((a, b) => a.lessonNumber - b.lessonNumber),
+    previousLessons: Array.from(previousMap.values()).sort((a, b) => a.lessonNumber - b.lessonNumber),
+  };
+};
+
+const buildBusinessEnglishReferenceContext = async (
+  level: number,
+  chapter: number,
+  lessonNumber: number,
+): Promise<string> => {
+  const skill = getBusinessEnglishLessonSkill(lessonNumber);
+  const { standardLessons, previousLessons } = await getReferenceLessons(level, chapter, lessonNumber);
+  const standardSummary = standardLessons.map(getReferenceLessonSummary).join('\n\n');
+  const previousSummary = previousLessons
+    .map((lesson) => {
+      const patterns = summarizeReferencePatterns(lesson);
+      const scenario = stripHtml(lesson.beData?.challenge?.scenarioEn || lesson.beData?.introduce?.situationEn || '');
+      return [
+        `Lesson ${lesson.lessonNumber}: ${lesson.lessonName}`,
+        lesson.goalTextEn ? `Goal: ${lesson.goalTextEn}` : '',
+        patterns ? `Patterns already used: ${patterns}` : '',
+        scenario ? `Scenario already used: ${scenario}` : '',
+      ].filter(Boolean).join('\n');
+    })
+    .join('\n\n');
+
+  return [
+    `\n\n=== LESSON SLOT TYPE ===`,
+    `Skill slot: ${skill.toUpperCase()}`,
+    getBusinessEnglishSkillGuidance(skill, level),
+    `\n=== REFERENCE STANDARD FROM LIVE LESSONS 1 AND 2 ===`,
+    standardSummary || 'No reference lessons found. Keep the section concise, controlled, and tutor-friendly.',
+    `\n=== UNIQUENESS AGAINST EARLIER LESSONS ===`,
+    previousSummary
+      ? `${previousSummary}\n\nDo NOT repeat the same scenario, key expressions, prompt questions, word bank focus, or practice titles too closely. Keep continuity, but make the new lesson clearly different.`
+      : 'There are no earlier lessons in this chapter before this one.',
+    `\n=== HOUSE STYLE RULES ===`,
+    '- Match the concise teaching-note style used in the standardized lessons.',
+    '- Tutor speaks English only.',
+    '- Use English names only.',
+    '- No em dashes. Use normal punctuation only.',
+    '- For Level 3, keep notes and sentences short and predictable.',
+  ].join('\n');
+};
+
+const getPracticeBlueprint = (skill: BELessonSkill, lessonNumber: number, goalTextEn: string) => {
+  if (skill === 'listening') {
+    return {
+      titles: [
+        'Step 1 - Repeat After Your Tutor',
+        'Step 2 - Fill in the Blanks',
+        'Step 3 - Read the Dialogue',
+        'Step 4 - Complete the Dialogue',
+      ],
+      guidance: `Follow the Lesson 1 listening standard. Start with tutor modeling, then controlled blanks, then a short guided dialogue, then a partially completed dialogue.`,
+    };
+  }
+
+  if (skill === 'reading') {
+    return {
+      titles: [
+        'Step 1 - Read & Repeat',
+        'Step 2 - Complete the Sentences',
+        'Step 3 - Read a Second Entry',
+        'Step 4 - Complete Your Own Profile',
+      ],
+      guidance: `Follow the Lesson 2 reading standard. Use a readable workplace text first, then sentence completion, then a second short reading entry with dialogue support, then a personalized writing/speaking profile task.`,
+    };
+  }
+
+  if (skill === 'review') {
+    return {
+      titles: [
+        'Step 1 - Quick Recall',
+        'Step 2 - Controlled Review',
+        'Step 3 - Full Review Dialogue',
+        'Step 4 - Final Speaking Task',
+      ],
+      guidance: `This is a review lesson. Combine material from earlier lessons in the chapter and move from recall to fuller speaking.`,
+    };
+  }
+
+  const goal = (goalTextEn || '').toLowerCase();
+  if (goal.includes('ask')) {
+    return {
+      titles: [
+        'Step 1 - Repeat After Me',
+        'Step 2 - Complete the Questions',
+        'Step 3 - Dialogue Practice',
+        'Step 4 - Ask About the Team',
+      ],
+      guidance: `This is a speaking lesson focused on asking questions. Move from repeating target questions to completing them, then to dialogue, then to freer question-based production.`,
+    };
+  }
+
+  return {
+    titles: [
+      'Step 1 - Repeat After Me',
+      'Step 2 - Fill in Your Introduction',
+      'Step 3 - Dialogue Practice',
+      'Step 4 - Free Introduction',
+    ],
+    guidance: `This is a speaking lesson focused on personal production. Move from repeating patterns to controlled completion, then dialogue, then freer speaking.`,
+  };
+};
+
+const getIntroduceStandardNotes = (
+  skill: BELessonSkill,
+  goalLine: string,
+  situationLine: string,
+) => {
+  const safeGoal = stripHtml(goalLine || '').replace(/[.]+$/, '').trim();
+  const safeSituation = stripHtml(situationLine || '').trim();
+
+  if (skill === 'listening') {
+    return [
+      { type: 'script', text: `"Today's goal: ${safeGoal || 'listen carefully and respond clearly'}."` },
+      { type: 'instruction', text: 'Read the lesson goal aloud.' },
+      { type: 'instruction', text: 'Ask the student to repeat the goal.' },
+      { type: 'script', text: '"Is it clear?"' },
+      { type: 'instruction', text: 'Read the situation clearly.' },
+      { type: 'script', text: '"Is it clear? Let\'s go to the next part."' },
+      { type: 'tip', text: 'For Listening lessons, focus on understanding first. Speak slowly and repeat key lines if needed.' },
+    ];
+  }
+
+  if (skill === 'reading') {
+    return [
+      { type: 'script', text: `"Today's goal: ${safeGoal || 'read the workplace text and understand the key information'}."` },
+      { type: 'instruction', text: 'Read the lesson goal aloud. Ask the student to repeat.' },
+      { type: 'script', text: '"Is it clear?"' },
+      { type: 'instruction', text: 'Read the situation. Check the student understands.' },
+      { type: 'script', text: '"Let\'s go to the next part."' },
+    ];
+  }
+
+  return [
+    { type: 'script', text: `"Today's goal: ${safeGoal || 'speak clearly in this workplace situation'}."` },
+    { type: 'instruction', text: 'Read the lesson goal aloud. Ask the student to repeat.' },
+    { type: 'script', text: '"Is it clear?"' },
+    { type: 'instruction', text: safeSituation ? 'Read the situation clearly.' : 'Read the situation.' },
+    { type: 'script', text: '"Let\'s go to the next part."' },
+  ];
+};
 
 // ============================================================================
 // TYPES
@@ -4080,6 +4396,7 @@ export interface BEGenerationResult {
     scenarioEn: string; scenarioKr: string;
     guideQuestions: Array<{ text: string }>;
     roleplayTable?: { you: string; coworkers: string[] };
+    activityBlocks?: any[];
     tutorNotes: Array<{ type: string; text: string }>;
   };
   discussion?: {
@@ -4118,6 +4435,8 @@ export const generateBusinessEnglishContent = async (
   } | null,
 ): Promise<BEGenerationResult> => {
   const variationSeed = `BE-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const skillType = getBusinessEnglishLessonSkill(lessonNumber);
+  const referenceContext = await buildBusinessEnglishReferenceContext(level, chapter, lessonNumber);
 
   const getToeicRange = (lvl: number): string => {
     if (lvl <= 3) return 'TOEIC 10-220 (Beginner)';
@@ -4146,7 +4465,8 @@ Complexity: ${complexityDesc}
 Chapter ${chapter}: ${chapterName}
 Lesson ${lessonNumber}: ${lessonName}
 Lesson Goal (EN): ${goalTextEn}
-Lesson Goal (KR): ${goalTextJp}`;
+Lesson Goal (KR): ${goalTextJp}
+${referenceContext}`;
 
   // Build cross-section cohesion context from Present data
   const buildPresentContext = (): string => {
@@ -4168,19 +4488,20 @@ Lesson Goal (KR): ${goalTextJp}`;
   if (section === 'introduce') {
     const introNotesRule = level <= 3
       ? `LEVEL 3 TUTOR NOTES RULE:
-- Use EXACTLY 4 tutorNotes total (no TIP).
+- Match the concise Warm-Up teaching-note style used in standardized Lessons 1 and 2.
 - Tutor only speaks English. Do NOT instruct reading Korean or Japanese.
-- Use a simple flow like the sample: INSTRUCTION (read + repeat), SCRIPT (lesson goal), SCRIPT (situation), SCRIPT ("Is it clear?").
+- Use a short sequence of SCRIPT and INSTRUCTION notes. Listening lessons may include one TIP at the end.
 - Do NOT include extra prompts like "Ask the student who they will introduce..." or "what the visitor needs to know."
-- Final check line must be exactly: "Is it clear?"
 - Each note should be one short sentence.`
       : `TUTOR NOTES RULE:
-- Use the same 4-note order: INSTRUCTION (read + repeat), SCRIPT (lesson goal), SCRIPT (situation), SCRIPT ("Is it clear?").
+- Keep the notes concise and tutor-friendly.
 - Tutor only speaks English. Do NOT instruct reading Korean or Japanese.
 - Each note should be one short sentence.`;
     let prompt = `${lessonContext}
 
 Generate the INTRODUCE section for this Business English lesson.
+
+The warm-up must fit the lesson slot type and lead naturally into the lesson skill focus.
 
 REQUIREMENTS:
 1. goalEn & goalKr: The lesson goal. Use the provided goal or improve it to be more specific.
@@ -4234,26 +4555,14 @@ Return ONLY JSON:
 
       const containsKorean = (text: string) => /[가-힣]/.test(text || '');
       const filtered = normalizedIntroNotes.filter((n: any) => !disallowedInstruction(n) && !containsKorean(n.text || ''));
-      let mainNotes = filtered.filter((n: any) => n.type !== 'tip');
-
-      // Enforce "Is it clear?" as the final script line
-      mainNotes = mainNotes.map((n: any) => {
-        if (n.type !== 'script') return n;
-        const text = (n.text || '').replace(/"/g, '').trim().toLowerCase();
-        if (text.startsWith('is it clear')) {
-          return { ...n, text: '"Is it clear?"' };
-        }
-        return n;
-      });
-
       const goalLine = intro.goalEn || goalTextEn;
       const situationLine = intro.situationEn || '';
-      return [
-        { type: 'instruction', text: 'Read the goal and ask the student to repeat after you.' },
-        { type: 'script', text: `"Today's goal: ${goalLine}."` },
-        { type: 'script', text: situationLine ? `"Situation: ${situationLine}"` : '"Situation: Please imagine the workplace setting."'},
-        { type: 'script', text: '"Is it clear?"' },
-      ];
+      const standardizedNotes = getIntroduceStandardNotes(skillType, goalLine, situationLine);
+      if (filtered.length === 0) {
+        return standardizedNotes;
+      }
+
+      return standardizedNotes;
     })();
     return {
       introduce: {
@@ -4285,6 +4594,9 @@ Return ONLY JSON:
     let prompt = `${lessonContext}
 
 Generate the PRESENT section for this Business English lesson.
+
+The patterns must fit the lesson slot type and must be different from earlier lessons in the same chapter.
+Do not closely repeat earlier expressions, scenarios, or word-bank focus from the reference context above.
 
 REQUIREMENTS:
 1. patterns: Exactly ${patternCount} useful English patterns with Korean translations.
@@ -4449,6 +4761,12 @@ Generate the UNDERSTAND section for this Business English lesson.
 
 This section tests whether the student comprehends the patterns from the PRESENT section.
 
+SKILL-SPECIFIC FOCUS:
+- LISTENING: keep the language very short and recognition-based.
+- READING: make the tasks clearly support understanding written text from the lesson context.
+- SPEAKING: use comprehension tasks that still prepare the student for later speaking.
+- REVIEW: recycle earlier chapter content without copying earlier exercises exactly.
+
 REQUIREMENTS:
 1. instruction & instructionKr: A clear bilingual instruction explaining the exercise.
    Example: "You can use these patterns to introduce yourself and a coworker."
@@ -4470,7 +4788,9 @@ REQUIREMENTS:
    Example: { "parts": [{ "text": "My name ", "isBlank": false }, { "text": "is", "isBlank": true }, { "text": " John.", "isBlank": false }] }
 
 4. The blanks should test KEY words from the patterns (verbs, key nouns, prepositions).
-5. tutorNotes: 3-4 tutor notes.
+5. tutorNotes: grouped notes that are easy for the tutor to follow.
+   - If you include comprehension, word bank, and sound practice notes, keep them clearly separated in style.
+   - Match the concise grouped-note style seen in the reference lessons.
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
 ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content:\n${JSON.stringify(currentContent)}` : ''}
@@ -4650,29 +4970,33 @@ Return ONLY JSON:
 
   // ===== PRACTICE SECTION =====
   if (section === 'practice') {
+    const practiceBlueprint = getPracticeBlueprint(skillType, lessonNumber, goalTextEn);
     let prompt = `${lessonContext}
 ${presentContext}
 
 Generate the PRACTICE section for this Business English lesson.
 
 This section has EXACTLY 4 progressive steps:
+${practiceBlueprint.titles.map((title, index) => `${index + 1}. ${title}`).join('\n')}
 
-Step 1 — Repeat: Student repeats sentences after tutor. No dialogue needed.
-Step 2 — Fill in the Blanks: Student completes sentences using learned patterns. No dialogue needed.
-Step 3 — Dialogue: A conversation between tutor and student using the lesson's patterns. Include 3-4 dialogue lines.
-Step 4 — Complete the Dialogue: A partial dialogue where the student fills in their own responses. Include blanks (________________).
+SKILL-SPECIFIC PRACTICE BLUEPRINT:
+${practiceBlueprint.guidance}
 
 REQUIREMENTS FOR EACH STEP:
-1. title: "Step 1 - Repeat", "Step 2 - Fill in the Blanks", "Step 3 - Dialogue", "Step 4 - Complete the Dialogue"
+1. title: Use the exact step titles listed above.
 2. instructionEn & instructionKr: Bilingual instructions.
    - instructionKr must fully translate instructionEn. Do not omit details such as "read the sentences", "fill in the blanks", or "with your own information".
 3. content: Additional text content if needed (can be empty).
-4. dialogue (Steps 3 & 4 only): Array of { role: "tutor"|"student", en: "...", kr: "..." }
-   - Step 3: Full dialogue with both roles speaking
-   - Step 4: Student lines have blanks (________________) that they must fill in
-5. tutorNotes: 3-4 notes per step with practical guidance.
+4. dialogue:
+   - Include dialogue only when the step naturally needs it.
+   - Dialogue must feel natural for the lesson type.
+   - If a step is a reading-focused step, the text may appear in content instead of dialogue.
+5. tutorNotes: concise practical guidance using the standardized teaching-note style from the reference lessons.
+   - Prefer SCRIPT first, then INSTRUCTION.
+   - Keep each note short.
 
-The practice must reinforce patterns and vocabulary from the PRESENT section.
+The practice must reinforce patterns and vocabulary from the PRESENT section and clearly fit the lesson slot type.
+Do not copy the exact practice titles or scenarios from earlier lessons unless the blueprint above requires it.
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
 ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content:\n${JSON.stringify(currentContent)}` : ''}
@@ -4682,26 +5006,26 @@ Return ONLY JSON:
   "practice": {
     "steps": [
       {
-        "title": "Step 1 - Repeat",
+        "title": "${practiceBlueprint.titles[0]}",
         "instructionEn": "...", "instructionKr": "...",
         "content": "",
         "tutorNotes": [{ "type": "...", "text": "..." }]
       },
       {
-        "title": "Step 2 - Fill in the Blanks",
+        "title": "${practiceBlueprint.titles[1]}",
         "instructionEn": "...", "instructionKr": "...",
         "content": "",
         "tutorNotes": [{ "type": "...", "text": "..." }]
       },
       {
-        "title": "Step 3 - Dialogue",
+        "title": "${practiceBlueprint.titles[2]}",
         "instructionEn": "...", "instructionKr": "...",
         "content": "",
         "dialogue": [{ "role": "tutor|student", "en": "...", "kr": "..." }],
         "tutorNotes": [{ "type": "...", "text": "..." }]
       },
       {
-        "title": "Step 4 - Complete the Dialogue",
+        "title": "${practiceBlueprint.titles[3]}",
         "instructionEn": "...", "instructionKr": "...",
         "content": "",
         "dialogue": [{ "role": "tutor|student", "en": "...", "kr": "..." }],
@@ -4739,7 +5063,7 @@ Return ONLY JSON:
     return {
       practice: {
         steps: (practice.steps || []).slice(0, 4).map((s: any, i: number) => ({
-          title: s.title || `Step ${i + 1}`,
+          title: s.title || practiceBlueprint.titles[i] || `Step ${i + 1}`,
           instructionEn: s.instructionEn || '',
           instructionKr: normalizePracticeInstructionKr(
             s.instructionEn || '',
@@ -4776,15 +5100,26 @@ Generate the CHALLENGE section for this Business English lesson.
 
 This is a real-life SIMULATION where the student applies everything they've learned.
 
+SKILL-SPECIFIC CHALLENGE RULES:
+- LISTENING: the tutor can model or say short lines first, but the student still needs to respond in the roleplay.
+- READING: you may use a short reading support block before the roleplay. For reading lessons, roleplayTable may be null and activityBlocks may include one readingPassage block instead.
+- SPEAKING: prioritize natural back-and-forth. The student should actively produce the target expressions.
+- REVIEW: combine material from earlier lessons without copying any earlier simulation exactly.
+
 REQUIREMENTS:
 1. scenarioEn & scenarioKr: A detailed workplace scenario (2-3 sentences) that gives the student a clear task.
    The student must use the patterns and vocabulary from the lesson.
 
-2. roleplayTable: Names for the roleplay.
-   - "you": One name for the student's character
-   - "coworkers": 5-6 character names for the scenario
+2. roleplayTable:
+   - For listening and speaking lessons, prefer a roleplayTable when it helps the scenario.
+   - For reading lessons, roleplayTable may be null if a reading support block fits better.
 
-3. tutorNotes: use this fixed teaching-note flow EXACTLY before the question notes:
+3. activityBlocks:
+   - Optional.
+   - For reading lessons, you may include exactly one { "type": "readingPassage", "id": "...", "title": "...", "titleKr": "...", "passage": "...", "questions": [] } block.
+   - For listening and speaking lessons, prefer [] unless the lesson truly needs a support block.
+
+4. tutorNotes: use this fixed teaching-note flow EXACTLY before the question notes:
    - { "type": "script", "text": "\"Now let's do simulation\"" }
    - { "type": "script", "text": "\"First please read the Key Expressions. You may use the Key Expressions in the Simulation.\"" }
    - { "type": "instruction", "text": "Read the simulation." }
@@ -4807,6 +5142,7 @@ Return ONLY JSON:
   "challenge": {
     "scenarioEn": "...", "scenarioKr": "...",
     "roleplayTable": { "you": "...", "coworkers": ["..."] },
+    "activityBlocks": [],
     "tutorNotes": [{ "type": "script|instruction|question|tip", "text": "..." }]
   }
 }`;
@@ -4848,6 +5184,7 @@ Return ONLY JSON:
           you: challenge.roleplayTable.you || '',
           coworkers: challenge.roleplayTable.coworkers || [],
         } : undefined,
+        activityBlocks: Array.isArray(challenge.activityBlocks) ? challenge.activityBlocks : [],
         tutorNotes: [...standardChallengeNotes, ...questionNotes],
       },
     };

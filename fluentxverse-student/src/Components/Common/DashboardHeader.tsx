@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { inboxApi } from '../../api/inbox.api';
+import { useThemeStore } from '../../context/ThemeContext';
 import './DashboardHeader.css';
 
 interface DashboardHeaderProps {
@@ -17,6 +18,7 @@ const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
   const [philippineTime, setPhilippineTime] = useState<string>('');
   const [philippineDate, setPhilippineDate] = useState<string>('');
   const [inboxUnreadCount, setInboxUnreadCount] = useState<number>(0);
+  const { isDarkMode, toggleTheme } = useThemeStore();
 
   // Get user ID from localStorage
   const userId = localStorage.getItem('fxv_user_id') || '';
@@ -67,7 +69,7 @@ const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
   }, []);
 
   return (
-    <div className="dashboard-header light">
+    <div className={`dashboard-header ${isDarkMode ? 'dark' : 'light'}`}>
       <div className="header-left">
         <div className="philippine-clock">
           <i className="fas fa-clock"></i>
@@ -80,6 +82,16 @@ const DashboardHeader = ({ title, user }: DashboardHeaderProps) => {
       </div>
 
       <div className="dashboard-header-actions">
+        <button
+          type="button"
+          className="dashboard-theme-btn"
+          aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          onClick={toggleTheme}
+        >
+          <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+        </button>
+
         {/* Inbox Button */}
         <a
           href="/inbox"

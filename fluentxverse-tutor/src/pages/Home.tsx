@@ -21,7 +21,7 @@ const Home = () => {
 
   return (
     <>
-      <Header/>
+      <Header showThemeSwitch={false} />
       <IndexOne/>
       <Footer />
     </>

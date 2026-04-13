@@ -1,8 +1,13 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import { useNotificationStore } from '../context/NotificationContext';
-import { initSocket, getSocket, connectSocket, disconnectSocket } from '../client/socket/socket.client';
+import { initSocket, connectSocket, destroySocket } from '../client/socket/socket.client';
 import { useAuthContext } from '../context/AuthContext';
 import type { Notification } from '../types/notification.types';
+
+let notificationRealtimeDisabled = false;
+let notificationSocketWarningShown = false;
+const notificationSocketEnabled =
+  String(import.meta.env.VITE_ENABLE_NOTIFICATION_SOCKET || 'false').toLowerCase() === 'true';
 
 export const useNotifications = () => {
   const { 
@@ -20,33 +25,40 @@ export const useNotifications = () => {
     toggleDropdown,
     setUnreadCount
   } = useNotificationStore();
-  
-  const socketInitialized = useRef(false);
   const { user } = useAuthContext();
 
   useEffect(() => {
-    // Initialize and connect socket with explicit auth token from context
-    if (!socketInitialized.current) {
-      try {
-        const token = user ? JSON.stringify({
-          userId: user.userId,
-          email: user.email,
-          tier: 2
-        }) : undefined;
-        initSocket(token);
-        connectSocket();
-        socketInitialized.current = true;
-      } catch (error) {
-      }
+    fetchNotifications();
+
+    if (!notificationSocketEnabled) {
+      return;
     }
 
-    // Get socket and subscribe to notifications
+    if (notificationRealtimeDisabled) {
+      return;
+    }
+
     try {
-      const socket = getSocket();
-      
-      
-      // Subscribe to notification room
-      socket.emit('notification:subscribe');
+      const token = user ? JSON.stringify({
+        userId: user.userId,
+        email: user.email,
+        tier: 2
+      }) : undefined;
+      const socket = initSocket(token);
+
+      const subscribeToNotifications = () => {
+        socket.emit('notification:subscribe');
+      };
+
+      const handleConnectError = (error: Error) => {
+        if (!notificationSocketWarningShown) {
+          console.warn('Notification realtime connection unavailable. Falling back to standard refresh.');
+          notificationSocketWarningShown = true;
+        }
+        notificationRealtimeDisabled = true;
+        destroySocket();
+        fetchNotifications();
+      };
 
       // Listen for new notifications
       socket.on('notification:new', (notification: Notification) => {
@@ -99,7 +111,18 @@ export const useNotifications = () => {
         }));
       });
 
+      socket.on('connect', subscribeToNotifications);
+      socket.on('connect_error', handleConnectError);
+
+      connectSocket();
+
+      if (socket.connected) {
+        subscribeToNotifications();
+      }
+
       return () => {
+        socket.off('connect', subscribeToNotifications);
+        socket.off('connect_error', handleConnectError);
         socket.off('notification:new');
         socket.off('notification:list');
         socket.off('notification:read');
@@ -107,10 +130,10 @@ export const useNotifications = () => {
         socket.off('notification:delete');
       };
     } catch (error) {
-      // Fallback to HTTP polling
+      notificationRealtimeDisabled = true;
       fetchNotifications();
     }
-  }, []);
+  }, [user?.userId, user?.email]);
 
   // Request browser notification permission
   useEffect(() => {

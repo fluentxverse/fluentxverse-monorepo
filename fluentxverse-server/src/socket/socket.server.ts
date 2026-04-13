@@ -10,6 +10,7 @@ import { registerScheduleHandlers } from './handlers/schedule.handler';
 import { ticketHandler } from './handlers/ticket.handler';
 import { lessonHandler } from './handlers/lesson.handler';
 import { authMiddleware } from './middleware/auth.middleware';
+import { getAllowedOrigins, isAllowedOrigin } from '../config/cors';
 
 // Store the IO instance for access from other modules
 let ioInstance: SocketIOServer | null = null;
@@ -22,26 +23,21 @@ export const getIO = (): SocketIOServer | null => {
 };
 
 export const initSocketServer = (httpServer: HTTPServer) => {
-  const defaultOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'http://192.168.0.102:5173',
-    'http://192.168.0.102:5174',
-    'http://192.168.0.102:5175'
-  ];
-  
-  const envOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
-    .split(',')
-    .map(o => o.trim())
-    .filter(o => o.length > 0);
-  
-  const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
+  const allowedOrigins = getAllowedOrigins(process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '');
 
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        if (isAllowedOrigin(origin, allowedOrigins)) {
+          callback(null, true);
+          return;
+        }
+
+        console.warn(`⚠️ Socket.IO CORS blocked origin: ${origin}`);
+        callback(new Error('Origin not allowed by Socket.IO CORS'));
+      },
       methods: ['GET', 'POST'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'Pragma'],
       credentials: true
     },
     pingTimeout: 60000,

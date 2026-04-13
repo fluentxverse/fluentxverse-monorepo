@@ -455,3 +455,42 @@
     padding-left: 1.5rem;
   }
 }
+.dark-mode .yl-page {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+.dark-mode .yl-level,
+.dark-mode .yl-unit,
+.dark-mode .yl-lesson-card,
+.dark-mode .yl-search-box {
+  background: var(--fxv-surface);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+.dark-mode .yl-page-header h1,
+.dark-mode .yl-level-name,
+.dark-mode .yl-unit-name,
+.dark-mode .yl-card-title {
+  color: var(--fxv-text);
+}
+
+.dark-mode .yl-page-header p,
+.dark-mode .yl-level-meta,
+.dark-mode .yl-unit-meta,
+.dark-mode .yl-card-lesson,
+.dark-mode .yl-card-tag,
+.dark-mode .yl-loading,
+.dark-mode .yl-empty,
+.dark-mode .yl-error p {
+  color: var(--fxv-text-muted);
+}
+
+.dark-mode .yl-search-box input {
+  color: var(--fxv-text);
+}
+
+.dark-mode .yl-search-box input::placeholder {
+  color: var(--fxv-text-soft);
+}

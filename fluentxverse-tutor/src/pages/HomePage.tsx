@@ -121,58 +121,36 @@ const HomePage = () => {
               {/* Progress Steps */}
               <div className="progress-steps">
                 {/* Progress Line - hidden on mobile via CSS */}
-                <div className="progress-line" style={{
-                  position: 'absolute',
-                  top: '28px',
-                  left: '12%',
-                  right: '12%',
-                  height: '4px',
-                  background: 'rgba(2, 69, 174, 0.1)',
-                  borderRadius: '2px',
-                  zIndex: 0
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: activeStep >= 2 ? '50%' : '0%',
-                    background: 'linear-gradient(90deg, #0245ae 0%, #4a9eff 100%)',
-                    borderRadius: '2px',
-                    transition: 'width 0.5s ease',
-                    boxShadow: '0 2px 8px rgba(2, 69, 174, 0.3)'
-                  }}></div>
+                <div className="progress-line">
+                  <div
+                    className="progress-line-fill"
+                    style={{ width: activeStep >= 2 ? '50%' : '0%' }}
+                  ></div>
                 </div>
 
                 {/* Step 1 */}
                 <div className="progress-step">
-                  <div className="progress-step-number" style={{ 
-                    background: activeStep >= 1 ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : '#e2e8f0',
-                    boxShadow: activeStep >= 1 ? '0 4px 16px rgba(2, 69, 174, 0.4)' : 'none'
-                  }}>1</div>
-                  <div>
-                    <div className="progress-step-label" style={{ color: '#0245ae' }}>SKILLS</div>
-                    <div className="progress-step-label" style={{ color: '#0245ae' }}>ASSESSMENT</div>
+                  <div className={`progress-step-number ${activeStep >= 1 ? 'is-active' : 'is-inactive'}`}>1</div>
+                  <div className={`progress-step-copy ${activeStep >= 1 ? 'is-active' : 'is-inactive'}`}>
+                    <div className="progress-step-label">SKILLS</div>
+                    <div className="progress-step-label">ASSESSMENT</div>
                   </div>
                 </div>
 
                 {/* Step 2 */}
                 <div className="progress-step">
-                  <div className="progress-step-number" style={{ 
-                    background: activeStep >= 2 ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : '#e2e8f0',
-                    boxShadow: activeStep >= 2 ? '0 4px 16px rgba(2, 69, 174, 0.4)' : 'none'
-                  }}>2</div>
-                  <div>
-                    <div className="progress-step-label" style={{ color: activeStep >= 2 ? '#0245ae' : '#94a3b8' }}>ONBOARDING &</div>
-                    <div className="progress-step-label" style={{ color: activeStep >= 2 ? '#0245ae' : '#94a3b8' }}>PROFILE</div>
+                  <div className={`progress-step-number ${activeStep >= 2 ? 'is-active' : 'is-inactive'}`}>2</div>
+                  <div className={`progress-step-copy ${activeStep >= 2 ? 'is-active' : 'is-inactive'}`}>
+                    <div className="progress-step-label">ONBOARDING &</div>
+                    <div className="progress-step-label">PROFILE</div>
                   </div>
                 </div>
 
                 {/* Step 3 */}
                 <div className="progress-step">
-                  <div className="progress-step-number" style={{ 
-                    background: activeStep >= 3 ? 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)' : '#e2e8f0',
-                    boxShadow: activeStep >= 3 ? '0 4px 16px rgba(2, 69, 174, 0.4)' : 'none'
-                  }}>3</div>
-                  <div>
-                    <div className="progress-step-label" style={{ color: activeStep >= 3 ? '#0245ae' : '#94a3b8' }}>SCHEDULE SETUP</div>
+                  <div className={`progress-step-number ${activeStep >= 3 ? 'is-active' : 'is-inactive'}`}>3</div>
+                  <div className={`progress-step-copy ${activeStep >= 3 ? 'is-active' : 'is-inactive'}`}>
+                    <div className="progress-step-label">SCHEDULE SETUP</div>
                   </div>
                 </div>
               </div>

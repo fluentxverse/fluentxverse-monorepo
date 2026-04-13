@@ -17,6 +17,16 @@
   margin: 0 auto;
 }
 
+.student-profile-state {
+  padding: 32px;
+  text-align: center;
+  color: #64748b;
+}
+
+.student-profile-state.error {
+  color: #dc2626;
+}
+
 /* Back Button */
 .back-button {
   background: transparent;
@@ -219,28 +229,65 @@
 }
 
 .enter-classroom-btn {
-  background: #0245ae;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0245ae 0%, #2563eb 52%, #60a5fa 100%);
   color: #fff;
-  border: none;
+  border: 1px solid rgba(96, 165, 250, 0.34);
   padding: 12px 24px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 6px 20px rgba(2, 69, 174, 0.35);
-  transition: all 0.3s ease;
+  box-shadow:
+    0 12px 24px rgba(2, 69, 174, 0.28),
+    0 4px 10px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
+}
+
+.enter-classroom-btn::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 46%);
+  pointer-events: none;
 }
 
 .enter-classroom-btn:hover {
-  background: #013d99;
+  transform: translateY(-2px);
+  filter: saturate(1.06) brightness(1.04);
+  border-color: rgba(147, 197, 253, 0.5);
+  box-shadow:
+    0 16px 30px rgba(2, 69, 174, 0.34),
+    0 6px 14px rgba(37, 99, 235, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.enter-classroom-btn:active {
+  transform: translateY(0);
+  box-shadow:
+    0 8px 18px rgba(2, 69, 174, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .enter-classroom-btn i {
   font-size: 16px;
+}
+
+.enter-classroom-btn span,
+.enter-classroom-btn i {
+  position: relative;
+  z-index: 1;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  text-shadow: 0 1px 2px rgba(7, 23, 64, 0.22);
 }
 
 /* Contact Info Grid */
@@ -1496,4 +1543,291 @@
   .headset-modal-content {
     padding: 14px;
   }
+}
+
+[data-theme='dark'] .student-profile-page {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .student-profile-content,
+[data-theme='dark'] .student-profile-main {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .student-profile-state {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .student-profile-state.error {
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .lesson-info-card,
+[data-theme='dark'] .profile-header-card,
+[data-theme='dark'] .tabs-container,
+[data-theme='dark'] .content-card,
+[data-theme='dark'] .content-card.simple,
+[data-theme='dark'] .empty-state,
+[data-theme='dark'] .stat-card,
+[data-theme='dark'] .note-card,
+[data-theme='dark'] .session-card,
+[data-theme='dark'] .headset-modal,
+[data-theme='dark'] .permission-request-area {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .back-button,
+[data-theme='dark'] .lesson-info-header h2,
+[data-theme='dark'] .profile-name,
+[data-theme='dark'] .stat-value,
+[data-theme='dark'] .card-title,
+[data-theme='dark'] .section-subtitle,
+[data-theme='dark'] .session-topic,
+[data-theme='dark'] .note-date,
+[data-theme='dark'] .empty-state h3,
+[data-theme='dark'] .headset-modal-header h2,
+[data-theme='dark'] .test-section h3 {
+  color: var(--fxv-text) !important;
+}
+
+[data-theme='dark'] .lesson-info-item,
+[data-theme='dark'] .contact-info-item span,
+[data-theme='dark'] .stat-label,
+[data-theme='dark'] .tab-button,
+[data-theme='dark'] .card-text,
+[data-theme='dark'] .topic-tag,
+[data-theme='dark'] .session-meta,
+[data-theme='dark'] .session-meta-row,
+[data-theme='dark'] .note-time,
+[data-theme='dark'] .note-content,
+[data-theme='dark'] .empty-state p,
+[data-theme='dark'] .test-description {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .back-button:hover {
+  color: #bfdbfe;
+}
+
+[data-theme='dark'] .lesson-info-header i {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.14);
+}
+
+[data-theme='dark'] .card-title i,
+[data-theme='dark'] .test-section h3 i {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .lesson-info-item i,
+[data-theme='dark'] .contact-info-item i,
+[data-theme='dark'] .session-meta i,
+[data-theme='dark'] .session-meta-item i {
+  color: var(--fxv-text-soft);
+}
+
+[data-theme='dark'] .profile-id-badge {
+  background: var(--fxv-surface-soft);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .profile-level-badge {
+  border-color: var(--fxv-surface);
+}
+
+[data-theme='dark'] .stat-card {
+  background: var(--fxv-surface-soft);
+}
+
+[data-theme='dark'] .stat-card.blue {
+  border-color: rgba(124, 184, 255, 0.22);
+  background: rgba(37, 99, 235, 0.14);
+}
+
+[data-theme='dark'] .stat-card.green {
+  border-color: rgba(74, 222, 128, 0.22);
+  background: rgba(22, 163, 74, 0.12);
+}
+
+[data-theme='dark'] .stat-card.orange {
+  border-color: rgba(251, 191, 36, 0.24);
+  background: rgba(217, 119, 6, 0.14);
+}
+
+[data-theme='dark'] .stat-card.blue .stat-value,
+[data-theme='dark'] .stat-card.blue .stat-label {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .stat-card.green .stat-value,
+[data-theme='dark'] .stat-card.green .stat-label {
+  color: #86efac;
+}
+
+[data-theme='dark'] .stat-card.orange .stat-value,
+[data-theme='dark'] .stat-card.orange .stat-label {
+  color: #fcd34d;
+}
+
+[data-theme='dark'] .test-headset-btn {
+  background: var(--fxv-surface-soft);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .test-headset-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border-strong);
+}
+
+[data-theme='dark'] .enter-classroom-btn {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 52%, #60a5fa 100%);
+  border-color: rgba(124, 184, 255, 0.34);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.26),
+    0 6px 14px rgba(37, 99, 235, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+[data-theme='dark'] .enter-classroom-btn:hover {
+  border-color: rgba(147, 197, 253, 0.5);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.32),
+    0 8px 18px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+[data-theme='dark'] .tabs-container {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+}
+
+[data-theme='dark'] .tab-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .tab-button.active {
+  background: linear-gradient(135deg, var(--fxv-accent) 0%, var(--fxv-accent-strong) 100%);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .topic-tag {
+  background: var(--fxv-surface-soft);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .session-card,
+[data-theme='dark'] .note-card {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='dark'] .session-card {
+  border-left-color: #60a5fa;
+}
+
+[data-theme='dark'] .session-card.completed {
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: #4ade80;
+}
+
+[data-theme='dark'] .rating-badge {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .headset-modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme='dark'] .headset-modal {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border: 1px solid var(--fxv-border);
+}
+
+[data-theme='dark'] .headset-modal-header {
+  background: var(--fxv-surface);
+  border-bottom-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .modal-close-btn {
+  background: var(--fxv-surface-soft);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .permission-request-area {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .mic-status.pending,
+[data-theme='dark'] .cam-status.pending {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+[data-theme='dark'] .mic-status.denied,
+[data-theme='dark'] .cam-status.denied {
+  background: rgba(127, 29, 29, 0.16);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.26);
+}
+
+[data-theme='dark'] .mic-status.granted,
+[data-theme='dark'] .cam-status.granted {
+  background: rgba(20, 83, 45, 0.18);
+  color: #86efac;
+  border-color: rgba(74, 222, 128, 0.24);
+}
+
+[data-theme='dark'] .mic-status.denied .https-hint,
+[data-theme='dark'] .cam-status.denied .https-hint {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(248, 113, 113, 0.22);
+}
+
+[data-theme='dark'] .mic-status.denied .https-hint code,
+[data-theme='dark'] .cam-status.denied .https-hint code {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .camera-preview {
+  border-color: rgba(124, 184, 255, 0.24);
+}
+
+[data-theme='dark'] .camera-btn,
+[data-theme='dark'] .speaker-btn {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(124, 184, 255, 0.2);
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .camera-btn:hover,
+[data-theme='dark'] .speaker-btn:hover:not(:disabled),
+[data-theme='dark'] .speaker-btn.playing {
+  background: linear-gradient(135deg, var(--fxv-accent) 0%, var(--fxv-accent-strong) 100%);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .mic-level-bar {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .mic-level-text {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .headset-modal-footer {
+  background: rgba(255, 255, 255, 0.03);
+  border-top-color: var(--fxv-border);
 }

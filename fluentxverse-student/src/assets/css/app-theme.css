@@ -1,0 +1,668 @@
+:root {
+  color-scheme: light;
+  --fxv-accent: #0245ae;
+  --fxv-accent-strong: #4a9eff;
+  --fxv-accent-soft: rgba(2, 69, 174, 0.14);
+  --fxv-bg: #f4f8ff;
+  --fxv-bg-elevated: rgba(255, 255, 255, 0.92);
+  --fxv-surface: #ffffff;
+  --fxv-surface-muted: #f8fafc;
+  --fxv-surface-soft: #eef4ff;
+  --fxv-border: rgba(15, 23, 42, 0.08);
+  --fxv-border-strong: rgba(2, 69, 174, 0.18);
+  --fxv-text: #0f172a;
+  --fxv-text-muted: #64748b;
+  --fxv-text-soft: #94a3b8;
+  --fxv-shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --fxv-shadow-md: 0 18px 42px rgba(2, 69, 174, 0.14);
+  --fxv-shadow-lg: 0 26px 60px rgba(2, 69, 174, 0.16);
+  --background-color: var(--fxv-bg);
+  --card-background: var(--fxv-surface);
+  --text-color: var(--fxv-text);
+  --secondary-text: var(--fxv-text-muted);
+  --border-color: rgba(226, 232, 240, 0.95);
+  --primary-text-color: var(--fxv-text);
+  --secondary-text-color: var(--fxv-text-muted);
+  --card-box-shadow: var(--fxv-shadow-sm);
+  --bg-hover: rgba(2, 69, 174, 0.08);
+  --success-color: #16a34a;
+  --primary-color: var(--fxv-accent);
+  --primary-light: rgba(2, 69, 174, 0.12);
+  --bg-primary: var(--fxv-bg);
+  --bg-card: var(--fxv-surface);
+  --card-bg: var(--fxv-surface);
+  --card-bg-dark: #1e1e1e;
+  --page-background: var(--fxv-bg);
+  --text-primary: var(--fxv-text);
+  --text-secondary: var(--fxv-text-muted);
+  --primary: var(--fxv-accent);
+  --primary-dark: #023a8f;
+  --primary-hover: var(--fxv-accent-strong);
+  --dashboard-bg: var(--fxv-bg);
+  --dashboard-bg-dark: #1a1a1a;
+  --scrollbar-thumb: rgba(2, 69, 174, 0.3);
+  --scrollbar-thumb-dark: rgba(255, 255, 255, 0.14);
+  --secondary-button-bg: rgba(2, 69, 174, 0.08);
+  --secondary-button-text: var(--fxv-accent);
+  --dark-page-background: #1a1a1a;
+  --dark-primary-text-color: #f3f4f6;
+  --dark-secondary-text-color: #a3a3a3;
+  --dark-secondary-button-bg: #232323;
+  --dark-secondary-button-text: #e5e7eb;
+  --section-background-color: var(--fxv-bg);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --fxv-accent: #2563eb;
+  --fxv-accent-strong: #60a5fa;
+  --fxv-accent-soft: rgba(124, 184, 255, 0.18);
+  --fxv-bg: #1a1a1a;
+  --fxv-bg-elevated: rgba(26, 26, 26, 0.94);
+  --fxv-surface: #1e1e1e;
+  --fxv-surface-muted: #232323;
+  --fxv-surface-soft: #2a2a2a;
+  --fxv-border: rgba(255, 255, 255, 0.09);
+  --fxv-border-strong: rgba(124, 184, 255, 0.24);
+  --fxv-text: #f3f4f6;
+  --fxv-text-muted: #a3a3a3;
+  --fxv-text-soft: #737373;
+  --fxv-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.16);
+  --fxv-shadow-md: 0 10px 26px rgba(0, 0, 0, 0.22);
+  --fxv-shadow-lg: 0 18px 42px rgba(0, 0, 0, 0.28);
+  --background-color: var(--fxv-bg);
+  --card-background: var(--fxv-surface);
+  --text-color: var(--fxv-text);
+  --secondary-text: var(--fxv-text-muted);
+  --border-color: var(--fxv-border);
+  --primary-text-color: var(--fxv-text);
+  --secondary-text-color: var(--fxv-text-muted);
+  --card-box-shadow: var(--fxv-shadow-sm);
+  --bg-hover: rgba(124, 184, 255, 0.12);
+  --success-color: #4ade80;
+  --primary-color: var(--fxv-accent);
+  --primary-light: rgba(124, 184, 255, 0.14);
+  --bg-primary: var(--fxv-bg);
+  --bg-card: var(--fxv-surface);
+  --card-bg: var(--fxv-surface);
+  --page-background: var(--fxv-bg);
+  --text-primary: var(--fxv-text);
+  --text-secondary: var(--fxv-text-muted);
+  --primary: var(--fxv-accent);
+  --primary-dark: #1d4ed8;
+  --primary-hover: var(--fxv-accent-strong);
+  --secondary-button-bg: rgba(255, 255, 255, 0.06);
+  --secondary-button-text: var(--fxv-text);
+  --section-background-color: var(--fxv-bg);
+}
+
+html,
+body {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+body {
+  background-image: radial-gradient(circle at top left, rgba(74, 158, 255, 0.16), transparent 36%),
+    linear-gradient(180deg, #f4f8ff 0%, #e9f0ff 100%);
+  background-attachment: fixed;
+}
+
+[data-theme='dark'] body {
+  background-image: none;
+  background-color: var(--fxv-bg);
+}
+
+#app,
+.App {
+  min-height: 100vh;
+  color: inherit;
+}
+
+main,
+.main-content,
+.main-wrapper,
+.dashboard-container,
+.dashboard-content {
+  background: transparent;
+  color: inherit;
+}
+
+::selection {
+  background: rgba(74, 158, 255, 0.24);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] ::selection {
+  background: rgba(124, 184, 255, 0.28);
+  color: #f8fbff;
+}
+
+[data-theme='dark'] main,
+[data-theme='dark'] .main-content,
+[data-theme='dark'] .home-page-main,
+[data-theme='dark'] .schedule-page,
+[data-theme='dark'] .materials-page,
+[data-theme='dark'] .inbox-page,
+[data-theme='dark'] .lesson-page,
+[data-theme='dark'] .student-profile-page,
+[data-theme='dark'] .purchase-history-page,
+[data-theme='dark'] .course-detail-page,
+[data-theme='dark'] .daily-dispatch-page,
+[data-theme='dark'] .lesson-fullpage,
+[data-theme='dark'] .register-container,
+[data-theme='dark'] .ddp-container {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .dashboard-container,
+[data-theme='dark'] .main-wrapper {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .menu-area,
+[data-theme='dark'] #sticky-header,
+[data-theme='dark'] .dashboard-header {
+  background: rgba(26, 26, 26, 0.94);
+  color: var(--fxv-text);
+  border-bottom: 1px solid var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .brand-text,
+[data-theme='dark'] .navigation > li > a,
+[data-theme='dark'] .menu-area .menu-nav .logo + .brand-text,
+[data-theme='dark'] .dashboard-header,
+[data-theme='dark'] .dashboard-header * {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .navigation > li > a:hover,
+[data-theme='dark'] .navigation > li.active > a,
+[data-theme='dark'] .brand-x {
+  color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .menu-wrap.main-menu,
+[data-theme='dark'] .menu-nav,
+[data-theme='dark'] .mobile-menu .menu-box,
+[data-theme='dark'] .mobile-menu-header {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .mobile-nav .nav-link,
+[data-theme='dark'] .close-btn,
+[data-theme='dark'] .social-links-title {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .mobile-nav .nav-link:hover,
+[data-theme='dark'] .mobile-nav .nav-link:focus-visible {
+  background: var(--fxv-surface-soft);
+  color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .login-btn {
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+}
+
+[data-theme='dark'] .theme-btn,
+[data-theme='dark'] .dashboard-theme-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .theme-btn:hover,
+[data-theme='dark'] .dashboard-theme-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fde68a;
+}
+
+[data-theme='dark'] .sidebar,
+[data-theme='dark'] .sidebar-logo,
+[data-theme='dark'] .sidebar-icon ul li a {
+  background: #1e1e1e;
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .sidebar {
+  border-right: 1px solid var(--fxv-border);
+}
+
+[data-theme='dark'] .sidebar-icon ul li a {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .sidebar-icon ul li a i {
+  color: #d4d4d8;
+}
+
+[data-theme='dark'] .sidebar-icon ul li a:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+}
+
+[data-theme='dark'] .sidebar-icon ul li a:hover i,
+[data-theme='dark'] .sidebar-icon ul li.active a i {
+  color: #fff;
+}
+
+[data-theme='dark'] .philippine-clock,
+[data-theme='dark'] .inbox-btn,
+[data-theme='dark'] .notification-btn,
+[data-theme='dark'] .dashboard-theme-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .clock-time {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .clock-date {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .home-page-main,
+[data-theme='dark'] .schedule-page,
+[data-theme='dark'] .materials-page,
+[data-theme='dark'] .lesson-page,
+[data-theme='dark'] .purchase-history-page,
+[data-theme='dark'] .course-detail-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .home-quick-actions .quick-action-card,
+[data-theme='dark'] .home-card,
+[data-theme='dark'] .schedule-tabs,
+[data-theme='dark'] .schedule-card,
+[data-theme='dark'] .skeleton-card,
+[data-theme='dark'] .materials-search input,
+[data-theme='dark'] .category-tab,
+[data-theme='dark'] .course-card,
+[data-theme='dark'] .messages-list,
+[data-theme='dark'] .message-detail,
+[data-theme='dark'] .lesson-card,
+[data-theme='dark'] .lesson-notification,
+[data-theme='dark'] .profile-header-card,
+[data-theme='dark'] .stat-card,
+[data-theme='dark'] .tabs-container,
+[data-theme='dark'] .content-card,
+[data-theme='dark'] .session-card,
+[data-theme='dark'] .material-card,
+[data-theme='dark'] .purchase-stat-card,
+[data-theme='dark'] .purchase-history-content,
+[data-theme='dark'] .course-hero,
+[data-theme='dark'] .lessons-filters-section,
+[data-theme='dark'] .level-content,
+[data-theme='dark'] .chapter-group,
+[data-theme='dark'] .lessons-table,
+[data-theme='dark'] .lesson-card,
+[data-theme='dark'] .dispatch-search,
+[data-theme='dark'] .dispatch-category-select,
+[data-theme='dark'] .dispatch-card,
+[data-theme='dark'] .dispatch-article-card,
+[data-theme='dark'] .ddp-sidebar-section,
+[data-theme='dark'] .lesson-back-btn,
+[data-theme='dark'] .lesson-fullpage-error .error-icon {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .lesson-back-btn,
+[data-theme='dark'] .dispatch-search,
+[data-theme='dark'] .dispatch-category-select,
+[data-theme='dark'] .materials-search input,
+[data-theme='dark'] .filter-select,
+[data-theme='dark'] .filter-group .lessons-search input,
+[data-theme='dark'] .cancel-modal,
+[data-theme='dark'] .cancel-modal-btn.cancel-btn {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .home-card-title,
+[data-theme='dark'] .quick-action-title,
+[data-theme='dark'] .schedule-title,
+[data-theme='dark'] .materials-page-title,
+[data-theme='dark'] .message-title,
+[data-theme='dark'] .detail-title,
+[data-theme='dark'] .lesson-page-title,
+[data-theme='dark'] .profile-page-title,
+[data-theme='dark'] .profile-name,
+[data-theme='dark'] .purchase-history-title,
+[data-theme='dark'] .purchase-stat-value,
+[data-theme='dark'] .course-title,
+[data-theme='dark'] .course-title-main,
+[data-theme='dark'] .dispatch-title,
+[data-theme='dark'] .dispatch-card-title,
+[data-theme='dark'] .lesson-fullpage-error h3 {
+  color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .home-page-main p,
+[data-theme='dark'] .quick-action-desc,
+[data-theme='dark'] .schedule-subtitle,
+[data-theme='dark'] .lesson-detail,
+[data-theme='dark'] .materials-page-subtitle,
+[data-theme='dark'] .course-description,
+[data-theme='dark'] .message-snippet,
+[data-theme='dark'] .detail-body,
+[data-theme='dark'] .lesson-page-subtitle,
+[data-theme='dark'] .classroom-message,
+[data-theme='dark'] .profile-page-subtitle,
+[data-theme='dark'] .rating-count,
+[data-theme='dark'] .card-text,
+[data-theme='dark'] .note-text,
+[data-theme='dark'] .purchase-history-subtitle,
+[data-theme='dark'] .purchase-stat-label,
+[data-theme='dark'] .course-description-main,
+[data-theme='dark'] .course-stat,
+[data-theme='dark'] .dispatch-subtitle,
+[data-theme='dark'] .dispatch-card-topic,
+[data-theme='dark'] .dispatch-card-date,
+[data-theme='dark'] .dispatch-empty,
+[data-theme='dark'] .lesson-fullpage-loading p,
+[data-theme='dark'] .lesson-fullpage-error p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .schedule-tab,
+[data-theme='dark'] .schedule-timezone,
+[data-theme='dark'] .inbox-filters .filter-btn,
+[data-theme='dark'] .lesson-back-btn-header,
+[data-theme='dark'] .back-button,
+[data-theme='dark'] .tab-button,
+[data-theme='dark'] .purchase-history-error button,
+[data-theme='dark'] .empty-action-btn,
+[data-theme='dark'] .course-detail-page .back-link,
+[data-theme='dark'] .btn-clear-filters,
+[data-theme='dark'] .dispatch-header .back-link,
+[data-theme='dark'] .ddp-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .schedule-tab:hover,
+[data-theme='dark'] .inbox-filters .filter-btn:hover,
+[data-theme='dark'] .lesson-back-btn-header:hover,
+[data-theme='dark'] .back-button:hover,
+[data-theme='dark'] .tab-button:hover,
+[data-theme='dark'] .course-detail-page .back-link:hover,
+[data-theme='dark'] .btn-clear-filters:hover,
+[data-theme='dark'] .dispatch-header .back-link:hover,
+[data-theme='dark'] .ddp-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-accent-strong);
+  border-color: rgba(124, 184, 255, 0.24);
+}
+
+[data-theme='dark'] .schedule-tab.active,
+[data-theme='dark'] .inbox-filters .filter-btn.active,
+[data-theme='dark'] .category-tab.active,
+[data-theme='dark'] .tab-button.active,
+[data-theme='dark'] .purchase-history-action-btn,
+[data-theme='dark'] .btn-book-again,
+[data-theme='dark'] .btn-join-classroom,
+[data-theme='dark'] .btn-view-tutor,
+[data-theme='dark'] .btn-open-lesson,
+[data-theme='dark'] .dispatch-error button,
+[data-theme='dark'] .lesson-fullpage-error .btn-back {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+}
+
+[data-theme='dark'] .tab-count,
+[data-theme='dark'] .schedule-tab:not(.active) .tab-count,
+[data-theme='dark'] .filter-count,
+[data-theme='dark'] .message-category,
+[data-theme='dark'] .profile-id-badge,
+[data-theme='dark'] .course-category-badge {
+  background: rgba(124, 184, 255, 0.12);
+  color: #bfdbfe;
+}
+
+[data-theme='dark'] .schedule-timezone,
+[data-theme='dark'] .course-stat:hover,
+[data-theme='dark'] .schedule-tab:hover {
+  background: rgba(124, 184, 255, 0.08);
+}
+
+[data-theme='dark'] .inbox-error,
+[data-theme='dark'] .lesson-notification,
+[data-theme='dark'] .purchase-history-error,
+[data-theme='dark'] .dispatch-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='dark'] .message-item,
+[data-theme='dark'] .detail-header,
+[data-theme='dark'] .session-timeline-item,
+[data-theme='dark'] .material-card,
+[data-theme='dark'] .purchase-card,
+[data-theme='dark'] .lesson-row,
+[data-theme='dark'] .dispatch-card,
+[data-theme='dark'] .ddp-sidebar-search input,
+[data-theme='dark'] .ddp-sidebar-search-btn {
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .message-item:hover,
+[data-theme='dark'] .message-item.selected {
+  background: rgba(124, 184, 255, 0.08);
+}
+
+[data-theme='dark'] .message-item.unread {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='dark'] .inbox-empty,
+[data-theme='dark'] .inbox-loading,
+[data-theme='dark'] .schedule-empty,
+[data-theme='dark'] .purchase-history-empty,
+[data-theme='dark'] .lessons-empty {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .dispatch-search input,
+[data-theme='dark'] .materials-search input,
+[data-theme='dark'] .filter-select,
+[data-theme='dark'] .filter-group .lessons-search input,
+[data-theme='dark'] .ddp-sidebar-search input {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .dispatch-search input::placeholder,
+[data-theme='dark'] .materials-search input::placeholder,
+[data-theme='dark'] .filter-group .lessons-search input::placeholder,
+[data-theme='dark'] .ddp-sidebar-search input::placeholder {
+  color: var(--fxv-text-soft);
+}
+
+[data-theme='dark'] .course-detail-page .back-link,
+[data-theme='dark'] .schedule-timezone,
+[data-theme='dark'] .back-button,
+[data-theme='dark'] .lesson-back-btn-header,
+[data-theme='dark'] .lesson-back-btn,
+[data-theme='dark'] .dispatch-header .back-link {
+  box-shadow: none;
+}
+
+[data-theme='dark'] .ddp-container,
+[data-theme='dark'] .ddp-loading,
+[data-theme='dark'] .ddp-error {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .ddp-container {
+  --ddp-white: #1e1e1e;
+  --ddp-black: #f3f4f6;
+  --ddp-gray-50: #1a1a1a;
+  --ddp-gray-100: #232323;
+  --ddp-gray-200: #2d2d2d;
+  --ddp-gray-300: #3a3a3a;
+  --ddp-gray-400: #737373;
+  --ddp-gray-500: #8a8a8a;
+  --ddp-gray-600: #a3a3a3;
+  --ddp-gray-700: #d4d4d8;
+  --ddp-gray-800: #e4e4e7;
+  --ddp-gray-900: #f4f4f5;
+  --ddp-link: #93c5fd;
+}
+
+[data-theme='dark'] .ddp-header-bar {
+  background: #111111;
+  border-bottom-color: rgba(250, 204, 21, 0.65);
+}
+
+[data-theme='dark'] .ddp-category-item {
+  color: #9ca3af;
+}
+
+[data-theme='dark'] .ddp-category-item:hover {
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .ddp-category-item.active {
+  color: #fde047;
+  border-bottom-color: #fde047;
+}
+
+[data-theme='dark'] .ddp-sidebar-search input,
+[data-theme='dark'] .dispatch-category-select,
+[data-theme='dark'] .filter-select {
+  appearance: none;
+}
+
+[data-theme='dark'] .ddp-sidebar-search-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .ddp-sidebar-search-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .tutor-profile-page,
+[data-theme='dark'] .yl-page,
+[data-theme='dark'] .yl-lesson-page {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .profile-hero,
+[data-theme='dark'] .profile-booking-card,
+[data-theme='dark'] .hero-video-section,
+[data-theme='dark'] .profile-tabs,
+[data-theme='dark'] .content-section,
+[data-theme='dark'] .schedule-table,
+[data-theme='dark'] .yl-level,
+[data-theme='dark'] .yl-unit,
+[data-theme='dark'] .yl-lesson-card,
+[data-theme='dark'] .yl-search-box,
+[data-theme='dark'] .yl-section,
+[data-theme='dark'] .yl-song,
+[data-theme='dark'] .yl-story-book,
+[data-theme='dark'] .yl-story-page,
+[data-theme='dark'] .yl-activity-card,
+[data-theme='dark'] .yl-complete,
+[data-theme='dark'] .register-form-card {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .profile-name,
+[data-theme='dark'] .booking-card-title,
+[data-theme='dark'] .section-title,
+[data-theme='dark'] .yl-page-header h1,
+[data-theme='dark'] .yl-level-name,
+[data-theme='dark'] .yl-unit-name,
+[data-theme='dark'] .yl-card-title,
+[data-theme='dark'] .yl-lesson-title-area h1,
+[data-theme='dark'] .yl-section-title,
+[data-theme='dark'] .yl-song-title,
+[data-theme='dark'] .yl-story-title,
+[data-theme='dark'] .yl-activity-info h3,
+[data-theme='dark'] .yl-complete-content h2,
+[data-theme='dark'] .form-title {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .rating-count,
+[data-theme='dark'] .profile-bio-short,
+[data-theme='dark'] .meta-item,
+[data-theme='dark'] .booking-card-subtitle,
+[data-theme='dark'] .booking-note,
+[data-theme='dark'] .section-content,
+[data-theme='dark'] .yl-page-header p,
+[data-theme='dark'] .yl-level-meta,
+[data-theme='dark'] .yl-unit-meta,
+[data-theme='dark'] .yl-card-lesson,
+[data-theme='dark'] .yl-card-tag,
+[data-theme='dark'] .yl-section-subtitle,
+[data-theme='dark'] .yl-jp,
+[data-theme='dark'] .yl-speech-bubble p,
+[data-theme='dark'] .yl-preview-item span,
+[data-theme='dark'] .yl-translation,
+[data-theme='dark'] .yl-lyric-text p,
+[data-theme='dark'] .yl-story-text p,
+[data-theme='dark'] .yl-activity-info p,
+[data-theme='dark'] .yl-complete-content p,
+[data-theme='dark'] .form-description,
+[data-theme='dark'] .form-hint,
+[data-theme='dark'] .login-link-wrapper {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .schedule-table thead th,
+[data-theme='dark'] .slot,
+[data-theme='dark'] .period-tab,
+[data-theme='dark'] .tag,
+[data-theme='dark'] .btn-favorite-star,
+[data-theme='dark'] .btn-book-mobile,
+[data-theme='dark'] .yl-search-box input,
+[data-theme='dark'] .yl-back-button,
+[data-theme='dark'] .yl-audio-button,
+[data-theme='dark'] .yl-story-nav button,
+[data-theme='dark'] .yl-home-button,
+[data-theme='dark'] .form-input,
+[data-theme='dark'] .form-input-with-icon,
+[data-theme='dark'] .form-input-readonly,
+[data-theme='dark'] .password-input,
+[data-theme='dark'] .submit-btn {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fxv-text);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .profile-tabs .tab-btn.active,
+[data-theme='dark'] .period-tab.active,
+[data-theme='dark'] .yl-story-nav button:not(:disabled):hover,
+[data-theme='dark'] .yl-audio-button:hover,
+[data-theme='dark'] .yl-home-button,
+[data-theme='dark'] .submit-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+[data-theme='dark'] .yl-search-box input::placeholder,
+[data-theme='dark'] .form-input::placeholder,
+[data-theme='dark'] .form-input-with-icon::placeholder {
+  color: var(--fxv-text-soft);
+}

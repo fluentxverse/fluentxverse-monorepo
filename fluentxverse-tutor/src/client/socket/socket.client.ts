@@ -5,14 +5,27 @@ import type {
 } from '../../types/socket.types';
 
 // Known production domains
-const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'tutor.fluentxverse.xyz', 'student.fluentxverse.xyz'];
-const PRODUCTION_SOCKET_URL = 'https://socket.fluentxverse.xyz';
+const PRODUCTION_DOMAINS = [
+  'fluentxverse.xyz',
+  'tutor.fluentxverse.xyz',
+  'student.fluentxverse.xyz',
+  'dashboard.fluentxverse.xyz'
+];
+const PRODUCTION_SOCKET_URL = 'https://ws.fluentxverse.xyz';
+
+const normalizeSocketUrl = (url: string) =>
+  url
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/^wss:/i, 'https:')
+    .replace(/^ws:/i, 'http:');
 
 // Dynamic socket URL - handles both dev and production
 const getSocketUrl = () => {
   // 1. Explicit env var takes priority
-  if (import.meta.env.VITE_SOCKET_URL) {
-    return import.meta.env.VITE_SOCKET_URL;
+  const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();
+  if (envSocketUrl) {
+    return normalizeSocketUrl(envSocketUrl);
   }
   
   if (typeof window !== 'undefined') {
@@ -31,7 +44,7 @@ const getSocketUrl = () => {
     }
     
     // LAN access: use same protocol to avoid mixed content
-    return `${protocol}//${hostname}:8767`;
+    return normalizeSocketUrl(`${protocol}//${hostname}:8767`);
   }
   
   return 'http://localhost:8767';
@@ -40,6 +53,7 @@ const getSocketUrl = () => {
 const SOCKET_URL = getSocketUrl();
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+let socketConnectWarningShown = false;
 
 export const getSocket = (): Socket<ServerToClientEvents, ClientToServerEvents> => {
   if (!socket) {
@@ -48,47 +62,48 @@ export const getSocket = (): Socket<ServerToClientEvents, ClientToServerEvents> 
   return socket;
 };
 
+const resolveAuthToken = (token?: string) => {
+  if (token) {
+    return token;
+  }
+
+  const authCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('tutorAuth='))
+    ?.split('=')[1];
+
+  if (authCookie) {
+    return decodeURIComponent(authCookie);
+  }
+
+  return JSON.stringify({
+    userId: `tutor-${Date.now()}`,
+    email: 'tutor@dev.local',
+    tier: 2
+  });
+};
+
 export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientToServerEvents> => {
+  const authToken = resolveAuthToken(token);
+
   if (socket) {
+    socket.auth = { ...(socket.auth || {}), token: authToken };
     return socket;
   }
-
-  // Get tutorAuth cookie - now a JWT token (opaque to client)
-  // Server will verify the JWT via withCredentials
-  let authToken: string | null = null;
-  
-  // Prefer explicit token passed in; fallback to tutorAuth cookie
-  if (token) {
-    authToken = token;
-  } else {
-    const authCookie = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('tutorAuth='))
-      ?.split('=')[1];
-
-    if (authCookie) {
-      authToken = decodeURIComponent(authCookie);
-    }
-  }
-
 
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
     auth: {
-      // Pass raw JWT token - server will verify it
-      // For authenticated users, the cookie is sent via withCredentials
-      // For dev fallback without cookie, create a placeholder
-      token: authToken || JSON.stringify({
-        userId: `tutor-${Date.now()}`,
-        email: 'tutor@dev.local',
-        tier: 2 // tier 2+ = tutor
-      })
+      token: authToken
     },
+    transports: ['websocket', 'polling'],
+    rememberUpgrade: true,
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    reconnectionAttempts: 5
+    reconnectionAttempts: 10,
+    timeout: 10000
   });
 
   socket.on('connect', () => {
@@ -98,7 +113,10 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
   });
 
   socket.on('connect_error', (error) => {
-    console.error('Socket connection error:', error);
+    if (!socketConnectWarningShown) {
+      console.warn('Socket connection unavailable; realtime updates are temporarily disabled.');
+      socketConnectWarningShown = true;
+    }
   });
 
   return socket;

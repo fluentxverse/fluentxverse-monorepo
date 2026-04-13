@@ -6,7 +6,6 @@
     top: 0;
     width: 100%;
     z-index: 99; /* Lower than sidebar */
-    transition: all 0.3s ease;
     background: transparent;
 }
 
@@ -15,7 +14,6 @@
     background: var(--header-background-color);
     box-shadow: 0 10px 15px rgba(25, 25, 25, 0.1);
     border-radius: 10px;
-    transition: all 0.3s ease;
     margin: 7px 9px;
     padding: 0 25px;
 }

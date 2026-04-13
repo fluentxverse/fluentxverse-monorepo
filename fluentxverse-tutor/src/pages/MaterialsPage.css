@@ -392,4 +392,49 @@
   }
 }
 
-/* Light mode only - dark mode disabled */
+[data-theme='dark'] .materials-page {
+  background: #1a1a1a;
+}
+
+[data-theme='dark'] .materials-page .back-link,
+[data-theme='dark'] .materials-subtitle,
+[data-theme='dark'] .course-description,
+[data-theme='dark'] .course-lessons,
+[data-theme='dark'] .materials-empty p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .materials-search input,
+[data-theme='dark'] .category-tab,
+[data-theme='dark'] .course-card,
+[data-theme='dark'] .materials-empty {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .materials-search input {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .materials-search i,
+[data-theme='dark'] .course-level i,
+[data-theme='dark'] .course-lessons i,
+[data-theme='dark'] .course-rating i {
+  color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .course-title,
+[data-theme='dark'] .course-rating,
+[data-theme='dark'] .materials-empty h3 {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .course-footer {
+  border-top-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .category-tab:hover {
+  border-color: var(--fxv-accent);
+}

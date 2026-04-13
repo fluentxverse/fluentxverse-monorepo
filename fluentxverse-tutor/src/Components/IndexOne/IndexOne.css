@@ -1,11 +1,11 @@
 /* Additional styles for the IndexOne component */
 
 main {
-  background-color: #ffffff; /* Default light mode */
+  background-color: transparent;
 }
 
 .dark-mode main {
-  background-color: #121212; /* Dark mode */
+  background-color: transparent;
 }
 
 /* Additional fix for any gaps between components */

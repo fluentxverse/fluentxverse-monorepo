@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "preact/hooks";
-import { LocationProvider, Router, Route, hydrate, prerender as ssr } from 'preact-iso';
+import { LocationProvider, Router, Route, hydrate, prerender as ssr, useLocation } from 'preact-iso';
 
 import { ToastProvider } from './Components/Common/Toast';
 import Home from './pages/Home';
@@ -18,6 +18,7 @@ import DailyDispatchArticlePage from './pages/DailyDispatchArticlePage';
 import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import ConversationalSkillsLessonPage from './pages/ConversationalSkillsLessonPage';
+import BusinessEnglishPreviewPage from './pages/BusinessEnglishPreviewPage';
 import LessonViewPage from './pages/LessonViewPage';
 import InboxPage from './pages/InboxPage';
 import MyProfilePage from "./pages/MyProfilePage";
@@ -40,6 +41,7 @@ import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
 import { OfflineBanner } from './Components/Common/OfflineBanner';
 import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
+import { useThemeStore } from './context/ThemeContext';
 
 // Performance: Link prefetching on hover
 import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
@@ -50,7 +52,7 @@ import ErrorBoundary from './Components/ErrorBoundary';
 import "./assets/css/privacy-policy.css";
 import "./assets/css/terms-of-service.css";
 import "./assets/css/mobile-global.css";
-import "./assets/css/force-light-mode.css";
+import "./assets/css/app-theme.css";
 
 // Initialize prefetching after DOM ready
 if (typeof window !== 'undefined') {
@@ -59,9 +61,14 @@ if (typeof window !== 'undefined') {
 }
 
 
-export function AppInner() {
+function AppShell() {
 	const [menuActive, setMenuActive] = useState(false);
 	const { isAuthenticated } = useAuthContext();
+	const { path } = useLocation();
+	const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+	const hydrateTheme = useThemeStore((state) => state.hydrateTheme);
+	const syncSystemTheme = useThemeStore((state) => state.syncSystemTheme);
+	const effectiveTheme = path === '/' ? 'light' : resolvedTheme;
 	// Auth state for session modal
 	// We'll read isAuthenticated via context inside the tree
 
@@ -85,14 +92,67 @@ export function AppInner() {
 		};
 	}, [handleClick]);
 
+	useEffect(() => {
+		hydrateTheme();
+	}, [hydrateTheme]);
+
+	useEffect(() => {
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+			return;
+		}
+
+		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		const handleSystemThemeChange = () => {
+			syncSystemTheme();
+		};
+
+		handleSystemThemeChange();
+
+		if (typeof mediaQuery.addEventListener === 'function') {
+			mediaQuery.addEventListener('change', handleSystemThemeChange);
+			return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+		}
+
+		mediaQuery.addListener(handleSystemThemeChange);
+		return () => mediaQuery.removeListener(handleSystemThemeChange);
+	}, [syncSystemTheme]);
+
+	useEffect(() => {
+		if (typeof document === 'undefined') {
+			return;
+		}
+
+		const root = document.documentElement;
+		const body = document.body;
+		const isDarkTheme = effectiveTheme === 'dark';
+		const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+		const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+
+		root.dataset.theme = effectiveTheme;
+		root.classList.toggle('dark-mode', isDarkTheme);
+		root.style.colorScheme = effectiveTheme;
+
+		if (body) {
+			body.dataset.theme = effectiveTheme;
+			body.classList.toggle('dark-mode', isDarkTheme);
+		}
+
+		if (themeColorMeta) {
+			themeColorMeta.setAttribute('content', isDarkTheme ? '#081324' : '#0245ae');
+		}
+
+		if (colorSchemeMeta) {
+			colorSchemeMeta.setAttribute('content', 'light dark');
+		}
+	}, [effectiveTheme]);
+
 	    return (
-		    <div className="App">
+		    <div className={`App theme-${effectiveTheme}`}>
 				<div className={`offcanvas-wrapper${menuActive ? " active" : ""}`}>
 					{/* Offcanvas content */}
 					<button className="menu-close"></button>
 				</div>
 				<div className={`offcanvas-overly${menuActive ? " active" : ""}`} />
-					<LocationProvider>
 						{/* Mobile Header for logged-in users */}
 						<MobileHeader />
 						<main>
@@ -123,6 +183,7 @@ export function AppInner() {
 							<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 							<Route path="/materials/conversational-skills/:id" component={withProtected(ConversationalSkillsLessonPage)} />
+							<Route path="/materials/business-english/:id" component={withProtected(BusinessEnglishPreviewPage)} />
 							<Route path="/materials/young-learners" component={withProtected(YoungLearnersPage)} />
 							<Route path="/materials/young-learners/lesson/:id" component={withProtected(YoungLearnersLessonPage)} />
 							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage} />
@@ -139,8 +200,15 @@ export function AppInner() {
 							<Route path="/:404*" component={NotFoundPage} />
 						</Router>
 					</main>
-			</LocationProvider>
 			</div>
+	);
+}
+
+export function AppInner() {
+	return (
+		<LocationProvider>
+			<AppShell />
+		</LocationProvider>
 	);
 }
 

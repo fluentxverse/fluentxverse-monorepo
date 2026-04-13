@@ -474,7 +474,7 @@ const InterviewBookingPage = () => {
               <p><i className="fas fa-calendar-day"></i> {formatDateFull(selectedSlot.date)}</p>
               <p><i className="fas fa-clock"></i> {selectedSlot.time}</p>
             </div>
-            <p style={{ fontSize: '13px', color: '#64748b' }}>
+            <p className="interview-modal-note">
               Please make sure you're available at this time. You can cancel up until the interview time.
             </p>
             <div className="interview-modal-actions">

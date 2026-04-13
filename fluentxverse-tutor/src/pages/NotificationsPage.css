@@ -440,3 +440,26 @@
     opacity: 1;
   }
 }
+
+[data-theme='dark'] .notifications-page-header {
+  box-shadow: 0 20px 38px rgba(1, 6, 17, 0.28);
+}
+
+[data-theme='dark'] .notifications-filters .btn-filter,
+[data-theme='dark'] .notifications-list-container,
+[data-theme='dark'] .notification-card,
+[data-theme='dark'] .notifications-empty,
+[data-theme='dark'] .notifications-empty-unread {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border-color: var(--fxv-border);
+  color: var(--fxv-text);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .notifications-loading,
+[data-theme='dark'] .notification-card-time,
+[data-theme='dark'] .notification-card-message,
+[data-theme='dark'] .notifications-empty p,
+[data-theme='dark'] .notifications-empty-unread p {
+  color: var(--fxv-text-muted);
+}

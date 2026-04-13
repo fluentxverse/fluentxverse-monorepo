@@ -2,6 +2,7 @@ import { useState, useCallback } from 'preact/hooks';
 import { Link, useLocation } from 'wouter';
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
+import ThemeSwitch from '../Common/ThemeSwitch';
 import './MobileHeader.css';
 
 interface MenuItem {
@@ -119,6 +120,14 @@ const MobileHeader = () => {
                 <span className="user-name">{user.firstName} {user.lastName}</span>
                 <span className="user-email">{user.email}</span>
               </div>
+            </div>
+
+            <div className="mobile-menu-theme">
+              <div className="mobile-menu-theme-copy">
+                <span className="mobile-menu-theme-label">Appearance</span>
+                <span className="mobile-menu-theme-text">Choose how the tutor app looks</span>
+              </div>
+              <ThemeSwitch size="sm" showLabels />
             </div>
 
             {/* Navigation Links */}

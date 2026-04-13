@@ -1,5 +1,7 @@
 import { useEffect, useCallback, useState } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../../context/AuthContext';
+import { useThemeStore } from '../../context/ThemeContext';
 import { SocialLoginModal } from '../Auth/SocialLoginModal';
 
 import "./Header.css";
@@ -7,7 +9,10 @@ import "./Header.css";
 
 const Header = () => {
   const { isAuthenticated } = useAuthContext();
+  const { path } = useLocation();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isDarkMode, toggleTheme } = useThemeStore();
+  const isLandingPage = path === '/';
 
   // Handler to open mobile menu
   const openMobileMenu = useCallback(() => {
@@ -71,6 +76,7 @@ const Header = () => {
       }
     };
 
+    handleScroll();
     window.addEventListener('scroll', handleScroll);
 
     // Scroll to target
@@ -142,9 +148,22 @@ const Header = () => {
                       <li><a href="/contact">Contact</a></li> */}
                     </ul>
                   </div>
-                  {!isAuthenticated && (
-                    <div className="header-action d-none d-md-block">
-                      <ul>
+                  <div className="header-action d-none d-md-block">
+                    <ul>
+                      {!isLandingPage && (
+                        <li className="theme-toggle">
+                          <button
+                            type="button"
+                            className="theme-btn"
+                            onClick={toggleTheme}
+                            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                          >
+                            <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+                          </button>
+                        </li>
+                      )}
+                      {!isAuthenticated && (
                         <li className="header-login">
                           <button 
                             className="login-btn" 
@@ -155,9 +174,9 @@ const Header = () => {
                             <span>Login</span>
                           </button>
                         </li>
-                      </ul>
-                    </div>
-                  )}
+                      )}
+                    </ul>
+                  </div>
                 </nav>
               </div>
               {/* Mobile Menu  */}
@@ -183,6 +202,19 @@ const Header = () => {
                     </div>
                     
                     <nav className="mobile-nav">
+                      {!isLandingPage && (
+                        <div className="mobile-menu-theme">
+                          <button
+                            type="button"
+                            className="theme-btn mobile-theme-btn"
+                            onClick={toggleTheme}
+                            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                          >
+                            <i className={`fas ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+                            <span>{isDarkMode ? 'Light mode' : 'Dark mode'}</span>
+                          </button>
+                        </div>
+                      )}
                       <ul className="navigation">
                         <li>
                           <a href={isAuthenticated ? "/home" : "/"} onClick={closeMobileMenu} className="nav-link">

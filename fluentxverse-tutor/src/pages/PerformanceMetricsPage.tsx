@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { useLocation } from 'wouter';
 import { useAuthContext } from '../context/AuthContext';
+import { useThemeStore } from '../context/ThemeContext';
 import { client } from '../api/utils';
 import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
@@ -19,6 +20,7 @@ interface PerformanceData {
 
 export const PerformanceMetricsPage = () => {
   const { user } = useAuthContext();
+  const isDarkMode = useThemeStore((state) => state.resolvedTheme === 'dark');
   const [location] = useLocation();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'lessons' | 'rating' | 'reliability' | 'formula'>('lessons');
@@ -71,6 +73,214 @@ export const PerformanceMetricsPage = () => {
     setActiveTab(tab);
     window.history.replaceState(null, '', `#${tab}`);
   };
+
+  const getPenaltyAppearance = (
+    tone: 'critical' | 'high' | 'medium' | 'low-purple' | 'low-violet' | 'low-cyan' | 'critical-dark',
+    severity: 'critical' | 'high' | 'medium' | 'low'
+  ) => {
+    const lightToneMap = {
+      critical: {
+        background: '#fef2f2',
+        border: 'rgba(220, 38, 38, 0.2)',
+        codeBg: '#fff5f5',
+        code: '#dc2626',
+        severityColor: '#dc2626',
+        title: '#0f172a',
+        body: '#64748b'
+      },
+      'critical-dark': {
+        background: '#fef2f2',
+        border: 'rgba(153, 27, 27, 0.2)',
+        codeBg: '#fff5f5',
+        code: '#991b1b',
+        severityColor: '#dc2626',
+        title: '#0f172a',
+        body: '#64748b'
+      },
+      high: {
+        background: '#fff7ed',
+        border: 'rgba(234, 88, 12, 0.2)',
+        codeBg: '#fff1e6',
+        code: '#ea580c',
+        severityColor: '#ea580c',
+        title: '#0f172a',
+        body: '#64748b'
+      },
+      medium: {
+        background: '#fffbeb',
+        border: 'rgba(245, 158, 11, 0.2)',
+        codeBg: '#fff7db',
+        code: '#f59e0b',
+        severityColor: '#f59e0b',
+        title: '#0f172a',
+        body: '#64748b'
+      },
+      'low-purple': {
+        background: '#eef2ff',
+        border: 'rgba(99, 102, 241, 0.2)',
+        codeBg: '#e5e7ff',
+        code: '#6366f1',
+        severityColor: '#6366f1',
+        title: '#0f172a',
+        body: '#64748b'
+      },
+      'low-violet': {
+        background: '#f5f3ff',
+        border: 'rgba(139, 92, 246, 0.2)',
+        codeBg: '#efe8ff',
+        code: '#8b5cf6',
+        severityColor: '#8b5cf6',
+        title: '#0f172a',
+        body: '#64748b'
+      },
+      'low-cyan': {
+        background: '#ecfeff',
+        border: 'rgba(6, 182, 212, 0.2)',
+        codeBg: '#ddfbff',
+        code: '#06b6d4',
+        severityColor: '#06b6d4',
+        title: '#0f172a',
+        body: '#64748b'
+      }
+    } as const;
+
+    const darkToneMap = {
+      critical: {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#fca5a5'
+      },
+      'critical-dark': {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#fca5a5'
+      },
+      high: {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#fdba74'
+      },
+      medium: {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#fde68a'
+      },
+      'low-purple': {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#c4b5fd'
+      },
+      'low-violet': {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#d8b4fe'
+      },
+      'low-cyan': {
+        background: 'var(--fxv-surface-muted)',
+        border: 'var(--fxv-border)',
+        codeBg: 'rgba(255, 255, 255, 0.06)',
+        code: '#67e8f9'
+      }
+    } as const;
+
+    const severityMap = {
+      critical: '#fda4af',
+      high: '#fdba74',
+      medium: '#fde68a',
+      low: '#93c5fd'
+    } as const;
+
+    const lightConfig = lightToneMap[tone];
+    const darkConfig = darkToneMap[tone];
+    const config = isDarkMode ? darkConfig : lightConfig;
+
+    return {
+      rowStyle: {
+        background: config.background,
+        borderColor: config.border,
+        boxShadow: isDarkMode ? 'inset 0 1px 0 rgba(255, 255, 255, 0.02)' : undefined
+      } as h.JSX.CSSProperties,
+      codeStyle: {
+        background: config.codeBg,
+        color: config.code,
+        boxShadow: isDarkMode ? 'inset 0 1px 0 rgba(255, 255, 255, 0.04)' : undefined
+      } as h.JSX.CSSProperties,
+      severityStyle: {
+        color: isDarkMode ? severityMap[severity] : lightConfig.severityColor
+      } as h.JSX.CSSProperties,
+      titleStyle: {
+        color: isDarkMode ? '#f8fafc' : lightConfig.title
+      } as h.JSX.CSSProperties,
+      bodyStyle: {
+        color: isDarkMode ? '#cbd5e1' : lightConfig.body
+      } as h.JSX.CSSProperties
+    };
+  };
+
+  const penaltyReferenceItems = [
+    {
+      code: 'TA-301',
+      severity: 'critical' as const,
+      tone: 'critical' as const,
+      title: 'Tutor Absence (Booked)',
+      description:
+        'Tutor failed to attend a booked lesson slot. Includes short-notice cancellations (less than 48 hours), failure to confirm attendance, or technical issues not properly reported.'
+    },
+    {
+      code: 'TA-302',
+      severity: 'high' as const,
+      tone: 'high' as const,
+      title: 'Tutor Absence (Unbooked)',
+      description:
+        'Tutor failed to attend an unbooked (open) lesson slot or failed to confirm attendance for an open slot.'
+    },
+    {
+      code: 'TA-303',
+      severity: 'medium' as const,
+      tone: 'medium' as const,
+      title: 'Short Notice Cancellation',
+      description:
+        'Open slot cancelled on short notice (within 48 hours of lesson time). Multiple occurrences may lead to slot restrictions.'
+    },
+    {
+      code: 'SUB-401',
+      severity: 'low' as const,
+      tone: 'low-purple' as const,
+      title: 'Substitution',
+      description:
+        'Slot temporarily closed for potential substitution. Becomes available again 30 minutes before lesson if no transfer occurs.'
+    },
+    {
+      code: 'SYS-501',
+      severity: 'low' as const,
+      tone: 'low-violet' as const,
+      title: 'System Issue',
+      description:
+        'Lesson terminated or not conducted due to system or student-side issues. Tutor is compensated.'
+    },
+    {
+      code: 'STU-502',
+      severity: 'low' as const,
+      tone: 'low-cyan' as const,
+      title: 'Student Absent',
+      description:
+        'Student failed to attend the booked lesson. Tutor is compensated.'
+    },
+    {
+      code: 'BLK-601',
+      severity: 'critical' as const,
+      tone: 'critical-dark' as const,
+      title: 'Penalty Block',
+      description:
+        'Temporary block on future unbooked slots due to repeated absences (3+ TA-301 codes in 30 days).'
+    }
+  ];
 
   if (loading) {
     return (
@@ -390,7 +600,7 @@ export const PerformanceMetricsPage = () => {
                       <div className="slot-grid">
                         <div className="slot-item booked">
                           <div className="slot-icon">
-                            <i className="fi-sr-user-check"></i>
+                            <i className="fi-sr-book-alt"></i>
                           </div>
                           <div className="slot-info">
                             <span className="slot-label">Booked Slots</span>
@@ -399,7 +609,7 @@ export const PerformanceMetricsPage = () => {
                         </div>
                         <div className="slot-item unbooked">
                           <div className="slot-icon">
-                            <i className="fi-sr-calendar-clock"></i>
+                            <i className="fi-sr-calendar"></i>
                           </div>
                           <div className="slot-info">
                             <span className="slot-label">Unbooked Slots</span>
@@ -468,89 +678,23 @@ export const PerformanceMetricsPage = () => {
                       </div>
                     </div>
 
-                    {/* TA-301 */}
-                    <div className="metric-item critical">
-                      <div className="metric-code">
-                        <span className="code-label">TA-301</span>
-                        <span className="severity-label critical">CRITICAL</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>Tutor Absence (Booked)</h4>
-                        <p>Tutor failed to attend a booked lesson slot. Includes short-notice cancellations (less than 48 hours), failure to confirm attendance, or technical issues not properly reported.</p>
-                      </div>
-                    </div>
-
-                    {/* TA-302 */}
-                    <div className="metric-item high">
-                      <div className="metric-code">
-                        <span className="code-label">TA-302</span>
-                        <span className="severity-label high">HIGH</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>Tutor Absence (Unbooked)</h4>
-                        <p>Tutor failed to attend an unbooked (open) lesson slot or failed to confirm attendance for an open slot.</p>
-                      </div>
-                    </div>
-
-                    {/* TA-303 */}
-                    <div className="metric-item medium">
-                      <div className="metric-code">
-                        <span className="code-label">TA-303</span>
-                        <span className="severity-label medium">MEDIUM</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>Short Notice Cancellation</h4>
-                        <p>Open slot cancelled on short notice (within 48 hours of lesson time). Multiple occurrences may lead to slot restrictions.</p>
-                      </div>
-                    </div>
-
-                    {/* SUB-401 */}
-                    <div className="metric-item low-purple">
-                      <div className="metric-code">
-                        <span className="code-label">SUB-401</span>
-                        <span className="severity-label low">LOW</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>Substitution</h4>
-                        <p>Slot temporarily closed for potential substitution. Becomes available again 30 minutes before lesson if no transfer occurs.</p>
-                      </div>
-                    </div>
-
-                    {/* SYS-501 */}
-                    <div className="metric-item low-violet">
-                      <div className="metric-code">
-                        <span className="code-label">SYS-501</span>
-                        <span className="severity-label low">LOW</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>System Issue</h4>
-                        <p>Lesson terminated or not conducted due to system or student-side issues. Tutor is compensated.</p>
-                      </div>
-                    </div>
-
-                    {/* STU-502 */}
-                    <div className="metric-item low-cyan">
-                      <div className="metric-code">
-                        <span className="code-label">STU-502</span>
-                        <span className="severity-label low">LOW</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>Student Absent</h4>
-                        <p>Student failed to attend the booked lesson. Tutor is compensated.</p>
-                      </div>
-                    </div>
-
-                    {/* BLK-601 */}
-                    <div className="metric-item critical-dark">
-                      <div className="metric-code">
-                        <span className="code-label">BLK-601</span>
-                        <span className="severity-label critical">CRITICAL</span>
-                      </div>
-                      <div className="metric-info">
-                        <h4>Penalty Block</h4>
-                        <p>Temporary block on future unbooked slots due to repeated absences (3+ TA-301 codes in 30 days).</p>
-                      </div>
-                    </div>
+                    {penaltyReferenceItems.map((item) => {
+                      const appearance = getPenaltyAppearance(item.tone, item.severity);
+                      return (
+                        <div key={item.code} className={`metric-item ${item.tone}`} style={appearance.rowStyle}>
+                          <div className="metric-code">
+                            <span className="code-label" style={appearance.codeStyle}>{item.code}</span>
+                            <span className={`severity-label ${item.severity}`} style={appearance.severityStyle}>
+                              {item.severity.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="metric-info">
+                            <h4 style={appearance.titleStyle}>{item.title}</h4>
+                            <p style={appearance.bodyStyle}>{item.description}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
 
                     <div className="info-box">
                       <i className="fi-sr-lightbulb-on"></i>

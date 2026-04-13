@@ -5,14 +5,27 @@ import type {
 } from '../../types/socket.types';
 
 // Known production domains
-const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'tutor.fluentxverse.xyz', 'student.fluentxverse.xyz'];
-const PRODUCTION_SOCKET_URL = 'https://socket.fluentxverse.xyz';
+const PRODUCTION_DOMAINS = [
+  'fluentxverse.xyz',
+  'tutor.fluentxverse.xyz',
+  'student.fluentxverse.xyz',
+  'dashboard.fluentxverse.xyz'
+];
+const PRODUCTION_SOCKET_URL = 'https://ws.fluentxverse.xyz';
+
+const normalizeSocketUrl = (url: string) =>
+  url
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/^wss:/i, 'https:')
+    .replace(/^ws:/i, 'http:');
 
 // Dynamic socket URL - handles both dev and production
 const getSocketUrl = () => {
   // 1. Explicit env var takes priority
-  if (import.meta.env.VITE_SOCKET_URL) {
-    return import.meta.env.VITE_SOCKET_URL;
+  const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();
+  if (envSocketUrl) {
+    return normalizeSocketUrl(envSocketUrl);
   }
   
   if (typeof window !== 'undefined') {
@@ -31,7 +44,7 @@ const getSocketUrl = () => {
     }
     
     // LAN access: use same protocol to avoid mixed content
-    return `${protocol}//${hostname}:8767`;
+    return normalizeSocketUrl(`${protocol}//${hostname}:8767`);
   }
   
   return 'http://localhost:8767';
@@ -48,37 +61,48 @@ export const getSocket = (): Socket<ServerToClientEvents, ClientToServerEvents> 
   return socket;
 };
 
+const resolveAuthToken = (token?: string) => {
+  if (token) {
+    return token;
+  }
+
+  const authCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('studentAuth=') || row.startsWith('auth='))
+    ?.split('=')[1];
+
+  if (authCookie) {
+    return decodeURIComponent(authCookie);
+  }
+
+  return JSON.stringify({
+    userId: `student-${Date.now()}`,
+    email: 'student@dev.local',
+    tier: 1
+  });
+};
+
 export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientToServerEvents> => {
+  const authToken = resolveAuthToken(token);
+
   if (socket) {
+    socket.auth = { ...(socket.auth || {}), token: authToken };
     return socket;
   }
 
-  // Get auth cookie for authentication - now a JWT token
-  // The cookie is opaque (JWT), server will verify it via withCredentials
-  const authCookie = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('auth='))
-    ?.split('=')[1];
-  
-  // Pass the raw JWT token (or decoded for dev fallback)
-  // Server will verify the JWT token sent via cookies
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
     auth: {
-      // Pass raw JWT token - server will verify it
-      // For authenticated users, the cookie is sent via withCredentials
-      // For dev fallback without cookie, create a placeholder
-      token: authCookie ? decodeURIComponent(authCookie) : JSON.stringify({
-        userId: `student-${Date.now()}`,
-        email: 'student@dev.local',
-        tier: 1 // tier 1 = student
-      })
+      token: authToken
     },
+    transports: ['websocket', 'polling'],
+    rememberUpgrade: true,
     reconnection: true,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
-    reconnectionAttempts: 5
+    reconnectionAttempts: 10,
+    timeout: 10000
   });
 
   socket.on('connect', () => {

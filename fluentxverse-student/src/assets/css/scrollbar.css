@@ -30,10 +30,11 @@
 }
 
 /* Dark Mode Scrollbar */
-.dark-mode {
-  --scrollbar-track: #2d3748;
-  --scrollbar-thumb: #4a5568;
-  --scrollbar-thumb-hover: #718096;
+.dark-mode,
+[data-theme='dark'] {
+  --scrollbar-track: #1f2937;
+  --scrollbar-thumb: #4b5563;
+  --scrollbar-thumb-hover: #6b7280;
 }
 
 /* Firefox */

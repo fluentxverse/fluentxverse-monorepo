@@ -80,6 +80,11 @@
   flex-wrap: wrap;
 }
 
+.inbox-error-slot {
+  min-height: 64px;
+  margin-bottom: 24px;
+}
+
 .inbox-filters .filter-btn {
   display: flex;
   align-items: center;
@@ -126,36 +131,39 @@
 .inbox-error {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 12px 16px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 12px;
-  margin-bottom: 24px;
   color: #dc2626;
+  min-height: 64px;
+  box-sizing: border-box;
 }
 
 .inbox-error i {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .inbox-error p {
   flex: 1;
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.35;
 }
 
 .inbox-error button {
-  padding: 8px 16px;
+  padding: 7px 14px;
   background: #dc2626;
   border: none;
   border-radius: 8px;
   color: white;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  line-height: 1.2;
 }
 
 .inbox-error button:hover {
@@ -512,6 +520,10 @@
     gap: 8px;
   }
 
+  .inbox-error-slot {
+    min-height: 72px;
+  }
+
   .inbox-filters .filter-btn {
     padding: 8px 14px;
     font-size: 13px;
@@ -548,4 +560,135 @@
   .inbox-filters .filter-btn i {
     display: none;
   }
+}
+
+[data-theme='dark'] .inbox-page {
+  background: #1a1a1a;
+}
+
+[data-theme='dark'] .inbox-filters .filter-btn,
+[data-theme='dark'] .messages-list,
+[data-theme='dark'] .message-detail,
+[data-theme='dark'] .message-item,
+[data-theme='dark'] .detail-header,
+[data-theme='dark'] .back-btn,
+[data-theme='dark'] .inbox-action-btn,
+[data-theme='dark'] .inbox-empty,
+[data-theme='dark'] .inbox-loading,
+[data-theme='dark'] .inbox-error {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border-color: var(--fxv-border);
+  color: var(--fxv-text);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .message-title,
+[data-theme='dark'] .detail-title,
+[data-theme='dark'] .detail-body,
+[data-theme='dark'] .inbox-empty p,
+[data-theme='dark'] .inbox-loading p,
+[data-theme='dark'] .no-message-selected p {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .message-snippet,
+[data-theme='dark'] .message-time,
+[data-theme='dark'] .message-meta,
+[data-theme='dark'] .detail-date,
+[data-theme='dark'] .inbox-empty span,
+[data-theme='dark'] .inbox-loading,
+[data-theme='dark'] .no-message-selected,
+[data-theme='dark'] .inbox-error p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .inbox-filters .filter-btn:hover {
+  border-color: var(--fxv-border-strong);
+  color: #bfdbfe;
+}
+
+[data-theme='dark'] .inbox-filters .filter-btn.active {
+  background: linear-gradient(135deg, var(--fxv-accent) 0%, var(--fxv-accent-strong) 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
+[data-theme='dark'] .filter-count {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .inbox-filters .filter-btn.active .filter-count {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .message-item {
+  box-shadow: none;
+}
+
+[data-theme='dark'] .message-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='dark'] .message-item.selected {
+  background: rgba(37, 99, 235, 0.14);
+  border-left-color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .message-item.unread {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+[data-theme='dark'] .message-item,
+[data-theme='dark'] .detail-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .back-btn,
+[data-theme='dark'] .inbox-action-btn {
+  background: var(--fxv-surface-soft);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .back-btn:hover,
+[data-theme='dark'] .inbox-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .inbox-action-btn.active {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .inbox-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .inbox-error {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.4) 0%, rgba(69, 10, 10, 0.58) 100%);
+  border-color: rgba(248, 113, 113, 0.24);
+  color: #fecaca;
+}
+
+[data-theme='dark'] .inbox-error i {
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .inbox-error button {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .inbox-error button:hover {
+  background: #b91c1c;
+}
+
+[data-theme='dark'] .inbox-empty i,
+[data-theme='dark'] .inbox-loading i,
+[data-theme='dark'] .no-message-selected i {
+  color: var(--fxv-text-soft);
 }

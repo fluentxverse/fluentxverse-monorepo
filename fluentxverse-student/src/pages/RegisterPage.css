@@ -995,3 +995,43 @@
     padding: 8px 14px;
   }
 }
+.dark-mode .register-container,
+.dark-mode .register-right-side,
+.dark-mode .register-form-card {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+.dark-mode .register-form-card {
+  background: var(--fxv-surface);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-md);
+}
+
+.dark-mode .form-title,
+.dark-mode .form-label,
+.dark-mode .show-password-label,
+.dark-mode .left-title {
+  color: var(--fxv-text);
+}
+
+.dark-mode .form-description,
+.dark-mode .form-hint,
+.dark-mode .login-link-wrapper,
+.dark-mode .left-subtitle {
+  color: var(--fxv-text-muted);
+}
+
+.dark-mode .form-input,
+.dark-mode .form-input-with-icon,
+.dark-mode .form-input-readonly,
+.dark-mode .password-input {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+.dark-mode .form-input::placeholder,
+.dark-mode .form-input-with-icon::placeholder {
+  color: var(--fxv-text-soft);
+}

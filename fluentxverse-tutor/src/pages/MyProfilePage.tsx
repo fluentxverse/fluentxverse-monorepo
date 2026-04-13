@@ -868,24 +868,24 @@ export const MyProfilePage = () => {
               {activeTab === 'about' && (
                 <div className="tab-content">
                   {/* About Me */}
-                  <section className="content-section">
-                    <h2 className="section-title">
+                  <section className="profile-tab-section">
+                    <h2 className="profile-tab-title">
                       <i className="fi-sr-user"></i>
                       About Me
                     </h2>
-                    <div className="section-content">
+                    <div className="profile-tab-body">
                       <p>{profileData?.introduction || profileData?.bio || 'Tell students about yourself, your teaching philosophy, and what makes your lessons unique.'}</p>
                     </div>
                   </section>
 
                   {/* Education */}
                   {(personalInfo?.schoolAttended || (profileData?.education && profileData.education.length > 0)) && (
-                    <section className="content-section">
-                      <h2 className="section-title">
+                    <section className="profile-tab-section">
+                      <h2 className="profile-tab-title">
                         <i className="fi-sr-graduation-cap"></i>
                         Education
                       </h2>
-                      <div className="section-content">
+                      <div className="profile-tab-body">
                         <div className="education-info">
                           {personalInfo?.schoolAttended ? (
                             <>
@@ -918,9 +918,9 @@ export const MyProfilePage = () => {
                   )}
 
                   {/* Interests */}
-                  <section className="content-section">
-                    <div className="section-header-row">
-                      <h2 className="section-title">
+                  <section className="profile-tab-section">
+                    <div className="profile-tab-title-row">
+                      <h2 className="profile-tab-title">
                         <i className="fi-sr-heart"></i>
                         Interests
                       </h2>
@@ -928,7 +928,7 @@ export const MyProfilePage = () => {
                         <i className="fas fa-pencil-alt"></i>
                       </button>
                     </div>
-                    <div className="section-content">
+                    <div className="profile-tab-body">
                       {profileData?.interests && profileData.interests.length > 0 ? (
                         <div className="interests-grid">
                           {profileData.interests.map((interest, idx) => (
@@ -946,12 +946,12 @@ export const MyProfilePage = () => {
 
                   {/* Areas of Expertise */}
                   {profileData?.specializations && profileData.specializations.length > 0 && (
-                    <section className="content-section">
-                      <h2 className="section-title">
+                    <section className="profile-tab-section">
+                      <h2 className="profile-tab-title">
                         <i className="fi-sr-bulb"></i>
                         Areas of Expertise
                       </h2>
-                      <div className="section-content">
+                      <div className="profile-tab-body">
                         <div className="specializations-grid">
                           {profileData.specializations.map((spec, idx) => (
                             <div key={idx} className="specialization-card">
@@ -968,39 +968,39 @@ export const MyProfilePage = () => {
 
               {activeTab === 'stats' && (
                 <div className="tab-content">
-                  <section className="content-section">
-                    <h2 className="section-title">
+                  <section className="profile-tab-section">
+                    <h2 className="profile-tab-title">
                       <i className="fi-sr-chart-histogram"></i>
                       Your Performance
                     </h2>
                     <div className="stats-grid">
-                      <a href="/performance-metrics#lessons" className="stat-card clickable">
-                        <div className="stat-card-icon">
+                      <a href="/performance-metrics#lessons" className="profile-stat-card profile-stat-card-clickable">
+                        <div className="profile-stat-card-icon">
                           <i className="fi-sr-book-alt"></i>
                         </div>
-                        <div className="stat-card-value">{profileData?.totalSessions || 0}</div>
-                        <div className="stat-card-label">Total Lessons</div>
+                        <div className="profile-stat-card-value">{profileData?.totalSessions || 0}</div>
+                        <div className="profile-stat-card-label">Total Lessons</div>
                       </a>
-                      <a href="/performance-metrics#rating" className="stat-card clickable">
-                        <div className="stat-card-icon">
+                      <a href="/performance-metrics#rating" className="profile-stat-card profile-stat-card-clickable">
+                        <div className="profile-stat-card-icon">
                           <i className="fi-sr-star"></i>
                         </div>
-                        <div className="stat-card-value">{profileData?.rating?.toFixed(1) || '-'}</div>
-                        <div className="stat-card-label">Average Rating</div>
+                        <div className="profile-stat-card-value">{profileData?.rating?.toFixed(1) || '-'}</div>
+                        <div className="profile-stat-card-label">Average Rating</div>
                       </a>
-                      <a href="/performance-metrics#rating" className="stat-card clickable">
-                        <div className="stat-card-icon">
+                      <a href="/performance-metrics#rating" className="profile-stat-card profile-stat-card-clickable">
+                        <div className="profile-stat-card-icon">
                           <i className="fi-sr-comment"></i>
                         </div>
-                        <div className="stat-card-value">{profileData?.totalReviews || 0}</div>
-                        <div className="stat-card-label">Total Reviews</div>
+                        <div className="profile-stat-card-value">{profileData?.totalReviews || 0}</div>
+                        <div className="profile-stat-card-label">Total Reviews</div>
                       </a>
-                      <a href="/performance-metrics#reliability" className="stat-card clickable">
-                        <div className="stat-card-icon">
+                      <a href="/performance-metrics#reliability" className="profile-stat-card profile-stat-card-clickable">
+                        <div className="profile-stat-card-icon">
                           <i className="fi-sr-shield-check"></i>
                         </div>
-                        <div className="stat-card-value">100%</div>
-                        <div className="stat-card-label">Reliability</div>
+                        <div className="profile-stat-card-value">100%</div>
+                        <div className="profile-stat-card-label">Reliability</div>
                       </a>
                     </div>
                   </section>
@@ -1009,33 +1009,33 @@ export const MyProfilePage = () => {
 
               {activeTab === 'settings' && (
                 <div className="tab-content">
-                  <section className="content-section">
-                    <h2 className="section-title">
+                  <section className="profile-tab-section">
+                    <h2 className="profile-tab-title">
                       <i className="fi-sr-settings"></i>
                       Quick Settings
                     </h2>
-                    <div className="settings-links">
-                      <a href="/availability" className="settings-link">
+                    <div className="profile-settings-links">
+                      <a href="/availability" className="profile-settings-link">
                         <i className="fi-sr-calendar"></i>
-                        <div className="settings-link-content">
-                          <span className="settings-link-title">Manage Availability</span>
-                          <span className="settings-link-desc">Set your teaching hours</span>
+                        <div className="profile-settings-link-content">
+                          <span className="profile-settings-link-title">Manage Availability</span>
+                          <span className="profile-settings-link-desc">Set your teaching hours</span>
                         </div>
                         <i className="fi-sr-angle-small-right"></i>
                       </a>
-                      <a href="/wallet" className="settings-link">
-                        <i className="fi-sr-wallet"></i>
-                        <div className="settings-link-content">
-                          <span className="settings-link-title">Wallet & Earnings</span>
-                          <span className="settings-link-desc">View your balance and payouts</span>
+                      <a href="/wallet" className="profile-settings-link">
+                        <i className="fas fa-wallet"></i>
+                        <div className="profile-settings-link-content">
+                          <span className="profile-settings-link-title">Wallet & Earnings</span>
+                          <span className="profile-settings-link-desc">View your balance and payouts</span>
                         </div>
                         <i className="fi-sr-angle-small-right"></i>
                       </a>
-                      <button className="settings-link" onClick={() => setSettingsOpen(true)}>
-                        <i className="fi-sr-user-gear"></i>
-                        <div className="settings-link-content">
-                          <span className="settings-link-title">Account Settings</span>
-                          <span className="settings-link-desc">Email, password, and preferences</span>
+                      <button className="profile-settings-link" onClick={() => setSettingsOpen(true)}>
+                        <i className="fas fa-user-cog"></i>
+                        <div className="profile-settings-link-content">
+                          <span className="profile-settings-link-title">Account Settings</span>
+                          <span className="profile-settings-link-desc">Email, password, and preferences</span>
                         </div>
                         <i className="fi-sr-angle-small-right"></i>
                       </button>

@@ -16,12 +16,6 @@
     height: 46px; /* Match logo height for better alignment */
 }
 
-/* Add subtle transition for smooth experience */
-#sticky-header .logo img,
-#sticky-header .brand-text {
-    transition: all 0.3s ease;
-}
-
 /* Logo container adjustments */
 #sticky-header .logo {
     display: flex;

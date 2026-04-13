@@ -411,6 +411,25 @@ export function BEAIContentGenerator({
           </div>
         </div>
 
+        <div className="beai-quick-actions">
+          <div className="beai-quick-actions-copy">
+            <strong>Generate All</strong>
+            <span>{Math.max(totalSections - completedCount, 0)} sections remaining</span>
+          </div>
+          <button
+            className="beai-btn beai-btn-batch beai-btn-batch-top"
+            onClick={handleBatchGenerate}
+            disabled={isGenerating || isBatchGenerating || completedCount === totalSections}
+            title={completedCount === totalSections ? 'All sections already have content' : `Generate ${totalSections - completedCount} remaining sections`}
+          >
+            {isBatchGenerating ? (
+              <><i className="ri-loader-4-line beai-spin" /> Generating All...</>
+            ) : (
+              <><i className="ri-stack-line" /> Generate All</>
+            )}
+          </button>
+        </div>
+
         {/* Progress bar */}
         <div className="beai-progress-bar">
           <div className="beai-progress-fill" style={{ width: `${(completedCount / totalSections) * 100}%` }} />
@@ -506,7 +525,7 @@ export function BEAIContentGenerator({
             title={completedCount === totalSections ? 'All sections have content' : `Generate ${totalSections - completedCount} remaining sections`}
           >
             {isBatchGenerating ? (
-              <><i className="ri-loader-4-line beai-spin" /> Batch generating...</>
+              <><i className="ri-loader-4-line beai-spin" /> Generating All...</>
             ) : (
               <><i className="ri-stack-line" /> Generate All ({totalSections - completedCount} remaining)</>
             )}

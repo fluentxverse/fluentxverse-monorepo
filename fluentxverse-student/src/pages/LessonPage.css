@@ -925,3 +925,40 @@
     flex-direction: column;
   }
 }
+
+[data-theme='dark'] .lesson-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .lesson-back-btn-header,
+[data-theme='dark'] .lesson-card,
+[data-theme='dark'] .lesson-notification,
+[data-theme='dark'] .cancel-modal {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .lesson-page-title,
+[data-theme='dark'] .tutor-name,
+[data-theme='dark'] .classroom-status,
+[data-theme='dark'] .cancel-modal h3 {
+  color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .lesson-page-subtitle,
+[data-theme='dark'] .tutor-bio,
+[data-theme='dark'] .classroom-message,
+[data-theme='dark'] .classroom-countdown,
+[data-theme='dark'] .refund-notice,
+[data-theme='dark'] .cancel-modal-body p,
+[data-theme='dark'] .cancel-info-row {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .lesson-back-btn-header:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(124, 184, 255, 0.24);
+}

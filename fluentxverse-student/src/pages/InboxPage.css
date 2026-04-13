@@ -549,3 +549,54 @@
     display: none;
   }
 }
+
+[data-theme='dark'] .inbox-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .inbox-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .messages-list,
+[data-theme='dark'] .message-detail {
+  background: var(--fxv-surface);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .inbox-filters .filter-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .message-item {
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .message-item:hover,
+[data-theme='dark'] .message-item.selected {
+  background: rgba(124, 184, 255, 0.08);
+}
+
+[data-theme='dark'] .message-item.unread {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme='dark'] .message-title,
+[data-theme='dark'] .detail-title {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .message-time,
+[data-theme='dark'] .message-snippet,
+[data-theme='dark'] .detail-date,
+[data-theme='dark'] .detail-body,
+[data-theme='dark'] .no-message-selected,
+[data-theme='dark'] .inbox-empty,
+[data-theme='dark'] .inbox-loading {
+  color: var(--fxv-text-muted);
+}

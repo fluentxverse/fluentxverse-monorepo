@@ -13,11 +13,17 @@
   transition: all 0.3s ease;
 }
 
-/* Light theme styles - always light */
 .dashboard-header.light {
   background-color: #ffffff;
   color: #2c2c2c;
   border-bottom: 1px solid #e6e6e6;
+}
+
+.dashboard-header.dark {
+  background-color: rgba(26, 26, 26, 0.94);
+  color: #f3f4f6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
 }
 
 /* Header Left Section */
@@ -80,22 +86,40 @@
   gap: 12px;
 }
 
-/* Inbox Button */
-.inbox-btn {
+.dashboard-theme-btn,
+.inbox-btn,
+.notification-btn {
   width: 44px;
   height: 44px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   border: 1px solid rgba(99, 102, 241, 0.15);
-  color: #64748b;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   font-size: 18px;
   text-decoration: none;
+}
+
+.dashboard-theme-btn {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #f59e0b;
+}
+
+.dashboard-theme-btn:hover {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  transform: scale(1.02);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Inbox Button */
+.inbox-btn {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #64748b;
 }
 
 .inbox-btn:hover {
@@ -127,26 +151,48 @@
 
 /* Notification Button */
 .notification-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 1px solid rgba(99, 102, 241, 0.15);
   color: #64748b;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  font-size: 18px;
-  text-decoration: none;
 }
 
 .notification-btn:hover {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
   transform: scale(1.02);
+  color: #fff;
+  border-color: transparent;
+}
+
+.dashboard-header.dark .philippine-clock,
+.dashboard-header.dark .dashboard-theme-btn,
+.dashboard-header.dark .inbox-btn,
+.dashboard-header.dark .notification-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-header.dark .philippine-clock > i,
+.dashboard-header.dark .inbox-btn,
+.dashboard-header.dark .notification-btn {
+  color: #a3a3a3;
+}
+
+.dashboard-header.dark .clock-time {
+  color: #f3f4f6;
+}
+
+.dashboard-header.dark .clock-date {
+  color: #a3a3a3;
+}
+
+.dashboard-header.dark .dashboard-theme-btn {
+  color: #fbbf24;
+}
+
+.dashboard-header.dark .dashboard-theme-btn:hover,
+.dashboard-header.dark .inbox-btn:hover,
+.dashboard-header.dark .notification-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
   color: #fff;
   border-color: transparent;
 }
@@ -189,7 +235,8 @@
   }
 
   .inbox-btn,
-  .notification-btn {
+  .notification-btn,
+  .dashboard-theme-btn {
     width: 38px;
     height: 38px;
     font-size: 16px;

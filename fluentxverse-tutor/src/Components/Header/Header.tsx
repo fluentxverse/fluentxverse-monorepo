@@ -1,12 +1,14 @@
 import { useEffect, useCallback, useState } from 'preact/hooks';
 import { Link } from 'wouter';
-import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
+import ThemeSwitch from '../Common/ThemeSwitch';
 import "./Header.css";
 
+interface HeaderProps {
+  showThemeSwitch?: boolean;
+}
 
-const Header = () => {
-  const { isDarkMode, toggleTheme } = useThemeStore();
+const Header = ({ showThemeSwitch = true }: HeaderProps) => {
   const { isAuthenticated, login } = useAuthContext();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [email, setEmail] = useState("");
@@ -142,6 +144,11 @@ const Header = () => {
                   </div>
                   <div className="header-action d-none d-md-block">
                     <ul>
+                      {showThemeSwitch && (
+                        <li className="header-theme-switch">
+                          <ThemeSwitch size="sm" />
+                        </li>
+                      )}
                       <li className="header-login">
                         <button 
                           className="login-btn" 
@@ -202,6 +209,12 @@ const Header = () => {
                     </nav>
                     
                     <div className="mobile-menu-actions">
+                      {showThemeSwitch && (
+                        <div className="mobile-theme-row">
+                          <span className="mobile-theme-row-label">Appearance</span>
+                          <ThemeSwitch size="sm" />
+                        </div>
+                      )}
                       <button 
                         className="mobile-login-btn" 
                         onClick={() => { closeMobileMenu(); openLoginModal(); }}

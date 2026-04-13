@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
-import { getLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
+import { getLessonById, getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
 import './BusinessEnglishVisualEditor.css';
 import './BusinessEnglishPreview.css';
 
@@ -633,18 +633,20 @@ export default function BusinessEnglishPreview() {
     if (!id) return;
 
     const stored = sessionStorage.getItem(`business-english-preview-${id}`);
+    let hasStoredPreview = false;
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as PreviewOverrides;
         setPreviewOverrides(parsed);
         setHasSessionData(true);
+        hasStoredPreview = true;
         if (parsed.theme) setTheme(parsed.theme);
       } catch (sessionError) {
         console.error('Failed to parse Business English preview session data:', sessionError);
       }
     }
 
-    loadLesson(id);
+    loadLesson(id, hasStoredPreview);
   }, [id]);
 
   useEffect(() => {
@@ -692,10 +694,20 @@ export default function BusinessEnglishPreview() {
     };
   }, [previewOverrides, lesson, theme, loading]);
 
-  const loadLesson = async (lessonId: string) => {
+  const loadLesson = async (lessonId: string, allowDraftFallback = false) => {
     try {
       setLoading(true);
-      const data = await getLessonById(lessonId);
+      let data: LessonMaterial;
+
+      try {
+        data = await getPublicLessonById(lessonId);
+      } catch (publicLoadError) {
+        if (!allowDraftFallback) {
+          throw publicLoadError;
+        }
+        data = await getLessonById(lessonId);
+      }
+
       setLesson(data);
       setError('');
     } catch (loadError) {

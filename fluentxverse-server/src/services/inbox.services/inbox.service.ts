@@ -121,27 +121,31 @@ export class InboxService {
     // First, ensure recipient records exist for this user
     await this.ensureRecipientRecords(params.userId, params.userType, targetAudiences);
 
+    const targetAudiencePlaceholders = targetAudiences
+      .map((_, index) => `$${index + 1}::varchar`)
+      .join(', ');
+
     // Build parameterized query
-    let whereConditions: string[] = [`sm.target_audience = ANY($1)`];
-    let queryParams: any[] = [targetAudiences];
-    let paramIndex = 2;
+    let whereConditions: string[] = [`sm.target_audience IN (${targetAudiencePlaceholders})`];
+    let queryParams: any[] = [...targetAudiences];
+    let paramIndex = queryParams.length + 1;
 
     if (params.category) {
       // Validate category
       const allowedCategories = ['announcement', 'update', 'promotion', 'alert', 'general'];
       if (allowedCategories.includes(params.category)) {
-        whereConditions.push(`sm.category = $${paramIndex}`);
+        whereConditions.push(`sm.category = $${paramIndex}::varchar`);
         queryParams.push(params.category);
         paramIndex++;
       }
     }
     if (params.isRead !== undefined) {
-      whereConditions.push(`COALESCE(smr.is_read, false) = $${paramIndex}`);
+      whereConditions.push(`COALESCE(smr.is_read, false) = $${paramIndex}::boolean`);
       queryParams.push(params.isRead);
       paramIndex++;
     }
     if (params.isPinned !== undefined) {
-      whereConditions.push(`COALESCE(smr.is_pinned, false) = $${paramIndex}`);
+      whereConditions.push(`COALESCE(smr.is_pinned, false) = $${paramIndex}::boolean`);
       queryParams.push(params.isPinned);
       paramIndex++;
     }
@@ -160,13 +164,15 @@ export class InboxService {
         smr.read_at
       FROM system_messages sm
       LEFT JOIN system_message_recipients smr 
-        ON sm.id = smr.message_id AND smr.user_id = $${userIdParam}
+        ON sm.id = smr.message_id AND smr.user_id = $${userIdParam}::varchar
       ${whereClause}
       ORDER BY smr.is_pinned DESC NULLS LAST, sm.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      LIMIT $${paramIndex}::int OFFSET $${paramIndex + 1}::int
     `, [...queryParams, limit, offset]);
 
     // Get stats
+    const statsUserIdParam = targetAudiences.length + 1;
+
     const statsResult = await db.unsafe(`
       SELECT 
         COUNT(*) as total,
@@ -174,9 +180,9 @@ export class InboxService {
         COUNT(*) FILTER (WHERE COALESCE(smr.is_pinned, false) = true) as pinned
       FROM system_messages sm
       LEFT JOIN system_message_recipients smr 
-        ON sm.id = smr.message_id AND smr.user_id = $2
-      WHERE sm.target_audience = ANY($1)
-    `, [targetAudiences, params.userId]);
+        ON sm.id = smr.message_id AND smr.user_id = $${statsUserIdParam}::varchar
+      WHERE sm.target_audience IN (${targetAudiencePlaceholders})
+    `, [...targetAudiences, params.userId]);
 
     const messages: SystemMessageWithStatus[] = messagesResult.map((row: any) => ({
       id: row.id,
@@ -211,23 +217,27 @@ export class InboxService {
       throw new Error('Invalid user type');
     }
     
+    const targetAudiencePlaceholders = targetAudiences
+      .map((_, index) => `$${index + 3}::varchar`)
+      .join(', ');
+
     await db.unsafe(`
       INSERT INTO system_message_recipients (id, message_id, user_id, user_type, is_read, is_pinned, created_at)
       SELECT 
-        gen_random_uuid(),
+        uuid_generate_v4(),
         sm.id,
-        $1,
-        $2,
+        $1::varchar,
+        $2::varchar,
         false,
         false,
         NOW()
       FROM system_messages sm
-      WHERE sm.target_audience = ANY($3)
+      WHERE sm.target_audience IN (${targetAudiencePlaceholders})
         AND NOT EXISTS (
           SELECT 1 FROM system_message_recipients smr 
-          WHERE smr.message_id = sm.id AND smr.user_id = $1
+          WHERE smr.message_id = sm.id AND smr.user_id = $1::varchar
         )
-    `, [userId, userType, targetAudiences]);
+    `, [userId, userType, ...targetAudiences]);
   }
 
   /**

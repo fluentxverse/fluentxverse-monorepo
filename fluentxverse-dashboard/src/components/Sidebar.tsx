@@ -23,6 +23,8 @@ const navItems: NavItem[] = [
   { path: '/lesson-material-maker', icon: 'ri-draft-line', label: 'Lesson Maker' },
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
   { path: '/analytics', icon: 'ri-bar-chart-box-line', label: 'Analytics' },
+  { path: '/ceo-orientation', icon: 'ri-user-voice-line', label: 'CEO Orientation' },
+  { path: '/platform-overview', icon: 'ri-layout-grid-line', label: 'Platform Overview' },
   { path: '/payments', icon: 'ri-money-dollar-circle-line', label: 'Payments' },
   { path: '/admins', icon: 'ri-admin-line', label: 'Admins', superadminOnly: true },
   { path: '/settings', icon: 'ri-settings-3-line', label: 'Settings' },

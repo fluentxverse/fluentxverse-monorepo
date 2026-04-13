@@ -1,6 +1,16 @@
 /* Header styles */
+.header-action ul {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-theme-switch {
+  display: flex;
+  align-items: center;
+}
+
 .header-login {
-  margin-right: 15px;
   display: flex;
   align-items: center;
 }
@@ -435,6 +445,26 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.mobile-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 4px 0 8px;
+}
+
+.mobile-theme-row-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7c8da6;
+}
+
+.dark-mode .mobile-theme-row-label {
+  color: #a9b8cf;
+}
+
 .mobile-login-btn,
 .mobile-register-btn {
   display: flex;
@@ -470,4 +500,3 @@
 .mobile-register-btn:hover {
   background: rgba(2, 69, 174, 0.1);
 }
-

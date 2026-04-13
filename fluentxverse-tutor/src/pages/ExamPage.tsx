@@ -441,32 +441,36 @@ const ExamPage = () => {
         <div className="exam-info-grid">
           <div className="exam-info-item">
             <i className="fas fa-list-ol"></i>
-            <span>30 Questions</span>
+            <span className="exam-info-value">30</span>
+            <span className="exam-info-label">Questions</span>
           </div>
           <div className="exam-info-item">
             <i className="fas fa-clock"></i>
-            <span>25 Minutes</span>
+            <span className="exam-info-value">25</span>
+            <span className="exam-info-label">Minutes</span>
           </div>
           <div className="exam-info-item">
             <i className="fas fa-percentage"></i>
-            <span>90% to Pass</span>
+            <span className="exam-info-value">90%</span>
+            <span className="exam-info-label">To Pass</span>
           </div>
           <div className="exam-info-item">
             <i className="fas fa-redo"></i>
-            <span>2 Attempts/Month</span>
+            <span className="exam-info-value">2</span>
+            <span className="exam-info-label">Attempts/Month</span>
           </div>
         </div>
 
         <div className="exam-categories">
           <h4>Sections:</h4>
           <div className="category-tags">
-            <span className="category-tag" style={{ background: '#3b82f6', color: 'white' }}>
+            <span className="category-tag category-tag--grammar">
               <i className="fas fa-spell-check"></i> Grammar (10 questions)
             </span>
-            <span className="category-tag" style={{ background: '#8b5cf6', color: 'white' }}>
+            <span className="category-tag category-tag--vocabulary">
               <i className="fas fa-book"></i> Vocabulary (10 questions)
             </span>
-            <span className="category-tag" style={{ background: '#10b981', color: 'white' }}>
+            <span className="category-tag category-tag--comprehension">
               <i className="fas fa-glasses"></i> Comprehension (5 questions)
             </span>
           </div>

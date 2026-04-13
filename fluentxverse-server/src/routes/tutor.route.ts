@@ -1,12 +1,16 @@
 import Elysia, { t } from 'elysia';
 import { TutorService } from '../services/tutor.services/tutor.service';
 import StudentService from '../services/auth.services/student.service';
+import { ScheduleService } from '../services/schedule.services/schedule.service';
+import { ClassroomNotesService } from '../services/classroomNotes.services/classroomNotes.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { cacheGetOrSet, invalidateCache } from '../db/redis';
 
 const tutorService = new TutorService();
+const scheduleService = new ScheduleService();
+const classroomNotesService = new ClassroomNotesService();
 
 const Tutor = new Elysia({ prefix: '/tutor' })
   /**
@@ -541,6 +545,127 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       set.status = 500;
       return { success: false, error: error.message || 'Failed to get student lesson request' };
     }
+  })
+
+  /**
+   * Get persisted classroom notes for a session + active material
+   * GET /tutor/classroom-notes/:sessionId?materialType=...&materialId=...
+   */
+  .get('/classroom-notes/:sessionId', async ({ params, query, cookie, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid token' };
+      }
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
+      const { sessionId } = params;
+      const { materialType, materialId } = query as { materialType?: string; materialId?: string };
+
+      if (!sessionId || !materialType || !materialId) {
+        set.status = 400;
+        return { success: false, error: 'sessionId, materialType, and materialId are required' };
+      }
+
+      await scheduleService.getTutorLessonDetails(sessionId, payload.userId);
+
+      const notes = await classroomNotesService.getNotes(sessionId, materialType, materialId);
+      return { success: true, data: notes };
+    } catch (error: any) {
+      console.error('[TutorRoute] Error in /tutor/classroom-notes/:sessionId:', error);
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: error.message || 'Failed to get classroom notes' };
+    }
+  }, {
+    query: t.Object({
+      materialType: t.String(),
+      materialId: t.String(),
+    })
+  })
+
+  /**
+   * Save persisted classroom notes for a session + active material
+   * PUT /tutor/classroom-notes/:sessionId
+   */
+  .put('/classroom-notes/:sessionId', async ({ params, body, cookie, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid token' };
+      }
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+
+      const { sessionId } = params;
+      if (!sessionId) {
+        set.status = 400;
+        return { success: false, error: 'sessionId is required' };
+      }
+
+      const lessonDetails = await scheduleService.getTutorLessonDetails(sessionId, payload.userId);
+      const notesBody = body as {
+        materialType: string;
+        materialId: string;
+        courseId?: string;
+        lessonId?: string;
+        articleId?: string;
+        vocabularyItems?: any[];
+        grammarItems?: any[];
+        pronunciationItems?: any[];
+        studentComment?: string;
+        tutorMemo?: string;
+      };
+
+      const notes = await classroomNotesService.saveNotes({
+        sessionId,
+        tutorId: payload.userId,
+        studentId: lessonDetails.studentId || null,
+        materialType: notesBody.materialType,
+        materialId: notesBody.materialId,
+        courseId: notesBody.courseId || null,
+        lessonId: notesBody.lessonId || null,
+        articleId: notesBody.articleId || null,
+        vocabularyItems: notesBody.vocabularyItems || [],
+        grammarItems: notesBody.grammarItems || [],
+        pronunciationItems: notesBody.pronunciationItems || [],
+        studentComment: notesBody.studentComment || '',
+        tutorMemo: notesBody.tutorMemo || '',
+      });
+
+      return { success: true, data: notes };
+    } catch (error: any) {
+      console.error('[TutorRoute] Error in PUT /tutor/classroom-notes/:sessionId:', error);
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: error.message || 'Failed to save classroom notes' };
+    }
+  }, {
+    body: t.Object({
+      materialType: t.String(),
+      materialId: t.String(),
+      courseId: t.Optional(t.String()),
+      lessonId: t.Optional(t.String()),
+      articleId: t.Optional(t.String()),
+      vocabularyItems: t.Array(t.Any()),
+      grammarItems: t.Array(t.Any()),
+      pronunciationItems: t.Array(t.Any()),
+      studentComment: t.Optional(t.String()),
+      tutorMemo: t.Optional(t.String()),
+    })
   })
 
 

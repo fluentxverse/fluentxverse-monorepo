@@ -204,6 +204,26 @@
   position: relative;
 }
 
+.progress-line {
+  position: absolute;
+  top: 28px;
+  left: 12%;
+  right: 12%;
+  height: 4px;
+  background: rgba(2, 69, 174, 0.1);
+  border-radius: 999px;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.progress-line-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0245ae 0%, #4a9eff 100%);
+  border-radius: inherit;
+  transition: width 0.5s ease;
+  box-shadow: 0 2px 8px rgba(2, 69, 174, 0.3);
+}
+
 .progress-step {
   flex: 1;
   text-align: center;
@@ -223,6 +243,25 @@
   font-weight: 800;
   margin-bottom: 16px;
   transition: all 0.3s ease;
+}
+
+.progress-step-number.is-active {
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  box-shadow: 0 4px 16px rgba(2, 69, 174, 0.4);
+}
+
+.progress-step-number.is-inactive {
+  background: #e2e8f0;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.progress-step-copy.is-active .progress-step-label {
+  color: #0245ae;
+}
+
+.progress-step-copy.is-inactive .progress-step-label {
+  color: #94a3b8;
 }
 
 .progress-step-label {
@@ -833,7 +872,76 @@
     padding: 10px 18px;
   }
 
-  .status-description {
-    font-size: 13px;
+.status-description {
+  font-size: 13px;
   }
+}
+
+[data-theme='dark'] .main-content,
+[data-theme='dark'] .home-page-container {
+  background: #1a1a1a;
+}
+
+[data-theme='dark'] .certification-alert {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.88) 0%, rgba(69, 10, 10, 0.92) 100%);
+  border-color: rgba(248, 113, 113, 0.24);
+}
+
+[data-theme='dark'] .certification-alert-content strong,
+[data-theme='dark'] .certification-alert-content span,
+[data-theme='dark'] .certification-alert-close {
+  color: #fecaca;
+}
+
+[data-theme='dark'] .notification-banner,
+[data-theme='dark'] .main-status-card,
+[data-theme='dark'] .assessment-section,
+[data-theme='dark'] .test-card,
+[data-theme='dark'] .next-steps-card,
+[data-theme='dark'] .step-card,
+[data-theme='dark'] .score-card {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-md);
+}
+
+[data-theme='dark'] .status-description,
+[data-theme='dark'] .notification-text,
+[data-theme='dark'] .test-content p,
+[data-theme='dark'] .attempts-info,
+[data-theme='dark'] .section-subtitle {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .test-content h4,
+[data-theme='dark'] .test-header h4,
+[data-theme='dark'] .section-title {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .progress-line {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .progress-line-fill {
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.22);
+}
+
+[data-theme='dark'] .progress-step-number.is-inactive {
+  background: var(--fxv-surface-soft);
+  color: #cbd5e1;
+  border: 1px solid var(--fxv-border);
+}
+
+[data-theme='dark'] .progress-step-copy.is-active .progress-step-label {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .progress-step-copy.is-inactive .progress-step-label {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .test-status-badge.pending {
+  background: rgba(124, 184, 255, 0.12);
+  color: #cfe4ff;
 }

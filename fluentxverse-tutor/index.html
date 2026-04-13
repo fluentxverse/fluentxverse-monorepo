@@ -5,7 +5,7 @@
 		<meta http-equiv="x-ua-compatible" content="ie=edge" />
 		<title>Become an ESL Tutor | FluentXVerse - Teach English Online</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="color-scheme" content="light only" />
+		<meta name="color-scheme" content="light dark" />
 		<meta name="description" content="Join FluentXVerse as an online ESL tutor. Flexible schedule, competitive pay, work from anywhere. Start teaching English to students worldwide today." />
 		
 		<!-- SEO Meta Tags -->
@@ -42,11 +42,37 @@
 		<link rel="preload" href="/assets/css/bootstrap.min.css" as="style" />
 		<link rel="preload" href="/assets/css/style.css" as="style" />
 		
+		<script>
+			(function () {
+				var themeMode = 'system';
+				try {
+					var rawTheme = localStorage.getItem('theme-storage');
+					if (rawTheme) {
+						var parsedTheme = JSON.parse(rawTheme);
+						var storedTheme = parsedTheme && typeof parsedTheme === 'object' && parsedTheme.state ? parsedTheme.state : parsedTheme;
+						if (storedTheme && storedTheme.themeMode) {
+							themeMode = storedTheme.themeMode;
+						} else if (storedTheme && typeof storedTheme.isDarkMode === 'boolean') {
+							themeMode = storedTheme.isDarkMode ? 'dark' : 'light';
+						}
+					}
+				} catch (error) {}
+
+				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+				var resolvedTheme = themeMode === 'system' ? (prefersDark ? 'dark' : 'light') : themeMode;
+				var root = document.documentElement;
+				root.dataset.theme = resolvedTheme;
+				root.classList.toggle('dark-mode', resolvedTheme === 'dark');
+				root.style.colorScheme = resolvedTheme;
+			})();
+		</script>
+
 		<!-- Critical CSS inline for instant first paint -->
 		<style>
 			/* Critical CSS - above the fold styles */
 			*{margin:0;padding:0;box-sizing:border-box}
 			body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;line-height:1.6;color:#333;background:#fff}
+			html[data-theme='dark'] body{color:#e6eefc;background:#08111d}
 			.scroll-top{position:fixed;right:30px;bottom:30px;width:45px;height:45px;background:#6DBE45;border:none;border-radius:50%;cursor:pointer;z-index:999;display:none}
 			.scroll-top.active{display:flex;align-items:center;justify-content:center}
 			.scroll-top i{color:#fff;font-size:18px}
@@ -62,7 +88,7 @@
 		<meta name="mobile-web-app-capable" content="yes">
 		<meta name="apple-mobile-web-app-status-bar-style" content="default">
 		<meta name="apple-mobile-web-app-title" content="FluentXVerse">
-		<meta name="theme-color" content="#6DBE45">
+		<meta name="theme-color" content="#0245ae">
 
 		<link rel="shortcut icon" type="image/x-icon" href="/assets/img/logo/icon_logo.png" />
 

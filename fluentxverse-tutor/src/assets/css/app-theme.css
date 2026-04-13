@@ -1,0 +1,132 @@
+:root {
+  color-scheme: light;
+  --fxv-accent: #0245ae;
+  --fxv-accent-strong: #4a9eff;
+  --fxv-accent-soft: rgba(2, 69, 174, 0.14);
+  --fxv-bg: #f4f8ff;
+  --fxv-bg-elevated: rgba(255, 255, 255, 0.92);
+  --fxv-surface: #ffffff;
+  --fxv-surface-muted: #f8fafc;
+  --fxv-surface-soft: #eef4ff;
+  --fxv-border: rgba(15, 23, 42, 0.08);
+  --fxv-border-strong: rgba(2, 69, 174, 0.18);
+  --fxv-text: #0f172a;
+  --fxv-text-muted: #64748b;
+  --fxv-text-soft: #94a3b8;
+  --fxv-shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --fxv-shadow-md: 0 18px 42px rgba(2, 69, 174, 0.14);
+  --fxv-shadow-lg: 0 26px 60px rgba(2, 69, 174, 0.16);
+  --background-color: var(--fxv-bg);
+  --card-background: var(--fxv-surface);
+  --text-color: var(--fxv-text);
+  --secondary-text: var(--fxv-text-muted);
+  --border-color: rgba(226, 232, 240, 0.95);
+  --primary-text-color: var(--fxv-text);
+  --secondary-text-color: var(--fxv-text-muted);
+  --card-box-shadow: var(--fxv-shadow-sm);
+  --bg-hover: rgba(2, 69, 174, 0.08);
+  --success-color: #16a34a;
+  --primary-color: var(--fxv-accent);
+  --primary-light: rgba(2, 69, 174, 0.12);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --fxv-accent: #2563eb;
+  --fxv-accent-strong: #60a5fa;
+  --fxv-accent-soft: rgba(124, 184, 255, 0.18);
+  --fxv-bg: #1a1a1a;
+  --fxv-bg-elevated: rgba(26, 26, 26, 0.94);
+  --fxv-surface: #1e1e1e;
+  --fxv-surface-muted: #232323;
+  --fxv-surface-soft: #2a2a2a;
+  --fxv-border: rgba(255, 255, 255, 0.09);
+  --fxv-border-strong: rgba(124, 184, 255, 0.24);
+  --fxv-text: #f3f4f6;
+  --fxv-text-muted: #a3a3a3;
+  --fxv-text-soft: #737373;
+  --fxv-shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.16);
+  --fxv-shadow-md: 0 10px 26px rgba(0, 0, 0, 0.22);
+  --fxv-shadow-lg: 0 18px 42px rgba(0, 0, 0, 0.28);
+  --background-color: var(--fxv-bg);
+  --card-background: var(--fxv-surface);
+  --text-color: var(--fxv-text);
+  --secondary-text: var(--fxv-text-muted);
+  --border-color: var(--fxv-border);
+  --primary-text-color: var(--fxv-text);
+  --secondary-text-color: var(--fxv-text-muted);
+  --card-box-shadow: var(--fxv-shadow-sm);
+  --bg-hover: rgba(124, 184, 255, 0.12);
+  --success-color: #4ade80;
+  --primary-color: var(--fxv-accent);
+  --primary-light: rgba(124, 184, 255, 0.14);
+}
+
+html,
+body {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+body {
+  background-image: radial-gradient(circle at top left, rgba(74, 158, 255, 0.16), transparent 36%),
+    linear-gradient(180deg, #f4f8ff 0%, #e9f0ff 100%);
+  background-attachment: fixed;
+}
+
+[data-theme='dark'] body {
+  background-image: none;
+  background-color: var(--fxv-bg);
+}
+
+#app,
+.App {
+  min-height: 100vh;
+  color: inherit;
+}
+
+main {
+  background: transparent;
+  color: inherit;
+}
+
+.main-content {
+  min-height: 100vh;
+  background: transparent;
+  color: inherit;
+}
+
+::selection {
+  background: rgba(74, 158, 255, 0.24);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] ::selection {
+  background: rgba(124, 184, 255, 0.28);
+  color: #f8fbff;
+}
+
+[data-theme='dark'] .offcanvas-wrapper,
+[data-theme='dark'] .offcanvas-overly,
+[data-theme='dark'] .menu-backdrop {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .main-content,
+[data-theme='dark'] .home-page-container,
+[data-theme='dark'] .materials-page,
+[data-theme='dark'] .notifications-page,
+[data-theme='dark'] .inbox-page,
+[data-theme='dark'] .performance-metrics-page,
+[data-theme='dark'] .student-profile-page,
+[data-theme='dark'] .interview-booking-page,
+[data-theme='dark'] .exam-page,
+[data-theme='dark'] .speaking-exam-page,
+[data-theme='dark'] .my-profile-page,
+[data-theme='dark'] .about-us-wrapper,
+[data-theme='dark'] .contact-us-page-wrapper,
+[data-theme='dark'] .become-tutor-page,
+[data-theme='dark'] .register-container {
+  color: var(--fxv-text);
+}

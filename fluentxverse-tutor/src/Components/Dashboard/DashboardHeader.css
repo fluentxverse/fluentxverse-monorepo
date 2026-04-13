@@ -9,15 +9,23 @@
   top: 0;
   z-index: 10;
   margin-bottom: 24px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
-/* Light theme styles - always light */
 .dashboard-header.light {
-  background-color: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   color: #2c2c2c;
   border-bottom: 1px solid #e6e6e6;
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-header.dark {
+  background: rgba(26, 26, 26, 0.96);
+  color: var(--fxv-text);
+  border-bottom: 1px solid var(--fxv-border);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(20px);
 }
 
 /* Header Left Section */
@@ -197,6 +205,56 @@
   overflow: hidden;
 }
 
+.dashboard-header.dark .dashboard-page-title,
+.dashboard-header.dark .clock-time,
+.dashboard-header.dark .notifications-header h4,
+.dashboard-header.dark .notification-title,
+.dashboard-header.dark .view-all-notifications {
+  color: var(--fxv-text);
+}
+
+.dashboard-header.dark .philippine-clock,
+.dashboard-header.dark .inbox-btn,
+.dashboard-header.dark .notification-btn {
+  background: linear-gradient(135deg, #1f1f1f 0%, #272727 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text-muted);
+}
+
+.dashboard-header.dark .clock-date,
+.dashboard-header.dark .notification-message,
+.dashboard-header.dark .notification-time,
+.dashboard-header.dark .mark-all-read {
+  color: var(--fxv-text-muted);
+}
+
+.dashboard-header.dark .notifications-dropdown {
+  background: #1e1e1e;
+  border-color: var(--fxv-border);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+}
+
+.dashboard-header.dark .notifications-header {
+  background: linear-gradient(135deg, #232323 0%, #2b2b2b 100%);
+  border-bottom-color: var(--fxv-border);
+}
+
+.dashboard-header.dark .notification-item {
+  border-bottom-color: rgba(148, 163, 184, 0.1);
+}
+
+.dashboard-header.dark .notification-item:hover {
+  background-color: rgba(124, 184, 255, 0.08);
+}
+
+.dashboard-header.dark .notification-empty,
+.dashboard-header.dark .notification-loading,
+.dashboard-header.dark .notifications-footer {
+  background: transparent;
+  color: var(--fxv-text-muted);
+  border-top-color: rgba(148, 163, 184, 0.12);
+}
+
 .notifications-header {
   display: flex;
   justify-content: space-between;
@@ -230,6 +288,7 @@
 .notifications-list {
   max-height: 360px;
   overflow-y: auto;
+  background: inherit;
 }
 
 .notification-item {
@@ -239,6 +298,10 @@
   gap: 12px;
   transition: background-color 0.2s ease;
   cursor: pointer;
+}
+
+.notifications-list .notification-item:last-child {
+  border-bottom: none;
 }
 
 .notification-item:hover {

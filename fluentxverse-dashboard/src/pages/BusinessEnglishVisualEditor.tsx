@@ -2508,6 +2508,7 @@ export default function BusinessEnglishVisualEditor() {
             scenarioEn: data.scenarioEn || '',
             scenarioKr: data.scenarioKr || '',
             roleplayTable: data.roleplayTable,
+            activityBlocks: Array.isArray(data.activityBlocks) ? data.activityBlocks : [],
             tutorNotes: normalizedTutorNotes,
           });
         }}

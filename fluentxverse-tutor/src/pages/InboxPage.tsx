@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { inboxApi, SystemMessage, MessageCategory } from '../api/inbox.api';
+import { useAuthContext } from '../context/AuthContext';
 import './InboxPage.css';
 
 const categoryInfo = {
@@ -13,6 +14,7 @@ const categoryInfo = {
 };
 
 export default function InboxPage() {
+  const { user, initialLoading } = useAuthContext();
   // Set page title for browser tab
   useEffect(() => {
     const prevTitle = document.title;
@@ -27,16 +29,22 @@ export default function InboxPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get user ID from localStorage
-  const userId = localStorage.getItem('fxv_user_id') || '';
+  const userId = user?.userId || localStorage.getItem('fxv_user_id') || '';
 
   useEffect(() => {
+    if (initialLoading) return;
     loadMessages();
-  }, [filter]);
+  }, [filter, userId, initialLoading]);
 
   const loadMessages = async () => {
+    if (initialLoading) {
+      return;
+    }
+
     if (!userId) {
       setError('Please log in to view your inbox');
+      setMessages([]);
+      setSelectedMessage(null);
       setIsLoading(false);
       return;
     }
@@ -50,10 +58,14 @@ export default function InboxPage() {
       if (filter === 'pinned') params.isPinned = true;
       
       const response = await inboxApi.getMessages(params);
-      setMessages(response.messages);
+      const nextMessages = response.messages || [];
+      setMessages(nextMessages);
+      setSelectedMessage((current) =>
+        current ? nextMessages.find((message) => message.id === current.id) || null : null
+      );
     } catch (err: any) {
       console.error('Failed to load messages:', err);
-      setError(err.message || 'Failed to load messages');
+      setError(err?.message || 'Failed to load messages');
     } finally {
       setIsLoading(false);
     }
@@ -151,13 +163,15 @@ export default function InboxPage() {
           )}
         </div>
 
-        {error && (
-          <div className="inbox-error">
-            <i className="fas fa-exclamation-circle"></i>
-            <p>{error}</p>
-            <button onClick={loadMessages}>Try Again</button>
-          </div>
-        )}
+        <div className="inbox-error-slot" aria-live="polite">
+          {error && (
+            <div className="inbox-error">
+              <i className="fas fa-exclamation-circle"></i>
+              <p>{error}</p>
+              <button onClick={loadMessages}>Try Again</button>
+            </div>
+          )}
+        </div>
 
         <div className="inbox-filters">
           <button 

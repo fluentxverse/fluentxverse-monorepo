@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { useNotifications, getNotificationIcon, formatRelativeTime } from '../../hooks/useNotifications';
 import { Link } from 'wouter';
 import { inboxApi } from '../../api/inbox.api';
+import { useThemeStore } from '../../context/ThemeContext';
+import { useAuthContext } from '../../context/AuthContext';
+import ThemeSwitch from '../Common/ThemeSwitch';
 import './DashboardHeader.css';
 
 interface DashboardHeaderProps {
@@ -14,13 +17,15 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
+  const { user: authUser } = useAuthContext();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [philippineTime, setPhilippineTime] = useState<string>('');
   const [philippineDate, setPhilippineDate] = useState<string>('');
   const [inboxUnreadCount, setInboxUnreadCount] = useState<number>(0);
   
   // Get user ID from localStorage
-  const userId = localStorage.getItem('fxv_user_id') || '';
+  const userId = authUser?.userId || localStorage.getItem('fxv_user_id') || '';
   
   const {
     notifications,
@@ -109,7 +114,7 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
   };
 
   return (
-    <div className="dashboard-header light">
+    <div className={`dashboard-header ${resolvedTheme}`}>
       <div className="header-left">
         {title && (
           <h1 className="dashboard-page-title">{title}</h1>
@@ -125,6 +130,8 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
       </div>
 
       <div className="dashboard-header-actions">
+        <ThemeSwitch size="sm" />
+
         {/* Inbox Button */}
         <Link href="/inbox" className="inbox-btn" aria-label="Inbox">
           <i className="fas fa-envelope"></i>

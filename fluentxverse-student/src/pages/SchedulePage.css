@@ -379,14 +379,22 @@
   font-weight: 800;
   color: #fff;
   line-height: 1;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
 }
 
 .date-month {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.98);
   text-transform: uppercase;
   margin-top: 2px;
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+}
+
+.schedule-card.past .date-day,
+.schedule-card.past .date-month {
+  color: #f8fafc;
 }
 
 /* Avatar */
@@ -985,4 +993,96 @@
     right: 16px;
     bottom: 16px;
   }
+}
+
+[data-theme='dark'] .schedule-page,
+.dark-mode .schedule-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .schedule-tabs,
+[data-theme='dark'] .schedule-card,
+[data-theme='dark'] .skeleton-card,
+[data-theme='dark'] .cancel-modal,
+[data-theme='dark'] .schedule-empty,
+.dark-mode .schedule-tabs,
+.dark-mode .schedule-card,
+.dark-mode .skeleton-card,
+.dark-mode .cancel-modal,
+.dark-mode .schedule-empty {
+  background: var(--fxv-surface);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .schedule-tab,
+[data-theme='dark'] .schedule-timezone,
+[data-theme='dark'] .action-btn,
+[data-theme='dark'] .cancel-modal-btn.cancel-btn,
+.dark-mode .schedule-tab,
+.dark-mode .schedule-timezone,
+.dark-mode .action-btn,
+.dark-mode .cancel-modal-btn.cancel-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .schedule-tab:hover,
+[data-theme='dark'] .action-btn:hover,
+.dark-mode .schedule-tab:hover,
+.dark-mode .action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(124, 184, 255, 0.24);
+}
+
+[data-theme='dark'] .schedule-title,
+[data-theme='dark'] .schedule-card-date,
+[data-theme='dark'] .tutor-name,
+[data-theme='dark'] .schedule-empty h3,
+.dark-mode .schedule-title,
+.dark-mode .schedule-card-date,
+.dark-mode .tutor-name,
+.dark-mode .schedule-empty h3 {
+  color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .schedule-subtitle,
+[data-theme='dark'] .lesson-detail,
+[data-theme='dark'] .schedule-loading p,
+[data-theme='dark'] .schedule-empty,
+[data-theme='dark'] .schedule-empty p,
+[data-theme='dark'] .cancel-info-row,
+[data-theme='dark'] .cancel-modal-body p,
+.dark-mode .schedule-subtitle,
+.dark-mode .lesson-detail,
+.dark-mode .schedule-loading p,
+.dark-mode .schedule-empty,
+.dark-mode .schedule-empty p,
+.dark-mode .cancel-info-row,
+.dark-mode .cancel-modal-body p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .empty-icon,
+.dark-mode .empty-icon {
+  background: rgba(124, 184, 255, 0.1);
+  border: 1px solid rgba(124, 184, 255, 0.12);
+}
+
+[data-theme='dark'] .empty-icon i,
+.dark-mode .empty-icon i {
+  color: var(--fxv-accent-strong);
+}
+
+[data-theme='dark'] .empty-cta,
+.dark-mode .empty-cta {
+  color: #f8fbff;
+}
+
+[data-theme='dark'] .schedule-error,
+.dark-mode .schedule-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
 }

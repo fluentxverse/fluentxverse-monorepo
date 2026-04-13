@@ -21,6 +21,8 @@ import TicketsPage from './pages/TicketsPage';
 import SessionsPage from './pages/SessionsPage';
 import LessonMaterialMakerPage from './pages/LessonMaterialMakerPage';
 import LessonMaterialViewPage from './pages/LessonMaterialViewPage';
+import CeoOrientationPage from './pages/CeoOrientationPage';
+import PlatformOverviewPage from './pages/PlatformOverviewPage';
 import ConversationalSkillsEditorPage from './pages/ConversationalSkillsEditorPage';
 import ConversationalSkillsPreview from './pages/ConversationalSkillsPreview';
 import ConversationalSkillsVisualEditor from './pages/ConversationalSkillsVisualEditor';
@@ -189,9 +191,6 @@ const AppContent = () => {
 
   // Business English preview page - standalone
   if (path.startsWith('/business-english-preview')) {
-    if (!isAuthenticated) {
-      return <LoginPage />;
-    }
     return (
       <Router>
         <Route path="/business-english-preview/:id" component={BusinessEnglishPreview} />
@@ -244,6 +243,8 @@ const AppContent = () => {
         <Route path="/business-english-editor" component={BusinessEnglishEditorPage} />
         <Route path="/business-english-preview/:id" component={BusinessEnglishPreview} />
         <Route path="/lesson-material-view" component={LessonMaterialViewPage} />
+        <Route path="/ceo-orientation" component={CeoOrientationPage} />
+        <Route path="/platform-overview" component={PlatformOverviewPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/admins" component={AdminsPage} />
       </Router>

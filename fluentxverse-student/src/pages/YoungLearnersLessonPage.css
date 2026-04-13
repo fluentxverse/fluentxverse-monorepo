@@ -730,3 +730,52 @@
     padding: 0.75rem;
   }
 }
+.dark-mode .yl-lesson-page {
+  background: var(--fxv-bg);
+  color: var(--fxv-text);
+}
+
+.dark-mode .yl-back-button,
+.dark-mode .yl-section,
+.dark-mode .yl-song,
+.dark-mode .yl-story-book,
+.dark-mode .yl-story-page,
+.dark-mode .yl-activity-card,
+.dark-mode .yl-complete,
+.dark-mode .yl-audio-button,
+.dark-mode .yl-story-nav button,
+.dark-mode .yl-home-button {
+  background: var(--fxv-surface);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+  color: var(--fxv-text);
+}
+
+.dark-mode .yl-lesson-title-area h1,
+.dark-mode .yl-section-title,
+.dark-mode .yl-song-title,
+.dark-mode .yl-story-title,
+.dark-mode .yl-activity-info h3,
+.dark-mode .yl-complete-content h2 {
+  color: var(--fxv-text);
+}
+
+.dark-mode .yl-section-subtitle,
+.dark-mode .yl-jp,
+.dark-mode .yl-speech-bubble p,
+.dark-mode .yl-translation,
+.dark-mode .yl-lyric-text p,
+.dark-mode .yl-story-text p,
+.dark-mode .yl-activity-info p,
+.dark-mode .yl-complete-content p,
+.dark-mode .yl-lesson-loading,
+.dark-mode .yl-lesson-error p {
+  color: var(--fxv-text-muted);
+}
+
+.dark-mode .yl-home-button,
+.dark-mode .yl-story-nav button:not(:disabled):hover {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  border-color: transparent;
+}

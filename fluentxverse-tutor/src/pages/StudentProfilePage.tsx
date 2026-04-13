@@ -339,7 +339,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
         <SideBar />
         <div className="main-content">
           <DashboardHeader user={user || undefined} />
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <div className="student-profile-state">
             <p>Loading student profile...</p>
           </div>
         </div>
@@ -354,7 +354,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
         <SideBar />
         <div className="main-content">
           <DashboardHeader user={user || undefined} />
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'red' }}>
+          <div className="student-profile-state error">
             <p>{error || 'Student not found'}</p>
           </div>
         </div>
@@ -514,7 +514,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
                     }}
                     title="Enter the classroom for this lesson"
                   >
-                    <i className="fi fi-sr-video-camera-alt"></i>
+                    <i className="fas fa-video"></i>
                     <span>Enter Classroom</span>
                   </button>
                 ) : (

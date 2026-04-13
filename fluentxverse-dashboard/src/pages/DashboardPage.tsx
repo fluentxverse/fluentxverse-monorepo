@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { adminApi, type DashboardStats, type ExamStats, type PendingTutor, type RecentActivity } from '../api/admin.api';
 import { interviewApi } from '../api/interview.api';
@@ -49,6 +49,8 @@ interface TodayInterview {
   status: string;
 }
 
+const REQUEST_TIMEOUT_MS = 12000;
+
 const DashboardPage = () => {
   const { user } = useAuthContext();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -60,6 +62,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -69,30 +72,65 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const safeRequest = async <T,>(promise: Promise<T>, fallback: T) => {
+    let timeoutId: number;
+    return new Promise<{ value: T; ok: boolean }>((resolve) => {
+      timeoutId = window.setTimeout(() => resolve({ value: fallback, ok: false }), REQUEST_TIMEOUT_MS);
+      promise
+        .then((value) => {
+          window.clearTimeout(timeoutId);
+          resolve({ value, ok: true });
+        })
+        .catch(() => {
+          window.clearTimeout(timeoutId);
+          resolve({ value: fallback, ok: false });
+        });
+    });
+  };
+
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      setError(null);
+      if (!hasLoadedOnce.current) {
+        setError(null);
+      }
 
-      const [statsData, examData, tutorsData, activityData, interviewData, queueData] = await Promise.all([
-        adminApi.getStats(),
-        adminApi.getExamStats(),
-        adminApi.getPendingTutors(5),
-        adminApi.getRecentActivity(5),
-        interviewApi.getStats().catch(() => null),
-        interviewApi.getTodayQueue().catch(() => [])
+      const [
+        statsRes,
+        examRes,
+        tutorsRes,
+        activityRes,
+        interviewRes,
+        queueRes
+      ] = await Promise.all([
+        safeRequest(adminApi.getStats(), null),
+        safeRequest(adminApi.getExamStats(), null),
+        safeRequest(adminApi.getPendingTutors(5), []),
+        safeRequest(adminApi.getRecentActivity(5), []),
+        safeRequest(interviewApi.getStats(), null),
+        safeRequest(interviewApi.getTodayQueue(), [])
       ]);
 
-      setStats(statsData);
-      setExamStats(examData);
-      setPendingTutors(tutorsData);
-      setRecentActivities(activityData);
-      setInterviewStats(interviewData);
-      setTodayQueue(queueData);
-      setLastUpdated(new Date());
+      if (statsRes.ok) setStats(statsRes.value);
+      if (examRes.ok) setExamStats(examRes.value);
+      if (tutorsRes.ok) setPendingTutors(tutorsRes.value);
+      if (activityRes.ok) setRecentActivities(activityRes.value);
+      if (interviewRes.ok) setInterviewStats(interviewRes.value);
+      if (queueRes.ok) setTodayQueue(queueRes.value);
+
+      const hasAnySuccess = statsRes.ok || examRes.ok || tutorsRes.ok || activityRes.ok || interviewRes.ok || queueRes.ok;
+      if (hasAnySuccess) {
+        hasLoadedOnce.current = true;
+        setError(null);
+        setLastUpdated(new Date());
+      } else if (!hasLoadedOnce.current) {
+        setError('Failed to load dashboard data. Please try again.');
+      }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
-      setError('Failed to load dashboard data. Please try again.');
+      if (!hasLoadedOnce.current) {
+        setError('Failed to load dashboard data. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -341,7 +379,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="dashboard-content">
+      <div className="dashboard-grid">
         {/* Exam Statistics */}
         {examStats && (
           <div className="dashboard-card exam-stats-card">

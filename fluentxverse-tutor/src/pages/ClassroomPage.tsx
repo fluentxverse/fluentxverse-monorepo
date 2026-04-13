@@ -3,14 +3,29 @@ import type { JSX } from 'preact';
 import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../context/AuthContext';
 import { initSocket, connectSocket, getSocket, destroySocket } from '../client/socket/socket.client';
+import { useThemeStore } from '../context/ThemeContext';
 import { useWebRTC } from '../hooks/useWebRTC';
 import PdfViewer from '../Components/PdfViewer/PdfViewer';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import { lessonApi, type Lesson } from '../api/lesson.api';
-import { tutorApi } from '../api/tutor.api';
+import {
+  tutorApi,
+  type ClassroomGrammarNote,
+  type ClassroomNotesRecord,
+  type ClassroomPronunciationNote,
+  type SaveClassroomNotesInput,
+  type ClassroomVocabularyNote,
+} from '../api/tutor.api';
 import type { ChatMessageData } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
 import { API_BASE_URL } from '../config/api';
+import BusinessEnglishPreviewPage from './BusinessEnglishPreviewPage';
+import {
+  cacheBusinessEnglishLesson,
+  cacheBusinessEnglishLessonList,
+  readCachedBusinessEnglishLesson,
+  readCachedBusinessEnglishLessonList,
+} from '../utils/businessEnglishCache';
 import './ClassroomPage.css';
 
 // Daily Dispatch article interface
@@ -37,6 +52,20 @@ interface ClassroomPageProps {
   sessionId?: string;
 }
 
+interface StudentLessonRequest {
+  lessonId: string;
+  courseId: string;
+  title: string;
+  lessonNumber: number;
+  goal: string;
+  studentPreferences?: {
+    cameraOn?: boolean;
+    proficiency?: string;
+    errorCorrection?: string;
+    otherRequests?: string;
+  };
+}
+
 interface ChatMessage {
   id: string;
   sender: 'tutor' | 'student';
@@ -48,6 +77,235 @@ interface ChatMessage {
   fileType?: 'image' | 'file';
   fileSize?: number;
 }
+
+type ClassroomPersistedOpenMaterial =
+  | {
+      kind: 'dispatch';
+      article: DispatchArticle;
+    }
+  | {
+      kind: 'conversational';
+      lesson: ConversationalLesson;
+      viewUrl: string;
+    }
+  | {
+      kind: 'lesson';
+      request: StudentLessonRequest;
+      viewUrl: string | null;
+      businessEnglishTheme?: 'light' | 'dark';
+    };
+
+interface ClassroomPersistedState {
+  showLessonRequest: boolean;
+  openMaterial: ClassroomPersistedOpenMaterial | null;
+}
+
+interface ActiveNotesTarget {
+  materialType: 'business-english' | 'daily-dispatch';
+  materialId: string;
+  courseId?: string | null;
+  lessonId?: string | null;
+  articleId?: string | null;
+}
+
+interface ClassroomNotesSnapshot {
+  vocabularyItems: ClassroomVocabularyNote[];
+  grammarItems: ClassroomGrammarNote[];
+  pronunciationItems: ClassroomPronunciationNote[];
+  studentComment: string;
+  tutorMemo: string;
+}
+
+interface ClassroomNotesDraft extends ClassroomNotesSnapshot {
+  sessionId: string;
+  materialType: ActiveNotesTarget['materialType'];
+  materialId: string;
+  courseId?: string | null;
+  lessonId?: string | null;
+  articleId?: string | null;
+  updatedAt: number;
+}
+
+const buildClassroomPersistedStateKey = (sessionId: string) => `fxv-tutor-classroom-state:${sessionId}`;
+const buildClassroomNotesBindingKey = (sessionId: string, target: ActiveNotesTarget) =>
+  `${sessionId}:${target.materialType}:${target.materialId}`;
+const buildClassroomNotesDraftKey = (bindingKey: string) => `fxv-tutor-classroom-notes:${bindingKey}`;
+
+const createEmptyVocabularyItem = (): ClassroomVocabularyNote => ({
+  word: '',
+  definitions: [],
+  selectedDefinitionIndex: 0,
+  isLoading: false,
+  showDefinition: false,
+  showTranslation: false,
+});
+
+const createEmptyGrammarItem = (): ClassroomGrammarNote => ({
+  youSaid: '',
+  correct: '',
+  simpleExplanation: '',
+  technicalExplanation: '',
+  isLoading: false,
+  showExplanation: false,
+});
+
+const createEmptyPronunciationItem = (): ClassroomPronunciationNote => ({
+  word: '',
+  phonetic: '',
+  isLoading: false,
+  showPhonetic: false,
+});
+
+const normalizeVocabularyItems = (items: ClassroomVocabularyNote[] = []): ClassroomVocabularyNote[] => {
+  const normalized = items.map((item) => {
+    const definitions = Array.isArray(item.definitions) ? item.definitions : [];
+    const selectedDefinitionIndex = Math.min(
+      Math.max(item.selectedDefinitionIndex || 0, 0),
+      Math.max(definitions.length - 1, 0),
+    );
+
+    return {
+      word: item.word || '',
+      definitions,
+      selectedDefinitionIndex,
+      isLoading: false,
+      showDefinition: Boolean(item.showDefinition),
+      showTranslation: Boolean(item.showTranslation),
+    };
+  });
+
+  return normalized.length > 0 ? normalized : [createEmptyVocabularyItem()];
+};
+
+const normalizeGrammarItems = (items: ClassroomGrammarNote[] = []): ClassroomGrammarNote[] => {
+  const normalized = items.map((item) => ({
+    youSaid: item.youSaid || '',
+    correct: item.correct || '',
+    simpleExplanation: item.simpleExplanation || '',
+    technicalExplanation: item.technicalExplanation || '',
+    isLoading: false,
+    showExplanation: Boolean(item.showExplanation),
+  }));
+
+  return normalized.length > 0 ? normalized : [createEmptyGrammarItem()];
+};
+
+const normalizePronunciationItems = (items: ClassroomPronunciationNote[] = []): ClassroomPronunciationNote[] => {
+  const normalized = items.map((item) => ({
+    word: item.word || '',
+    phonetic: item.phonetic || '',
+    isLoading: false,
+    showPhonetic: Boolean(item.showPhonetic),
+  }));
+
+  return normalized.length > 0 ? normalized : [createEmptyPronunciationItem()];
+};
+
+const normalizeClassroomNotesSnapshot = (
+  snapshot?: Partial<ClassroomNotesSnapshot> | null,
+): ClassroomNotesSnapshot => ({
+  vocabularyItems: normalizeVocabularyItems(snapshot?.vocabularyItems),
+  grammarItems: normalizeGrammarItems(snapshot?.grammarItems),
+  pronunciationItems: normalizePronunciationItems(snapshot?.pronunciationItems),
+  studentComment: snapshot?.studentComment || '',
+  tutorMemo: snapshot?.tutorMemo || '',
+});
+
+const createClassroomNotesDraft = (
+  sessionId: string,
+  target: ActiveNotesTarget,
+  snapshot: Partial<ClassroomNotesSnapshot> | null | undefined,
+  updatedAt = Date.now(),
+): ClassroomNotesDraft => {
+  const normalizedSnapshot = normalizeClassroomNotesSnapshot(snapshot);
+
+  return {
+    sessionId,
+    materialType: target.materialType,
+    materialId: target.materialId,
+    courseId: target.courseId || null,
+    lessonId: target.lessonId || null,
+    articleId: target.articleId || null,
+    updatedAt,
+    ...normalizedSnapshot,
+  };
+};
+
+const buildClassroomNotesPayload = (
+  target: ActiveNotesTarget,
+  snapshot: Partial<ClassroomNotesSnapshot> | null | undefined,
+): SaveClassroomNotesInput => {
+  const normalizedSnapshot = normalizeClassroomNotesSnapshot(snapshot);
+
+  return {
+    materialType: target.materialType,
+    materialId: target.materialId,
+    courseId: target.courseId || null,
+    lessonId: target.lessonId || null,
+    articleId: target.articleId || null,
+    ...normalizedSnapshot,
+  };
+};
+
+const parseNotesUpdatedAt = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return Date.now();
+};
+
+const readClassroomNotesDraft = (bindingKey: string): ClassroomNotesDraft | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(buildClassroomNotesDraftKey(bindingKey));
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<ClassroomNotesDraft> | null;
+    if (!parsed || typeof parsed.sessionId !== 'string' || typeof parsed.materialId !== 'string' || typeof parsed.materialType !== 'string') {
+      return null;
+    }
+
+    const normalizedSnapshot = normalizeClassroomNotesSnapshot(parsed);
+    return {
+      sessionId: parsed.sessionId,
+      materialType: parsed.materialType as ActiveNotesTarget['materialType'],
+      materialId: parsed.materialId,
+      courseId: parsed.courseId || null,
+      lessonId: parsed.lessonId || null,
+      articleId: parsed.articleId || null,
+      updatedAt: parseNotesUpdatedAt(parsed.updatedAt),
+      ...normalizedSnapshot,
+    };
+  } catch (error) {
+    console.error('Failed to read classroom notes draft:', error);
+    return null;
+  }
+};
+
+const persistClassroomNotesDraft = (bindingKey: string, draft: ClassroomNotesDraft) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(buildClassroomNotesDraftKey(bindingKey), JSON.stringify(draft));
+  } catch (error) {
+    console.error('Failed to persist classroom notes draft:', error);
+  }
+};
 
 // Format text with bold, italic, clickable links, and line breaks
 const formatMessageText = (text: string): (string | JSX.Element)[] => {
@@ -125,12 +383,21 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   }, []);
 
   const { user } = useAuthContext();
+  const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { route } = useLocation();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localPipRef = useRef<HTMLVideoElement>(null);
   const remotePipRef = useRef<HTMLVideoElement>(null);
+  const courseDropdownRef = useRef<HTMLDivElement>(null);
+  const levelDropdownRef = useRef<HTMLDivElement>(null);
+  const chapterDropdownRef = useRef<HTMLDivElement>(null);
+  const lessonDropdownRef = useRef<HTMLDivElement>(null);
+  const materialCourseCacheRef = useRef<Record<string, Lesson[]>>({});
+  const businessEnglishPrefetchRef = useRef<Record<string, Promise<void>>>({});
+  const restoredClassroomStateRef = useRef<ClassroomPersistedState | null>(null);
+  const hydratedClassroomSessionRef = useRef<string | null>(null);
   
   // Track stream IDs for forcing re-renders
   const [localStreamId, setLocalStreamId] = useState<string>('');
@@ -150,6 +417,55 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     }
   })();
   const currentSessionId = sessionId || routeSessionId || querySessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
+
+  useEffect(() => {
+    if (!currentSessionId || hydratedClassroomSessionRef.current === currentSessionId) {
+      return;
+    }
+
+    hydratedClassroomSessionRef.current = currentSessionId;
+
+    try {
+      const raw = window.sessionStorage.getItem(buildClassroomPersistedStateKey(currentSessionId));
+      if (!raw) {
+        restoredClassroomStateRef.current = null;
+        return;
+      }
+
+      const persistedState = JSON.parse(raw) as ClassroomPersistedState;
+      restoredClassroomStateRef.current = persistedState;
+      setShowLessonRequest(persistedState.showLessonRequest ?? true);
+
+      if (!persistedState.openMaterial) {
+        return;
+      }
+
+      if (persistedState.openMaterial.kind === 'dispatch') {
+        setViewingDispatchArticle(persistedState.openMaterial.article);
+        setViewingConversationalLesson(null);
+        setConversationalViewUrl(null);
+        setLessonViewUrl(null);
+        return;
+      }
+
+      if (persistedState.openMaterial.kind === 'conversational') {
+        setViewingDispatchArticle(null);
+        setViewingConversationalLesson(persistedState.openMaterial.lesson);
+        setConversationalViewUrl(persistedState.openMaterial.viewUrl);
+        setLessonViewUrl(null);
+        return;
+      }
+
+      setViewingDispatchArticle(null);
+      setViewingConversationalLesson(null);
+      setConversationalViewUrl(null);
+      setStudentLessonRequest(persistedState.openMaterial.request);
+      setLessonViewUrl(persistedState.openMaterial.viewUrl);
+    } catch (error) {
+      console.error('Failed to restore classroom material state:', error);
+      restoredClassroomStateRef.current = null;
+    }
+  }, [currentSessionId]);
   
   // Initialize socket and join session
   useEffect(() => {
@@ -215,15 +531,37 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       try {
         const lessonRequest = await tutorApi.getStudentLessonRequest(studentId);
         if (lessonRequest) {
-          setStudentLessonRequest(lessonRequest);
-          
-          // Also fetch the lesson viewUrl for iframe display
-          if (lessonRequest.lessonId) {
-            try {
-              const lessonResult = await lessonApi.getTutorLesson(lessonRequest.lessonId);
-              if (lessonResult.success && lessonResult.viewUrl) {
-                setLessonViewUrl(lessonResult.viewUrl);
+          const restoredOpenMaterial = restoredClassroomStateRef.current?.openMaterial;
+
+          if (restoredOpenMaterial?.kind === 'lesson') {
+            const mergedLessonRequest: StudentLessonRequest = {
+              ...lessonRequest,
+              ...restoredOpenMaterial.request,
+              studentPreferences: lessonRequest.studentPreferences || restoredOpenMaterial.request.studentPreferences,
+            };
+
+            setStudentLessonRequest(mergedLessonRequest);
+
+            if (mergedLessonRequest.lessonId) {
+              try {
+                const nextViewUrl = restoredOpenMaterial.viewUrl
+                  || await resolveTutorMaterialViewUrl(mergedLessonRequest.courseId, mergedLessonRequest.lessonId);
+                setLessonViewUrl(nextViewUrl);
+              } catch (err) {
+                console.error('Failed to restore lesson view URL:', err);
               }
+            }
+
+            return;
+          }
+
+          setStudentLessonRequest(lessonRequest);
+
+          // Also fetch the lesson viewUrl for iframe display
+          if (lessonRequest.lessonId && (!restoredOpenMaterial || restoredOpenMaterial.kind === 'lesson')) {
+            try {
+              const nextViewUrl = await resolveTutorMaterialViewUrl(lessonRequest.courseId, lessonRequest.lessonId);
+              setLessonViewUrl(nextViewUrl);
             } catch (err) {
               console.error('Failed to get lesson view URL:', err);
             }
@@ -320,45 +658,23 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   
   // Daily Dispatch Notes Widget state
   const [showNotesWidget, setShowNotesWidget] = useState(false);
-  const [vocabularyItems, setVocabularyItems] = useState<{
-    word: string;
-    definitions: {
-      meaning: string;
-      partOfSpeech: string;
-      koreanNative: string;
-      koreanRomanized: string;
-      vietnameseNative: string;
-      vietnameseRomanized: string;
-    }[];
-    selectedDefinitionIndex: number;
-    isLoading: boolean;
-    showDefinition: boolean;
-    showTranslation: boolean;
-  }[]>([
-    { word: '', definitions: [], selectedDefinitionIndex: 0, isLoading: false, showDefinition: false, showTranslation: false }
-  ]);
-  const [grammarItems, setGrammarItems] = useState<{
-    youSaid: string;
-    correct: string;
-    simpleExplanation: string;
-    technicalExplanation: string;
-    isLoading: boolean;
-    showExplanation: boolean;
-  }[]>([
-    { youSaid: '', correct: '', simpleExplanation: '', technicalExplanation: '', isLoading: false, showExplanation: false }
-  ]);
-  const [pronunciationItems, setPronunciationItems] = useState<{
-    word: string;
-    phonetic: string;
-    isLoading: boolean;
-    showPhonetic: boolean;
-  }[]>([
-    { word: '', phonetic: '', isLoading: false, showPhonetic: false }
-  ]);
+  const [vocabularyItems, setVocabularyItems] = useState<ClassroomVocabularyNote[]>([createEmptyVocabularyItem()]);
+  const [grammarItems, setGrammarItems] = useState<ClassroomGrammarNote[]>([createEmptyGrammarItem()]);
+  const [pronunciationItems, setPronunciationItems] = useState<ClassroomPronunciationNote[]>([createEmptyPronunciationItem()]);
+  const [studentComment, setStudentComment] = useState('');
+  const [tutorMemo, setTutorMemo] = useState('');
+  const [notesPersistenceState, setNotesPersistenceState] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'draft' | 'error'>('idle');
+  const notesHydratedKeyRef = useRef<string | null>(null);
+  const notesSkipAutosaveRef = useRef(false);
+  const notesSkipDraftPersistRef = useRef(false);
+  const notesAutosaveTimeoutRef = useRef<number | null>(null);
+  const notesDraftUpdatedAtRef = useRef(0);
+  const latestNotesDraftRef = useRef<ClassroomNotesDraft | null>(null);
+  const notesLastExitFlushAtRef = useRef(0);
   
   // Vocabulary item handlers
   const addVocabularyItem = () => {
-    setVocabularyItems(prev => [...prev, { word: '', definitions: [], selectedDefinitionIndex: 0, isLoading: false, showDefinition: false, showTranslation: false }]);
+    setVocabularyItems(prev => [...prev, createEmptyVocabularyItem()]);
   };
   
   const updateVocabularyWord = (index: number, value: string) => {
@@ -493,7 +809,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Grammar item handlers
   const addGrammarItem = () => {
-    setGrammarItems(prev => [...prev, { youSaid: '', correct: '', simpleExplanation: '', technicalExplanation: '', isLoading: false, showExplanation: false }]);
+    setGrammarItems(prev => [...prev, createEmptyGrammarItem()]);
   };
 
   const updateGrammarItem = (index: number, field: 'youSaid' | 'correct' | 'simpleExplanation' | 'technicalExplanation' | 'showExplanation', value: string | boolean) => {
@@ -607,7 +923,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   
   // Pronunciation item handlers
   const addPronunciationItem = () => {
-    setPronunciationItems(prev => [...prev, { word: '', phonetic: '', isLoading: false, showPhonetic: false }]);
+    setPronunciationItems(prev => [...prev, createEmptyPronunciationItem()]);
   };
 
   const updatePronunciationWord = (index: number, value: string) => {
@@ -720,38 +1036,154 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Student lesson request state (received from student)
-  const [studentLessonRequest, setStudentLessonRequest] = useState<{
-    lessonId: string;
-    courseId: string;
-    title: string;
-    lessonNumber: number;
-    goal: string;
-    studentPreferences?: {
-      cameraOn?: boolean;
-      proficiency?: string;
-      errorCorrection?: string;
-      otherRequests?: string;
-    };
-  } | null>(null);
+  const [studentLessonRequest, setStudentLessonRequest] = useState<StudentLessonRequest | null>(null);
   
   // Material selector state - hierarchical
   const [availableLessons, setAvailableLessons] = useState<Lesson[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
+  const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
+  const [courseDropdownMenuStyle, setCourseDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
+  const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
+  const [levelDropdownMenuStyle, setLevelDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
+  const [isChapterDropdownOpen, setIsChapterDropdownOpen] = useState(false);
+  const [chapterDropdownMenuStyle, setChapterDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
+  const [isLessonDropdownOpen, setIsLessonDropdownOpen] = useState(false);
+  const [lessonDropdownMenuStyle, setLessonDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string>('');
   const [showLessonRequest, setShowLessonRequest] = useState(true);
   const [lessonViewUrl, setLessonViewUrl] = useState<string | null>(null);
   const [loadingViewUrl, setLoadingViewUrl] = useState(false);
+  const businessEnglishTheme: 'light' | 'dark' = resolvedTheme === 'dark' ? 'dark' : 'light';
   
   // Course definitions
   const courses = [
-    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬' },
-    { id: 'business-english', name: 'Business English', icon: '💼' },
-    { id: 'young-learners', name: 'Young Learners', icon: '🎨' },
-    { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰' },
+    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', description: 'Dialogue practice and speaking prompts' },
+    { id: 'business-english', name: 'Business English', icon: '💼', description: 'Meetings, workplace language, and email tone' },
+    { id: 'young-learners', name: 'Young Learners', icon: '🎨', description: 'Playful lessons for younger students' },
+    { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰', description: 'Current-events articles for discussion practice' },
   ];
+  const isLessonMaterialCourse = (courseId?: string | null) =>
+    courseId === 'conversational-skills' || courseId === 'business-english';
+
+  const transformLessonMaterialToLesson = (lessonMaterial: any): Lesson => {
+    const chapterLabel = lessonMaterial.chapterLabel
+      || (lessonMaterial.chapterName
+        ? `Chapter ${lessonMaterial.chapter}: ${lessonMaterial.chapterName}`
+        : `Chapter ${lessonMaterial.chapter}`);
+    const lessonLabel = lessonMaterial.lessonTitle || `Lesson ${lessonMaterial.lessonNumber}: ${lessonMaterial.lessonName}`;
+
+    return {
+      id: lessonMaterial.id,
+      title: lessonLabel,
+      slug: lessonMaterial.id,
+      status: 'published',
+      parentId: null,
+      forkOf: null,
+      isFork: false,
+      createdBy: lessonMaterial.createdBy || '',
+      createdByName: lessonMaterial.createdByName || null,
+      storagePath: '',
+      createdAt: lessonMaterial.createdAt || '',
+      updatedAt: lessonMaterial.updatedAt || '',
+      publishedAt: lessonMaterial.updatedAt || null,
+      lessonData: {
+        course: lessonMaterial.course,
+        header: {
+          levelBadge: `Level ${lessonMaterial.level || 1}`,
+          chapterLabel,
+          lessonLabel,
+          goalText: lessonMaterial.goalTextEn || '',
+          goalSubtext: lessonMaterial.goalTextJp || '',
+          backgroundImage: lessonMaterial.backgroundImage || '',
+          overlayColor: lessonMaterial.overlayColor || '',
+        }
+      } as Lesson['lessonData'],
+    };
+  };
+
+  const prefetchBusinessEnglishLesson = async (lessonId: string): Promise<void> => {
+    if (!lessonId || readCachedBusinessEnglishLesson(lessonId)) {
+      return;
+    }
+
+    if (businessEnglishPrefetchRef.current[lessonId]) {
+      return businessEnglishPrefetchRef.current[lessonId];
+    }
+
+    const request = (async () => {
+      try {
+        const result = await lessonApi.getPublicLessonMaterial(lessonId);
+        if (result.success && result.lesson) {
+          cacheBusinessEnglishLesson(lessonId, result.lesson);
+        }
+      } catch (error) {
+        console.error('Failed to prefetch Business English lesson:', error);
+      } finally {
+        delete businessEnglishPrefetchRef.current[lessonId];
+      }
+    })();
+
+    businessEnglishPrefetchRef.current[lessonId] = request;
+    return request;
+  };
+
+  const warmBusinessEnglishCourseCache = async (): Promise<Lesson[]> => {
+    const inMemoryLessons = materialCourseCacheRef.current['business-english'];
+    if (inMemoryLessons?.length) {
+      return inMemoryLessons;
+    }
+
+    const cachedLessons = readCachedBusinessEnglishLessonList<Lesson>('business-english');
+    if (cachedLessons?.length) {
+      materialCourseCacheRef.current['business-english'] = cachedLessons;
+      return cachedLessons;
+    }
+
+    const result = await lessonApi.getPublishedLessonMaterials('business-english');
+    if (!result.success || !result.lessons) {
+      return [];
+    }
+
+    const nextLessons = result.lessons.map(transformLessonMaterialToLesson);
+    materialCourseCacheRef.current['business-english'] = nextLessons;
+    cacheBusinessEnglishLessonList('business-english', nextLessons);
+    return nextLessons;
+  };
+
+  const resolveTutorMaterialViewUrl = async (courseId: string | undefined, lessonId: string): Promise<string | null> => {
+    if (courseId === 'conversational-skills') {
+      return `/materials/conversational-skills/${lessonId}`;
+    }
+
+    if (courseId === 'young-learners') {
+      return `/materials/young-learners/lesson/${lessonId}`;
+    }
+
+    if (courseId === 'business-english') {
+      return `/materials/business-english/${lessonId}`;
+    }
+
+    const result = await lessonApi.getTutorLesson(lessonId);
+    return result.success ? result.viewUrl || null : null;
+  };
+
+  const selectedCourseOption = courses.find(course => course.id === selectedCourse) || null;
+  const selectedMaterialHref = studentLessonRequest
+    ? studentLessonRequest.courseId === 'business-english'
+      ? `/materials/business-english/${studentLessonRequest.lessonId}`
+      : studentLessonRequest.courseId === 'conversational-skills'
+        ? `/materials/conversational-skills/${studentLessonRequest.lessonId}`
+        : studentLessonRequest.courseId === 'young-learners'
+          ? `/materials/young-learners/lesson/${studentLessonRequest.lessonId}`
+          : `/lesson/view?id=${studentLessonRequest.lessonId}`
+    : '#';
+  const activeMaterialCourseId = !showLessonRequest ? studentLessonRequest?.courseId || '' : '';
+  const isViewingBusinessEnglishMaterial =
+    activeMaterialCourseId === 'business-english' && !showLessonRequest;
+  const businessEnglishHeaderTitle = studentLessonRequest?.title || 'Business English lesson';
   
   // Daily Dispatch state
   const [dispatchArticles, setDispatchArticles] = useState<DispatchArticle[]>([]);
@@ -762,6 +1194,534 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [viewingConversationalLesson, setViewingConversationalLesson] = useState<ConversationalLesson | null>(null);
   const [conversationalViewUrl, setConversationalViewUrl] = useState<string | null>(null);
   const [loadingConversationalView, setLoadingConversationalView] = useState(false);
+  const hasOpenMaterial = Boolean(
+    viewingDispatchArticle ||
+    (viewingConversationalLesson && conversationalViewUrl) ||
+    lessonViewUrl ||
+    loadingViewUrl,
+  );
+  const materialTabTitle = viewingDispatchArticle?.title
+    || viewingConversationalLesson?.title
+    || studentLessonRequest?.title
+    || (loadingViewUrl ? 'Opening material...' : 'Current material');
+  const materialTabContext = viewingDispatchArticle
+    ? 'Daily Dispatch'
+    : viewingConversationalLesson
+      ? 'Conversational Skills'
+      : studentLessonRequest?.courseId === 'business-english'
+        ? 'Business English'
+        : studentLessonRequest?.courseId === 'young-learners'
+          ? 'Young Learners'
+          : 'Lesson Material';
+  const materialTabIconClass = viewingDispatchArticle
+    ? 'fas fa-newspaper'
+    : viewingConversationalLesson
+      ? 'fas fa-comments'
+      : studentLessonRequest?.courseId === 'business-english'
+        ? 'fas fa-briefcase'
+        : studentLessonRequest?.courseId === 'young-learners'
+          ? 'fas fa-seedling'
+          : 'fas fa-book-open';
+  const activeNotesMaterial = !showLessonRequest
+    ? viewingDispatchArticle
+      ? 'daily-dispatch'
+      : isViewingBusinessEnglishMaterial
+        ? 'business-english'
+        : null
+    : null;
+  const showNotesWidgetTrigger = Boolean(activeNotesMaterial);
+  const notesWidgetTitle = activeNotesMaterial === 'business-english'
+    ? 'Business English Notes'
+    : 'Daily Dispatch Notes';
+  const notesWidgetFabTitle = activeNotesMaterial === 'business-english'
+    ? 'Business English Notes'
+    : 'Daily Dispatch Notes';
+  const notesWidgetIconClass = activeNotesMaterial === 'business-english'
+    ? 'fas fa-briefcase'
+    : 'fas fa-newspaper';
+  const notesWidgetClassName = activeNotesMaterial === 'business-english'
+    ? `dispatch-notes-widget dispatch-notes-widget--business-english dispatch-notes-widget--business-english-${businessEnglishTheme}`
+    : 'dispatch-notes-widget dispatch-notes-widget--daily-dispatch';
+  const notesWidgetFabClassName = activeNotesMaterial === 'business-english'
+    ? `dispatch-notes-fab dispatch-notes-fab--business-english dispatch-notes-fab--business-english-${businessEnglishTheme}`
+    : 'dispatch-notes-fab dispatch-notes-fab--daily-dispatch';
+  const activeNotesTarget: ActiveNotesTarget | null = !showLessonRequest
+    ? viewingDispatchArticle
+      ? {
+          materialType: 'daily-dispatch',
+          materialId: viewingDispatchArticle.id,
+          courseId: 'daily-dispatch',
+          articleId: viewingDispatchArticle.id,
+        }
+      : isViewingBusinessEnglishMaterial && studentLessonRequest?.lessonId
+        ? {
+            materialType: 'business-english',
+            materialId: studentLessonRequest.lessonId,
+            courseId: studentLessonRequest.courseId || 'business-english',
+            lessonId: studentLessonRequest.lessonId,
+          }
+        : null
+    : null;
+  const activeNotesBindingKey = currentSessionId && activeNotesTarget
+    ? buildClassroomNotesBindingKey(currentSessionId, activeNotesTarget)
+    : null;
+  const activeNotesMaterialType = activeNotesTarget?.materialType || null;
+  const activeNotesMaterialId = activeNotesTarget?.materialId || null;
+  const activeNotesCourseId = activeNotesTarget?.courseId || null;
+  const activeNotesLessonId = activeNotesTarget?.lessonId || null;
+  const activeNotesArticleId = activeNotesTarget?.articleId || null;
+
+  const applyNotesSnapshot = (snapshot: Partial<ClassroomNotesSnapshot> | null | undefined) => {
+    const normalizedSnapshot = normalizeClassroomNotesSnapshot(snapshot);
+    setVocabularyItems(normalizedSnapshot.vocabularyItems);
+    setGrammarItems(normalizedSnapshot.grammarItems);
+    setPronunciationItems(normalizedSnapshot.pronunciationItems);
+    setStudentComment(normalizedSnapshot.studentComment);
+    setTutorMemo(normalizedSnapshot.tutorMemo);
+  };
+
+  const syncDraftFromServerRecord = (
+    bindingKey: string,
+    target: ActiveNotesTarget,
+    record: ClassroomNotesRecord,
+  ) => {
+    if (!currentSessionId) {
+      return;
+    }
+
+    const syncedDraft = createClassroomNotesDraft(
+      currentSessionId,
+      target,
+      record,
+      parseNotesUpdatedAt(record.updatedAt),
+    );
+    notesDraftUpdatedAtRef.current = syncedDraft.updatedAt;
+    latestNotesDraftRef.current = syncedDraft;
+    persistClassroomNotesDraft(bindingKey, syncedDraft);
+  };
+
+  const saveNotesSnapshotToBackend = async (
+    bindingKey: string,
+    target: ActiveNotesTarget,
+    snapshot: Partial<ClassroomNotesSnapshot> | null | undefined,
+  ) => {
+    if (!currentSessionId) {
+      throw new Error('Missing classroom session id');
+    }
+
+    const savedRecord = await tutorApi.saveClassroomNotes(
+      currentSessionId,
+      buildClassroomNotesPayload(target, snapshot),
+    );
+
+    syncDraftFromServerRecord(bindingKey, target, savedRecord);
+    return savedRecord;
+  };
+
+  useEffect(() => {
+    if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
+      latestNotesDraftRef.current = null;
+      return;
+    }
+
+    const updatedAt = notesDraftUpdatedAtRef.current || Date.now();
+    latestNotesDraftRef.current = createClassroomNotesDraft(
+      currentSessionId,
+      activeNotesTarget,
+      {
+        vocabularyItems,
+        grammarItems,
+        pronunciationItems,
+        studentComment,
+        tutorMemo,
+      },
+      updatedAt,
+    );
+  }, [
+    activeNotesBindingKey,
+    activeNotesArticleId,
+    currentSessionId,
+    activeNotesCourseId,
+    grammarItems,
+    activeNotesLessonId,
+    activeNotesMaterialId,
+    activeNotesMaterialType,
+    pronunciationItems,
+    studentComment,
+    tutorMemo,
+    vocabularyItems,
+  ]);
+
+  useEffect(() => {
+    if (!currentSessionId) {
+      return;
+    }
+
+    let openMaterial: ClassroomPersistedOpenMaterial | null = null;
+
+    if (viewingDispatchArticle) {
+      openMaterial = {
+        kind: 'dispatch',
+        article: viewingDispatchArticle,
+      };
+    } else if (viewingConversationalLesson && conversationalViewUrl) {
+      openMaterial = {
+        kind: 'conversational',
+        lesson: viewingConversationalLesson,
+        viewUrl: conversationalViewUrl,
+      };
+    } else if (lessonViewUrl && studentLessonRequest) {
+      openMaterial = {
+        kind: 'lesson',
+        request: studentLessonRequest,
+        viewUrl: lessonViewUrl,
+        businessEnglishTheme: studentLessonRequest.courseId === 'business-english' ? businessEnglishTheme : undefined,
+      };
+    }
+
+    try {
+      if (!openMaterial) {
+        restoredClassroomStateRef.current = null;
+        window.sessionStorage.removeItem(buildClassroomPersistedStateKey(currentSessionId));
+        return;
+      }
+
+      const persistedState: ClassroomPersistedState = {
+        showLessonRequest,
+        openMaterial,
+      };
+      restoredClassroomStateRef.current = persistedState;
+
+      window.sessionStorage.setItem(
+        buildClassroomPersistedStateKey(currentSessionId),
+        JSON.stringify(persistedState),
+      );
+    } catch (error) {
+      console.error('Failed to persist classroom material state:', error);
+    }
+  }, [
+    businessEnglishTheme,
+    conversationalViewUrl,
+    currentSessionId,
+    lessonViewUrl,
+    showLessonRequest,
+    studentLessonRequest,
+    viewingConversationalLesson,
+    viewingDispatchArticle,
+  ]);
+
+  useEffect(() => {
+    if (!showNotesWidgetTrigger && showNotesWidget) {
+      setShowNotesWidget(false);
+    }
+  }, [showNotesWidget, showNotesWidgetTrigger]);
+
+  useEffect(() => {
+    return () => {
+      if (notesAutosaveTimeoutRef.current !== null) {
+        window.clearTimeout(notesAutosaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
+      notesHydratedKeyRef.current = null;
+      setNotesPersistenceState('idle');
+      return;
+    }
+
+    let cancelled = false;
+    const localDraft = readClassroomNotesDraft(activeNotesBindingKey);
+    setNotesPersistenceState('loading');
+
+    if (localDraft) {
+      notesHydratedKeyRef.current = activeNotesBindingKey;
+      notesSkipAutosaveRef.current = true;
+      notesSkipDraftPersistRef.current = true;
+      notesDraftUpdatedAtRef.current = localDraft.updatedAt;
+      latestNotesDraftRef.current = localDraft;
+      applyNotesSnapshot(localDraft);
+    }
+
+    void (async () => {
+      try {
+        const savedNotes = await tutorApi.getClassroomNotes(
+          currentSessionId,
+          activeNotesTarget.materialType,
+          activeNotesTarget.materialId,
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        const remoteUpdatedAt = savedNotes ? parseNotesUpdatedAt(savedNotes.updatedAt) : 0;
+        const shouldPreferLocalDraft = Boolean(
+          localDraft && (!savedNotes || localDraft.updatedAt >= remoteUpdatedAt),
+        );
+
+        if (shouldPreferLocalDraft && localDraft) {
+          notesHydratedKeyRef.current = activeNotesBindingKey;
+          notesSkipAutosaveRef.current = true;
+          notesSkipDraftPersistRef.current = true;
+          notesDraftUpdatedAtRef.current = localDraft.updatedAt;
+          latestNotesDraftRef.current = localDraft;
+          applyNotesSnapshot(localDraft);
+
+          if (!savedNotes || localDraft.updatedAt > remoteUpdatedAt) {
+            setNotesPersistenceState('saving');
+
+            try {
+              await saveNotesSnapshotToBackend(activeNotesBindingKey, activeNotesTarget, localDraft);
+
+              if (!cancelled && notesHydratedKeyRef.current === activeNotesBindingKey) {
+                setNotesPersistenceState('saved');
+              }
+            } catch (error) {
+              console.error('Failed to sync restored classroom notes draft:', error);
+              if (!cancelled && notesHydratedKeyRef.current === activeNotesBindingKey) {
+                setNotesPersistenceState('draft');
+              }
+            }
+            return;
+          }
+
+          setNotesPersistenceState('saved');
+          return;
+        }
+
+        notesHydratedKeyRef.current = activeNotesBindingKey;
+        notesSkipAutosaveRef.current = true;
+        notesSkipDraftPersistRef.current = true;
+
+        if (savedNotes) {
+          applyNotesSnapshot(savedNotes);
+          syncDraftFromServerRecord(activeNotesBindingKey, activeNotesTarget, savedNotes);
+          setNotesPersistenceState('saved');
+          return;
+        }
+
+        notesDraftUpdatedAtRef.current = 0;
+        latestNotesDraftRef.current = null;
+        applyNotesSnapshot(null);
+        setNotesPersistenceState('idle');
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error('Failed to load classroom notes:', error);
+        notesHydratedKeyRef.current = activeNotesBindingKey;
+        notesSkipAutosaveRef.current = true;
+        notesSkipDraftPersistRef.current = true;
+
+        if (localDraft) {
+          notesDraftUpdatedAtRef.current = localDraft.updatedAt;
+          latestNotesDraftRef.current = localDraft;
+          applyNotesSnapshot(localDraft);
+          setNotesPersistenceState('draft');
+          return;
+        }
+
+        notesDraftUpdatedAtRef.current = 0;
+        latestNotesDraftRef.current = null;
+        applyNotesSnapshot(null);
+        setNotesPersistenceState('error');
+        toast.error('Failed to load saved notes');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeNotesBindingKey, activeNotesMaterialId, activeNotesMaterialType, currentSessionId]);
+
+  useEffect(() => {
+    if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
+      return;
+    }
+
+    if (notesHydratedKeyRef.current !== activeNotesBindingKey) {
+      return;
+    }
+
+    if (notesSkipAutosaveRef.current) {
+      notesSkipAutosaveRef.current = false;
+      return;
+    }
+
+    if (notesAutosaveTimeoutRef.current !== null) {
+      window.clearTimeout(notesAutosaveTimeoutRef.current);
+    }
+
+    notesAutosaveTimeoutRef.current = window.setTimeout(() => {
+      void (async () => {
+        try {
+          setNotesPersistenceState('saving');
+          await saveNotesSnapshotToBackend(activeNotesBindingKey, activeNotesTarget, {
+            vocabularyItems,
+            grammarItems,
+            pronunciationItems,
+            studentComment,
+            tutorMemo,
+          });
+
+          if (notesHydratedKeyRef.current === activeNotesBindingKey) {
+            setNotesPersistenceState('saved');
+          }
+        } catch (error) {
+          console.error('Failed to save classroom notes:', error);
+          if (notesHydratedKeyRef.current === activeNotesBindingKey) {
+            setNotesPersistenceState(latestNotesDraftRef.current ? 'draft' : 'error');
+          }
+        }
+      })();
+    }, 700);
+
+    return () => {
+      if (notesAutosaveTimeoutRef.current !== null) {
+        window.clearTimeout(notesAutosaveTimeoutRef.current);
+        notesAutosaveTimeoutRef.current = null;
+      }
+    };
+  }, [
+    activeNotesBindingKey,
+    activeNotesArticleId,
+    currentSessionId,
+    grammarItems,
+    activeNotesCourseId,
+    activeNotesLessonId,
+    activeNotesMaterialId,
+    activeNotesMaterialType,
+    pronunciationItems,
+    studentComment,
+    tutorMemo,
+    vocabularyItems,
+  ]);
+
+  useEffect(() => {
+    if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
+      return;
+    }
+
+    if (notesHydratedKeyRef.current !== activeNotesBindingKey) {
+      return;
+    }
+
+    if (notesSkipDraftPersistRef.current) {
+      notesSkipDraftPersistRef.current = false;
+      return;
+    }
+
+    const updatedAt = Date.now();
+    const draft = createClassroomNotesDraft(
+      currentSessionId,
+      activeNotesTarget,
+      {
+        vocabularyItems,
+        grammarItems,
+        pronunciationItems,
+        studentComment,
+        tutorMemo,
+      },
+      updatedAt,
+    );
+
+    notesDraftUpdatedAtRef.current = updatedAt;
+    latestNotesDraftRef.current = draft;
+    persistClassroomNotesDraft(activeNotesBindingKey, draft);
+  }, [
+    activeNotesBindingKey,
+    activeNotesArticleId,
+    currentSessionId,
+    activeNotesCourseId,
+    grammarItems,
+    activeNotesLessonId,
+    activeNotesMaterialId,
+    activeNotesMaterialType,
+    pronunciationItems,
+    studentComment,
+    tutorMemo,
+    vocabularyItems,
+  ]);
+
+  useEffect(() => {
+    if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
+      return;
+    }
+
+    const flushNotesDraft = (requestKeepaliveSave: boolean) => {
+      const now = Date.now();
+      if (now - notesLastExitFlushAtRef.current < 250) {
+        return;
+      }
+
+      const currentDraft = latestNotesDraftRef.current;
+      if (!currentDraft) {
+        return;
+      }
+
+      notesLastExitFlushAtRef.current = now;
+
+      const flushedDraft = createClassroomNotesDraft(
+        currentSessionId,
+        activeNotesTarget,
+        currentDraft,
+        now,
+      );
+
+      notesDraftUpdatedAtRef.current = now;
+      latestNotesDraftRef.current = flushedDraft;
+      persistClassroomNotesDraft(activeNotesBindingKey, flushedDraft);
+
+      if (!requestKeepaliveSave) {
+        return;
+      }
+
+      try {
+        void window.fetch(`${API_BASE_URL}/tutor/classroom-notes/${encodeURIComponent(currentSessionId)}`, {
+          method: 'PUT',
+          credentials: 'include',
+          keepalive: true,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(buildClassroomNotesPayload(activeNotesTarget, flushedDraft)),
+        }).catch((error) => {
+          console.error('Failed to flush classroom notes during page exit:', error);
+        });
+      } catch (error) {
+        console.error('Failed to flush classroom notes during page exit:', error);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushNotesDraft(false);
+      }
+    };
+
+    const handlePageHide = () => {
+      flushNotesDraft(true);
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [
+    activeNotesArticleId,
+    activeNotesBindingKey,
+    currentSessionId,
+    activeNotesCourseId,
+    activeNotesLessonId,
+    activeNotesMaterialId,
+    activeNotesMaterialType,
+  ]);
 
   // Helper functions for lesson data extraction
   const getLevelNumber = (lesson: Lesson): number => {
@@ -789,6 +1749,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     setSelectedChapter(null);
     setSelectedLessonId('');
     setDispatchArticles([]);
+    setIsCourseDropdownOpen(false);
+    setIsLevelDropdownOpen(false);
+    setIsChapterDropdownOpen(false);
+    setIsLessonDropdownOpen(false);
     
     if (!courseId) return;
     
@@ -816,29 +1780,34 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       }
       return;
     }
+
+    if (courseId === 'business-english') {
+      const cachedLessons = materialCourseCacheRef.current[courseId] || readCachedBusinessEnglishLessonList<Lesson>(courseId);
+      if (cachedLessons?.length) {
+        materialCourseCacheRef.current[courseId] = cachedLessons;
+        setAvailableLessons(cachedLessons);
+        return;
+      }
+    } else if (isLessonMaterialCourse(courseId)) {
+      const cachedLessons = materialCourseCacheRef.current[courseId];
+      if (cachedLessons?.length) {
+        setAvailableLessons(cachedLessons);
+        return;
+      }
+    }
     
     setLoadingMaterials(true);
     try {
-      // Use lesson-materials endpoint for conversational-skills (Memgraph storage)
-      if (courseId === 'conversational-skills') {
+      // Use lesson-materials endpoint for builder-backed courses
+      if (courseId === 'business-english') {
+        const nextLessons = await warmBusinessEnglishCourseCache();
+        setAvailableLessons(nextLessons);
+      } else if (isLessonMaterialCourse(courseId)) {
         const result = await lessonApi.getPublishedLessonMaterials(courseId);
         if (result.success && result.lessons) {
-          // Transform lesson-materials format to match expected Lesson format
-          const transformedLessons = result.lessons.map((l: any) => ({
-            id: l.id,
-            title: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
-            slug: l.id,
-            status: 'published' as const,
-            lessonData: {
-              header: {
-                levelBadge: l.levelBadge,
-                chapterLabel: l.chapterLabel,
-                lessonLabel: l.lessonTitle,
-                goalText: l.goalTextEn || '',
-              }
-            }
-          })) as Lesson[];
-          setAvailableLessons(transformedLessons);
+          const nextLessons = result.lessons.map(transformLessonMaterialToLesson);
+          materialCourseCacheRef.current[courseId] = nextLessons;
+          setAvailableLessons(nextLessons);
         }
       } else {
         // Use regular lesson endpoint for other courses
@@ -854,6 +1823,160 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     }
   };
 
+  const buildDropdownMenuStyle = (container: HTMLDivElement | null): JSX.CSSProperties | null => {
+    if (!container) return null;
+
+    const triggerRect = container.getBoundingClientRect();
+    const gap = 8;
+    const viewportPadding = 16;
+    const preferredMaxHeight = 240;
+    const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
+    const width = Math.min(triggerRect.width, window.innerWidth - viewportPadding * 2);
+    const left = Math.min(
+      Math.max(triggerRect.left, viewportPadding),
+      window.innerWidth - width - viewportPadding,
+    );
+
+    return {
+      top: `${triggerRect.bottom + gap}px`,
+      left: `${left}px`,
+      width: `${width}px`,
+      maxHeight: `${Math.min(preferredMaxHeight, Math.max(140, spaceBelow))}px`,
+    };
+  };
+
+  const updateCourseDropdownMenuPosition = () => {
+    setCourseDropdownMenuStyle(buildDropdownMenuStyle(courseDropdownRef.current));
+  };
+
+  const updateLevelDropdownMenuPosition = () => {
+    setLevelDropdownMenuStyle(buildDropdownMenuStyle(levelDropdownRef.current));
+  };
+
+  const updateChapterDropdownMenuPosition = () => {
+    setChapterDropdownMenuStyle(buildDropdownMenuStyle(chapterDropdownRef.current));
+  };
+
+  const updateLessonDropdownMenuPosition = () => {
+    setLessonDropdownMenuStyle(buildDropdownMenuStyle(lessonDropdownRef.current));
+  };
+
+  const toggleCourseDropdown = () => {
+    if (isCourseDropdownOpen) {
+      setIsCourseDropdownOpen(false);
+      return;
+    }
+
+    setIsLevelDropdownOpen(false);
+    setIsChapterDropdownOpen(false);
+    setIsLessonDropdownOpen(false);
+    updateCourseDropdownMenuPosition();
+    setIsCourseDropdownOpen(true);
+  };
+
+  const toggleLevelDropdown = () => {
+    if (!availableLevels.length) return;
+    if (isLevelDropdownOpen) {
+      setIsLevelDropdownOpen(false);
+      return;
+    }
+
+    setIsCourseDropdownOpen(false);
+    setIsChapterDropdownOpen(false);
+    setIsLessonDropdownOpen(false);
+    updateLevelDropdownMenuPosition();
+    setIsLevelDropdownOpen(true);
+  };
+
+  const toggleChapterDropdown = () => {
+    if (selectedLevel === null || !availableChapters.length) return;
+    if (isChapterDropdownOpen) {
+      setIsChapterDropdownOpen(false);
+      return;
+    }
+
+    setIsCourseDropdownOpen(false);
+    setIsLevelDropdownOpen(false);
+    setIsLessonDropdownOpen(false);
+    updateChapterDropdownMenuPosition();
+    setIsChapterDropdownOpen(true);
+  };
+
+  const toggleLessonDropdown = () => {
+    if (!filteredLessons.length) return;
+    if (isLessonDropdownOpen) {
+      setIsLessonDropdownOpen(false);
+      return;
+    }
+
+    setIsCourseDropdownOpen(false);
+    setIsLevelDropdownOpen(false);
+    setIsChapterDropdownOpen(false);
+    updateLessonDropdownMenuPosition();
+    setIsLessonDropdownOpen(true);
+  };
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const clickedInsideSelector =
+        courseDropdownRef.current?.contains(target) ||
+        levelDropdownRef.current?.contains(target) ||
+        chapterDropdownRef.current?.contains(target) ||
+        lessonDropdownRef.current?.contains(target);
+
+      if (!clickedInsideSelector) {
+        setIsCourseDropdownOpen(false);
+        setIsLevelDropdownOpen(false);
+        setIsChapterDropdownOpen(false);
+        setIsLessonDropdownOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsCourseDropdownOpen(false);
+        setIsLevelDropdownOpen(false);
+        setIsChapterDropdownOpen(false);
+        setIsLessonDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isCourseDropdownOpen && !isLevelDropdownOpen && !isChapterDropdownOpen && !isLessonDropdownOpen) {
+      setCourseDropdownMenuStyle(null);
+      setLevelDropdownMenuStyle(null);
+      setChapterDropdownMenuStyle(null);
+      setLessonDropdownMenuStyle(null);
+      return;
+    }
+
+    const syncDropdownPositions = () => {
+      if (isCourseDropdownOpen) updateCourseDropdownMenuPosition();
+      if (isLevelDropdownOpen) updateLevelDropdownMenuPosition();
+      if (isChapterDropdownOpen) updateChapterDropdownMenuPosition();
+      if (isLessonDropdownOpen) updateLessonDropdownMenuPosition();
+    };
+
+    syncDropdownPositions();
+    window.addEventListener('resize', syncDropdownPositions);
+    window.addEventListener('scroll', syncDropdownPositions, true);
+
+    return () => {
+      window.removeEventListener('resize', syncDropdownPositions);
+      window.removeEventListener('scroll', syncDropdownPositions, true);
+    };
+  }, [isCourseDropdownOpen, isLevelDropdownOpen, isChapterDropdownOpen, isLessonDropdownOpen]);
+
   // Get unique levels from available lessons
   const availableLevels = [...new Set(availableLessons.map(l => getLevelNumber(l)))].sort((a, b) => a - b);
   
@@ -866,6 +1989,30 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const filteredLessons = selectedLevel !== null && selectedChapter !== null
     ? availableLessons.filter(l => getLevelNumber(l) === selectedLevel && getChapterNumber(l) === selectedChapter)
     : [];
+  const selectedBusinessLevelLessons = selectedLevel !== null
+    ? availableLessons.filter(lesson => getLevelNumber(lesson) === selectedLevel)
+    : [];
+  const selectedLevelSummary = selectedLevel !== null
+    ? `${selectedBusinessLevelLessons.length} lesson${selectedBusinessLevelLessons.length === 1 ? '' : 's'} available`
+    : availableLevels.length > 0
+      ? `${availableLevels.length} level${availableLevels.length === 1 ? '' : 's'} available`
+      : 'Levels will appear here';
+  const selectedChapterSummary = selectedLevel === null
+    ? 'Choose a level first'
+    : availableChapters.length > 0
+      ? `${availableChapters.length} chapter${availableChapters.length === 1 ? '' : 's'} in this level`
+      : 'No chapters available yet';
+  const selectedBusinessLesson = selectedLessonId
+    ? filteredLessons.find(lesson => lesson.id === selectedLessonId) || null
+    : null;
+  const selectedLessonSummary = selectedBusinessLesson
+    ? selectedBusinessLesson.lessonData?.header?.goalText || selectedBusinessLesson.title
+    : filteredLessons.length > 0
+      ? `${filteredLessons.length} lesson${filteredLessons.length === 1 ? '' : 's'} in this chapter`
+      : selectedChapter === null
+        ? 'Choose a chapter first'
+        : 'No lessons available yet';
+  const showSelectedCourseDetails = Boolean(selectedCourse) && !isCourseDropdownOpen;
 
   // Handle selecting a new material (for tutor to override)
   const handleApplyMaterial = async () => {
@@ -883,28 +2030,66 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       
       setStudentLessonRequest(prev => prev ? { ...prev, ...newLesson } : newLesson);
       
+      setViewingDispatchArticle(null);
+      setViewingConversationalLesson(null);
+      setConversationalViewUrl(null);
+
+      if (selectedCourse === 'business-english') {
+        setLoadingViewUrl(false);
+        setLessonViewUrl(`/materials/business-english/${selectedLesson.id}`);
+        setShowLessonRequest(false);
+        void prefetchBusinessEnglishLesson(selectedLesson.id);
+        return;
+      }
+
       // Fetch the lesson viewUrl for iframe display (use tutor view for tutor)
       setLoadingViewUrl(true);
       try {
-        const result = await lessonApi.getTutorLesson(selectedLesson.id);
-        if (result.success && result.viewUrl) {
-          setLessonViewUrl(result.viewUrl);
-        }
+        const nextViewUrl = await resolveTutorMaterialViewUrl(selectedCourse, selectedLesson.id);
+        setLessonViewUrl(nextViewUrl);
       } catch (err) {
         console.error('Failed to get lesson view URL:', err);
       } finally {
         setLoadingViewUrl(false);
       }
-      
-      // Reset selectors and hide lesson request to show material
-      setSelectedCourse('');
-      setSelectedLevel(null);
-      setSelectedChapter(null);
-      setSelectedLessonId('');
-      setAvailableLessons([]);
+
+      // Keep the current selection state warm so switching tabs feels instant
       setShowLessonRequest(false);
     }
   };
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        await warmBusinessEnglishCourseCache();
+      } catch (error) {
+        console.error('Failed to warm Business English selector cache:', error);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (studentLessonRequest?.courseId === 'business-english' && studentLessonRequest.lessonId) {
+      void prefetchBusinessEnglishLesson(studentLessonRequest.lessonId);
+    }
+  }, [studentLessonRequest?.courseId, studentLessonRequest?.lessonId]);
+
+  useEffect(() => {
+    if (selectedCourse !== 'business-english') {
+      return;
+    }
+
+    const firstLessonInChapter = filteredLessons[0];
+    if (firstLessonInChapter) {
+      void prefetchBusinessEnglishLesson(firstLessonInChapter.id);
+    }
+  }, [filteredLessons, selectedCourse]);
+
+  useEffect(() => {
+    if (selectedCourse === 'business-english' && selectedLessonId) {
+      void prefetchBusinessEnglishLesson(selectedLessonId);
+    }
+  }, [selectedCourse, selectedLessonId]);
 
   // Try to enable audio - will succeed if user has engagement history with the site
   useEffect(() => {
@@ -1119,9 +2304,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // Listen for close messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'close-lesson-material') {
-        setViewingConversationalLesson(null);
-        setConversationalViewUrl(null);
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data?.type === 'close-lesson-material' || event.data?.type === 'closeMaterial') {
+        setShowLessonRequest(true);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -1266,14 +2454,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" style={{ height: '32px' }} />
             <span>FluentXVerse</span>
           </div>
-          <div className="classroom-session-info">
-            <div className="session-student">
-              <div className="student-avatar-small">{studentData.initials}</div>
-              <span>{studentData.name}</span>
-            </div>
-            <div className="session-time-display">
-              <span className="timer">{formatTime(elapsedTime)}</span>
-              <span className="session-date">{studentData.date}</span>
+          <div className="classroom-header-actions">
+            <div className="classroom-session-info">
+              <div className="session-student">
+                <div className="student-avatar-small">{studentData.initials}</div>
+                <span>{studentData.name}</span>
+              </div>
+              <div className="session-time-display">
+                <span className="timer">{formatTime(elapsedTime)}</span>
+                <span className="session-date">{studentData.date}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1573,15 +2763,52 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       {/* Right Panel - Learning Materials */}
       <div className="classroom-right">
-        {/* Material Header - conditionally show dispatch/conversational header or regular header */}
-        {viewingDispatchArticle ? (
+        <div className="material-topbar">
+          <div className="material-header">
+            <i className="fi fi-sr-book-open-reader"></i>
+            <span>Learning Material</span>
+          </div>
+          <div className="material-tabs">
+            <button
+              type="button"
+              className={`material-tab ${showLessonRequest ? 'is-active' : ''}`}
+              onClick={() => setShowLessonRequest(true)}
+            >
+              <span className="material-tab-icon" aria-hidden="true">
+                <i className="fas fa-clipboard-list"></i>
+              </span>
+              <span className="material-tab-copy">
+                <span className="material-tab-label">Lesson Selection</span>
+                <span className="material-tab-meta">Request and material picker</span>
+              </span>
+            </button>
+            {hasOpenMaterial && (
+              <button
+                type="button"
+                className={`material-tab ${!showLessonRequest ? 'is-active' : ''}`}
+                onClick={() => setShowLessonRequest(false)}
+              >
+                <span className="material-tab-icon" aria-hidden="true">
+                  <i className={materialTabIconClass}></i>
+                </span>
+                <span className="material-tab-copy">
+                  <span className="material-tab-label">{materialTabTitle}</span>
+                  <span className="material-tab-meta">{materialTabContext}</span>
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Material Header - conditionally show dispatch/conversational header */}
+        {!showLessonRequest && viewingDispatchArticle ? (
           <div className={`dispatch-view-header ${selectedCourse === 'daily-dispatch' ? 'daily-dispatch-theme' : ''}`}>
             <button 
               className="btn-back-to-request"
-              onClick={() => setViewingDispatchArticle(null)}
+              onClick={() => setShowLessonRequest(true)}
             >
               <i className="fi fi-sr-arrow-left"></i>
-              Back to Selection
+              Go to Selection Tab
             </button>
             <div className="dispatch-view-meta">
               <span className="dispatch-view-category">{viewingDispatchArticle.category}</span>
@@ -1594,17 +2821,14 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               </span>
             </div>
           </div>
-        ) : viewingConversationalLesson ? (
+        ) : !showLessonRequest && viewingConversationalLesson ? (
           <div className="dispatch-view-header conversational-theme">
             <button 
               className="btn-back-to-request"
-              onClick={() => {
-                setViewingConversationalLesson(null);
-                setConversationalViewUrl(null);
-              }}
+              onClick={() => setShowLessonRequest(true)}
             >
               <i className="fi fi-sr-arrow-left"></i>
-              Back to Selection
+              Go to Selection Tab
             </button>
             <div className="dispatch-view-meta">
               <span className="dispatch-view-category">Level {viewingConversationalLesson.level}</span>
@@ -1613,102 +2837,144 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               </span>
             </div>
           </div>
-        ) : (
-          <div className="material-header">
-            <i className="fi fi-sr-book-open-reader"></i>
-            <span>Learning Material</span>
+        ) : isViewingBusinessEnglishMaterial ? (
+          <div className={`dispatch-view-header business-english-theme business-english-theme--${businessEnglishTheme}`}>
+            <button
+              className="btn-back-to-request"
+              onClick={() => {
+                setShowLessonRequest(true);
+              }}
+            >
+              <i className="fi fi-sr-arrow-left"></i>
+              Go to Selection Tab
+            </button>
+            <div className="dispatch-view-meta">
+              <span className="dispatch-view-category">Business English</span>
+              <span className="dispatch-view-date">{businessEnglishHeaderTitle}</span>
+            </div>
           </div>
-        )}
+        ) : null}
 
         {/* Chosen Material Display or PDF Viewer */}
-        <div className="material-content">
-          {viewingDispatchArticle ? (
-            <iframe 
-              src={`/materials/daily-dispatch/${viewingDispatchArticle.id}`}
-              className="dispatch-article-iframe"
-              title={viewingDispatchArticle.title}
-            />
-          ) : viewingConversationalLesson && conversationalViewUrl ? (
-            <iframe 
-              src={conversationalViewUrl}
-              className="dispatch-article-iframe conversational-iframe"
-              title={viewingConversationalLesson.title}
-            />
-          ) : showLessonRequest ? (
+        <div className={`material-content ${showLessonRequest ? 'material-content--request' : ''}`}>
+          {showLessonRequest ? (
             <div className="lesson-request-container">
               {/* Lesson Request Section - always show, even if no material selected */}
               <div className="lesson-request-section">
                 <div className="lesson-request-header">
-                  <h2 className="lesson-request-title">
-                    <i className="ri-file-list-3-line" />
-                    Lesson Request
-                  </h2>
-                  <p className="lesson-request-updated">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</p>
+                  <div className="lesson-request-title-wrap">
+                    <h2 className="lesson-request-title">
+                      <i className="fas fa-clipboard-list" />
+                      Lesson Request
+                    </h2>
+                    <p className="lesson-request-subtitle">
+                      Review the student's selected lesson and the teaching cues they shared before class begins.
+                    </p>
+                  </div>
+                  <div className="lesson-request-meta">
+                    <span className={`lesson-request-status ${studentLessonRequest ? 'lesson-request-status--ready' : 'lesson-request-status--pending'}`}>
+                      {studentLessonRequest ? 'Material chosen' : 'Awaiting selection'}
+                    </span>
+                    <p className="lesson-request-updated">
+                      Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' })} {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="lesson-request-body">
                   <div className="lesson-request-content">
                     <div className="lesson-request-details">
-                      <p className="request-intro">Student's lesson request details below.</p>
+                      <div className="request-intro-block">
+                        <span className="request-eyebrow">Student brief</span>
+                        <p className="request-intro">Student's lesson request details below.</p>
+                      </div>
                       
                       {studentLessonRequest ? (
-                        <table className="request-table">
-                          <tbody>
-                            <tr className="request-row">
-                              <td className="request-label">Material:</td>
-                              <td className="request-value">
-                                <a 
-                                  href={`/lesson/view?id=${studentLessonRequest.lessonId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="request-link"
-                                >
-                                  {studentLessonRequest.title}
-                                </a>
-                              </td>
-                            </tr>
-                            <tr className="request-row">
-                              <td className="request-label">Lesson Number:</td>
-                              <td className="request-value">Lesson {studentLessonRequest.lessonNumber}</td>
-                            </tr>
-                            {studentLessonRequest.goal && (
-                              <tr className="request-row">
-                                <td className="request-label">Goal:</td>
-                                <td className="request-value">{studentLessonRequest.goal}</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+                        <>
+                          <div className="request-detail-grid">
+                            <div className="request-detail-card request-detail-card--primary">
+                              <span className="request-detail-label">Selected material</span>
+                              <a 
+                                href={selectedMaterialHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="request-link"
+                              >
+                                {studentLessonRequest.title}
+                              </a>
+                              <span className="request-detail-meta">Open lesson in a new tab</span>
+                            </div>
+
+                            <div className="request-detail-card request-detail-card--compact">
+                              <span className="request-detail-label">Lesson number</span>
+                              <span className="request-detail-value">Lesson {studentLessonRequest.lessonNumber}</span>
+                            </div>
+                          </div>
+
+                        </>
                       ) : (
-                        <p className="no-material-selected">No material selected by student yet.</p>
+                        <div className="request-empty-state">
+                          <div className="request-empty-icon">
+                            <i className="fas fa-book-open" />
+                          </div>
+                          <div className="request-empty-copy">
+                            <p className="request-empty-title">No material selected yet</p>
+                            <p className="request-empty-description">
+                              You can still choose a lesson below and guide the student from the classroom.
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                     
-                    {/* Student Preferences Sidebar */}
                     <div className="student-preferences-sidebar">
-                      <div className="preference-section">
-                        <h4 className="preference-title">Student Preferences</h4>
-                        <p className="preference-item">Camera: {studentLessonRequest?.studentPreferences?.cameraOn !== false ? 'On' : 'Off'}</p>
-                        <p className="preference-item">Proficiency: {studentLessonRequest?.studentPreferences?.proficiency || 'Not set'}</p>
+                      <div className="student-preferences-header">
+                        <span className="preference-kicker">Student setup</span>
+                        <h4 className="preference-panel-title">Teaching preferences</h4>
                       </div>
-                      
-                      <div className="preference-section">
-                        <h4 className="preference-title">Error Correction</h4>
-                        <p className="preference-item">
-                          {studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively' 
-                            ? 'Please correct my errors proactively'
-                            : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
-                            ? 'Please correct errors during feedback time'
-                            : 'Tutor\'s choice'}
-                        </p>
-                      </div>
-                      
-                      {studentLessonRequest?.studentPreferences?.otherRequests && (
-                        <div className="preference-section">
-                          <h4 className="preference-title">Other Request</h4>
-                          <p className="preference-item">{studentLessonRequest.studentPreferences.otherRequests}</p>
+
+                      <div className="preference-card-grid">
+                        <div className="preference-card preference-card--camera">
+                          <span className="preference-card-label">Camera</span>
+                          <p className="preference-card-value">
+                            {studentLessonRequest?.studentPreferences?.cameraOn !== false ? 'On' : 'Off'}
+                          </p>
+                          <span className="preference-card-note">Use this as your default video setup.</span>
                         </div>
-                      )}
+
+                        <div className="preference-card preference-card--proficiency">
+                          <span className="preference-card-label">Proficiency</span>
+                          <p className="preference-card-value">
+                            {studentLessonRequest?.studentPreferences?.proficiency || 'Not set'}
+                          </p>
+                          <span className="preference-card-note">Helpful for pacing and vocabulary choices.</span>
+                        </div>
+
+                        <div className="preference-card preference-card--correction">
+                          <span className="preference-card-label">Error correction</span>
+                          <p className="preference-card-value">
+                            {studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively' 
+                              ? 'Correct proactively'
+                              : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
+                              ? 'Save for feedback'
+                              : 'Tutor decides'}
+                          </p>
+                          <span className="preference-card-note">
+                            {studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively' 
+                              ? 'Student prefers immediate support during class.'
+                              : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
+                              ? 'Student prefers review during feedback time.'
+                              : 'No strong preference was shared.'}
+                          </span>
+                        </div>
+
+                        {studentLessonRequest?.studentPreferences?.otherRequests && (
+                          <div className="preference-card preference-card--wide preference-card--other">
+                            <span className="preference-card-label">Other request</span>
+                            <p className="preference-card-value">{studentLessonRequest.studentPreferences.otherRequests}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1720,25 +2986,97 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   <div className="material-selector-header-icon">
                     <i className="fas fa-book-open"></i>
                   </div>
-                  <label className="material-selector-label">Select a Material</label>
+                  <div className="material-selector-copy">
+                    <label className="material-selector-label">Select a Material</label>
+                    <p className="material-selector-description">
+                      Choose the course library you want to teach from. You can switch materials whenever you need.
+                    </p>
+                  </div>
+                  {studentLessonRequest && (
+                    <span className="material-selector-chip">
+                      Requested lesson {studentLessonRequest.lessonNumber}
+                    </span>
+                  )}
                 </div>
                 <div className="material-selector-body">
-                {/* Course Selector */}
-                <div className="material-selector-row">
-                  <select 
-                    className="material-selector-dropdown"
-                    value={selectedCourse}
-                    onChange={(e) => handleCourseChange((e.target as HTMLSelectElement).value)}
-                  >
-                    <option value="">-- Select Course --</option>
-                    {courses.map(course => (
-                      <option key={course.id} value={course.id}>{course.name}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Course Selector */}
+                  <div className="material-selector-row material-selector-row--course">
+                    <div className="material-selector-field">
+                      <span className="material-selector-field-label">Course library</span>
+                      <div
+                        className={`material-selector-combobox ${isCourseDropdownOpen ? 'is-open' : ''}`}
+                        ref={courseDropdownRef}
+                      >
+                        <button
+                          type="button"
+                          className="material-selector-trigger"
+                          onClick={toggleCourseDropdown}
+                          aria-haspopup="listbox"
+                          aria-expanded={isCourseDropdownOpen}
+                        >
+                          <span className="material-selector-trigger-content">
+                            {selectedCourseOption ? (
+                              <>
+                                <span className="material-selector-trigger-icon" aria-hidden="true">
+                                  {selectedCourseOption.icon}
+                                </span>
+                                <span className="material-selector-trigger-copy">
+                                  <span className="material-selector-trigger-title">{selectedCourseOption.name}</span>
+                                  <span className="material-selector-trigger-subtitle">{selectedCourseOption.description}</span>
+                                </span>
+                              </>
+                            ) : (
+                              <span className="material-selector-trigger-placeholder">
+                                Select a course library
+                              </span>
+                            )}
+                          </span>
+                          <span className="material-selector-trigger-arrow" aria-hidden="true">
+                            <i className={`fas ${isCourseDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                          </span>
+                        </button>
+
+                        {isCourseDropdownOpen && (
+                          <div
+                            className="material-selector-menu"
+                            role="listbox"
+                            aria-label="Course library"
+                            style={courseDropdownMenuStyle || undefined}
+                          >
+                            {courses.map(course => (
+                              <button
+                                key={course.id}
+                                type="button"
+                                className={`material-selector-option ${selectedCourse === course.id ? 'is-selected' : ''}`}
+                                onClick={() => {
+                                  setIsCourseDropdownOpen(false);
+                                  void handleCourseChange(course.id);
+                                }}
+                                role="option"
+                                aria-selected={selectedCourse === course.id}
+                              >
+                                <span className="material-selector-option-icon" aria-hidden="true">
+                                  {course.icon}
+                                </span>
+                                <span className="material-selector-option-copy">
+                                  <span className="material-selector-option-title">{course.name}</span>
+                                  <span className="material-selector-option-description">{course.description}</span>
+                                </span>
+                                {selectedCourse === course.id && (
+                                  <span className="material-selector-option-check" aria-hidden="true">
+                                    <i className="fas fa-check"></i>
+                                  </span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 
                 {/* Daily Dispatch Card - shows when Daily Dispatch is selected */}
-                {selectedCourse === 'daily-dispatch' && (
+                {showSelectedCourseDetails && selectedCourse === 'daily-dispatch' && (
                   <>
                     {/* Latest Article Card */}
                     <div className="dispatch-article-card">
@@ -1768,7 +3106,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                             <span className="dispatch-col-category">{dispatchArticles[0].category}</span>
                             <button 
                               className="dispatch-col-action dispatch-open-link"
-                              onClick={() => setViewingDispatchArticle(dispatchArticles[0])}
+                              onClick={() => {
+                                setViewingDispatchArticle(dispatchArticles[0]);
+                                setViewingConversationalLesson(null);
+                                setConversationalViewUrl(null);
+                                setLessonViewUrl(null);
+                                setShowLessonRequest(false);
+                              }}
                             >
                               Open Article
                             </button>
@@ -1804,7 +3148,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                             <span className="dispatch-col-category">{article.category}</span>
                             <button 
                               className="dispatch-col-action dispatch-open-link"
-                              onClick={() => setViewingDispatchArticle(article)}
+                              onClick={() => {
+                                setViewingDispatchArticle(article);
+                                setViewingConversationalLesson(null);
+                                setConversationalViewUrl(null);
+                                setLessonViewUrl(null);
+                                setShowLessonRequest(false);
+                              }}
                             >
                               Open Article
                             </button>
@@ -1816,7 +3166,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 
                 {/* Conversational Skills Card - shows when Conversational Skills is selected */}
-                {selectedCourse === 'conversational-skills' && (
+                {showSelectedCourseDetails && selectedCourse === 'conversational-skills' && (
                   <>
                     {loadingMaterials ? (
                       <div className="dispatch-article-card">
@@ -1870,9 +3220,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                                                 lessonNumber: getLessonNumber(lesson),
                                                 goalTextEn: goalText
                                               };
+                                              setViewingDispatchArticle(null);
                                               setViewingConversationalLesson(viewLesson);
                                               // Use local route directly instead of API call
                                               setConversationalViewUrl(`/materials/conversational-skills/${lesson.id}`);
+                                              setLessonViewUrl(null);
+                                              setShowLessonRequest(false);
                                             }}
                                           >
                                             Open Material
@@ -1897,8 +3250,262 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   </>
                 )}
                 
+                {/* Business English filters */}
+                {showSelectedCourseDetails && selectedCourse === 'business-english' && availableLevels.length > 0 && (
+                  <div className="material-selector-filter-grid">
+                    <div className="material-selector-field">
+                      <span className="material-selector-field-label">Level</span>
+                      <div
+                        className={`material-selector-combobox material-selector-combobox--filter ${isLevelDropdownOpen ? 'is-open' : ''}`}
+                        ref={levelDropdownRef}
+                      >
+                        <button
+                          type="button"
+                          className="material-selector-trigger material-selector-trigger--filter"
+                          onClick={toggleLevelDropdown}
+                          aria-haspopup="listbox"
+                          aria-expanded={isLevelDropdownOpen}
+                        >
+                          <span className="material-selector-trigger-content">
+                            {selectedLevel !== null ? (
+                              <>
+                                <span className="material-selector-trigger-icon material-selector-trigger-icon--level" aria-hidden="true">
+                                  <i className="fas fa-layer-group"></i>
+                                </span>
+                                <span className="material-selector-trigger-copy">
+                                  <span className="material-selector-trigger-title">Level {selectedLevel}</span>
+                                  <span className="material-selector-trigger-subtitle">{selectedLevelSummary}</span>
+                                </span>
+                              </>
+                            ) : (
+                              <span className="material-selector-trigger-placeholder">
+                                Select a Business English level
+                              </span>
+                            )}
+                          </span>
+                          <span className="material-selector-trigger-arrow" aria-hidden="true">
+                            <i className={`fas ${isLevelDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                          </span>
+                        </button>
+
+                        {isLevelDropdownOpen && (
+                          <div
+                            className="material-selector-menu"
+                            role="listbox"
+                            aria-label="Business English level"
+                            style={levelDropdownMenuStyle || undefined}
+                          >
+                            {availableLevels.map(level => {
+                              const levelLessons = availableLessons.filter(lesson => getLevelNumber(lesson) === level);
+
+                              return (
+                                <button
+                                  key={level}
+                                  type="button"
+                                  className={`material-selector-option ${selectedLevel === level ? 'is-selected' : ''}`}
+                                  onClick={() => {
+                                    setSelectedLevel(level);
+                                    setSelectedChapter(null);
+                                    setSelectedLessonId('');
+                                    setIsLevelDropdownOpen(false);
+                                    setIsLessonDropdownOpen(false);
+                                  }}
+                                  role="option"
+                                  aria-selected={selectedLevel === level}
+                                >
+                                  <span className="material-selector-option-icon material-selector-option-icon--level" aria-hidden="true">
+                                    <i className="fas fa-layer-group"></i>
+                                  </span>
+                                  <span className="material-selector-option-copy">
+                                    <span className="material-selector-option-title">Level {level}</span>
+                                    <span className="material-selector-option-description">
+                                      {levelLessons.length} lesson{levelLessons.length === 1 ? '' : 's'} available
+                                    </span>
+                                  </span>
+                                  {selectedLevel === level && (
+                                    <span className="material-selector-option-check" aria-hidden="true">
+                                      <i className="fas fa-check"></i>
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="material-selector-field">
+                      <span className="material-selector-field-label">Chapter</span>
+                      <div
+                        className={`material-selector-combobox material-selector-combobox--filter ${isChapterDropdownOpen ? 'is-open' : ''}`}
+                        ref={chapterDropdownRef}
+                      >
+                        <button
+                          type="button"
+                          className="material-selector-trigger material-selector-trigger--filter"
+                          onClick={toggleChapterDropdown}
+                          aria-haspopup="listbox"
+                          aria-expanded={isChapterDropdownOpen}
+                          disabled={selectedLevel === null || availableChapters.length === 0}
+                        >
+                          <span className="material-selector-trigger-content">
+                            {selectedChapter !== null ? (
+                              <>
+                                <span className="material-selector-trigger-icon material-selector-trigger-icon--chapter" aria-hidden="true">
+                                  <i className="fas fa-list-ul"></i>
+                                </span>
+                                <span className="material-selector-trigger-copy">
+                                  <span className="material-selector-trigger-title">Chapter {selectedChapter}</span>
+                                  <span className="material-selector-trigger-subtitle">{selectedChapterSummary}</span>
+                                </span>
+                              </>
+                            ) : (
+                              <span className="material-selector-trigger-placeholder">
+                                {selectedLevel === null ? 'Choose a level first' : 'Select a chapter'}
+                              </span>
+                            )}
+                          </span>
+                          <span className="material-selector-trigger-arrow" aria-hidden="true">
+                            <i className={`fas ${isChapterDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                          </span>
+                        </button>
+
+                        {isChapterDropdownOpen && (
+                          <div
+                            className="material-selector-menu"
+                            role="listbox"
+                            aria-label="Business English chapter"
+                            style={chapterDropdownMenuStyle || undefined}
+                          >
+                            {availableChapters.map(chapter => {
+                              const chapterLessons = availableLessons.filter(
+                                lesson => getLevelNumber(lesson) === selectedLevel && getChapterNumber(lesson) === chapter
+                              );
+
+                              return (
+                                <button
+                                  key={chapter}
+                                  type="button"
+                                  className={`material-selector-option ${selectedChapter === chapter ? 'is-selected' : ''}`}
+                                  onClick={() => {
+                                    setSelectedChapter(chapter);
+                                    setSelectedLessonId('');
+                                    setIsChapterDropdownOpen(false);
+                                    setIsLessonDropdownOpen(false);
+                                  }}
+                                  role="option"
+                                  aria-selected={selectedChapter === chapter}
+                                >
+                                  <span className="material-selector-option-icon material-selector-option-icon--chapter" aria-hidden="true">
+                                    <i className="fas fa-list-ul"></i>
+                                  </span>
+                                  <span className="material-selector-option-copy">
+                                    <span className="material-selector-option-title">Chapter {chapter}</span>
+                                    <span className="material-selector-option-description">
+                                      {chapterLessons.length} lesson{chapterLessons.length === 1 ? '' : 's'} in this chapter
+                                    </span>
+                                  </span>
+                                  {selectedChapter === chapter && (
+                                    <span className="material-selector-option-check" aria-hidden="true">
+                                      <i className="fas fa-check"></i>
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Business English lesson selector */}
+                {showSelectedCourseDetails && selectedCourse === 'business-english' && selectedChapter !== null && filteredLessons.length > 0 && (
+                  <div className="material-selector-row">
+                    <div className="material-selector-field">
+                      <span className="material-selector-field-label">Lesson</span>
+                      <div
+                        className={`material-selector-combobox material-selector-combobox--filter ${isLessonDropdownOpen ? 'is-open' : ''}`}
+                        ref={lessonDropdownRef}
+                      >
+                        <button
+                          type="button"
+                          className="material-selector-trigger material-selector-trigger--filter"
+                          onClick={toggleLessonDropdown}
+                          aria-haspopup="listbox"
+                          aria-expanded={isLessonDropdownOpen}
+                        >
+                          <span className="material-selector-trigger-content">
+                            {selectedBusinessLesson ? (
+                              <>
+                                <span className="material-selector-trigger-icon material-selector-trigger-icon--lesson" aria-hidden="true">
+                                  <i className="fas fa-book-open"></i>
+                                </span>
+                                <span className="material-selector-trigger-copy">
+                                  <span className="material-selector-trigger-title">{selectedBusinessLesson.title}</span>
+                                  <span className="material-selector-trigger-subtitle">{selectedLessonSummary}</span>
+                                </span>
+                              </>
+                            ) : (
+                              <span className="material-selector-trigger-placeholder">
+                                Select a lesson
+                              </span>
+                            )}
+                          </span>
+                          <span className="material-selector-trigger-arrow" aria-hidden="true">
+                            <i className={`fas ${isLessonDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                          </span>
+                        </button>
+
+                        {isLessonDropdownOpen && (
+                          <div
+                            className="material-selector-menu"
+                            role="listbox"
+                            aria-label="Business English lesson"
+                            style={lessonDropdownMenuStyle || undefined}
+                          >
+                            {filteredLessons
+                              .slice()
+                              .sort((a, b) => getLessonNumber(a) - getLessonNumber(b))
+                              .map(lesson => (
+                                <button
+                                  key={lesson.id}
+                                  type="button"
+                                  className={`material-selector-option ${selectedLessonId === lesson.id ? 'is-selected' : ''}`}
+                                  onClick={() => {
+                                    setSelectedLessonId(lesson.id);
+                                    setIsLessonDropdownOpen(false);
+                                  }}
+                                  role="option"
+                                  aria-selected={selectedLessonId === lesson.id}
+                                >
+                                  <span className="material-selector-option-icon material-selector-option-icon--lesson" aria-hidden="true">
+                                    <i className="fas fa-book-open"></i>
+                                  </span>
+                                  <span className="material-selector-option-copy">
+                                    <span className="material-selector-option-title">{lesson.title}</span>
+                                    <span className="material-selector-option-description">
+                                      {lesson.lessonData?.header?.goalText || 'Open this lesson in the classroom viewer'}
+                                    </span>
+                                  </span>
+                                  {selectedLessonId === lesson.id && (
+                                    <span className="material-selector-option-check" aria-hidden="true">
+                                      <i className="fas fa-check"></i>
+                                    </span>
+                                  )}
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Level Selector - shows for other courses */}
-                {selectedCourse && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && availableLevels.length > 0 && (
+                {showSelectedCourseDetails && selectedCourse && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedCourse !== 'business-english' && availableLevels.length > 0 && (
                   <div className="material-selector-row">
                     <select 
                       className="material-selector-dropdown"
@@ -1919,7 +3526,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 
                 {/* Chapter Selector - shows when level is selected (for other courses) */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLevel !== null && availableChapters.length > 0 && (
+                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedCourse !== 'business-english' && selectedLevel !== null && availableChapters.length > 0 && (
                   <div className="material-selector-row">
                     <select 
                       className="material-selector-dropdown"
@@ -1939,7 +3546,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 
                 {/* Lesson Selector - shows when chapter is selected (for other courses) */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedChapter !== null && filteredLessons.length > 0 && (
+                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedCourse !== 'business-english' && selectedChapter !== null && filteredLessons.length > 0 && (
                   <div className="material-selector-row">
                     <select 
                       className="material-selector-dropdown"
@@ -1957,7 +3564,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 
                 {/* Loading indicator - for other courses with dropdowns */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && loadingMaterials && (
+                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && loadingMaterials && (
                   <div className="material-loading-inline">
                     <div className="spinner-small"></div>
                     <span>Loading...</span>
@@ -1965,7 +3572,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 
                 {/* Select Button - shows when a lesson is selected (for other courses) */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLessonId && (
+                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLessonId && (
                   <div className="material-selector-row">
                     <button 
                       className="btn-search-material"
@@ -1978,6 +3585,35 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 )}
                 </div>
               </div>
+            </div>
+          ) : !showLessonRequest && viewingDispatchArticle ? (
+            <iframe 
+              src={`/materials/daily-dispatch/${viewingDispatchArticle.id}`}
+              className="dispatch-article-iframe"
+              title={viewingDispatchArticle.title}
+            />
+          ) : !showLessonRequest && viewingConversationalLesson && conversationalViewUrl ? (
+            <iframe 
+              src={conversationalViewUrl}
+              className="dispatch-article-iframe conversational-iframe"
+              title={viewingConversationalLesson.title}
+            />
+          ) : !showLessonRequest && isViewingBusinessEnglishMaterial && studentLessonRequest?.lessonId ? (
+            <div className="lesson-material-view lesson-material-view--business-english">
+              {loadingViewUrl ? (
+                <div className="material-loading">
+                  <div className="spinner"></div>
+                  <p>Loading lesson...</p>
+                </div>
+              ) : (
+                <BusinessEnglishPreviewPage
+                  key={studentLessonRequest.lessonId}
+                  lessonId={studentLessonRequest.lessonId}
+                  embedded
+                  forcedTheme={businessEnglishTheme}
+                  onRequestClose={() => setShowLessonRequest(true)}
+                />
+              )}
             </div>
           ) : !showLessonRequest && lessonViewUrl ? (
             <div className="lesson-material-view">
@@ -2006,24 +3642,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         </div>
       </div>
 
-      {/* Daily Dispatch Notes Floating Button - only shows when viewing Daily Dispatch article */}
-      {viewingDispatchArticle && (
+      {/* Classroom Notes Floating Button */}
+      {showNotesWidgetTrigger && (
         <button 
-          className={`dispatch-notes-fab dispatch-notes-fab--daily-dispatch ${showNotesWidget ? 'active' : ''}`}
+          className={`${notesWidgetFabClassName} ${showNotesWidget ? 'active' : ''}`}
           onClick={() => setShowNotesWidget(!showNotesWidget)}
-          title="Daily Dispatch Notes"
+          title={notesWidgetFabTitle}
         >
           <i className={showNotesWidget ? 'fi fi-sr-cross-small' : 'fi fi-sr-pencil'} />
         </button>
       )}
 
-      {/* Daily Dispatch Notes Widget */}
-      {viewingDispatchArticle && showNotesWidget && (
-        <div className="dispatch-notes-widget dispatch-notes-widget--daily-dispatch">
+      {/* Classroom Notes Widget */}
+      {showNotesWidgetTrigger && showNotesWidget && (
+        <div className={notesWidgetClassName}>
           <div className="dispatch-notes-header">
             <h3>
-              <i className="ri-newspaper-line" />
-              Daily Dispatch Notes
+              <i className={notesWidgetIconClass} />
+              {notesWidgetTitle}
             </h3>
             <button 
               className="dispatch-notes-close"
@@ -2373,15 +4009,56 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 Add Pronunciation Note
               </button>
             </div>
+
+            <div className="dispatch-notes-section">
+              <label className="dispatch-notes-label">
+                <i className="fas fa-comment-dots" />
+                COMMENT TO STUDENT
+              </label>
+              <textarea
+                className="dispatch-notes-textarea dispatch-notes-textarea--tall"
+                placeholder="Write a comment the student can review after the lesson..."
+                value={studentComment}
+                onChange={(e) => setStudentComment((e.target as HTMLTextAreaElement).value)}
+              />
+            </div>
+
+            <div className="dispatch-notes-section">
+              <label className="dispatch-notes-label">
+                <i className="fas fa-sticky-note" />
+                TUTOR MEMO
+              </label>
+              <textarea
+                className="dispatch-notes-textarea dispatch-notes-textarea--tall"
+                placeholder="Private tutor memo for this assigned lesson..."
+                value={tutorMemo}
+                onChange={(e) => setTutorMemo((e.target as HTMLTextAreaElement).value)}
+              />
+            </div>
           </div>
           
           <div className="dispatch-notes-footer">
+            <div className={`dispatch-notes-save-state dispatch-notes-save-state--${notesPersistenceState}`}>
+              {notesPersistenceState === 'loading'
+                ? 'Loading saved notes...'
+                : notesPersistenceState === 'saving'
+                  ? 'Saving...'
+                  : notesPersistenceState === 'saved'
+                    ? 'Saved to this lesson'
+                    : notesPersistenceState === 'draft'
+                      ? 'Draft kept on this device'
+                    : notesPersistenceState === 'error'
+                      ? 'Save unavailable'
+                      : 'Notes stay with this lesson'}
+            </div>
             <button 
               className="dispatch-notes-clear"
               onClick={() => {
-                setVocabularyItems([{ word: '', definitions: [], selectedDefinitionIndex: 0, isLoading: false, showDefinition: false, showTranslation: false }]);
-                setGrammarItems([{ youSaid: '', correct: '', simpleExplanation: '', technicalExplanation: '', isLoading: false, showExplanation: false }]);
-                setPronunciationItems([{ word: '', phonetic: '', isLoading: false, showPhonetic: false }]);
+                setVocabularyItems([createEmptyVocabularyItem()]);
+                setGrammarItems([createEmptyGrammarItem()]);
+                setPronunciationItems([createEmptyPronunciationItem()]);
+                setStudentComment('');
+                setTutorMemo('');
               }}
             >
               <i className="fi fi-sr-trash" />
@@ -2405,7 +4082,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   .filter(item => item.word.trim() || item.phonetic)
                   .map(item => `• ${item.word} - [${item.phonetic}]`)
                   .join('\n');
-                const notes = `VOCABULARY:\n${vocabText || '(none)'}\n\nGRAMMAR:\n${grammarText || '(none)'}\n\nPRONUNCIATION:\n${pronunciationText || '(none)'}`;
+                const notes = `VOCABULARY:\n${vocabText || '(none)'}\n\nGRAMMAR:\n${grammarText || '(none)'}\n\nPRONUNCIATION:\n${pronunciationText || '(none)'}\n\nCOMMENT TO STUDENT:\n${studentComment.trim() || '(none)'}\n\nTUTOR MEMO:\n${tutorMemo.trim() || '(none)'}`;
                 navigator.clipboard.writeText(notes);
                 toast.success('Notes copied to clipboard!');
               }}

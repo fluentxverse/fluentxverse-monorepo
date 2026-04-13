@@ -285,6 +285,35 @@
   margin-top: 1px;
 }
 
+.beai-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(124, 58, 237, 0.04));
+  border: 1px solid var(--beai-border);
+  border-radius: 8px;
+}
+
+.beai-quick-actions-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.beai-quick-actions-copy strong {
+  font-size: 14px;
+  color: var(--beai-text-bright);
+}
+
+.beai-quick-actions-copy span {
+  font-size: 12px;
+  color: var(--beai-text-dim);
+}
+
 /* Progress bar */
 .beai-progress-bar {
   position: relative;
@@ -592,6 +621,26 @@
 .beai-btn-batch:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.beai-btn-batch-top {
+  width: auto;
+  min-width: 150px;
+  white-space: nowrap;
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: var(--beai-text-bright);
+}
+
+@media (max-width: 640px) {
+  .beai-btn-batch-top {
+    width: 100%;
+  }
+}
+
+.beai-btn-batch-top:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.18);
+  color: #fff;
 }
 
 /* ============================================================================

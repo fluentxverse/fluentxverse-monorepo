@@ -497,6 +497,7 @@
   border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
+  border: 1px solid transparent;
 }
 
 .factor-item.positive {
@@ -1009,10 +1010,11 @@
   align-items: flex-start;
   gap: 16px;
   padding: 16px 20px;
-  background: #ffffff;
+  background: var(--penalty-bg, #ffffff);
   border-radius: 12px;
   margin-bottom: 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--penalty-border, transparent);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .metric-item.critical {
@@ -1065,7 +1067,8 @@
   font-weight: 800;
   padding: 6px 10px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--penalty-code-bg, #fff);
+  color: var(--penalty-code-color, inherit);
 }
 
 .metric-item.critical .code-label {
@@ -1101,6 +1104,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--penalty-severity-color, inherit);
 }
 
 .severity-label.critical {
@@ -1122,13 +1126,13 @@
 .metric-item .metric-info h4 {
   font-size: 15px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--penalty-title-color, #0f172a);
   margin: 0 0 6px 0;
 }
 
 .metric-item .metric-info p {
   font-size: 13px;
-  color: #64748b;
+  color: var(--penalty-body-color, #64748b);
   line-height: 1.5;
   margin: 0;
 }
@@ -1277,4 +1281,366 @@
   .performance-metrics-page .page-title-gradient {
     font-size: 20px;
   }
+}
+
+[data-theme='dark'] .performance-metrics-page {
+  background: #1a1a1a;
+}
+
+[data-theme='dark'] .performance-subtitle,
+[data-theme='dark'] .back-link,
+[data-theme='dark'] .summary-label,
+[data-theme='dark'] .summary-caption,
+[data-theme='dark'] .metric-card-subtitle,
+[data-theme='dark'] .metric-meta,
+[data-theme='dark'] .penalty-header-subtitle {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .summary-card,
+[data-theme='dark'] .metric-card,
+[data-theme='dark'] .performance-tabs,
+[data-theme='dark'] .weight-card,
+[data-theme='dark'] .formula-display,
+[data-theme='dark'] .content-card,
+[data-theme='dark'] .penalty-code-panel,
+[data-theme='dark'] .score-panel,
+[data-theme='dark'] .breakdown-card,
+[data-theme='dark'] .chart-card {
+  background: linear-gradient(135deg, var(--fxv-surface) 0%, var(--fxv-surface-muted) 100%);
+  border-color: var(--fxv-border);
+  color: var(--fxv-text);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .performance-loading .spinner {
+  border-color: rgba(255, 255, 255, 0.12);
+  border-top-color: var(--fxv-accent);
+}
+
+[data-theme='dark'] .performance-loading p,
+[data-theme='dark'] .lesson-stat-label,
+[data-theme='dark'] .rating-count,
+[data-theme='dark'] .rating-bar-label,
+[data-theme='dark'] .rating-bar-count,
+[data-theme='dark'] .reliability-label,
+[data-theme='dark'] .formula-header-subtitle,
+[data-theme='dark'] .slot-desc,
+[data-theme='dark'] .penalty-header-subtitle,
+[data-theme='dark'] .metric-item .metric-info p,
+[data-theme='dark'] .info-box p,
+[data-theme='dark'] .formula-desc,
+[data-theme='dark'] .example-box p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .summary-value,
+[data-theme='dark'] .card-title,
+[data-theme='dark'] .lesson-stat-value,
+[data-theme='dark'] .reliability-factors h3,
+[data-theme='dark'] .formula-section h3,
+[data-theme='dark'] .penalty-table h4,
+[data-theme='dark'] .slot-label,
+[data-theme='dark'] .weights-title,
+[data-theme='dark'] .weight-value,
+[data-theme='dark'] .example-title,
+[data-theme='dark'] .example-calc,
+[data-theme='dark'] .metric-item .metric-info h4,
+[data-theme='dark'] .formula-fraction .numerator,
+[data-theme='dark'] .formula-fraction .denominator,
+[data-theme='dark'] .formula-multiply {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .summary-card:hover {
+  border-color: var(--fxv-border-strong);
+  box-shadow: var(--fxv-shadow-md);
+}
+
+[data-theme='dark'] .summary-card.active {
+  border-color: var(--fxv-accent);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+}
+
+[data-theme='dark'] .performance-tabs .tab-btn {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .performance-tabs .tab-btn:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .performance-tabs .tab-btn.active {
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
+[data-theme='dark'] .card-title {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .card-title i {
+  background: rgba(37, 99, 235, 0.12);
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .lesson-stat,
+[data-theme='dark'] .example-box,
+[data-theme='dark'] .formula-box {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .rating-stars i {
+  color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme='dark'] .rating-bar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .reliability-bg {
+  opacity: 1;
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .factor-item.positive {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .factor-item.negative {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .factor-item.positive i {
+  color: #34d399;
+}
+
+[data-theme='dark'] .factor-item.negative i {
+  color: #f87171;
+}
+
+[data-theme='dark'] .formula-section {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .formula-display {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .fraction-numerator,
+[data-theme='dark'] .fraction-denominator,
+[data-theme='dark'] .formula-operator,
+[data-theme='dark'] .formula-100 {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .fraction-line {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+[data-theme='dark'] .slot-item.booked {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .slot-item.unbooked {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .slot-item.booked .slot-icon,
+[data-theme='dark'] .slot-item.unbooked .slot-icon {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .slot-item.booked .slot-icon i {
+  color: #60a5fa;
+}
+
+[data-theme='dark'] .slot-item.unbooked .slot-icon i {
+  color: #4ade80;
+}
+
+[data-theme='dark'] .weight-item.critical {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .weight-item.high {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .weight-item.medium {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .weight-item.low {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .weight-item.neutral {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .weight-item.critical .weight-code {
+  color: #f87171;
+}
+
+[data-theme='dark'] .weight-item.high .weight-code {
+  color: #fb923c;
+}
+
+[data-theme='dark'] .weight-item.medium .weight-code {
+  color: #fbbf24;
+}
+
+[data-theme='dark'] .weight-item.low .weight-code {
+  color: #a78bfa;
+}
+
+[data-theme='dark'] .weight-item.neutral .weight-code {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .formula-result {
+  color: var(--fxv-text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--fxv-border);
+}
+
+[data-theme='dark'] .example-calc {
+  background: rgba(17, 17, 17, 0.34);
+}
+
+[data-theme='dark'] .penalty-header-icon {
+  box-shadow: none;
+}
+
+[data-theme='dark'] .metric-item {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+[data-theme='dark'] .metric-item.critical,
+[data-theme='dark'] .metric-item.critical-dark {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .metric-item.high {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .metric-item.medium {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .metric-item.low-purple {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .metric-item.low-violet {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .metric-item.low-cyan {
+  background: var(--fxv-surface-muted);
+  border-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .code-label {
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme='dark'] .metric-item .metric-info h4 {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .metric-item .metric-info p {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .severity-label.critical {
+  color: #fda4af;
+}
+
+[data-theme='dark'] .severity-label.high {
+  color: #fdba74;
+}
+
+[data-theme='dark'] .severity-label.medium {
+  color: #fde68a;
+}
+
+[data-theme='dark'] .severity-label.low {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .metric-item.critical .code-label {
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .metric-item.critical-dark .code-label {
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .metric-item.high .code-label {
+  color: #fdba74;
+}
+
+[data-theme='dark'] .metric-item.medium .code-label {
+  color: #fde68a;
+}
+
+[data-theme='dark'] .metric-item.low-purple .code-label {
+  color: #c4b5fd;
+}
+
+[data-theme='dark'] .metric-item.low-violet .code-label {
+  color: #d8b4fe;
+}
+
+[data-theme='dark'] .metric-item.low-cyan .code-label {
+  color: #67e8f9;
+}
+
+[data-theme='dark'] .penalty-table th {
+  background: var(--fxv-surface-muted);
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .penalty-table th,
+[data-theme='dark'] .penalty-table td {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .info-box {
+  background: var(--fxv-surface-muted);
+  border: 1px solid var(--fxv-border);
+  border-left-color: var(--fxv-accent);
+}
+
+[data-theme='dark'] .info-box i {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .info-box.warning {
+  background: var(--fxv-surface-muted);
+  border-left-color: #f59e0b;
 }

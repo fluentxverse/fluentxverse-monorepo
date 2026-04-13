@@ -124,7 +124,10 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         
         // Get dashboard URL
         const dashboardBase = getDashboardPublicUrl();
-        const viewUrl = `${dashboardBase}/conversational-skills-preview/${lesson.id}`;
+        const previewPath = lesson.course === 'business-english'
+          ? 'business-english-preview'
+          : 'conversational-skills-preview';
+        const viewUrl = `${dashboardBase}/${previewPath}/${lesson.id}`;
         
         return { 
           success: true, 

@@ -1081,3 +1081,77 @@
     height: 140px;
   }
 }
+
+[data-theme='dark'] .course-detail-page {
+  background: var(--fxv-bg);
+}
+
+[data-theme='dark'] .course-detail-page .back-link,
+[data-theme='dark'] .course-hero,
+[data-theme='dark'] .course-stat,
+[data-theme='dark'] .lessons-filters-section,
+[data-theme='dark'] .level-content,
+[data-theme='dark'] .chapter-group,
+[data-theme='dark'] .lessons-table,
+[data-theme='dark'] .lesson-card,
+[data-theme='dark'] .lessons-loading,
+[data-theme='dark'] .lessons-error,
+[data-theme='dark'] .lessons-empty,
+[data-theme='dark'] .filter-select,
+[data-theme='dark'] .filter-group .lessons-search input,
+[data-theme='dark'] .btn-clear-filters {
+  background: var(--fxv-surface);
+  color: var(--fxv-text);
+  border-color: var(--fxv-border);
+  box-shadow: var(--fxv-shadow-sm);
+}
+
+[data-theme='dark'] .course-title-main,
+[data-theme='dark'] .lesson-title,
+[data-theme='dark'] .chapter-title {
+  color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .course-description-main,
+[data-theme='dark'] .filter-label,
+[data-theme='dark'] .lesson-goal,
+[data-theme='dark'] .lesson-meta,
+[data-theme='dark'] .lessons-empty,
+[data-theme='dark'] .lessons-loading,
+[data-theme='dark'] .lessons-error {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .course-stat span,
+[data-theme='dark'] .lessons-loading p,
+[data-theme='dark'] .lessons-error p,
+[data-theme='dark'] .lessons-empty p {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .lessons-error h3,
+[data-theme='dark'] .lessons-empty h3 {
+  color: var(--fxv-text);
+}
+
+[data-theme='dark'] .empty-icon {
+  background: rgba(59, 130, 246, 0.12);
+  color: #7eb3ff;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+[data-theme='dark'] .course-stat i,
+[data-theme='dark'] .filter-group .lessons-search i {
+  color: #7eb3ff;
+}
+
+[data-theme='dark'] .course-category-badge {
+  background: rgba(59, 130, 246, 0.12);
+  color: #9fc5ff;
+  border-color: rgba(96, 165, 250, 0.18);
+}
+
+[data-theme='dark'] .filter-group .lessons-search input::placeholder {
+  color: var(--fxv-text-soft);
+}

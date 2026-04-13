@@ -107,7 +107,7 @@
 
 /* ===== FEATURED PROGRESS CARD ===== */
 .featured-progress-card {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  background: linear-gradient(135deg, #1a1a1a 0%, #232323 100%);
   border-radius: 24px;
   padding: 40px;
   margin-bottom: 32px;
@@ -186,10 +186,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(35, 35, 35, 0.88);
   border-radius: 16px;
   padding: 32px 40px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .progress-stat {
@@ -209,7 +209,7 @@
 .stat-label {
   display: block;
   font-size: 14px;
-  color: #94a3b8;
+  color: #a3a3a3;
   line-height: 1.4;
 }
 
@@ -235,7 +235,7 @@
   text-align: center;
   gap: 16px;
   padding: 32px 24px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.86);
   border-radius: 20px;
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -245,7 +245,7 @@
 .feature-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 25px 50px rgba(2, 69, 174, 0.12);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .feature-card.purple:hover {

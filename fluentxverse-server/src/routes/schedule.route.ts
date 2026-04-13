@@ -1,11 +1,13 @@
 import Elysia, { t } from 'elysia';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
+import { ClassroomNotesService } from '../services/classroomNotes.services/classroomNotes.service';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
 import { cacheGetOrSet, invalidateCache, getRedis } from '../db/redis';
 import { DateString, TimeString, ID, SafeString } from '../utils/validation';
 
 const scheduleService = new ScheduleService();
+const classroomNotesService = new ClassroomNotesService();
 
 // Cache TTLs in seconds
 const STUDENT_STATS_CACHE_TTL = 60; // 1 minute - stats change on booking/completion
@@ -374,6 +376,70 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         error: error.message || 'Failed to get lesson details'
       };
     }
+  })
+
+  /**
+   * Get the student-visible classroom comment for a saved material note
+   * GET /schedule/classroom-notes/:bookingId?materialType=...&materialId=...
+   */
+  .get('/classroom-notes/:bookingId', async ({ cookie, params, query, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+      const studentId = payload.userId;
+
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
+
+      const { bookingId } = params;
+      const materialType = typeof query.materialType === 'string' ? query.materialType : '';
+      const materialId = typeof query.materialId === 'string' ? query.materialId : '';
+
+      if (!bookingId || !materialType || !materialId) {
+        set.status = 400;
+        return { success: false, error: 'bookingId, materialType, and materialId are required' };
+      }
+
+      await scheduleService.getLessonDetails(bookingId, studentId);
+
+      const notes = await classroomNotesService.getNotes(bookingId, materialType, materialId);
+
+      return {
+        success: true,
+        data: notes
+          ? {
+              sessionId: notes.sessionId,
+              materialType: notes.materialType,
+              materialId: notes.materialId,
+              courseId: notes.courseId,
+              lessonId: notes.lessonId,
+              articleId: notes.articleId,
+              studentComment: notes.studentComment,
+              updatedAt: notes.updatedAt,
+            }
+          : null,
+      };
+    } catch (error: any) {
+      console.error('Error in /schedule/classroom-notes/:bookingId:', error);
+      set.status = error.message?.includes('Not authenticated') ? 401 : 500;
+      return {
+        success: false,
+        error: error.message || 'Failed to get classroom notes'
+      };
+    }
+  }, {
+    query: t.Object({
+      materialType: t.String(),
+      materialId: t.String(),
+    })
   })
 
   /**
