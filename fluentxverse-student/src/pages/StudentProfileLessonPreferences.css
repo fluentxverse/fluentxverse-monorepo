@@ -252,14 +252,14 @@
 }
 
 [data-theme='dark'] .profile-lesson-pref-section {
-  background: var(--fxv-surface);
+  background: transparent;
   border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme='dark'] .profile-lesson-pref,
 [data-theme='dark'] .profile-lesson-pref-header,
 [data-theme='dark'] .profile-lesson-pref-copy {
-  background: var(--fxv-surface);
+  background: transparent;
 }
 
 [data-theme='dark'] .profile-lesson-pref-icon {
@@ -288,7 +288,7 @@
 [data-theme='dark'] .profile-lesson-pref-toggle,
 [data-theme='dark'] .profile-lesson-pref-choice,
 [data-theme='dark'] .profile-lesson-pref-notes {
-  background: var(--fxv-surface);
+  background: transparent;
   border-color: rgba(255, 255, 255, 0.1);
   color: #e5e7eb;
   box-shadow: none;
@@ -297,13 +297,13 @@
 [data-theme='dark'] .profile-lesson-pref-toggle:hover,
 [data-theme='dark'] .profile-lesson-pref-choice:hover,
 [data-theme='dark'] .profile-lesson-pref-notes:hover {
-  background: var(--fxv-surface);
+  background: transparent;
   border-color: rgba(96, 165, 250, 0.24);
 }
 
 [data-theme='dark'] .profile-lesson-pref-toggle.is-active,
 [data-theme='dark'] .profile-lesson-pref-choice.is-active {
-  background: rgba(59, 130, 246, 0.09);
+  background: rgba(255, 255, 255, 0.025);
   border-color: rgba(96, 165, 250, 0.48);
   box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.16);
 }
@@ -313,7 +313,7 @@
 }
 
 [data-theme='dark'] .profile-lesson-pref-notes:focus {
-  background: rgba(59, 130, 246, 0.06);
+  background: transparent;
   border-color: rgba(96, 165, 250, 0.48);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
