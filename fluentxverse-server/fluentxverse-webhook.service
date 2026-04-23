@@ -2,15 +2,19 @@
 Description=FluentXverse Webhook Server
 After=network.target docker.service
 Wants=docker.service
+StartLimitIntervalSec=300
+StartLimitBurst=3
 
 [Service]
 Type=simple
 # UPDATE THESE VALUES for your system:
 User=paulanthonyarriola
 WorkingDirectory=/home/paulanthonyarriola/Desktop/fluentxverse/fluentxverse-server
+# A system service cannot execute a Bun binary labeled user_home_t on SELinux Enforcing.
+# Install Bun system-wide or run this webhook as a user service/container instead.
 ExecStart=/home/paulanthonyarriola/.bun/bin/bun run scripts/webhook-server.ts
-Restart=always
-RestartSec=10
+Restart=on-failure
+RestartSec=30
 StandardOutput=append:/home/paulanthonyarriola/webhook.log
 StandardError=append:/home/paulanthonyarriola/webhook.log
 

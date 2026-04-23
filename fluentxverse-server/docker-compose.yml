@@ -58,7 +58,9 @@ services:
     networks:
       - fluentxverse-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8765/health"]
+      # The API listens on IPv4 only inside the container, so localhost can
+      # resolve to ::1 and produce a false negative.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8765/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -156,7 +158,8 @@ services:
     networks:
       - fluentxverse-network
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/status || exit 1"]
+      # Seaweed volume binds to its container network address, not loopback.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://fluentxverse-seaweed-volume:8080/status || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -199,7 +202,6 @@ services:
       - Java_Xms=512m
       - Java_Xmx=2g
       - langtool_languageModel=/ngrams
-      - langtool_fasttextModel=/fasttext/lid.176.bin
     volumes:
       - languagetool-ngrams:/ngrams
       - languagetool-fasttext:/fasttext

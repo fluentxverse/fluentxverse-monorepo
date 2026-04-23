@@ -252,7 +252,14 @@
 }
 
 [data-theme='dark'] .profile-lesson-pref-section {
+  background: var(--fxv-surface);
   border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .profile-lesson-pref,
+[data-theme='dark'] .profile-lesson-pref-header,
+[data-theme='dark'] .profile-lesson-pref-copy {
+  background: var(--fxv-surface);
 }
 
 [data-theme='dark'] .profile-lesson-pref-icon {
@@ -281,7 +288,7 @@
 [data-theme='dark'] .profile-lesson-pref-toggle,
 [data-theme='dark'] .profile-lesson-pref-choice,
 [data-theme='dark'] .profile-lesson-pref-notes {
-  background: transparent;
+  background: var(--fxv-surface);
   border-color: rgba(255, 255, 255, 0.1);
   color: #e5e7eb;
   box-shadow: none;
@@ -290,7 +297,7 @@
 [data-theme='dark'] .profile-lesson-pref-toggle:hover,
 [data-theme='dark'] .profile-lesson-pref-choice:hover,
 [data-theme='dark'] .profile-lesson-pref-notes:hover {
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--fxv-surface);
   border-color: rgba(96, 165, 250, 0.24);
 }
 

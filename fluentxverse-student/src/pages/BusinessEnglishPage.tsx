@@ -184,10 +184,6 @@ export default function BusinessEnglishPage() {
     );
   };
 
-  const handleOpenLesson = (lesson: Lesson) => {
-    window.open(`/materials/business-english/${lesson.id}`, '_blank');
-  };
-
   const getLevelFromHeader = (lesson: Lesson): string => {
     return lesson.lessonData?.header?.levelBadge || 'Level 1';
   };
@@ -256,6 +252,11 @@ export default function BusinessEnglishPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="business-english-status-note" role="note">
+              <i className="fas fa-info-circle"></i>
+              <span>Lesson preview is temporarily unavailable in the student app while we rebuild it.</span>
             </div>
 
             {/* Filters Section */}
@@ -423,7 +424,6 @@ export default function BusinessEnglishPage() {
                                           <tr
                                             key={lesson.id}
                                             className="lesson-row"
-                                            onClick={() => handleOpenLesson(lesson)}
                                           >
                                             <td className="lesson-col-number">
                                               {getLessonNumber(lesson)}
@@ -438,7 +438,13 @@ export default function BusinessEnglishPage() {
                                               {lesson.lessonData?.header?.goalText || 'Professional English practice'}
                                             </td>
                                             <td className="lesson-col-action">
-                                              <button className="btn-start-lesson">
+                                              <button
+                                                className="btn-start-lesson"
+                                                type="button"
+                                                disabled
+                                                title="Preview temporarily unavailable"
+                                                aria-label="Preview temporarily unavailable"
+                                              >
                                                 <i className="fas fa-play"></i>
                                               </button>
                                             </td>
@@ -471,7 +477,6 @@ export default function BusinessEnglishPage() {
                   <div
                     key={lesson.id}
                     className="lesson-card"
-                    onClick={() => handleOpenLesson(lesson)}
                   >
                     <div 
                       className="lesson-thumbnail"
@@ -503,9 +508,15 @@ export default function BusinessEnglishPage() {
                       </div>
                     </div>
                     <div className="lesson-action">
-                      <button className="btn-open-lesson">
-                        <i className="fas fa-play"></i>
-                        Start Lesson
+                      <button
+                        className="btn-open-lesson"
+                        type="button"
+                        disabled
+                        title="Preview temporarily unavailable"
+                        aria-label="Preview temporarily unavailable"
+                      >
+                        <i className="fas fa-clock"></i>
+                        Preview Disabled
                       </button>
                     </div>
                   </div>

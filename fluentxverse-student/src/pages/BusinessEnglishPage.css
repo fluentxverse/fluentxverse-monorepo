@@ -34,6 +34,30 @@
   margin-bottom: 40px;
 }
 
+.business-english-status-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -8px 0 24px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: linear-gradient(135deg, rgba(255, 248, 235, 0.95) 0%, rgba(255, 243, 214, 0.92) 100%);
+  color: #8a5400;
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.08);
+}
+
+.business-english-status-note i {
+  font-size: 16px;
+  color: #d97706;
+}
+
+.business-english-status-note span {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
 .course-detail-page .back-link {
   display: inline-flex;
   align-items: center;
@@ -1172,4 +1196,52 @@
 
 [data-theme='dark'] .filter-group .lessons-search input::placeholder {
   color: var(--fxv-text-soft);
+}
+
+[data-theme='dark'] .chapter-lessons {
+  background: transparent;
+}
+
+[data-theme='dark'] .business-english-status-note {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #f7c26b;
+  box-shadow: none;
+}
+
+[data-theme='dark'] .business-english-status-note i {
+  color: #f59e0b;
+}
+
+[data-theme='dark'] .lessons-table thead {
+  background: #303030;
+  border-bottom-color: var(--fxv-border);
+}
+
+[data-theme='dark'] .lessons-table th {
+  color: var(--fxv-text-soft);
+}
+
+[data-theme='dark'] .lesson-row {
+  background: #242424;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .lesson-row:nth-child(even) {
+  background: #2a2a2a;
+}
+
+[data-theme='dark'] .lesson-row:hover {
+  background: #313131;
+}
+
+[data-theme='dark'] .lesson-row td,
+[data-theme='dark'] .lesson-col-skill,
+[data-theme='dark'] .lesson-col-goal {
+  color: var(--fxv-text-muted);
+}
+
+[data-theme='dark'] .lesson-col-number,
+[data-theme='dark'] .lesson-col-title {
+  color: var(--fxv-text);
 }

@@ -80,8 +80,8 @@ export const lessonApi = {
   },
 
   /**
-   * Get student view of a lesson (stripped of tutor hints)
-   * Returns viewUrl for displaying in dashboard's student view mode
+   * Get student-facing lesson data from the backend.
+   * The backend may optionally return a viewUrl for server-managed viewers.
    */
   async getStudentLesson(lessonId: string): Promise<{ 
     success: boolean; 
@@ -96,8 +96,7 @@ export const lessonApi = {
   },
   
   /**
-   * Get view URL for a lesson material (Memgraph-stored lessons like conversational-skills)
-   * Returns viewUrl pointing to the dashboard preview page
+   * Get a backend-provided view URL for a lesson material when available.
    */
   async getLessonMaterialView(lessonId: string): Promise<{ 
     success: boolean; 
@@ -110,8 +109,7 @@ export const lessonApi = {
   },
   
   /**
-   * Get full lesson material data for rendering (Memgraph-stored lessons)
-   * Used by the local lesson renderer component
+   * Get full lesson material data for local student rendering.
    */
   async getPublicLessonMaterial(lessonId: string): Promise<{ 
     success: boolean; 

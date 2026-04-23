@@ -72,8 +72,8 @@ docker image prune -f
 # ==========================================
 # WEBHOOK SERVER (managed by systemd, just restart it)
 # ==========================================
-log "🎣 Restarting webhook server via systemd..."
-sudo systemctl restart fluentxverse-webhook || log "⚠️ Webhook systemd service not found, skipping"
+log "🎣 Reloading webhook server via systemd if it is already running..."
+sudo systemctl try-restart fluentxverse-webhook || log "⚠️ Webhook systemd service not running or not found, skipping"
 
 log "✅ Deployment complete!"
 log "📊 Container status:"
