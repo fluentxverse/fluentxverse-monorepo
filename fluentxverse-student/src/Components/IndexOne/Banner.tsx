@@ -298,24 +298,29 @@ const sampleOrbitSlot = (relative: number) => {
   const center = orbitSlotAnchors[2]
   const progressFromCenter = Math.min(1, Math.abs(clampedRelative) / SLOT_RANGE)
   const easedDepth = easeInOutCubic(progressFromCenter)
-  const angle = clampedRelative * 0.62
+  const angle = clampedRelative * 0.58
+  const orbitRadiusX = 10.35
+  const orbitRadiusZ = 7
   const sinAngle = Math.sin(angle)
   const cosAngle = Math.cos(angle)
   const sideWeight = Math.abs(sinAngle)
   const depthWeight = 1 - cosAngle
-  const side = Math.sign(clampedRelative)
+  const rightSideWeight = clampedRelative > 0 ? sideWeight : 0
+  const rightSideLift = Math.pow(rightSideWeight, 1.15) * 1.28
+  const rightSideBendTarget = clampedRelative > 0 ? 1.78 : 0.84
+  const rightSideFoldTarget = clampedRelative > 0 ? 0.18 : 0.12
 
   return {
-    x: center.x + sinAngle * 11.35,
-    y: center.y - sideWeight * sideWeight * 0.92 - progressFromCenter * 0.12,
-    z: center.z - depthWeight * 8.15 - progressFromCenter * 0.35,
-    scale: clamp(center.scale - depthWeight * 1.7 - progressFromCenter * 0.08, 0.46, center.scale),
+    x: center.x + sinAngle * orbitRadiusX + rightSideWeight * 1.45,
+    y: center.y + Math.pow(sideWeight, 1.45) * 0.96 + rightSideLift - progressFromCenter * 0.04,
+    z: center.z - depthWeight * orbitRadiusZ - progressFromCenter * 0.08,
+    scale: clamp(center.scale - progressFromCenter * 0.14 - depthWeight * 0.12, 0.64, center.scale),
     rotateX: lerp(center.rotateX, 0, easedDepth),
-    rotateY: clamp(angle * 1.45, -1.18, 1.18),
-    rotateZ: center.rotateZ - side * sideWeight * 0.19 - easedDepth * 0.04,
-    opacity: lerp(center.opacity, 0.72, easedDepth),
-    bendDepth: lerp(center.bendDepth, 0.76, easedDepth),
-    foldDrop: lerp(center.foldDrop, 0.16, easedDepth),
+    rotateY: clamp(angle * 1.64 + rightSideWeight * 0.06, -1.18, 1.18),
+    rotateZ: center.rotateZ + sideWeight * 0.025 - easedDepth * 0.006,
+    opacity: lerp(center.opacity, 0.8, easedDepth),
+    bendDepth: lerp(center.bendDepth, rightSideBendTarget, sideWeight),
+    foldDrop: lerp(center.foldDrop, rightSideFoldTarget, sideWeight),
   }
 }
 
