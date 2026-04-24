@@ -13,6 +13,18 @@ const Header = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isDarkMode, toggleTheme } = useThemeStore();
   const isLandingPage = path === '/';
+  const homeHref = isAuthenticated ? '/home' : '/';
+  const navItems = isLandingPage
+    ? [
+        { href: '#hero-banner', label: 'Explore', icon: 'fas fa-compass' },
+        { href: '#beginner-welcome', label: 'Learn', icon: 'fas fa-book-open' },
+        { href: '#why-choose', label: 'Build', icon: 'fas fa-layer-group' },
+        { href: '#pricing', label: 'Start', icon: 'fas fa-rocket' },
+      ]
+    : [
+        { href: homeHref, label: 'Home', icon: 'fas fa-home' },
+        { href: '/browse-tutors', label: 'Browse Tutors', icon: 'fas fa-chalkboard-teacher' },
+      ];
 
   // Handler to open mobile menu
   const openMobileMenu = useCallback(() => {
@@ -108,8 +120,8 @@ const Header = () => {
 
 
   return (
-    <header>
-      <div id='sticky-header' className="menu-area ">
+    <header className={isLandingPage ? 'landing-header-shell' : ''}>
+      <div id='sticky-header' className={`menu-area ${isLandingPage ? 'landing-header-bar' : ''}`}>
         <div className="container">
           <div className="row">
             <div className="col-12">
@@ -123,17 +135,34 @@ const Header = () => {
               >
                 <i className="fas fa-bars" />
               </div>
-              <div className="menu-wrap main-menu">
+              <div className={`menu-wrap main-menu ${isLandingPage ? 'landing-menu-wrap' : ''}`}>
                 <nav className="menu-nav">
-                  <div className="logo"><a href="/#"><img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" /></a></div>
-                  <div className="brand-text">
-                    Fluent<span className="brand-x">X</span>Verse
-                  </div>
+                  <a
+                    href={homeHref}
+                    className={`brand-lockup${isLandingPage ? ' brand-lockup--landing' : ''}`}
+                    aria-label="FluentXVerse home"
+                  >
+                    {isLandingPage ? (
+                      <span className="brand-plate">FluentXVerse</span>
+                    ) : (
+                      <>
+                        <span className="logo">
+                          <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" />
+                        </span>
+                        <span className="brand-text">
+                          Fluent<span className="brand-x">X</span>Verse
+                        </span>
+                      </>
+                    )}
+                  </a>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
-                    <ul className="navigation">
-                      <li><a href={isAuthenticated ? "/home" : "/"}>Home</a></li>
-                      <li><a href="/browse-tutors">Browse Tutors</a></li>
-                      {isAuthenticated && (
+                    <ul className={`navigation ${isLandingPage ? 'landing-navigation' : ''}`}>
+                      {navItems.map((item) => (
+                        <li key={item.href}>
+                          <a href={item.href}>{item.label}</a>
+                        </li>
+                      ))}
+                      {!isLandingPage && isAuthenticated && (
                         <>
                           <li><a href="/schedule">Schedule</a></li>
                           <li><a href="/tickets">Tickets</a></li>
@@ -148,7 +177,7 @@ const Header = () => {
                       <li><a href="/contact">Contact</a></li> */}
                     </ul>
                   </div>
-                  <div className="header-action d-none d-md-block">
+                  <div className={`header-action d-none d-md-block ${isLandingPage ? 'landing-header-actions' : ''}`}>
                     <ul>
                       {!isLandingPage && (
                         <li className="theme-toggle">
@@ -216,19 +245,15 @@ const Header = () => {
                         </div>
                       )}
                       <ul className="navigation">
-                        <li>
-                          <a href={isAuthenticated ? "/home" : "/"} onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-home" />
-                            <span>Home</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a href="/browse-tutors" onClick={closeMobileMenu} className="nav-link">
-                            <i className="fas fa-chalkboard-teacher" />
-                            <span>Browse Tutors</span>
-                          </a>
-                        </li>
-                        {isAuthenticated && (
+                        {navItems.map((item) => (
+                          <li key={item.href}>
+                            <a href={item.href} onClick={closeMobileMenu} className="nav-link">
+                              <i className={item.icon} />
+                              <span>{item.label}</span>
+                            </a>
+                          </li>
+                        ))}
+                        {!isLandingPage && isAuthenticated && (
                           <>
                             <li>
                               <a href="/schedule" onClick={closeMobileMenu} className="nav-link">

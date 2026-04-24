@@ -26,7 +26,7 @@ const WhyChooseUs = () => {
   ];
 
   return (
-    <section className="why-choose-section">
+    <section className="why-choose-section" id="why-choose">
       {/* Floating decorations */}
       <div className="why-decoration why-decoration--1"></div>
       <div className="why-decoration why-decoration--2"></div>

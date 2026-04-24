@@ -2,7 +2,7 @@ import './PricingSection.css';
 
 const PricingSection = () => {
   return (
-    <section className="pricing-section">
+    <section className="pricing-section" id="pricing">
       <div className="pricing-container">
         <div className="pricing-header">
           <span className="pricing-badge">💎 Pricing</span>

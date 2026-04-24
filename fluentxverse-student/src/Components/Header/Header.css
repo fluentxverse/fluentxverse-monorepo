@@ -1,4 +1,22 @@
 /* Header styles */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-lockup .logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-lockup .logo img {
+  display: block;
+}
+
 .menu-wrap.main-menu .navbar-wrap > ul > li > a {
   font-size: 16px;
   font-weight: 700;
@@ -18,6 +36,121 @@
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.01em;
+}
+
+.landing-header-shell {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.landing-header-shell .landing-header-bar {
+  margin: 0;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: auto;
+  box-shadow: none !important;
+}
+
+.landing-header-shell .landing-header-bar.sticky-menu {
+  background: rgba(6, 10, 18, 0.38) !important;
+  backdrop-filter: blur(14px);
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+.landing-header-shell .landing-header-bar .container {
+  max-width: min(100% - 36px, 1840px);
+}
+
+.landing-header-shell .menu-wrap.main-menu.landing-menu-wrap {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.landing-header-shell .menu-wrap.main-menu.landing-menu-wrap::before {
+  display: none !important;
+}
+
+.landing-header-shell .menu-wrap.main-menu.landing-menu-wrap .menu-nav {
+  min-height: 92px;
+  justify-content: space-between;
+  gap: 28px;
+  background: transparent !important;
+}
+
+.brand-lockup--landing {
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  padding: 8px 14px 7px;
+}
+
+.brand-plate {
+  color: #ffffff;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.landing-header-shell .landing-menu-wrap .navbar-wrap {
+  justify-content: center;
+}
+
+.landing-header-shell .landing-menu-wrap .navbar-wrap ul {
+  margin: 0 auto;
+  gap: 26px;
+}
+
+.landing-navigation > li > a {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  min-height: 92px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+.landing-navigation > li > a:hover,
+.landing-navigation > li.active > a {
+  color: #ffffff !important;
+}
+
+.landing-header-actions .header-login {
+  margin-right: 0;
+}
+
+.landing-header-actions > ul {
+  align-items: center;
+}
+
+.landing-header-actions .login-btn {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+.landing-header-actions .login-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.landing-header-actions .login-btn span {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .header-login {
@@ -99,6 +232,14 @@
   .menu-wrap.main-menu .brand-text {
     font-size: 21px;
   }
+
+  .brand-plate {
+    font-size: 21px;
+  }
+
+  .landing-navigation > li > a {
+    font-size: 16px;
+  }
 }
 
 .mobile-menu-theme {
@@ -124,6 +265,26 @@
 
 .dark-mode .mobile-menu-theme {
   border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 991.98px) {
+  .landing-header-shell {
+    position: absolute;
+  }
+
+  .landing-header-shell .landing-header-bar {
+    background: rgba(6, 10, 18, 0.72);
+    backdrop-filter: blur(14px);
+  }
+
+  .brand-lockup--landing {
+    border-width: 1px;
+    padding: 6px 11px;
+  }
+
+  .brand-plate {
+    font-size: 19px;
+  }
 }
 
 /* Login Modal Styles */

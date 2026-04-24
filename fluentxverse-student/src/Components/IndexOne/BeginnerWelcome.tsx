@@ -3,7 +3,7 @@ import './BeginnerWelcome.css';
 
 const BeginnerWelcome = () => {
   return (
-    <section className="beginner-welcome">
+    <section className="beginner-welcome" id="beginner-welcome">
       <div className="beginner-welcome__container">
         {/* Decorative elements */}
         <div className="beginner-welcome__decoration beginner-welcome__decoration--1"></div>
