@@ -14,17 +14,18 @@ const Header = () => {
   const { isDarkMode, toggleTheme } = useThemeStore();
   const isLandingPage = path === '/';
   const homeHref = isAuthenticated ? '/home' : '/';
-  const navItems = isLandingPage
-    ? [
-        { href: '#hero-banner', label: 'Explore', icon: 'fas fa-compass' },
-        { href: '#beginner-welcome', label: 'Learn', icon: 'fas fa-book-open' },
-        { href: '#why-choose', label: 'Build', icon: 'fas fa-layer-group' },
-        { href: '#pricing', label: 'Start', icon: 'fas fa-rocket' },
-      ]
-    : [
-        { href: homeHref, label: 'Home', icon: 'fas fa-home' },
-        { href: '/browse-tutors', label: 'Browse Tutors', icon: 'fas fa-chalkboard-teacher' },
-      ];
+  const navItems = [
+    { href: homeHref, label: 'Home', icon: 'fas fa-home' },
+    { href: '/browse-tutors', label: 'Browse Tutors', icon: 'fas fa-chalkboard-teacher' },
+    ...(isAuthenticated
+      ? [
+          { href: '/schedule', label: 'Schedule', icon: 'fas fa-calendar-alt' },
+          { href: '/tickets', label: 'Tickets', icon: 'fas fa-ticket-alt' },
+          { href: '/materials', label: 'Materials', icon: 'fas fa-book' },
+          { href: '/profile', label: 'Profile', icon: 'fas fa-user' },
+        ]
+      : []),
+  ];
 
   // Handler to open mobile menu
   const openMobileMenu = useCallback(() => {
@@ -120,7 +121,7 @@ const Header = () => {
 
 
   return (
-    <header className={isLandingPage ? 'landing-header-shell' : ''}>
+    <header className={`${isLandingPage ? 'landing-header-shell' : ''}${showLoginModal ? ' header-modal-open' : ''}`}>
       <div id='sticky-header' className={`menu-area ${isLandingPage ? 'landing-header-bar' : ''}`}>
         <div className="container">
           <div className="row">
@@ -142,18 +143,15 @@ const Header = () => {
                     className={`brand-lockup${isLandingPage ? ' brand-lockup--landing' : ''}`}
                     aria-label="FluentXVerse home"
                   >
-                    {isLandingPage ? (
-                      <span className="brand-plate">FluentXVerse</span>
-                    ) : (
-                      <>
-                        <span className="logo">
-                          <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40" />
-                        </span>
-                        <span className="brand-text">
-                          Fluent<span className="brand-x">X</span>Verse
-                        </span>
-                      </>
-                    )}
+                    <span className="logo">
+                      <span className="logo__spin" aria-hidden="true">
+                        <img className="logo__face logo__face--front" src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40" />
+                        <img className="logo__face logo__face--back" src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40" />
+                      </span>
+                    </span>
+                    <span className="brand-text">
+                      Fluent<span className="brand-x">X</span>Verse
+                    </span>
                   </a>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul className={`navigation ${isLandingPage ? 'landing-navigation' : ''}`}>
@@ -162,14 +160,6 @@ const Header = () => {
                           <a href={item.href}>{item.label}</a>
                         </li>
                       ))}
-                      {!isLandingPage && isAuthenticated && (
-                        <>
-                          <li><a href="/schedule">Schedule</a></li>
-                          <li><a href="/tickets">Tickets</a></li>
-                          <li><a href="/materials">Materials</a></li>
-                          <li><a href="/profile">Profile</a></li>
-                        </>
-                      )}
                       {/* <li><a href="/farms">Farms</a></li>
                       <li><a href="/tree-nfts">Trees</a></li>
                       <li><a href="/assets/whitepaper/whitepaper.pdf" target="_blank" rel="noopener noreferrer">Whitepaper</a></li>
@@ -253,34 +243,6 @@ const Header = () => {
                             </a>
                           </li>
                         ))}
-                        {!isLandingPage && isAuthenticated && (
-                          <>
-                            <li>
-                              <a href="/schedule" onClick={closeMobileMenu} className="nav-link">
-                                <i className="fas fa-calendar-alt" />
-                                <span>Schedule</span>
-                              </a>
-                            </li>
-                            <li>
-                              <a href="/tickets" onClick={closeMobileMenu} className="nav-link">
-                                <i className="fas fa-ticket-alt" />
-                                <span>Tickets</span>
-                              </a>
-                            </li>
-                            <li>
-                              <a href="/materials" onClick={closeMobileMenu} className="nav-link">
-                                <i className="fas fa-book" />
-                                <span>Materials</span>
-                              </a>
-                            </li>
-                            <li>
-                              <a href="/profile" onClick={closeMobileMenu} className="nav-link">
-                                <i className="fas fa-user" />
-                                <span>Profile</span>
-                              </a>
-                            </li>
-                          </>
-                        )}
                       </ul>
                     </nav>
                     

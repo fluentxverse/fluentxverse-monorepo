@@ -1,89 +1,152 @@
-import { h } from 'preact';
-import './BeginnerWelcome.css';
+import { h } from 'preact'
+import { useEffect, useRef } from 'preact/hooks'
+import './BeginnerWelcome.css'
 
 const BeginnerWelcome = () => {
+  const sectionRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    let frame = 0
+
+    const updateTransition = () => {
+      frame = 0
+
+      const section = sectionRef.current
+
+      if (!section) {
+        return
+      }
+
+      const bounds = section.getBoundingClientRect()
+      const viewportHeight = Math.max(window.innerHeight, 1)
+      const triggerPoint = viewportHeight * 0.22
+      const isTriggered = bounds.top <= triggerPoint
+      const root = document.documentElement
+
+      root.style.setProperty('--student-section-handoff-progress', isTriggered ? '1' : '0')
+    }
+
+    const requestUpdate = () => {
+      if (frame) {
+        return
+      }
+
+      frame = window.requestAnimationFrame(updateTransition)
+    }
+
+    updateTransition()
+    window.addEventListener('scroll', requestUpdate, { passive: true })
+    window.addEventListener('resize', requestUpdate)
+
+    return () => {
+      if (frame) {
+        window.cancelAnimationFrame(frame)
+      }
+
+      document.documentElement.style.setProperty('--student-section-handoff-progress', '0')
+      window.removeEventListener('scroll', requestUpdate)
+      window.removeEventListener('resize', requestUpdate)
+    }
+  }, [])
+
+  const handlePointerMove = (event: PointerEvent) => {
+    const section = sectionRef.current
+
+    if (!section) {
+      return
+    }
+
+    const bounds = section.getBoundingClientRect()
+    const x = (event.clientX - bounds.left) / Math.max(bounds.width, 1)
+    const y = (event.clientY - bounds.top) / Math.max(bounds.height, 1)
+    const tiltX = (0.5 - y) * 15
+    const tiltY = (x - 0.5) * 18
+    const shiftX = (x - 0.5) * 64
+    const shiftY = (y - 0.5) * 34
+
+    section.style.setProperty('--spotlight-tilt-x', `${tiltX.toFixed(2)}deg`)
+    section.style.setProperty('--spotlight-tilt-y', `${tiltY.toFixed(2)}deg`)
+    section.style.setProperty('--spotlight-shift-x', `${shiftX.toFixed(2)}px`)
+    section.style.setProperty('--spotlight-shift-y', `${shiftY.toFixed(2)}px`)
+    section.style.setProperty('--spotlight-glow-x', `${(x * 100).toFixed(2)}%`)
+    section.style.setProperty('--spotlight-glow-y', `${(y * 100).toFixed(2)}%`)
+  }
+
+  const handlePointerLeave = () => {
+    const section = sectionRef.current
+
+    if (!section) {
+      return
+    }
+
+    section.style.setProperty('--spotlight-tilt-x', '0deg')
+    section.style.setProperty('--spotlight-tilt-y', '0deg')
+    section.style.setProperty('--spotlight-shift-x', '0px')
+    section.style.setProperty('--spotlight-shift-y', '0px')
+    section.style.setProperty('--spotlight-glow-x', '50%')
+    section.style.setProperty('--spotlight-glow-y', '50%')
+  }
+
   return (
-    <section className="beginner-welcome" id="beginner-welcome">
+    <section
+      className="beginner-welcome"
+      id="beginner-welcome"
+      ref={sectionRef}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
+      <div className="beginner-welcome__ghost beginner-welcome__ghost--left" aria-hidden="true" />
+      <div className="beginner-welcome__ghost beginner-welcome__ghost--back" aria-hidden="true" />
+
       <div className="beginner-welcome__container">
-        {/* Decorative elements */}
-        <div className="beginner-welcome__decoration beginner-welcome__decoration--1"></div>
-        <div className="beginner-welcome__decoration beginner-welcome__decoration--2"></div>
-        
         <div className="beginner-welcome__content">
-          <div className="beginner-welcome__badge">
-            <span className="beginner-welcome__badge-icon">🌱</span>
-            <span>Everyone Starts Somewhere</span>
+          <div className="beginner-welcome__eyebrow">
+            <span>FluentXVerse</span>
+            <strong>Spotlight</strong>
           </div>
-          
-          <h2 className="beginner-welcome__title">
-            New to English?
-            <span className="beginner-welcome__highlight"> You're Welcome Here!</span>
-          </h2>
-          
-          <p className="beginner-welcome__description">
-            Whether you're saying "Hello" for the first time or building confidence to speak fluently, 
-            FluentXVerse is designed for learners at every level. Our patient, certified tutors 
-            specialize in helping beginners overcome the fear of speaking and build a strong foundation.
-          </p>
-          
-          <div className="beginner-welcome__features">
-            {/* Featured Card */}
-            <div className="beginner-welcome__featured-card">
-              <div className="beginner-welcome__featured-icon">
-                <i className="fas fa-heart"></i>
-              </div>
-              <div className="beginner-welcome__featured-content">
-                <h3>Patient & Supportive</h3>
-                <p>Our tutors understand that learning takes time. No judgment, just encouragement and personalized guidance every step of the way.</p>
-              </div>
-              <div className="beginner-welcome__featured-decoration"></div>
-            </div>
-            
-            {/* Regular Feature Cards */}
-            <div className="beginner-welcome__features-grid">
-              <div className="beginner-welcome__feature">
-                <div className="beginner-welcome__feature-icon">
-                  <i className="fas fa-tachometer-alt"></i>
-                </div>
-                <div className="beginner-welcome__feature-content">
-                  <h3>Learn at Your Pace</h3>
-                  <p>Go slow or speed up — lessons adapt to your comfort level and learning style.</p>
-                </div>
-              </div>
-              
-              <div className="beginner-welcome__feature">
-                <div className="beginner-welcome__feature-icon">
-                  <i className="fas fa-comments"></i>
-                </div>
-                <div className="beginner-welcome__feature-content">
-                  <h3>Speak from Day One</h3>
-                  <p>Practice real conversations in a safe environment. Making mistakes is how we learn!</p>
-                </div>
-              </div>
-              
-              <div className="beginner-welcome__feature">
-                <div className="beginner-welcome__feature-icon">
-                  <i className="fas fa-chart-line"></i>
-                </div>
-                <div className="beginner-welcome__feature-content">
-                  <h3>Track Your Progress</h3>
-                  <p>See how far you've come with personalized feedback and achievement milestones.</p>
-                </div>
-              </div>
-            </div>
+
+          <h2 className="beginner-welcome__title">Practice That Clicks</h2>
+
+          <div className="beginner-welcome__copy">
+            <p>
+              Step into focused English lessons built around real conversations, useful feedback, and tutors
+              who keep every session moving with purpose.
+            </p>
+            <p>
+              Choose the path that fits your week: private lessons, group practice, ticket-based sessions, or
+              skill routes that help you build confidence one win at a time.
+            </p>
+            <p>Simple, flexible, and made for steady progress.</p>
           </div>
-          
-          <div className="beginner-welcome__cta">
-            <a href="/register" className="beginner-welcome__button beginner-welcome__button--primary">
-              <i className="fas fa-gift"></i>
-              Try a Free Lesson
-              <i className="fas fa-arrow-right"></i>
+
+          <div className="beginner-welcome__actions">
+            <a href="/register" className="beginner-welcome__button">
+              Get Started
             </a>
+            <a href="/browse-tutors" className="beginner-welcome__button">
+              Browse Tutors
+            </a>
+          </div>
+        </div>
+
+        <div className="beginner-welcome__visual" aria-label="Featured FluentXVerse lesson card">
+          <div className="beginner-welcome__card">
+            <img src="/assets/img/banner/banner_woman.png" alt="" />
+            <div className="beginner-welcome__card-shade" />
+            <div className="beginner-welcome__card-copy">
+              <h3>Private Lessons</h3>
+              <p>Focused English sessions with patient tutors.</p>
+              <a href="/browse-tutors">What's this</a>
+            </div>
           </div>
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default BeginnerWelcome;
+export default BeginnerWelcome

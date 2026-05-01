@@ -11,7 +11,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 100000;
+  pointer-events: auto;
   animation: fadeIn 0.3s ease;
   padding: 20px;
 }
@@ -23,6 +24,7 @@
   max-width: 420px;
   width: 100%;
   position: relative;
+  pointer-events: auto;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }

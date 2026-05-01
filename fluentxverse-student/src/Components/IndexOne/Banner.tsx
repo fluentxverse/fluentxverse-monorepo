@@ -23,6 +23,7 @@ type HeroSlide = {
 
 type ThemePalette = {
   shellStart: string
+  shellMid: string
   shellEnd: string
   glow: string
   contour: string
@@ -41,170 +42,94 @@ type CanvasScene = {
   height: number
 }
 
-type PosterPoseAnchor = {
-  relative: number
-  centerX: number
-  centerY: number
-  width: number
-  aspect: number
-  rotate: number
-  skewX: number
-  squashY: number
-  opacity: number
-  depth: number
-}
-
-type OrbitSlotAnchor = {
-  relative: number
-  x: number
-  y: number
-  z: number
-  scale: number
-  rotateX: number
-  rotateY: number
-  rotateZ: number
-  opacity: number
-  bendDepth: number
-  foldDrop: number
+type DragState = {
+  active: boolean
+  pointerId: number | null
+  startX: number
+  startRotation: number
 }
 
 const AUTO_SLOW_MS = 5000
-const AUTO_FAST_MS = 900
-const AUTO_SLOW_PROGRESS = 0.22
-const SLOT_RANGE = 2.2
-const RENDER_SLOT_OFFSETS = [-2, -1, 0, 1, 2] as const
-const CARD_ASPECT_RATIO = 1.86
+const AUTO_FAST_MS = 1200
+const AUTO_SLOW_PROGRESS = 0.16
+const DRAG_ROTATION_SENSITIVITY = 2.45
+const RENDER_SLOT_OFFSETS = [0, 1, 2, 3, 4] as const
+const CARD_ASPECT_RATIO = 1.909
+const CARD_ARC_RADIANS = Math.PI * 0.366
+const CARD_PLANE_WIDTH = 8.22
+const ORBIT_RADIUS = CARD_PLANE_WIDTH / (2 * Math.sin(CARD_ARC_RADIANS / 2))
+const ORBIT_RADIUS_X = ORBIT_RADIUS * 1.015
+const ORBIT_RADIUS_Z = ORBIT_RADIUS * 0.675
+const ORBIT_CENTER_X = 2.05
+const ORBIT_CENTER_Y = 0.18
+const ORBIT_STEP_RADIANS = (Math.PI * 2) / RENDER_SLOT_OFFSETS.length
+const ORBIT_DEFAULT_PHASE = -1.0
+const ORBIT_PRESENTATION_TILT_X = -0.035
+const ORBIT_PRESENTATION_TILT_Y = -0.005
+const ORBIT_PRESENTATION_TILT_Z = 0.105
+const ORBIT_PRESENTATION_SHIFT_X = 0.56
+const ORBIT_PRESENTATION_SHIFT_Y = -0.26
+const ORBIT_CAMERA_X = ORBIT_CENTER_X + 0.1
+const ORBIT_CAMERA_Y = -1.48
+const ORBIT_CAMERA_Z = 16.35
+const ORBIT_LOOK_AT_X = ORBIT_CENTER_X + 0.32
+const ORBIT_LOOK_AT_Y = 0.58
+const ORBIT_LOOK_AT_Z = -0.3
+const TAU = Math.PI * 2
+const ORBIT_SAMPLE_COUNT = 960
 
-const posterPoseAnchors: PosterPoseAnchor[] = [
-  {
-    relative: -2.3,
-    centerX: -0.24,
-    centerY: 0.56,
-    width: 0.22,
-    aspect: 1.58,
-    rotate: -15,
-    skewX: -0.1,
-    squashY: 0.96,
-    opacity: 0.12,
-    depth: 0.04,
-  },
-  {
-    relative: -1,
-    centerX: -0.01,
-    centerY: 0.54,
-    width: 0.29,
-    aspect: 1.58,
-    rotate: -13,
-    skewX: -0.08,
-    squashY: 0.97,
-    opacity: 0.52,
-    depth: 0.24,
-  },
-  {
-    relative: 0,
-    centerX: 0.41,
-    centerY: 0.46,
-    width: 0.64,
-    aspect: 1.57,
-    rotate: -6.5,
-    skewX: -0.035,
-    squashY: 1,
-    opacity: 1,
-    depth: 1,
-  },
-  {
-    relative: 1,
-    centerX: 0.96,
-    centerY: 0.46,
-    width: 0.35,
-    aspect: 1.58,
-    rotate: 5,
-    skewX: 0.075,
-    squashY: 0.98,
-    opacity: 0.66,
-    depth: 0.38,
-  },
-  {
-    relative: 2.3,
-    centerX: 1.16,
-    centerY: 0.45,
-    width: 0.24,
-    aspect: 1.58,
-    rotate: 12,
-    skewX: 0.1,
-    squashY: 0.97,
-    opacity: 0.18,
-    depth: 0.08,
-  },
-]
+function getOrbitPoint(angle: number) {
+  return {
+    x: Math.sin(angle) * ORBIT_RADIUS_X,
+    z: Math.cos(angle) * ORBIT_RADIUS_Z,
+  }
+}
 
-const orbitSlotAnchors: OrbitSlotAnchor[] = [
-  {
-    relative: -2.2,
-    x: -16.2,
-    y: -0.34,
-    z: -2.8,
-    scale: 0.60,
-    rotateX: 0,
-    rotateY: 1.2,
-    rotateZ: -0.22,
-    opacity: 0.72,
-    bendDepth: 0.78,
-    foldDrop: 0.18,
-  },
-  {
-    relative: -1,
-    x: -11.2,
-    y: -0.54,
-    z: -1.42,
-    scale: 0.7,
-    rotateX: 0,
-    rotateY: 1.02,
-    rotateZ: -0.18,
-    opacity: 0.8,
-    bendDepth: 0.54,
-    foldDrop: 0.12,
-  },
-  {
-    relative: 0,
-    x: -0.05,
-    y: 0.42,
-    z: 1.14,
-    scale: 1.08,
-    rotateX: -0.04,
-    rotateY: 0,
-    rotateZ: 0.15,
-    opacity: 1,
-    bendDepth: 0.48,
-    foldDrop: 0.055,
-  },
-  {
-    relative: 1,
-    x: 5.05,
-    y: -0.48,
-    z: -1.52,
-    scale: 0.73,
-    rotateX: 0,
-    rotateY: -0.8,
-    rotateZ: -0.06,
-    opacity: 0.82,
-    bendDepth: 0.62,
-    foldDrop: 0.13,
-  },
-  {
-    relative: 2.2,
-    x: 10.9,
-    y: -0.28,
-    z: 0.14,
-    scale: 0.78,
-    rotateX: 0,
-    rotateY: -0.88,
-    rotateZ: 0.04,
-    opacity: 0.96,
-    bendDepth: 0.84,
-    foldDrop: 0.18,
-  },
-]
+function createOrbitSamples() {
+  const samples: Array<{ angle: number; length: number }> = [{ angle: 0, length: 0 }]
+  let length = 0
+  let previous = getOrbitPoint(0)
+
+  for (let index = 1; index <= ORBIT_SAMPLE_COUNT; index += 1) {
+    const angle = (index / ORBIT_SAMPLE_COUNT) * TAU
+    const point = getOrbitPoint(angle)
+
+    length += Math.hypot(point.x - previous.x, point.z - previous.z)
+    samples.push({ angle, length })
+    previous = point
+  }
+
+  return samples
+}
+
+const ORBIT_SAMPLES = createOrbitSamples()
+const ORBIT_CIRCUMFERENCE = ORBIT_SAMPLES[ORBIT_SAMPLES.length - 1].length
+const ORBIT_STEP_DISTANCE = ORBIT_CIRCUMFERENCE / RENDER_SLOT_OFFSETS.length
+const ORBIT_CARD_DISTANCE = ORBIT_STEP_DISTANCE * 0.92
+const CENTERED_SLIDE_OFFSET = 1
+
+function distanceToOrbitAngle(distance: number) {
+  const wrappedDistance = ((distance % ORBIT_CIRCUMFERENCE) + ORBIT_CIRCUMFERENCE) % ORBIT_CIRCUMFERENCE
+  let low = 0
+  let high = ORBIT_SAMPLES.length - 1
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2)
+
+    if (ORBIT_SAMPLES[mid].length < wrappedDistance) {
+      low = mid + 1
+    } else {
+      high = mid
+    }
+  }
+
+  const current = ORBIT_SAMPLES[low]
+  const previous = ORBIT_SAMPLES[Math.max(0, low - 1)]
+  const segmentLength = Math.max(current.length - previous.length, 0.0001)
+  const segmentProgress = (wrappedDistance - previous.length) / segmentLength
+
+  return previous.angle + (current.angle - previous.angle) * segmentProgress
+}
 
 const slides: HeroSlide[] = [
   {
@@ -212,52 +137,82 @@ const slides: HeroSlide[] = [
     theme: 'ember',
     badge: 'HOT',
     category: 'LESSONS',
-    titleLines: ['SPEAK', 'READY'],
+    titleLines: ['DAILY', 'DISPATCH'],
     description: 'Private English sessions that feel personal, focused, and easy to start from day one.',
     actionHref: '/browse-tutors',
     actionLabel: 'Launch',
-    imageSrc: '/assets/img/banner/banner_woman.png',
-    thumbSrc: '/assets/img/banner/banner_woman.png',
+    imageSrc: '/assets/img/banner/daily_dispatch.png',
+    thumbSrc: '/assets/img/banner/daily_dispatch.png',
     thumbLabel: 'Speak',
-    cardStart: '#120914',
-    cardEnd: '#6b2417',
+    cardStart: '#060606',
+    cardEnd: '#d8b11f',
   },
   {
     id: 'flex-pass',
     theme: 'acid',
     badge: 'FLEX',
     category: 'TICKETS',
-    titleLines: ['FLEX', 'PASS'],
+    titleLines: ['BUSINESS', 'ENGLISH'],
     description: 'Keep trial and premium tickets on hand so you can jump into lessons whenever time opens up.',
     actionHref: '/register',
     actionLabel: 'Start',
-    imageSrc: '/assets/img/icons/premium_ticket2.png',
-    accentImageSrc: '/assets/img/icons/trial_ticket.png',
-    thumbSrc: '/assets/img/icons/basic_ticket2.png',
+    imageSrc: '/assets/img/banner/business_banner.png',
+    thumbSrc: '/assets/img/banner/business_banner.png',
     thumbLabel: 'Pass',
-    cardStart: '#0d130f',
-    cardEnd: '#516a19',
+    cardStart: '#050507',
+    cardEnd: '#5a2aa8',
   },
   {
-    id: 'tutor-match',
-    theme: 'ocean',
-    badge: 'LIVE',
-    category: 'TUTORS',
-    titleLines: ['TUTOR', 'MATCH'],
-    description: 'Browse tutor styles, compare vibes, and book the teacher that fits your week best.',
+    id: 'daily-dispatch',
+    theme: 'ember',
+    badge: 'HOT',
+    category: 'LESSONS',
+    titleLines: ['PRONUNCIATION', 'PRACTICE'],
+    description: 'Private English sessions that feel personal, focused, and easy to start from day one.',
     actionHref: '/browse-tutors',
+    actionLabel: 'Launch',
+    imageSrc: '/assets/img/banner/pronunciation.png',
+    thumbSrc: '/assets/img/banner/pronunciation.png',
+    thumbLabel: 'Speak',
+    cardStart: '#f6faf6',
+    cardEnd: '#1f8247',
+  },
+  {
+    id: 'skill-path',
+    theme: 'ember',
+    badge: 'NEW',
+    category: 'PRACTICE',
+    titleLines: ['CONVERSATION', 'SKILLS'],
+    description: 'Strengthen speaking habits with guided conversation practice built to grow fluency one session at a time.',
+    actionHref: '/register',
+    actionLabel: 'Join',
+    imageSrc: '/assets/img/banner/conversation_skill_banner.png',
+    thumbSrc: '/assets/img/banner/conversation_skill_banner.png',
+    thumbLabel: 'Skills',
+    cardStart: '#79b7ff',
+    cardEnd: '#1f6dff',
+  },
+  {
+    id: 'group-flow',
+    theme: 'ocean',
+    badge: 'KIDS',
+    category: 'YOUNG LEARNERS',
+    titleLines: ['KIDS', 'ZONE'],
+    description: 'A playful English space for young learners with guided speaking, games, and confidence-building practice.',
+    actionHref: '/young-learners',
     actionLabel: 'Explore',
-    imageSrc: '/assets/img/banner/group_banner.png',
-    thumbSrc: '/assets/img/banner/group_banner.png',
-    thumbLabel: 'Match',
-    cardStart: '#08111a',
-    cardEnd: '#1c5e7b',
+    imageSrc: '/assets/img/banner/kid_zone_banner.png',
+    thumbSrc: '/assets/img/banner/kid_zone_banner.png',
+    thumbLabel: 'Kids',
+    cardStart: '#f28a1f',
+    cardEnd: '#ef7a1a',
   },
 ]
 
 const themePalettes: Record<SlideTheme, ThemePalette> = {
   ember: {
     shellStart: '#090b12',
+    shellMid: '#24101f',
     shellEnd: '#260d1b',
     glow: 'rgba(255, 101, 39, 0.24)',
     contour: 'rgba(255, 255, 255, 0.24)',
@@ -266,6 +221,7 @@ const themePalettes: Record<SlideTheme, ThemePalette> = {
   },
   ocean: {
     shellStart: '#07111a',
+    shellMid: '#0c3242',
     shellEnd: '#0d3246',
     glow: 'rgba(112, 214, 255, 0.22)',
     contour: 'rgba(255, 255, 255, 0.22)',
@@ -274,6 +230,7 @@ const themePalettes: Record<SlideTheme, ThemePalette> = {
   },
   acid: {
     shellStart: '#090d0d',
+    shellMid: '#293710',
     shellEnd: '#283610',
     glow: 'rgba(174, 255, 74, 0.2)',
     contour: 'rgba(255, 255, 255, 0.2)',
@@ -288,39 +245,92 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 const lerp = (start: number, end: number, amount: number) => start + (end - start) * amount
 
+const isInteractiveTarget = (target: EventTarget | null) =>
+  target instanceof Element && Boolean(target.closest('a, button, input, textarea, select, [role="button"]'))
+
 const easeInOutCubic = (value: number) =>
   value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2
 
-const sampleOrbitSlot = (relative: number) => {
-  const minRelative = orbitSlotAnchors[0].relative
-  const maxRelative = orbitSlotAnchors[orbitSlotAnchors.length - 1].relative
-  const clampedRelative = clamp(relative, minRelative, maxRelative)
-  const center = orbitSlotAnchors[2]
-  const progressFromCenter = Math.min(1, Math.abs(clampedRelative) / SLOT_RANGE)
-  const easedDepth = easeInOutCubic(progressFromCenter)
-  const angle = clampedRelative * 0.58
-  const orbitRadiusX = 10.35
-  const orbitRadiusZ = 7
-  const sinAngle = Math.sin(angle)
-  const cosAngle = Math.cos(angle)
-  const sideWeight = Math.abs(sinAngle)
-  const depthWeight = 1 - cosAngle
-  const rightSideWeight = clampedRelative > 0 ? sideWeight : 0
-  const rightSideLift = Math.pow(rightSideWeight, 1.15) * 1.28
-  const rightSideBendTarget = clampedRelative > 0 ? 1.78 : 0.84
-  const rightSideFoldTarget = clampedRelative > 0 ? 0.18 : 0.12
+const hexToRgb = (value: string) => {
+  const normalized = value.replace('#', '')
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => `${char}${char}`)
+          .join('')
+      : normalized
+
+  const parsed = Number.parseInt(expanded, 16)
 
   return {
-    x: center.x + sinAngle * orbitRadiusX + rightSideWeight * 1.45,
-    y: center.y + Math.pow(sideWeight, 1.45) * 0.96 + rightSideLift - progressFromCenter * 0.04,
-    z: center.z - depthWeight * orbitRadiusZ - progressFromCenter * 0.08,
-    scale: clamp(center.scale - progressFromCenter * 0.14 - depthWeight * 0.12, 0.64, center.scale),
-    rotateX: lerp(center.rotateX, 0, easedDepth),
-    rotateY: clamp(angle * 1.64 + rightSideWeight * 0.06, -1.18, 1.18),
-    rotateZ: center.rotateZ + sideWeight * 0.025 - easedDepth * 0.006,
-    opacity: lerp(center.opacity, 0.8, easedDepth),
-    bendDepth: lerp(center.bendDepth, rightSideBendTarget, sideWeight),
-    foldDrop: lerp(center.foldDrop, rightSideFoldTarget, sideWeight),
+    r: (parsed >> 16) & 255,
+    g: (parsed >> 8) & 255,
+    b: parsed & 255,
+  }
+}
+
+const rgbToHex = (r: number, g: number, b: number) =>
+  `#${[r, g, b]
+    .map((channel) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0'))
+    .join('')}`
+
+const mixHex = (start: string, end: string, amount: number) => {
+  const from = hexToRgb(start)
+  const to = hexToRgb(end)
+
+  return rgbToHex(lerp(from.r, to.r, amount), lerp(from.g, to.g, amount), lerp(from.b, to.b, amount))
+}
+
+const getLuminance = (hex: string) => {
+  const { r, g, b } = hexToRgb(hex)
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+}
+
+const rgbaFromHex = (hex: string, alpha: number) => {
+  const { r, g, b } = hexToRgb(hex)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+const getSlidePalette = (slide: HeroSlide): ThemePalette => {
+  const fallback = themePalettes[slide.theme]
+  const start = slide.cardStart || fallback.shellStart
+  const end = slide.cardEnd || fallback.shellEnd
+  const shellMid = mixHex(start, end, 0.52)
+  const startLuminance = getLuminance(start)
+  const endLuminance = getLuminance(end)
+  const accent = endLuminance > 0.8 && startLuminance < endLuminance ? start : end
+  const averageLuminance = (startLuminance + endLuminance) / 2
+
+  return {
+    shellStart: start,
+    shellMid,
+    shellEnd: end,
+    glow: rgbaFromHex(accent, averageLuminance > 0.62 ? 0.16 : 0.24),
+    contour: averageLuminance > 0.62 ? 'rgba(0, 0, 0, 0.14)' : 'rgba(255, 255, 255, 0.22)',
+    rim: averageLuminance > 0.62 ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.15)',
+    fog: rgbaFromHex(accent, averageLuminance > 0.62 ? 0.12 : 0.18),
+  }
+}
+
+const sampleOrbitSlot = (relative: number) => {
+  const orbitDistance = (relative + ORBIT_DEFAULT_PHASE) * ORBIT_STEP_DISTANCE
+  const orbitAngle = distanceToOrbitAngle(orbitDistance)
+  const orbitPoint = getOrbitPoint(orbitAngle)
+  const depthWeight = (Math.cos(orbitAngle) + 1) / 2
+  const backWeight = 1 - depthWeight
+
+  return {
+    x: ORBIT_CENTER_X + orbitPoint.x,
+    y: ORBIT_CENTER_Y + depthWeight * 0.18 - backWeight * 0.1,
+    z: orbitPoint.z,
+    scale: 1,
+    rotateX: 0,
+    rotateY: 0,
+    rotateZ: 0,
+    opacity: lerp(0.94, 1, depthWeight),
+    orbitDistance,
+    cardDistance: ORBIT_CARD_DISTANCE,
   }
 }
 
@@ -424,9 +434,6 @@ const drawTicketScene = (
     context.rotate(-0.08 + pulse * 0.02)
     const ticketWidth = width * 0.54
     const ticketHeight = ticketWidth * (ticketImage.naturalHeight / ticketImage.naturalWidth)
-    context.shadowColor = 'rgba(0, 0, 0, 0.32)'
-    context.shadowBlur = 24
-    context.shadowOffsetY = 18
     context.drawImage(ticketImage, -ticketWidth / 2, -ticketHeight / 2, ticketWidth, ticketHeight)
     context.restore()
   }
@@ -442,7 +449,7 @@ const drawPosterCard = (
   sideLean: number,
   time: number,
 ) => {
-  const cornerRadius = Math.max(12, Math.min(width, height) * 0.02)
+  const cornerRadius = 0
   const backgroundGradient = context.createLinearGradient(0, 0, width, height)
   backgroundGradient.addColorStop(0, slide.cardStart)
   backgroundGradient.addColorStop(1, slide.cardEnd)
@@ -458,7 +465,7 @@ const drawPosterCard = (
   const image = slide.imageSrc ? imageMap.get(slide.imageSrc) : undefined
   const pulse = (Math.sin(time * 0.001 + frontWeight * 2) + 1) / 2
 
-  if (slide.theme === 'acid') {
+  if (slide.theme === 'acid' && slide.accentImageSrc) {
     drawTicketScene(context, slide, imageMap, width, height, pulse)
   } else if (image?.complete) {
     drawImageCover(
@@ -475,17 +482,10 @@ const drawPosterCard = (
   }
 
   const overlay = context.createLinearGradient(0, 0, 0, height)
-  overlay.addColorStop(0, 'rgba(6, 10, 18, 0.08)')
-  overlay.addColorStop(0.48, 'rgba(6, 10, 18, 0.14)')
-  overlay.addColorStop(1, 'rgba(6, 10, 18, 0.64)')
+  overlay.addColorStop(0, 'rgba(6, 10, 18, 0)')
+  overlay.addColorStop(0.58, 'rgba(6, 10, 18, 0.015)')
+  overlay.addColorStop(1, 'rgba(6, 10, 18, 0.06)')
   context.fillStyle = overlay
-  context.fillRect(0, 0, width, height)
-
-  const sheen = context.createLinearGradient(0, 0, width, height)
-  sheen.addColorStop(0, 'rgba(255, 255, 255, 0.11)')
-  sheen.addColorStop(0.36, 'rgba(255, 255, 255, 0.02)')
-  sheen.addColorStop(1, 'rgba(255, 255, 255, 0.08)')
-  context.fillStyle = sheen
   context.fillRect(0, 0, width, height)
 
   context.restore()
@@ -604,6 +604,14 @@ const Banner = () => {
   const rotationOffsetRef = useRef(0)
   const activeSequenceRef = useRef(0)
   const autoStartTimeRef = useRef<number | null>(null)
+  const autoCycleIndexRef = useRef(0)
+  const autoCycleCarryRef = useRef(0)
+  const dragRef = useRef<DragState>({
+    active: false,
+    pointerId: null,
+    startX: 0,
+    startRotation: 0,
+  })
   const imagesRef = useRef<Map<string, HTMLImageElement>>(new Map())
   const reducedMotionRef = useRef(false)
   const sceneRef = useRef<CanvasScene>({
@@ -617,12 +625,53 @@ const Banner = () => {
     height: 0,
   })
 
-  const activeIndex = wrapIndex(activeSequence)
+  const activeIndex = wrapIndex(activeSequence + CENTERED_SLIDE_OFFSET)
   const currentSlide = slides[activeIndex]
+  const currentPalette = getSlidePalette(currentSlide)
+  const slideAssetSignature = slides
+    .map((slide) => [slide.id, slide.imageSrc ?? '', slide.accentImageSrc ?? '', slide.thumbSrc ?? ''].join('|'))
+    .join('::')
 
   useEffect(() => {
     rotationOffsetRef.current = rotationOffset
   }, [rotationOffset])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    const root = document.documentElement
+    root.style.setProperty('--student-hero-sync-bg-start', currentPalette.shellStart)
+    root.style.setProperty('--student-hero-sync-bg-mid', currentPalette.shellMid)
+    root.style.setProperty('--student-hero-sync-bg-end', currentPalette.shellEnd)
+    root.style.setProperty('--student-hero-sync-accent', currentPalette.glow)
+    root.style.setProperty('--student-hero-sync-contour', currentPalette.contour)
+    root.style.setProperty('--student-section-bridge-color', currentPalette.shellEnd)
+    root.style.setProperty('--student-section-surface-color', '#eef8ff')
+
+    return () => {
+      root.style.removeProperty('--student-hero-sync-bg-start')
+      root.style.removeProperty('--student-hero-sync-bg-mid')
+      root.style.removeProperty('--student-hero-sync-bg-end')
+      root.style.removeProperty('--student-hero-sync-accent')
+      root.style.removeProperty('--student-hero-sync-contour')
+      root.style.removeProperty('--student-section-bridge-color')
+      root.style.removeProperty('--student-section-surface-color')
+    }
+  }, [
+    currentPalette.shellStart,
+    currentPalette.shellMid,
+    currentPalette.shellEnd,
+    currentPalette.glow,
+    currentPalette.contour,
+  ])
+
+  const resetAutoCycleClock = () => {
+    autoStartTimeRef.current = typeof performance === 'undefined' ? null : performance.now()
+    autoCycleIndexRef.current = 0
+    autoCycleCarryRef.current = 0
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -640,7 +689,7 @@ const Banner = () => {
     return () => {
       mediaQuery.removeEventListener('change', syncReducedMotion)
     }
-  }, [])
+  }, [slideAssetSignature])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -665,7 +714,7 @@ const Banner = () => {
     })
 
     return undefined
-  }, [])
+  }, [slideAssetSignature])
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -690,10 +739,12 @@ const Banner = () => {
     renderer.setClearColor(0x000000, 0)
 
     const scene3d = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(29, 1, 0.1, 100)
-    camera.position.set(0, 0.18, 13.7)
+    const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100)
+    camera.position.set(ORBIT_CAMERA_X, ORBIT_CAMERA_Y, ORBIT_CAMERA_Z)
+    camera.lookAt(ORBIT_LOOK_AT_X, ORBIT_LOOK_AT_Y, ORBIT_LOOK_AT_Z)
 
     const carouselGroup = new THREE.Group()
+    carouselGroup.position.set(ORBIT_PRESENTATION_SHIFT_X, ORBIT_PRESENTATION_SHIFT_Y, 0)
     scene3d.add(carouselGroup)
 
     scene3d.add(new THREE.AmbientLight(0xffffff, 1.28))
@@ -738,8 +789,8 @@ const Banner = () => {
       blending: THREE.AdditiveBlending,
     })
     const deckGlow = new THREE.Sprite(glowMaterial)
-    deckGlow.position.set(-0.85, -4.15, -0.8)
-    deckGlow.scale.set(17.2, 5.4, 1)
+    deckGlow.position.set(ORBIT_CENTER_X, -4.15, 0)
+    deckGlow.scale.set(ORBIT_RADIUS_X * 2.1, 5.4, 1)
     scene3d.add(deckGlow)
 
     const anisotropy = renderer.capabilities.getMaxAnisotropy()
@@ -751,7 +802,7 @@ const Banner = () => {
       texture.anisotropy = anisotropy
       texture.needsUpdate = true
 
-      const planeWidth = 8.15
+      const planeWidth = CARD_PLANE_WIDTH
       const planeHeight = planeWidth / CARD_ASPECT_RATIO
       const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, 38, 18)
       const positionAttribute = geometry.attributes.position as THREE.BufferAttribute
@@ -796,35 +847,35 @@ const Banner = () => {
 
     const imageCleanupHandlers: Array<() => void> = []
     imagesRef.current.forEach((image) => {
-      if (image.complete) {
+      const handleLoad = () => redrawCardSurfaces()
+
+      if (image.complete && image.naturalWidth > 0) {
+        window.requestAnimationFrame(handleLoad)
         return
       }
 
-      const handleLoad = () => redrawCardSurfaces()
-      image.addEventListener('load', handleLoad)
+      image.addEventListener('load', handleLoad, { once: true })
       imageCleanupHandlers.push(() => image.removeEventListener('load', handleLoad))
     })
 
-    const updateCardGeometry = (entry: (typeof cardEntries)[number], bendDepth: number, foldDrop: number) => {
+    const updateCardGeometry = (
+      entry: (typeof cardEntries)[number],
+      orbitDistance: number,
+      cardDistance: number,
+    ) => {
       const positionAttribute = entry.geometry.attributes.position as THREE.BufferAttribute
       const width = entry.geometry.parameters.width
-      const height = entry.geometry.parameters.height
       const halfWidth = width / 2
-      const halfHeight = height / 2
+      const centerPoint = getOrbitPoint(distanceToOrbitAngle(orbitDistance))
 
       for (let index = 0; index < positionAttribute.count; index += 1) {
         const offset = index * 3
         const baseX = entry.basePositions[offset]
         const baseY = entry.basePositions[offset + 1]
         const normalizedX = baseX / halfWidth
-        const normalizedY = baseY / halfHeight
-        const edgeWeight = Math.abs(normalizedX)
-        const roundedBend = Math.pow(edgeWeight, 1.9)
-        const foldedZ = -bendDepth * roundedBend * 0.54
-        const verticalDrop = foldDrop * Math.pow(edgeWeight, 2.2) * 0.34 * (0.92 + Math.abs(normalizedY) * 0.08)
-        const liftedY = baseY - verticalDrop
+        const orbitPoint = getOrbitPoint(distanceToOrbitAngle(orbitDistance + normalizedX * (cardDistance / 2)))
 
-        positionAttribute.setXYZ(index, baseX, liftedY, foldedZ)
+        positionAttribute.setXYZ(index, orbitPoint.x - centerPoint.x, baseY, orbitPoint.z - centerPoint.z)
       }
 
       positionAttribute.needsUpdate = true
@@ -862,18 +913,31 @@ const Banner = () => {
         autoStartTimeRef.current = time
       }
 
-      const width = scene.width
-      const height = scene.height
-      const elapsedMs = time - autoStartTimeRef.current
       const autoCycleMs = AUTO_SLOW_MS + AUTO_FAST_MS
-      const completedCycles = Math.floor(elapsedMs / autoCycleMs)
+      let elapsedMs = Math.max(0, time - autoStartTimeRef.current)
+      let completedCycles = Math.floor(elapsedMs / autoCycleMs)
+
+      if (completedCycles > autoCycleIndexRef.current) {
+        const missedCycles = completedCycles - autoCycleIndexRef.current
+        autoCycleCarryRef.current += Math.min(missedCycles, 1)
+
+        if (missedCycles > 1) {
+          autoStartTimeRef.current = time
+          autoCycleIndexRef.current = 0
+          elapsedMs = 0
+          completedCycles = 0
+        } else {
+          autoCycleIndexRef.current = completedCycles
+        }
+      }
+
       const cycleProgressMs = elapsedMs % autoCycleMs
       const slowProgress = clamp(cycleProgressMs / AUTO_SLOW_MS, 0, 1)
       const fastProgress =
         cycleProgressMs <= AUTO_SLOW_MS ? 0 : clamp((cycleProgressMs - AUTO_SLOW_MS) / AUTO_FAST_MS, 0, 1)
       const autoRotation = reducedMotionRef.current
-        ? completedCycles
-        : completedCycles +
+        ? autoCycleCarryRef.current
+        : autoCycleCarryRef.current +
           (cycleProgressMs <= AUTO_SLOW_MS
             ? slowProgress * AUTO_SLOW_PROGRESS
             : AUTO_SLOW_PROGRESS + easeInOutCubic(fastProgress) * (1 - AUTO_SLOW_PROGRESS))
@@ -893,62 +957,32 @@ const Banner = () => {
       stage.style.setProperty('--hero-tilt-x', scene.tiltX.toFixed(3))
       stage.style.setProperty('--hero-tilt-y', scene.tiltY.toFixed(3))
 
-      const focusSlide = slides[wrapIndex(Math.round(scene.rotation))]
-      const palette = themePalettes[focusSlide.theme]
+      const focusSlide = slides[wrapIndex(Math.round(scene.rotation) + CENTERED_SLIDE_OFFSET)]
+      const palette = getSlidePalette(focusSlide)
       glowMaterial.color.set(new THREE.Color(palette.shellEnd))
       glowMaterial.opacity = 0.36 + (reducedMotionRef.current ? 0 : 0.08)
-      deckGlow.position.x = -0.92 + scene.tiltX * 0.18
+      deckGlow.position.x = ORBIT_CENTER_X + scene.tiltX * 0.18
       deckGlow.position.y = -4.15 - scene.tiltY * 0.12
 
-      carouselGroup.rotation.x = -0.045 + scene.tiltY * -0.08
-      carouselGroup.rotation.y = scene.tiltX * 0.1
-      carouselGroup.rotation.z = -0.03 + scene.tiltX * -0.02
-
-      const centerSequence = Math.round(scene.rotation)
+      carouselGroup.rotation.x = ORBIT_PRESENTATION_TILT_X + scene.tiltY * -0.045
+      carouselGroup.rotation.y = ORBIT_PRESENTATION_TILT_Y + scene.tiltX * 0.035
+      carouselGroup.rotation.z = ORBIT_PRESENTATION_TILT_Z + scene.tiltX * -0.012
 
       cardEntries.forEach((entry) => {
-        const sequence = centerSequence + entry.slotOffset
-        const slideIndex = wrapIndex(sequence)
-        const relative = sequence - scene.rotation
-
-        if (entry.slideIndex !== slideIndex) {
-          entry.slideIndex = slideIndex
-
-          const surfaceContext = entry.surface.getContext('2d')
-
-          if (surfaceContext) {
-            surfaceContext.clearRect(0, 0, entry.surface.width, entry.surface.height)
-            drawPosterCard(
-              surfaceContext,
-              slides[slideIndex],
-              imagesRef.current,
-              entry.surface.width,
-              entry.surface.height,
-              1,
-              0,
-              time,
-            )
-            entry.texture.needsUpdate = true
-          }
-        }
-
-        if (relative < -SLOT_RANGE || relative > SLOT_RANGE) {
-          entry.mesh.visible = false
-          return
-        }
+        const relative = entry.slotOffset - scene.rotation
 
         entry.mesh.visible = true
 
         const slot = sampleOrbitSlot(relative)
 
-        updateCardGeometry(entry, slot.bendDepth, slot.foldDrop)
+        updateCardGeometry(entry, slot.orbitDistance, slot.cardDistance)
 
         entry.mesh.position.set(slot.x + scene.tiltX * 0.16, slot.y + scene.tiltY * 0.1, slot.z)
-        entry.mesh.rotation.x = slot.rotateX + scene.tiltY * -0.05
-        entry.mesh.rotation.y = slot.rotateY + scene.tiltX * 0.06
-        entry.mesh.rotation.z = slot.rotateZ + scene.tiltX * -0.02
+        entry.mesh.rotation.x = slot.rotateX
+        entry.mesh.rotation.y = slot.rotateY
+        entry.mesh.rotation.z = slot.rotateZ
         entry.mesh.scale.setScalar(slot.scale)
-        entry.mesh.renderOrder = Math.round((slot.z + 5) * 100)
+        entry.mesh.renderOrder = Math.round((slot.z + ORBIT_RADIUS_Z) * 100)
 
         const material = entry.mesh.material as THREE.MeshBasicMaterial
         material.opacity = slot.opacity
@@ -976,7 +1010,7 @@ const Banner = () => {
     }
   }, [])
 
-  const handlePointerMove = (event: any) => {
+  const handlePointerMove = (event: PointerEvent) => {
     const stage = stageRef.current
 
     if (!stage) {
@@ -989,6 +1023,59 @@ const Banner = () => {
 
     sceneRef.current.pointerX = clamp(x, -1, 1)
     sceneRef.current.pointerY = clamp(y, -1, 1)
+
+    const drag = dragRef.current
+
+    if (!drag.active || drag.pointerId !== event.pointerId) {
+      return
+    }
+
+    const dragDistance = (event.clientX - drag.startX) / Math.max(bounds.width, 1)
+    const nextRotation = drag.startRotation - dragDistance * DRAG_ROTATION_SENSITIVITY
+
+    rotationOffsetRef.current = nextRotation
+    setRotationOffset(nextRotation)
+  }
+
+  const handlePointerDown = (event: PointerEvent) => {
+    const stage = stageRef.current
+
+    if (!stage || event.button !== 0 || isInteractiveTarget(event.target)) {
+      return
+    }
+
+    resetAutoCycleClock()
+
+    dragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startRotation: rotationOffsetRef.current,
+    }
+
+    stage.setPointerCapture(event.pointerId)
+  }
+
+  const handlePointerUp = (event: PointerEvent) => {
+    const drag = dragRef.current
+
+    if (!drag.active || drag.pointerId !== event.pointerId) {
+      return
+    }
+
+    dragRef.current = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      startRotation: rotationOffsetRef.current,
+    }
+
+    stageRef.current?.releasePointerCapture(event.pointerId)
+    resetAutoCycleClock()
+
+    const snappedRotation = Math.round(rotationOffsetRef.current)
+    rotationOffsetRef.current = snappedRotation
+    setRotationOffset(snappedRotation)
   }
 
   const handlePointerLeave = () => {
@@ -997,12 +1084,14 @@ const Banner = () => {
   }
 
   const shiftSlide = (direction: 'next' | 'prev') => {
+    resetAutoCycleClock()
     setRotationOffset((current) => current + (direction === 'next' ? 1 : -1))
   }
 
   const jumpToSlide = (targetIndex: number) => {
+    resetAutoCycleClock()
     setRotationOffset((current) => {
-      const currentIndex = wrapIndex(activeSequenceRef.current)
+      const currentIndex = wrapIndex(activeSequenceRef.current + CENTERED_SLIDE_OFFSET)
 
       if (currentIndex === targetIndex) {
         return current
@@ -1016,16 +1105,33 @@ const Banner = () => {
   }
 
   return (
-    <section className={`hero-section hero-section--${currentSlide.theme}`}>
+    <section
+      className="hero-section"
+      style={
+        {
+          '--hero-bg-start': currentPalette.shellStart,
+          '--hero-bg-mid': currentPalette.shellMid,
+          '--hero-bg-end': currentPalette.shellEnd,
+          '--hero-accent': currentPalette.glow,
+          '--hero-contour': currentPalette.contour,
+        } as any
+      }
+    >
       <div
         className="hero-stage"
         ref={stageRef}
+        onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onPointerLeave={handlePointerLeave}
       >
         <canvas ref={canvasRef} className="hero-stage__canvas" aria-hidden="true" />
         <div className="hero-stage__vignette" aria-hidden="true" />
         <div className="hero-stage__contours" aria-hidden="true" />
+        <div className="hero-stage__bottom-blur" aria-hidden="true" />
+        <div className="hero-stage__lower-left-fog" aria-hidden="true" />
+        <div className="hero-stage__foreground-wash" aria-hidden="true" />
 
         <div className="hero-stage__copy">
           <div className="hero-stage__meta">
