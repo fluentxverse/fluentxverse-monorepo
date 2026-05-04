@@ -25,6 +25,6 @@
     "install:all": "bun install && cd fluentxverse-tutor && bun install && cd ../fluentxverse-student && bun install && cd ../fluentxverse-server && bun install && cd ../fluentxverse-dashboard && bun install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.2.1"
   }
 }

@@ -16,6 +16,8 @@ export interface MyInterview {
   time: string;
   status: 'booked' | 'completed' | 'in_progress';
   bookedAt: string;
+  completedAt?: string;
+  result?: 'pass' | 'fail';
 }
 
 export const interviewApi = {

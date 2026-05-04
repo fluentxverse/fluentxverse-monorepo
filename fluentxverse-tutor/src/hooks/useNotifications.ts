@@ -1,13 +1,40 @@
 import { useEffect } from 'preact/hooks';
 import { useNotificationStore } from '../context/NotificationContext';
-import { initSocket, connectSocket, destroySocket } from '../client/socket/socket.client';
+import { initSocket, connectSocket } from '../client/socket/socket.client';
 import { useAuthContext } from '../context/AuthContext';
 import type { Notification } from '../types/notification.types';
 
-let notificationRealtimeDisabled = false;
 let notificationSocketWarningShown = false;
+const dispatchedScheduleNotificationIds = new Set<string>();
 const notificationSocketEnabled =
-  String(import.meta.env.VITE_ENABLE_NOTIFICATION_SOCKET || 'false').toLowerCase() === 'true';
+  String(import.meta.env.VITE_ENABLE_NOTIFICATION_SOCKET ?? 'true').toLowerCase() !== 'false';
+const NOTIFICATION_REFRESH_INTERVAL_MS = 10000;
+
+const warnNotificationRealtimeUnavailable = () => {
+  if (!notificationSocketWarningShown) {
+    console.warn('Notification realtime connection unavailable. Falling back to standard refresh.');
+    notificationSocketWarningShown = true;
+  }
+};
+
+const dispatchScheduleNotificationEvent = (notification: Notification) => {
+  if (notification.type !== 'booking_new' && notification.type !== 'booking_cancelled') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent('fxv:schedule-notification', {
+    detail: notification
+  }));
+};
+
+const dispatchScheduleNotificationOnce = (notification: Notification) => {
+  if (!notification.id || dispatchedScheduleNotificationIds.has(notification.id)) {
+    return;
+  }
+
+  dispatchedScheduleNotificationIds.add(notification.id);
+  dispatchScheduleNotificationEvent(notification);
+};
 
 export const useNotifications = () => {
   const { 
@@ -28,14 +55,38 @@ export const useNotifications = () => {
   const { user } = useAuthContext();
 
   useEffect(() => {
-    fetchNotifications();
+    let isActive = true;
+    let refreshInterval: ReturnType<typeof setInterval> | undefined;
+
+    const startStandardRefresh = () => {
+      if (refreshInterval) {
+        return;
+      }
+
+      refreshInterval = setInterval(() => {
+        if (isActive) {
+          void fetchNotifications();
+        }
+      }, NOTIFICATION_REFRESH_INTERVAL_MS);
+    };
+
+    const stopStandardRefresh = () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = undefined;
+      }
+    };
+
+    void fetchNotifications();
 
     if (!notificationSocketEnabled) {
-      return;
-    }
-
-    if (notificationRealtimeDisabled) {
-      return;
+      startStandardRefresh();
+      return () => {
+        isActive = false;
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+        }
+      };
     }
 
     try {
@@ -47,73 +98,77 @@ export const useNotifications = () => {
       const socket = initSocket(token);
 
       const subscribeToNotifications = () => {
-        socket.emit('notification:subscribe');
-      };
-
-      const handleConnectError = (error: Error) => {
-        if (!notificationSocketWarningShown) {
-          console.warn('Notification realtime connection unavailable. Falling back to standard refresh.');
-          notificationSocketWarningShown = true;
+        if (!isActive) {
+          return;
         }
-        notificationRealtimeDisabled = true;
-        destroySocket();
-        fetchNotifications();
+
+        stopStandardRefresh();
+        socket.emit('notification:subscribe');
+        void fetchNotifications();
       };
 
-      // Listen for new notifications
-      socket.on('notification:new', (notification: Notification) => {
-        
+      const handleDisconnect = () => {
+        if (isActive) {
+          startStandardRefresh();
+        }
+      };
+
+      const handleConnectError = () => {
+        warnNotificationRealtimeUnavailable();
+        startStandardRefresh();
+        void fetchNotifications();
+      };
+
+      const handleNewNotification = (notification: Notification) => {
         addNotification(notification);
-        
-        // Show browser notification if permission granted
-        if (Notification.permission === 'granted') {
+        dispatchScheduleNotificationOnce(notification);
+
+        if ('Notification' in window && Notification.permission === 'granted') {
           new Notification(notification.title, {
             body: notification.message,
             icon: '/assets/img/logo/icon_logo.png'
           });
         }
-      });
+      };
 
-      // Listen for notification list
-      socket.on('notification:list', (data: { notifications: Notification[]; unreadCount: number }) => {
-        
-        // Update store with initial data
+      const handleNotificationList = (data: { notifications: Notification[]; unreadCount: number }) => {
         useNotificationStore.setState({
           notifications: data.notifications,
           unreadCount: data.unreadCount
         });
-      });
+      };
 
-      // Listen for read updates
-      socket.on('notification:read', (data: { notificationId: string; unreadCount: number }) => {
-        // Update unread count
+      const handleNotificationRead = (data: { notificationId: string; unreadCount: number }) => {
         setUnreadCount(data.unreadCount);
-        // Update local list: mark the specific notification as read
         useNotificationStore.setState((state) => ({
           notifications: state.notifications.map(n => n.id === data.notificationId ? { ...n, isRead: true } : n)
         }));
-      });
+      };
 
-      // Listen for read-all updates
-      socket.on('notification:read-all', (data: { unreadCount: number }) => {
+      const handleNotificationReadAll = (data: { unreadCount: number }) => {
         setUnreadCount(data.unreadCount);
-        // Update all to read
         useNotificationStore.setState((state) => ({
           notifications: state.notifications.map(n => ({ ...n, isRead: true }))
         }));
-      });
+      };
 
-      // Listen for deletion
-      socket.on('notification:delete', (data: { notificationId: string; unreadCount: number }) => {
+      const handleNotificationDelete = (data: { notificationId: string; unreadCount: number }) => {
         setUnreadCount(data.unreadCount);
         useNotificationStore.setState((state) => ({
           notifications: state.notifications.filter(n => n.id !== data.notificationId)
         }));
-      });
+      };
 
       socket.on('connect', subscribeToNotifications);
+      socket.on('disconnect', handleDisconnect);
       socket.on('connect_error', handleConnectError);
+      socket.on('notification:new', handleNewNotification);
+      socket.on('notification:list', handleNotificationList);
+      socket.on('notification:read', handleNotificationRead);
+      socket.on('notification:read-all', handleNotificationReadAll);
+      socket.on('notification:delete', handleNotificationDelete);
 
+      startStandardRefresh();
       connectSocket();
 
       if (socket.connected) {
@@ -121,19 +176,36 @@ export const useNotifications = () => {
       }
 
       return () => {
+        isActive = false;
+        stopStandardRefresh();
         socket.off('connect', subscribeToNotifications);
+        socket.off('disconnect', handleDisconnect);
         socket.off('connect_error', handleConnectError);
-        socket.off('notification:new');
-        socket.off('notification:list');
-        socket.off('notification:read');
-        socket.off('notification:read-all');
-        socket.off('notification:delete');
+        socket.off('notification:new', handleNewNotification);
+        socket.off('notification:list', handleNotificationList);
+        socket.off('notification:read', handleNotificationRead);
+        socket.off('notification:read-all', handleNotificationReadAll);
+        socket.off('notification:delete', handleNotificationDelete);
       };
     } catch (error) {
-      notificationRealtimeDisabled = true;
-      fetchNotifications();
+      warnNotificationRealtimeUnavailable();
+      startStandardRefresh();
+      void fetchNotifications();
     }
+
+    return () => {
+      isActive = false;
+      stopStandardRefresh();
+    };
   }, [user?.userId, user?.email]);
+
+  useEffect(() => {
+    notifications.forEach((notification) => {
+      if (!notification.isRead) {
+        dispatchScheduleNotificationOnce(notification);
+      }
+    });
+  }, [notifications]);
 
   // Request browser notification permission
   useEffect(() => {

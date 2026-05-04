@@ -2169,6 +2169,7 @@
   overflow: hidden;
 }
 
+.csp-trivia-guide .csp-guide-header {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -2180,12 +2181,14 @@
   text-decoration: underline;
 }
 
+.csp-trivia-guide .csp-guide-steps {
   padding: 0.25rem 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
 }
 
+.csp-trivia-guide .csp-guide-step {
   display: flex;
   align-items: flex-start;
   gap: 0.25rem;
@@ -2199,6 +2202,7 @@
   margin-bottom: 0;
 }
 
+.csp-trivia-guide .csp-guide-number {
   flex-shrink: 0;
   width: 12px;
   height: 12px;

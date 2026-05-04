@@ -4,6 +4,7 @@ import { suspensionJobService } from '../services/admin.services/suspension.job'
 import { signAuthToken, verifyAuthToken, getCookieConfig } from '../utils/jwt';
 import { createAdminGuard } from '../middleware/auth.middleware';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
+import { retryTutorCertificationZkVerifySubmission } from '../services/proof.services/tutorCertificationWorkflow.service';
 
 const adminService = new AdminService();
 
@@ -240,7 +241,7 @@ const Admin = new Elysia({ prefix: '/admin' })
       const params = {
         page: query.page ? Number(query.page) : 1,
         limit: query.limit ? Number(query.limit) : 20,
-        status: (query.status as 'all' | 'certified' | 'pending' | 'processing' | 'failed') || 'all',
+        status: (query.status as 'all' | 'certified' | 'pending' | 'processing' | 'failed' | 'suspended' | 'pending_profile') || 'all',
         search: query.search || ''
       };
       const result = await adminService.getTutors(params);
@@ -253,6 +254,28 @@ const Admin = new Elysia({ prefix: '/admin' })
       return {
         success: false,
         error: 'Failed to get tutors'
+      };
+    }
+  })
+
+  /**
+   * Retry tutor certification zkVerify submission.
+   * POST /admin/tutors/:tutorId/proof/retry
+   */
+  .post('/tutors/:tutorId/proof/retry', async ({ params, set }) => {
+    try {
+      const result = await retryTutorCertificationZkVerifySubmission(params.tutorId);
+      return {
+        success: true,
+        data: result,
+        message: 'Tutor certification proof submitted to zkVerify',
+      };
+    } catch (error) {
+      console.error('Error in /admin/tutors/:tutorId/proof/retry:', error);
+      set.status = 500;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to retry tutor certification proof submission',
       };
     }
   })

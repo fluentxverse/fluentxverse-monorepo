@@ -5,7 +5,11 @@ WORKDIR /app
 
 # Build-time Vite env vars (baked into the bundle)
 ARG VITE_API_URL
+ARG VITE_SOCKET_URL=https://ws.fluentxverse.xyz
+ARG VITE_ENABLE_NOTIFICATION_SOCKET=true
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
+ENV VITE_ENABLE_NOTIFICATION_SOCKET=$VITE_ENABLE_NOTIFICATION_SOCKET
 
 # Copy package files
 COPY package.json bun.lock* ./

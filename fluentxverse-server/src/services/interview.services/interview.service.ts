@@ -1,6 +1,7 @@
 import { getDriver } from '../../db/memgraph';
 import { cacheGetOrSet, invalidateCache } from '../../db/redis';
 import neo4j from 'neo4j-driver';
+import { tryIssueAndMaybeSubmitTutorCertificationProof } from '../proof.services/tutorCertificationWorkflow.service';
 import type { 
   InterviewSlot, 
   InterviewWeekSchedule,
@@ -361,8 +362,10 @@ export class InterviewService {
 
     try {
       const result = await session.run(`
-        MATCH (s:InterviewSlot {tutorId: $tutorId, status: 'booked'})
+        MATCH (s:InterviewSlot {tutorId: $tutorId})
+        WHERE s.status IN ['booked', 'completed']
         RETURN s
+        ORDER BY CASE s.status WHEN 'booked' THEN 0 ELSE 1 END, s.completedAt DESC, s.bookedAt DESC
         LIMIT 1
       `, { tutorId });
 
@@ -379,7 +382,10 @@ export class InterviewService {
         status: s.status,
         tutorId: s.tutorId,
         createdAt: s.createdAt,
-        bookedAt: s.bookedAt
+        bookedAt: s.bookedAt,
+        completedAt: s.completedAt,
+        notes: s.notes,
+        result: s.result
       };
     } finally {
       await session.close();
@@ -434,6 +440,25 @@ export class InterviewService {
       // If passed, update tutor certification status
       if (data.result === 'pass') {
         await session.run(`
+          MATCH (u:User {id: $tutorId})
+          SET u.interviewPassed = true,
+              u.interviewPassedAt = $completedAt,
+              u.interviewSlotId = $slotId,
+              u.interviewRubricScores = $rubricScores,
+              u.certificationStatus = CASE 
+                WHEN u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved' THEN 'certified'
+                ELSE coalesce(u.certificationStatus, 'pending')
+              END
+          RETURN u
+        `, {
+          tutorId: data.tutorId,
+          slotId: data.slotId,
+          completedAt,
+          rubricScores: JSON.stringify(data.rubricScores)
+        });
+
+        // Keep the legacy Tutor node in sync when it exists.
+        await session.run(`
           MATCH (t:Tutor {odIuser: $tutorId})
           SET t.interviewPassed = true,
               t.interviewPassedAt = $completedAt,
@@ -443,8 +468,26 @@ export class InterviewService {
               END
           RETURN t
         `, { tutorId: data.tutorId, completedAt });
+
+        void tryIssueAndMaybeSubmitTutorCertificationProof(data.tutorId, 'interview_passed');
       } else {
         // If failed, mark interview as failed
+        await session.run(`
+          MATCH (u:User {id: $tutorId})
+          SET u.interviewPassed = false,
+              u.interviewFailedAt = $completedAt,
+              u.interviewSlotId = $slotId,
+              u.interviewRubricScores = $rubricScores,
+              u.certificationStatus = coalesce(u.certificationStatus, 'pending')
+          RETURN u
+        `, {
+          tutorId: data.tutorId,
+          slotId: data.slotId,
+          completedAt,
+          rubricScores: JSON.stringify(data.rubricScores)
+        });
+
+        // Keep the legacy Tutor node in sync when it exists.
         await session.run(`
           MATCH (t:Tutor {odIuser: $tutorId})
           SET t.interviewPassed = false,

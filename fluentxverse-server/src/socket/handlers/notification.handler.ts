@@ -9,38 +9,45 @@ const userSockets = new Map<string, Set<string>>();
 export const notificationHandler = (io: Server, socket: Socket) => {
   const userId = socket.data.userId;
   const userType = socket.data.userType;
+  const room = `notifications:${userId}`;
+
+  const joinNotificationRooms = () => {
+    socket.join(room);
+
+    if (userType === 'admin') {
+      socket.join('notifications:admin');
+    }
+
+    if (!userSockets.has(userId)) {
+      userSockets.set(userId, new Set());
+    }
+    userSockets.get(userId)?.add(socket.id);
+  };
+
+  const emitNotificationList = async (limit = 20, offset = 0) => {
+    const notifications = await notificationService.getNotifications({
+      userId,
+      limit,
+      offset
+    });
+
+    const unreadCount = await notificationService.getUnreadCount(userId);
+
+    socket.emit('notification:list', {
+      notifications,
+      unreadCount
+    });
+  };
+
+  // Join the user's notification room immediately so realtime events are not
+  // missed while the client is still opening menus or requesting the first list.
+  joinNotificationRooms();
 
   // Subscribe to notifications - join user-specific room
   socket.on('notification:subscribe', async () => {
     try {
-      // Join room for this user's notifications
-      const room = `notifications:${userId}`;
-      socket.join(room);
-      
-      // If admin, also join the admin notifications room
-      if (userType === 'admin') {
-        socket.join('notifications:admin');
-      }
-      
-      // Track socket in userSockets map
-      if (!userSockets.has(userId)) {
-        userSockets.set(userId, new Set());
-      }
-      userSockets.get(userId)?.add(socket.id);
-      
-      
-      // Send initial notifications
-      const notifications = await notificationService.getNotifications({
-        userId,
-        limit: 20
-      });
-      
-      const unreadCount = await notificationService.getUnreadCount(userId);
-      
-      socket.emit('notification:list', {
-        notifications,
-        unreadCount
-      });
+      joinNotificationRooms();
+      await emitNotificationList();
     } catch (error) {
       console.error('Error subscribing to notifications:', error);
     }
@@ -58,18 +65,7 @@ export const notificationHandler = (io: Server, socket: Socket) => {
   // Get all notifications
   socket.on('notification:get-all', async (data?: { limit?: number; offset?: number }) => {
     try {
-      const notifications = await notificationService.getNotifications({
-        userId,
-        limit: data?.limit || 50,
-        offset: data?.offset || 0
-      });
-      
-      const unreadCount = await notificationService.getUnreadCount(userId);
-      
-      socket.emit('notification:list', {
-        notifications,
-        unreadCount
-      });
+      await emitNotificationList(data?.limit || 50, data?.offset || 0);
     } catch (error) {
       console.error('Error getting notifications:', error);
     }

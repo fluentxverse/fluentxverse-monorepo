@@ -1,92 +1,117 @@
 import './WhyChooseUs.css';
 
-const WhyChooseUs = () => {
-  const features = [
-    {
-      icon: 'fas fa-user-graduate',
-      title: 'Professional Tutors',
-      description: 'Learn from certified, experienced tutors who are passionate about teaching. Our rigorous selection ensures you get effective, engaging lessons every time.',
-      highlight: 'Certified & Vetted',
-      color: 'purple'
-    },
-    {
-      icon: 'fas fa-calendar-check',
-      title: 'Flexible Scheduling',
-      description: 'Book lessons that fit your life. Choose from hundreds of available time slots across different time zones. Reschedule anytime with no penalties.',
-      highlight: '24/7 Availability',
-      color: 'green'
-    },
-    {
-      icon: 'fas fa-wallet',
-      title: 'Flexible Payment',
-      description: 'No subscriptions or commitments. Buy tickets when you need them—they never expire. Pay only for lessons you take, with no hidden fees.',
-      highlight: 'No Subscriptions',
-      color: 'orange'
-    }
-  ];
+const successFeatures = [
+  {
+    title: 'Professional Tutors',
+    description:
+      'Learn from certified, experienced tutors selected for clear lessons, useful feedback, and student-first coaching.',
+    visual: 'tutors',
+  },
+  {
+    title: 'Flexible Scheduling',
+    description:
+      'Book lessons around your routine with available slots across time zones and simple rescheduling when plans change.',
+    visual: 'schedule',
+  },
+  {
+    title: 'Smart Progress Tracking',
+    description:
+      'See vocabulary growth, fluency gains, and weekly learning milestones with reports that make improvement visible.',
+    visual: 'progress',
+  },
+  {
+    title: 'Flexible Payment',
+    description:
+      'Buy tickets only when you need them. No subscriptions, no hidden fees, and no wasted lessons.',
+    visual: 'tickets',
+  },
+];
 
+const WhyChooseUs = () => {
   return (
     <section className="why-choose-section" id="why-choose">
-      {/* Floating decorations */}
-      <div className="why-decoration why-decoration--1"></div>
-      <div className="why-decoration why-decoration--2"></div>
-      <div className="why-decoration why-decoration--3"></div>
-
       <div className="why-choose-container">
         <div className="why-choose-header">
-          <span className="why-badge">✨ Why FluentXVerse</span>
-          <h2 className="why-title">
-            Everything You Need to <span className="why-title-highlight">Succeed</span>
-          </h2>
-          <p className="why-subtitle">
-            We've built the most student-friendly English learning platform with tools designed for your success
-          </p>
+          <h2 className="why-title">Everything You Need To Succeed</h2>
+          <p className="why-with">WITH...</p>
         </div>
 
-        {/* Featured Progress Tracking Card */}
-        <div className="featured-progress-card">
-          <div className="featured-card-header">
-            <div className="featured-icon">
-              <i className="fas fa-chart-line"></i>
-            </div>
-            <div className="featured-title-group">
-              <span className="featured-badge">Weekly Reports</span>
-              <h3 className="featured-title">Smart Progress Tracking</h3>
-            </div>
-          </div>
-          <p className="featured-description">
-            Our AI-powered system measures your weekly progress with detailed metrics. Get personalized reports showing vocabulary growth, fluency improvements, and achievement milestones.
-          </p>
-          <div className="progress-stats">
-            <div className="progress-stat">
-              <span className="stat-number">All levels</span>
-              <span className="stat-label">from beginner to advanced welcome</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="progress-stat">
-              <span className="stat-number">3 months</span>
-              <span className="stat-label">average time to hold basic conversations</span>
-            </div>
-            <div className="stat-divider"></div>
-            <div className="progress-stat">
-              <span className="stat-number">100%</span>
-              <span className="stat-label">supportive learning environment</span>
-            </div>
-          </div>
-        </div>
+        <div className="success-card-grid" aria-label="Student success features">
+          {successFeatures.map((feature) => (
+            <article className={`success-card success-card--${feature.visual}`} key={feature.title}>
+              <div className="success-card__copy">
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
 
-        <div className="features-grid">
-          {features.map((feature, index) => (
-            <div key={index} className={`feature-card ${feature.color}`}>
-              <div className={`feature-icon-wrapper ${feature.color}`}>
-                <i className={feature.icon}></i>
+              <div className={`success-card__visual success-card__visual--${feature.visual}`} aria-hidden="true">
+                {feature.visual === 'tutors' && (
+                  <div className="mini-leaderboard mini-leaderboard--tutors">
+                    <div className="mini-leaderboard__title">Tutors</div>
+                    <div className="mini-leaderboard__row">
+                      <span className="rank rank--gold">1</span>
+                      <span className="avatar avatar--blue">A</span>
+                      <span>Anna</span>
+                      <strong>4.9</strong>
+                    </div>
+                    <div className="mini-leaderboard__row">
+                      <span className="rank rank--silver">2</span>
+                      <span className="avatar avatar--teal">M</span>
+                      <span>Mark</span>
+                      <strong>4.8</strong>
+                    </div>
+                    <div className="mini-leaderboard__row">
+                      <span className="rank rank--bronze">3</span>
+                      <span className="avatar avatar--pink">J</span>
+                      <span>Jean</span>
+                      <strong>4.8</strong>
+                    </div>
+                    <div className="flame-badge">
+                      <i className="fas fa-fire"></i>
+                    </div>
+                  </div>
+                )}
+
+                {feature.visual === 'schedule' && (
+                  <div className="mini-schedule">
+                    <div className="mini-schedule__header">
+                      <span>Today</span>
+                      <strong>3 Slots</strong>
+                    </div>
+                    <div className="mini-schedule__slot mini-schedule__slot--active">09:00</div>
+                    <div className="mini-schedule__slot">14:30</div>
+                    <div className="mini-schedule__slot">20:00</div>
+                  </div>
+                )}
+
+                {feature.visual === 'progress' && (
+                  <div className="mini-progress">
+                    <div className="points-chip points-chip--large">+50</div>
+                    <div className="points-chip points-chip--wide">+300</div>
+                    <div className="points-chip points-chip--small">+25</div>
+                    <span className="spark spark--one"></span>
+                    <span className="spark spark--two"></span>
+                    <span className="spark spark--three"></span>
+                  </div>
+                )}
+
+                {feature.visual === 'tickets' && (
+                  <div className="mini-ticket-stack">
+                    <div className="ticket-avatar ticket-avatar--one">
+                      <i className="fas fa-ticket-alt"></i>
+                    </div>
+                    <div className="ticket-avatar ticket-avatar--two">
+                      <i className="fas fa-wallet"></i>
+                    </div>
+                    <div className="ticket-avatar ticket-avatar--three">
+                      <i className="fas fa-star"></i>
+                    </div>
+                    <span className="ticket-multiplier ticket-multiplier--two">x2</span>
+                    <span className="ticket-multiplier ticket-multiplier--three">x3</span>
+                  </div>
+                )}
               </div>
-              <div className="feature-content">
-                <span className={`feature-highlight ${feature.color}`}>{feature.highlight}</span>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
-              </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>

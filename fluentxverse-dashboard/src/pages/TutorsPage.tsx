@@ -3,6 +3,7 @@ import { adminApi, TutorListItem, SuspensionHistoryItem } from '../api/admin.api
 import './TutorsPage.css';
 
 type TabType = 'certified' | 'all' | 'suspended';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
 
 const TutorsPage = () => {
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
@@ -30,6 +31,7 @@ const TutorsPage = () => {
   const [historyTutor, setHistoryTutor] = useState<TutorListItem | null>(null);
   const [suspensionHistory, setSuspensionHistory] = useState<SuspensionHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [retryingProofTutorId, setRetryingProofTutorId] = useState<string | null>(null);
   
   const limit = 15;
 
@@ -108,6 +110,21 @@ const TutorsPage = () => {
     }
   };
 
+  const handleRetryProof = async (tutor: TutorListItem) => {
+    try {
+      setRetryingProofTutorId(tutor.id);
+      setError('');
+      await adminApi.retryTutorProofSubmission(tutor.id);
+      setSuccessMessage(`zkVerify proof submission restarted for ${tutor.name}.`);
+      setTimeout(() => setSuccessMessage(''), 5000);
+      await loadTutors();
+    } catch (err: any) {
+      setError(err.message || 'Failed to retry zkVerify proof submission');
+    } finally {
+      setRetryingProofTutorId(null);
+    }
+  };
+
   const openProfileModal = (tutor: TutorListItem) => {
     setViewingTutor(tutor);
     setShowProfileModal(true);
@@ -168,6 +185,51 @@ const TutorsPage = () => {
         return <span className="status-badge pending-speaking"><i className="ri-mic-line"></i> Pending Speaking</span>;
       }
     }
+  };
+
+  const getProofStatusBadge = (tutor: TutorListItem) => {
+    const status = tutor.zkCertificationStatus || (
+      tutor.status === 'certified' ? 'ready_for_proving' : 'requirements_incomplete'
+    );
+    const statusClass = status.replace(/_/g, '-');
+
+    const labels: Record<string, { icon: string; label: string }> = {
+      requirements_incomplete: { icon: 'ri-time-line', label: 'Incomplete' },
+      ready_for_proving: { icon: 'ri-flask-line', label: 'Ready' },
+      local_proof_generated: { icon: 'ri-shield-keyhole-line', label: 'Local Proof' },
+      submitted: { icon: 'ri-send-plane-line', label: 'Submitted' },
+      verified: { icon: 'ri-shield-check-line', label: 'Verified' },
+      failed: { icon: 'ri-error-warning-line', label: 'Failed' },
+    };
+
+    const meta = labels[status] || labels.requirements_incomplete;
+    return (
+      <div className="proof-status-wrap">
+        <span className={`proof-badge proof-badge--${statusClass}`} title={tutor.zkVerifyLastError || undefined}>
+          <i className={meta.icon}></i>
+          {meta.label}
+        </span>
+        {tutor.zkVerifyTxHash && tutor.zkCredentialCommitment && (
+          <a
+            className="proof-tx-link"
+            href={`${API_BASE_URL}/proof/tutor-certification/public/${encodeURIComponent(tutor.zkCredentialCommitment || '')}`}
+            target="_blank"
+            rel="noreferrer"
+            title={tutor.zkVerifyTxHash}
+          >
+            Tx {tutor.zkVerifyTxHash.slice(0, 8)}...
+          </a>
+        )}
+        {tutor.zkVerifyAggregationId != null && (
+          <span className="proof-aggregation">Agg #{tutor.zkVerifyAggregationId}</span>
+        )}
+      </div>
+    );
+  };
+
+  const canRetryProof = (tutor: TutorListItem) => {
+    if (tutor.status !== 'certified') return false;
+    return tutor.zkCertificationStatus !== 'verified' && tutor.zkCertificationStatus !== 'submitted';
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -289,6 +351,7 @@ const TutorsPage = () => {
                 <th>Written Exam</th>
                 <th>Speaking Exam</th>
                 <th>Status</th>
+                <th>ZK Proof</th>
                 <th>Sessions</th>
                 <th>Rating</th>
                 <th>Actions</th>
@@ -346,6 +409,7 @@ const TutorsPage = () => {
                     )}
                   </td>
                   <td>{getStatusBadge(tutor)}</td>
+                  <td>{getProofStatusBadge(tutor)}</td>
                   <td className="sessions-cell">{tutor.totalSessions}</td>
                   <td>
                     {tutor.rating > 0 ? (
@@ -376,6 +440,16 @@ const TutorsPage = () => {
                       <button className="action-btn edit" title="Edit">
                         <i className="ri-edit-line"></i>
                       </button>
+                      {canRetryProof(tutor) && (
+                        <button
+                          className="action-btn proof"
+                          title="Retry zkVerify proof submission"
+                          onClick={() => handleRetryProof(tutor)}
+                          disabled={retryingProofTutorId === tutor.id}
+                        >
+                          <i className={retryingProofTutorId === tutor.id ? 'ri-loader-4-line spinning' : 'ri-shield-flash-line'}></i>
+                        </button>
+                      )}
                       {tutor.isSuspended ? (
                         <button 
                           className="action-btn unsuspend" 
@@ -557,6 +631,36 @@ const TutorsPage = () => {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <div className="profile-section">
+                <h4>ZK Certification Proof</h4>
+                <div className="profile-grid">
+                  <div className="profile-item">
+                    <span className="label">Proof Status</span>
+                    <span className="value">{getProofStatusBadge(viewingTutor)}</span>
+                  </div>
+                  <div className="profile-item">
+                    <span className="label">Domain</span>
+                    <span className="value">{viewingTutor.zkVerifyDomainId || 'Not submitted'}</span>
+                  </div>
+                  <div className="profile-item">
+                    <span className="label">Aggregation ID</span>
+                    <span className="value">{viewingTutor.zkVerifyAggregationId ?? 'Not available'}</span>
+                  </div>
+                  <div className="profile-item">
+                    <span className="label">Transaction</span>
+                    <span className="value proof-hash">
+                      {viewingTutor.zkVerifyTxHash || 'Not submitted'}
+                    </span>
+                  </div>
+                </div>
+                {viewingTutor.zkVerifyLastError && (
+                  <div className="proof-error">
+                    <i className="ri-error-warning-line"></i>
+                    {viewingTutor.zkVerifyLastError}
+                  </div>
+                )}
               </div>
               
               <div className="profile-section">

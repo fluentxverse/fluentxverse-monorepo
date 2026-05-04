@@ -81,10 +81,18 @@ export interface TutorListItem {
   registeredAt: string;
   writtenExamPassed: boolean;
   speakingExamPassed: boolean;
+  interviewPassed: boolean;
   writtenExamScore?: number;
   speakingExamScore?: number;
   status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
+  zkCertificationStatus?: 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
+  zkCredentialCommitment?: string;
+  zkVerifyTxHash?: string;
+  zkVerifyAggregationId?: number;
+  zkVerifyDomainId?: string;
+  zkVerifyLastError?: string;
+  zkVerifyUpdatedAt?: string;
   languages: string[];
   totalSessions: number;
   rating: number;
@@ -318,7 +326,7 @@ export const adminApi = {
   async getTutors(params: {
     page?: number;
     limit?: number;
-    status?: 'all' | 'certified' | 'pending' | 'processing' | 'failed';
+    status?: 'all' | 'certified' | 'pending' | 'processing' | 'failed' | 'suspended' | 'pending_profile';
     search?: string;
   }): Promise<{ tutors: TutorListItem[]; total: number }> {
     const response = await api.get<ApiResponse<{ tutors: TutorListItem[]; total: number }>>('/admin/tutors', {
@@ -328,6 +336,16 @@ export const adminApi = {
       throw new Error(response.data.error || 'Failed to get tutors');
     }
     return response.data.data!;
+  },
+
+  /**
+   * Retry tutor certification proof submission to zkVerify
+   */
+  async retryTutorProofSubmission(tutorId: string): Promise<void> {
+    const response = await api.post<ApiResponse<void>>(`/admin/tutors/${tutorId}/proof/retry`);
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to retry tutor proof submission');
+    }
   },
 
   /**

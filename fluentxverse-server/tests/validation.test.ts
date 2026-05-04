@@ -14,6 +14,14 @@ import {
   PATTERNS,
 } from '../src/utils/validation';
 
+const toIsoDate = (date: Date) => {
+  const isoDate = date.toISOString().split('T')[0];
+  if (!isoDate) {
+    throw new Error('Failed to format ISO date');
+  }
+  return isoDate;
+};
+
 describe('Email Validation', () => {
   it('should accept valid emails', () => {
     expect(isValidEmail('test@example.com')).toBe(true);
@@ -73,7 +81,7 @@ describe('Date Validation', () => {
   it('should correctly identify future dates', () => {
     const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
-    expect(isFutureDate(futureDate.toISOString().split('T')[0])).toBe(true);
+    expect(isFutureDate(toIsoDate(futureDate))).toBe(true);
     expect(isFutureDate('2020-01-01')).toBe(false);
   });
 
@@ -81,7 +89,7 @@ describe('Date Validation', () => {
     expect(isPastDate('2020-01-01')).toBe(true);
     const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
-    expect(isPastDate(futureDate.toISOString().split('T')[0])).toBe(false);
+    expect(isPastDate(toIsoDate(futureDate))).toBe(false);
   });
 });
 
@@ -90,13 +98,13 @@ describe('Age Validation', () => {
     // Person born 20 years ago
     const twentyYearsAgo = new Date();
     twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
-    expect(isValidAge(twentyYearsAgo.toISOString().split('T')[0], 13)).toBe(true);
-    expect(isValidAge(twentyYearsAgo.toISOString().split('T')[0], 18)).toBe(true);
+    expect(isValidAge(toIsoDate(twentyYearsAgo), 13)).toBe(true);
+    expect(isValidAge(toIsoDate(twentyYearsAgo), 18)).toBe(true);
 
     // Person born 10 years ago
     const tenYearsAgo = new Date();
     tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
-    expect(isValidAge(tenYearsAgo.toISOString().split('T')[0], 13)).toBe(false);
+    expect(isValidAge(toIsoDate(tenYearsAgo), 13)).toBe(false);
   });
 });
 

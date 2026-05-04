@@ -1,16 +1,39 @@
 /* Adjustments for sticky header logo and brand text spacing */
 
-/* Increase logo size */
-#sticky-header .logo img {
-    max-height: 46px; /* Increased from 30px */
-    width: auto;
-    display: inline-block;
-    vertical-align: middle;
+/* Keep the brand icon sharp and stable in both normal and sticky header states. */
+#sticky-header .brand-lockup .logo {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#sticky-header .brand-lockup {
+    gap: 2px;
+}
+
+#sticky-header .brand-lockup .logo__spin {
+    display: block;
+    width: 100%;
+    height: 100%;
+    animation: none;
+    transform: none;
+}
+
+#sticky-header .brand-lockup .logo img {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+    transform: none;
+    filter: none;
 }
 
 /* Adjust brand text spacing - much closer to logo */
 #sticky-header .brand-text {
-    margin-left: 8px; /* Significantly reduced from 20px */
+    margin-left: 0;
     display: inline-flex;
     align-items: center;
     height: 46px; /* Match logo height for better alignment */
@@ -32,7 +55,7 @@
 /* Enhanced logo and brand text relationship */
 #sticky-header .logo + .brand-text {
     position: relative;
-    margin-left: 5px; /* Further reduced from 15px */
+    margin-left: 0;
 }
 
 /* Responsive adjustments */
@@ -42,7 +65,7 @@
     }
     
     #sticky-header .brand-text {
-        margin-left: 5px;
+        margin-left: 0;
     }
 }
 
@@ -52,7 +75,7 @@
     }
     
     #sticky-header .brand-text {
-        margin-left: 4px;
+        margin-left: 0;
     }
 }
 

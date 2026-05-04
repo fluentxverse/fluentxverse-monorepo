@@ -3073,9 +3073,11 @@
 
 /* Part-specific tutor guides (Discussion, Pronunciation) - inherits sticky from parent .csve-learn-right */
 
+.csve-guide-steps {
   padding: 0 0.5rem 0.25rem;
 }
 
+.csve-guide-step {
   display: flex;
   gap: 0.25rem;
   margin-bottom: 0.25rem;
@@ -3089,6 +3091,7 @@
   position: relative;
 }
 
+.csve-guide-number {
   width: 14px;
   height: 14px;
   background: var(--primary, #0245ae);
@@ -5108,9 +5111,11 @@
   overflow: hidden;
 }
 
+.csve-trivia-guide .csve-guide-steps {
   padding: 0 0.5rem 0.25rem;
 }
 
+.csve-trivia-guide .csve-guide-step {
   display: flex;
   gap: 0.25rem;
   margin-bottom: 0.25rem;
@@ -5120,6 +5125,7 @@
   margin-bottom: 0;
 }
 
+.csve-trivia-guide .csve-guide-number {
   width: 14px;
   height: 14px;
   background: var(--primary, #0245ae);
@@ -9880,7 +9886,6 @@
   color: #00b4ff;
   background: #edf7ff;
   border-top-color: #00b4ff;
-}
 }
 
 /* ============================================================================

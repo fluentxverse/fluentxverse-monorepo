@@ -46,21 +46,38 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   addNotification: (notification: Notification) => {
-    set(state => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + (notification.isRead ? 0 : 1)
-    }));
+    set(state => {
+      const existingNotification = state.notifications.find(n => n.id === notification.id);
+
+      if (existingNotification) {
+        return {
+          notifications: state.notifications.map(n =>
+            n.id === notification.id ? { ...n, ...notification } : n
+          ),
+          unreadCount: state.unreadCount
+        };
+      }
+
+      return {
+        notifications: [notification, ...state.notifications],
+        unreadCount: state.unreadCount + (notification.isRead ? 0 : 1)
+      };
+    });
   },
 
   markAsRead: async (notificationId: string) => {
     try {
       await notificationApi.markAsRead(notificationId);
-      set(state => ({
-        notifications: state.notifications.map(n => 
-          n.id === notificationId ? { ...n, isRead: true } : n
-        ),
-        unreadCount: Math.max(0, state.unreadCount - 1)
-      }));
+      set(state => {
+        const wasUnread = state.notifications.some(n => n.id === notificationId && !n.isRead);
+
+        return {
+          notifications: state.notifications.map(n =>
+            n.id === notificationId ? { ...n, isRead: true } : n
+          ),
+          unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount
+        };
+      });
     } catch (error: any) {
       set({ error: error.message || 'Failed to mark as read' });
     }

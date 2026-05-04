@@ -28,6 +28,9 @@ try {
       beData: lesson.beData,
     };
     const fileName = FILE_MAP[lesson.lessonNumber];
+    if (!fileName) {
+      continue;
+    }
     await writeFile(path.join(DOCS_DIR, fileName), `${JSON.stringify(payload, null, 2)}\n`);
     await writeFile(path.join(TMP_DIR, `L${lesson.lessonNumber}-updated.json`), `${JSON.stringify(payload, null, 2)}\n`);
     console.log(`Synced Lesson ${lesson.lessonNumber} from DB`);

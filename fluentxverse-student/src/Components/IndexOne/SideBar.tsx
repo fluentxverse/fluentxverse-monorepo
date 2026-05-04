@@ -46,7 +46,7 @@ const SideBar = (): JSX.Element | null => {
             route('/home');
           }}
         >
-          <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse Logo" />
+          <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse Logo" />
         </a>
       </div>
       <div className="sidebar-icon">

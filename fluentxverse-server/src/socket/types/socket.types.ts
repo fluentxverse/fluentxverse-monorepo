@@ -29,7 +29,7 @@ export interface ServerToClientEvents {
   'interview:admin-left': () => void;
   
   // Schedule events
-  'schedule:slot-booked': (data: { tutorId: string; slotKey: string; studentId: string; studentName?: string; date: string; time: string }) => void;
+  'schedule:slot-booked': (data: { tutorId: string; slotKey: string; bookingId?: string; studentId: string; studentName?: string; date: string; time: string }) => void;
   'schedule:slot-cancelled': (data: { tutorId: string; slotKey: string; date: string; time: string }) => void;
   
   // Ticket events

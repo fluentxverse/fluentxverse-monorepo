@@ -6,14 +6,15 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
 import { useAuthContext } from '../context/AuthContext';
+import LoadingSpinner from '../Components/LoadingSpinner';
 import { API_BASE_URL } from '../config/api';
 import './BrowseTutorsPage.css';
 
 // Get ticket image URL from local assets (same as TicketsPage)
 const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
-  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.png';
-  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.png';
-  return '/assets/img/icons/trial_ticket.png';
+  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.webp';
+  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.webp';
+  return '/assets/img/icons/trial_ticket.webp';
 };
 
 // Ticket balance type
@@ -29,8 +30,48 @@ interface TicketBalance {
 // Type assertion helper to fix Preact/React compatibility
 const jsx = (el: any) => el as any;
 
+const getZkCertificationBadge = (tutor: Tutor) => {
+  if (!tutor.zkCertificationStatus) return null;
+
+  const labels: Partial<Record<NonNullable<Tutor['zkCertificationStatus']>, string>> = {
+    local_proof_generated: 'ZK Proof Ready',
+    submitted: 'zkVerify Pending',
+    verified: 'ZK Verified',
+  };
+  const label = labels[tutor.zkCertificationStatus];
+  if (!label) return null;
+
+  const href = tutor.zkCredentialCommitment
+    ? `${API_BASE_URL}/proof/tutor-certification/public/${encodeURIComponent(tutor.zkCredentialCommitment)}`
+    : undefined;
+
+  const content = (
+    <Fragment>
+      <i className={tutor.zkCertificationStatus === 'verified' ? 'ri-shield-check-fill' : 'ri-shield-keyhole-line'}></i>
+      <span>{label}</span>
+    </Fragment>
+  );
+
+  return href ? (
+    <a
+      className={`tutor-card-new__zk-badge tutor-card-new__zk-badge--${tutor.zkCertificationStatus}`}
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(e: any) => e.stopPropagation()}
+      title="View public certification proof"
+    >
+      {jsx(content)}
+    </a>
+  ) : (
+    <span className={`tutor-card-new__zk-badge tutor-card-new__zk-badge--${tutor.zkCertificationStatus}`}>
+      {jsx(content)}
+    </span>
+  );
+};
+
 // Tutor Card Component (inline for better control)
-const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: Tutor) => void }) => {
+const TutorCard = ({ tutor, onBookClick, isAuthenticated }: { tutor: Tutor; onBookClick: (tutor: Tutor) => void; isAuthenticated: boolean }) => {
   const displayName = tutor.displayName || `${tutor.firstName} ${tutor.lastName}`;
   const initials = `${tutor.firstName?.[0] || ''}${tutor.lastName?.[0] || ''}`.toUpperCase();
   const rating = tutor.rating ? tutor.rating.toFixed(1) : 'New';
@@ -39,7 +80,7 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
 
   const handleCardClick = (e: any) => {
     // Don't navigate if clicking the Book Now button
-    if (e.target.closest('.tutor-card-new__cta')) {
+    if (e.target.closest('.tutor-card-new__cta') || e.target.closest('.tutor-card-new__zk-badge')) {
       return;
     }
     window.location.href = `/tutor/${tutor.userId}`;
@@ -47,6 +88,10 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
 
   const handleBookNow = (e: any) => {
     e.stopPropagation();
+    if (!isAuthenticated) {
+      window.location.href = `/tutor/${tutor.userId}`;
+      return;
+    }
     onBookClick(tutor);
   };
 
@@ -67,6 +112,7 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
       <i className="ri-checkbox-circle-fill"></i>
     </div>
   ) : null;
+  const zkCertificationBadge = getZkCertificationBadge(tutor);
 
   return (
     <div className="tutor-card-new" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
@@ -80,6 +126,7 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
         <div className="tutor-card-new__info">
           <div className="tutor-card-new__name-row">
             <h3 className="tutor-card-new__name">{displayName}</h3>
+            {jsx(zkCertificationBadge)}
             {/* Availability Badge */}
             {tutor.isAvailable && (
               <div className="tutor-card-new__available-badge">
@@ -145,7 +192,7 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
       {/* Footer with Book Now */}
       <div className="tutor-card-new__footer">
         <button onClick={handleBookNow} className="tutor-card-new__cta">
-          Book Now
+          {isAuthenticated ? 'Book Now' : 'View Profile'}
           <i className="ri-arrow-right-line"></i>
         </button>
       </div>
@@ -466,18 +513,38 @@ export const BrowseTutorsPage = () => {
   const hasActiveFilters = selectedSpecs.length > 0 || 
     startTime !== '05:00' ||
     endTime !== '24:30';
+  const isPublicBrowse = !isAuthenticated;
+
+  if (initialLoading) {
+    return (
+      <div className="browse-page browse-page--auth-check">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <>
       {/* Show SideBar only when logged in */}
       {isAuthenticated && <SideBar />}
       
-      <div className={`browse-page ${isAuthenticated ? 'browse-page--with-sidebar' : ''}`}>
+      <div className={`browse-page ${isAuthenticated ? 'browse-page--with-sidebar' : 'browse-page--public'}`}>
         <Header />
+
+        <section className="browse-public-hero">
+          <div className="browse-public-hero__image" aria-hidden="true"></div>
+          <div className="browse-public-hero__overlay" aria-hidden="true"></div>
+          <div className="browse-public-hero__content">
+            <h1 className="browse-public-hero__title">
+              Find the English tutor who fits your goal.
+            </h1>
+            <p className="browse-public-hero__description">
+              Browse verified FluentXVerse tutors, compare open lesson times, and start with a speaking-focused class built for steady progress.
+            </p>
+          </div>
+        </section>
         
-        {/* Conditionally render hero or balance section */}
-        {(isAuthenticated || initialLoading) ? (
-          /* Logged-in user: Show balance card instead of hero */
+        {isAuthenticated && (
           <section className="browse-balance-section">
             <div className="browse-balance-card">
               <div className="browse-balance-header">
@@ -537,57 +604,18 @@ export const BrowseTutorsPage = () => {
               )}
             </div>
           </section>
-        ) : (
-          /* Not logged in: Show hero banner */
-          <section className="browse-hero">
-            <div className="browse-hero__bg">
-              <div className="browse-hero__image" aria-hidden="true"></div>
-              <div className="browse-hero__gradient"></div>
-              <div className="browse-hero__pattern"></div>
-            </div>
-            
-            <div className="browse-hero__content">
-              <h1 className="browse-hero__title">
-                Find Your Perfect
-                <span className="browse-hero__highlight"> English Tutor</span>
-              </h1>
-              <p className="browse-hero__subtitle">
-                Connect with expert tutors for personalized 1-on-1 lessons
-              </p>
-
-              {/* Search Bar */}
-              <form className="browse-search" onSubmit={handleSearch}>
-                <div className="browse-search__input-wrapper">
-                  <i className="ri-search-line browse-search__icon"></i>
-                  <input
-                    type="text"
-                    className="browse-search__input"
-                    placeholder="Search by name"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-                  />
-                  {searchQuery && (
-                    <button 
-                      type="button" 
-                      className="browse-search__clear"
-                      onClick={() => { setSearchQuery(''); searchTutors(true); }}
-                    >
-                      <i className="ri-close-line"></i>
-                    </button>
-                  )}
-                </div>
-                <button type="submit" className="browse-search__btn">
-                  <i className="ri-search-line"></i>
-                  <span>Search</span>
-                </button>
-              </form>
-            </div>
-          </section>
         )}
 
       {/* Main Content */}
       <section className="browse-main">
         <div className="browse-container">
+          {isPublicBrowse && (
+            <div className="browse-public-section-heading">
+              <span>Open lessons this week</span>
+              <h2>Choose a tutor and a time that fits your schedule.</h2>
+            </div>
+          )}
+
           {/* Top Bar with Quick Filters */}
           <div className="browse-topbar">
             <div className="browse-topbar__left">
@@ -808,7 +836,7 @@ export const BrowseTutorsPage = () => {
 
                     {/* Show tutor cards */}
                     {tutors.map((tutor) => (
-                      <TutorCard key={tutor.userId} tutor={tutor} onBookClick={handleBookClick} />
+                      <TutorCard key={tutor.userId} tutor={tutor} onBookClick={handleBookClick} isAuthenticated={isAuthenticated} />
                     ))}
                   </div>
 

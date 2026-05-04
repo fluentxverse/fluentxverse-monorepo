@@ -92,22 +92,30 @@
 }
 
 .social-login-modal .modal-brand-text {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0245ae;
-  letter-spacing: 0.3px;
+  font-size: 25px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .social-login-modal .modal-brand-text .brand-x {
-  color: #0245ae;
+  color: #4fb4ff;
+  text-shadow:
+    0 0 12px rgba(79, 180, 255, 0.36),
+    0 0 22px rgba(84, 239, 228, 0.16);
 }
 
 .dark-mode .social-login-modal .modal-brand-text {
-  color: #4a9eff;
+  color: #f7fbff;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.34),
+    0 0 18px rgba(79, 180, 255, 0.24);
 }
 
 .dark-mode .social-login-modal .modal-brand-text .brand-x {
-  color: #4a9eff;
+  color: #4fb4ff;
 }
 
 /* Title */

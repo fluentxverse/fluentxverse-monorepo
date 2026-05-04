@@ -426,7 +426,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
             <div className="settings-profile">
               <div className="settings-avatar">
                 <img
-                  src={avatarPreview || '/assets/img/logo/icon_logo.png'}
+                  src={avatarPreview || '/assets/img/logo/icon_logo.webp'}
                   alt="User Avatar"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/120/0245ae/ffffff?text=' + displayName.charAt(0).toUpperCase();

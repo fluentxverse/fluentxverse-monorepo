@@ -2,8 +2,12 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi, AvailableSlot } from '../../api/schedule.api';
 import { transferTicketForBooking, getTicketBalance, type TicketBalance } from '../../services/ticket.service';
-import { useActiveAccount } from 'thirdweb/react';
+import { useActiveAccount, useAutoConnect, useConnect } from 'thirdweb/react';
+import { arbitrumSepolia } from 'thirdweb/chains';
 import { getErrorMessage } from '../../api/utils';
+import { useThemeStore } from '../../context/ThemeContext';
+import { useAuthContext } from '../../context/AuthContext';
+import { thirdwebClient, appWallet } from '../../config/wallet';
 import './BookingModal.css';
 
 interface BookingModalProps {
@@ -38,15 +42,43 @@ export const BookingModal = ({
   const [ticketBalance, setTicketBalance] = useState<TicketBalance | null>(null);
   const [ticketLoading, setTicketLoading] = useState(true);
   const [transferringTicket, setTransferringTicket] = useState(false);
+  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const { user } = useAuthContext();
 
   // Get the connected account for ticket transfer
   const activeAccount = useActiveAccount();
+  const { connect, isConnecting: isWalletConnecting } = useConnect();
+  const { isLoading: isWalletAutoConnecting } = useAutoConnect({
+    client: thirdwebClient,
+    wallets: [appWallet],
+  });
+  const connectedAccount = activeAccount || appWallet.getAccount();
+  const walletAddress = connectedAccount?.address || user?.walletAddress || user?.smartWalletAddress;
+
+  const reconnectWallet = async () => {
+    setError(null);
+
+    try {
+      await connect(async () => {
+        if (!appWallet.getAccount()) {
+          await appWallet.connect({
+            client: thirdwebClient,
+            chain: arbitrumSepolia,
+          });
+        }
+
+        return appWallet;
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Unable to reconnect wallet. Please sign in with your wallet again.');
+    }
+  };
 
   // Fetch ticket balance when modal opens
   useEffect(() => {
-    if (isOpen && activeAccount?.address) {
+    if (isOpen && walletAddress) {
       setTicketLoading(true);
-      getTicketBalance(activeAccount.address)
+      getTicketBalance(walletAddress)
         .then((balance) => {
           setTicketBalance(balance);
         })
@@ -56,10 +88,13 @@ export const BookingModal = ({
         .finally(() => {
           setTicketLoading(false);
         });
-    } else if (isOpen && !activeAccount?.address) {
+    } else if (isOpen && !isWalletAutoConnecting && !isWalletConnecting) {
+      setTicketBalance(null);
       setTicketLoading(false);
+    } else if (isOpen) {
+      setTicketLoading(true);
     }
-  }, [isOpen, activeAccount?.address]);
+  }, [isOpen, walletAddress, isWalletAutoConnecting, isWalletConnecting]);
 
   // Helper function to convert PHT time to KST time
   // Returns the ACTUAL KST date (may be next day for late-night PHT times)
@@ -191,11 +226,23 @@ export const BookingModal = ({
 
   const handleBookSlot = async () => {
     if (!selectedSlot) return;
+
+    let bookingAccount = activeAccount || appWallet.getAccount();
+
+    if (!bookingAccount && (isWalletAutoConnecting || isWalletConnecting)) {
+      setError('Wallet is reconnecting, please wait a moment and try again.');
+      return;
+    }
     
     // Check if user has connected wallet
-    if (!activeAccount) {
-      setError('Please connect your wallet to book a lesson');
-      return;
+    if (!bookingAccount) {
+      await reconnectWallet();
+      bookingAccount = appWallet.getAccount();
+
+      if (!bookingAccount) {
+        setError('Please connect your wallet to book a lesson');
+        return;
+      }
     }
 
     // Wait for ticket data to load
@@ -222,7 +269,7 @@ export const BookingModal = ({
     
     try {
       // Step 1: Transfer ticket to vault wallet (on-chain)
-      const transferResult = await transferTicketForBooking(activeAccount, ticketTier as 'basic' | 'premium', 1);
+      const transferResult = await transferTicketForBooking(bookingAccount, ticketTier as 'basic' | 'premium', 1);
       
       if (!transferResult.success) {
         throw new Error(transferResult.error || 'Failed to transfer ticket');
@@ -236,8 +283,8 @@ export const BookingModal = ({
       setBookingSuccess(true);
       
       // Refresh ticket balance
-      if (activeAccount?.address) {
-        getTicketBalance(activeAccount.address).then(setTicketBalance).catch(console.error);
+      if (bookingAccount.address) {
+        getTicketBalance(bookingAccount.address).then(setTicketBalance).catch(console.error);
       }
       
       // Close modal after 2 seconds and redirect to schedule page
@@ -337,8 +384,8 @@ export const BookingModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="booking-modal-overlay" onClick={handleClose}>
-      <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
+    <div className={`booking-modal-overlay${isDarkMode ? ' booking-modal-overlay--dark' : ''}`} onClick={handleClose}>
+      <div className={`booking-modal${isDarkMode ? ' booking-modal--dark' : ''}`} onClick={(e) => e.stopPropagation()}>
         <button className="booking-modal-close" onClick={handleClose} aria-label="Close">
           ×
         </button>
@@ -391,8 +438,12 @@ export const BookingModal = ({
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             <span>{error}</span>
-            <button onClick={fetchAvailableSlots} className="booking-modal-retry">
-              Retry
+            <button
+              onClick={error.toLowerCase().includes('wallet') ? reconnectWallet : fetchAvailableSlots}
+              className="booking-modal-retry"
+              disabled={isWalletConnecting || isWalletAutoConnecting}
+            >
+              {isWalletConnecting || isWalletAutoConnecting ? 'Connecting...' : 'Retry'}
             </button>
           </div>
         )}
@@ -456,12 +507,17 @@ export const BookingModal = ({
                 <button
                   className="booking-modal-confirm"
                   onClick={handleBookSlot}
-                  disabled={booking || ticketLoading}
+                  disabled={booking || ticketLoading || isWalletConnecting || isWalletAutoConnecting}
                 >
                   {booking ? (
                     <>
                       <span className="booking-modal-spinner-small"></span>
                       Booking...
+                    </>
+                  ) : isWalletConnecting || isWalletAutoConnecting ? (
+                    <>
+                      <span className="booking-modal-spinner-small"></span>
+                      Connecting wallet...
                     </>
                   ) : ticketLoading ? (
                     <>

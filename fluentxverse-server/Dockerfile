@@ -1,8 +1,18 @@
+# Build circom once, then copy only the binary into the runtime image.
+FROM docker.io/oven/bun:1-alpine AS circom-builder
+
+RUN apk add --no-cache build-base cargo git
+RUN cargo install --git https://github.com/iden3/circom.git --tag v2.1.9 circom
+
 # Use official Bun image
 FROM docker.io/oven/bun:1-alpine
 
 # Create non-root user early (before any files are copied)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Local Groth16 proof generation needs circom and snarkjs.
+COPY --from=circom-builder /root/.cargo/bin/circom /usr/local/bin/circom
+RUN apk add --no-cache nodejs npm && npm install -g snarkjs@0.7.6
 
 # Set working directory
 WORKDIR /app
@@ -15,7 +25,10 @@ RUN bun install --production --no-save
 
 # Copy source code
 COPY --chown=appuser:appgroup src ./src
+COPY --chown=appuser:appgroup circuits ./circuits
 COPY --chown=appuser:appgroup tsconfig.json ./
+
+RUN mkdir -p zk-artifacts && chown -R appuser:appgroup zk-artifacts circuits
 
 # Switch to non-root user
 USER appuser

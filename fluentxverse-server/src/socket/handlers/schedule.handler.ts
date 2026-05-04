@@ -63,6 +63,7 @@ export const emitSlotBooked = (
   tutorId: string,
   data: {
     slotKey: string;
+    bookingId?: string;
     studentId: string;
     studentName?: string;
     date: string;

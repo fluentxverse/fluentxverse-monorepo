@@ -213,27 +213,27 @@
 }
 
 .quick-action-card.browse .quick-action-icon {
-  background: linear-gradient(135deg, #1f2937 0%, #273244 100%);
+  background: linear-gradient(135deg, rgba(2, 69, 174, 0.1) 0%, rgba(2, 69, 174, 0.18) 100%);
 }
 
 .quick-action-card.browse .quick-action-icon i {
-  color: #e2e8f0;
+  color: #0245ae;
 }
 
 .quick-action-card.tickets .quick-action-icon {
-  background: linear-gradient(135deg, #1f2937 0%, #273244 100%);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.22) 100%);
 }
 
 .quick-action-card.tickets .quick-action-icon i {
-  color: #e2e8f0;
+  color: #b45309;
 }
 
 .quick-action-card.lessons .quick-action-icon {
-  background: linear-gradient(135deg, #1f2937 0%, #273244 100%);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.22) 100%);
 }
 
 .quick-action-card.lessons .quick-action-icon i {
-  color: #e2e8f0;
+  color: #047857;
 }
 
 .quick-action-text {
@@ -1267,6 +1267,7 @@
 [data-theme='dark'] .quick-action-title,
 [data-theme='dark'] .home-card-title,
 [data-theme='dark'] .empty-title,
+[data-theme='dark'] .next-lesson-tutor,
 [data-theme='dark'] .next-lesson-detail strong,
 [data-theme='dark'] .favorite-tutor-name,
 [data-theme='dark'] .ticket-balance-count,
@@ -1274,6 +1275,7 @@
 .dark-mode .quick-action-title,
 .dark-mode .home-card-title,
 .dark-mode .empty-title,
+.dark-mode .next-lesson-tutor,
 .dark-mode .next-lesson-detail strong,
 .dark-mode .favorite-tutor-name,
 .dark-mode .ticket-balance-count,

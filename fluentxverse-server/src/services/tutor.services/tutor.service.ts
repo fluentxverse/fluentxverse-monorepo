@@ -58,6 +58,19 @@ function isSlotBookable(slotDate: string, slotTime: string): boolean {
   return slotDateTime > minBookTime;
 }
 
+function toTutorProofSummary(credentialNode: any) {
+  const credential = credentialNode?.properties;
+  if (!credential) return {};
+
+  return {
+    zkCertificationStatus: credential.status || undefined,
+    zkCredentialCommitment: credential.credentialCommitment || undefined,
+    zkCircuitVersion: credential.circuitVersion || undefined,
+    zkVerifiedAt: neo4jDateTimeToISO(credential.zkVerifyVerifiedAt) || neo4jDateTimeToISO(credential.verifiedAt) || undefined,
+    zkVerifyTxHash: credential.zkVerifyTxHash || undefined,
+  };
+}
+
 export class TutorService {
   /**
    * Search and filter tutors
@@ -131,11 +144,11 @@ export class TutorService {
       let matchPattern = 'MATCH (u:User)';
       const queryParams: any = { dateFilter, skip: neo4j.int(skip), limit: neo4j.int(limitNum) };
       
-      // Certification requirement - tutor must have passed both exams AND have approved profile
+      // Certification requirement - tutor must have passed both exams, profile review, and interview
       // OR be a test account (bypass for development) - use toLower for case-insensitive email check
       // IMPORTANT: Wrap entire check in parentheses for correct OR precedence
       const TEST_ACCOUNT_IDS = ['paulanthonyarriola@gmail.com']; // Test tutor emails
-      const certificationCheck = `((u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved') OR toLower(u.email) = 'paulanthonyarriola@gmail.com')`;
+      const certificationCheck = `((u.writtenExamPassed = true AND u.speakingExamPassed = true AND u.profileStatus = 'approved' AND u.interviewPassed = true) OR toLower(u.email) = 'paulanthonyarriola@gmail.com')`;
       
       // Name search condition (case-insensitive using toLower and CONTAINS)
       const nameSearchCondition = nameSearchLower 
@@ -225,7 +238,8 @@ export class TutorService {
         countQuery = `
           ${matchPattern}
           ${whereClause}
-          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots
+          OPTIONAL MATCH (u)-[:HAS_CERTIFICATION_CREDENTIAL]->(cred:TutorCertificationCredential)
+          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots, cred
         `;
         
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
@@ -233,7 +247,8 @@ export class TutorService {
         // "All Dates" mode without time filter - need to get tutors with their slots for bookable check
         countQuery = `
           ${matchPattern}
-          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots
+          OPTIONAL MATCH (u)-[:HAS_CERTIFICATION_CREDENTIAL]->(cred:TutorCertificationCredential)
+          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots, cred
         `;
         
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
@@ -252,6 +267,7 @@ export class TutorService {
       for (const record of result.records) {
         const user = record.get('u').properties;
         const slots: Array<{date: string; time: string}> = record.get('slots') || [];
+        const proofSummary = toTutorProofSummary(record.get('cred'));
         
         // Filter to only bookable slots (not past and at least 5 min away)
         const bookableSlots = slots.filter((slot: {date: string; time: string}) => 
@@ -283,7 +299,8 @@ export class TutorService {
             timezone: user.timezone,
             isVerified: user.isVerified || false,
             isAvailable: true,
-            joinedDate: user.createdAt
+            joinedDate: user.createdAt,
+            ...proofSummary
           });
         }
       }
@@ -726,7 +743,8 @@ export class TutorService {
     try {
       const query = `
         MATCH (u:User {id: $tutorId})
-        RETURN u
+        OPTIONAL MATCH (u)-[:HAS_CERTIFICATION_CREDENTIAL]->(cred:TutorCertificationCredential)
+        RETURN u, cred
       `;
 
       const result = await session.run(query, { tutorId });
@@ -741,6 +759,7 @@ export class TutorService {
       }
 
       const user = record.get('u').properties;
+      const proofSummary = toTutorProofSummary(record.get('cred'));
 
       return {
         userId: user.id,
@@ -778,7 +797,8 @@ export class TutorService {
         profileItemStatuses: user.profileItemStatuses ? JSON.parse(user.profileItemStatuses) : undefined,
         profileRejectionReason: user.profileRejectionReason || undefined,
         pendingProfileChanges: user.pendingProfileChanges ? JSON.parse(user.pendingProfileChanges) : undefined,
-        hasPendingChanges: user.hasPendingChanges || false
+        hasPendingChanges: user.hasPendingChanges || false,
+        ...proofSummary
       };
     } catch (error) {
       console.error('Error getting tutor profile:', error);

@@ -30,6 +30,11 @@ export interface Tutor {
   // Profile completion
   isVerified?: boolean;
   joinedDate?: string;
+  zkCertificationStatus?: 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
+  zkCredentialCommitment?: string;
+  zkCircuitVersion?: string;
+  zkVerifiedAt?: string;
+  zkVerifyTxHash?: string;
 }
 
 export interface TutorProfile extends Tutor {

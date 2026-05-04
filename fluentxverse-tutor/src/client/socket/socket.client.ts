@@ -3,6 +3,7 @@ import type {
   ServerToClientEvents, 
   ClientToServerEvents 
 } from '../../types/socket.types';
+import { API_BASE_URL } from '../../config/api';
 
 // Known production domains
 const PRODUCTION_DOMAINS = [
@@ -50,10 +51,11 @@ const getSocketUrl = () => {
   return 'http://localhost:8767';
 };
 
-const SOCKET_URL = getSocketUrl();
+export const SOCKET_URL = getSocketUrl();
 
 let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 let socketConnectWarningShown = false;
+let socketTokenWarningShown = false;
 
 export const getSocket = (): Socket<ServerToClientEvents, ClientToServerEvents> => {
   if (!socket) {
@@ -62,8 +64,38 @@ export const getSocket = (): Socket<ServerToClientEvents, ClientToServerEvents> 
   return socket;
 };
 
+const isJwtLikeToken = (token?: string) => Boolean(token && token.split('.').length === 3);
+
+const fetchTutorSocketToken = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tutor/socket-token`, {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Socket token request failed with ${response.status}`);
+    }
+
+    const data = await response.json();
+    return typeof data?.token === 'string' ? data.token : undefined;
+  } catch (error) {
+    if (!socketTokenWarningShown) {
+      console.warn('Unable to fetch socket auth token; realtime connection may be unavailable.', error);
+      socketTokenWarningShown = true;
+    }
+
+    return undefined;
+  }
+};
+
 const resolveAuthToken = (token?: string) => {
-  if (token) {
+  if (isJwtLikeToken(token)) {
     return token;
   }
 
@@ -72,31 +104,35 @@ const resolveAuthToken = (token?: string) => {
     .find(row => row.startsWith('tutorAuth='))
     ?.split('=')[1];
 
-  if (authCookie) {
+  if (isJwtLikeToken(authCookie)) {
     return decodeURIComponent(authCookie);
   }
 
-  return JSON.stringify({
-    userId: `tutor-${Date.now()}`,
-    email: 'tutor@dev.local',
-    tier: 2
-  });
+  return undefined;
+};
+
+const createSocketAuth = (token?: string) => {
+  const immediateToken = resolveAuthToken(token);
+  if (immediateToken) {
+    return { token: immediateToken };
+  }
+
+  return async (callback: (auth: { token?: string }) => void) => {
+    const socketToken = await fetchTutorSocketToken();
+    callback(socketToken ? { token: socketToken } : {});
+  };
 };
 
 export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientToServerEvents> => {
-  const authToken = resolveAuthToken(token);
-
   if (socket) {
-    socket.auth = { ...(socket.auth || {}), token: authToken };
+    socket.auth = createSocketAuth(token) as any;
     return socket;
   }
 
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
-    auth: {
-      token: authToken
-    },
+    auth: createSocketAuth(token) as any,
     transports: ['websocket', 'polling'],
     rememberUpgrade: true,
     reconnection: true,
@@ -107,6 +143,8 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
   });
 
   socket.on('connect', () => {
+    socketConnectWarningShown = false;
+    socketTokenWarningShown = false;
   });
 
   socket.on('disconnect', (reason) => {
@@ -114,7 +152,12 @@ export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientT
 
   socket.on('connect_error', (error) => {
     if (!socketConnectWarningShown) {
-      console.warn('Socket connection unavailable; realtime updates are temporarily disabled.');
+      console.warn('Socket connection unavailable; realtime updates are temporarily disabled.', {
+        message: error.message,
+        data: (error as any).data,
+        description: (error as any).description,
+        context: (error as any).context
+      });
       socketConnectWarningShown = true;
     }
   });

@@ -226,6 +226,36 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       set.headers['Vary'] = 'Cookie';
       return { success: true };
     })
+
+    .get('/socket-token', async ({ cookie, set }) => {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+
+      const token = await signAuthToken({
+        userId: payload.userId,
+        email: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        walletAddress: payload.walletAddress,
+        mobileNumber: payload.mobileNumber,
+        tier: payload.tier,
+        role: payload.role || 'tutor'
+      }, 10 * 60);
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      set.headers['Vary'] = 'Cookie';
+      return { success: true, token };
+    })
     
     .get('/me', async ({ cookie, set }): Promise<MeResponse> => {
       try {

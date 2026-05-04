@@ -63,10 +63,18 @@ if (typeof window !== 'undefined') {
 
 function AppShell() {
 	const [menuActive, setMenuActive] = useState(false);
-	const { isAuthenticated } = useAuthContext();
+	const { isAuthenticated, initialLoading } = useAuthContext();
 	const { path } = useLocation();
 	const isDarkMode = useThemeStore((state) => state.isDarkMode);
-	const effectiveTheme = path === '/' ? 'light' : (isDarkMode ? 'dark' : 'light');
+	const hasStoredAuth = typeof window !== 'undefined'
+		? Boolean(
+			window.localStorage.getItem('authToken') ||
+			window.sessionStorage.getItem('authToken') ||
+			window.localStorage.getItem('fxv_user_id')
+		)
+		: false;
+	const isThemeLockedLight = path === '/' || (path === '/browse-tutors' && !isAuthenticated && !initialLoading && !hasStoredAuth);
+	const effectiveTheme = isThemeLockedLight ? 'light' : (isDarkMode ? 'dark' : 'light');
 	
 	// Auto-connect wallet if user has previously connected
 	// This restores the wallet session on page reload
@@ -80,12 +88,16 @@ function AppShell() {
 	// Disconnect wallet if user is not authenticated (logged out)
 	// This ensures wallet state stays in sync with auth state
 	useEffect(() => {
+		if (initialLoading) {
+			return;
+		}
+
 		if (!isAuthenticated && autoConnected) {
 			appWallet.disconnect().catch(err => {
 				console.warn('Failed to disconnect wallet:', err);
 			});
 		}
-	}, [isAuthenticated, autoConnected]);
+	}, [initialLoading, isAuthenticated, autoConnected]);
 
 	const handleClick = useCallback((e: MouseEvent) => {
 		const target = e.target as HTMLElement;

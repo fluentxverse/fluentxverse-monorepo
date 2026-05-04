@@ -12,7 +12,9 @@ export interface InterviewSlot {
   tutorEmail?: string;
   createdAt: string;
   bookedAt?: string;
+  completedAt?: string;
   notes?: string;
+  result?: 'pass' | 'fail';
 }
 
 export interface CreateInterviewSlotsRequest {

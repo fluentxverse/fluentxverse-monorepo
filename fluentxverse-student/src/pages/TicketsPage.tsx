@@ -23,9 +23,9 @@ import './TicketsPage.css';
 
 // Get ticket image URL from local assets
 const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
-  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.png';
-  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.png';
-  return '/assets/img/icons/trial_ticket.png';
+  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.webp';
+  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.webp';
+  return '/assets/img/icons/trial_ticket.webp';
 };
 
 // Arbitrum chain

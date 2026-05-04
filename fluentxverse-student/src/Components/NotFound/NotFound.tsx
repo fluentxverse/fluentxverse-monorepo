@@ -105,7 +105,7 @@ const NotFound = () => {
               : '1px solid rgba(2, 69, 174, 0.1)'
           }}>
             <img 
-              src="/assets/img/logo/icon_logo.png" 
+              src="/assets/img/logo/icon_logo.webp" 
               alt="FluentXVerse Logo"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />

@@ -21,6 +21,7 @@ export interface Notification {
   isRead: boolean;
   data?: {
     bookingId?: string;
+    slotId?: string;
     sessionId?: string;
     studentId?: string;
     studentName?: string;

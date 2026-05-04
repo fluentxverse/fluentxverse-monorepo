@@ -4,6 +4,13 @@ node_modules
 # output
 out
 dist
+zk-artifacts
+circuits/**/build
+circuits/**/*.r1cs
+circuits/**/*.sym
+circuits/**/*.zkey
+circuits/**/*.ptau
+circuits/**/verification_key.json
 *.tgz
 
 # code coverage

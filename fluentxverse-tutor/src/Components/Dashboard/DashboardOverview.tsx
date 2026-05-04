@@ -3,6 +3,7 @@ import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../../context/AuthContext';
 import { getExamStatus, getSpeakingExamStatus, type ExamStatus, type SpeakingExamStatus } from '../../api/exam.api';
 import { interviewApi, type MyInterview } from '../../api/interview.api';
+import { proofApi, type TutorCertificationProofResponse } from '../../api/proof.api';
 import './DashboardOverview.css';
 
 interface ProgressData {
@@ -32,6 +33,7 @@ const DashboardOverview = () => {
   const [writtenStatus, setWrittenStatus] = useState<ExamStatus | null>(null);
   const [speakingStatus, setSpeakingStatus] = useState<SpeakingExamStatus | null>(null);
   const [interview, setInterview] = useState<MyInterview | null>(null);
+  const [proofStatus, setProofStatus] = useState<TutorCertificationProofResponse | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,10 +41,11 @@ const DashboardOverview = () => {
       
       setLoading(true);
       try {
-        const [writtenRes, speakingRes, interviewRes] = await Promise.all([
+        const [writtenRes, speakingRes, interviewRes, proofRes] = await Promise.all([
           getExamStatus(user.userId),
           getSpeakingExamStatus(user.userId),
-          interviewApi.getMyBooking().catch(() => null)
+          interviewApi.getMyBooking().catch(() => null),
+          proofApi.getTutorCertificationStatus().catch(() => null)
         ]);
         
         if (writtenRes.success && writtenRes.status) {
@@ -52,6 +55,7 @@ const DashboardOverview = () => {
           setSpeakingStatus(speakingRes.status);
         }
         setInterview(interviewRes);
+        setProofStatus(proofRes);
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
       } finally {
@@ -67,17 +71,32 @@ const DashboardOverview = () => {
     let progress = 0;
     if (writtenStatus?.passed) progress += 33;
     if (speakingStatus?.passed) progress += 33;
-    if (interview?.status === 'completed') progress += 34;
+    if (proofStatus?.snapshot.interviewPassed || interview?.result === 'pass') progress += 34;
     return progress;
   };
 
   // Get certification status text
   const getCertificationStatus = () => {
-    const allPassed = writtenStatus?.passed && speakingStatus?.passed && interview?.status === 'completed';
-    if (allPassed) return { text: 'Certified', color: '#10b981' };
+    const missing = proofStatus?.snapshot.missingRequirements || [];
+    const allPassed = Boolean(proofStatus) && missing.length === 0;
+
+    if (allPassed && proofStatus?.credential.status === 'verified') return { text: 'zkVerified', color: '#10b981' };
+    if (allPassed) return { text: 'ZK Ready', color: '#10b981' };
+    if (proofStatus && missing.includes('profile_approval')) return { text: 'Profile Review Pending', color: '#f59e0b' };
+    if (proofStatus && missing.includes('interview_pass')) return { text: 'Interview Pending', color: '#f59e0b' };
     if (speakingStatus?.passed && writtenStatus?.passed) return { text: 'Interview Pending', color: '#f59e0b' };
     if (writtenStatus?.passed) return { text: 'Speaking Exam Pending', color: '#3b82f6' };
     return { text: 'In Progress', color: '#94a3b8' };
+  };
+
+  const getProofBadge = () => {
+    const status = proofStatus?.credential.status || 'requirements_incomplete';
+    if (status === 'verified') return { label: 'ZK VERIFIED', className: 'passed' };
+    if (status === 'local_proof_generated') return { label: 'LOCAL PROOF', className: 'passed' };
+    if (status === 'submitted') return { label: 'SUBMITTED', className: 'processing' };
+    if (status === 'ready_for_proving') return { label: 'READY', className: 'passed' };
+    if (status === 'failed') return { label: 'FAILED', className: 'failed' };
+    return { label: 'INCOMPLETE', className: 'pending' };
   };
 
   const certStatus = getCertificationStatus();
@@ -177,14 +196,14 @@ const DashboardOverview = () => {
           
           <div className="step-connector"></div>
           
-          <div className={`progress-step ${interview?.status === 'completed' ? 'completed' : interview ? 'scheduled' : ''}`}>
+          <div className={`progress-step ${proofStatus?.snapshot.interviewPassed || interview?.result === 'pass' ? 'completed' : interview ? 'scheduled' : ''}`}>
             <div className="step-icon">
-              {interview?.status === 'completed' ? <i className="fas fa-check"></i> : <span>3</span>}
+              {proofStatus?.snapshot.interviewPassed || interview?.result === 'pass' ? <i className="fas fa-check"></i> : <span>3</span>}
             </div>
             <div className="step-info">
               <span className="step-title">Interview</span>
               <span className="step-status">
-                {interview?.status === 'completed' ? 'Completed' : 
+                {proofStatus?.snapshot.interviewPassed || interview?.result === 'pass' ? 'Passed' : 
                  interview ? `Scheduled: ${interview.date} ${interview.time}` : 'Not scheduled'}
               </span>
             </div>
@@ -269,8 +288,8 @@ const DashboardOverview = () => {
           <div className="stat-card-content">
             <h3>Interview</h3>
             <div className="stat-score">
-              {interview?.status === 'completed' ? (
-                <span className="score-badge passed">COMPLETED</span>
+              {proofStatus?.snapshot.interviewPassed || interview?.result === 'pass' ? (
+                <span className="score-badge passed">PASSED</span>
               ) : interview ? (
                 <span className="score-badge scheduled">SCHEDULED</span>
               ) : (
@@ -294,6 +313,32 @@ const DashboardOverview = () => {
             <button className="stat-action" onClick={() => location.route(`/interview/room/${interview.id}`)}>
               View Details
               <i className="fas fa-arrow-right"></i>
+            </button>
+          )}
+        </div>
+
+        <div className="stat-card zk-proof">
+          <div className="stat-card-icon">
+            <i className="fas fa-shield-alt"></i>
+          </div>
+          <div className="stat-card-content">
+            <h3>ZK Certification</h3>
+            <div className="stat-score">
+              <span className={`score-badge ${getProofBadge().className}`}>
+                {getProofBadge().label}
+              </span>
+            </div>
+            <div className="stat-attempts">
+              <i className="fas fa-fingerprint"></i>
+              {proofStatus?.credential.credentialCommitment
+                ? `${proofStatus.credential.credentialCommitment.slice(0, 18)}...`
+                : `${proofStatus?.snapshot.missingRequirements.length || 0} requirements remaining`}
+            </div>
+          </div>
+          {proofStatus?.credential.status === 'requirements_incomplete' && (
+            <button className="stat-action" onClick={() => proofApi.maybeIssueTutorCertification().then(setProofStatus).catch(console.error)}>
+              Recheck
+              <i className="fas fa-sync"></i>
             </button>
           )}
         </div>

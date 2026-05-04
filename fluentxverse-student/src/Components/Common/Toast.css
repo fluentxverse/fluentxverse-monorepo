@@ -220,6 +220,79 @@
   background: #0234a1;
 }
 
+[data-theme='dark'] .toast,
+.dark-mode .toast {
+  background: #202020;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .toast-success,
+.dark-mode .toast-success {
+  border-left: 4px solid #34d399;
+}
+
+[data-theme='dark'] .toast-error,
+.dark-mode .toast-error {
+  border-left: 4px solid #f87171;
+}
+
+[data-theme='dark'] .toast-warning,
+.dark-mode .toast-warning {
+  border-left: 4px solid #fbbf24;
+}
+
+[data-theme='dark'] .toast-info,
+.dark-mode .toast-info {
+  border-left: 4px solid #60a5fa;
+}
+
+[data-theme='dark'] .toast-title,
+[data-theme='dark'] .toast-message,
+.dark-mode .toast-title,
+.dark-mode .toast-message {
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .toast-close,
+.dark-mode .toast-close {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .toast-close:hover,
+.dark-mode .toast-close:hover {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .toast-confirm-modal,
+.dark-mode .toast-confirm-modal {
+  background: #202020;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme='dark'] .toast-confirm-title,
+.dark-mode .toast-confirm-title {
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .toast-confirm-message,
+.dark-mode .toast-confirm-message {
+  color: #a3a3a3;
+}
+
+[data-theme='dark'] .toast-confirm-btn.cancel,
+.dark-mode .toast-confirm-btn.cancel {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f3f4f6;
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+[data-theme='dark'] .toast-confirm-btn.cancel:hover,
+.dark-mode .toast-confirm-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /* Mobile Responsive */
 @media (max-width: 480px) {
   .toast-container {

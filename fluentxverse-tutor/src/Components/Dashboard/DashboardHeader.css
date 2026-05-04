@@ -289,13 +289,54 @@
   max-height: 360px;
   overflow-y: auto;
   background: inherit;
+  scrollbar-color: #94a3b8 transparent;
+  scrollbar-width: thin;
+}
+
+.notifications-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notifications-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notifications-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.notifications-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dashboard-header.dark .notifications-list {
+  scrollbar-color: #5a5a5a transparent;
+}
+
+.dashboard-header.dark .notifications-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #5a5a5a 0%, #3f3f3f 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dashboard-header.dark .notifications-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6a6a6a 0%, #4a4a4a 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .notification-item {
   display: flex;
+  align-items: flex-start;
   padding: 16px 20px;
   border-bottom: 1px solid #f1f5f9;
   gap: 12px;
+  min-height: 92px;
   transition: background-color 0.2s ease;
   cursor: pointer;
 }
@@ -331,6 +372,35 @@
 .notification-icon.orange {
   background-color: rgba(237, 137, 54, 0.15);
   color: #ED8936;
+}
+
+.notification-icon.type-booking_new {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+}
+
+.notification-icon.type-booking_cancelled {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+}
+
+.notification-icon.type-session_reminder,
+.notification-icon.type-interview_reminder,
+.notification-icon.type-review_received {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+}
+
+.notification-icon.type-session_started,
+.notification-icon.type-interview_scheduled,
+.notification-icon.type-message {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #3b82f6 !important;
+}
+
+.notification-icon.type-payment_received {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
 }
 
 .notification-content {
@@ -375,7 +445,47 @@
   border-radius: 50%;
   background-color: #0245ae;
   flex-shrink: 0;
-  margin-left: 8px;
+  margin-top: 9px;
+}
+
+.notification-status-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 66px;
+  width: 66px;
+  padding-top: 1px;
+}
+
+.notification-mark-read {
+  border: 1px solid rgba(2, 69, 174, 0.18);
+  background: rgba(2, 69, 174, 0.06);
+  color: #0245ae;
+  border-radius: 6px;
+  padding: 0 8px;
+  min-height: 26px;
+  width: 48px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.notification-mark-read:hover {
+  background: rgba(2, 69, 174, 0.12);
+}
+
+.dashboard-header.dark .notification-mark-read {
+  border-color: rgba(74, 158, 255, 0.28);
+  background: rgba(74, 158, 255, 0.1);
+  color: #93c5fd;
+}
+
+.dashboard-header.dark .notification-mark-read:hover {
+  background: rgba(74, 158, 255, 0.16);
 }
 
 /* Empty and loading states */

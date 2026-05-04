@@ -375,7 +375,7 @@
   width: min(920px, 56vw);
   background-image:
     linear-gradient(90deg, rgba(231, 245, 255, 0.08), rgba(231, 245, 255, 0.22)),
-    url('/assets/img/banner/business_banner.png');
+    url('/assets/img/banner/business_banner.webp');
   transform:
     translate3d(
       calc(var(--spotlight-shift-x) * 0.2),
@@ -395,7 +395,7 @@
   width: min(760px, 46vw);
   background-image:
     linear-gradient(90deg, rgba(231, 245, 255, 0.06), rgba(231, 245, 255, 0.18)),
-    url('/assets/img/banner/conversation_skill_banner.png');
+    url('/assets/img/banner/conversation_skill_banner.webp');
   transform:
     translate3d(
       calc(var(--spotlight-shift-x) * 0.2),

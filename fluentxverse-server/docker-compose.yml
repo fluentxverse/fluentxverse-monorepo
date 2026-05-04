@@ -41,6 +41,13 @@ services:
       - THIRDWEB_VAULT_ADMIN_KEY=${THIRDWEB_VAULT_ADMIN_KEY}
       # OpenAI
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Tutor certification proof issuance
+      - TUTOR_CERT_ISSUER_ID=${TUTOR_CERT_ISSUER_ID:-fluentxverse:tutor-certification:v1}
+      - TUTOR_CERT_ISSUER_SECRET=${TUTOR_CERT_ISSUER_SECRET:-local-dev-tutor-cert-issuer-secret-change-me}
+      - TUTOR_CERT_COMMITMENT_SALT=${TUTOR_CERT_COMMITMENT_SALT:-local-dev-tutor-cert-commitment-salt-change-me}
+      - ZKVERIFY_SEED_PHRASE=${ZKVERIFY_SEED_PHRASE}
+      - ZKVERIFY_ENABLED=${ZKVERIFY_ENABLED:-true}
+      - ZKVERIFY_DOMAIN_ID=${ZKVERIFY_DOMAIN_ID:-0}
       # LanguageTool
       - LANGUAGETOOL_URL=http://fluentxverse-languagetool:8010
       # Ticket Contract (optional)
@@ -238,6 +245,8 @@ services:
         # Public HTTPS API origin (baked into the Vite build)
         # IMPORTANT: Hardcoded to ensure consistent builds via webhook
         VITE_API_URL: https://api.fluentxverse.xyz
+        VITE_SOCKET_URL: https://ws.fluentxverse.xyz
+        VITE_ENABLE_NOTIFICATION_SOCKET: "true"
     container_name: fluentxverse-tutor
     restart: unless-stopped
     ports:

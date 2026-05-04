@@ -10,10 +10,12 @@ const Footer = () => {
             <div className="col-xl-4 col-lg-4 col-md-5 col-sm-9">
               <div className="footer-widget footer-about-widget">
                 <div className="footer-logo mb-25">
-                  <a href="/" style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" style={{ height: '45px', width: 'auto', maxWidth: '45px', objectFit: 'contain' }} />
+                  <a href="/" className="footer-brand-lockup" aria-label="FluentXVerse home">
+                    <span className="footer-brand-icon" aria-hidden="true">
+                      <img src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40" />
+                    </span>
                     <span className="logo-text">
-                      Fluent<span style={{ color: '#60b0ff' }}>X</span>Verse
+                      Fluent<span className="brand-x">X</span>Verse
                     </span>
                   </a>
                 </div>

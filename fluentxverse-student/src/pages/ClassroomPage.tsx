@@ -921,7 +921,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         {/* Header Bar */}
         <div className="classroom-header">
           <div className="classroom-logo">
-            <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" style={{ height: '32px' }} />
+            <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" style={{ height: '32px' }} />
             <span>FluentXVerse</span>
           </div>
           <div className="classroom-session-info">

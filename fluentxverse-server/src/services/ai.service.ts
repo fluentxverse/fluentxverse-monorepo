@@ -2,14 +2,16 @@
  * AI Service - Grammar Checking and Language Assistance
  * Uses Mastra Agent with OpenAI for grammar correction and explanations
  */
-import { Agent } from "@mastra/core/agent";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { createAgent } from "./agentFactory";
 import { lessonMaterialService } from "./lessonMaterial.service";
 
 // ============================================================================
 // HELPERS
 // ============================================================================
+
+type AIServiceAgent = ReturnType<typeof createAgent>;
 
 /** Strip em dashes (—) and en dashes (–) from AI output, replacing with regular dashes */
 function sanitizeAIText(text: string): string {
@@ -19,6 +21,8 @@ function sanitizeAIText(text: string): string {
 type BELessonSkill = 'listening' | 'reading' | 'speaking' | 'review';
 
 interface BEReferenceLesson {
+  level?: number;
+  chapter?: number;
   lessonNumber: number;
   lessonName: string;
   chapterName: string;
@@ -29,12 +33,23 @@ interface BEReferenceLesson {
   source: 'db' | 'file';
 }
 
+const BE_HOUSE_STANDARD_LEVEL = 3;
+const BE_HOUSE_STANDARD_CHAPTER = 1;
+const BE_HOUSE_STANDARD_LESSON_NUMBERS = [1, 2, 3] as const;
+
 const stripHtml = (text: string = '') =>
   (text || '')
     .replace(/<[^>]*>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
+    .replace(/[—–]/g, '-')
     .replace(/\s+/g, ' ')
     .trim();
+
+const truncateText = (text: string = '', maxLength = 220) => {
+  const normalized = stripHtml(text);
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
+};
 
 const getBusinessEnglishLessonSkill = (lessonNumber: number): BELessonSkill => {
   if (lessonNumber === 1) return 'listening';
@@ -71,6 +86,8 @@ const getBusinessEnglishDocsLessonPath = (level: number, chapter: number, lesson
 };
 
 const buildReferenceLessonFromRaw = (raw: any, lessonNumber: number, source: 'db' | 'file'): BEReferenceLesson => ({
+  level: raw.level,
+  chapter: raw.chapter,
   lessonNumber,
   lessonName: raw.lessonName || '',
   chapterName: raw.chapterName || '',
@@ -81,19 +98,46 @@ const buildReferenceLessonFromRaw = (raw: any, lessonNumber: number, source: 'db
   source,
 });
 
-const summarizeReferencePatterns = (lesson: BEReferenceLesson) =>
+const summarizeReferencePatterns = (lesson: BEReferenceLesson, limit = 5) =>
   (lesson.beData?.present?.patterns || [])
-    .slice(0, 3)
-    .map((pattern: any) => `"${stripHtml(pattern?.en || '')}"`)
+    .slice(0, limit)
+    .map((pattern: any) => stripHtml(pattern?.en || ''))
     .filter(Boolean)
+    .map((pattern: string) => `"${pattern}"`)
     .join(', ');
 
-const summarizeReferenceQuestions = (lesson: BEReferenceLesson) =>
+const summarizeReferenceVocabulary = (lesson: BEReferenceLesson, limit = 6) =>
+  (lesson.beData?.present?.vocabulary || [])
+    .slice(0, limit)
+    .map((item: any) => {
+      const word = stripHtml(item?.word || '');
+      if (!word) return '';
+      const pos = stripHtml(item?.pos || '');
+      const translation = stripHtml(item?.translation || '');
+      const definition = stripHtml(item?.definition || '');
+      return `${word}${pos ? ` (${pos})` : ''}${translation ? ` = ${translation}` : ''}${definition ? `; ${definition}` : ''}`;
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const summarizeTutorNotes = (notes: any[] = [], limit = 8) =>
+  (Array.isArray(notes) ? notes : [])
+    .slice(0, limit)
+    .map((note: any) => {
+      const type = stripHtml(note?.type || 'instruction');
+      const text = truncateText(note?.text || '', 130);
+      return text ? `${type}: ${text}` : '';
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const summarizeReferenceQuestions = (lesson: BEReferenceLesson, limit = 6) =>
   (lesson.beData?.challenge?.tutorNotes || [])
     .filter((note: any) => note?.type === 'question')
-    .slice(0, 4)
-    .map((note: any) => `"${stripHtml(note?.text || '')}"`)
+    .slice(0, limit)
+    .map((note: any) => stripHtml(note?.text || ''))
     .filter(Boolean)
+    .map((question: string) => `"${question}"`)
     .join(', ');
 
 const summarizeDiscussionFlow = (lesson: BEReferenceLesson) =>
@@ -102,25 +146,141 @@ const summarizeDiscussionFlow = (lesson: BEReferenceLesson) =>
     .slice(0, 4)
     .join(' | ');
 
-const summarizePracticeTitles = (lesson: BEReferenceLesson) =>
+const summarizePracticeTitles = (lesson: BEReferenceLesson, limit = 4) =>
   (lesson.beData?.practice?.steps || [])
+    .slice(0, limit)
     .map((step: any) => stripHtml(step?.title || ''))
     .filter(Boolean)
     .join(' | ');
 
+const summarizePracticeSteps = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.practice?.steps || [])
+    .slice(0, 4)
+    .map((step: any) => {
+      const title = stripHtml(step?.title || '');
+      const instruction = truncateText(step?.instructionEn || '', 130);
+      const dialoguePreview = Array.isArray(step?.dialogue) && step.dialogue.length > 0
+        ? ` Dialogue: ${step.dialogue.slice(0, 2).map((line: any) => `${line?.role || 'role'}: ${truncateText(line?.en || '', 70)}`).join(' / ')}`
+        : '';
+      return [title, instruction, dialoguePreview].filter(Boolean).join(' - ');
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const summarizePatternDrills = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.understand?.patternDrills || [])
+    .slice(0, 3)
+    .map((drill: any) => {
+      const label = stripHtml(drill?.label || '');
+      const template = stripHtml(drill?.template || '');
+      return [label, template].filter(Boolean).join(': ');
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const summarizeFillRows = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.understand?.fillRows || [])
+    .slice(0, 4)
+    .map((row: any) => {
+      const sentence = (row?.parts || [])
+        .map((part: any) => part?.isBlank ? '___' : stripHtml(part?.text || ''))
+        .join('')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return sentence;
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const summarizeActivityBlocks = (blocks: any[] = []) =>
+  (Array.isArray(blocks) ? blocks : [])
+    .slice(0, 2)
+    .map((block: any) => {
+      const title = stripHtml(block?.title || block?.id || block?.type || '');
+      const passage = truncateText(block?.passage || block?.content || '', 160);
+      return [block?.type || 'activity', title, passage].filter(Boolean).join(': ');
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const summarizeDiscussionCategories = (lesson: BEReferenceLesson) =>
+  (lesson.beData?.discussion?.categories || [])
+    .slice(0, 3)
+    .map((category: any) => {
+      const title = stripHtml(category?.title || '');
+      const questions = (category?.questions || [])
+        .slice(0, 3)
+        .map((question: string) => stripHtml(question || ''))
+        .filter(Boolean)
+        .join(' / ');
+      return [title, questions].filter(Boolean).join(': ');
+    })
+    .filter(Boolean)
+    .join(' | ');
+
+const getReferenceLessonSkill = (lesson: BEReferenceLesson): BELessonSkill => {
+  const lessonType = (lesson.lessonType || '').toLowerCase();
+  if (lessonType.includes('listen')) return 'listening';
+  if (lessonType.includes('read')) return 'reading';
+  if (lessonType.includes('review')) return 'review';
+  if (lessonType.includes('speak')) return 'speaking';
+  return getBusinessEnglishLessonSkill(lesson.lessonNumber);
+};
+
+const getSkillMatchedStandardLessons = (lessons: BEReferenceLesson[], skill: BELessonSkill) => {
+  if (skill === 'review') return lessons;
+  const matching = lessons.filter((lesson) => getReferenceLessonSkill(lesson) === skill);
+  return matching.length > 0 ? matching : lessons;
+};
+
 const getReferenceLessonSummary = (lesson: BEReferenceLesson) => {
   const patterns = summarizeReferencePatterns(lesson);
+  const vocabulary = summarizeReferenceVocabulary(lesson, 4);
   const questions = summarizeReferenceQuestions(lesson);
   const discussionFlow = summarizeDiscussionFlow(lesson);
   const practiceTitles = summarizePracticeTitles(lesson);
+  const skill = getReferenceLessonSkill(lesson).toUpperCase();
 
   return [
-    `Lesson ${lesson.lessonNumber} (${lesson.lessonType || getBusinessEnglishLessonSkill(lesson.lessonNumber).toUpperCase()}): ${lesson.lessonName}`,
+    `Lesson ${lesson.lessonNumber} (${lesson.lessonType || skill}): ${lesson.lessonName}`,
     lesson.goalTextEn ? `Goal: ${lesson.goalTextEn}` : '',
     patterns ? `Patterns: ${patterns}` : '',
+    vocabulary ? `Vocabulary: ${vocabulary}` : '',
     practiceTitles ? `Practice shape: ${practiceTitles}` : '',
     questions ? `Simulation prompt style: ${questions}` : '',
     discussionFlow ? `Open Talk notes: ${discussionFlow}` : '',
+  ].filter(Boolean).join('\n');
+};
+
+const getHouseStandardLessonSummary = (lesson: BEReferenceLesson) => {
+  const introduce = lesson.beData?.introduce || {};
+  const present = lesson.beData?.present || {};
+  const understand = lesson.beData?.understand || {};
+  const challenge = lesson.beData?.challenge || {};
+  const discussion = lesson.beData?.discussion || {};
+  const skill = getReferenceLessonSkill(lesson).toUpperCase();
+  const activityBlocks = summarizeActivityBlocks(challenge.activityBlocks || []);
+
+  return [
+    `STANDARD L${lesson.level || BE_HOUSE_STANDARD_LEVEL} Ch${lesson.chapter || BE_HOUSE_STANDARD_CHAPTER} Lesson ${lesson.lessonNumber} (${lesson.lessonType || skill}): ${lesson.lessonName}`,
+    lesson.goalTextEn ? `Goal: ${lesson.goalTextEn}` : '',
+    introduce.situationEn ? `Warm-up situation: ${truncateText(introduce.situationEn, 180)}` : '',
+    introduce.taskEn ? `Warm-up task: ${truncateText(introduce.taskEn, 160)}` : '',
+    introduce.tutorNotes?.length ? `Warm-up note style: ${summarizeTutorNotes(introduce.tutorNotes, 8)}` : '',
+    summarizeReferencePatterns(lesson, 6) ? `Key expressions: ${summarizeReferencePatterns(lesson, 6)}` : '',
+    summarizeReferenceVocabulary(lesson, 6) ? `Vocabulary bank: ${summarizeReferenceVocabulary(lesson, 6)}` : '',
+    present.pronunciation?.instruction ? `Pronunciation focus: ${stripHtml(present.pronunciation.instruction)} (${stripHtml(present.pronunciation?.left?.symbol || '')} vs ${stripHtml(present.pronunciation?.right?.symbol || '')})` : '',
+    understand.instruction ? `Comprehension instruction: ${truncateText(understand.instruction, 160)}` : '',
+    summarizePatternDrills(lesson) ? `Pattern drills: ${summarizePatternDrills(lesson)}` : '',
+    summarizeFillRows(lesson) ? `Fill-row shape: ${summarizeFillRows(lesson)}` : '',
+    summarizePracticeSteps(lesson) ? `Practice progression: ${summarizePracticeSteps(lesson)}` : '',
+    challenge.scenarioEn ? `Simulation scenario: ${truncateText(challenge.scenarioEn, 220)}` : '',
+    challenge.roleplayTable ? `Roleplay setup: you=${truncateText(challenge.roleplayTable.you || '', 80)}; coworkers=${(challenge.roleplayTable.coworkers || []).join(', ')}` : '',
+    activityBlocks ? `Simulation support block: ${activityBlocks}` : '',
+    summarizeReferenceQuestions(lesson, 6) ? `Simulation questions: ${summarizeReferenceQuestions(lesson, 6)}` : '',
+    discussion.instructionEn ? `Discussion instruction: ${truncateText(discussion.instructionEn, 120)}` : '',
+    summarizeDiscussionCategories(lesson) ? `Discussion categories: ${summarizeDiscussionCategories(lesson)}` : '',
+    discussion.tutorNotes?.length ? `Discussion note style: ${summarizeTutorNotes(discussion.tutorNotes, 5)}` : '',
   ].filter(Boolean).join('\n');
 };
 
@@ -132,47 +292,116 @@ const getFileReferenceLesson = async (level: number, chapter: number, lessonNumb
     const fileName = fileNames.find((name) => name.startsWith(lessonPrefix) && name.endsWith('.json'));
     if (!fileName) return null;
     const raw = JSON.parse(await readFile(path.join(lessonDir, fileName), 'utf8'));
-    return buildReferenceLessonFromRaw(raw, lessonNumber, 'file');
+    return buildReferenceLessonFromRaw({ ...raw, level, chapter }, lessonNumber, 'file');
   } catch {
     return null;
   }
+};
+
+const getFileReferenceLessonsForLevel = async (level: number): Promise<BEReferenceLesson[]> => {
+  try {
+    const { docsRoot, levelDir } = getBusinessEnglishDocsLessonPath(level, 1, 1);
+    const lessonDir = path.join(docsRoot, levelDir, 'lesson-data');
+    const fileNames = await readdir(lessonDir);
+    const lessons = await Promise.all(
+      fileNames
+        .filter((name) => /^ch\d+-L\d+-.*\.json$/.test(name))
+        .map(async (fileName) => {
+          const match = fileName.match(/^ch(\d+)-L(\d+)-.*\.json$/);
+          if (!match) return null;
+          const fileChapter = Number(match[1]);
+          const fileLessonNumber = Number(match[2]);
+          try {
+            const raw = JSON.parse(await readFile(path.join(lessonDir, fileName), 'utf8'));
+            return buildReferenceLessonFromRaw(
+              { ...raw, level, chapter: fileChapter },
+              fileLessonNumber,
+              'file',
+            );
+          } catch {
+            return null;
+          }
+        }),
+    );
+    return lessons.filter((lesson): lesson is BEReferenceLesson => !!lesson);
+  } catch {
+    return [];
+  }
+};
+
+const getExistingLessonSignature = (lesson: BEReferenceLesson) => {
+  const patterns = summarizeReferencePatterns(lesson, 3);
+  const scenario = truncateText(
+    lesson.beData?.challenge?.scenarioEn
+      || lesson.beData?.introduce?.situationEn
+      || '',
+    180,
+  );
+  const lessonType = lesson.lessonType || getReferenceLessonSkill(lesson).toUpperCase();
+
+  return [
+    `L${lesson.level || '?'} Ch${lesson.chapter || '?'} Lesson ${lesson.lessonNumber} (${lessonType}): ${lesson.lessonName}`,
+    lesson.goalTextEn ? `Goal: ${truncateText(lesson.goalTextEn, 130)}` : '',
+    patterns ? `Patterns: ${patterns}` : '',
+    scenario ? `Scenario: ${scenario}` : '',
+  ].filter(Boolean).join(' | ');
 };
 
 const getReferenceLessons = async (
   level: number,
   chapter: number,
   lessonNumber: number,
-): Promise<{ standardLessons: BEReferenceLesson[]; previousLessons: BEReferenceLesson[] }> => {
+): Promise<{
+  standardLessons: BEReferenceLesson[];
+  previousLessons: BEReferenceLesson[];
+  existingLevelLessons: BEReferenceLesson[];
+}> => {
   const standardMap = new Map<number, BEReferenceLesson>();
   const previousMap = new Map<number, BEReferenceLesson>();
+  const existingLevelMap = new Map<string, BEReferenceLesson>();
 
   try {
     const lessons = await lessonMaterialService.listByCourse('business-english');
-    lessons
-      .filter((lesson: any) => lesson.level === level && lesson.chapter === chapter)
-      .forEach((lesson: any) => {
-        const ref = buildReferenceLessonFromRaw({
-          lessonName: lesson.lessonName,
-          chapterName: lesson.chapterName,
-          goalTextEn: lesson.goalTextEn,
-          goalTextJp: lesson.goalTextJp,
-          beData: lesson.beData,
-        }, lesson.lessonNumber, 'db');
+    lessons.forEach((lesson: any) => {
+      const ref = buildReferenceLessonFromRaw({
+        level: lesson.level,
+        chapter: lesson.chapter,
+        lessonName: lesson.lessonName,
+        chapterName: lesson.chapterName,
+        goalTextEn: lesson.goalTextEn,
+        goalTextJp: lesson.goalTextJp,
+        beData: lesson.beData,
+      }, lesson.lessonNumber, 'db');
 
-        if (lesson.lessonNumber === 1 || lesson.lessonNumber === 2) {
+      if (lesson.level === BE_HOUSE_STANDARD_LEVEL && lesson.chapter === BE_HOUSE_STANDARD_CHAPTER) {
+        if (BE_HOUSE_STANDARD_LESSON_NUMBERS.includes(lesson.lessonNumber as typeof BE_HOUSE_STANDARD_LESSON_NUMBERS[number])) {
           standardMap.set(lesson.lessonNumber, ref);
         }
+      }
+
+      if (lesson.level === level) {
+        const key = `${lesson.chapter}-${lesson.lessonNumber}`;
+        const isCurrentLesson = lesson.chapter === chapter && lesson.lessonNumber === lessonNumber;
+        if (!isCurrentLesson) existingLevelMap.set(key, ref);
+      }
+
+      if (lesson.level === level && lesson.chapter === chapter) {
         if (lesson.lessonNumber < lessonNumber) {
           previousMap.set(lesson.lessonNumber, ref);
         }
-      });
+      }
+    });
   } catch {
     // fall back to files below
   }
 
-  for (const standardNumber of [1, 2]) {
+  for (const standardNumber of BE_HOUSE_STANDARD_LESSON_NUMBERS) {
     if (!standardMap.has(standardNumber)) {
-      const fileLesson = await getFileReferenceLesson(level, chapter, standardNumber);
+      const fileLesson = await getFileReferenceLesson(
+        BE_HOUSE_STANDARD_LEVEL,
+        BE_HOUSE_STANDARD_CHAPTER,
+        standardNumber,
+      );
       if (fileLesson) standardMap.set(standardNumber, fileLesson);
     }
   }
@@ -184,9 +413,19 @@ const getReferenceLessons = async (
     }
   }
 
+  if (existingLevelMap.size === 0) {
+    const fileLessons = await getFileReferenceLessonsForLevel(level);
+    fileLessons.forEach((lesson) => {
+      const isCurrentLesson = lesson.chapter === chapter && lesson.lessonNumber === lessonNumber;
+      if (!isCurrentLesson) existingLevelMap.set(`${lesson.chapter}-${lesson.lessonNumber}`, lesson);
+    });
+  }
+
   return {
     standardLessons: Array.from(standardMap.values()).sort((a, b) => a.lessonNumber - b.lessonNumber),
     previousLessons: Array.from(previousMap.values()).sort((a, b) => a.lessonNumber - b.lessonNumber),
+    existingLevelLessons: Array.from(existingLevelMap.values())
+      .sort((a, b) => (a.chapter || 0) - (b.chapter || 0) || a.lessonNumber - b.lessonNumber),
   };
 };
 
@@ -196,37 +435,55 @@ const buildBusinessEnglishReferenceContext = async (
   lessonNumber: number,
 ): Promise<string> => {
   const skill = getBusinessEnglishLessonSkill(lessonNumber);
-  const { standardLessons, previousLessons } = await getReferenceLessons(level, chapter, lessonNumber);
-  const standardSummary = standardLessons.map(getReferenceLessonSummary).join('\n\n');
+  const { standardLessons, previousLessons, existingLevelLessons } = await getReferenceLessons(level, chapter, lessonNumber);
+  const skillMatchedStandardLessons = getSkillMatchedStandardLessons(standardLessons, skill);
+  const standardSummary = standardLessons.map(getHouseStandardLessonSummary).join('\n\n');
+  const skillStandardSummary = skillMatchedStandardLessons.map(getReferenceLessonSummary).join('\n\n');
   const previousSummary = previousLessons
     .map((lesson) => {
-      const patterns = summarizeReferencePatterns(lesson);
-      const scenario = stripHtml(lesson.beData?.challenge?.scenarioEn || lesson.beData?.introduce?.situationEn || '');
+      const patterns = summarizeReferencePatterns(lesson, 4);
+      const scenario = truncateText(lesson.beData?.challenge?.scenarioEn || lesson.beData?.introduce?.situationEn || '', 180);
       return [
-        `Lesson ${lesson.lessonNumber}: ${lesson.lessonName}`,
+        `Lesson ${lesson.lessonNumber} (${lesson.lessonType || getReferenceLessonSkill(lesson).toUpperCase()}): ${lesson.lessonName}`,
         lesson.goalTextEn ? `Goal: ${lesson.goalTextEn}` : '',
         patterns ? `Patterns already used: ${patterns}` : '',
         scenario ? `Scenario already used: ${scenario}` : '',
       ].filter(Boolean).join('\n');
     })
     .join('\n\n');
+  const existingLevelSummary = existingLevelLessons
+    .filter((lesson) => !(lesson.chapter === chapter && lesson.lessonNumber < lessonNumber))
+    .slice(0, 30)
+    .map(getExistingLessonSignature)
+    .join('\n');
 
   return [
     `\n\n=== LESSON SLOT TYPE ===`,
     `Skill slot: ${skill.toUpperCase()}`,
     getBusinessEnglishSkillGuidance(skill, level),
-    `\n=== REFERENCE STANDARD FROM LIVE LESSONS 1 AND 2 ===`,
-    standardSummary || 'No reference lessons found. Keep the section concise, controlled, and tutor-friendly.',
-    `\n=== UNIQUENESS AGAINST EARLIER LESSONS ===`,
+    `\n=== HOUSE STANDARD FROM LEVEL 3 CHAPTER 1 LESSONS 1-3 ===`,
+    `These three human-authored lessons are the quality standard for the Business English AI widget.`,
+    `Use them for section density, PCPP flow, bilingual field completeness, concise tutor-note style, and skill-specific lesson shape.`,
+    `Lesson 1 is the LISTENING model, Lesson 2 is the READING model, and Lesson 3 is the SPEAKING model.`,
+    `Adapt the standard to the target Level ${level}, Chapter ${chapter}, Lesson ${lessonNumber}. Do not copy the Level 3 Chapter 1 topic, names, scenario, exact expressions, reading passage, or questions unless the target lesson itself is that same lesson.`,
+    standardSummary || 'No house-standard lessons found. Keep the section concise, controlled, and tutor-friendly.',
+    `\n=== PRIMARY STANDARD FOR THIS ${skill.toUpperCase()} SLOT ===`,
+    skillStandardSummary || 'No skill-matched standard lesson found. Use the full house standard above.',
+    `\n=== UNIQUENESS AGAINST EXISTING LESSONS ===`,
     previousSummary
-      ? `${previousSummary}\n\nDo NOT repeat the same scenario, key expressions, prompt questions, word bank focus, or practice titles too closely. Keep continuity, but make the new lesson clearly different.`
+      ? `Earlier lessons in this target chapter:\n${previousSummary}`
       : 'There are no earlier lessons in this chapter before this one.',
+    existingLevelSummary
+      ? `\nOther existing lessons in Level ${level}:\n${existingLevelSummary}`
+      : '',
+    `\nDo NOT repeat the same lesson name, goal, scenario, key expressions, vocabulary focus, reading passage, prompt questions, roleplay setup, discussion categories, or practice titles too closely. Keep continuity inside the chapter, but make the new lesson clearly different from existing lessons.`,
     `\n=== HOUSE STYLE RULES ===`,
     '- Match the concise teaching-note style used in the standardized lessons.',
     '- Tutor speaks English only.',
     '- Use English names only.',
     '- No em dashes. Use normal punctuation only.',
     '- For Level 3, keep notes and sentences short and predictable.',
+    '- For higher levels, increase complexity gradually while preserving the same section structure and tutor usability.',
   ].join('\n');
 };
 
@@ -361,7 +618,7 @@ export interface PronunciationResult {
 // AI AGENT FOR GRAMMAR CHECKING
 // ============================================================================
 
-const grammarCheckAgent = new Agent({
+const grammarCheckAgent = createAgent({
   name: "Grammar Checker",
   instructions: `You are a concise English grammar assistant for language tutors teaching students. When given a sentence:
 1. If there are grammar errors, provide the corrected version and TWO explanations.
@@ -466,7 +723,7 @@ export const checkGrammar = async (text: string): Promise<GrammarCheckResult> =>
 // AI AGENT FOR VOCABULARY DEFINITIONS
 // ============================================================================
 
-const vocabularyAgent = new Agent({
+const vocabularyAgent = createAgent({
   name: "Vocabulary Helper",
   instructions: `You are a concise vocabulary assistant for English language tutors. When given a word or phrase:
 1. Provide up to 3 different meanings/definitions (if the word has multiple meanings)
@@ -618,7 +875,7 @@ export const getVocabularyDefinition = async (word: string): Promise<VocabularyD
 // AI AGENT FOR PRONUNCIATION
 // ============================================================================
 
-const pronunciationAgent = new Agent({
+const pronunciationAgent = createAgent({
   name: "Pronunciation Helper",
   instructions: `You are a pronunciation assistant for English language tutors. When given a word or phrase:
 1. Provide the phonetic spelling using simple syllables
@@ -877,7 +1134,7 @@ export interface GenerateIntroductionResult {
   };
 }
 
-const introductionGeneratorAgent = new Agent({
+const introductionGeneratorAgent = createAgent({
   name: "Introduction Question Generator",
   model: "openai/gpt-5.2",
   instructions: `You are an expert ESL lesson designer creating engaging opening questions for language lessons.
@@ -917,7 +1174,7 @@ Respond ONLY in this JSON format:
 });
 
 // Full Introduction Content Generator Agent (for "Generate New" mode)
-const fullIntroductionGeneratorAgent = new Agent({
+const fullIntroductionGeneratorAgent = createAgent({
   name: "Full Introduction Content Generator",
   model: "openai/gpt-5.2",
   instructions: `You are an expert ESL lesson designer creating complete introduction sections for language lessons.
@@ -1012,7 +1269,7 @@ Respond ONLY in this JSON format:
 // AI AGENT FOR VOCABULARY LISTS (Learn -> Step A)
 // ============================================================================
 
-const vocabularyListAgent = new Agent({
+const vocabularyListAgent = createAgent({
   name: 'Vocabulary List Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL vocabulary curriculum designer. Generate vocabulary that students DON'T already know - things they need to LEARN, not words everyone knows.
@@ -1077,7 +1334,7 @@ REMEMBER: If a 5-year-old knows the word, DON'T include it. Generate phrases tha
 // AI AGENT FOR EXPRESSIONS LISTS (Learn -> Step A Expressions)
 // ============================================================================
 
-const expressionsListAgent = new Agent({
+const expressionsListAgent = createAgent({
   name: 'Expressions List Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL expressions curriculum designer. Generate USEFUL idiomatic expressions, phrasal verbs, and set phrases that students need to LEARN - not basic phrases everyone knows.
@@ -1151,7 +1408,7 @@ REMEMBER: If students learned it in their first English class, DON'T include it!
 // AI AGENT FOR STEP B: SPEAK YOUR MIND
 // ============================================================================
 
-const speakYourMindAgent = new Agent({
+const speakYourMindAgent = createAgent({
   name: 'Speak Your Mind Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an English lesson content generator. Generate a "Speak Your Mind" activity for ESL lessons.
@@ -1178,7 +1435,7 @@ Respond ONLY in JSON:
 // AI AGENT FOR STEP B: GRAMMAR TIP
 // ============================================================================
 
-const grammarTipAgent = new Agent({
+const grammarTipAgent = createAgent({
   name: 'Grammar Tip Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL grammar teacher. Generate a "Grammar Tip" section that teaches USEFUL grammar patterns related to the lesson topic.
@@ -1229,7 +1486,7 @@ const grammarTipAgent = new Agent({
 // AI AGENT FOR STEP B: PRONUNCIATION
 // ============================================================================
 
-const stepBPronunciationAgent = new Agent({
+const stepBPronunciationAgent = createAgent({
   name: 'Pronunciation Lesson Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an English pronunciation lesson generator. Generate a "Pronunciation" section for ESL lessons.
@@ -1256,7 +1513,7 @@ Respond ONLY in JSON:
 // AI AGENTS FOR APPLY SECTION (Section 3 - Speaking/Listening/Reading)
 // ============================================================================
 
-const applySpeakingAgent = new Agent({
+const applySpeakingAgent = createAgent({
   name: 'Apply Speaking Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a SPEAKING activity for the Apply section.
@@ -1342,7 +1599,7 @@ Respond ONLY in JSON format:
 `
 });
 
-const applyListeningAgent = new Agent({
+const applyListeningAgent = createAgent({
   name: 'Apply Listening Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a LISTENING activity for the Apply section.
@@ -1422,7 +1679,7 @@ Respond ONLY in JSON format:
 `
 });
 
-const applyReadingAgent = new Agent({
+const applyReadingAgent = createAgent({
   name: 'Apply Reading Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a READING activity for the Apply section.
@@ -1473,7 +1730,7 @@ Respond ONLY in JSON format:
 // TRIVIA TIME AGENT (Standalone trivia generation)
 // ============================================================================
 
-const triviaAgent = new Agent({
+const triviaAgent = createAgent({
   name: 'Trivia Time Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a TRIVIA TIME segment for a lesson.
@@ -1510,7 +1767,7 @@ Respond ONLY in JSON format:
 // ============================================================================
 
 // Exercise Step A - Rephrase Agent
-const exerciseRephraseAgent = new Agent({
+const exerciseRephraseAgent = createAgent({
   name: 'Exercise Rephrase Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a REPHRASE exercise for Step A of the Exercise section.
@@ -1591,7 +1848,7 @@ Respond ONLY in JSON format:
 });
 
 // Exercise Step A - Choose Agent
-const exerciseChooseAgent = new Agent({
+const exerciseChooseAgent = createAgent({
   name: 'Exercise Choose Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a CHOOSE THE CORRECT WORD exercise for Step A.
@@ -1652,7 +1909,7 @@ Respond ONLY in JSON format:
 });
 
 // Exercise Step A - Change Agent
-const exerciseChangeAgent = new Agent({
+const exerciseChangeAgent = createAgent({
   name: 'Exercise Change Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a CHANGE THE UNDERLINED exercise for Step A.
@@ -1707,7 +1964,7 @@ Respond ONLY in JSON format:
 });
 
 // Exercise Step B - Conversation Agent
-const exerciseConversationAgent = new Agent({
+const exerciseConversationAgent = createAgent({
   name: 'Exercise Conversation Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a CONVERSATION exercise for Step B.
@@ -1753,7 +2010,7 @@ Respond ONLY in JSON format:
 });
 
 // Exercise Step B - Multiple Choice Agent
-const exerciseMultipleChoiceAgent = new Agent({
+const exerciseMultipleChoiceAgent = createAgent({
   name: 'Exercise Multiple Choice Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a CHOOSE THE CORRECT MEANING exercise for Step B.
@@ -1803,7 +2060,7 @@ Respond ONLY in JSON format:
 });
 
 // Exercise Step B - Speech Agent
-const exerciseSpeechAgent = new Agent({
+const exerciseSpeechAgent = createAgent({
   name: 'Exercise Speech Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a SPEECH exercise for Step B.
@@ -1841,7 +2098,7 @@ Respond ONLY in JSON format:
 });
 
 // Exercise Step B - Compare Agent
-const exerciseCompareAgent = new Agent({
+const exerciseCompareAgent = createAgent({
   name: 'Exercise Compare Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a COMPARE exercise for Step B.
@@ -1894,7 +2151,7 @@ Respond ONLY in JSON format:
 // ============================================================================
 
 // Mission Speaking Agent - Roleplay-based speaking challenge
-const missionSpeakingAgent = new Agent({
+const missionSpeakingAgent = createAgent({
   name: 'Mission Speaking Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a SPEAKING mission challenge.
@@ -2004,7 +2261,7 @@ CRITICAL RULES:
 });
 
 // Mission Discussion Agent - Topic-based discussion with questions
-const missionDiscussionAgent = new Agent({
+const missionDiscussionAgent = createAgent({
   name: 'Mission Discussion Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a DISCUSSION mission challenge.
@@ -2079,7 +2336,7 @@ Respond ONLY in JSON format:
 });
 
 // Mission Reading Agent - Reading + roleplay challenge
-const missionReadingAgent = new Agent({
+const missionReadingAgent = createAgent({
   name: 'Mission Reading Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a READING mission challenge.
@@ -2199,7 +2456,7 @@ CRITICAL RULES:
 });
 
 // Mission Listening Agent - Listening comprehension challenge
-const missionListeningAgent = new Agent({
+const missionListeningAgent = createAgent({
   name: 'Mission Listening Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an ESL lesson content generator. Generate a LISTENING mission challenge.
@@ -3017,7 +3274,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
     if (exerciseType && exerciseStep) {
       const itemCount = exerciseItemCount || 4; // Default to 4 items
       
-      let exerciseAgent: Agent;
+      let exerciseAgent: AIServiceAgent;
       let exercisePrompt = '';
       
       // Select appropriate agent based on exercise type and step
@@ -3248,7 +3505,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
       };
       const applyContext = buildApplyContext();
       
-      let missionAgent: Agent;
+      let missionAgent: AIServiceAgent;
       
       // Select appropriate agent based on mission type
       if (missionType === 'speaking') {
@@ -3596,7 +3853,7 @@ Example formats by level (focus on the skill, not "English"):
 // EPISODE SUMMARY AGENT
 // ============================================================================
 
-const episodeSummaryAgent = new Agent({
+const episodeSummaryAgent = createAgent({
   name: "Episode Summary Generator",
   instructions: `You are a K-drama story writer creating summaries for an immersive language learning experience.
 Given story context and mission content from a lesson, create:
@@ -3719,7 +3976,7 @@ Make it dramatic and engaging like a K-drama recap!`;
 // DISCUSSION QUESTIONS GENERATOR
 // ============================================================================
 
-const discussionQuestionsAgent = new Agent({
+const discussionQuestionsAgent = createAgent({
   name: 'Discussion Questions Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL discussion facilitator and curriculum designer. You generate thoughtful, engaging discussion questions for English language students.
@@ -3816,7 +4073,7 @@ Return ONLY JSON:
 // Checks generated content against existing items for semantic similarity
 // ============================================================================
 
-const uniquenessValidatorAgent = new Agent({
+const uniquenessValidatorAgent = createAgent({
   name: 'Uniqueness Validator',
   model: 'openai/gpt-5.2',
   instructions: `You are a strict uniqueness checker for an ESL curriculum.
@@ -3902,7 +4159,7 @@ export interface CourseStructureResult {
   }>;
 }
 
-const courseStructureAgent = new Agent({
+const courseStructureAgent = createAgent({
   name: 'Course Structure Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL curriculum architect specializing in conversational English programs.
@@ -4115,7 +4372,7 @@ export interface LessonStructureResult {
   }>;
 }
 
-const lessonStructureAgent = new Agent({
+const lessonStructureAgent = createAgent({
   name: 'Lesson Structure Generator',
   model: 'openai/gpt-5.2',
   instructions: `You are an expert ESL lesson planner specializing in conversational English courses.
@@ -4312,7 +4569,7 @@ Generate exactly 5 lessons numbered 1 to 5 only.
  * Business English Agent — generates section content for the PCPP lesson format.
  * Covers: Introduce, Present, Understand, Practice, Challenge, Discussion, Feedback.
  */
-const businessEnglishAgent = new Agent({
+const businessEnglishAgent = createAgent({
   name: "Business English Content Generator",
   model: "openai/gpt-5.2",
   instructions: `You are an expert Business English lesson designer for the FluentXVerse PCPP method.
@@ -4334,7 +4591,7 @@ PCPP SECTION STRUCTURE:
 1. INTRODUCE: Lesson goal (EN+KR), Situation (EN+KR), Task description
 2. PRESENT: Useful Patterns (EN+KR pairs), Vocabulary (word, pos, translation, definition, pronunciation), Pronunciation drills
 3. UNDERSTAND: Comprehension instruction, fill-in-the-blank exercises from patterns
-4. PRACTICE: 4 progressive steps — Repeat, Fill Blanks, Dialogue (with roleplay), Complete Dialogue
+4. PRACTICE: 4 progressive steps - Repeat, Fill Blanks, Dialogue (with roleplay), Complete Dialogue
 5. CHALLENGE: Real-life simulation scenario with inline question notes and a roleplay table
    - IMPORTANT: Tutor Notes for CHALLENGE must be a concise step-by-step playbook the tutor can follow without improvising.
    - Tutor Notes must follow the "Teaching Notes" standard: a sequence of short notes where:
@@ -4430,7 +4687,7 @@ export const generateBusinessEnglishContent = async (
   currentContent?: any | null,
   generationMode?: 'new' | 'improve' | null,
   currentPresentData?: {
-    patterns?: Array<{ en: string; kr: string }>;
+    patterns?: Array<{ en: string; kr?: string; jp?: string }>;
     vocabulary?: Array<{ word: string; pos: string; translation: string }>;
   } | null,
 ): Promise<BEGenerationResult> => {
@@ -4460,7 +4717,7 @@ export const generateBusinessEnglishContent = async (
   const lessonContext = `[Variation ID: ${variationSeed}]
 === LESSON CONTEXT ===
 Course: Business English (PCPP Method)
-Level: ${level} — ${toeicRange}
+Level: ${level} - ${toeicRange}
 Complexity: ${complexityDesc}
 Chapter ${chapter}: ${chapterName}
 Lesson ${lessonNumber}: ${lessonName}
@@ -4473,10 +4730,10 @@ ${referenceContext}`;
     if (!currentPresentData) return '';
     const parts: string[] = [];
     if (currentPresentData.patterns?.length) {
-      parts.push('PATTERNS already taught:\n' + currentPresentData.patterns.map(p => `  - "${p.en}" (${p.kr})`).join('\n'));
+      parts.push('PATTERNS already taught:\n' + currentPresentData.patterns.map(p => `  - "${p.en}" (${p.kr || p.jp || ''})`).join('\n'));
     }
     if (currentPresentData.vocabulary?.length) {
-      parts.push('VOCABULARY already taught:\n' + currentPresentData.vocabulary.map(v => `  - ${v.word} (${v.pos}) — ${v.translation}`).join('\n'));
+      parts.push('VOCABULARY already taught:\n' + currentPresentData.vocabulary.map(v => `  - ${v.word} (${v.pos}) - ${v.translation}`).join('\n'));
     }
     if (parts.length === 0) return '';
     return `\n\n=== CROSS-SECTION COHESION ===\nThe student has already learned the following in the PRESENT section. Use these naturally in your generated content.\n${parts.join('\n\n')}`;
@@ -4488,7 +4745,7 @@ ${referenceContext}`;
   if (section === 'introduce') {
     const introNotesRule = level <= 3
       ? `LEVEL 3 TUTOR NOTES RULE:
-- Match the concise Warm-Up teaching-note style used in standardized Lessons 1 and 2.
+- Match the concise Warm-Up teaching-note style used in standardized Lessons 1-3.
 - Tutor only speaks English. Do NOT instruct reading Korean or Japanese.
 - Use a short sequence of SCRIPT and INSTRUCTION notes. Listening lessons may include one TIP at the end.
 - Do NOT include extra prompts like "Ask the student who they will introduce..." or "what the visitor needs to know."
@@ -4516,7 +4773,7 @@ ${introNotesRule}
 The situation must feel like a real workplace event relevant to the lesson topic.
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
-${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content — keep what works, fix what doesn't:\n${JSON.stringify(currentContent)}` : ''}
+${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content - keep what works, fix what doesn't:\n${JSON.stringify(currentContent)}` : ''}
 
 Return ONLY JSON:
 {
@@ -4614,8 +4871,8 @@ REQUIREMENTS:
 
 3. pronunciation: Two columns of minimal pairs or related sounds.
    - instruction & instructionKr: What to practice (e.g., "Let's practice /æ/ and /ʌ/.")
-   - left: { symbol: "/sound/", words: [{ en: "word", kr: "한국어" }] } — 5 words
-   - right: { symbol: "/sound/", words: [{ en: "word", kr: "한국어" }] } — 5 words
+   - left: { symbol: "/sound/", words: [{ en: "word", kr: "한국어" }] } - 5 words
+   - right: { symbol: "/sound/", words: [{ en: "word", kr: "한국어" }] } - 5 words
    - Choose sounds that appear in this lesson's vocabulary/patterns.
 
 4. tutorNotes: Concise notes that guide the tutor clearly.
@@ -4780,7 +5037,7 @@ REQUIREMENTS:
    - Use English names only in examples.
 
 3. fillRows: 4-6 fill-in-the-blank sentences that test understanding of the patterns.
-   Each row has "parts" — an array of objects with "text" and "isBlank".
+   Each row has "parts" - an array of objects with "text" and "isBlank".
    - isBlank: true means the student fills it in
    - isBlank: false means it's pre-filled text
    - Each row MUST include at least one blank part.
@@ -5132,7 +5389,7 @@ REQUIREMENTS:
    - NEVER put spoken dialogue inside an INSTRUCTION note.
    - Do NOT return a separate guideQuestions block. Put every roleplay prompt line inside tutorNotes with type "question".
 
-The challenge must test PRODUCTION — can the student use what they learned in a realistic situation?
+The challenge must test PRODUCTION - can the student use what they learned in a realistic situation?
 
 ${customPrompt ? `Additional instructions: ${customPrompt}` : ''}
 ${generationMode === 'improve' && currentContent ? `\nIMPROVE the following existing content:\n${JSON.stringify(currentContent)}` : ''}

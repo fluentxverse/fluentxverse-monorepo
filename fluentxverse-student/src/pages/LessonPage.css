@@ -940,6 +940,13 @@
   box-shadow: var(--fxv-shadow-sm);
 }
 
+[data-theme='dark'] .lesson-notification .refund-badge {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: #062c20;
+  border: 1px solid rgba(110, 231, 183, 0.45);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 6px 16px rgba(16, 185, 129, 0.18);
+}
+
 [data-theme='dark'] .lesson-page-title,
 [data-theme='dark'] .tutor-name,
 [data-theme='dark'] .classroom-status,

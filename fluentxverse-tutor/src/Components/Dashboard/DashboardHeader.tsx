@@ -20,6 +20,7 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
   const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
   const { user: authUser } = useAuthContext();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const autoReadCancellationIdsRef = useRef<Set<string>>(new Set());
   const [philippineTime, setPhilippineTime] = useState<string>('');
   const [philippineDate, setPhilippineDate] = useState<string>('');
   const [inboxUnreadCount, setInboxUnreadCount] = useState<number>(0);
@@ -34,6 +35,7 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
     isDropdownOpen,
     markAsRead,
     markAllAsRead,
+    refreshNotifications,
     setDropdownOpen,
     toggleDropdown
   } = useNotifications();
@@ -100,6 +102,31 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
     };
   }, [isDropdownOpen, setDropdownOpen]);
 
+  useEffect(() => {
+    if (!isDropdownOpen) {
+      return;
+    }
+
+    const unreadCancellationIds = notifications
+      .filter(notification => notification.type === 'booking_cancelled' && !notification.isRead)
+      .map(notification => notification.id)
+      .filter((notificationId): notificationId is string => Boolean(notificationId))
+      .filter(notificationId => !autoReadCancellationIdsRef.current.has(notificationId));
+
+    if (unreadCancellationIds.length === 0) {
+      return;
+    }
+
+    unreadCancellationIds.forEach(notificationId => {
+      autoReadCancellationIdsRef.current.add(notificationId);
+    });
+
+    void (async () => {
+      await Promise.all(unreadCancellationIds.map(notificationId => markAsRead(notificationId)));
+      await refreshNotifications();
+    })();
+  }, [isDropdownOpen, notifications, markAsRead, refreshNotifications]);
+
   const handleNotificationClick = async (notification: any) => {
     if (!notification.isRead) {
       await markAsRead(notification.id);
@@ -111,6 +138,11 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
     }
     
     setDropdownOpen(false);
+  };
+
+  const handleMarkNotificationRead = async (event: MouseEvent, notificationId: string) => {
+    event.stopPropagation();
+    await markAsRead(notificationId);
   };
 
   return (
@@ -190,7 +222,7 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
                         onClick={() => handleNotificationClick(notification)}
                       >
                         <div 
-                          className="notification-icon" 
+                          className={`notification-icon type-${notification.type}`}
                           style={{ backgroundColor: `${color}20`, color }}
                         >
                           <i className={`fas ${icon}`}></i>
@@ -202,9 +234,22 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
                             {formatRelativeTime(notification.timestamp)}
                           </span>
                         </div>
-                        {!notification.isRead && (
-                          <div className="notification-unread-dot"></div>
-                        )}
+                        <div className="notification-status-actions">
+                          {!notification.isRead && (
+                            <>
+                              <button
+                                type="button"
+                                className="notification-mark-read"
+                                title="Mark as read"
+                                aria-label="Mark notification as read"
+                                onClick={(event) => handleMarkNotificationRead(event, notification.id)}
+                              >
+                                Read
+                              </button>
+                              <div className="notification-unread-dot"></div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     );
                   })

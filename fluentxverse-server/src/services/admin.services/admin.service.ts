@@ -17,6 +17,7 @@ import type {
 import type { SuspensionHistoryItem } from './suspension.job';
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
+import { tryIssueAndMaybeSubmitTutorCertificationProof } from '../proof.services/tutorCertificationWorkflow.service';
 
 // Helper to safely convert Neo4j Integer to JavaScript number
 function toNumber(value: any): number {
@@ -90,10 +91,13 @@ export class AdminService {
         MATCH (u:User)
         OPTIONAL MATCH (u)-[:TAKES]->(we:Exam {type: 'written', status: 'completed'})
         OPTIONAL MATCH (u)-[:TAKES]->(se:Exam {type: 'speaking', status: 'completed'})
+        OPTIONAL MATCH (islot:InterviewSlot {tutorId: u.id, status: 'completed', result: 'pass'})
         RETURN u.id as tutorId,
                u.profileStatus as profileStatus,
+               u.interviewPassed as userInterviewPassed,
                collect(DISTINCT we.result) as writtenResults,
-               collect(DISTINCT se.result) as speakingResults
+               collect(DISTINCT se.result) as speakingResults,
+               count(DISTINCT islot) as passedInterviewCount
       `);
 
       let totalTutors = 0;
@@ -105,6 +109,7 @@ export class AdminService {
         const writtenResults = record.get('writtenResults') || [];
         const speakingResults = record.get('speakingResults') || [];
         const profileStatus = record.get('profileStatus');
+        const interviewPassed = record.get('userInterviewPassed') === true || toNumber(record.get('passedInterviewCount')) > 0;
         
         // Check if any written exam passed
         const writtenPassed = writtenResults.some((r: string) => examPassed(r));
@@ -113,8 +118,8 @@ export class AdminService {
         // Check if profile is approved
         const profileApproved = profileStatus === 'approved';
         
-        // Certified = passed both exams AND profile approved
-        if (writtenPassed && speakingPassed && profileApproved) {
+        // Certified = passed both exams, profile approved, and interview passed
+        if (writtenPassed && speakingPassed && profileApproved && interviewPassed) {
           certifiedTutors++;
         } else {
           pendingTutors++;
@@ -457,6 +462,10 @@ export class AdminService {
 
       // If overall status changed to approved or rejected, notify the tutor
       if (allApproved || hasRejected) {
+        if (allApproved) {
+          void tryIssueAndMaybeSubmitTutorCertificationProof(tutorId, 'profile_approved');
+        }
+
         const notificationService = new NotificationService();
         const io = getIO();
         
@@ -683,6 +692,10 @@ export class AdminService {
       if (io) {
         io.to(`notifications:${tutorId}`).emit('notification:new', notification);
       }
+
+      if (action === 'approve') {
+        void tryIssueAndMaybeSubmitTutorCertificationProof(tutorId, 'profile_approved');
+      }
     } finally {
       await session.close();
     }
@@ -719,10 +732,14 @@ export class AdminService {
         OPTIONAL MATCH (u)-[:TAKES]->(we:Exam {type: 'written', status: 'completed'})
         OPTIONAL MATCH (u)-[:TAKES]->(se:Exam {type: 'speaking', status: 'completed'})
         OPTIONAL MATCH (u)-[:TAKES]->(sp:Exam {type: 'speaking', status: 'processing'})
+        OPTIONAL MATCH (islot:InterviewSlot {tutorId: u.id, status: 'completed', result: 'pass'})
+        OPTIONAL MATCH (u)-[:HAS_CERTIFICATION_CREDENTIAL]->(cred:TutorCertificationCredential)
         RETURN u,
+               cred,
                collect(DISTINCT we.result) as writtenResults,
                collect(DISTINCT se.result) as speakingResults,
-               count(DISTINCT sp) as processingCount
+               count(DISTINCT sp) as processingCount,
+               count(DISTINCT islot) as passedInterviewCount
         ORDER BY u.createdAt DESC
       `, { search });
 
@@ -731,18 +748,20 @@ export class AdminService {
       
       for (const record of result.records) {
         const u = record.get('u').properties;
+        const credential = record.get('cred')?.properties;
         const writtenResults = record.get('writtenResults') || [];
         const speakingResults = record.get('speakingResults') || [];
         const processingCount = record.get('processingCount')?.toNumber?.() ?? record.get('processingCount') ?? 0;
         
         const writtenPassed = writtenResults.some((r: string) => examPassed(r));
         const speakingPassed = speakingResults.some((r: string) => examPassed(r));
+        const interviewPassed = u.interviewPassed === true || toNumber(record.get('passedInterviewCount')) > 0;
         const isProcessing = processingCount > 0;
         const profileStatus = u.profileStatus || 'incomplete';
 
         // Determine tutor status - now includes profile review requirement
         let tutorStatus: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
-        if (writtenPassed && speakingPassed && profileStatus === 'approved') {
+        if (writtenPassed && speakingPassed && profileStatus === 'approved' && interviewPassed) {
           tutorStatus = 'certified';
         } else if (writtenPassed && speakingPassed && profileStatus !== 'approved') {
           // Passed exams but profile not approved yet
@@ -770,10 +789,18 @@ export class AdminService {
           registeredAt: u.createdAt || new Date().toISOString(),
           writtenExamPassed: writtenPassed,
           speakingExamPassed: speakingPassed,
+          interviewPassed,
           writtenExamScore: u.writtenExamScore,
           speakingExamScore: u.speakingExamScore,
           status: tutorStatus,
           profileStatus: profileStatus as 'incomplete' | 'pending_review' | 'approved' | 'rejected',
+          zkCertificationStatus: credential?.status || u.tutorCertificationProofStatus || undefined,
+          zkCredentialCommitment: credential?.credentialCommitment || undefined,
+          zkVerifyTxHash: credential?.zkVerifyTxHash || undefined,
+          zkVerifyAggregationId: credential?.zkVerifyAggregationId != null ? toNumber(credential.zkVerifyAggregationId) : undefined,
+          zkVerifyDomainId: credential?.zkVerifyDomainId != null ? String(credential.zkVerifyDomainId) : undefined,
+          zkVerifyLastError: credential?.zkVerifyLastError || undefined,
+          zkVerifyUpdatedAt: credential?.updatedAt || undefined,
           languages: u.languages || ['English'],
           totalSessions: u.totalSessions || 0,
           rating: u.rating || 0,

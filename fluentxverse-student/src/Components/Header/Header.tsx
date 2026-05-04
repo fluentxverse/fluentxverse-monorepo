@@ -13,6 +13,8 @@ const Header = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isDarkMode, toggleTheme } = useThemeStore();
   const isLandingPage = path === '/';
+  const isPublicBrowsePage = path === '/browse-tutors' && !isAuthenticated;
+  const isThemeLockedPage = isLandingPage || isPublicBrowsePage;
   const homeHref = isAuthenticated ? '/home' : '/';
   const navItems = [
     { href: homeHref, label: 'Home', icon: 'fas fa-home' },
@@ -121,8 +123,8 @@ const Header = () => {
 
 
   return (
-    <header className={`${isLandingPage ? 'landing-header-shell' : ''}${showLoginModal ? ' header-modal-open' : ''}`}>
-      <div id='sticky-header' className={`menu-area ${isLandingPage ? 'landing-header-bar' : ''}`}>
+    <header className={`${isLandingPage ? 'landing-header-shell' : ''}${isPublicBrowsePage ? ' public-browse-header-shell' : ''}${showLoginModal ? ' header-modal-open' : ''}`}>
+      <div id='sticky-header' className={`menu-area ${isLandingPage ? 'landing-header-bar' : ''}${isPublicBrowsePage ? ' public-browse-header-bar' : ''}`}>
         <div className="container">
           <div className="row">
             <div className="col-12">
@@ -136,17 +138,16 @@ const Header = () => {
               >
                 <i className="fas fa-bars" />
               </div>
-              <div className={`menu-wrap main-menu ${isLandingPage ? 'landing-menu-wrap' : ''}`}>
+              <div className={`menu-wrap main-menu ${isLandingPage ? 'landing-menu-wrap' : ''}${isPublicBrowsePage ? ' public-browse-menu-wrap' : ''}`}>
                 <nav className="menu-nav">
                   <a
                     href={homeHref}
-                    className={`brand-lockup${isLandingPage ? ' brand-lockup--landing' : ''}`}
+                    className={`brand-lockup${isLandingPage ? ' brand-lockup--landing' : ''}${isPublicBrowsePage ? ' brand-lockup--public-browse' : ''}`}
                     aria-label="FluentXVerse home"
                   >
                     <span className="logo">
                       <span className="logo__spin" aria-hidden="true">
                         <img className="logo__face logo__face--front" src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40" />
-                        <img className="logo__face logo__face--back" src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40" />
                       </span>
                     </span>
                     <span className="brand-text">
@@ -154,7 +155,7 @@ const Header = () => {
                     </span>
                   </a>
                   <div className="navbar-wrap push-menu main-menu d-none d-lg-flex">
-                    <ul className={`navigation ${isLandingPage ? 'landing-navigation' : ''}`}>
+                    <ul className={`navigation ${isLandingPage ? 'landing-navigation' : ''}${isPublicBrowsePage ? ' public-browse-navigation' : ''}`}>
                       {navItems.map((item) => (
                         <li key={item.href}>
                           <a href={item.href}>{item.label}</a>
@@ -167,9 +168,9 @@ const Header = () => {
                       <li><a href="/contact">Contact</a></li> */}
                     </ul>
                   </div>
-                  <div className={`header-action d-none d-md-block ${isLandingPage ? 'landing-header-actions' : ''}`}>
+                  <div className={`header-action d-none d-md-block ${isLandingPage ? 'landing-header-actions' : ''}${isPublicBrowsePage ? ' public-browse-header-actions' : ''}`}>
                     <ul>
-                      {!isLandingPage && (
+                      {!isThemeLockedPage && (
                         <li className="theme-toggle">
                           <button
                             type="button"
@@ -216,12 +217,12 @@ const Header = () => {
                   <div className="menu-outer">
                     <div className="mobile-menu-header">
                       <div className="mobile-logo">
-                        <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse" width="32" height="32" /> <div className="brand-text">Fluent<span className="brand-x">X</span>Verse</div>
+                        <img src="assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="32" height="32" /> <div className="brand-text">Fluent<span className="brand-x">X</span>Verse</div>
                       </div>
                     </div>
                     
                     <nav className="mobile-nav">
-                      {!isLandingPage && (
+                      {!isThemeLockedPage && (
                         <div className="mobile-menu-theme">
                           <button
                             type="button"

@@ -21,7 +21,7 @@ import type {
 import { determinePenaltyCode, PENALTY_RULES, PENALTY_CODE_DETAILS } from '../../config/penaltyCodes';
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
-import { emitSlotBooked } from '../../socket/handlers/schedule.handler';
+import { emitSlotBooked, emitSlotCancelled } from '../../socket/handlers/schedule.handler';
 import { ticketService } from '../ticket.services/ticket.service';
 import { REFUND_POLICY } from '../../config/constant';
 import { invalidateCache } from '../../db/redis';
@@ -590,7 +590,10 @@ export class ScheduleService {
           studentName,
           formattedDate,
           slot.slotTime,
-          bookingId
+          bookingId,
+          input.studentId,
+          slot.slotDate,
+          input.slotId
         ).then(notification => {
           // Emit real-time notification via Socket.IO
           const io = getIO();
@@ -600,9 +603,10 @@ export class ScheduleService {
             // Emit real-time schedule update
             emitSlotBooked(io, slot.tutorId, {
               slotKey: input.slotId,
+              bookingId,
               studentId: input.studentId,
               studentName: studentName,
-              date: formattedDate,
+              date: slot.slotDate,
               time: slot.slotTime
             });
           }
@@ -675,8 +679,8 @@ export class ScheduleService {
       // Get booking details
       const bookingResult = await session.run(
         `
-        MATCH (b:Booking {bookingId: $bookingId})
-        RETURN b
+        MATCH (b:Booking {bookingId: $bookingId})-[:BOOKS]->(s:TimeSlot)
+        RETURN b, s
         `,
         { bookingId: input.bookingId }
       );
@@ -686,6 +690,7 @@ export class ScheduleService {
       }
       
       const booking = bookingResult.records[0]?.get('b').properties;
+      const slot = bookingResult.records[0]?.get('s').properties;
       
       // Check if booking is already cancelled
       if (booking.status === 'cancelled') {
@@ -798,7 +803,7 @@ export class ScheduleService {
         const studentLastName = studentNameResult.records[0]?.get('lastName') || '';
         const studentName = `${studentFirstName} ${studentLastName}`.trim() || 'A student';
         
-        await notificationService.createNotification({
+        const notification = await notificationService.createNotification({
           userId: booking.tutorId,
           userType: 'tutor',
           type: 'booking_cancelled',
@@ -806,8 +811,12 @@ export class ScheduleService {
           message: `${studentName} has cancelled their lesson scheduled for ${scheduledTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${scheduledTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`,
           data: {
             bookingId: input.bookingId,
+            slotId: booking.slotId,
             studentId: booking.studentId,
             studentName,
+            date: slot.slotDate,
+            time: slot.slotTime,
+            link: '/schedule',
             reason: input.reason,
           },
         });
@@ -815,10 +824,11 @@ export class ScheduleService {
         // Emit real-time notification
         const io = getIO();
         if (io) {
-          io.to(`notifications:${booking.tutorId}`).emit('notification:new', {
-            type: 'booking_cancelled',
-            title: 'Booking Cancelled',
-            message: `${studentName} has cancelled their lesson.`,
+          io.to(`notifications:${booking.tutorId}`).emit('notification:new', notification);
+          emitSlotCancelled(io, booking.tutorId, {
+            slotKey: booking.slotId,
+            date: slot.slotDate,
+            time: slot.slotTime,
           });
         }
         

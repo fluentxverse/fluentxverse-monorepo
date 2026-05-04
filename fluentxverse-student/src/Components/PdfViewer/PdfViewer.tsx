@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
 import * as pdfjsLib from 'pdfjs-dist';
-import { renderTextLayer } from 'pdfjs-dist';
 import type { Socket } from 'socket.io-client';
 import './PdfViewer.css';
 
@@ -37,6 +36,27 @@ const USER_COLORS = {
 
 // Generate unique ID for strokes
 const generateStrokeId = () => `stroke_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+const renderPdfTextLayer = async (params: {
+  textContentSource: any;
+  container: HTMLElement;
+  viewport: any;
+}) => {
+  const pdfjs = pdfjsLib as any;
+
+  if (pdfjs.TextLayer) {
+    const textLayer = new pdfjs.TextLayer(params);
+    await textLayer.render();
+    return;
+  }
+
+  const task = pdfjs.renderTextLayer?.({
+    ...params,
+    textDivs: [],
+  });
+
+  await task?.promise;
+};
 
 const PdfViewer = ({ materialId = 'default', socket, sessionId, userType = 'student' }: PdfViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -475,12 +495,12 @@ const PdfViewer = ({ materialId = 'default', socket, sessionId, userType = 'stud
       textLayerDiv.className = 'textLayer';
       pageWrapper.appendChild(textLayerDiv);
       
-      // Render text layer using the function API
-      renderTextLayer({
+      void renderPdfTextLayer({
         textContentSource: pageData.textContent,
         container: textLayerDiv,
         viewport: pageData.viewport,
-        textDivs: [],
+      }).catch((err) => {
+        console.error('Failed to render PDF text layer:', err);
       });
       
       container.appendChild(pageWrapper);

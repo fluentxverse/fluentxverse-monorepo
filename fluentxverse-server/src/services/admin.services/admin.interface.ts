@@ -91,10 +91,18 @@ export interface TutorListItem {
   registeredAt: string;
   writtenExamPassed: boolean;
   speakingExamPassed: boolean;
+  interviewPassed: boolean;
   writtenExamScore?: number;
   speakingExamScore?: number;
   status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
+  zkCertificationStatus?: 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
+  zkCredentialCommitment?: string;
+  zkVerifyTxHash?: string;
+  zkVerifyAggregationId?: number;
+  zkVerifyDomainId?: string;
+  zkVerifyLastError?: string;
+  zkVerifyUpdatedAt?: string;
   languages: string[];
   totalSessions: number;
   rating: number;

@@ -42,7 +42,11 @@ async function main() {
       throw new Error('Lesson not found in DB');
     }
 
-    const lessonId = result.records[0].get('id');
+    const lessonRecord = result.records[0];
+    if (!lessonRecord) {
+      throw new Error('Lesson not found in DB');
+    }
+    const lessonId = lessonRecord.get('id');
 
     await session.run(
       `MATCH (l:LessonMaterial {id: $id})
@@ -69,7 +73,11 @@ async function main() {
       { id: lessonId },
     );
 
-    const verified = verifyResult.records[0].get('beData');
+    const verifyRecord = verifyResult.records[0];
+    if (!verifyRecord) {
+      throw new Error('Lesson verification failed');
+    }
+    const verified = verifyRecord.get('beData');
 
     console.log(
       JSON.stringify(

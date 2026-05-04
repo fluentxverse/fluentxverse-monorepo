@@ -6,6 +6,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { useThemeStore } from '../context/ThemeContext';
 import { scheduleApi } from '../api/schedule.api';
 import { initSocket, getSocket, connectSocket, disconnectSocket } from '../client/socket/socket.client';
+import type { Notification } from '../types/notification.types';
 
 // Penalty code types
 type PenaltyCode = '301' | '302' | '303' | '401' | '501' | '502' | '601';
@@ -77,6 +78,27 @@ const SchedulePage = () => {
   const boxShadowCard = isDarkMode ? '0 10px 26px rgba(0, 0, 0, 0.2)' : '0 8px 32px rgba(2, 69, 174, 0.12)';
   const warningBannerBackground = isDarkMode ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255, 255, 255, 0.9)';
   const warningBannerText = isDarkMode ? '#fcd34d' : '#92400e';
+  const darkSlotBackground = '#242424';
+  const darkSlotAltBackground = '#2b2b2b';
+  const darkSlotHoverBackground = '#2b2b2b';
+  const darkSlotAltHoverBackground = '#323232';
+  const darkSlotBookedBackground = '#323232';
+  const darkSlotPastBackground = '#1f1f1f';
+  const darkSlotBorder = 'rgba(255, 255, 255, 0.1)';
+  const periodStyles = {
+    morning: {
+      background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)',
+      shadow: '0 4px 14px rgba(249, 115, 22, 0.34)'
+    },
+    afternoon: {
+      background: 'linear-gradient(135deg, #fb923c 0%, #dc2626 100%)',
+      shadow: '0 4px 14px rgba(220, 38, 38, 0.32)'
+    },
+    evening: {
+      background: 'linear-gradient(135deg, #1e3a8a 0%, #111827 100%)',
+      shadow: '0 4px 14px rgba(30, 58, 138, 0.34)'
+    }
+  };
 
   // Refresh handler
   const handleRefresh = () => {
@@ -180,6 +202,75 @@ const SchedulePage = () => {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const resolveRealtimeSlotKey = (slotDate?: string, slotTime?: string): string | null => {
+    if (!slotDate || !slotTime) {
+      return null;
+    }
+
+    const currentWeekDates = getWeekDates(currentWeekOffset);
+    let dayIdx = -1;
+
+    if (/^\d{4}-\d{2}-\d{2}/.test(slotDate)) {
+      const date = new Date(`${slotDate.slice(0, 10)}T00:00:00`);
+      dayIdx = currentWeekDates.findIndex((weekDate) =>
+        weekDate.getFullYear() === date.getFullYear() &&
+        weekDate.getMonth() === date.getMonth() &&
+        weekDate.getDate() === date.getDate()
+      );
+    } else {
+      dayIdx = currentWeekDates.findIndex((weekDate) =>
+        weekDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric'
+        }) === slotDate
+      );
+    }
+
+    if (dayIdx === -1) {
+      return null;
+    }
+
+    const timeLabel = /\b(?:AM|PM)\b/i.test(slotTime)
+      ? slotTime.replace(/\s+/g, ' ').toUpperCase()
+      : convertTo12Hour(slotTime);
+
+    return `${dayIdx}-${timeLabel}`;
+  };
+
+  const applyBookedSlotUpdate = (
+    slotKey: string,
+    bookingInfo?: BookedSlotInfo
+  ) => {
+    setSelectedTimeSlots((prev) => {
+      const next = new Set(prev);
+      next.add(slotKey);
+      return next;
+    });
+
+    if (bookingInfo) {
+      setBookedSlots((prev) => {
+        const next = new Map(prev);
+        next.set(slotKey, bookingInfo);
+        return next;
+      });
+    }
+  };
+
+  const applyCancelledSlotUpdate = (slotKey: string) => {
+    setSelectedTimeSlots((prev) => {
+      const next = new Set(prev);
+      next.add(slotKey);
+      return next;
+    });
+
+    setBookedSlots((prev) => {
+      const next = new Map(prev);
+      next.delete(slotKey);
+      return next;
+    });
+  };
   
   const { getUserId } = useAuthContext();
   const userId = getUserId();
@@ -277,11 +368,21 @@ const SchedulePage = () => {
       const handleSlotBooked = (data: { 
         tutorId: string; 
         slotKey: string; 
+        bookingId?: string;
         studentId: string; 
         studentName?: string; 
         date: string; 
         time: string 
       }) => {
+        const gridSlotKey = resolveRealtimeSlotKey(data.date, data.time);
+
+        if (gridSlotKey && data.bookingId) {
+          applyBookedSlotUpdate(gridSlotKey, {
+            bookingId: data.bookingId,
+            studentId: data.studentId,
+            studentName: data.studentName,
+          });
+        }
         
         // Show toast notification
         setBookingToast({
@@ -304,6 +405,11 @@ const SchedulePage = () => {
         date: string;
         time: string;
       }) => {
+        const gridSlotKey = resolveRealtimeSlotKey(data.date, data.time);
+
+        if (gridSlotKey) {
+          applyCancelledSlotUpdate(gridSlotKey);
+        }
         
         // Refresh the schedule
         setRefreshTrigger(prev => prev + 1);
@@ -320,7 +426,42 @@ const SchedulePage = () => {
       };
     } catch (error) {
     }
-  }, [userId]);
+  }, [userId, currentWeekOffset]);
+
+  useEffect(() => {
+    const handleScheduleNotification = (event: Event) => {
+      const notification = (event as CustomEvent<Notification>).detail;
+      const slotKey = notification
+        ? resolveRealtimeSlotKey(notification.data?.date, notification.data?.time)
+        : null;
+
+      if (slotKey) {
+        if (notification.type === 'booking_cancelled') {
+          applyCancelledSlotUpdate(slotKey);
+        }
+
+        if (notification.type === 'booking_new') {
+          if (notification.data?.bookingId && notification.data?.studentId) {
+            applyBookedSlotUpdate(slotKey, {
+              bookingId: notification.data!.bookingId!,
+              studentId: notification.data!.studentId!,
+              studentName: notification.data?.studentName,
+            });
+          } else {
+            applyBookedSlotUpdate(slotKey);
+          }
+        }
+      }
+
+      setRefreshTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener('fxv:schedule-notification', handleScheduleNotification);
+
+    return () => {
+      window.removeEventListener('fxv:schedule-notification', handleScheduleNotification);
+    };
+  }, [currentWeekOffset]);
 
   // Check if slot can be opened (more than 5 minutes away)
   const canOpenSlot = (date: Date, timeStr: string): boolean => {
@@ -700,11 +841,11 @@ const SchedulePage = () => {
               border-radius: 4px;
             }
             .schedule-scrollable::-webkit-scrollbar-thumb {
-              background: ${isDarkMode ? 'linear-gradient(135deg, #2563eb 0%, #60a5fa 100%)' : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)'};
+              background: ${isDarkMode ? 'linear-gradient(135deg, #3a3a3a 0%, #5a5a5a 100%)' : 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)'};
               border-radius: 4px;
             }
             .schedule-scrollable::-webkit-scrollbar-thumb:hover {
-              background: ${isDarkMode ? 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)' : 'linear-gradient(135deg, #023a8f 0%, #3d8ce6 100%)'};
+              background: ${isDarkMode ? 'linear-gradient(135deg, #4a4a4a 0%, #6a6a6a 100%)' : 'linear-gradient(135deg, #023a8f 0%, #3d8ce6 100%)'};
             }
           `}</style>
           <div className="container">
@@ -926,33 +1067,38 @@ const SchedulePage = () => {
                 justifyContent: 'center',
                 flexWrap: 'wrap'
               }}>
-                {(['morning', 'afternoon', 'evening'] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setSelectedPeriod(period)}
-                    style={{
-                      background: selectedPeriod === period 
-                        ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-                        : isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(15, 23, 42, 0.05)',
-                      color: selectedPeriod === period ? '#fff' : textMuted,
-                      border: 'none',
-                      padding: '10px 24px',
-                      borderRadius: '12px',
-                      fontSize: '14px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      boxShadow: selectedPeriod === period ? (isDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.18)' : '0 4px 12px rgba(15, 23, 42, 0.3)') : 'none',
-                      textTransform: 'capitalize'
-                    }}
-                  >
-                    <i className={`fas fa-${period === 'morning' ? 'sun' : period === 'afternoon' ? 'cloud-sun' : 'moon'}`}></i>
-                    {period}
-                  </button>
-                ))}
+                {(['morning', 'afternoon', 'evening'] as const).map((period) => {
+                  const periodStyle = periodStyles[period];
+                  const isActive = selectedPeriod === period;
+
+                  return (
+                    <button
+                      key={period}
+                      onClick={() => setSelectedPeriod(period)}
+                      style={{
+                        background: isActive
+                          ? periodStyle.background
+                          : isDarkMode ? '#2b2b2b' : 'rgba(15, 23, 42, 0.05)',
+                        color: isActive ? '#fff' : textMuted,
+                        border: isDarkMode && !isActive ? `1px solid ${darkSlotBorder}` : 'none',
+                        padding: '10px 24px',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: isActive ? periodStyle.shadow : 'none',
+                        textTransform: 'capitalize'
+                      }}
+                    >
+                      <i className={`fas fa-${period === 'morning' ? 'sun' : period === 'afternoon' ? 'cloud-sun' : 'moon'}`}></i>
+                      {period}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Calendar Grid */}
@@ -979,16 +1125,19 @@ const SchedulePage = () => {
                         const { day, month } = formatDate(date);
                         return (
                           <th key={idx} style={{
-                            background: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(2, 69, 174, 0.08)',
+                            background: isDarkMode
+                              ? (idx % 2 === 0 ? '#2b2b2b' : '#242424')
+                              : 'rgba(2, 69, 174, 0.08)',
                             padding: '10px 8px',
                             borderRadius: '10px',
                             textAlign: 'center',
+                            border: isDarkMode ? `1px solid ${darkSlotBorder}` : 'none',
                             minWidth: '80px'
                           }}>
                             <div style={{ fontWeight: 800, fontSize: '11px', color: textMuted, marginBottom: '4px', letterSpacing: '0.5px' }}>
                               {days[idx]}
                             </div>
-                            <div style={{ fontSize: '20px', fontWeight: 900, color: isDarkMode ? '#93c5fd' : '#0245ae', lineHeight: 1 }}>
+                            <div style={{ fontSize: '20px', fontWeight: 900, color: isDarkMode ? '#d4d4d4' : '#0245ae', lineHeight: 1 }}>
                               {day}
                             </div>
                             <div style={{ fontSize: '10px', fontWeight: 700, color: textMuted, marginTop: '2px', letterSpacing: '0.5px' }}>
@@ -1018,10 +1167,10 @@ const SchedulePage = () => {
                               style={{
                                 width: '100%',
                                 background: availableCount === 0 
-                                  ? (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(148, 163, 184, 0.15)')
-                                  : cardBackgroundSoft,
-                                color: availableCount === 0 ? textSoft : isDarkMode ? '#93c5fd' : '#0245ae',
-                                border: availableCount === 0 ? 'none' : isDarkMode ? '1px dashed rgba(147, 197, 253, 0.24)' : '1px dashed rgba(2, 69, 174, 0.3)',
+                                  ? (isDarkMode ? '#202020' : 'rgba(148, 163, 184, 0.15)')
+                                  : isDarkMode ? (dayIdx % 2 === 0 ? '#2b2b2b' : '#242424') : cardBackgroundSoft,
+                                color: availableCount === 0 ? textSoft : isDarkMode ? '#d4d4d4' : '#0245ae',
+                                border: availableCount === 0 ? (isDarkMode ? `1px dashed ${darkSlotBorder}` : 'none') : isDarkMode ? `1px dashed ${darkSlotBorder}` : '1px dashed rgba(2, 69, 174, 0.3)',
                                 padding: '6px 4px',
                                 borderRadius: '6px',
                                 fontSize: '10px',
@@ -1044,16 +1193,22 @@ const SchedulePage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {timeSlots[selectedPeriod].map((time, timeIdx) => (
+                    {timeSlots[selectedPeriod].map((time, timeIdx) => {
+                      const darkRowBackground = timeIdx % 2 === 0 ? darkSlotBackground : darkSlotAltBackground;
+                      const darkRowHoverBackground = timeIdx % 2 === 0 ? darkSlotHoverBackground : darkSlotAltHoverBackground;
+                      const darkTimeBackground = timeIdx % 2 === 0 ? '#242424' : '#303030';
+
+                      return (
                       <tr key={timeIdx}>
                         <td style={{
-                          background: cardBackgroundMuted,
+                          background: isDarkMode ? darkTimeBackground : cardBackgroundMuted,
                           padding: '8px',
                           borderRadius: '8px',
                           fontWeight: 700,
                           fontSize: '12px',
-                          color: isDarkMode ? '#d1d5db' : '#475569',
-                          textAlign: 'center'
+                          color: isDarkMode ? '#d4d4d4' : '#475569',
+                          textAlign: 'center',
+                          border: isDarkMode ? `1px solid ${darkSlotBorder}` : 'none'
                         }}>
                           {time}
                         </td>
@@ -1075,7 +1230,7 @@ const SchedulePage = () => {
                           // Show loading skeleton while fetching schedule data
                           if (loading) {
                             return (
-                              <td key={dayIdx} style={{ padding: '2px' }}>
+                              <td key={dayIdx} style={{ padding: '2px', background: 'transparent' }}>
                                 <div
                                   style={{
                                     width: '100%',
@@ -1114,43 +1269,46 @@ const SchedulePage = () => {
                           }
                           
                           return (
-                            <td key={dayIdx} style={{ padding: '2px' }}>
+                            <td key={dayIdx} style={{ padding: '2px', background: 'transparent' }}>
                               <button
                                 onClick={() => handleSlotClick(dayIdx, time)}
                                 onDblClick={() => handleSlotDoubleClick(dayIdx, time)}
                                 disabled={!isBooked && (isPastOrNear || (isSelected && !canMarkAttend))}
                                 style={{
                                   width: '100%',
+                                  display: 'block',
                                   padding: '10px 6px',
                                   borderRadius: '8px',
+                                  outline: 'none',
+                                  appearance: 'none',
                                   cursor: isBooked ? 'pointer' : isPastOrNear || (isSelected && !canMarkAttend) ? 'not-allowed' : 'pointer',
                                   background: penalty
                                     ? PENALTY_LABELS[penalty.code].bgColor
                                     : isPastOrNear
-                                    ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(203, 213, 225, 0.5)')
+                                    ? (isDarkMode ? darkSlotPastBackground : 'rgba(203, 213, 225, 0.5)')
                                     : isBookedAndPresent
-                                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                                    ? (isDarkMode ? darkSlotBookedBackground : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)')
                                     : isBooked
-                                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                                    ? (isDarkMode ? darkSlotBookedBackground : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)')
                                     : isPendingSelection
                                     ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
                                     : isMarkedPresent
                                     ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                                     : isSelected
-                                    ? (isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.9)')
-                                    : (isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.9)'),
+                                    ? (isDarkMode ? darkRowBackground : 'rgba(255, 255, 255, 0.9)')
+                                    : (isDarkMode ? darkRowBackground : 'rgba(255, 255, 255, 0.9)'),
                                   color: penalty
                                     ? PENALTY_LABELS[penalty.code].color
-                                    : isPendingSelection || isMarkedPresent || isBooked ? '#fff' : isPastOrNear ? textSoft : isSelected ? '#10b981' : textMuted,
+                                    : isPendingSelection || isMarkedPresent ? '#fff' : isBooked ? (isDarkMode ? '#e5e7eb' : '#fff') : isPastOrNear ? textSoft : isSelected ? '#10b981' : textMuted,
                                   fontWeight: 800,
                                   fontSize: isBooked || penalty ? '13px' : '11px',
                                   transition: 'all 0.2s ease',
                                   boxShadow: penalty
                                     ? `0 2px 8px ${PENALTY_LABELS[penalty.code].color}40`
                                     : isBookedAndPresent
-                                    ? '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 0 0 2px rgba(16, 185, 129, 0.8)'
+                                    ? (isDarkMode ? 'inset 0 0 0 2px rgba(16, 185, 129, 0.8)' : '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 0 0 2px rgba(16, 185, 129, 0.8)')
                                     : isBooked
-                                    ? '0 2px 8px rgba(59, 130, 246, 0.4)'
+                                    ? (isDarkMode ? 'none' : '0 2px 8px rgba(59, 130, 246, 0.4)')
                                     : isPendingSelection
                                     ? '0 2px 8px rgba(245, 158, 11, 0.4), inset 0 0 0 2px rgba(255, 255, 255, 0.3)'
                                     : isMarkedPresent
@@ -1162,35 +1320,39 @@ const SchedulePage = () => {
                                     : isBookedAndPresent
                                     ? '2px solid #10b981'
                                     : isBooked
-                                    ? '2px solid transparent'
+                                    ? (isDarkMode ? `1px solid ${darkSlotBorder}` : '2px solid transparent')
                                     : isPendingSelection
                                     ? '2px solid rgba(251, 191, 36, 0.6)'
                                     : isSelected && !isMarkedPresent
                                     ? '2px solid #10b981' 
                                     : !isSelected && !isPastOrNear
-                                    ? isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(2, 69, 174, 0.1)' 
-                                    : '2px solid transparent',
+                                    ? isDarkMode ? `1px solid ${darkSlotBorder}` : '2px solid rgba(2, 69, 174, 0.1)' 
+                                    : isDarkMode ? `1px solid ${darkSlotBorder}` : '2px solid transparent',
                                   opacity: isSelected && !canMarkAttend && !isBooked ? 0.5 : 1,
                                   boxSizing: 'border-box'
                                 }}
                                 onMouseEnter={(e) => {
                                   if (isBookedAndPresent) {
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5), inset 0 0 0 2px rgba(16, 185, 129, 1)';
+                                    e.currentTarget.style.background = isDarkMode ? darkRowHoverBackground : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                                    e.currentTarget.style.boxShadow = isDarkMode ? 'inset 0 0 0 2px rgba(16, 185, 129, 1)' : '0 4px 12px rgba(59, 130, 246, 0.5), inset 0 0 0 2px rgba(16, 185, 129, 1)';
                                   } else if (isBooked) {
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.5)';
+                                    e.currentTarget.style.background = isDarkMode ? darkRowHoverBackground : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                                    e.currentTarget.style.boxShadow = isDarkMode ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.5)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(2, 69, 174, 0.1)';
-                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(147, 197, 253, 0.28)' : 'rgba(2, 69, 174, 0.3)';
+                                    e.currentTarget.style.background = isDarkMode ? darkRowHoverBackground : 'rgba(2, 69, 174, 0.1)';
+                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.18)' : 'rgba(2, 69, 174, 0.3)';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
                                   if (isBookedAndPresent) {
-                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 0 0 2px rgba(16, 185, 129, 0.8)';
+                                    e.currentTarget.style.background = isDarkMode ? darkSlotBookedBackground : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                                    e.currentTarget.style.boxShadow = isDarkMode ? 'inset 0 0 0 2px rgba(16, 185, 129, 0.8)' : '0 2px 8px rgba(59, 130, 246, 0.4), inset 0 0 0 2px rgba(16, 185, 129, 0.8)';
                                   } else if (isBooked) {
-                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.4)';
+                                    e.currentTarget.style.background = isDarkMode ? darkSlotBookedBackground : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+                                    e.currentTarget.style.boxShadow = isDarkMode ? 'none' : '0 2px 8px rgba(59, 130, 246, 0.4)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.9)';
-                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(2, 69, 174, 0.1)';
+                                    e.currentTarget.style.background = isDarkMode ? darkRowBackground : 'rgba(255, 255, 255, 0.9)';
+                                    e.currentTarget.style.borderColor = isDarkMode ? darkSlotBorder : 'rgba(2, 69, 174, 0.1)';
                                   }
                                 }}
                                 title={penalty ? penalty.reason : undefined}
@@ -1201,7 +1363,8 @@ const SchedulePage = () => {
                           );
                         })}
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1275,10 +1438,20 @@ const SchedulePage = () => {
               flexWrap: 'wrap'
             }}>
               {[
-                { label: 'Available', color: 'rgba(255, 255, 255, 0.9)', textColor: '#64748b', border: '1px solid rgba(2, 69, 174, 0.1)' },
+                {
+                  label: 'Available',
+                  color: isDarkMode ? darkSlotBackground : 'rgba(255, 255, 255, 0.9)',
+                  textColor: isDarkMode ? textMuted : '#64748b',
+                  border: isDarkMode ? `1px solid ${darkSlotBorder}` : '1px solid rgba(2, 69, 174, 0.1)'
+                },
                 { label: 'Selected', color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', textColor: '#fff' },
                 { label: 'Your Open Slots', color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', textColor: '#fff' },
-                { label: 'Past/Unavailable', color: 'rgba(203, 213, 225, 0.5)', textColor: '#94a3b8', border: 'none' }
+                {
+                  label: 'Past/Unavailable',
+                  color: isDarkMode ? darkSlotPastBackground : 'rgba(203, 213, 225, 0.5)',
+                  textColor: '#94a3b8',
+                  border: isDarkMode ? `1px solid ${darkSlotBorder}` : 'none'
+                }
               ].map((item) => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{

@@ -225,7 +225,16 @@ export class NotificationService {
   /**
    * Create booking notification for tutor
    */
-  async notifyNewBooking(tutorId: string, studentName: string, date: string, time: string, bookingId: string): Promise<Notification> {
+  async notifyNewBooking(
+    tutorId: string,
+    studentName: string,
+    date: string,
+    time: string,
+    bookingId: string,
+    studentId?: string,
+    slotDate?: string,
+    slotId?: string
+  ): Promise<Notification> {
     return this.createNotification({
       userId: tutorId,
       userType: 'tutor',
@@ -234,8 +243,10 @@ export class NotificationService {
       message: `${studentName} has booked a session on ${date} at ${time}`,
       data: {
         bookingId,
+        slotId,
+        studentId,
         studentName,
-        date,
+        date: slotDate || date,
         time,
         link: '/schedule'
       }

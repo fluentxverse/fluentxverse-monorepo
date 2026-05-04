@@ -12,6 +12,7 @@ import Notification from './routes/notification.route';
 import Inbox from './routes/inbox.route';
 import Ticket from './routes/ticket.route';
 import Lesson from './routes/lesson.route';
+import Proof from './routes/proof.route';
 import { categoryRoute } from './routes/category.route';
 import { mediaRoute } from './routes/media.route';
 import { analyticsRoute } from './routes/analytics.route';
@@ -284,6 +285,7 @@ const app = new Elysia({
   .use(Inbox)
   .use(Ticket)
   .use(Lesson)
+  .use(Proof)
   .use(lessonMaterialRoutes)
   .use(dispatchRoutes)
   .use(youngLearnersRoute)

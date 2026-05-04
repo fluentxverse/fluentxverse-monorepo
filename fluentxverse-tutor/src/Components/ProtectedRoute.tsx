@@ -4,7 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import LoadingSpinner from './LoadingSpinner';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
-import { getExamStatus, getSpeakingExamStatus } from '../api/exam.api';
+import { proofApi } from '../api/proof.api';
 
 interface ProtectedRouteProps {
   Component: any;
@@ -65,15 +65,10 @@ export const CertifiedRoute = ({ Component }: CertifiedRouteProps): JSX.Element 
       }
       
       try {
-        const [writtenRes, speakingRes] = await Promise.all([
-          getExamStatus(user.userId),
-          getSpeakingExamStatus(user.userId),
-        ]);
-        
-        const writtenPassed = writtenRes.success && writtenRes.status?.passed === true;
-        const speakingPassed = speakingRes.success && speakingRes.status?.passed === true;
-        
-        if (writtenPassed && speakingPassed) {
+        const certification = await proofApi.getTutorCertificationStatus();
+        const hasAllRequirements = certification.snapshot.missingRequirements.length === 0;
+
+        if (hasAllRequirements) {
           setIsCertified(true);
         } else {
           // Redirect to home with message

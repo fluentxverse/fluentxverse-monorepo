@@ -1,5 +1,6 @@
-import { Agent } from "@mastra/core/agent";
+import { createAgent } from "../agentFactory";
 import { getDriver } from "../../db/memgraph";
+import { tryIssueAndMaybeSubmitTutorCertificationProof } from "../proof.services/tutorCertificationWorkflow.service";
 import type {
   ComprehensionPassage,
   ExamQuestion,
@@ -24,7 +25,7 @@ export type {
 // AI AGENT FOR EXAM GENERATION
 // ============================================================================
 
-const examGeneratorAgent = new Agent({
+const examGeneratorAgent = createAgent({
   name: "Written Exam Generator",
   instructions: `You are an expert ESL (English as a Second Language) exam creator for FluentXVerse.
 
@@ -419,6 +420,8 @@ export const gradeExam = async (
           percentage: examResult.percentage,
         }
       );
+
+      void tryIssueAndMaybeSubmitTutorCertificationProof(tutorId, "written_exam_passed");
     }
 
     return examResult;

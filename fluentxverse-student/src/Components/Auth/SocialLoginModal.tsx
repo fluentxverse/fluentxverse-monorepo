@@ -119,7 +119,7 @@ export function SocialLoginModal({ isOpen, onClose, onSuccess, onNeedsRegistrati
         {/* Header */}
         <div className="modal-header">
           <div className="modal-logo">
-            <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" />
+            <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" />
           </div>
           <div className="modal-brand-text">Fluent<span className="brand-x">X</span>Verse</div>
         </div>

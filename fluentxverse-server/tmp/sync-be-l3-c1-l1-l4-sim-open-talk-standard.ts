@@ -72,7 +72,7 @@ async function main() {
         chapterName: lesson.chapterName || source.chapterName,
         lessonName: lesson.lessonName || source.lessonName,
         goalTextEn: lesson.goalTextEn || source.goalTextEn,
-        goalTextKr: lesson.goalTextJp || lesson.goalTextKr || source.goalTextKr,
+        goalTextKr: lesson.goalTextJp || source.goalTextKr,
         beData,
       };
 

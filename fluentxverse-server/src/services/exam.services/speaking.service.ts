@@ -1,5 +1,6 @@
-import { Agent } from "@mastra/core/agent";
+import { createAgent } from "../agentFactory";
 import { getDriver } from "../../db/memgraph";
+import { tryIssueAndMaybeSubmitTutorCertificationProof } from "../proof.services/tutorCertificationWorkflow.service";
 import type {
   SpeakingExam,
   SpeakingTask,
@@ -41,7 +42,7 @@ const MAX_ATTEMPTS_PER_MONTH = 2;
 /**
  * Agent for generating unique speaking exam tasks
  */
-const speakingExamGeneratorAgent = new Agent({
+const speakingExamGeneratorAgent = createAgent({
   name: "Speaking Exam Generator",
   instructions: `You are an expert ESL speaking exam creator for FluentXVerse tutor certification.
 
@@ -132,7 +133,7 @@ Return ONLY valid JSON in this EXACT format:
 /**
  * Agent for grading speaking responses using transcriptions
  */
-const speakingGraderAgent = new Agent({
+const speakingGraderAgent = createAgent({
   name: "Speaking Exam Grader",
   instructions: `You are an expert ESL speaking evaluator for FluentXVerse.
 
@@ -727,6 +728,8 @@ export const gradeSpeakingExam = async (
           score: examResult.overallScore,
         }
       );
+
+      void tryIssueAndMaybeSubmitTutorCertificationProof(tutorId, "speaking_exam_passed");
     }
 
     return examResult;

@@ -12,7 +12,45 @@ import { useAuthContext } from '../context/AuthContext';
 import VideoPlayer from '../Components/Common/VideoPlayer';
 import { Toast, useToast } from '../Components/Common/Toast';
 import { getTicketBalance } from '../services/ticket.service';
+import { API_BASE_URL } from '../config/api';
 import './TutorProfilePage.css';
+
+const getZkProfileBadge = (tutor: TutorProfile) => {
+  if (!tutor.zkCertificationStatus) return null;
+
+  const labels: Partial<Record<NonNullable<TutorProfile['zkCertificationStatus']>, string>> = {
+    local_proof_generated: 'ZK Proof Ready',
+    submitted: 'zkVerify Pending',
+    verified: 'ZK Verified',
+  };
+  const label = labels[tutor.zkCertificationStatus];
+  if (!label) return null;
+
+  const className = `zk-proof-badge zk-proof-badge--${tutor.zkCertificationStatus}`;
+  const icon = tutor.zkCertificationStatus === 'verified' ? 'fi-sr-shield-check' : 'fi-sr-shield';
+
+  if (!tutor.zkCredentialCommitment) {
+    return (
+      <span className={className}>
+        <i className={icon}></i>
+        <span>{label}</span>
+      </span>
+    );
+  }
+
+  return (
+    <a
+      className={className}
+      href={`${API_BASE_URL}/proof/tutor-certification/public/${encodeURIComponent(tutor.zkCredentialCommitment)}`}
+      target="_blank"
+      rel="noreferrer"
+      title="View public certification proof"
+    >
+      <i className={icon}></i>
+      <span>{label}</span>
+    </a>
+  );
+};
 
 export const TutorProfilePage = () => {
   const { user } = useAuthContext();
@@ -382,6 +420,7 @@ export const TutorProfilePage = () => {
                         <span>Verified</span>
                       </div>
                     )}
+                    {getZkProfileBadge(tutor)}
                   </div>
 
                   {/* Languages & Country */}

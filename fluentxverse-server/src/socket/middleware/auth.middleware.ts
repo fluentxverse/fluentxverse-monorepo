@@ -20,7 +20,7 @@ export const authMiddleware = async (
     let authPayload: JwtAuthPayload | null = null;
 
     // Try to verify JWT token from handshake.auth
-    if (tokenFromAuth) {
+    if (tokenFromAuth && tokenFromAuth.includes('.')) {
       authPayload = await verifyAuthToken(tokenFromAuth);
       if (authPayload) {
       }

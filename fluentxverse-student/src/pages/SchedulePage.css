@@ -715,6 +715,53 @@
   color: #64748b;
 }
 
+[data-theme='dark'] .cancel-notification,
+.dark-mode .cancel-notification {
+  background: #202020;
+  color: #f3f4f6;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-left: 4px solid #94a3b8;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .cancel-notification.refunded,
+.dark-mode .cancel-notification.refunded {
+  border-left-color: #34d399;
+}
+
+[data-theme='dark'] .cancel-notification span:not(.refund-badge),
+.dark-mode .cancel-notification span:not(.refund-badge) {
+  color: #e5e7eb;
+}
+
+[data-theme='dark'] .cancel-notification i,
+.dark-mode .cancel-notification i {
+  color: #cbd5e1;
+}
+
+[data-theme='dark'] .cancel-notification.refunded i,
+.dark-mode .cancel-notification.refunded i {
+  color: #34d399;
+}
+
+[data-theme='dark'] .cancel-notification .refund-badge,
+.dark-mode .cancel-notification .refund-badge {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  color: #062c20;
+  border: 1px solid rgba(110, 231, 183, 0.45);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.18), 0 6px 16px rgba(16, 185, 129, 0.18);
+}
+
+[data-theme='dark'] .notification-close,
+.dark-mode .notification-close {
+  color: #34d399;
+}
+
+[data-theme='dark'] .notification-close:hover,
+.dark-mode .notification-close:hover {
+  color: #6ee7b7;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -1048,6 +1095,14 @@
   -webkit-text-fill-color: currentColor;
 }
 
+[data-theme='dark'] .schedule-card-date .date-day,
+[data-theme='dark'] .schedule-card-date .date-month,
+.dark-mode .schedule-card-date .date-day,
+.dark-mode .schedule-card-date .date-month {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
 [data-theme='dark'] .schedule-subtitle,
 [data-theme='dark'] .lesson-detail,
 [data-theme='dark'] .schedule-loading p,
@@ -1085,4 +1140,82 @@
 .dark-mode .schedule-error {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.2);
+}
+
+[data-theme='dark'] .cancel-modal-overlay,
+.dark-mode .cancel-modal-overlay {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+[data-theme='dark'] .cancel-modal-header,
+[data-theme='dark'] .cancel-modal-footer,
+.dark-mode .cancel-modal-header,
+.dark-mode .cancel-modal-footer {
+  border-color: var(--fxv-border, rgba(255, 255, 255, 0.09));
+}
+
+[data-theme='dark'] .cancel-modal-header h3,
+[data-theme='dark'] .cancel-lesson-details h4,
+[data-theme='dark'] .refund-notice strong,
+.dark-mode .cancel-modal-header h3,
+.dark-mode .cancel-lesson-details h4,
+.dark-mode .refund-notice strong {
+  color: var(--fxv-text, #f3f4f6);
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .modal-close-btn,
+.dark-mode .modal-close-btn {
+  color: var(--fxv-text-muted, #a3a3a3);
+}
+
+[data-theme='dark'] .modal-close-btn:hover,
+.dark-mode .modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fxv-text, #f3f4f6);
+}
+
+[data-theme='dark'] .cancel-lesson-info,
+.dark-mode .cancel-lesson-info {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--fxv-border, rgba(255, 255, 255, 0.09));
+}
+
+[data-theme='dark'] .cancel-lesson-details p,
+[data-theme='dark'] .refund-notice p,
+[data-theme='dark'] .cancel-warning,
+.dark-mode .cancel-lesson-details p,
+.dark-mode .refund-notice p,
+.dark-mode .cancel-warning {
+  color: var(--fxv-text-muted, #a3a3a3);
+}
+
+[data-theme='dark'] .cancel-lesson-details p i,
+.dark-mode .cancel-lesson-details p i {
+  color: var(--fxv-accent-strong, #60a5fa);
+}
+
+[data-theme='dark'] .refund-notice.eligible,
+.dark-mode .refund-notice.eligible {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.32);
+}
+
+[data-theme='dark'] .refund-notice.not-eligible,
+.dark-mode .refund-notice.not-eligible {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+[data-theme='dark'] .cancel-modal-btn.secondary,
+.dark-mode .cancel-modal-btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fxv-text, #f3f4f6);
+  border: 1px solid var(--fxv-border, rgba(255, 255, 255, 0.09));
+}
+
+[data-theme='dark'] .cancel-modal-btn.secondary:hover,
+.dark-mode .cancel-modal-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }

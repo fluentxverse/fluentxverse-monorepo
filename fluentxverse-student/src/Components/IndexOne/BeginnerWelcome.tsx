@@ -135,7 +135,7 @@ const BeginnerWelcome = () => {
 
         <div className="beginner-welcome__visual" aria-label="Featured FluentXVerse lesson card">
           <div className="beginner-welcome__card">
-            <img src="/assets/img/banner/banner_woman.png" alt="" />
+            <img src="/assets/img/banner/banner_woman.webp" alt="" />
             <div className="beginner-welcome__card-shade" />
             <div className="beginner-welcome__card-copy">
               <h3>Private Lessons</h3>

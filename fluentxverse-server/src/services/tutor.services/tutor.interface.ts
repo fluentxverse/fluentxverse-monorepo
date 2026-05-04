@@ -22,6 +22,11 @@ export interface Tutor {
   timezone?: string;
   isVerified?: boolean;
   joinedDate?: string;
+  zkCertificationStatus?: string;
+  zkCredentialCommitment?: string;
+  zkCircuitVersion?: string;
+  zkVerifiedAt?: string;
+  zkVerifyTxHash?: string;
 }
 
 export interface TutorProfile extends Tutor {
