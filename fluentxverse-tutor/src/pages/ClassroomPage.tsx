@@ -1060,10 +1060,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   
   // Course definitions
   const courses = [
-    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', description: 'Dialogue practice and speaking prompts' },
-    { id: 'business-english', name: 'Business English', icon: '💼', description: 'Meetings, workplace language, and email tone' },
-    { id: 'young-learners', name: 'Young Learners', icon: '🎨', description: 'Playful lessons for younger students' },
-    { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰', description: 'Current-events articles for discussion practice' },
+    { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', description: 'Conversation lessons for practical speaking practice.' },
+    { id: 'business-english', name: 'Business English', icon: '💼', description: 'Workplace English lessons and professional scenarios.' },
+    { id: 'young-learners', name: 'Young Learners', icon: '🎨', description: 'Visual lessons designed for younger students.' },
+    { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰', description: 'News-based reading and discussion material.' },
   ];
   const isLessonMaterialCourse = (courseId?: string | null) =>
     courseId === 'conversational-skills' || courseId === 'business-english';
@@ -1171,15 +1171,26 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   };
 
   const selectedCourseOption = courses.find(course => course.id === selectedCourse) || null;
-  const selectedMaterialHref = studentLessonRequest
-    ? studentLessonRequest.courseId === 'business-english'
-      ? `/materials/business-english/${studentLessonRequest.lessonId}`
-      : studentLessonRequest.courseId === 'conversational-skills'
-        ? `/materials/conversational-skills/${studentLessonRequest.lessonId}`
-        : studentLessonRequest.courseId === 'young-learners'
-          ? `/materials/young-learners/lesson/${studentLessonRequest.lessonId}`
-          : `/lesson/view?id=${studentLessonRequest.lessonId}`
-    : '#';
+  const requestedCourseLabel = studentLessonRequest
+    ? courses.find(course => course.id === studentLessonRequest.courseId)?.name || 'Lesson Material'
+    : 'Not selected';
+  const previousLessonLabel = studentLessonRequest && studentLessonRequest.lessonNumber > 1
+    ? `Lesson ${studentLessonRequest.lessonNumber - 1}`
+    : 'No previous lesson';
+  const cameraPreference = studentLessonRequest?.studentPreferences?.cameraOn === false ? 'Off' : 'On';
+  const proficiencyPreference = studentLessonRequest?.studentPreferences?.proficiency || 'Not set';
+  const correctionPreference =
+    studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively'
+      ? 'Correct proactively'
+      : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
+        ? 'Save for feedback'
+        : 'Tutor decides';
+  const correctionPreferenceNote =
+    studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively'
+      ? 'Student prefers support during class.'
+      : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
+        ? 'Student prefers review near the end.'
+        : 'No strong correction preference was shared.';
   const activeMaterialCourseId = !showLessonRequest ? studentLessonRequest?.courseId || '' : '';
   const isViewingBusinessEnglishMaterial =
     activeMaterialCourseId === 'business-english' && !showLessonRequest;
@@ -2005,6 +2016,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const selectedBusinessLesson = selectedLessonId
     ? filteredLessons.find(lesson => lesson.id === selectedLessonId) || null
     : null;
+  const currentMaterialTitle = studentLessonRequest?.title || 'No material selected yet';
+  const currentMaterialMeta = studentLessonRequest
+    ? `Lesson ${studentLessonRequest.lessonNumber}`
+    : 'Awaiting student selection';
+  const hasCurrentMaterial = Boolean(studentLessonRequest?.lessonId);
   const selectedLessonSummary = selectedBusinessLesson
     ? selectedBusinessLesson.lessonData?.header?.goalText || selectedBusinessLesson.title
     : filteredLessons.length > 0
@@ -2013,6 +2029,37 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         ? 'Choose a chapter first'
         : 'No lessons available yet';
   const showSelectedCourseDetails = Boolean(selectedCourse) && !isCourseDropdownOpen;
+
+  const handleOpenCurrentMaterial = async () => {
+    if (!studentLessonRequest?.lessonId) return;
+
+    setViewingDispatchArticle(null);
+    setViewingConversationalLesson(null);
+    setConversationalViewUrl(null);
+
+    if (studentLessonRequest.courseId === 'business-english') {
+      setLoadingViewUrl(false);
+      setLessonViewUrl(`/materials/business-english/${studentLessonRequest.lessonId}`);
+      setShowLessonRequest(false);
+      void prefetchBusinessEnglishLesson(studentLessonRequest.lessonId);
+      return;
+    }
+
+    setLoadingViewUrl(true);
+    setShowLessonRequest(false);
+
+    try {
+      const nextViewUrl = await resolveTutorMaterialViewUrl(
+        studentLessonRequest.courseId,
+        studentLessonRequest.lessonId,
+      );
+      setLessonViewUrl(nextViewUrl);
+    } catch (err) {
+      console.error('Failed to open current material:', err);
+    } finally {
+      setLoadingViewUrl(false);
+    }
+  };
 
   // Handle selecting a new material (for tutor to override)
   const handleApplyMaterial = async () => {
@@ -2147,7 +2194,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     toggleAudio,
     toggleVideo,
     cleanup
-  } = useWebRTC({ remoteUserId: studentInfo?.id });
+  } = useWebRTC({ remoteUserId: studentInfo?.id, socket: socketInstance });
+  const localHasVideo = Boolean(localStream?.getVideoTracks().some(track => track.readyState === 'live'));
+  const remoteHasVideo = Boolean(remoteStream?.getVideoTracks().some(track => track.readyState === 'live'));
 
   // Mock student data (will be replaced with real data)
   const studentData = studentInfo || {
@@ -2494,10 +2543,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               playsInline 
               muted={!audioEnabled}
               className="remote-video"
-              style={{ display: isSwapped && remoteStream ? 'block' : 'none' }}
+              style={{ display: isSwapped && remoteHasVideo ? 'block' : 'none' }}
             />
             {/* Remote placeholder in main (visible when swapped and no stream) */}
-            {isSwapped && !remoteStream && (
+            {isSwapped && !remoteHasVideo && (
               <div className="video-placeholder student-video">
                 <div className="video-avatar-large">{studentData.initials}</div>
                 <span className="video-name">{studentData.name}</span>
@@ -2511,16 +2560,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               autoPlay 
               playsInline 
               className="local-video" 
-              style={{ display: !isSwapped && !isVideoOff ? 'block' : 'none' }}
+              style={{ display: !isSwapped && !isVideoOff && localHasVideo ? 'block' : 'none' }}
             />
             {/* Speaking indicator for local in main */}
-            {!isSwapped && !isVideoOff && (
+            {!isSwapped && !isVideoOff && localHasVideo && (
               <div className={`mic-indicator mic-large ${isSpeakingLocal ? 'active' : ''}`}> 
                 <div className="mic-dot" />
               </div>
             )}
             {/* Local placeholder in main (visible when not swapped and video off) */}
-            {!isSwapped && isVideoOff && (
+            {!isSwapped && (isVideoOff || !localHasVideo) && (
               <div className="video-placeholder tutor-video">
                 <div className="video-avatar-large">
                   {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
@@ -2539,17 +2588,17 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               autoPlay 
               playsInline 
               className="local-video-small" 
-              style={{ display: isSwapped && !isVideoOff ? 'block' : 'none' }}
+              style={{ display: isSwapped && !isVideoOff && localHasVideo ? 'block' : 'none' }}
               ref={localPipRef}
             />
             {/* Speaking indicator for local in PiP */}
-            {isSwapped && !isVideoOff && (
+            {isSwapped && !isVideoOff && localHasVideo && (
               <div className={`mic-indicator ${isSpeakingLocal ? 'active' : ''}`}>
                 <div className="mic-dot" />
               </div>
             )}
             {/* Local placeholder in PiP (visible when swapped and video off) */}
-            {isSwapped && isVideoOff && (
+            {isSwapped && (isVideoOff || !localHasVideo) && (
               <div className="video-placeholder tutor-video">
                 <div className="video-avatar-small">
                   {user?.firstName?.charAt(0) || 'T'}{user?.lastName?.charAt(0) || ''}
@@ -2570,10 +2619,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   el.play().catch(() => {});
                 }
               }}
-              style={{ display: !isSwapped && remoteStream ? 'block' : 'none' }}
+              style={{ display: !isSwapped && remoteHasVideo ? 'block' : 'none' }}
             />
             {/* Remote placeholder in PiP (visible when not swapped and no stream) */}
-            {!isSwapped && !remoteStream && (
+            {!isSwapped && !remoteHasVideo && (
               <div className="video-placeholder student-video">
                 <div className="video-avatar-small">{studentData.initials}</div>
               </div>
@@ -2884,94 +2933,95 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 <div className="lesson-request-body">
                   <div className="lesson-request-content">
                     <div className="lesson-request-details">
-                      <div className="request-intro-block">
-                        <span className="request-eyebrow">Student brief</span>
-                        <p className="request-intro">Student's lesson request details below.</p>
-                      </div>
-                      
-                      {studentLessonRequest ? (
-                        <>
-                          <div className="request-detail-grid">
-                            <div className="request-detail-card request-detail-card--primary">
-                              <span className="request-detail-label">Selected material</span>
-                              <a 
-                                href={selectedMaterialHref}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="request-link"
-                              >
-                                {studentLessonRequest.title}
-                              </a>
-                              <span className="request-detail-meta">Open lesson in a new tab</span>
-                            </div>
-
-                            <div className="request-detail-card request-detail-card--compact">
-                              <span className="request-detail-label">Lesson number</span>
-                              <span className="request-detail-value">Lesson {studentLessonRequest.lessonNumber}</span>
-                            </div>
-                          </div>
-
-                        </>
-                      ) : (
-                        <div className="request-empty-state">
-                          <div className="request-empty-icon">
-                            <i className="fas fa-book-open" />
-                          </div>
-                          <div className="request-empty-copy">
-                            <p className="request-empty-title">No material selected yet</p>
-                            <p className="request-empty-description">
-                              You can still choose a lesson below and guide the student from the classroom.
-                            </p>
-                          </div>
+                      <div className="request-material-summary">
+                        <div className="request-material-heading">
+                          <span className="request-eyebrow">Student brief</span>
+                          <span className="request-course-pill">{requestedCourseLabel}</span>
                         </div>
-                      )}
+
+                        <div className="request-summary-grid">
+                          <div className="request-stat-card">
+                            <span className="request-detail-label">Previous lesson</span>
+                            <span className="request-detail-value request-detail-value--text">{previousLessonLabel}</span>
+                            <span className="request-detail-meta">
+                              {studentLessonRequest && studentLessonRequest.lessonNumber > 1
+                                ? 'Most recent sequence before this request'
+                                : 'This is the first lesson in the sequence'}
+                            </span>
+                          </div>
+
+                          <div className="request-stat-card">
+                            <span className="request-detail-label">Current course</span>
+                            <span className="request-detail-value request-detail-value--text">{requestedCourseLabel}</span>
+                            <span className="request-detail-meta">
+                              {studentLessonRequest ? 'Course library selected by student' : 'Awaiting student selection'}
+                            </span>
+                          </div>
+
+                          <div className="request-stat-card request-stat-card--wide">
+                            <span className="request-detail-label">Current material chosen</span>
+                            <button
+                              type="button"
+                              className="request-link request-link--material"
+                              onClick={handleOpenCurrentMaterial}
+                              disabled={!hasCurrentMaterial}
+                            >
+                              {currentMaterialTitle}
+                            </button>
+                            <span className="request-detail-meta">{currentMaterialMeta}</span>
+                          </div>
+
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="student-preferences-sidebar">
                       <div className="student-preferences-header">
                         <span className="preference-kicker">Student setup</span>
-                        <h4 className="preference-panel-title">Teaching preferences</h4>
+                        <h4 className="preference-panel-title">Teaching cues</h4>
                       </div>
 
-                      <div className="preference-card-grid">
-                        <div className="preference-card preference-card--camera">
-                          <span className="preference-card-label">Camera</span>
-                          <p className="preference-card-value">
-                            {studentLessonRequest?.studentPreferences?.cameraOn !== false ? 'On' : 'Off'}
-                          </p>
-                          <span className="preference-card-note">Use this as your default video setup.</span>
+                      <div className="preference-list">
+                        <div className="preference-row preference-row--camera">
+                          <span className="preference-row-icon" aria-hidden="true">
+                            <i className="fas fa-video"></i>
+                          </span>
+                          <span className="preference-row-copy">
+                            <span className="preference-card-label">Camera</span>
+                            <span className="preference-card-value">{cameraPreference}</span>
+                          </span>
                         </div>
 
-                        <div className="preference-card preference-card--proficiency">
-                          <span className="preference-card-label">Proficiency</span>
-                          <p className="preference-card-value">
-                            {studentLessonRequest?.studentPreferences?.proficiency || 'Not set'}
-                          </p>
-                          <span className="preference-card-note">Helpful for pacing and vocabulary choices.</span>
+                        <div className="preference-row preference-row--proficiency">
+                          <span className="preference-row-icon" aria-hidden="true">
+                            <i className="fas fa-signal"></i>
+                          </span>
+                          <span className="preference-row-copy">
+                            <span className="preference-card-label">Proficiency</span>
+                            <span className="preference-card-value">{proficiencyPreference}</span>
+                          </span>
                         </div>
 
-                        <div className="preference-card preference-card--correction">
-                          <span className="preference-card-label">Error correction</span>
-                          <p className="preference-card-value">
-                            {studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively' 
-                              ? 'Correct proactively'
-                              : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
-                              ? 'Save for feedback'
-                              : 'Tutor decides'}
-                          </p>
-                          <span className="preference-card-note">
-                            {studentLessonRequest?.studentPreferences?.errorCorrection === 'proactively' 
-                              ? 'Student prefers immediate support during class.'
-                              : studentLessonRequest?.studentPreferences?.errorCorrection === 'during_feedback'
-                              ? 'Student prefers review during feedback time.'
-                              : 'No strong preference was shared.'}
+                        <div className="preference-row preference-row--correction">
+                          <span className="preference-row-icon" aria-hidden="true">
+                            <i className="fas fa-comment-dots"></i>
+                          </span>
+                          <span className="preference-row-copy">
+                            <span className="preference-card-label">Error correction</span>
+                            <span className="preference-card-value">{correctionPreference}</span>
+                            <span className="preference-card-note">{correctionPreferenceNote}</span>
                           </span>
                         </div>
 
                         {studentLessonRequest?.studentPreferences?.otherRequests && (
-                          <div className="preference-card preference-card--wide preference-card--other">
-                            <span className="preference-card-label">Other request</span>
-                            <p className="preference-card-value">{studentLessonRequest.studentPreferences.otherRequests}</p>
+                          <div className="preference-row preference-row--other">
+                            <span className="preference-row-icon" aria-hidden="true">
+                              <i className="fas fa-sticky-note"></i>
+                            </span>
+                            <span className="preference-row-copy">
+                              <span className="preference-card-label">Other request</span>
+                              <span className="preference-card-value">{studentLessonRequest.studentPreferences.otherRequests}</span>
+                            </span>
                           </div>
                         )}
                       </div>
@@ -2999,6 +3049,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   )}
                 </div>
                 <div className="material-selector-body">
+                  <div className="material-selector-layout">
+                    <div className="material-selector-primary">
                   {/* Course Selector */}
                   <div className="material-selector-row material-selector-row--course">
                     <div className="material-selector-field">
@@ -3074,6 +3126,22 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                       </div>
                     </div>
                   </div>
+                    </div>
+
+                    <div className="material-selector-secondary">
+                {!selectedCourse && (
+                  <div className="material-selector-empty-panel">
+                    <div className="material-selector-empty-icon">
+                      <i className="fas fa-arrow-left"></i>
+                    </div>
+                    <div>
+                      <p className="material-selector-empty-title">Choose a course to begin</p>
+                      <p className="material-selector-empty-copy">
+                        After choosing a library, the available levels, chapters, and lessons appear here.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Daily Dispatch Card - shows when Daily Dispatch is selected */}
                 {showSelectedCourseDetails && selectedCourse === 'daily-dispatch' && (
@@ -3583,6 +3651,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                     </button>
                   </div>
                 )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

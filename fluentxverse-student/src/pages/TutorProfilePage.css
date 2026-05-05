@@ -221,7 +221,7 @@
   font-weight: 800;
   color: #0f172a;
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: 0;
   background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1574,4 +1574,265 @@
   background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
   color: #fff;
   border-color: transparent;
+}
+
+[data-theme='dark'] .tutor-profile-page,
+.dark-mode .tutor-profile-page {
+  background: #1a1a1a;
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .profile-hero,
+[data-theme='dark'] .profile-booking-card,
+[data-theme='dark'] .profile-tabs,
+[data-theme='dark'] .profile-content,
+[data-theme='dark'] .schedule-grid,
+[data-theme='dark'] .reviews-overview,
+[data-theme='dark'] .reviews-list-placeholder,
+[data-theme='dark'] .experience-item,
+[data-theme='dark'] .teaching-style,
+[data-theme='dark'] .specialization-card,
+.dark-mode .profile-hero,
+.dark-mode .profile-booking-card,
+.dark-mode .profile-tabs,
+.dark-mode .profile-content,
+.dark-mode .schedule-grid,
+.dark-mode .reviews-overview,
+.dark-mode .reviews-list-placeholder,
+.dark-mode .experience-item,
+.dark-mode .teaching-style,
+.dark-mode .specialization-card {
+  background: #202020;
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme='dark'] .booking-card-price,
+[data-theme='dark'] .booking-card-header,
+.dark-mode .booking-card-price,
+.dark-mode .booking-card-header {
+  background: rgba(255, 255, 255, 0.035);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .profile-name,
+[data-theme='dark'] .booking-card-title,
+[data-theme='dark'] .section-title,
+[data-theme='dark'] .video-section-title,
+[data-theme='dark'] .rating-score,
+[data-theme='dark'] .stat-value,
+[data-theme='dark'] .education-row strong,
+[data-theme='dark'] .experience-details strong,
+[data-theme='dark'] .teaching-style h3,
+[data-theme='dark'] .credentials-group h3,
+.dark-mode .profile-name,
+.dark-mode .booking-card-title,
+.dark-mode .section-title,
+.dark-mode .video-section-title,
+.dark-mode .rating-score,
+.dark-mode .stat-value,
+.dark-mode .education-row strong,
+.dark-mode .experience-details strong,
+.dark-mode .teaching-style h3,
+.dark-mode .credentials-group h3 {
+  color: #f3f4f6;
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .profile-bio-short,
+[data-theme='dark'] .meta-item,
+[data-theme='dark'] .rating-count,
+[data-theme='dark'] .stat-label,
+[data-theme='dark'] .booking-card-subtitle,
+[data-theme='dark'] .price-label,
+[data-theme='dark'] .price-unit,
+[data-theme='dark'] .booking-card-loading,
+[data-theme='dark'] .feature-item,
+[data-theme='dark'] .booking-note,
+[data-theme='dark'] .section-content,
+[data-theme='dark'] .section-content p,
+[data-theme='dark'] .education-label,
+[data-theme='dark'] .experience-details span,
+[data-theme='dark'] .teaching-style p,
+[data-theme='dark'] .timezone-note,
+[data-theme='dark'] .schedule-placeholder,
+[data-theme='dark'] .no-reviews,
+[data-theme='dark'] .reviews-list-placeholder,
+.dark-mode .profile-bio-short,
+.dark-mode .meta-item,
+.dark-mode .rating-count,
+.dark-mode .stat-label,
+.dark-mode .booking-card-subtitle,
+.dark-mode .price-label,
+.dark-mode .price-unit,
+.dark-mode .booking-card-loading,
+.dark-mode .feature-item,
+.dark-mode .booking-note,
+.dark-mode .section-content,
+.dark-mode .section-content p,
+.dark-mode .education-label,
+.dark-mode .experience-details span,
+.dark-mode .teaching-style p,
+.dark-mode .timezone-note,
+.dark-mode .schedule-placeholder,
+.dark-mode .no-reviews,
+.dark-mode .reviews-list-placeholder {
+  color: #a3a3a3;
+  -webkit-text-fill-color: currentColor;
+}
+
+[data-theme='dark'] .price-value,
+[data-theme='dark'] .rating-big,
+.dark-mode .price-value,
+.dark-mode .rating-big {
+  color: #f8fbff;
+  background: none;
+  -webkit-text-fill-color: #f8fbff;
+}
+
+[data-theme='dark'] .section-title,
+.dark-mode .section-title {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .section-title i,
+[data-theme='dark'] .video-section-title i,
+[data-theme='dark'] .meta-item i,
+[data-theme='dark'] .education-row > i,
+[data-theme='dark'] .education-details > i,
+[data-theme='dark'] .booking-note i,
+.dark-mode .section-title i,
+.dark-mode .video-section-title i,
+.dark-mode .meta-item i,
+.dark-mode .education-row > i,
+.dark-mode .education-details > i,
+.dark-mode .booking-note i {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+}
+
+[data-theme='dark'] .profile-avatar-large,
+.dark-mode .profile-avatar-large {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.35),
+    0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .profile-avatar-wrapper:hover .profile-avatar-large,
+.dark-mode .profile-avatar-wrapper:hover .profile-avatar-large {
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.42),
+    0 0 0 4px rgba(96, 165, 250, 0.16);
+}
+
+[data-theme='dark'] .btn-favorite-star,
+[data-theme='dark'] .tab-btn,
+[data-theme='dark'] .period-tab,
+[data-theme='dark'] .slot,
+[data-theme='dark'] .btn-message,
+[data-theme='dark'] .btn-add-favorite,
+.dark-mode .btn-favorite-star,
+.dark-mode .tab-btn,
+.dark-mode .period-tab,
+.dark-mode .slot,
+.dark-mode .btn-message,
+.dark-mode .btn-add-favorite {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.09);
+  color: #e5e7eb;
+}
+
+[data-theme='dark'] .tab-btn:hover,
+[data-theme='dark'] .period-tab:hover,
+[data-theme='dark'] .btn-message:hover,
+[data-theme='dark'] .btn-add-favorite:hover,
+.dark-mode .tab-btn:hover,
+.dark-mode .period-tab:hover,
+.dark-mode .btn-message:hover,
+.dark-mode .btn-add-favorite:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(96, 165, 250, 0.28);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .tab-btn.active,
+[data-theme='dark'] .period-tab.active,
+[data-theme='dark'] .btn-book-trial,
+[data-theme='dark'] .btn-buy-tickets,
+.dark-mode .tab-btn.active,
+.dark-mode .period-tab.active,
+.dark-mode .btn-book-trial,
+.dark-mode .btn-buy-tickets {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.24);
+}
+
+[data-theme='dark'] .tag,
+.dark-mode .tag {
+  background: rgba(96, 165, 250, 0.11);
+  border-color: rgba(96, 165, 250, 0.2);
+  color: #bfdbfe;
+}
+
+[data-theme='dark'] .tag-more,
+.dark-mode .tag-more {
+  background: rgba(255, 255, 255, 0.08);
+  color: #d1d5db;
+}
+
+[data-theme='dark'] .booking-features,
+.dark-mode .booking-features {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .feature-item i,
+.dark-mode .feature-item i {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.14);
+}
+
+[data-theme='dark'] .booking-note,
+.dark-mode .booking-note {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+[data-theme='dark'] .schedule-table thead th,
+[data-theme='dark'] .schedule-table .time-col,
+.dark-mode .schedule-table thead th,
+.dark-mode .schedule-table .time-col {
+  background: rgba(255, 255, 255, 0.055);
+  color: #d1d5db;
+}
+
+[data-theme='dark'] .schedule-table thead th:first-child,
+.dark-mode .schedule-table thead th:first-child {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .slot.disabled,
+.dark-mode .slot.disabled {
+  background: rgba(255, 255, 255, 0.035);
+  color: #737373;
+}
+
+[data-theme='dark'] .star-rating i.empty,
+.dark-mode .star-rating i.empty {
+  color: #525252;
+}
+
+[data-theme='dark'] .specialization-card:hover,
+.dark-mode .specialization-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(96, 165, 250, 0.32);
+}
+
+[data-theme='dark'] .credentials-list li,
+.dark-mode .credentials-list li {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }

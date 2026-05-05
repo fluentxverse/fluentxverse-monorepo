@@ -2,13 +2,13 @@
 
 /* Main content background fix */
 .main-content {
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  background: #f8fafc;
 }
 
 /* Container responsive padding */
 .home-page-container {
   padding: 40px 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  background: #f8fafc;
   min-height: 100vh;
 }
 

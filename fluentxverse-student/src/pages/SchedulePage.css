@@ -433,11 +433,13 @@
   min-width: 180px;
 }
 
-.tutor-name {
+.schedule-card-tutor-name {
   margin: 0 0 8px 0;
   font-size: 17px;
   font-weight: 800;
   color: #0f172a;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .lesson-details {
@@ -1085,11 +1087,11 @@
 
 [data-theme='dark'] .schedule-title,
 [data-theme='dark'] .schedule-card-date,
-[data-theme='dark'] .tutor-name,
+[data-theme='dark'] .schedule-card-tutor-name,
 [data-theme='dark'] .schedule-empty h3,
 .dark-mode .schedule-title,
 .dark-mode .schedule-card-date,
-.dark-mode .tutor-name,
+.dark-mode .schedule-card-tutor-name,
 .dark-mode .schedule-empty h3 {
   color: var(--fxv-text);
   -webkit-text-fill-color: currentColor;
@@ -1144,14 +1146,33 @@
 
 [data-theme='dark'] .cancel-modal-overlay,
 .dark-mode .cancel-modal-overlay {
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+[data-theme='dark'] .cancel-modal,
+.dark-mode .cancel-modal {
+  background: linear-gradient(180deg, #242424 0%, #202020 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
 }
 
 [data-theme='dark'] .cancel-modal-header,
 [data-theme='dark'] .cancel-modal-footer,
 .dark-mode .cancel-modal-header,
 .dark-mode .cancel-modal-footer {
-  border-color: var(--fxv-border, rgba(255, 255, 255, 0.09));
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .cancel-modal-header,
+.dark-mode .cancel-modal-header {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme='dark'] .cancel-modal-footer,
+.dark-mode .cancel-modal-footer {
+  background: rgba(0, 0, 0, 0.14);
 }
 
 [data-theme='dark'] .cancel-modal-header h3,
@@ -1177,8 +1198,9 @@
 
 [data-theme='dark'] .cancel-lesson-info,
 .dark-mode .cancel-lesson-info {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--fxv-border, rgba(255, 255, 255, 0.09));
+  background: #252525;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 [data-theme='dark'] .cancel-lesson-details p,
@@ -1187,7 +1209,7 @@
 .dark-mode .cancel-lesson-details p,
 .dark-mode .refund-notice p,
 .dark-mode .cancel-warning {
-  color: var(--fxv-text-muted, #a3a3a3);
+  color: #d1d5db;
 }
 
 [data-theme='dark'] .cancel-lesson-details p i,
@@ -1197,25 +1219,31 @@
 
 [data-theme='dark'] .refund-notice.eligible,
 .dark-mode .refund-notice.eligible {
-  background: rgba(16, 185, 129, 0.14);
-  border-color: rgba(16, 185, 129, 0.32);
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.34);
 }
 
 [data-theme='dark'] .refund-notice.not-eligible,
 .dark-mode .refund-notice.not-eligible {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.32);
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(251, 191, 36, 0.32);
 }
 
 [data-theme='dark'] .cancel-modal-btn.secondary,
 .dark-mode .cancel-modal-btn.secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: #2a2a2a;
   color: var(--fxv-text, #f3f4f6);
-  border: 1px solid var(--fxv-border, rgba(255, 255, 255, 0.09));
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 [data-theme='dark'] .cancel-modal-btn.secondary:hover,
 .dark-mode .cancel-modal-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #323232;
   color: #ffffff;
+}
+
+[data-theme='dark'] .cancel-modal-btn.danger,
+.dark-mode .cancel-modal-btn.danger {
+  background: linear-gradient(135deg, #dc2626 0%, #ff4d4d 100%);
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.22);
 }

@@ -231,7 +231,7 @@ const SchedulePage = () => {
           return {
             id: booking.bookingId,
             tutorId: booking.tutorId,
-            tutorName: booking.tutorName,
+            tutorName: booking.tutorName?.trim() || 'Tutor',
             tutorAvatar: booking.tutorAvatar,
             date: dateObj,
             dateStr: kstDate,
@@ -508,7 +508,7 @@ const SchedulePage = () => {
 
                     {/* Lesson Info */}
                     <div className="schedule-card-info">
-                      <h3 className="tutor-name">{lesson.tutorName}</h3>
+                      <h3 className="schedule-card-tutor-name">{lesson.tutorName}</h3>
                       <div className="lesson-details">
                         <div className="lesson-detail">
                           <i className="fas fa-calendar"></i>

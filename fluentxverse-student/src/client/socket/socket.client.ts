@@ -3,6 +3,7 @@ import type {
   ServerToClientEvents, 
   ClientToServerEvents 
 } from '../../types/socket.types';
+import { API_BASE_URL, getAuthToken } from '../../config/api';
 
 // Known production domains
 const PRODUCTION_DOMAINS = [
@@ -66,6 +67,11 @@ const resolveAuthToken = (token?: string) => {
     return token;
   }
 
+  const storedToken = getAuthToken();
+  if (storedToken) {
+    return storedToken;
+  }
+
   const authCookie = document.cookie
     .split('; ')
     .find(row => row.startsWith('studentAuth=') || row.startsWith('auth='))
@@ -75,27 +81,39 @@ const resolveAuthToken = (token?: string) => {
     return decodeURIComponent(authCookie);
   }
 
-  return JSON.stringify({
-    userId: `student-${Date.now()}`,
-    email: 'student@dev.local',
-    tier: 1
+  return undefined;
+};
+
+export const fetchSocketAuthToken = async (): Promise<string | undefined> => {
+  const response = await fetch(`${API_BASE_URL}/student/socket-token`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Cache-Control': 'no-store'
+    }
   });
+
+  if (!response.ok) {
+    return undefined;
+  }
+
+  const data = await response.json();
+  return data?.success && data?.token ? data.token : undefined;
 };
 
 export const initSocket = (token?: string): Socket<ServerToClientEvents, ClientToServerEvents> => {
   const authToken = resolveAuthToken(token);
 
   if (socket) {
-    socket.auth = { ...(socket.auth || {}), token: authToken };
+    socket.auth = authToken ? { ...(socket.auth || {}), token: authToken } : { ...(socket.auth || {}) };
     return socket;
   }
 
   socket = io(SOCKET_URL, {
     withCredentials: true,
     autoConnect: false,
-    auth: {
-      token: authToken
-    },
+    auth: authToken ? { token: authToken } : {},
     transports: ['websocket', 'polling'],
     rememberUpgrade: true,
     reconnection: true,

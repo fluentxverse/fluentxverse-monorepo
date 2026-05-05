@@ -81,7 +81,11 @@ export const authMiddleware = async (
 
     // Attach user data to socket
     socket.data.userId = authPayload.userId;
-    socket.data.userType = (authPayload.tier && authPayload.tier >= 2) ? 'tutor' : 'student';
+    socket.data.userType = authPayload.role === 'admin'
+      ? 'admin'
+      : authPayload.role === 'tutor'
+        ? 'tutor'
+        : 'student';
     socket.data.email = authPayload.email;
 
     next();

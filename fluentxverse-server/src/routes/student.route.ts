@@ -238,6 +238,42 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
+  .get('/student/socket-token', async ({ cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+
+      const payload = await verifyAuthToken(raw as string);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired token' };
+      }
+
+      const token = await signAuthToken({
+        userId: payload.userId,
+        email: payload.email,
+        familyName: payload.familyName ?? payload.lastName,
+        givenName: payload.givenName ?? payload.firstName,
+        mobileNumber: payload.mobileNumber,
+        tier: payload.tier,
+        role: payload.role || 'student',
+        walletAddress: payload.walletAddress
+      }, 10 * 60);
+
+      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      set.headers['Pragma'] = 'no-cache';
+      set.headers['Vary'] = 'Cookie';
+      return { success: true, token };
+    } catch (error: any) {
+      console.error('Error issuing student socket token:', error);
+      set.status = 401;
+      return { success: false, error: 'Invalid session' };
+    }
+  })
+
   .get('/student/me', async ({ cookie, set }) => {
     try {
       const raw = cookie.studentAuth?.value;

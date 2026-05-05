@@ -1287,11 +1287,14 @@ export class ScheduleService {
         const booking = record.get('b').properties;
         const slot = record.get('slot').properties;
         const tutor = record.get('tutor').properties;
+        const tutorFirstName = tutor.firstName || tutor.givenName || '';
+        const tutorLastName = tutor.lastName || tutor.familyName || '';
+        const tutorName = `${tutorFirstName} ${tutorLastName}`.trim() || 'Tutor';
         
         return {
           bookingId: booking.bookingId,
-          tutorId: tutor.id,
-          tutorName: `${tutor.givenName || ''} ${tutor.familyName || ''}`.trim(),
+          tutorId: tutor.userId || tutor.id,
+          tutorName,
           tutorAvatar: tutor.profilePicture,
           slotDate: slot.slotDate,
           slotTime: slot.slotTime,

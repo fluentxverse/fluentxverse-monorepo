@@ -3,12 +3,12 @@
   --fxv-accent: #0245ae;
   --fxv-accent-strong: #4a9eff;
   --fxv-accent-soft: rgba(2, 69, 174, 0.14);
-  --fxv-bg: #f4f8ff;
-  --fxv-bg-elevated: rgba(255, 255, 255, 0.92);
-  --fxv-surface: #ffffff;
-  --fxv-surface-muted: #f8fafc;
-  --fxv-surface-soft: #eef4ff;
-  --fxv-border: rgba(15, 23, 42, 0.08);
+  --fxv-bg: #e7edf6;
+  --fxv-bg-elevated: rgba(242, 246, 251, 0.94);
+  --fxv-surface: #f3f6fb;
+  --fxv-surface-muted: #eaf0f7;
+  --fxv-surface-soft: #dfe8f3;
+  --fxv-border: rgba(15, 23, 42, 0.11);
   --fxv-border-strong: rgba(2, 69, 174, 0.18);
   --fxv-text: #0f172a;
   --fxv-text-muted: #64748b;
@@ -20,7 +20,7 @@
   --card-background: var(--fxv-surface);
   --text-color: var(--fxv-text);
   --secondary-text: var(--fxv-text-muted);
-  --border-color: rgba(226, 232, 240, 0.95);
+  --border-color: rgba(148, 163, 184, 0.34);
   --primary-text-color: var(--fxv-text);
   --secondary-text-color: var(--fxv-text-muted);
   --card-box-shadow: var(--fxv-shadow-sm);
@@ -70,8 +70,8 @@ body {
 }
 
 body {
-  background-image: radial-gradient(circle at top left, rgba(74, 158, 255, 0.16), transparent 36%),
-    linear-gradient(180deg, #f4f8ff 0%, #e9f0ff 100%);
+  background-image: radial-gradient(circle at top left, rgba(74, 158, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, #e7edf6 0%, #dfe7f2 100%);
   background-attachment: fixed;
 }
 

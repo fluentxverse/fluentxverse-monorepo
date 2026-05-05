@@ -8,16 +8,17 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  margin-bottom: 24px;
+  margin-bottom: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 .dashboard-header.light {
-  background: rgba(255, 255, 255, 0.9);
-  color: #2c2c2c;
-  border-bottom: 1px solid #e6e6e6;
-  backdrop-filter: blur(18px);
+  background: #f8fafc;
+  color: var(--fxv-text);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.72);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .dashboard-header.dark {
@@ -41,9 +42,10 @@
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
   border-radius: 12px;
-  border: 1px solid rgba(2, 69, 174, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  box-shadow: 0 8px 18px rgba(30, 41, 59, 0.06);
 }
 
 .philippine-clock > i {
@@ -96,8 +98,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 1px solid rgba(2, 69, 174, 0.15);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  border: 1px solid rgba(148, 163, 184, 0.32);
   color: #64748b;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -141,8 +143,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border: 1px solid rgba(2, 69, 174, 0.15);
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  border: 1px solid rgba(148, 163, 184, 0.32);
   color: #64748b;
   cursor: pointer;
   transition: all 0.3s ease;
