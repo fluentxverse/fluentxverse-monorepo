@@ -8,7 +8,7 @@ import PdfViewer from '../Components/PdfViewer/PdfViewer';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import { studentApi, type StudentProfile, type LessonPreferences } from '../api/student.api';
 import { lessonApi, type Lesson } from '../api/lesson.api';
-import type { ChatMessageData } from '../types/socket.types';
+import type { ChatMessageData, ClassroomActivityLogData } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
 import { API_BASE_URL } from '../config/api';
 import './ClassroomPage.css';
@@ -43,11 +43,31 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   correction?: string;
+  isEdited?: boolean;
+  editedAt?: string;
   fileUrl?: string;
   fileName?: string;
   fileType?: 'image' | 'file';
   fileSize?: number;
 }
+
+interface MediaDeviceSettings {
+  audioDeviceId?: string;
+  videoDeviceId?: string;
+}
+
+const CLASSROOM_DEVICE_SETTINGS_KEY = 'fxv-classroom-device-settings';
+
+const readSavedDeviceSettings = (): MediaDeviceSettings => {
+  if (typeof window === 'undefined') return {};
+
+  try {
+    const raw = window.localStorage.getItem(CLASSROOM_DEVICE_SETTINGS_KEY);
+    return raw ? JSON.parse(raw) as MediaDeviceSettings : {};
+  } catch {
+    return {};
+  }
+};
 
 // Format text with bold, italic, and clickable links
 const formatMessageText = (text: string): (string | JSX.Element)[] => {
@@ -98,6 +118,9 @@ const formatMessageText = (text: string): (string | JSX.Element)[] => {
   
   return parts.length > 0 ? parts : [text];
 };
+
+const shouldShowMessageText = (msg: ChatMessage) =>
+  Boolean(msg.text && (!msg.fileUrl || !msg.text.startsWith('Sent ')));
 
 // Format file size for display
 const formatFileSize = (bytes?: number): string => {
@@ -159,12 +182,21 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle incoming chat messages
     const onChatMessage = (data: ChatMessageData) => {
+      if (data.isDeleted) {
+        setChatMessages(prev => prev.filter(msg => msg.id !== data.id));
+        setOpenMessageMenuId(prev => prev === data.id ? null : prev);
+        setEditingMessageId(prev => prev === data.id ? null : prev);
+        return;
+      }
+
       const newMsg: ChatMessage = {
         id: data.id,
         sender: data.senderType,
         text: data.text,
         timestamp: new Date(data.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         correction: data.correction,
+        isEdited: data.isEdited,
+        editedAt: data.editedAt,
         fileUrl: data.fileUrl,
         fileName: data.fileName,
         fileType: data.fileType,
@@ -176,6 +208,42 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         return [...prev, newMsg];
       });
     };
+
+    const onChatMessageUpdated = (data: ChatMessageData) => {
+      if (data.isDeleted) {
+        setChatMessages(prev => prev.filter(msg => msg.id !== data.id));
+        setOpenMessageMenuId(prev => prev === data.id ? null : prev);
+        setEditingMessageId(prev => prev === data.id ? null : prev);
+        return;
+      }
+
+      setChatMessages(prev => prev.map(msg =>
+        msg.id === data.id
+          ? {
+              ...msg,
+              text: data.text,
+              correction: data.correction,
+              isEdited: data.isEdited,
+              editedAt: data.editedAt
+            }
+          : msg
+      ));
+    };
+
+    const onChatMessageDeleted = (data: { sessionId?: string; messageId?: string; id?: string }) => {
+      if ('sessionId' in data && data.sessionId && data.sessionId !== currentSessionId) return;
+
+      const deletedMessageId = data.messageId ?? data.id;
+      if (!deletedMessageId) return;
+
+      setChatMessages(prev => prev.filter(msg => msg.id !== deletedMessageId));
+      setOpenMessageMenuId(prev => prev === deletedMessageId ? null : prev);
+      setEditingMessageId(prev => prev === deletedMessageId ? null : prev);
+    };
+
+    const onChatError = (data: { message: string }) => {
+      toast.error(data.message);
+    };
     
     // Handle chat history
     const onChatHistory = (messages: ChatMessageData[]) => {
@@ -185,6 +253,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         text: msg.text,
         timestamp: new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         correction: msg.correction,
+        isEdited: msg.isEdited,
+        editedAt: msg.editedAt,
         fileUrl: msg.fileUrl,
         fileName: msg.fileName,
         fileType: msg.fileType,
@@ -237,10 +307,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         setTutorInfo(null);
       }
     };
+
+    const onVideoState = (data: { sessionId: string; userType: 'tutor' | 'student'; enabled: boolean }) => {
+      if (data.sessionId !== currentSessionId || data.userType !== 'tutor') return;
+      setRemoteVideoEnabled(data.enabled);
+    };
     
     // Handle lesson ended by tutor
     const onLessonEnded = (data: { tutorId: string; message?: string }) => {
       setLessonEndedMessage(data.message || 'The tutor has ended the lesson. Thank you for learning with us!');
+    };
+
+    const onActivityHistory = (logs: ClassroomActivityLogData[]) => {
+      setActivityLogs(logs);
+      setIsHistoryLoading(false);
+    };
+
+    const onActivityLog = (log: ClassroomActivityLogData) => {
+      setActivityLogs(prev => prev.some(item => item.id === log.id) ? prev : [...prev, log]);
     };
     
     const setupSocket = async () => {
@@ -258,12 +342,18 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       // Set up listeners before connecting so the first connect event is not missed.
       socket.on('connect', onConnect);
       socket.on('chat:message', onChatMessage);
+      socket.on('chat:message-updated', onChatMessageUpdated);
+      socket.on('chat:message-deleted', onChatMessageDeleted);
       socket.on('chat:history', onChatHistory);
       socket.on('chat:typing', onTyping);
+      socket.on('chat:error', onChatError);
       socket.on('session:state', onSessionState);
       socket.on('session:user-joined', onUserJoined);
       socket.on('session:user-left', onUserLeft);
       socket.on('session:lesson-ended', onLessonEnded);
+      socket.on('classroom:video-state', onVideoState);
+      socket.on('classroom:activity-history', onActivityHistory);
+      socket.on('classroom:activity-log', onActivityLog);
 
       if (socket.connected) {
         onConnect();
@@ -281,12 +371,18 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       if (!socket) return;
       socket.off('connect', onConnect);
       socket.off('chat:message', onChatMessage);
+      socket.off('chat:message-updated', onChatMessageUpdated);
+      socket.off('chat:message-deleted', onChatMessageDeleted);
       socket.off('chat:history', onChatHistory);
       socket.off('chat:typing', onTyping);
+      socket.off('chat:error', onChatError);
       socket.off('session:state', onSessionState);
       socket.off('session:user-joined', onUserJoined);
       socket.off('session:user-left', onUserLeft);
       socket.off('session:lesson-ended', onLessonEnded);
+      socket.off('classroom:video-state', onVideoState);
+      socket.off('classroom:activity-history', onActivityHistory);
+      socket.off('classroom:activity-log', onActivityLog);
       setSocketInstance(null);
     };
   }, [currentSessionId]);
@@ -296,14 +392,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isSwapped, setIsSwapped] = useState(false);
+  const [isSwapped, setIsSwapped] = useState(true);
   const [tutorInfo, setTutorInfo] = useState<{ name: string; id: string; initials: string; date: string } | null>(null);
   const [isConnecting, setIsConnecting] = useState(true);
   const [isSpeakingLocal, setIsSpeakingLocal] = useState(false);
+  const [remoteVideoEnabled, setRemoteVideoEnabled] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [remoteTyping, setRemoteTyping] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [lessonEndedMessage, setLessonEndedMessage] = useState<string | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [activityLogs, setActivityLogs] = useState<ClassroomActivityLogData[]>([]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoInputDevices, setVideoInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState(() => readSavedDeviceSettings().audioDeviceId || '');
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState(() => readSavedDeviceSettings().videoDeviceId || '');
+  const [isApplyingDeviceSettings, setIsApplyingDeviceSettings] = useState(false);
   
   // Material/Lesson state
   const [chosenLesson, setChosenLesson] = useState<{
@@ -869,10 +975,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     startLocalStream,
     toggleAudio,
     toggleVideo,
+    switchMediaDevices,
     cleanup
   } = useWebRTC({ remoteUserId: tutorInfo?.id, socket: socketInstance });
   const localHasVideo = Boolean(localStream?.getVideoTracks().some(track => track.readyState === 'live'));
-  const remoteHasVideo = Boolean(remoteStream?.getVideoTracks().some(track => track.readyState === 'live'));
+  const remoteHasVideo = remoteVideoEnabled && Boolean(remoteStream?.getVideoTracks().some(track => track.readyState === 'live'));
 
   // Mock student data (will be replaced with real data)
   const studentData = {
@@ -881,9 +988,82 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     sessionTime: '10:00AM - 10:25AM',
     date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
   };
+  const remoteParticipantData = tutorInfo || {
+    name: 'Tutor',
+    initials: 'T',
+    date: studentData.date
+  };
 
   // Chat messages - start empty, will load from server
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [openMessageMenuId, setOpenMessageMenuId] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageText, setEditingMessageText] = useState('');
+
+  const requestActivityHistory = () => {
+    if (!currentSessionId || !socketInstance) return;
+    if (isHistoryOpen) {
+      setIsHistoryOpen(false);
+      setIsHistoryLoading(false);
+      return;
+    }
+
+    setIsSettingsOpen(false);
+    setIsHistoryOpen(true);
+    setIsHistoryLoading(true);
+    socketInstance.emit('classroom:request-activity-history', { sessionId: currentSessionId });
+  };
+
+  const loadMediaDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setAudioInputDevices(devices.filter(device => device.kind === 'audioinput'));
+      setVideoInputDevices(devices.filter(device => device.kind === 'videoinput'));
+    } catch (error) {
+      console.error('Failed to load media devices:', error);
+      toast.error('Failed to load camera and microphone devices');
+    }
+  };
+
+  const openDeviceSettings = async () => {
+    if (isSettingsOpen) {
+      setIsSettingsOpen(false);
+      return;
+    }
+
+    setIsHistoryOpen(false);
+    setIsSettingsOpen(true);
+    await loadMediaDevices();
+  };
+
+  const applyDeviceSettings = async () => {
+    setIsApplyingDeviceSettings(true);
+    try {
+      const settings = {
+        audioDeviceId: selectedAudioDeviceId || undefined,
+        videoDeviceId: selectedVideoDeviceId || undefined,
+      };
+
+      window.localStorage.setItem(CLASSROOM_DEVICE_SETTINGS_KEY, JSON.stringify(settings));
+      await switchMediaDevices(settings);
+      await loadMediaDevices();
+      setIsSettingsOpen(false);
+      toast.success('Classroom devices updated');
+    } catch (error) {
+      console.error('Failed to apply device settings:', error);
+      toast.error('Failed to apply classroom devices');
+    } finally {
+      setIsApplyingDeviceSettings(false);
+    }
+  };
+
+  const formatActivityTime = (createdAt: string) =>
+    new Date(createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+  const formatActivityDate = (createdAt?: string) =>
+    createdAt
+      ? new Date(createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   // Timer effect
   useEffect(() => {
@@ -897,7 +1077,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   useEffect(() => {
     const initWebRTC = async () => {
       try {
-        await startLocalStream(true, true);
+        await startLocalStream(true, true, {
+          audioDeviceId: selectedAudioDeviceId || undefined,
+          videoDeviceId: selectedVideoDeviceId || undefined,
+        });
       } catch (err) {
         console.error('❌ [Classroom] Failed to start media:', err);
       }
@@ -975,31 +1158,60 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
   }, [localStream, remoteStream]);
 
-  // Detect local speaking using Web Audio API
+  // Detect local speaking using a calibrated noise floor so room noise does not flicker the mic indicator.
   useEffect(() => {
     if (!localStream) return;
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(localStream);
     const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 512;
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    analyser.fftSize = 1024;
+    analyser.smoothingTimeConstant = 0.85;
+    const dataArray = new Uint8Array(analyser.fftSize);
     source.connect(analyser);
 
     let rafId: number;
-    const threshold = 40; // simple energy threshold
+    let calibratedNoiseFloor = 0.018;
+    let isSpeaking = false;
+    let lastVoiceAt = 0;
+    const minVoiceLevel = 0.055;
+    const releaseDelayMs = 260;
+
     const tick = () => {
-      analyser.getByteFrequencyData(dataArray);
-      // compute average energy
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-      const avg = sum / dataArray.length;
-      setIsSpeakingLocal(avg > threshold);
+      analyser.getByteTimeDomainData(dataArray);
+
+      let sumSquares = 0;
+      for (let i = 0; i < dataArray.length; i += 1) {
+        const centeredSample = (dataArray[i] - 128) / 128;
+        sumSquares += centeredSample * centeredSample;
+      }
+
+      const rms = Math.sqrt(sumSquares / dataArray.length);
+      calibratedNoiseFloor = Math.min(
+        0.08,
+        calibratedNoiseFloor * 0.96 + Math.min(rms, 0.08) * 0.04
+      );
+
+      const voiceThreshold = Math.max(minVoiceLevel, calibratedNoiseFloor * 3.6);
+      const now = performance.now();
+      const hasVoice = rms > voiceThreshold;
+
+      if (hasVoice) {
+        lastVoiceAt = now;
+      }
+
+      const nextIsSpeaking = hasVoice || now - lastVoiceAt < releaseDelayMs;
+      if (nextIsSpeaking !== isSpeaking) {
+        isSpeaking = nextIsSpeaking;
+        setIsSpeakingLocal(nextIsSpeaking);
+      }
+
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(rafId);
+      setIsSpeakingLocal(false);
       try { source.disconnect(); } catch {}
       try { analyser.disconnect(); } catch {}
       try { audioCtx.close(); } catch {}
@@ -1013,7 +1225,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   useEffect(() => {
     toggleVideo(!isVideoOff);
-  }, [isVideoOff, toggleVideo]);
+    if (currentSessionId && socketInstance?.connected) {
+      socketInstance.emit('classroom:video-state', { sessionId: currentSessionId, enabled: !isVideoOff });
+    }
+  }, [currentSessionId, isVideoOff, socketInstance, toggleVideo]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1130,6 +1345,107 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     clearSelectedFile();
   };
 
+  const beginEditMessage = (msg: ChatMessage) => {
+    setEditingMessageId(msg.id);
+    setEditingMessageText(msg.text);
+    setOpenMessageMenuId(null);
+  };
+
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditingMessageText('');
+  };
+
+  const submitEditMessage = (messageId: string) => {
+    const nextText = editingMessageText.trim();
+    if (!nextText || !currentSessionId) return;
+
+    const socket = getSocket();
+    socket.emit('chat:edit', { sessionId: currentSessionId, messageId, text: nextText });
+    cancelEditMessage();
+  };
+
+  const deleteOwnMessage = (messageId: string) => {
+    if (!currentSessionId) return;
+
+    setOpenMessageMenuId(null);
+    setEditingMessageId(prev => prev === messageId ? null : prev);
+
+    const socket = getSocket();
+    socket.emit('chat:delete', { sessionId: currentSessionId, messageId }, (result) => {
+      if (!result?.success) {
+        toast.error(result?.message || 'Unable to delete message');
+        return;
+      }
+
+      socket.emit('chat:request-history', { sessionId: currentSessionId });
+    });
+
+    window.setTimeout(() => {
+      if (socket.connected) {
+        socket.emit('chat:request-history', { sessionId: currentSessionId });
+      }
+    }, 500);
+  };
+
+  const applyMessageFormatting = (textarea: HTMLTextAreaElement, marker: '*' | '_') => {
+    const value = textarea.value;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.slice(start, end);
+    const hasSelection = start !== end;
+    const isWrappedSelection = hasSelection && start > 0 && end < value.length && value[start - 1] === marker && value[end] === marker;
+
+    let nextMessage = value;
+    let nextSelectionStart = start;
+    let nextSelectionEnd = end;
+
+    if (isWrappedSelection) {
+      nextMessage = `${value.slice(0, start - 1)}${selectedText}${value.slice(end + 1)}`;
+      nextSelectionStart = start - 1;
+      nextSelectionEnd = end - 1;
+    } else if (hasSelection) {
+      nextMessage = `${value.slice(0, start)}${marker}${selectedText}${marker}${value.slice(end)}`;
+      nextSelectionStart = start + 1;
+      nextSelectionEnd = end + 1;
+    } else {
+      nextMessage = `${value.slice(0, start)}${marker}${marker}${value.slice(end)}`;
+      nextSelectionStart = start + 1;
+      nextSelectionEnd = start + 1;
+    }
+
+    setMessage(nextMessage);
+    handleTyping(nextMessage.trim().length > 0);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+    });
+  };
+
+  const handleChatInputKeyDown = (e: KeyboardEvent) => {
+    const textarea = e.currentTarget as HTMLTextAreaElement;
+    const modifierPressed = e.ctrlKey || e.metaKey;
+    const key = e.key.toLowerCase();
+
+    if (modifierPressed && key === 'b') {
+      e.preventDefault();
+      applyMessageFormatting(textarea, '*');
+      return;
+    }
+
+    if (modifierPressed && key === 'i') {
+      e.preventDefault();
+      applyMessageFormatting(textarea, '_');
+      return;
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey && !isUploading) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   // Handle typing indicator
   const handleTyping = (typing: boolean) => {
     try {
@@ -1200,10 +1516,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             />
             {/* Remote placeholder in main (visible when swapped and no stream) */}
             {isSwapped && !remoteHasVideo && (
-              <div className="video-placeholder student-video">
-                <div className="video-avatar-large">{studentData.initials}</div>
-                <span className="video-name">{studentData.name}</span>
-                {!isConnected && tutorInfo && <span className="connection-text">Connecting...</span>}
+              <div className="video-placeholder remote-camera-off">
+                <i className="fas fa-video-slash camera-off-icon" aria-hidden="true"></i>
+                <span className="camera-off-text">The camera is turned off</span>
               </div>
             )}
             {/* Local video in main (visible when not swapped) */}
@@ -1276,8 +1591,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             />
             {/* Remote placeholder in PiP (visible when not swapped and no stream) */}
             {!isSwapped && !remoteHasVideo && (
-              <div className="video-placeholder student-video">
-                <div className="video-avatar-small">{studentData.initials}</div>
+              <div className="video-placeholder remote-camera-off pip-camera-off" aria-label="No camera">
+                <i className="fas fa-video-slash camera-off-icon" aria-hidden="true"></i>
               </div>
             )}
           </div>
@@ -1337,11 +1652,118 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           <div className="chat-header">
             <i className="fi fi-sr-comment-alt"></i>
             <span>Chat</span>
+            <div className="chat-header-actions" aria-label="Chat tools">
+              <button type="button" className="chat-tool-btn" title="Classroom history" aria-label="Classroom history" onClick={requestActivityHistory}>
+                <i className="fi fi-sr-time-past"></i>
+              </button>
+              <button type="button" className="chat-tool-btn" title="Device settings" aria-label="Device settings" onClick={openDeviceSettings}>
+                <i className="fi fi-sr-settings"></i>
+              </button>
+            </div>
           </div>
+          {(isHistoryOpen || isSettingsOpen) && (
+            <div className="classroom-chat-popover">
+              {isHistoryOpen && (
+                <div className="classroom-modal classroom-history-modal" role="dialog" aria-modal="false" aria-labelledby="classroom-history-title">
+                  <div className="classroom-modal-header">
+                    <div>
+                      <h2 id="classroom-history-title">History</h2>
+                      <div className="classroom-modal-meta">
+                        <span>SID: {currentSessionId}</span>
+                        <span><i className="fi fi-sr-calendar"></i>{formatActivityDate(activityLogs[0]?.createdAt)}</span>
+                      </div>
+                    </div>
+                    <button type="button" className="classroom-modal-close" aria-label="Close history" onClick={() => setIsHistoryOpen(false)}>
+                      <i className="fi fi-sr-cross-small"></i>
+                    </button>
+                  </div>
+
+                  <div className="classroom-history-list">
+                    {isHistoryLoading ? (
+                      <div className="classroom-modal-empty">Loading history...</div>
+                    ) : activityLogs.length === 0 ? (
+                      <div className="classroom-modal-empty">No classroom activity yet.</div>
+                    ) : (
+                      activityLogs.map(log => (
+                        <div key={log.id} className={`classroom-history-item ${log.userType}`}>
+                          <span className="classroom-history-marker" aria-hidden="true"></span>
+                          <span className="classroom-history-time">{formatActivityTime(log.createdAt)}</span>
+                          <span className="classroom-history-message">{log.message}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="classroom-modal-footer">
+                    <button type="button" className="classroom-modal-primary" onClick={requestActivityHistory}>
+                      <i className="fi fi-sr-refresh"></i>
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isSettingsOpen && (
+                <div className="classroom-modal classroom-settings-modal" role="dialog" aria-modal="false" aria-labelledby="classroom-settings-title">
+                  <div className="classroom-modal-header">
+                    <div>
+                      <h2 id="classroom-settings-title">Settings</h2>
+                      <div className="classroom-modal-meta">
+                        <span>Classroom devices</span>
+                      </div>
+                    </div>
+                    <button type="button" className="classroom-modal-close" aria-label="Close settings" onClick={() => setIsSettingsOpen(false)}>
+                      <i className="fi fi-sr-cross-small"></i>
+                    </button>
+                  </div>
+
+                  <div className="classroom-device-fields">
+                    <label className="classroom-device-field">
+                      <span><i className="fi fi-sr-microphone"></i>Microphone</span>
+                      <select value={selectedAudioDeviceId} onChange={(event) => setSelectedAudioDeviceId((event.currentTarget as HTMLSelectElement).value)}>
+                        <option value="">Default microphone</option>
+                        {audioInputDevices.map((device, index) => (
+                          <option key={device.deviceId || `audio-${index}`} value={device.deviceId}>
+                            {device.label || `Microphone ${index + 1}`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="classroom-device-field">
+                      <span><i className="fi fi-sr-video-camera"></i>Camera</span>
+                      <select value={selectedVideoDeviceId} onChange={(event) => setSelectedVideoDeviceId((event.currentTarget as HTMLSelectElement).value)}>
+                        <option value="">Default camera</option>
+                        {videoInputDevices.map((device, index) => (
+                          <option key={device.deviceId || `video-${index}`} value={device.deviceId}>
+                            {device.label || `Camera ${index + 1}`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="classroom-modal-footer">
+                    <button type="button" className="classroom-modal-secondary" onClick={loadMediaDevices}>
+                      <i className="fi fi-sr-refresh"></i>
+                      Refresh
+                    </button>
+                    <button type="button" className="classroom-modal-primary" disabled={isApplyingDeviceSettings} onClick={applyDeviceSettings}>
+                      <i className="fi fi-sr-check"></i>
+                      {isApplyingDeviceSettings ? 'Applying...' : 'Apply'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <div className="chat-messages">
             {chatMessages.map((msg) => {
               // In student app: student messages are "self" (right), tutor messages are "other" (left)
               const isOwnMessage = msg.sender === 'student';
+              const canManageMessage = isOwnMessage && !msg.correction && msg.id !== 'error';
+              const canEditMessage = canManageMessage && shouldShowMessageText(msg);
+              const isEditingMessage = editingMessageId === msg.id;
               return (
               <div key={msg.id} className={`chat-message ${isOwnMessage ? 'self' : 'other'}`}>
                 {msg.correction && (
@@ -1352,36 +1774,94 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   </div>
                 )}
                 {!msg.correction && (
-                  <div className="message-bubble">
-                    {/* Display image if present */}
-                    {msg.fileUrl && msg.fileType === 'image' && (
-                      <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                        <img 
-                          src={msg.fileUrl} 
-                          alt={msg.fileName || 'Shared image'} 
-                          className="message-image"
-                        />
-                      </a>
-                    )}
-                    {/* Display file link if present */}
-                    {msg.fileUrl && msg.fileType === 'file' && (
-                      <a 
-                        href={msg.fileUrl} 
-                        download={msg.fileName}
-                        className="message-file"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <i className="fi fi-sr-file"></i>
-                        <span className="file-info">
-                          <span className="file-name">{msg.fileName}</span>
-                          {msg.fileSize && <span className="file-size">{formatFileSize(msg.fileSize)}</span>}
-                        </span>
-                      </a>
-                    )}
-                    {/* Display formatted text */}
-                    {msg.text && (!msg.fileUrl || !msg.text.startsWith('Sent ')) && (
-                      <span>{formatMessageText(msg.text)}</span>
+                  <div className="message-row">
+                    <div className="message-bubble">
+                      {isEditingMessage ? (
+                        <div className="message-edit-panel">
+                          <textarea
+                            className="message-edit-input"
+                            value={editingMessageText}
+                            rows={2}
+                            onInput={(event) => setEditingMessageText((event.currentTarget as HTMLTextAreaElement).value)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' && !event.shiftKey) {
+                                event.preventDefault();
+                                submitEditMessage(msg.id);
+                              }
+
+                              if (event.key === 'Escape') {
+                                cancelEditMessage();
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <div className="message-edit-actions">
+                            <button type="button" className="message-edit-cancel" onClick={cancelEditMessage}>Cancel</button>
+                            <button type="button" className="message-edit-save" disabled={!editingMessageText.trim()} onClick={() => submitEditMessage(msg.id)}>Save</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Display image if present */}
+                          {msg.fileUrl && msg.fileType === 'image' && (
+                            <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
+                              <img
+                                src={msg.fileUrl}
+                                alt={msg.fileName || 'Shared image'}
+                                className="message-image"
+                              />
+                            </a>
+                          )}
+                          {/* Display file link if present */}
+                          {msg.fileUrl && msg.fileType === 'file' && (
+                            <a
+                              href={msg.fileUrl}
+                              download={msg.fileName}
+                              className="message-file"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <i className="fi fi-sr-file"></i>
+                              <span className="file-info">
+                                <span className="file-name">{msg.fileName}</span>
+                                {msg.fileSize && <span className="file-size">{formatFileSize(msg.fileSize)}</span>}
+                              </span>
+                            </a>
+                          )}
+                          {/* Display formatted text */}
+                          {shouldShowMessageText(msg) && (
+                            <span>{formatMessageText(msg.text)}</span>
+                          )}
+                          {msg.isEdited && <span className="message-edited-label">edited</span>}
+                        </>
+                      )}
+                    </div>
+                    {canManageMessage && !isEditingMessage && (
+                      <div className="message-actions">
+                        <button
+                          type="button"
+                          className="message-more-btn"
+                          aria-label="Message actions"
+                          title="Message actions"
+                          onClick={() => setOpenMessageMenuId(openMessageMenuId === msg.id ? null : msg.id)}
+                        >
+                          <span aria-hidden="true">•••</span>
+                        </button>
+                        {openMessageMenuId === msg.id && (
+                          <div className="message-action-menu">
+                            {canEditMessage && (
+                              <button type="button" onClick={() => beginEditMessage(msg)}>
+                                <i className="fi fi-sr-pencil"></i>
+                                Edit
+                              </button>
+                            )}
+                            <button type="button" className="danger" onClick={() => deleteOwnMessage(msg.id)}>
+                              <i className="fi fi-sr-trash"></i>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
@@ -1429,7 +1909,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               <i className="fi fi-sr-clip"></i>
             </button>
             <textarea
-              placeholder="Type a message... (*bold* _italic_) | Shift+Enter for new line"
+              placeholder="Type a message..."
+              aria-label="Chat message. Press Shift and Enter for a new line."
               value={message}
               onChange={(e) => {
                 const newValue = (e.target as HTMLTextAreaElement).value;
@@ -1437,10 +1918,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 handleTyping(newValue.trim().length > 0);
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !isUploading) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
+                handleChatInputKeyDown(e as KeyboardEvent);
               }}
               onBlur={() => handleTyping(false)}
               disabled={isUploading}

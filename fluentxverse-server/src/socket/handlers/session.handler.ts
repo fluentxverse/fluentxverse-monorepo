@@ -1,11 +1,13 @@
 import type { Server, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/socket.types';
 import { SessionService } from '../../services/session.services/session.service';
+import { ClassroomActivityService } from '../../services/classroomActivity.services/classroomActivity.service';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 const sessionService = new SessionService();
+const classroomActivityService = new ClassroomActivityService();
 // In-memory fallback store for dev or DB-down scenarios
 // Key: sessionId, Value: { tutor?: participant, student?: participant }
 const memParticipants: Record<string, { 
@@ -14,6 +16,29 @@ const memParticipants: Record<string, {
 }> = {};
 
 export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
+  const logActivity = async (
+    sessionId: string,
+    userId: string,
+    userType: 'tutor' | 'student',
+    eventType: 'entered' | 'left' | 'lesson_ended',
+    message?: string
+  ) => {
+    try {
+      const activity = await classroomActivityService.log({
+        sessionId,
+        userId,
+        userType,
+        eventType,
+        message
+      });
+      io.to(sessionId).emit('classroom:activity-log', activity);
+      return activity;
+    } catch (error) {
+      console.warn('Failed to persist classroom activity:', (error as Error)?.message);
+      return null;
+    }
+  };
+
   // Join a session
   socket.on('session:join', async (data) => {
     try {
@@ -74,12 +99,36 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         userId,
         userType
       });
+      await logActivity(sessionId, userId, userType, 'entered');
 
       // Send session state to all participants
       io.to(sessionId).emit('session:state', sessionState);
 
     } catch (error) {
       console.error('Error handling session:join:', error);
+    }
+  });
+
+  socket.on('classroom:video-state', (data) => {
+    try {
+      const sessionId = data.sessionId || socket.data.sessionId;
+      if (!sessionId) return;
+
+      const payload = {
+        sessionId,
+        userId: socket.data.userId,
+        userType: socket.data.userType,
+        enabled: data.enabled
+      };
+
+      socket.to(sessionId).emit('classroom:video-state', payload);
+      io.sockets.sockets.forEach((clientSocket) => {
+        if (clientSocket.id !== socket.id && clientSocket.data.sessionId === sessionId) {
+          clientSocket.emit('classroom:video-state', payload);
+        }
+      });
+    } catch (error) {
+      console.error('Error handling classroom:video-state:', error);
     }
   });
 
@@ -113,6 +162,7 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         userId,
         userType
       });
+      await logActivity(sessionId, userId, userType, 'left');
 
       // Get remaining participants
       let participants: Array<{ user_id: string; socket_id: string; user_type: 'tutor' | 'student' }> = [];
@@ -169,9 +219,21 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         tutorId: userId,
         message: data?.message || 'The tutor has ended the lesson. Thank you for learning with us!'
       });
+      await logActivity(sessionId, userId, 'tutor', 'lesson_ended', 'Tutor ended the lesson.');
 
     } catch (error) {
       console.error('Error handling session:end-lesson:', error);
+    }
+  });
+
+  socket.on('classroom:request-activity-history', async (data) => {
+    try {
+      const { sessionId } = data;
+      const history = await classroomActivityService.getSessionActivity(sessionId);
+      socket.emit('classroom:activity-history', history);
+    } catch (error) {
+      console.error('Error handling classroom:request-activity-history:', error);
+      socket.emit('classroom:activity-history', []);
     }
   });
 
@@ -196,6 +258,7 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
           userId,
           userType
         });
+        await logActivity(sessionId, userId, userType, 'left');
 
       }
     } catch (error) {

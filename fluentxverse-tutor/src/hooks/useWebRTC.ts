@@ -7,6 +7,19 @@ interface UseWebRTCProps {
   socket?: Socket | null;
 }
 
+interface MediaDeviceSelection {
+  audioDeviceId?: string;
+  videoDeviceId?: string;
+}
+
+const buildAudioConstraints = (devices: MediaDeviceSelection): MediaTrackConstraints => ({
+  ...(devices.audioDeviceId ? { deviceId: { exact: devices.audioDeviceId } } : {}),
+  echoCancellation: { ideal: true },
+  noiseSuppression: { ideal: true },
+  autoGainControl: { ideal: false },
+  channelCount: { ideal: 1 },
+});
+
 export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -18,6 +31,7 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
   const remoteStreamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<Socket | null>(socket ?? null);
   const startingLocalStreamRef = useRef<Promise<MediaStream> | null>(null);
+  const deviceSelectionRef = useRef<MediaDeviceSelection>({});
   const remoteUserIdRef = useRef<string | undefined>(remoteUserId);
   const pendingCandidates = useRef<RTCIceCandidate[]>([]);
 
@@ -26,6 +40,19 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
   }, [socket]);
 
   const getActiveSocket = useCallback(() => socketRef.current ?? getSocket(), []);
+
+  const buildMediaConstraints = useCallback((
+    audio = true,
+    video = true,
+    devices: MediaDeviceSelection = deviceSelectionRef.current
+  ): MediaStreamConstraints => ({
+    audio: audio ? buildAudioConstraints(devices) : false,
+    video: video
+      ? devices.videoDeviceId
+        ? { deviceId: { exact: devices.videoDeviceId } }
+        : true
+      : false,
+  }), []);
 
   const ensureMediaTransceivers = useCallback((pc: RTCPeerConnection) => {
     const ensureKind = (kind: 'audio' | 'video') => {
@@ -164,7 +191,11 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
   }, [ensureMediaTransceivers, getActiveSocket]);
 
   // Get local media stream
-  const startLocalStream = useCallback(async (audio = true, video = true) => {
+  const startLocalStream = useCallback(async (audio = true, video = true, devices?: MediaDeviceSelection) => {
+    if (devices) {
+      deviceSelectionRef.current = devices;
+    }
+
     // If we already have a stream, return it
     if (localStreamRef.current) {
       return localStreamRef.current;
@@ -179,14 +210,14 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
         let stream: MediaStream;
 
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ audio, video });
+          stream = await navigator.mediaDevices.getUserMedia(buildMediaConstraints(audio, video));
         } catch (err: any) {
           if (!video) {
             throw err;
           }
 
           console.warn('Camera unavailable, retrying with microphone only:', err);
-          stream = await navigator.mediaDevices.getUserMedia({ audio, video: false });
+          stream = await navigator.mediaDevices.getUserMedia(buildMediaConstraints(audio, false));
           setError('Camera is unavailable. Joined with microphone only.');
         }
       
@@ -208,7 +239,7 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
     })();
 
     return startingLocalStreamRef.current;
-  }, [createPeerConnection, addLocalTracksToPeerConnection]);
+  }, [createPeerConnection, addLocalTracksToPeerConnection, buildMediaConstraints]);
 
   // Create and send offer
   const createOffer = useCallback(async () => {
@@ -322,6 +353,45 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
     }
   }, []);
 
+  const switchMediaDevices = useCallback(async (devices: MediaDeviceSelection) => {
+    deviceSelectionRef.current = devices;
+
+    const previousStream = localStreamRef.current;
+    const shouldKeepVideo = Boolean(previousStream?.getVideoTracks().some(track => track.readyState === 'live'));
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(
+        buildMediaConstraints(true, shouldKeepVideo, devices)
+      );
+
+      localStreamRef.current = stream;
+      setLocalStream(stream);
+
+      const pc = createPeerConnection();
+      await addLocalTracksToPeerConnection(pc);
+
+      for (const kind of ['audio', 'video'] as const) {
+        const hasTrack = stream.getTracks().some(track => track.kind === kind);
+        if (hasTrack) continue;
+
+        const transceiver = pc.getTransceivers().find(item =>
+          item.receiver.track.kind === kind || item.sender.track?.kind === kind
+        );
+        await transceiver?.sender.replaceTrack(null);
+      }
+
+      previousStream?.getTracks().forEach(track => track.stop());
+
+      if (pc.signalingState === 'stable' && remoteUserIdRef.current) {
+        await createOffer();
+      }
+    } catch (err) {
+      console.error('❌ Error switching media devices:', err);
+      setError('Failed to switch camera or microphone');
+      throw err;
+    }
+  }, [addLocalTracksToPeerConnection, buildMediaConstraints, createOffer, createPeerConnection]);
+
   // Toggle audio
   const toggleAudio = useCallback((enabled: boolean) => {
     if (localStreamRef.current) {
@@ -359,7 +429,7 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
     let videoTrack = stream.getVideoTracks().find(track => track.readyState === 'live');
     if (!videoTrack) {
       try {
-        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const videoStream = await navigator.mediaDevices.getUserMedia(buildMediaConstraints(false, true));
         videoTrack = videoStream.getVideoTracks()[0];
         stream.addTrack(videoTrack);
       } catch (err) {
@@ -379,7 +449,7 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
     if (pc?.signalingState === 'stable' && remoteUserIdRef.current) {
       await createOffer();
     }
-  }, [addLocalTracksToPeerConnection, createOffer]);
+  }, [addLocalTracksToPeerConnection, buildMediaConstraints, createOffer]);
 
   // Cleanup
   const cleanup = useCallback(() => {
@@ -456,6 +526,7 @@ export const useWebRTC = ({ remoteUserId, socket }: UseWebRTCProps = {}) => {
     createOffer,
     toggleAudio,
     toggleVideo,
+    switchMediaDevices,
     cleanup
   };
 };

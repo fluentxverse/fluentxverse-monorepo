@@ -49,8 +49,19 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   correction_text TEXT,
   is_system_message BOOLEAN DEFAULT false,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  edited_message_text TEXT,
+  edited_at TIMESTAMP,
+  is_deleted BOOLEAN DEFAULT false,
+  deleted_at TIMESTAMP
 );
+
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS edited_message_text TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
@@ -59,6 +70,20 @@ CREATE INDEX IF NOT EXISTS idx_session_participants_session_id ON session_partic
 CREATE INDEX IF NOT EXISTS idx_sessions_tutor_id ON sessions(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_student_id ON sessions(student_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_scheduled_at ON sessions(scheduled_at);
+
+-- Classroom activity logs (join/leave/end lesson history)
+CREATE TABLE IF NOT EXISTS classroom_activity_logs (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  user_type TEXT NOT NULL CHECK (user_type IN ('tutor', 'student')),
+  event_type TEXT NOT NULL CHECK (event_type IN ('entered', 'left', 'lesson_ended')),
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS classroom_activity_logs_session_created_idx
+  ON classroom_activity_logs (session_id, created_at DESC);
 
 -- Tutor schedules table
 CREATE TABLE IF NOT EXISTS tutor_schedules (

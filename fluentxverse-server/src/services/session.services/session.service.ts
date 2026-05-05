@@ -69,12 +69,38 @@ export class SessionService {
   async addParticipant(data: AddParticipantData): Promise<SessionParticipant> {
     const { sessionId, userId, socketId, userType } = data;
 
+    // The legacy unique constraint includes is_active, so multiple inactive rows
+    // for the same user/session can make a later reconnect fail while marking the
+    // current active row inactive. Clear stale inactive rows first.
+    await query(
+      `DELETE FROM session_participants
+       WHERE session_id = $1
+         AND user_id = $2
+         AND is_active = false
+       RETURNING id`,
+      [sessionId, userId]
+    );
+
+    // Also clear an active row for this same authenticated user even if an old
+    // record has the wrong role. The legacy uniqueness constraint does not
+    // include user_type, so a stale row can block a valid reconnect.
+    await query(
+      `UPDATE session_participants
+       SET is_active = false, left_at = NOW()
+       WHERE session_id = $1
+         AND user_id = $2
+         AND is_active = true
+       RETURNING id`,
+      [sessionId, userId]
+    );
+
     // First, deactivate any existing active participants of the same type in this session
     // This handles reconnections where user ID might change
     await query(
       `UPDATE session_participants
        SET is_active = false, left_at = NOW()
-       WHERE session_id = $1 AND user_type = $2 AND is_active = true`,
+       WHERE session_id = $1 AND user_type = $2 AND is_active = true
+       RETURNING id`,
       [sessionId, userType]
     );
 
@@ -95,7 +121,8 @@ export class SessionService {
       const result = await query(
         `UPDATE session_participants
          SET is_active = false, left_at = NOW()
-         WHERE session_id = $1 AND user_type = $2 AND is_active = true`,
+         WHERE session_id = $1 AND user_type = $2 AND is_active = true
+         RETURNING id`,
         [sessionId, userType]
       );
       return (result.rowCount || 0) > 0;
@@ -105,7 +132,8 @@ export class SessionService {
     const result = await query(
       `UPDATE session_participants
        SET is_active = false, left_at = NOW()
-       WHERE session_id = $1 AND user_id = $2 AND is_active = true`,
+       WHERE session_id = $1 AND user_id = $2 AND is_active = true
+       RETURNING id`,
       [sessionId, userId]
     );
 
