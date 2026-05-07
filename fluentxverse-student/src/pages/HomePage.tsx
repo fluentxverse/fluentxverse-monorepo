@@ -305,7 +305,7 @@ const HomePage = () => {
                 <div className="home-hero">
                   <div className="home-hero-content">
                     <div className="home-hero-text">
-                      <h1>Welcome back, {user.givenName || user.familyName || 'Student'}! 👋</h1>
+                      <h1>Welcome back, {user.givenName || user.familyName || 'Student'}! </h1>
                       <p>Track your progress and continue your English learning journey</p>
                     </div>
                     <div className="home-hero-stats">

@@ -309,7 +309,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
               {/* Left Column - Tutor & Schedule */}
               <div className="lesson-left-column">
                 {/* Tutor Card */}
-                <div className="lesson-card tutor-card">
+                <div className="lesson-card tutor-card lesson-overview-card">
                   <div className="lesson-card-header">
                     <i className="fas fa-user-graduate"></i>
                     <h2>Your Tutor</h2>
@@ -332,13 +332,12 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                       </button>
                     </div>
                   </div>
-                </div>
 
-                {/* Schedule Card */}
-                <div className="lesson-card schedule-card">
-                  <div className="lesson-card-header">
+                  <div className="lesson-overview-divider" />
+
+                  <div className="lesson-overview-section-title">
                     <i className="fas fa-calendar-alt"></i>
-                    <h2>Schedule</h2>
+                    <span>Schedule</span>
                   </div>
                   <div className="schedule-details">
                     <div className="schedule-row">

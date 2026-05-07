@@ -116,6 +116,22 @@ const Header = () => {
     };
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const desktopQuery = window.matchMedia('(min-width: 992px)');
+    const closeMenuOnDesktop = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) {
+        closeMobileMenu();
+      }
+    };
+
+    closeMenuOnDesktop(desktopQuery);
+    desktopQuery.addEventListener('change', closeMenuOnDesktop);
+
+    return () => {
+      desktopQuery.removeEventListener('change', closeMenuOnDesktop);
+    };
+  }, [closeMobileMenu]);
+
 
  
 
@@ -245,6 +261,21 @@ const Header = () => {
                           </li>
                         ))}
                       </ul>
+                      {!isAuthenticated && (
+                        <div className="mobile-menu-actions">
+                          <button
+                            type="button"
+                            className="mobile-login-btn"
+                            onClick={() => {
+                              closeMobileMenu();
+                              openLoginModal();
+                            }}
+                          >
+                            <i className="fas fa-user" />
+                            <span>Login</span>
+                          </button>
+                        </div>
+                      )}
                     </nav>
                     
 

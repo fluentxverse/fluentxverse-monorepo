@@ -8,6 +8,8 @@ import { lessonApi, type Lesson } from '../api/lesson.api';
 import './StudentProfilePage.css';
 import './StudentProfileLessonPreferences.css';
 
+const OTHER_REQUESTS_MAX_LENGTH = 150;
+
 interface SessionWithNote {
   id: string;
   date: string;
@@ -383,8 +385,12 @@ const StudentProfilePage = () => {
           setProfileData(result.data);
           // Load saved preferences if available
           if (result.data.lessonPreferences) {
-            setPreferences(result.data.lessonPreferences);
-            setInitialPreferences(result.data.lessonPreferences);
+            const lessonPreferences = {
+              ...result.data.lessonPreferences,
+              otherRequests: result.data.lessonPreferences.otherRequests.slice(0, OTHER_REQUESTS_MAX_LENGTH)
+            };
+            setPreferences(lessonPreferences);
+            setInitialPreferences(lessonPreferences);
           }
           // Load saved About Me data if available
           if (result.data.purpose || result.data.occupation || result.data.hobbies || result.data.bio) {
@@ -681,7 +687,7 @@ const StudentProfilePage = () => {
           <Header />
           <div className="student-profile-main">
             <div className="loading-container">
-              <i className="fi fi-sr-spinner loading-spinner"></i>
+              <i className="fi fi-sr-spinner profile-loading-spinner"></i>
               <p>Loading your profile...</p>
             </div>
           </div>
@@ -738,9 +744,6 @@ const StudentProfilePage = () => {
                 <div className="profile-avatar">
                   {displayData.initials}
                 </div>
-                <span className="profile-level-badge">
-                  {displayData.level}
-                </span>
               </div>
 
               {/* Profile Info */}
@@ -961,14 +964,21 @@ const StudentProfilePage = () => {
                       </div>
                     </div>
 
-                    <textarea
-                      className="profile-lesson-pref-notes"
-                      placeholder="Anything you'd like your tutor to keep in mind for future lessons?"
-                      value={preferences.otherRequests}
-                      onChange={(e) => setPreferences((p) => ({ ...p, otherRequests: (e.target as HTMLTextAreaElement).value }))}
-                      rows={4}
-                    />
-                  </section>
+	                    <textarea
+	                      className="profile-lesson-pref-notes"
+	                      placeholder="Anything you'd like your tutor to keep in mind for future lessons?"
+	                      value={preferences.otherRequests}
+	                      maxLength={OTHER_REQUESTS_MAX_LENGTH}
+	                      onChange={(e) => setPreferences((p) => ({
+	                        ...p,
+	                        otherRequests: (e.target as HTMLTextAreaElement).value.slice(0, OTHER_REQUESTS_MAX_LENGTH)
+	                      }))}
+	                      rows={4}
+	                    />
+	                    <div className="profile-lesson-pref-limit">
+	                      <span>{preferences.otherRequests.length}/{OTHER_REQUESTS_MAX_LENGTH}</span>
+	                    </div>
+	                  </section>
                 </div>
 
                 {/* Save Button - Only show when changes made */}
@@ -981,7 +991,7 @@ const StudentProfilePage = () => {
                     >
                       {savingPreferences ? (
                         <>
-                          <i className="fi fi-sr-spinner loading-spinner"></i>
+                          <i className="fi fi-sr-spinner profile-inline-spinner"></i>
                           Saving...
                         </>
                       ) : (

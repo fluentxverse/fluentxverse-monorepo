@@ -300,7 +300,8 @@ const DashboardPage = () => {
     <div className="dashboard-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1>Welcome back, {user?.username || 'Admin'}!</h1>
+          <h1>
+            , {user?.username || 'Admin'}!</h1>
           <p>Here's an overview of your platform today.</p>
         </div>
         <div className="page-header-actions">

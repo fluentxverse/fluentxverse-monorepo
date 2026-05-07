@@ -66,14 +66,7 @@ function AppShell() {
 	const { isAuthenticated, initialLoading } = useAuthContext();
 	const { path } = useLocation();
 	const isDarkMode = useThemeStore((state) => state.isDarkMode);
-	const hasStoredAuth = typeof window !== 'undefined'
-		? Boolean(
-			window.localStorage.getItem('authToken') ||
-			window.sessionStorage.getItem('authToken') ||
-			window.localStorage.getItem('fxv_user_id')
-		)
-		: false;
-	const isThemeLockedLight = path === '/' || (path === '/browse-tutors' && !isAuthenticated && !initialLoading && !hasStoredAuth);
+		const isThemeLockedLight = path === '/' || (path === '/browse-tutors' && !isAuthenticated && !initialLoading);
 	const effectiveTheme = isThemeLockedLight ? 'light' : (isDarkMode ? 'dark' : 'light');
 	
 	// Auto-connect wallet if user has previously connected

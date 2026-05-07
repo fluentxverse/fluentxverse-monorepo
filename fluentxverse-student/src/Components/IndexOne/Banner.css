@@ -544,10 +544,19 @@
   .hero-stage__copy {
     left: 18px;
     bottom: 18px;
-    width: min(480px, calc(100% - 110px));
+    width: calc(100% - 36px);
+  }
+
+  .hero-stage__title {
+    max-width: 100%;
+    font-size: clamp(1.85rem, 7.2vw, 2.65rem);
+    letter-spacing: 0;
+    overflow: hidden;
+    text-overflow: clip;
   }
 
   .hero-stage__description {
+    max-width: 220px;
     margin-bottom: 16px;
     font-size: 11px;
   }
@@ -577,7 +586,7 @@
   }
 
   .hero-stage__copy {
-    width: min(360px, calc(100% - 92px));
+    width: calc(100% - 36px);
   }
 
   .hero-stage__meta {
@@ -592,7 +601,7 @@
   }
 
   .hero-stage__title {
-    font-size: clamp(2.05rem, 9.8vw, 2.95rem);
+    font-size: clamp(1.28rem, 5.35vw, 2.15rem);
   }
 
   .hero-stage__description {

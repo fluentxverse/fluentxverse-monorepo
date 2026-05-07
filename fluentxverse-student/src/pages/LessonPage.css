@@ -379,6 +379,68 @@
   background: rgba(37, 99, 235, 0.14);
 }
 
+.lesson-overview-card {
+  gap: 0;
+}
+
+.lesson-overview-divider {
+  height: 1px;
+  width: 100%;
+  margin: 22px 0 18px;
+  background: linear-gradient(90deg, transparent 0%, var(--lesson-border-strong) 12%, var(--lesson-border-strong) 88%, transparent 100%);
+}
+
+.lesson-overview-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--lesson-accent-strong);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.lesson-overview-section-title i {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--lesson-accent-soft);
+  color: var(--lesson-accent-strong);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lesson-overview-card .schedule-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lesson-overview-card .schedule-row {
+  min-height: 74px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lesson-overview-card .schedule-label {
+  min-width: 0;
+  font-size: 13px;
+}
+
+.lesson-overview-card .schedule-value {
+  width: 100%;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.lesson-overview-card .lesson-cancel-btn-card {
+  margin-top: 18px;
+}
+
 /* Schedule Card - Fixed Layout (scoped to lesson-page) */
 .lesson-page .schedule-card {
   display: flex;
@@ -438,6 +500,31 @@
   flex: 1;
   word-break: break-word;
   -webkit-text-fill-color: currentColor;
+}
+
+.lesson-page .lesson-overview-card .schedule-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lesson-page .lesson-overview-card .schedule-row {
+  min-height: 74px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lesson-page .lesson-overview-card .schedule-label {
+  min-width: 0;
+  font-size: 13px;
+}
+
+.lesson-page .lesson-overview-card .schedule-value {
+  width: 100%;
+  text-align: left;
+  line-height: 1.25;
 }
 
 /* Classroom Card (scoped to lesson-page) */
@@ -950,6 +1037,15 @@
     text-align: center;
   }
 
+  .lesson-page .lesson-overview-card .schedule-details {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-overview-section-title {
+    justify-content: center;
+    width: 100%;
+  }
+
   .lesson-page .schedule-row {
     flex-direction: column;
     align-items: flex-start;
@@ -1089,6 +1185,23 @@
 .dark-mode .lesson-page .lesson-card-header i {
   background: rgba(96, 165, 250, 0.14);
   border: 1px solid rgba(96, 165, 250, 0.16);
+}
+
+[data-theme='dark'] .lesson-overview-divider,
+.dark-mode .lesson-overview-divider {
+  background: linear-gradient(90deg, transparent 0%, var(--lesson-border-strong) 12%, var(--lesson-border-strong) 88%, transparent 100%);
+}
+
+[data-theme='dark'] .lesson-overview-section-title,
+.dark-mode .lesson-overview-section-title {
+  color: var(--lesson-accent-strong);
+}
+
+[data-theme='dark'] .lesson-overview-section-title i,
+.dark-mode .lesson-overview-section-title i {
+  background: rgba(96, 165, 250, 0.14);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  color: var(--lesson-accent-strong);
 }
 
 [data-theme='dark'] .lesson-page-title,

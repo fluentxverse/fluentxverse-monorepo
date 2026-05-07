@@ -71,7 +71,7 @@ const getZkCertificationBadge = (tutor: Tutor) => {
 };
 
 // Tutor Card Component (inline for better control)
-const TutorCard = ({ tutor, onBookClick, isAuthenticated }: { tutor: Tutor; onBookClick: (tutor: Tutor) => void; isAuthenticated: boolean }) => {
+const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: Tutor) => void }) => {
   const displayName = tutor.displayName || `${tutor.firstName} ${tutor.lastName}`;
   const initials = `${tutor.firstName?.[0] || ''}${tutor.lastName?.[0] || ''}`.toUpperCase();
   const rating = tutor.rating ? tutor.rating.toFixed(1) : 'New';
@@ -79,19 +79,15 @@ const TutorCard = ({ tutor, onBookClick, isAuthenticated }: { tutor: Tutor; onBo
   const sessionCount = tutor.totalSessions || 0;
 
   const handleCardClick = (e: any) => {
-    // Don't navigate if clicking the Book Now button
+    // Keep explicit actions from triggering the card-level quick booking modal.
     if (e.target.closest('.tutor-card-new__cta') || e.target.closest('.tutor-card-new__zk-badge')) {
       return;
     }
-    window.location.href = `/tutor/${tutor.userId}`;
+    onBookClick(tutor);
   };
 
   const handleBookNow = (e: any) => {
     e.stopPropagation();
-    if (!isAuthenticated) {
-      window.location.href = `/tutor/${tutor.userId}`;
-      return;
-    }
     onBookClick(tutor);
   };
 
@@ -189,10 +185,17 @@ const TutorCard = ({ tutor, onBookClick, isAuthenticated }: { tutor: Tutor; onBo
         )}
       </div>
 
-      {/* Footer with Book Now */}
+  {/* Footer with Book Now */}
       <div className="tutor-card-new__footer">
+        <a
+          href={`/tutor/${tutor.userId}`}
+          onClick={(e: any) => e.stopPropagation()}
+          className="tutor-card-new__cta tutor-card-new__cta--secondary"
+        >
+          View Profile
+        </a>
         <button onClick={handleBookNow} className="tutor-card-new__cta">
-          {isAuthenticated ? 'Book Now' : 'View Profile'}
+          Show Schedule
           <i className="ri-arrow-right-line"></i>
         </button>
       </div>
@@ -836,7 +839,7 @@ export const BrowseTutorsPage = () => {
 
                     {/* Show tutor cards */}
                     {tutors.map((tutor) => (
-                      <TutorCard key={tutor.userId} tutor={tutor} onBookClick={handleBookClick} isAuthenticated={isAuthenticated} />
+                      <TutorCard key={tutor.userId} tutor={tutor} onBookClick={handleBookClick} />
                     ))}
                   </div>
 
@@ -844,7 +847,7 @@ export const BrowseTutorsPage = () => {
                   {!loading && tutors.length === 0 && (
                     <div className="browse-empty">
                       <div className="browse-empty__icon">
-                        <i className="ri-user-search-line"></i>
+                        <i className="ri-search-line"></i>
                       </div>
                       <h3>No tutors found</h3>
                       <p>Try adjusting your filters or search query</p>
