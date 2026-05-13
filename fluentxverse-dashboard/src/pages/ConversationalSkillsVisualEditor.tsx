@@ -18,6 +18,15 @@ import '../components/TutorGuideStep.css';
 
 // Autosave constants
 const AUTOSAVE_DELAY_MS = 5000; // 5 seconds
+type ConversationalTheme = 'light' | 'dark';
+
+const getStoredConversationalTheme = (): ConversationalTheme => {
+  try {
+    return (localStorage.getItem('csve-theme') as ConversationalTheme) || 'light';
+  } catch {
+    return 'light';
+  }
+};
 
 // ============================================================================
 // SHARED TYPES
@@ -1856,6 +1865,7 @@ export default function ConversationalSkillsVisualEditor() {
   // UI state
   const [activeElement, setActiveElement] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ConversationalTheme>(getStoredConversationalTheme);
 
   const id = params?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -2035,6 +2045,7 @@ export default function ConversationalSkillsVisualEditor() {
   const handleOpenPreview = () => {
     if (!lesson) return;
     sessionStorage.setItem(`preview-${lesson.id}`, JSON.stringify({
+      theme,
       backgroundImage,
       overlayColor,
       chapterName,
@@ -2051,6 +2062,14 @@ export default function ConversationalSkillsVisualEditor() {
       feedbackData,
     }));
     window.open(`/conversational-skills-preview/${lesson.id}`, '_blank');
+  };
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    try {
+      localStorage.setItem('csve-theme', next);
+    } catch {}
   };
 
   const handleBack = () => {
@@ -2103,7 +2122,7 @@ export default function ConversationalSkillsVisualEditor() {
   // ============================================================================
 
   return (
-    <div className="csve-fullpage">
+    <div className={`csve-fullpage csve-${theme}`}>
       {/* AI Content Generator Widget */}
       <AIContentGenerator
         topic={lessonName}
@@ -2306,6 +2325,14 @@ export default function ConversationalSkillsVisualEditor() {
           </span>
         </div>
         <div className="csve-toolbar-right">
+          <button
+            className="csve-toolbar-btn"
+            onClick={toggleTheme}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} material theme`}
+          >
+            <i className={theme === 'dark' ? 'ri-sun-line' : 'ri-moon-line'} />
+            <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
+          </button>
           <button className="csve-toolbar-btn" onClick={() => setShowHelpManual(true)} title="Editor Manual">
             <i className="ri-question-line" />
             <span>Help</span>

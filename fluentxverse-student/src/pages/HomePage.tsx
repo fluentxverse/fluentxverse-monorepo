@@ -663,7 +663,7 @@ const HomePage = () => {
                   <div className="landing-hero-image">
                     <div className="landing-hero-image-wrapper">
                       <img 
-                        src="/assets/img/banner/banner_woman_register.png" 
+                        src="/assets/img/banner/banner_woman.webp" 
                         alt="Happy student learning English" 
                       />
                     </div>

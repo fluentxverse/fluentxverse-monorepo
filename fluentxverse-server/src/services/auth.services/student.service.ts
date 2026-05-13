@@ -5,6 +5,81 @@ import type { RegisterParams, LoginParams, RegisteredParams, Suspended, Register
 import { invalidateUserTokens } from '../../db/redis';
 import WalletService from "../wallet.services/wallet.service";
 
+function parseJsonValue(value: any) {
+  if (!value || typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function toPlainNumber(value: any): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'object' && typeof value.toNumber === 'function') return value.toNumber();
+  if (typeof value === 'object' && typeof value.toInt === 'function') return value.toInt();
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toStringArray(value: any): string[] {
+  const parsed = parseJsonValue(value);
+  if (Array.isArray(parsed)) {
+    return parsed.map(item => String(item).trim()).filter(Boolean);
+  }
+  if (typeof parsed === 'string') {
+    return parsed
+      .split(/\r?\n|;/)
+      .map(item => item.replace(/^[-•]\s*/, '').trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function buildLevelAssessment(rawAssessment: any, studentData: any) {
+  const assessment = parseJsonValue(rawAssessment || studentData.studentLevelAssessment || studentData.assessmentResult);
+  const source = assessment && typeof assessment === 'object' ? assessment : {};
+
+  const studentLevel = source.studentLevel || source.student_level || source.level || source.levelName || studentData.assessedLevel;
+  const curriculum = source.curriculum || source.curriculumName || source.course || source.courseName;
+  const dateAssessed = source.dateAssessed || source.assessmentDate || source.assessedAt || source.createdAt || source.updatedAt;
+  const assessedBy = source.assessedBy || source.assessor || source.assessorName || source.conductedBy || source.tutorName;
+  const maxScore = toPlainNumber(source.maxScore || source.scoreMax || source.score_max) || 3;
+
+  const comprehension = toPlainNumber(source.comprehension ?? source.comprehensionScore ?? source.comprehension_score);
+  const pronunciation = toPlainNumber(source.pronunciation ?? source.pronunciationScore ?? source.pronunciation_score);
+  const grammar = toPlainNumber(source.grammar ?? source.grammarScore ?? source.grammar_score);
+  const remarks = toStringArray(source.remarks || source.assessmentRemarks || source.assessment_remarks);
+
+  const hasAssessmentData = [
+    studentLevel,
+    curriculum,
+    dateAssessed,
+    assessedBy,
+    comprehension,
+    pronunciation,
+    grammar,
+    ...remarks
+  ].some(value => value !== null && value !== undefined && value !== '');
+
+  if (!hasAssessmentData) return null;
+
+  return {
+    studentLevel: studentLevel || '',
+    curriculum: curriculum || '',
+    dateAssessed: dateAssessed || '',
+    scores: {
+      comprehension,
+      pronunciation,
+      grammar,
+      maxScore
+    },
+    remarks,
+    assessedBy: assessedBy || ''
+  };
+}
+
 class StudentService {
   public async register(params: RegisterStudentParams & { familyName: string; givenName: string }): Promise<{ message: string }> {
     try {
@@ -608,15 +683,26 @@ class StudentService {
              COUNT(DISTINCT CASE WHEN b.status = 'confirmed' OR b.status = 'completed' THEN b END) as totalLessons,
              COUNT(DISTINCT CASE WHEN b.status = 'completed' AND b.attendanceStatus = 'present' THEN b END) as attendedLessons,
              COUNT(DISTINCT CASE WHEN b.status = 'confirmed' THEN b END) as upcomingLessons
+        OPTIONAL MATCH (s)-[]-(assessmentNode)
+        WHERE any(label IN labels(assessmentNode) WHERE label IN $assessmentLabels OR toLower(label) CONTAINS 'assessment')
+        WITH s, totalLessons, attendedLessons, upcomingLessons, assessmentNode,
+             coalesce(assessmentNode.dateAssessed, assessmentNode.assessmentDate, assessmentNode.assessedAt, assessmentNode.createdAt, assessmentNode.updatedAt, '') as assessmentSortKey
+        ORDER BY assessmentSortKey DESC
+        WITH s, totalLessons, attendedLessons, upcomingLessons, collect(assessmentNode)[0] as latestAssessment
         RETURN s {
           .*,
           totalLessons: totalLessons,
           attendedLessons: attendedLessons,
           upcomingLessons: upcomingLessons,
-          attendanceRate: CASE WHEN totalLessons > 0 THEN (attendedLessons * 100.0 / totalLessons) ELSE 0 END
+          attendanceRate: CASE WHEN totalLessons > 0 THEN (attendedLessons * 100.0 / totalLessons) ELSE 0 END,
+          studentLevelAssessment: s.levelAssessment,
+          levelAssessment: CASE WHEN latestAssessment IS NULL THEN null ELSE properties(latestAssessment) END
         } as student
         `,
-        { studentId }
+        {
+          studentId,
+          assessmentLabels: ['LevelAssessment', 'StudentAssessment', 'AssessmentResult', 'StudentLevelAssessment']
+        }
       );
 
       if (result.records.length === 0) {
@@ -659,7 +745,8 @@ class StudentService {
         purpose: studentData.purpose || '',
         occupation: studentData.occupation || '',
         hobbies: studentData.hobbies ? (Array.isArray(studentData.hobbies) ? studentData.hobbies : []) : [],
-        bio: studentData.bio || ''
+        bio: studentData.bio || '',
+        levelAssessment: buildLevelAssessment(studentData.levelAssessment, studentData)
       };
       
       return profileData;

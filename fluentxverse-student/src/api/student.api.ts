@@ -22,6 +22,20 @@ export interface LastViewedLesson {
   viewedAt: number;
 }
 
+export interface LevelAssessment {
+  studentLevel?: string;
+  curriculum?: string;
+  dateAssessed?: string | number;
+  scores?: {
+    comprehension?: number | null;
+    pronunciation?: number | null;
+    grammar?: number | null;
+    maxScore?: number | null;
+  };
+  remarks?: string[];
+  assessedBy?: string;
+}
+
 export interface StudentProfile {
   id: string;
   email: string;
@@ -49,6 +63,7 @@ export interface StudentProfile {
   occupation?: string;
   hobbies?: string[];
   bio?: string;
+  levelAssessment?: LevelAssessment | null;
 }
 
 /**

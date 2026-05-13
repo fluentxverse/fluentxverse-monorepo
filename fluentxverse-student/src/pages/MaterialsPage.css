@@ -262,23 +262,10 @@
 
 .course-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
-}
-
-.course-rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.course-rating i {
-  color: #f59e0b;
 }
 
 .course-category {

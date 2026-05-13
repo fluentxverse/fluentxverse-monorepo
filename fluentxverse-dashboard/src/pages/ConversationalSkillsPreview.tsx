@@ -8,6 +8,16 @@ import { useRoute } from 'preact-iso';
 import { getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
 import './ConversationalSkillsPreview.css';
 
+type ConversationalTheme = 'light' | 'dark';
+
+const getStoredConversationalTheme = (): ConversationalTheme => {
+  try {
+    return (localStorage.getItem('csve-theme') as ConversationalTheme) || 'light';
+  } catch {
+    return 'light';
+  }
+};
+
 // ============================================================================
 // SHARED TYPES (same as Visual Editor)
 // ============================================================================
@@ -523,6 +533,7 @@ export default function ConversationalSkillsPreview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>('');
   const [previewOverrides, setPreviewOverrides] = useState<{
+    theme?: ConversationalTheme;
     backgroundImage?: string;
     overlayColor?: string;
     chapterName?: string;
@@ -539,6 +550,7 @@ export default function ConversationalSkillsPreview() {
     feedbackData?: FeedbackSectionData;
   } | null>(null);
   const [hasSessionData, setHasSessionData] = useState(false);
+  const [theme, setTheme] = useState<ConversationalTheme>(getStoredConversationalTheme);
 
   const id = params?.id;
 
@@ -548,7 +560,11 @@ export default function ConversationalSkillsPreview() {
       const storedData = sessionStorage.getItem(`preview-${id}`);
       if (storedData) {
         try {
-          setPreviewOverrides(JSON.parse(storedData));
+          const parsed = JSON.parse(storedData);
+          setPreviewOverrides(parsed);
+          if (parsed.theme === 'dark' || parsed.theme === 'light') {
+            setTheme(parsed.theme);
+          }
           setHasSessionData(true);
         } catch (e) {
           console.error('Failed to parse preview data:', e);
@@ -653,9 +669,16 @@ export default function ConversationalSkillsPreview() {
   const skill = lesson?.skill ?? 'speaking';
   const chapter = lesson?.chapter ?? 1;
   const lessonNumber = lesson?.lessonNumber ?? 1;
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    try {
+      localStorage.setItem('csve-theme', next);
+    } catch {}
+  };
 
   return (
-    <div className="csp-fullpage">
+    <div className={`csp-fullpage csp-${theme}`}>
       {/* Top Navigation Bar */}
       <nav className="csp-topbar">
         <div className="csp-topbar-content">
@@ -717,6 +740,11 @@ export default function ConversationalSkillsPreview() {
       </main>
 
       {/* Close Button */}
+      <button className="csp-theme-btn" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
+        <i className={theme === 'dark' ? 'ri-sun-line' : 'ri-moon-line'} />
+        <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
+      </button>
+
       <button className="csp-close-btn" onClick={() => window.close()} title="Close Preview">
         <i className="ri-close-line" />
       </button>

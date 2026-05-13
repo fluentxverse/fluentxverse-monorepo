@@ -10,7 +10,6 @@ interface Course {
   icon: string;
   category: string;
   lessons: number;
-  rating: number;
 }
 
 const courses: Course[] = [
@@ -21,7 +20,6 @@ const courses: Course[] = [
     icon: '💼',
     category: 'Business',
     lessons: 24,
-    rating: 4.8,
   },
   {
     id: 'conversational-skills',
@@ -30,7 +28,6 @@ const courses: Course[] = [
     icon: '💬',
     category: 'Conversation',
     lessons: 30,
-    rating: 4.9,
   },
   {
     id: 'job-interview-prep',
@@ -39,7 +36,6 @@ const courses: Course[] = [
     icon: '👔',
     category: 'Career',
     lessons: 18,
-    rating: 4.8,
   },
   {
     id: 'travel-english',
@@ -48,7 +44,6 @@ const courses: Course[] = [
     icon: '✈️',
     category: 'Travel',
     lessons: 20,
-    rating: 4.7,
   },
   {
     id: 'academic-english',
@@ -57,7 +52,6 @@ const courses: Course[] = [
     icon: '🎓',
     category: 'Academic',
     lessons: 22,
-    rating: 4.8,
   },
   {
     id: 'pronunciation',
@@ -66,7 +60,6 @@ const courses: Course[] = [
     icon: '🎤',
     category: 'Speaking',
     lessons: 16,
-    rating: 4.9,
   },
   {
     id: 'grammar-improvement',
@@ -75,7 +68,6 @@ const courses: Course[] = [
     icon: '📝',
     category: 'Grammar',
     lessons: 28,
-    rating: 4.7,
   },
   {
     id: 'vocabulary-building',
@@ -84,7 +76,6 @@ const courses: Course[] = [
     icon: '📚',
     category: 'Vocabulary',
     lessons: 25,
-    rating: 4.8,
   },
   {
     id: 'daily-dispatch',
@@ -93,7 +84,6 @@ const courses: Course[] = [
     icon: '📰',
     category: 'News',
     lessons: 0,
-    rating: 4.9,
   }
 ];
 
@@ -184,10 +174,6 @@ export default function MaterialsPage() {
                       </span>
                     </div>
                     <div className="course-footer">
-                      <div className="course-rating">
-                        <i className="fas fa-star" />
-                        <span>{course.rating.toFixed(1)}</span>
-                      </div>
                       <span className="course-category">{course.category}</span>
                     </div>
                   </div>

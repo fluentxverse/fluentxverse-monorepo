@@ -12,7 +12,7 @@ const Header = () => {
   const { path } = useLocation();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const { isDarkMode, toggleTheme } = useThemeStore();
-  const isLandingPage = path === '/';
+  const isLandingPage = path === '/' || path === '/register';
   const isPublicBrowsePage = path === '/browse-tutors' && !isAuthenticated;
   const isThemeLockedPage = isLandingPage || isPublicBrowsePage;
   const homeHref = isAuthenticated ? '/home' : '/';

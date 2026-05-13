@@ -502,15 +502,7 @@
     width: min(100%, 360px);
     aspect-ratio: 1.48;
     border-radius: 22px;
-    transform:
-      translate3d(
-        calc(-50% + (var(--spotlight-shift-x) * 0.06)),
-        calc(0px + (var(--spotlight-shift-y) * 0.04)),
-        0
-      )
-      rotateX(calc(var(--spotlight-tilt-x) * 0.45))
-      rotateY(calc(var(--spotlight-tilt-y) * 0.45))
-      rotateZ(-2deg);
+    transform: translate3d(-50%, 0, 0);
   }
 
   .beginner-welcome__card-copy {

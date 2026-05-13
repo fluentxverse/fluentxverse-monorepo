@@ -10417,3 +10417,241 @@
 .dqve-page .csve-mission-duration-input {
   font-family: 'Courier New', monospace;
 }
+
+/* ============================================================================
+   CONVERSATIONAL MATERIAL DARK THEME
+   Applies only to the material canvas/editor surfaces when .csve-dark is active.
+   ============================================================================ */
+
+.csve-fullpage.csve-dark {
+  --primary: #4a9eff;
+  --primary-dark: #2f7fe5;
+  --primary-light: #60a5fa;
+  --text-primary: #f4f7fb;
+  --text-secondary: #b8c1cf;
+  --text-muted: #8f99a8;
+  --border-color: #3b3b3b;
+  --surface: #222222;
+  --surface-raised: #292929;
+  --surface-soft: #303030;
+  --surface-muted: #1d1d1d;
+  background: #171717;
+}
+
+.csve-dark .csve-canvas {
+  background: #1b1b1b;
+  color: var(--text-primary);
+  scrollbar-color: #555 #242424;
+}
+
+.csve-dark .csve-canvas::-webkit-scrollbar-track {
+  background: #242424;
+}
+
+.csve-dark .csve-canvas::-webkit-scrollbar-thumb {
+  background: #555;
+  border: 3px solid #242424;
+}
+
+.csve-dark .csve-canvas::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+}
+
+.csve-dark .csve-topbar {
+  background: rgba(18, 18, 18, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.csve-dark .csve-section,
+.csve-dark .csve-vocab-card,
+.csve-dark .csve-expr-item,
+.csve-dark .csve-lesson-issue,
+.csve-dark .csve-lesson-goal-box,
+.csve-dark .csve-step-question,
+.csve-dark .csve-editable-card,
+.csve-dark .csve-intro-text-block,
+.csve-dark .csve-learn-step,
+.csve-dark .csve-stepb-section,
+.csve-dark .csve-apply-section,
+.csve-dark .csve-exercise-section,
+.csve-dark .csve-mission-section,
+.csve-dark .csve-feedback-section,
+.csve-dark .csve-expression-box,
+.csve-dark .csve-exercise-example,
+.csve-dark .csve-exercise-item,
+.csve-dark .csve-mission-situation-box,
+.csve-dark .csve-mission-instruction-box,
+.csve-dark .csve-mission-grammar-tip,
+.csve-dark .csve-mission-topic-card,
+.csve-dark .csve-fb-goal-card,
+.csve-dark .csve-fb-rubric-card,
+.csve-dark .csve-fb-category-card,
+.csve-dark .csve-fb-example-card {
+  background: var(--surface);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.csve-dark .csve-section-header {
+  background: #242424;
+  border-bottom-color: var(--border-color);
+}
+
+.csve-dark .csve-section-placeholder .csve-section-body {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.025) 10px,
+    rgba(255, 255, 255, 0.025) 20px
+  );
+}
+
+.csve-dark :is(
+  .csve-section-header h2,
+  .csve-section-title,
+  .csve-section-title-editable,
+  .csve-intro-text,
+  .csve-issue-content h3,
+  .csve-goal-header,
+  .csve-step-instruction,
+  .csve-stepb-name,
+  .csve-step-name,
+  .csve-vocab-english-input,
+  .csve-expr-definition-input,
+  .csve-expr-expression-input,
+  .csve-expr-example-input,
+  .csve-apply-situation,
+  .csve-exercise-instruction,
+  .csve-exercise-speech-bubble,
+  .csve-mission-situation,
+  .csve-mission-instruction,
+  .csve-mission-step-instruction,
+  .csve-mission-topic-title,
+  .csve-fb-goal-text,
+  .csve-fb-rubric-title,
+  .csve-fb-cat-name
+) {
+  color: var(--text-primary);
+}
+
+.csve-dark :is(
+  .csve-section-body,
+  .csve-issue-content li,
+  .csve-vocab-translation-input,
+  .csve-stepb-explanation,
+  .csve-apply-script-input,
+  .csve-apply-tip-input,
+  .csve-expression-input,
+  .csve-exercise-item-text,
+  .csve-mission-situation-translation,
+  .csve-mission-instruction-translation,
+  .csve-mission-tip-input,
+  .csve-mission-question-input,
+  .csve-mission-hint-input,
+  .csve-field-hint
+) {
+  color: var(--text-secondary);
+}
+
+.csve-dark :is(
+  input,
+  textarea,
+  select,
+  .csve-rich-text-input,
+  .csve-intro-textarea,
+  .csve-step-instruction-input,
+  .csve-step-script-input,
+  .csve-step-tip-input,
+  .csve-vocab-english-input,
+  .csve-vocab-highlight-input,
+  .csve-vocab-translation-input,
+  .csve-expr-expression-input,
+  .csve-expr-definition-input,
+  .csve-expr-example-input,
+  .csve-apply-script-input,
+  .csve-apply-tip-input,
+  .csve-expression-input,
+  .csve-mission-translation-input,
+  .csve-mission-challenge-input,
+  .csve-mission-duration-input,
+  .csve-mission-script-input,
+  .csve-mission-tip-input,
+  .csve-mission-question-input,
+  .csve-mission-hint-input,
+  .csve-mission-topic-title,
+  .csve-mission-topic-q-input
+) {
+  background-color: var(--surface-raised);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark :is(input, textarea, select)::placeholder,
+.csve-dark .csve-rich-text-input:empty::before {
+  color: var(--text-muted);
+}
+
+.csve-dark :is(
+  .csve-vocab-image-placeholder,
+  .csve-expr-image-placeholder,
+  .csve-apply-img-placeholder,
+  .csve-exercise-image-placeholder,
+  .csve-image-placeholder,
+  .csve-mission-image,
+  .csve-reading-image-add
+) {
+  background: var(--surface-soft);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.csve-dark .csve-exercise-speech-bubble {
+  border-color: var(--border-color);
+}
+
+.csve-dark .csve-exercise-conv-left .csve-exercise-speech-bubble::before,
+.csve-dark .csve-exercise-conv-left .csve-exercise-speech-bubble::after,
+.csve-dark .csve-exercise-conv-right .csve-exercise-speech-bubble::before,
+.csve-dark .csve-exercise-conv-right .csve-exercise-speech-bubble::after {
+  border-color: transparent;
+}
+
+.csve-dark .csve-step-type-btn,
+.csve-dark .csve-add-btn,
+.csve-dark .csve-mission-add-step,
+.csve-dark .csve-mission-add-question,
+.csve-dark .csve-mission-add-topic,
+.csve-dark .csve-fb-add-tag,
+.csve-dark .csve-fb-add-example {
+  background: var(--surface-raised);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.csve-dark .csve-step-type-btn.active,
+.csve-dark .csve-step-type-btn:hover,
+.csve-dark .csve-add-btn:hover,
+.csve-dark .csve-mission-add-step:hover,
+.csve-dark .csve-mission-add-question:hover,
+.csve-dark .csve-mission-add-topic:hover {
+  background: rgba(74, 158, 255, 0.16);
+  border-color: rgba(74, 158, 255, 0.45);
+  color: #dbeafe;
+}
+
+.csve-dark .tgs-guide,
+.csve-dark .csve-tutor-guide,
+.csve-dark .csve-stepb-tutor-guide,
+.csve-dark .csve-mission-tutor-guide {
+  background: #242424;
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark .tgs-step,
+.csve-dark .csve-mission-tutor-step {
+  background: var(--surface-raised);
+  border-color: var(--border-color);
+}

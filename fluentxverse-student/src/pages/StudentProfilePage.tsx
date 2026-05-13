@@ -3,7 +3,7 @@ import { useLocation } from 'preact-iso';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
-import { getStudentProfile, updateLessonPreferences, updateAboutMe, saveLastViewedLesson, getLastViewedLesson, type StudentProfile, type LessonPreferences, type AboutMe, type LastViewedLesson } from '../api/student.api';
+import { getStudentProfile, updateLessonPreferences, updateAboutMe, saveLastViewedLesson, getLastViewedLesson, type StudentProfile, type LessonPreferences, type AboutMe, type LastViewedLesson, type LevelAssessment } from '../api/student.api';
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './StudentProfilePage.css';
 import './StudentProfileLessonPreferences.css';
@@ -305,14 +305,34 @@ const StudentProfilePage = () => {
     errorCorrection: 'tutor_choice',
     otherRequests: ''
   });
+  const [editPreferences, setEditPreferences] = useState<LessonPreferences>({
+    preferCameraOn: true,
+    errorCorrection: 'tutor_choice',
+    otherRequests: ''
+  });
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [savingPreferences, setSavingPreferences] = useState(false);
   const [preferencesMessage, setPreferencesMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Check if preferences have changed
-  const hasPreferencesChanged = () => {
-    return preferences.preferCameraOn !== initialPreferences.preferCameraOn ||
-           preferences.errorCorrection !== initialPreferences.errorCorrection ||
-           preferences.otherRequests !== initialPreferences.otherRequests;
+  const havePreferencesChanged = (current: LessonPreferences, initial: LessonPreferences) => {
+    return current.preferCameraOn !== initial.preferCameraOn ||
+           current.errorCorrection !== initial.errorCorrection ||
+           current.otherRequests !== initial.otherRequests;
+  };
+
+  const hasPreferencesChanged = () => havePreferencesChanged(preferences, initialPreferences);
+  const hasEditPreferencesChanged = () => havePreferencesChanged(editPreferences, initialPreferences);
+
+  const getErrorCorrectionLabel = (value: LessonPreferences['errorCorrection']) => {
+    if (value === 'during_feedback') return 'During feedback';
+    if (value === 'proactively') return 'Proactively';
+    return "Tutor's choice";
+  };
+
+  const getErrorCorrectionDescription = (value: LessonPreferences['errorCorrection']) => {
+    if (value === 'during_feedback') return 'Corrections are saved for the end-of-lesson review.';
+    if (value === 'proactively') return 'Corrections happen as you move through the lesson.';
+    return 'Your tutor chooses the best timing for corrections.';
   };
 
   // About Me state
@@ -391,6 +411,7 @@ const StudentProfilePage = () => {
             };
             setPreferences(lessonPreferences);
             setInitialPreferences(lessonPreferences);
+            setEditPreferences(lessonPreferences);
           }
           // Load saved About Me data if available
           if (result.data.purpose || result.data.occupation || result.data.hobbies || result.data.bio) {
@@ -417,16 +438,21 @@ const StudentProfilePage = () => {
   }, []);
 
   // Save preferences handler
-  const handleSavePreferences = async () => {
+  const handleSavePreferences = async (nextPreferences: LessonPreferences = preferences) => {
     setSavingPreferences(true);
     setPreferencesMessage(null);
     
     try {
-      const result = await updateLessonPreferences(preferences);
+      const result = await updateLessonPreferences(nextPreferences);
       if (result.success) {
         setPreferencesMessage({ type: 'success', text: 'Preferences saved!' });
-        setInitialPreferences({ ...preferences });
-        setTimeout(() => setPreferencesMessage(null), 3000);
+        setPreferences({ ...nextPreferences });
+        setInitialPreferences({ ...nextPreferences });
+        setEditPreferences({ ...nextPreferences });
+        setTimeout(() => {
+          setPreferencesMessage(null);
+          setShowPreferencesModal(false);
+        }, 1200);
       } else {
         setPreferencesMessage({ type: 'error', text: result.error || 'Failed to save preferences' });
       }
@@ -434,6 +460,19 @@ const StudentProfilePage = () => {
       setPreferencesMessage({ type: 'error', text: err.message || 'Failed to save preferences' });
     } finally {
       setSavingPreferences(false);
+    }
+  };
+
+  const openPreferencesModal = () => {
+    setEditPreferences({ ...preferences });
+    setPreferencesMessage(null);
+    setShowPreferencesModal(true);
+  };
+
+  const closePreferencesModal = () => {
+    if (!savingPreferences) {
+      setShowPreferencesModal(false);
+      setPreferencesMessage(null);
     }
   };
 
@@ -497,6 +536,23 @@ const StudentProfilePage = () => {
     }
   };
 
+  const formatAssessmentDate = (date: LevelAssessment['dateAssessed']) => {
+    if (!date) return 'Not recorded';
+    if (typeof date === 'string' && Number.isNaN(Date.parse(date))) return date;
+    try {
+      const parsed = new Date(date);
+      if (Number.isNaN(parsed.getTime())) return String(date);
+      return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return String(date);
+    }
+  };
+
+  const formatAssessmentScore = (score: number | null | undefined, maxScore: number | null | undefined) => {
+    if (score === null || score === undefined) return 'Not scored';
+    return `${score} / ${maxScore || 3}`;
+  };
+
   // Display data with safe fallbacks
   const displayData = profileData ? {
     id: profileData.id || 'N/A',
@@ -516,8 +572,23 @@ const StudentProfilePage = () => {
     timezone: profileData.timezone || 'GMT+8 (Philippine Time)',
     preferredTopics: Array.isArray(profileData.preferredTopics) && profileData.preferredTopics.length > 0
       ? profileData.preferredTopics 
-      : ['Business English', 'Conversation', 'Pronunciation']
+      : ['Business English', 'Conversation', 'Pronunciation'],
+    levelAssessment: profileData.levelAssessment || null
   } : null;
+
+  const assessmentData = displayData?.levelAssessment || null;
+  const assessmentHasData = Boolean(
+    assessmentData && (
+      assessmentData.studentLevel ||
+      assessmentData.curriculum ||
+      assessmentData.dateAssessed ||
+      assessmentData.assessedBy ||
+      assessmentData.scores?.comprehension !== null && assessmentData.scores?.comprehension !== undefined ||
+      assessmentData.scores?.pronunciation !== null && assessmentData.scores?.pronunciation !== undefined ||
+      assessmentData.scores?.grammar !== null && assessmentData.scores?.grammar !== undefined ||
+      (Array.isArray(assessmentData.remarks) && assessmentData.remarks.length > 0)
+    )
+  );
 
   const openHeadsetModal = async () => {
     setShowHeadsetModal(true);
@@ -844,170 +915,104 @@ const StudentProfilePage = () => {
                 </div>
               </div>
 
-              {/* Lesson Preferences Card */}
-              <div className="content-card preferences-card preferences-card-v2">
+              {/* Level Assessment Card */}
+              <div className="content-card assessment-card">
                 <h3 className="card-title">
-                  <i className="fi fi-sr-settings-sliders"></i>
-                  Lesson Preferences
+                  <i className="fas fa-chart-line"></i>
+                  Level Assessment
                 </h3>
 
-                <div className="profile-lesson-pref">
-                  <section className="profile-lesson-pref-section">
-                    <div className="profile-lesson-pref-header">
-                      <span className="profile-lesson-pref-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h8A2.5 2.5 0 0 1 17 7.5v9A2.5 2.5 0 0 1 14.5 19h-8A2.5 2.5 0 0 1 4 16.5v-9Z" />
-                          <path d="m17 10 3-2v8l-3-2v-4Z" />
-                          <circle cx="9.5" cy="9.5" r="1" />
-                        </svg>
-                      </span>
-                      <div className="profile-lesson-pref-copy">
-                        <span className="profile-lesson-pref-kicker">Session Setup</span>
-                        <h4 className="profile-lesson-pref-heading">Prefer camera on</h4>
-                        <p className="profile-lesson-pref-helper">
-                          Pick the default classroom setup that feels most comfortable for you.
-                        </p>
+                {assessmentHasData && assessmentData ? (
+                  <>
+                    <div className="assessment-summary-grid">
+                      <div className="assessment-summary-item">
+                        <span className="assessment-label">Student Level</span>
+                        <strong>{assessmentData.studentLevel || 'Not recorded'}</strong>
+                      </div>
+                      <div className="assessment-summary-item">
+                        <span className="assessment-label">Curriculum</span>
+                        <strong>{assessmentData.curriculum || 'Not recorded'}</strong>
+                      </div>
+                      <div className="assessment-summary-item">
+                        <span className="assessment-label">Date Assessed</span>
+                        <strong>{formatAssessmentDate(assessmentData.dateAssessed)}</strong>
                       </div>
                     </div>
 
-                    <div className="profile-lesson-pref-toggle-grid" role="group" aria-label="Prefer camera on">
-                      <button
-                        type="button"
-                        className={`profile-lesson-pref-toggle ${preferences.preferCameraOn ? 'is-active' : ''}`}
-                        onClick={() => setPreferences((p) => ({ ...p, preferCameraOn: true }))}
-                      >
-                        <span className="profile-lesson-pref-toggle-title">Yes</span>
-                        <span className="profile-lesson-pref-toggle-copy">Use video by default</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`profile-lesson-pref-toggle ${!preferences.preferCameraOn ? 'is-active' : ''}`}
-                        onClick={() => setPreferences((p) => ({ ...p, preferCameraOn: false }))}
-                      >
-                        <span className="profile-lesson-pref-toggle-title">No</span>
-                        <span className="profile-lesson-pref-toggle-copy">Start audio-first</span>
-                      </button>
-                    </div>
-                  </section>
-
-                  <section className="profile-lesson-pref-section">
-                    <div className="profile-lesson-pref-header">
-                      <span className="profile-lesson-pref-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M7 13h10" />
-                          <path d="M7 9h10" />
-                          <path d="M7 17h6" />
-                          <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-11Z" />
-                        </svg>
-                      </span>
-                      <div className="profile-lesson-pref-copy">
-                        <span className="profile-lesson-pref-kicker">Correction Style</span>
-                        <h4 className="profile-lesson-pref-heading">How should your tutor correct you?</h4>
-                        <p className="profile-lesson-pref-helper">
-                          Choose the correction pace that helps you stay comfortable and focused.
-                        </p>
+                    <div className="assessment-score-section">
+                      <span className="assessment-section-label">Assessment Scores</span>
+                      <div className="assessment-score-grid">
+                        <div className="assessment-score-pill">
+                          <span>Comprehension</span>
+                          <strong>{formatAssessmentScore(assessmentData.scores?.comprehension, assessmentData.scores?.maxScore)}</strong>
+                        </div>
+                        <div className="assessment-score-pill">
+                          <span>Pronunciation</span>
+                          <strong>{formatAssessmentScore(assessmentData.scores?.pronunciation, assessmentData.scores?.maxScore)}</strong>
+                        </div>
+                        <div className="assessment-score-pill">
+                          <span>Grammar</span>
+                          <strong>{formatAssessmentScore(assessmentData.scores?.grammar, assessmentData.scores?.maxScore)}</strong>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="profile-lesson-pref-choice-list" role="group" aria-label="Error correction style">
-                      <button
-                        type="button"
-                        className={`profile-lesson-pref-choice ${preferences.errorCorrection === 'during_feedback' ? 'is-active' : ''}`}
-                        onClick={() => setPreferences((p) => ({ ...p, errorCorrection: 'during_feedback' }))}
-                      >
-                        <span className="profile-lesson-pref-choice-dot" aria-hidden="true"></span>
-                        <span className="profile-lesson-pref-choice-copy">
-                          <span className="profile-lesson-pref-choice-title">During feedback</span>
-                          <span className="profile-lesson-pref-choice-text">Save corrections for the end-of-lesson review.</span>
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`profile-lesson-pref-choice ${preferences.errorCorrection === 'proactively' ? 'is-active' : ''}`}
-                        onClick={() => setPreferences((p) => ({ ...p, errorCorrection: 'proactively' }))}
-                      >
-                        <span className="profile-lesson-pref-choice-dot" aria-hidden="true"></span>
-                        <span className="profile-lesson-pref-choice-copy">
-                          <span className="profile-lesson-pref-choice-title">Proactively</span>
-                          <span className="profile-lesson-pref-choice-text">Correct me as we move through the lesson.</span>
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`profile-lesson-pref-choice ${preferences.errorCorrection === 'tutor_choice' ? 'is-active' : ''}`}
-                        onClick={() => setPreferences((p) => ({ ...p, errorCorrection: 'tutor_choice' }))}
-                      >
-                        <span className="profile-lesson-pref-choice-dot" aria-hidden="true"></span>
-                        <span className="profile-lesson-pref-choice-copy">
-                          <span className="profile-lesson-pref-choice-title">Tutor&apos;s choice</span>
-                          <span className="profile-lesson-pref-choice-text">Let the tutor choose the best timing for corrections.</span>
-                        </span>
-                      </button>
-                    </div>
-                  </section>
-
-                  <section className="profile-lesson-pref-section">
-                    <div className="profile-lesson-pref-header">
-                      <span className="profile-lesson-pref-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M7 4h10a2 2 0 0 1 2 2v12l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z" />
-                          <path d="M9 9h6" />
-                          <path d="M9 12h6" />
-                        </svg>
-                      </span>
-                      <div className="profile-lesson-pref-copy">
-                        <span className="profile-lesson-pref-kicker">Extra Context</span>
-                        <h4 className="profile-lesson-pref-heading">Other requests</h4>
-                        <p className="profile-lesson-pref-helper">
-                          Share anything your tutor should keep in mind for future lessons.
-                        </p>
-                      </div>
-                    </div>
-
-	                    <textarea
-	                      className="profile-lesson-pref-notes"
-	                      placeholder="Anything you'd like your tutor to keep in mind for future lessons?"
-	                      value={preferences.otherRequests}
-	                      maxLength={OTHER_REQUESTS_MAX_LENGTH}
-	                      onChange={(e) => setPreferences((p) => ({
-	                        ...p,
-	                        otherRequests: (e.target as HTMLTextAreaElement).value.slice(0, OTHER_REQUESTS_MAX_LENGTH)
-	                      }))}
-	                      rows={4}
-	                    />
-	                    <div className="profile-lesson-pref-limit">
-	                      <span>{preferences.otherRequests.length}/{OTHER_REQUESTS_MAX_LENGTH}</span>
-	                    </div>
-	                  </section>
-                </div>
-
-                {/* Save Button - Only show when changes made */}
-                {(hasPreferencesChanged() || preferencesMessage) && (
-                  <div className="preference-actions">
-                    <button 
-                      className="save-preferences-btn"
-                      onClick={handleSavePreferences}
-                      disabled={savingPreferences || !hasPreferencesChanged()}
-                    >
-                      {savingPreferences ? (
-                        <>
-                          <i className="fi fi-sr-spinner profile-inline-spinner"></i>
-                          Saving...
-                        </>
+                    <div className="assessment-remarks">
+                      <span className="assessment-section-label">Assessment Remarks</span>
+                      {assessmentData.remarks && assessmentData.remarks.length > 0 ? (
+                        <ul>
+                          {assessmentData.remarks.map((remark, index) => (
+                            <li key={`${remark}-${index}`}>{remark}</li>
+                          ))}
+                        </ul>
                       ) : (
-                        <>
-                          <i className="fi fi-sr-check"></i>
-                          Save Changes
-                        </>
+                        <p className="assessment-empty-text">No remarks recorded.</p>
                       )}
-                    </button>
-                    {preferencesMessage && (
-                      <span className={`preference-message ${preferencesMessage.type}`}>
-                        {preferencesMessage.text}
-                      </span>
-                    )}
+                    </div>
+
+                    <div className="assessment-footer">
+                      <span>Assessment conducted by</span>
+                      <strong>{assessmentData.assessedBy || 'Not recorded'}</strong>
+                    </div>
+                  </>
+                ) : (
+                  <div className="assessment-empty-state">
+                    <span className="assessment-empty-icon">
+                      <i className="fas fa-chart-line"></i>
+                    </span>
+                    <strong>No level assessment yet</strong>
+                    <p>Your assessment results will appear here after they are recorded.</p>
                   </div>
                 )}
+              </div>
+
+              {/* Lesson Preferences Card */}
+              <div className="content-card preferences-card preferences-card-v2">
+                <div className="card-title-row">
+                  <h3 className="card-title">
+                    <i className="fi fi-sr-settings-sliders"></i>
+                    Lesson Preferences
+                  </h3>
+                  <button className="edit-about-me-btn" onClick={openPreferencesModal} aria-label="Edit lesson preferences">
+                    <i className="fi fi-sr-pencil"></i>
+                  </button>
+                </div>
+
+                <div className="lesson-preferences-display">
+                  <div className="lesson-preference-display-item">
+                    <span className="display-label">Session Setup</span>
+                    <span className="display-value">{preferences.preferCameraOn ? 'Prefer camera on' : 'Start audio-first'}</span>
+                  </div>
+                  <div className="lesson-preference-display-item">
+                    <span className="display-label">Correction Style</span>
+                    <span className="display-value">{getErrorCorrectionLabel(preferences.errorCorrection)}</span>
+                    <span className="display-helper">{getErrorCorrectionDescription(preferences.errorCorrection)}</span>
+                  </div>
+                  <div className="lesson-preference-display-item">
+                    <span className="display-label">Other Requests</span>
+                    <span className="display-value">{preferences.otherRequests || 'None added'}</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -1467,6 +1472,182 @@ const StudentProfilePage = () => {
               <button className="done-btn" onClick={closeHeadsetModal}>
                 Done
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lesson Preferences Edit Modal */}
+      {showPreferencesModal && (
+        <div className="about-me-modal-overlay" onClick={closePreferencesModal}>
+          <div className="about-me-modal preferences-edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="about-me-modal-header">
+              <div className="modal-header-icon">
+                <i className="fi fi-sr-settings-sliders"></i>
+              </div>
+              <div className="modal-header-text">
+                <h2>Edit Lesson Preferences</h2>
+                <p>Set your default classroom preferences</p>
+              </div>
+              <button className="close-modal-btn" onClick={closePreferencesModal}>
+                <i className="fi fi-sr-cross-small"></i>
+              </button>
+            </div>
+
+            <div className="about-me-modal-body preferences-edit-modal-body">
+              <div className="profile-lesson-pref">
+                <section className="profile-lesson-pref-section">
+                  <div className="profile-lesson-pref-header">
+                    <span className="profile-lesson-pref-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h8A2.5 2.5 0 0 1 17 7.5v9A2.5 2.5 0 0 1 14.5 19h-8A2.5 2.5 0 0 1 4 16.5v-9Z" />
+                        <path d="m17 10 3-2v8l-3-2v-4Z" />
+                        <circle cx="9.5" cy="9.5" r="1" />
+                      </svg>
+                    </span>
+                    <div className="profile-lesson-pref-copy">
+                      <span className="profile-lesson-pref-kicker">Session Setup</span>
+                      <h4 className="profile-lesson-pref-heading">Prefer camera on</h4>
+                      <p className="profile-lesson-pref-helper">
+                        Pick the default classroom setup that feels most comfortable for you.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="profile-lesson-pref-toggle-grid" role="group" aria-label="Prefer camera on">
+                    <button
+                      type="button"
+                      className={`profile-lesson-pref-toggle ${editPreferences.preferCameraOn ? 'is-active' : ''}`}
+                      onClick={() => setEditPreferences((p) => ({ ...p, preferCameraOn: true }))}
+                    >
+                      <span className="profile-lesson-pref-toggle-title">Yes</span>
+                      <span className="profile-lesson-pref-toggle-copy">Use video by default</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-lesson-pref-toggle ${!editPreferences.preferCameraOn ? 'is-active' : ''}`}
+                      onClick={() => setEditPreferences((p) => ({ ...p, preferCameraOn: false }))}
+                    >
+                      <span className="profile-lesson-pref-toggle-title">No</span>
+                      <span className="profile-lesson-pref-toggle-copy">Start audio-first</span>
+                    </button>
+                  </div>
+                </section>
+
+                <section className="profile-lesson-pref-section">
+                  <div className="profile-lesson-pref-header">
+                    <span className="profile-lesson-pref-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 13h10" />
+                        <path d="M7 9h10" />
+                        <path d="M7 17h6" />
+                        <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-11Z" />
+                      </svg>
+                    </span>
+                    <div className="profile-lesson-pref-copy">
+                      <span className="profile-lesson-pref-kicker">Correction Style</span>
+                      <h4 className="profile-lesson-pref-heading">How should your tutor correct you?</h4>
+                      <p className="profile-lesson-pref-helper">
+                        Choose the correction pace that helps you stay comfortable and focused.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="profile-lesson-pref-choice-list" role="group" aria-label="Error correction style">
+                    <button
+                      type="button"
+                      className={`profile-lesson-pref-choice ${editPreferences.errorCorrection === 'during_feedback' ? 'is-active' : ''}`}
+                      onClick={() => setEditPreferences((p) => ({ ...p, errorCorrection: 'during_feedback' }))}
+                    >
+                      <span className="profile-lesson-pref-choice-dot" aria-hidden="true"></span>
+                      <span className="profile-lesson-pref-choice-copy">
+                        <span className="profile-lesson-pref-choice-title">During feedback</span>
+                        <span className="profile-lesson-pref-choice-text">Save corrections for the end-of-lesson review.</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-lesson-pref-choice ${editPreferences.errorCorrection === 'proactively' ? 'is-active' : ''}`}
+                      onClick={() => setEditPreferences((p) => ({ ...p, errorCorrection: 'proactively' }))}
+                    >
+                      <span className="profile-lesson-pref-choice-dot" aria-hidden="true"></span>
+                      <span className="profile-lesson-pref-choice-copy">
+                        <span className="profile-lesson-pref-choice-title">Proactively</span>
+                        <span className="profile-lesson-pref-choice-text">Correct me as we move through the lesson.</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-lesson-pref-choice ${editPreferences.errorCorrection === 'tutor_choice' ? 'is-active' : ''}`}
+                      onClick={() => setEditPreferences((p) => ({ ...p, errorCorrection: 'tutor_choice' }))}
+                    >
+                      <span className="profile-lesson-pref-choice-dot" aria-hidden="true"></span>
+                      <span className="profile-lesson-pref-choice-copy">
+                        <span className="profile-lesson-pref-choice-title">Tutor&apos;s choice</span>
+                        <span className="profile-lesson-pref-choice-text">Let the tutor choose the best timing for corrections.</span>
+                      </span>
+                    </button>
+                  </div>
+                </section>
+
+                <section className="profile-lesson-pref-section">
+                  <div className="profile-lesson-pref-header">
+                    <span className="profile-lesson-pref-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 4h10a2 2 0 0 1 2 2v12l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2Z" />
+                        <path d="M9 9h6" />
+                        <path d="M9 12h6" />
+                      </svg>
+                    </span>
+                    <div className="profile-lesson-pref-copy">
+                      <span className="profile-lesson-pref-kicker">Extra Context</span>
+                      <h4 className="profile-lesson-pref-heading">Other requests</h4>
+                      <p className="profile-lesson-pref-helper">
+                        Share anything your tutor should keep in mind for future lessons.
+                      </p>
+                    </div>
+                  </div>
+
+                  <textarea
+                    className="profile-lesson-pref-notes"
+                    placeholder="Anything you'd like your tutor to keep in mind for future lessons?"
+                    value={editPreferences.otherRequests}
+                    maxLength={OTHER_REQUESTS_MAX_LENGTH}
+                    onChange={(e) => setEditPreferences((p) => ({
+                      ...p,
+                      otherRequests: (e.target as HTMLTextAreaElement).value.slice(0, OTHER_REQUESTS_MAX_LENGTH)
+                    }))}
+                    rows={4}
+                  />
+                  <div className="profile-lesson-pref-limit">
+                    <span>{editPreferences.otherRequests.length}/{OTHER_REQUESTS_MAX_LENGTH}</span>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <div className="about-me-modal-footer">
+              {preferencesMessage && (
+                <span className={`preference-message ${preferencesMessage.type}`}>
+                  {preferencesMessage.text}
+                </span>
+              )}
+              <div className="modal-actions">
+                <button className="cancel-btn" onClick={closePreferencesModal} disabled={savingPreferences}>
+                  Cancel
+                </button>
+                <button
+                  className="save-btn"
+                  onClick={() => handleSavePreferences(editPreferences)}
+                  disabled={savingPreferences || !hasEditPreferencesChanged()}
+                >
+                  {savingPreferences ? (
+                    <><i className="fas fa-spinner fa-spin"></i> Saving...</>
+                  ) : (
+                    'Save'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -66,7 +66,10 @@ function AppShell() {
 	const { isAuthenticated, initialLoading } = useAuthContext();
 	const { path } = useLocation();
 	const isDarkMode = useThemeStore((state) => state.isDarkMode);
-		const isThemeLockedLight = path === '/' || (path === '/browse-tutors' && !isAuthenticated && !initialLoading);
+	const isThemeLockedLight =
+		path === '/' ||
+		path === '/register' ||
+		(path === '/browse-tutors' && !isAuthenticated && !initialLoading);
 	const effectiveTheme = isThemeLockedLight ? 'light' : (isDarkMode ? 'dark' : 'light');
 	
 	// Auto-connect wallet if user has previously connected

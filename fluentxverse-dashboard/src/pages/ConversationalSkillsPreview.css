@@ -286,6 +286,206 @@
   transform: scale(1.1);
 }
 
+/* Theme toggle */
+.csp-theme-btn {
+  position: fixed;
+  top: 0.75rem;
+  right: 4rem;
+  z-index: 200;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.csp-theme-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.csp-theme-btn i {
+  font-size: 1rem;
+}
+
+/* ============================================================================
+   CONVERSATIONAL MATERIAL DARK THEME
+   ============================================================================ */
+
+.csp-fullpage.csp-dark {
+  --primary: #4a9eff;
+  --primary-dark: #2f7fe5;
+  --primary-light: #60a5fa;
+  --text-primary: #f4f7fb;
+  --text-secondary: #b8c1cf;
+  --text-muted: #8f99a8;
+  --border-color: #3b3b3b;
+  --info-light: #26364a;
+  --surface: #222222;
+  --surface-raised: #292929;
+  --surface-soft: #303030;
+  --surface-muted: #1d1d1d;
+  background: #1b1b1b;
+  color: var(--text-primary);
+  scrollbar-color: #555 #242424;
+}
+
+.csp-dark::-webkit-scrollbar-track {
+  background: #242424;
+}
+
+.csp-dark::-webkit-scrollbar-thumb {
+  background: #555;
+  border: 3px solid #242424;
+}
+
+.csp-dark::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+}
+
+.csp-dark .csp-topbar {
+  background: rgba(18, 18, 18, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.csp-dark .csp-section,
+.csp-dark .csp-vocab-card,
+.csp-dark .csp-expr-item,
+.csp-dark .csp-lesson-issue,
+.csp-dark .csp-lesson-goal-box,
+.csp-dark .csp-goal-step,
+.csp-dark .csp-step-question,
+.csp-dark .csp-tutor-important,
+.csp-dark .csp-tutor-guide,
+.csp-dark .csp-part-tutor-guide,
+.csp-dark .csp-pronunciation-column,
+.csp-dark .csp-stepb-section,
+.csp-dark .csp-stepb-explanation,
+.csp-dark .csp-stepb-question,
+.csp-dark .csp-apply-section,
+.csp-dark .csp-apply-situation,
+.csp-dark .csp-dialogue-line,
+.csp-dark .csp-apply-step,
+.csp-dark .csp-apply-questions-box,
+.csp-dark .csp-exercise-section,
+.csp-dark .csp-expression-box,
+.csp-dark .csp-expression-item,
+.csp-dark .csp-exercise-example,
+.csp-dark .csp-exercise-item,
+.csp-dark .csp-exercise-speech-bubble,
+.csp-dark .csp-stepb-multiple-choice,
+.csp-dark .csp-stepb-compare,
+.csp-dark .csp-stepb-speech,
+.csp-dark .csp-tutor-answer-key-box,
+.csp-dark .csp-mission-section,
+.csp-dark .csp-mission-situation-box,
+.csp-dark .csp-mission-instruction-box,
+.csp-dark .csp-mission-grammar-tip,
+.csp-dark .csp-mission-reading-passage,
+.csp-dark .csp-mission-topic-card,
+.csp-dark .csp-feedback-section {
+  background: var(--surface);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.csp-dark .csp-section-header,
+.csp-dark .csp-goal-step,
+.csp-dark .csp-apply-step,
+.csp-dark .csp-tutor-answer-key-header {
+  background: #242424;
+  border-color: var(--border-color);
+}
+
+.csp-dark :is(
+  .csp-section-header h2,
+  .csp-section-title,
+  .csp-intro-text,
+  .csp-issue-content h3,
+  .csp-step-instruction,
+  .csp-step-name,
+  .csp-part-english,
+  .csp-vocab-english,
+  .csp-expr-definition,
+  .csp-discuss-instruction,
+  .csp-pronunciation-instruction,
+  .csp-stepb-explanation,
+  .csp-stepb-question p,
+  .csp-exercise-instruction,
+  .csp-exercise-speech-bubble p,
+  .csp-apply-activity-title,
+  .csp-apply-situation,
+  .csp-dialogue-text,
+  .csp-mission-challenge-name,
+  .csp-mission-situation,
+  .csp-mission-instruction,
+  .csp-mission-topic-header,
+  .csp-placeholder-text
+) {
+  color: var(--text-primary);
+}
+
+.csp-dark :is(
+  .csp-coming-soon,
+  .csp-tutor-note-details,
+  .csp-issue-content li,
+  .csp-part-translation,
+  .csp-vocab-translation,
+  .csp-discuss-instruction-trans,
+  .csp-discuss-img-translation,
+  .csp-pronunciation-instruction-trans,
+  .csp-pronunciation-trans,
+  .csp-stepb-explanation-trans,
+  .csp-exercise-instruction-translation,
+  .csp-apply-tip,
+  .csp-mission-translation,
+  .csp-mission-topic-questions,
+  .csp-mission-topic-questions li
+) {
+  color: var(--text-secondary);
+}
+
+.csp-dark :is(
+  .csp-image-placeholder,
+  .csp-expr-image-placeholder,
+  .csp-discuss-image-placeholder,
+  .csp-pronunciation-img-placeholder,
+  .csp-exercise-item-image .csp-image-placeholder,
+  .csp-exercise-example-image .csp-image-placeholder
+) {
+  background: var(--surface-soft);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.csp-dark .csp-exercise-speech-bubble {
+  border-color: var(--border-color);
+}
+
+.csp-dark .csp-exercise-conv-left .csp-exercise-speech-bubble::before,
+.csp-dark .csp-exercise-conv-left .csp-exercise-speech-bubble::after,
+.csp-dark .csp-exercise-conv-right .csp-exercise-speech-bubble::before,
+.csp-dark .csp-exercise-conv-right .csp-exercise-speech-bubble::after {
+  border-color: transparent;
+}
+
+.csp-dark .csp-theme-btn,
+.csp-dark .csp-close-btn {
+  background: rgba(35, 35, 35, 0.82);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
 /* ============================================================================
    RESPONSIVE DESIGN
    ============================================================================ */

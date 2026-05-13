@@ -1,5 +1,5 @@
 # Build stage
-FROM docker.io/oven/bun:1-alpine AS builder
+FROM docker.io/oven/bun:1 AS builder
 
 WORKDIR /app
 
@@ -10,8 +10,8 @@ ENV VITE_API_URL=$VITE_API_URL
 # Copy package files
 COPY package.json bun.lock* ./
 
-# Install ALL dependencies (including dev for vite)
-RUN bun install
+# Install ALL dependencies (including dev for vite) from the app lockfile
+RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY . .

@@ -1,6 +1,7 @@
 
-import { useState, useEffect } from 'preact/compat';
+import { useState, useEffect, useCallback } from 'preact/compat';
 import Header from '../Components/Header/Header';
+import { SocialLoginModal } from '../Components/Auth/SocialLoginModal';
 
 import { register } from '../api/auth.api';
 import { useAuthContext } from '../context/AuthContext';
@@ -20,6 +21,7 @@ const RegisterPage = () => {
   const [pendingWallet, setPendingWallet] = useState<string | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [oauthEmail, setOauthEmail] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   
   const [formData, setFormData] = useState({
@@ -214,6 +216,31 @@ const RegisterPage = () => {
     }
   };
 
+  const openLoginModal = useCallback(() => {
+    setShowLoginModal(true);
+    document.body.style.overflow = 'hidden';
+  }, []);
+
+  const closeLoginModal = useCallback(() => {
+    setShowLoginModal(false);
+    document.body.style.overflow = 'unset';
+  }, []);
+
+  const handleLoginSuccess = useCallback(() => {
+    window.location.href = '/home';
+  }, []);
+
+  const handleNeedsRegistration = useCallback((walletAddress: string) => {
+    localStorage.setItem('fxv_pending_wallet', walletAddress);
+    closeLoginModal();
+  }, [closeLoginModal]);
+
+  const handleIncompleteProfile = useCallback((walletAddress: string, missingFields: string[]) => {
+    localStorage.setItem('fxv_pending_wallet', walletAddress);
+    localStorage.setItem('fxv_missing_fields', JSON.stringify(missingFields));
+    closeLoginModal();
+  }, [closeLoginModal]);
+
   return (
     <>
       <div className="register-container">
@@ -222,18 +249,27 @@ const RegisterPage = () => {
           {/* Left Side - Why FluentXVerse */}
           <div className="register-left-side register-bg-image">
             <div className="left-content">
+              <div className="register-card-brand" aria-label="FluentXVerse">
+                <img src="/assets/img/logo/icon_logo.png" alt="" />
+                <span>Fluent<span>X</span>Verse</span>
+              </div>
               <h2 className="left-subtitle">WELCOME TO FLUENTXVERSE</h2>
               <h1 className="left-title">Start Your English Journey</h1>
               <p className="left-intro">
-                FluentXVerse is designed for students who want to improve their English skills with friendly, expert tutors. Sign up to access interactive lessons, flexible schedules, and real progress. Your path to confident English starts here!
+                Personalized English lessons for Korean students. Build confidence with expert tutors, flexible schedules, and speaking-focused classes.
               </p>
+              <div className="register-hero-card" aria-hidden="true">
+                <img src="/assets/img/banner/banner_woman.webp" alt="" />
+                <div className="register-hero-card__badge">
+                  <i className="fas fa-comments"></i>
+                  <span>Trial lesson ready</span>
+                </div>
+              </div>
               <div className="features-list">
                 {[ 
-                  { icon: 'fas fa-user-graduate', title: 'For Korean Learners', desc: 'Tailored lessons and support for Korean students of all ages.' },
-                  { icon: 'fas fa-chalkboard-teacher', title: 'Expert Tutors', desc: 'Learn from experienced, caring English teachers.' },
-                  { icon: 'fas fa-clock', title: 'Flexible Scheduling', desc: 'Book lessons that fit your school and family life.' },
-                  { icon: 'fas fa-mobile-alt', title: 'Easy Access', desc: 'Join lessons from home or anywhere, on any device.' },
-                  { icon: 'fas fa-comments', title: 'Real Conversation', desc: 'Practice speaking and listening in every session.' }
+                  { icon: 'fas fa-comments', title: 'Real Conversation Practice', desc: 'Speak naturally in every lesson.' },
+                  { icon: 'fas fa-user-graduate', title: 'Expert Native Tutors', desc: 'Teachers who understand Korean learners.' },
+                  { icon: 'fas fa-clock', title: 'Flexible Scheduling', desc: 'Book classes around your day.' }
                 ].map((item, idx) => (
                   <div key={idx} className="feature-item">
                     <div className="feature-icon-circle">
@@ -245,9 +281,6 @@ const RegisterPage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="left-cta">
-                Ready to learn? Fill out the form to begin!
               </div>
             </div>
           </div>
@@ -456,13 +489,24 @@ const RegisterPage = () => {
 
               {step === 1 && (
                 <div className="form-footer">
-                  Already have an account? <a href="/login">Sign in</a>
+                  Already have an account?{' '}
+                  <button type="button" className="form-footer-link" onClick={openLoginModal}>
+                    Sign in
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      <SocialLoginModal
+        isOpen={showLoginModal}
+        onClose={closeLoginModal}
+        onSuccess={handleLoginSuccess}
+        onNeedsRegistration={handleNeedsRegistration}
+        onIncompleteProfile={handleIncompleteProfile}
+      />
     </>
   );
 };
