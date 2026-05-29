@@ -138,7 +138,7 @@
 .csp-hero-content {
   position: relative;
   z-index: 2;
-  color: #fff !important;
+  color: #fff;
   text-align: center;
 }
 
@@ -148,7 +148,6 @@
   opacity: 0.9;
   margin: 0 0 0.125rem;
   line-height: 1.2;
-  color: #fff !important;
 }
 
 .csp-lesson-name {
@@ -157,7 +156,6 @@
   font-style: italic;
   margin: 0 0 0.75rem;
   line-height: 1.2;
-  color: #fff !important;
 }
 
 /* Goal Section */
@@ -188,7 +186,6 @@
   font-weight: 600;
   margin: 0;
   line-height: 1;
-  color: #fff !important;
 }
 
 .csp-goal-jp {
@@ -197,7 +194,6 @@
   opacity: 0.85;
   margin: 0.25rem 0 0 0;
   line-height: 1.3;
-  color: #fff !important;
 }
 
 /* ============================================================================
@@ -207,7 +203,7 @@
 .csp-main {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 3rem 4rem;
+  padding: 2rem 1rem 4rem;
 }
 
 .csp-sections {
@@ -267,15 +263,15 @@
 
 .csp-close-btn {
   position: fixed;
-  top: 0.5rem;
-  right: 0.75rem;
+  top: 0.75rem;
+  right: 1rem;
   z-index: 200;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   font-size: 1.25rem;
   cursor: pointer;
@@ -286,9 +282,328 @@
 }
 
 .csp-close-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.25);
   transform: scale(1.1);
-  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Theme toggle */
+.csp-theme-btn {
+  position: fixed;
+  top: 0.75rem;
+  right: 4rem;
+  z-index: 200;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.csp-theme-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.csp-theme-btn i {
+  font-size: 1rem;
+}
+
+/* ============================================================================
+   CONVERSATIONAL MATERIAL DARK THEME
+   ============================================================================ */
+
+.csp-fullpage.csp-dark {
+  --primary: #4a9eff;
+  --primary-dark: #2f7fe5;
+  --primary-light: #60a5fa;
+  --text-primary: #f4f7fb;
+  --text-secondary: #b8c1cf;
+  --text-muted: #8f99a8;
+  --border-color: #3b3b3b;
+  --info-light: #26364a;
+  --surface: #222222;
+  --surface-raised: #292929;
+  --surface-soft: #303030;
+  --surface-muted: #1d1d1d;
+  background: #1b1b1b;
+  color: var(--text-primary);
+  scrollbar-color: #555 #242424;
+}
+
+.csp-dark::-webkit-scrollbar-track {
+  background: #242424;
+}
+
+.csp-dark::-webkit-scrollbar-thumb {
+  background: #555;
+  border: 3px solid #242424;
+}
+
+.csp-dark::-webkit-scrollbar-thumb:hover {
+  background: #6a6a6a;
+}
+
+.csp-dark .csp-topbar {
+  background: rgba(18, 18, 18, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.csp-dark .csp-section,
+.csp-dark .csp-vocab-card,
+.csp-dark .csp-expr-item,
+.csp-dark .csp-lesson-issue,
+.csp-dark .csp-lesson-goal-box,
+.csp-dark .csp-goal-step,
+.csp-dark .csp-step-question,
+.csp-dark .csp-tutor-important,
+.csp-dark .csp-tutor-guide,
+.csp-dark .csp-part-tutor-guide,
+.csp-dark .csp-pronunciation-column,
+.csp-dark .csp-stepb-section,
+.csp-dark .csp-stepb-explanation,
+.csp-dark .csp-stepb-question,
+.csp-dark .csp-apply-section,
+.csp-dark .csp-apply-situation,
+.csp-dark .csp-dialogue-line,
+.csp-dark .csp-apply-step,
+.csp-dark .csp-apply-questions-box,
+.csp-dark .csp-exercise-section,
+.csp-dark .csp-expression-box,
+.csp-dark .csp-expression-item,
+.csp-dark .csp-exercise-example,
+.csp-dark .csp-exercise-item,
+.csp-dark .csp-exercise-speech-bubble,
+.csp-dark .csp-stepb-multiple-choice,
+.csp-dark .csp-stepb-compare,
+.csp-dark .csp-stepb-speech,
+.csp-dark .csp-tutor-answer-key-box,
+.csp-dark .csp-mission-section,
+.csp-dark .csp-mission-situation-box,
+.csp-dark .csp-mission-instruction-box,
+.csp-dark .csp-mission-grammar-tip,
+.csp-dark .csp-mission-reading-passage,
+.csp-dark .csp-mission-topic-card,
+.csp-dark .csp-feedback-section {
+  background: var(--surface);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.csp-dark .csp-section-header,
+.csp-dark .csp-goal-step,
+.csp-dark .csp-apply-step,
+.csp-dark .csp-tutor-answer-key-header {
+  background: #242424;
+  border-color: var(--border-color);
+}
+
+.csp-dark .csp-lesson-issue {
+  background: #222222;
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
+.csp-dark .csp-issue-header {
+  background: #2a2a2a;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.csp-dark .csp-issue-header > small,
+.csp-dark .csp-issue-badges small:not(.csp-warning) {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.csp-dark .csp-issue-badges .csp-warning,
+.csp-dark .csp-issue-header > small.csp-warning {
+  background: #ef4444;
+  color: #fff;
+}
+
+.csp-dark .csp-issue-content {
+  background: #222222;
+}
+
+.csp-dark .csp-issue-content h3 {
+  border-bottom-color: var(--border-color);
+}
+
+.csp-dark .csp-issue-content li {
+  background: var(--surface-raised);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  color: var(--text-primary);
+  padding: 0.35rem 0.5rem 0.35rem 1.25rem;
+}
+
+.csp-dark .csp-issue-content li::before {
+  left: 0.5rem;
+  background: var(--primary);
+}
+
+.csp-dark .csp-lesson-goal-box {
+  background: #222222;
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+.csp-dark .csp-goal-header {
+  background: #2a2a2a;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.csp-dark .csp-goal-steps {
+  background: #222222;
+}
+
+.csp-dark .csp-goal-step {
+  background: var(--surface-raised);
+  border-color: var(--border-color);
+}
+
+.csp-dark .csp-step-question {
+  background: var(--surface-soft);
+  border-color: rgba(74, 158, 255, 0.45);
+  color: var(--text-primary);
+}
+
+.csp-dark :is(
+  .csp-section-header h2,
+  .csp-section-title,
+  .csp-intro-text,
+  .csp-issue-content h3,
+  .csp-step-instruction,
+  .csp-step-name,
+  .csp-part-english,
+  .csp-vocab-english,
+  .csp-expr-definition,
+  .csp-discuss-instruction,
+  .csp-pronunciation-instruction,
+  .csp-stepb-explanation,
+  .csp-stepb-question p,
+  .csp-exercise-instruction,
+  .csp-exercise-speech-bubble p,
+  .csp-apply-activity-title,
+  .csp-apply-situation,
+  .csp-dialogue-text,
+  .csp-mission-challenge-name,
+  .csp-mission-situation,
+  .csp-mission-instruction,
+  .csp-mission-topic-header,
+  .csp-placeholder-text
+) {
+  color: var(--text-primary);
+}
+
+.csp-dark :is(
+  .csp-coming-soon,
+  .csp-tutor-note-details,
+  .csp-issue-content li,
+  .csp-part-translation,
+  .csp-vocab-translation,
+  .csp-discuss-instruction-trans,
+  .csp-discuss-img-translation,
+  .csp-pronunciation-instruction-trans,
+  .csp-pronunciation-trans,
+  .csp-stepb-explanation-trans,
+  .csp-exercise-instruction-translation,
+  .csp-apply-tip,
+  .csp-mission-translation,
+  .csp-mission-topic-questions,
+  .csp-mission-topic-questions li
+) {
+  color: var(--text-secondary);
+}
+
+.csp-dark :is(
+  .csp-image-placeholder,
+  .csp-expr-image-placeholder,
+  .csp-discuss-image-placeholder,
+  .csp-pronunciation-img-placeholder,
+  .csp-exercise-item-image .csp-image-placeholder,
+  .csp-exercise-example-image .csp-image-placeholder
+) {
+  background: var(--surface-soft);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.csp-dark .csp-exercise-speech-bubble {
+  border-color: var(--border-color);
+}
+
+.csp-dark .csp-exercise-conv-left .csp-exercise-speech-bubble::before,
+.csp-dark .csp-exercise-conv-left .csp-exercise-speech-bubble::after,
+.csp-dark .csp-exercise-conv-right .csp-exercise-speech-bubble::before,
+.csp-dark .csp-exercise-conv-right .csp-exercise-speech-bubble::after {
+  border-color: transparent;
+}
+
+.csp-dark .csp-theme-btn,
+.csp-dark .csp-close-btn {
+  background: rgba(35, 35, 35, 0.82);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.csp-dark .csp-apply-section {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-dark .csp-apply-layout,
+.csp-dark .csp-apply-left,
+.csp-dark .csp-dialogue-lines {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-dark .csp-apply-situation,
+.csp-dark .csp-dialogue-line {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-dark .csp-apply-image {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-dark .csp-pronunciation-part,
+.csp-dark .csp-pronunciation-instruction,
+.csp-dark .csp-pronunciation-instruction-trans,
+.csp-dark .csp-pronunciation-table,
+.csp-dark .csp-pronunciation-column,
+.csp-dark .csp-pronunciation-words,
+.csp-dark .csp-pronunciation-word-item {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-dark .csp-pronunciation-table,
+.csp-dark .csp-pronunciation-column:first-child,
+.csp-dark .csp-pronunciation-words,
+.csp-dark .csp-pronunciation-word-item {
+  border-color: var(--border-color) !important;
 }
 
 /* ============================================================================
@@ -1058,15 +1373,15 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.75rem;
 }
 
 .csp-guide-step {
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.375rem 0.5rem;
-  border-radius: 6px;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
 }
@@ -1077,15 +1392,15 @@
 
 .csp-guide-number {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: var(--primary, #0245ae);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -3642,4 +3957,1058 @@
 .csp-fb-better-text {
   color: #15803d;
   font-weight: 500;
+}
+
+/* ============================================================================
+   DARK MODE HARDENING - PREVIEW
+   Keep this last so later light-mode lesson templates cannot leak into preview.
+   ============================================================================ */
+
+.csp-fullpage.csp-dark {
+  --csp-dark-bg: #1b1b1b;
+  --csp-dark-panel: #202020;
+  --csp-dark-panel-soft: #242424;
+  --csp-dark-field: #262626;
+  --csp-dark-border: rgba(255, 255, 255, 0.12);
+  --csp-dark-border-strong: rgba(255, 255, 255, 0.18);
+  --csp-dark-text: #f4f4f5;
+  --csp-dark-muted: #b8bec8;
+  --csp-dark-muted-soft: #8f98a6;
+  background: var(--csp-dark-bg) !important;
+  color: var(--csp-dark-text) !important;
+}
+
+.csp-fullpage.csp-dark .csp-container,
+.csp-fullpage.csp-dark .csp-main,
+.csp-fullpage.csp-dark .csp-sections,
+.csp-fullpage.csp-dark .csp-section,
+.csp-fullpage.csp-dark .csp-section-body,
+.csp-fullpage.csp-dark .csp-intro-section,
+.csp-fullpage.csp-dark .csp-learn-section,
+.csp-fullpage.csp-dark .csp-learn-left,
+.csp-fullpage.csp-dark .csp-stepb-section,
+.csp-fullpage.csp-dark .csp-stepb-left,
+.csp-fullpage.csp-dark .csp-apply-section,
+.csp-fullpage.csp-dark .csp-apply-left,
+.csp-fullpage.csp-dark .csp-exercise-section,
+.csp-fullpage.csp-dark .csp-exercise-left,
+.csp-fullpage.csp-dark .csp-mission-section,
+.csp-fullpage.csp-dark .csp-mission-left,
+.csp-fullpage.csp-dark .csp-feedback-section,
+.csp-fullpage.csp-dark .csp-feedback-left {
+  background: var(--csp-dark-bg) !important;
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-section {
+  border-color: transparent !important;
+}
+
+.csp-fullpage.csp-dark .csp-section-header,
+.csp-fullpage.csp-dark .csp-stepb-type-selector,
+.csp-fullpage.csp-dark .csp-exercise-layout,
+.csp-fullpage.csp-dark .csp-apply-layout,
+.csp-fullpage.csp-dark .csp-mission-layout,
+.csp-fullpage.csp-dark .csp-feedback-layout {
+  background: transparent !important;
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark h1,
+.csp-fullpage.csp-dark h2,
+.csp-fullpage.csp-dark h3,
+.csp-fullpage.csp-dark h4,
+.csp-fullpage.csp-dark .csp-section-title,
+.csp-fullpage.csp-dark .csp-section-header h2,
+.csp-fullpage.csp-dark .csp-intro-text,
+.csp-fullpage.csp-dark .csp-goal-en,
+.csp-fullpage.csp-dark .csp-issue-content h3,
+.csp-fullpage.csp-dark .csp-vocab-english,
+.csp-fullpage.csp-dark .csp-expr-definition,
+.csp-fullpage.csp-dark .csp-discuss-instruction,
+.csp-fullpage.csp-dark .csp-pronunciation-instruction,
+.csp-fullpage.csp-dark .csp-pronunciation-sound,
+.csp-fullpage.csp-dark .csp-pronunciation-word,
+.csp-fullpage.csp-dark .csp-stepb-explanation,
+.csp-fullpage.csp-dark .csp-stepb-question p,
+.csp-fullpage.csp-dark .csp-grammar-rule,
+.csp-fullpage.csp-dark .csp-example-sentence,
+.csp-fullpage.csp-dark .csp-pronunciation-tip,
+.csp-fullpage.csp-dark .csp-phrases-col-example p,
+.csp-fullpage.csp-dark .csp-phrase-text,
+.csp-fullpage.csp-dark .csp-exercise-instruction,
+.csp-fullpage.csp-dark .csp-exercise-instructions,
+.csp-fullpage.csp-dark .csp-exercise-speech-bubble p,
+.csp-fullpage.csp-dark .csp-expression-item,
+.csp-fullpage.csp-dark .csp-info-box-title,
+.csp-fullpage.csp-dark .csp-info-box-cell,
+.csp-fullpage.csp-dark .csp-item-number,
+.csp-fullpage.csp-dark .csp-item-sentence,
+.csp-fullpage.csp-dark .csp-change-text,
+.csp-fullpage.csp-dark .csp-mc-option,
+.csp-fullpage.csp-dark .csp-compare-image-label,
+.csp-fullpage.csp-dark .csp-compare-example,
+.csp-fullpage.csp-dark .csp-speech-bubble p,
+.csp-fullpage.csp-dark .csp-apply-situation,
+.csp-fullpage.csp-dark .csp-dialogue-speaker,
+.csp-fullpage.csp-dark .csp-dialogue-text,
+.csp-fullpage.csp-dark .csp-reading-text-box,
+.csp-fullpage.csp-dark .csp-reading-text-content,
+.csp-fullpage.csp-dark .csp-trivia-content,
+.csp-fullpage.csp-dark .csp-guide-instruction,
+.csp-fullpage.csp-dark .csp-question-text,
+.csp-fullpage.csp-dark .csp-mission-challenge-name,
+.csp-fullpage.csp-dark .csp-mission-situation,
+.csp-fullpage.csp-dark .csp-mission-instruction,
+.csp-fullpage.csp-dark .csp-reading-title,
+.csp-fullpage.csp-dark .csp-reading-paragraph,
+.csp-fullpage.csp-dark .csp-reading-closing-question,
+.csp-fullpage.csp-dark .csp-mission-topic-questions li,
+.csp-fullpage.csp-dark .csp-questions-list .csp-question-text,
+.csp-fullpage.csp-dark .csp-fb-goal-text,
+.csp-fullpage.csp-dark .csp-fb-rubric-label {
+  color: var(--csp-dark-text) !important;
+}
+
+.csp-fullpage.csp-dark .csp-goal-jp,
+.csp-fullpage.csp-dark .csp-tutor-note-details,
+.csp-fullpage.csp-dark .csp-vocab-translation,
+.csp-fullpage.csp-dark .csp-expr-translation,
+.csp-fullpage.csp-dark .csp-expr-example,
+.csp-fullpage.csp-dark .csp-expr-extra,
+.csp-fullpage.csp-dark .csp-discuss-instruction-trans,
+.csp-fullpage.csp-dark .csp-discuss-img-translation,
+.csp-fullpage.csp-dark .csp-pronunciation-instruction-trans,
+.csp-fullpage.csp-dark .csp-pronunciation-trans,
+.csp-fullpage.csp-dark .csp-stepb-explanation-trans,
+.csp-fullpage.csp-dark .csp-grammar-translation,
+.csp-fullpage.csp-dark .csp-example-translation,
+.csp-fullpage.csp-dark .csp-exercise-instruction-translation,
+.csp-fullpage.csp-dark .csp-action-text,
+.csp-fullpage.csp-dark .csp-trivia-translation,
+.csp-fullpage.csp-dark .csp-mission-challenge-duration,
+.csp-fullpage.csp-dark .csp-mission-translation,
+.csp-fullpage.csp-dark .csp-reading-author,
+.csp-fullpage.csp-dark .csp-fb-goal-jp,
+.csp-fullpage.csp-dark .csp-fb-rubric-desc,
+.csp-fullpage.csp-dark .csp-fb-cat-jp,
+.csp-fullpage.csp-dark .csp-fb-assess-text,
+.csp-fullpage.csp-dark .csp-fb-said-text {
+  color: var(--csp-dark-muted) !important;
+}
+
+.csp-fullpage.csp-dark .csp-goal-step,
+.csp-fullpage.csp-dark .csp-tutor-important,
+.csp-fullpage.csp-dark .csp-tutor-guide,
+.csp-fullpage.csp-dark .csp-part-tutor-guide,
+.csp-fullpage.csp-dark .csp-guide-step,
+.csp-fullpage.csp-dark .csp-vocab-card,
+.csp-fullpage.csp-dark .csp-expr-item,
+.csp-fullpage.csp-dark .csp-grammar-examples,
+.csp-fullpage.csp-dark .csp-pronunciation-table,
+.csp-fullpage.csp-dark .csp-pronunciation-column,
+.csp-fullpage.csp-dark .csp-pronunciation-words,
+.csp-fullpage.csp-dark .csp-pronunciation-word-item,
+.csp-fullpage.csp-dark .csp-stepb-question,
+.csp-fullpage.csp-dark .csp-speech-bubble,
+.csp-fullpage.csp-dark .csp-exercise-speech-bubble,
+.csp-fullpage.csp-dark .csp-expression-box,
+.csp-fullpage.csp-dark .csp-info-box,
+.csp-fullpage.csp-dark .csp-exercise-example,
+.csp-fullpage.csp-dark .csp-exercise-item,
+.csp-fullpage.csp-dark .csp-answer-key-box,
+.csp-fullpage.csp-dark .csp-stepb-multiple-choice,
+.csp-fullpage.csp-dark .csp-stepb-compare,
+.csp-fullpage.csp-dark .csp-stepb-speech,
+.csp-fullpage.csp-dark .csp-tutor-answer-key-box,
+.csp-fullpage.csp-dark .csp-trivia-box-inner,
+.csp-fullpage.csp-dark .csp-trivia-guide,
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-guide-step,
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-apply-questions-box,
+.csp-fullpage.csp-dark .csp-reading-text-box,
+.csp-fullpage.csp-dark .csp-mission-situation-box,
+.csp-fullpage.csp-dark .csp-mission-instruction-box,
+.csp-fullpage.csp-dark .csp-mission-grammar-tip,
+.csp-fullpage.csp-dark .csp-mission-reading-passage,
+.csp-fullpage.csp-dark .csp-mission-topic-card,
+.csp-fullpage.csp-dark .csp-mission-questions,
+.csp-fullpage.csp-dark .csp-fb-goal-card,
+.csp-fullpage.csp-dark .csp-fb-rubric-card,
+.csp-fullpage.csp-dark .csp-fb-category-card,
+.csp-fullpage.csp-dark .csp-fb-example-card {
+  background: var(--csp-dark-panel) !important;
+  border-color: var(--csp-dark-border) !important;
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-issue-content,
+.csp-fullpage.csp-dark .csp-goal-steps,
+.csp-fullpage.csp-dark .csp-guide-steps,
+.csp-fullpage.csp-dark .csp-trivia-body,
+.csp-fullpage.csp-dark .csp-tutor-answer-key-items,
+.csp-fullpage.csp-dark .csp-mission-challenge-header,
+.csp-fullpage.csp-dark .csp-grammar-tip-items,
+.csp-fullpage.csp-dark .csp-mission-topic-questions,
+.csp-fullpage.csp-dark .csp-questions-list,
+.csp-fullpage.csp-dark .csp-fb-goal-body,
+.csp-fullpage.csp-dark .csp-fb-rubric-title-row,
+.csp-fullpage.csp-dark .csp-fb-rubric-item,
+.csp-fullpage.csp-dark .csp-fb-cat-header,
+.csp-fullpage.csp-dark .csp-fb-cat-assess,
+.csp-fullpage.csp-dark .csp-fb-cat-focus,
+.csp-fullpage.csp-dark .csp-fb-cat-examples {
+  background: transparent !important;
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-image-placeholder,
+.csp-fullpage.csp-dark .csp-expr-image-placeholder,
+.csp-fullpage.csp-dark .csp-discuss-image-placeholder,
+.csp-fullpage.csp-dark .csp-pronunciation-img-placeholder,
+.csp-fullpage.csp-dark .csp-exercise-speaker-image,
+.csp-fullpage.csp-dark .csp-exercise-item-image,
+.csp-fullpage.csp-dark .csp-exercise-example-image,
+.csp-fullpage.csp-dark .csp-exercise-item-image .csp-image-placeholder,
+.csp-fullpage.csp-dark .csp-exercise-example-image .csp-image-placeholder,
+.csp-fullpage.csp-dark .csp-compare-image,
+.csp-fullpage.csp-dark .csp-speech-speaker-image {
+  background: var(--csp-dark-field) !important;
+  border-color: var(--csp-dark-border) !important;
+  color: var(--csp-dark-muted) !important;
+}
+
+.csp-fullpage.csp-dark .csp-section-line,
+.csp-fullpage.csp-dark .csp-pronunciation-part,
+.csp-fullpage.csp-dark .csp-pronunciation-column:first-child,
+.csp-fullpage.csp-dark .csp-pronunciation-words,
+.csp-fullpage.csp-dark .csp-pronunciation-word-item,
+.csp-fullpage.csp-dark .csp-reading-image,
+.csp-fullpage.csp-dark .csp-reading-header,
+.csp-fullpage.csp-dark .csp-reading-closing-question,
+.csp-fullpage.csp-dark .csp-trivia-row,
+.csp-fullpage.csp-dark .csp-trivia-image,
+.csp-fullpage.csp-dark .csp-info-box-table thead tr,
+.csp-fullpage.csp-dark .csp-phrases-row,
+.csp-fullpage.csp-dark .csp-phrases-col-phrase,
+.csp-fullpage.csp-dark .csp-fb-rubric-title-row,
+.csp-fullpage.csp-dark .csp-fb-rubric-item,
+.csp-fullpage.csp-dark .csp-fb-cat-header,
+.csp-fullpage.csp-dark .csp-fb-cat-assess,
+.csp-fullpage.csp-dark .csp-fb-cat-focus {
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-guide-header,
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-guide-header,
+.csp-fullpage.csp-dark .csp-tutor-answer-key-header,
+.csp-fullpage.csp-dark .csp-mission-topic-header {
+  background: var(--primary, #4f9cff) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+.csp-fullpage.csp-dark .csp-trivia-header,
+.csp-fullpage.csp-dark .csp-grammar-tip-header,
+.csp-fullpage.csp-dark .csp-phrases-header,
+.csp-fullpage.csp-dark .csp-questions-intro {
+  background: var(--csp-dark-panel-soft) !important;
+  color: var(--csp-dark-text) !important;
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-grammar-tip,
+.csp-fullpage.csp-dark .csp-answer-key-box {
+  background: rgba(22, 163, 74, 0.08) !important;
+}
+
+.csp-fullpage.csp-dark .csp-info-box-header,
+.csp-fullpage.csp-dark .csp-info-box-cell,
+.csp-fullpage.csp-dark .csp-hint,
+.csp-fullpage.csp-dark .csp-fb-focus-tag,
+.csp-fullpage.csp-dark .csp-fb-vocab-highlight {
+  background: var(--csp-dark-field) !important;
+  border-color: var(--csp-dark-border) !important;
+  color: var(--csp-dark-text) !important;
+}
+
+.csp-fullpage.csp-dark .csp-fb-example-icon {
+  background: rgba(220, 38, 38, 0.14) !important;
+}
+
+.csp-fullpage.csp-dark .csp-fb-better-icon {
+  background: rgba(22, 163, 74, 0.14) !important;
+}
+
+.csp-fullpage.csp-dark .csp-fb-better-text {
+  color: #7ddf9c !important;
+}
+
+.csp-fullpage.csp-dark .csp-speech-left::after,
+.csp-fullpage.csp-dark .csp-exercise-conv-left .csp-exercise-speech-bubble::after,
+.csp-fullpage.csp-dark .csp-speech-bubble::after {
+  border-right-color: var(--csp-dark-panel) !important;
+}
+
+.csp-fullpage.csp-dark .csp-speech-right::after,
+.csp-fullpage.csp-dark .csp-exercise-conv-right .csp-exercise-speech-bubble::after {
+  border-left-color: var(--csp-dark-panel) !important;
+}
+
+.csp-fullpage.csp-dark .csp-speech-left::before,
+.csp-fullpage.csp-dark .csp-exercise-conv-left .csp-exercise-speech-bubble::before,
+.csp-fullpage.csp-dark .csp-speech-bubble::before {
+  border-right-color: var(--csp-dark-border-strong) !important;
+}
+
+.csp-fullpage.csp-dark .csp-speech-right::before,
+.csp-fullpage.csp-dark .csp-exercise-conv-right .csp-exercise-speech-bubble::before {
+  border-left-color: var(--csp-dark-border-strong) !important;
+}
+
+.csp-fullpage.csp-dark .csp-optional-badge {
+  background: rgba(79, 156, 255, 0.14) !important;
+  border-color: rgba(79, 156, 255, 0.35) !important;
+  color: #9bc8ff !important;
+}
+
+.csp-fullpage.csp-dark .csp-fb-cat-icon,
+.csp-fullpage.csp-dark .csp-fb-rubric-circle {
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-reading-image img,
+.csp-fullpage.csp-dark .csp-trivia-image img,
+.csp-fullpage.csp-dark .csp-intro-image img {
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark [style*="background"]:not(.csp-hero):not(.csp-hero-overlay) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.csp-fullpage.csp-dark .csp-guide-header[style*="background"],
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-guide-header[style*="background"],
+.csp-fullpage.csp-dark .csp-tutor-answer-key-header[style*="background"],
+.csp-fullpage.csp-dark .csp-mission-topic-header[style*="background"] {
+  background: var(--primary, #4f9cff) !important;
+}
+
+.csp-fullpage.csp-dark {
+  --csp-dark-border: #303030;
+  --csp-dark-border-strong: #383838;
+}
+
+.csp-fullpage.csp-dark .csp-section,
+.csp-fullpage.csp-dark .csp-section-header,
+.csp-fullpage.csp-dark .csp-section-body,
+.csp-fullpage.csp-dark .csp-section-line,
+.csp-fullpage.csp-dark .csp-intro-section,
+.csp-fullpage.csp-dark .csp-learn-section,
+.csp-fullpage.csp-dark .csp-stepb-section,
+.csp-fullpage.csp-dark .csp-apply-section,
+.csp-fullpage.csp-dark .csp-exercise-section,
+.csp-fullpage.csp-dark .csp-mission-section,
+.csp-fullpage.csp-dark .csp-feedback-section,
+.csp-fullpage.csp-dark .csp-tutor-guide,
+.csp-fullpage.csp-dark .csp-guide-steps,
+.csp-fullpage.csp-dark .csp-guide-step,
+.csp-fullpage.csp-dark .csp-apply-step,
+.csp-fullpage.csp-dark .csp-stepb-type-selector,
+.csp-fullpage.csp-dark .csp-pronunciation-part,
+.csp-fullpage.csp-dark .csp-trivia-row,
+.csp-fullpage.csp-dark .csp-fb-rubric-item,
+.csp-fullpage.csp-dark .csp-fb-cat-header,
+.csp-fullpage.csp-dark .csp-fb-cat-assess,
+.csp-fullpage.csp-dark .csp-fb-cat-focus {
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-guide-step,
+.csp-fullpage.csp-dark .csp-apply-step {
+  background: #232323 !important;
+}
+
+.csp-fullpage.csp-dark .csp-guide-content,
+.csp-fullpage.csp-dark .csp-guide-content p,
+.csp-fullpage.csp-dark .csp-guide-content span,
+.csp-fullpage.csp-dark .csp-guide-content em,
+.csp-fullpage.csp-dark .csp-guide-content strong {
+  color: inherit;
+}
+
+.csp-fullpage.csp-dark .csp-apply-prompt,
+.csp-fullpage.csp-dark .csp-apply-prompt span,
+.csp-fullpage.csp-dark .csp-prompt-bullet {
+  color: #aeb7c5 !important;
+}
+
+.csp-fullpage.csp-dark .csp-apply-script,
+.csp-fullpage.csp-dark .csp-guide-script,
+.csp-fullpage.csp-dark .csp-answer-text {
+  color: #22c55e !important;
+}
+
+.csp-fullpage.csp-dark .csp-apply-tip,
+.csp-fullpage.csp-dark .csp-guide-tip,
+.csp-fullpage.csp-dark .csp-tip-icon {
+  color: #d7dbe2 !important;
+}
+
+.csp-fullpage.csp-dark .csp-guide-instruction {
+  color: #f5f5f5 !important;
+}
+
+.csp-fullpage.csp-dark .csp-apply-questions-box,
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-apply-questions-box {
+  border-color: #3a3a3a !important;
+}
+
+.csp-fullpage.csp-dark .csp-reading-image,
+.csp-fullpage.csp-dark .csp-trivia-image,
+.csp-fullpage.csp-dark .csp-reading-header,
+.csp-fullpage.csp-dark .csp-reading-closing-question,
+.csp-fullpage.csp-dark .csp-info-box-table thead tr,
+.csp-fullpage.csp-dark .csp-phrases-row,
+.csp-fullpage.csp-dark .csp-phrases-col-phrase {
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark *,
+.csp-fullpage.csp-dark *::before,
+.csp-fullpage.csp-dark *::after {
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-guide-header,
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-guide-header,
+.csp-fullpage.csp-dark .csp-tutor-answer-key-header,
+.csp-fullpage.csp-dark .csp-mission-topic-header {
+  border-color: transparent !important;
+}
+
+.csp-fullpage.csp-dark .csp-stepb-question,
+.csp-fullpage.csp-dark .csp-apply-questions-box,
+.csp-fullpage.csp-dark .csp-trivia-guide .csp-apply-questions-box {
+  border-color: #315a40 !important;
+}
+
+.csp-fullpage.csp-dark .csp-issue-content h3,
+.csp-fullpage.csp-dark .csp-section-line,
+.csp-fullpage.csp-dark .csp-apply-activity-title,
+.csp-fullpage.csp-dark .csp-step-name,
+.csp-fullpage.csp-dark .csp-stepb-section,
+.csp-fullpage.csp-dark .csp-trivia-row {
+  border-color: #303030 !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-situation-box,
+.csp-fullpage.csp-dark .csp-mission-instruction-box,
+.csp-fullpage.csp-dark .csp-mission-situation,
+.csp-fullpage.csp-dark .csp-mission-instruction,
+.csp-fullpage.csp-dark .csp-mission-situation *,
+.csp-fullpage.csp-dark .csp-mission-instruction * {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-situation,
+.csp-fullpage.csp-dark .csp-mission-instruction {
+  color: var(--csp-dark-text) !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-translation {
+  color: var(--csp-dark-muted) !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-grammar-tip {
+  background: var(--csp-dark-panel) !important;
+  background-color: var(--csp-dark-panel) !important;
+  border-color: var(--csp-dark-border) !important;
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-grammar-tip-header {
+  background: var(--csp-dark-panel) !important;
+  background-color: var(--csp-dark-panel) !important;
+  color: var(--csp-dark-text) !important;
+  border-bottom: 1px solid var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-grammar-tip-header i {
+  color: #4f9cff !important;
+}
+
+.csp-fullpage.csp-dark .csp-grammar-tip-items {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.csp-fullpage.csp-dark .csp-grammar-tip-items li {
+  color: var(--csp-dark-text) !important;
+}
+
+.csp-fullpage.csp-dark .csp-grammar-tip-items li::marker {
+  color: #4f9cff !important;
+}
+
+.csp-fullpage.csp-dark .csp-expr-list,
+.csp-fullpage.csp-dark .csp-expr-item,
+.csp-fullpage.csp-dark .csp-expr-content,
+.csp-fullpage.csp-dark .csp-expr-definition,
+.csp-fullpage.csp-dark .csp-expr-example,
+.csp-fullpage.csp-dark .csp-expr-translation,
+.csp-fullpage.csp-dark .csp-expr-extra,
+.csp-fullpage.csp-dark .csp-expr-definition *,
+.csp-fullpage.csp-dark .csp-expr-example *,
+.csp-fullpage.csp-dark .csp-expr-extra * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-expr-item {
+  border-color: transparent !important;
+}
+
+.csp-fullpage.csp-dark .csp-expr-image {
+  background: var(--csp-dark-field) !important;
+  background-color: var(--csp-dark-field) !important;
+  border-color: var(--csp-dark-border) !important;
+}
+
+.csp-fullpage.csp-dark .csp-expr-number {
+  color: var(--csp-dark-text) !important;
+}
+
+.csp-fullpage.csp-dark .csp-expr-example {
+  color: #d7dbe2 !important;
+}
+
+/* ============================================================================
+   MOBILE PREVIEW OPTIMIZATION
+   Keep this last so full lesson templates cannot reintroduce desktop overflow.
+   ============================================================================ */
+@media (max-width: 900px) {
+  .csp-fullpage {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .csp-topbar {
+    position: sticky;
+    top: 0;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .csp-topbar-content {
+    width: 100%;
+    min-width: 0;
+    gap: 0.75rem;
+  }
+
+  .csp-course-info {
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .csp-theme-btn,
+  .csp-close-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .csp-hero {
+    min-height: 220px;
+    padding: 2rem 1rem;
+  }
+
+  .csp-hero-content {
+    max-width: 100%;
+  }
+
+  .csp-lesson-name {
+    font-size: clamp(1.75rem, 9vw, 2.75rem);
+    line-height: 1.02;
+  }
+
+  .csp-goal-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .csp-goal-badge {
+    width: max-content;
+  }
+
+  .csp-main {
+    width: 100%;
+    max-width: none;
+    padding: 1.25rem 0.875rem 3rem;
+  }
+
+  .csp-sections {
+    gap: 2rem;
+  }
+
+  .csp-section-number {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .csp-section-title {
+    font-size: 1rem;
+  }
+
+  .csp-section-line {
+    min-width: 0;
+  }
+
+  .csp-section,
+  .csp-intro-section,
+  .csp-learn-section,
+  .csp-stepb-section,
+  .csp-apply-section,
+  .csp-exercise-section,
+  .csp-mission-section,
+  .csp-feedback-section {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .csp-intro-layout,
+  .csp-learn-layout,
+  .csp-stepb-layout,
+  .csp-apply-layout,
+  .csp-trivia-row,
+  .csp-exercise-layout,
+  .csp-mission-layout,
+  .csp-feedback-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1.25rem;
+    width: 100%;
+  }
+
+  .csp-intro-left,
+  .csp-intro-right,
+  .csp-learn-left,
+  .csp-learn-right,
+  .csp-stepb-left,
+  .csp-stepb-right,
+  .csp-apply-left,
+  .csp-apply-right,
+  .csp-trivia-left,
+  .csp-trivia-right,
+  .csp-exercise-left,
+  .csp-exercise-right,
+  .csp-mission-left,
+  .csp-mission-right,
+  .csp-feedback-left,
+  .csp-feedback-right {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .csp-intro-right,
+  .csp-learn-right,
+  .csp-stepb-right,
+  .csp-apply-right,
+  .csp-trivia-right,
+  .csp-exercise-right,
+  .csp-mission-right,
+  .csp-feedback-right {
+    order: 2;
+  }
+
+  .csp-intro-right-sticky,
+  .csp-learn-right,
+  .csp-stepb-right,
+  .csp-apply-right,
+  .csp-exercise-right,
+  .csp-mission-right,
+  .csp-feedback-right {
+    position: static !important;
+    top: auto !important;
+  }
+
+  .csp-tutor-guide,
+  .csp-part-tutor-guide,
+  .csp-trivia-guide,
+  .csp-stepb-tutor-guide {
+    width: 100%;
+    max-width: none;
+    overflow: hidden;
+  }
+
+  .csp-guide-header {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+  }
+
+  .csp-guide-steps {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .csp-guide-step,
+  .csp-apply-step {
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+
+  .csp-guide-content {
+    min-width: 0;
+  }
+
+  .csp-guide-instruction,
+  .csp-guide-script,
+  .csp-apply-script,
+  .csp-apply-prompt,
+  .csp-apply-tip,
+  .csp-question-text,
+  .csp-answer-text {
+    overflow-wrap: anywhere;
+  }
+
+  .csp-vocab-grid,
+  .csp-discuss-images,
+  .csp-expression-box,
+  .csp-compare-images,
+  .csp-feedback-layout .csp-fb-rubric-scale,
+  .csp-feedback-layout .csp-fb-categories {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .csp-expr-item,
+  .csp-exercise-example,
+  .csp-exercise-item,
+  .csp-dialogue-line,
+  .csp-fb-rubric-item,
+  .csp-fb-cat-header,
+  .csp-fb-example-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .csp-expr-image,
+  .csp-exercise-example-image,
+  .csp-exercise-item-image {
+    width: 100% !important;
+    max-width: none;
+  }
+
+  .csp-expr-image,
+  .csp-expr-image img,
+  .csp-exercise-example-image,
+  .csp-exercise-example-image img,
+  .csp-exercise-item-image,
+  .csp-exercise-item-image img {
+    height: auto;
+  }
+
+  .csp-intro-image,
+  .csp-apply-image,
+  .csp-reading-image,
+  .csp-trivia-image,
+  .csp-mission-image,
+  .csp-choose-image,
+  .csp-mc-image,
+  .csp-compare-image {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .csp-intro-image img,
+  .csp-apply-image img,
+  .csp-reading-image img,
+  .csp-trivia-image img,
+  .csp-mission-image img,
+  .csp-choose-image img,
+  .csp-mc-image img,
+  .csp-compare-image img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .csp-pronunciation-table,
+  .csp-phrases-header,
+  .csp-phrases-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .csp-pronunciation-column:first-child,
+  .csp-phrases-col-phrase {
+    border-right: 0 !important;
+  }
+
+  .csp-phrases-header {
+    display: none;
+  }
+
+  .csp-phrases-col-phrase,
+  .csp-phrases-col-example {
+    padding: 0.875rem;
+  }
+
+  .csp-conversation-row,
+  .csp-exercise-conv-row,
+  .csp-speech-layout {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .csp-speaker-left,
+  .csp-exercise-conv-left {
+    align-items: flex-start;
+  }
+
+  .csp-speaker-right,
+  .csp-exercise-conv-right {
+    align-items: flex-end;
+  }
+
+  .csp-speaker-image,
+  .csp-exercise-speaker-image,
+  .csp-speech-speaker-image {
+    width: 92px !important;
+    min-width: 92px;
+    max-width: 92px;
+  }
+
+  .csp-speech-bubble,
+  .csp-exercise-speech-bubble {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 10px !important;
+  }
+
+  .csp-speech-bubble::before,
+  .csp-speech-bubble::after,
+  .csp-exercise-speech-bubble::before,
+  .csp-exercise-speech-bubble::after {
+    display: none !important;
+  }
+
+  .csp-reading-text-box,
+  .csp-info-box,
+  .csp-pronunciation-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .csp-info-box-table {
+    min-width: 520px;
+  }
+
+  .csp-mission-topic-card,
+  .csp-fb-goal-card,
+  .csp-fb-rubric-card,
+  .csp-fb-category-card {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 520px) {
+  .csp-topbar-content {
+    justify-content: flex-start;
+  }
+
+  .csp-course-info {
+    font-size: 0.72rem;
+  }
+
+  .csp-theme-btn {
+    margin-left: auto;
+  }
+
+  .csp-hero {
+    min-height: 190px;
+  }
+
+  .csp-main {
+    padding-inline: 0.75rem;
+  }
+
+  .csp-section-number {
+    align-items: center;
+  }
+
+  .csp-number-badge {
+    width: 30px;
+    height: 30px;
+    font-size: 0.875rem;
+  }
+
+  .csp-step-name,
+  .csp-apply-activity-title,
+  .csp-challenge-name {
+    font-size: 1.15rem;
+    line-height: 1.25;
+  }
+
+  .csp-intro-text,
+  .csp-part-english,
+  .csp-stepb-explanation,
+  .csp-apply-situation,
+  .csp-exercise-instruction,
+  .csp-mission-situation,
+  .csp-mission-instruction {
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+
+  .csp-lesson-issue,
+  .csp-lesson-goal-box,
+  .csp-vocab-card,
+  .csp-expr-item,
+  .csp-stepb-question,
+  .csp-expression-box,
+  .csp-info-box,
+  .csp-exercise-example,
+  .csp-exercise-item,
+  .csp-answer-key-box,
+  .csp-mission-situation-box,
+  .csp-mission-instruction-box,
+  .csp-mission-grammar-tip,
+  .csp-mission-reading-passage,
+  .csp-mission-topic-card,
+  .csp-fb-goal-card,
+  .csp-fb-rubric-card,
+  .csp-fb-category-card {
+    border-radius: 10px;
+  }
+
+  .csp-issue-header,
+  .csp-goal-header,
+  .csp-guide-header,
+  .csp-trivia-header,
+  .csp-tutor-answer-key-header,
+  .csp-mission-topic-header {
+    padding-inline: 0.875rem;
+  }
+
+  .csp-issue-content,
+  .csp-goal-steps,
+  .csp-trivia-body,
+  .csp-tutor-answer-key-items,
+  .csp-fb-goal-body,
+  .csp-fb-rubric-scale,
+  .csp-fb-category-card {
+    padding: 0.875rem;
+  }
+
+  .csp-guide-step,
+  .csp-apply-step {
+    padding: 0.75rem;
+  }
+
+  .csp-dialogue-line {
+    gap: 0.35rem;
+  }
+
+  .csp-dialogue-speaker {
+    min-width: 0;
+  }
+
+  .csp-reading-text-content,
+  .csp-listening-script-box {
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+
+  .csp-fb-focus-tags {
+    gap: 0.4rem;
+  }
+
+  .csp-fb-focus-tag {
+    white-space: normal;
+  }
+}
+
+/* Keep the standalone preview isolated from the student app's global theme rules. */
+.csp-fullpage.csp-light {
+  background: #f5f5f5 !important;
+  color: #1e293b;
+}
+
+.csp-fullpage.csp-light .csp-main {
+  background: transparent !important;
+}
+
+.csp-fullpage.csp-light section:not(.csp-section) {
+  background-color: transparent !important;
+}
+
+.csp-fullpage.csp-light .csp-topbar .csp-course-info,
+.csp-fullpage.csp-light .csp-hero-content,
+.csp-fullpage.csp-light .csp-lesson-label,
+.csp-fullpage.csp-light .csp-lesson-name,
+.csp-fullpage.csp-light .csp-goal-en,
+.csp-fullpage.csp-light .csp-goal-jp {
+  color: #fff !important;
+}
+
+.csp-fullpage.csp-light .csp-hero-content {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.38);
+}
+
+.csp-fullpage.csp-light .csp-lesson-label {
+  opacity: 0.9;
+}
+
+.csp-fullpage.csp-light .csp-goal-jp {
+  opacity: 0.85;
+}
+
+.csp-fullpage.csp-light .csp-goal-badge {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #134e4a !important;
+  border: 0 !important;
+  text-shadow: none !important;
+}
+
+.csp-fullpage .csp-number-badge,
+.csp-fullpage .csp-step-number,
+.csp-fullpage .csp-guide-number {
+  color: #fff !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+.csp-fullpage.csp-dark .csp-number-badge,
+.csp-fullpage.csp-dark .csp-step-number,
+.csp-fullpage.csp-dark .csp-guide-number {
+  background: var(--primary, #4a9eff) !important;
+  color: #fff !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-topic-header,
+.csp-fullpage.csp-dark .csp-mission-topic-header * {
+  color: #ffffff !important;
+}
+
+.csp-fullpage.csp-dark .csp-topic-label {
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: #ffffff !important;
+}
+
+.csp-fullpage.csp-dark .csp-topic-title {
+  color: #ffffff !important;
+}
+
+.csp-fullpage.csp-dark .csp-mission-topic-questions,
+.csp-fullpage.csp-dark .csp-mission-topic-questions li,
+.csp-fullpage.csp-dark .csp-mission-topic-questions li::before {
+  color: #ffffff !important;
 }

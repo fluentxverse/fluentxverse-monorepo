@@ -15,6 +15,22 @@ const LESSONS_PER_CHAPTER = 10;
 const getChaptersForLevel = (level: number): number[] =>
   level === 1 ? [1] : Array.from({ length: CHAPTERS_PER_LEVEL }, (_, i) => i + 1);
 
+const formatLevelBadge = (lesson: any): string => {
+  if (lesson.levelBadge && /\d+/.test(String(lesson.levelBadge))) {
+    return String(lesson.levelBadge);
+  }
+
+  return lesson.level ? `Level ${lesson.level}` : String(lesson.levelBadge || 'All Levels');
+};
+
+const formatChapterLabel = (lesson: any): string => {
+  if (lesson.chapterLabel) {
+    return String(lesson.chapterLabel);
+  }
+
+  return lesson.chapter ? `Chapter ${lesson.chapter}${lesson.chapterName ? `: ${lesson.chapterName}` : ''}` : '';
+};
+
 export default function ConversationalSkillsPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,12 +62,39 @@ export default function ConversationalSkillsPage() {
           title: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
           slug: l.id,
           status: 'published' as const,
+          parentId: null,
+          forkOf: null,
+          isFork: false,
+          createdBy: l.createdBy || '',
+          createdByName: l.createdByName || null,
+          storagePath: '',
+          createdAt: l.createdAt || l.updatedAt || new Date().toISOString(),
+          updatedAt: l.updatedAt || l.publishedAt || l.createdAt || new Date().toISOString(),
+          publishedAt: l.publishedAt || l.updatedAt || null,
           lessonData: {
+            level: Number(l.level) || 1,
+            chapter: Number(l.chapter) || 1,
+            lessonNumber: Number(l.lessonNumber) || 1,
+            skill: l.skill || 'speaking',
+            chapterName: l.chapterName || '',
+            lessonName: l.lessonName || '',
+            backgroundImage: l.backgroundImage || '',
+            sections: [
+              l.introductionData,
+              l.learnData,
+              l.stepBData,
+              l.applyData,
+              l.exerciseData,
+              l.missionData,
+              l.missionData2,
+              l.feedbackData,
+            ].filter(Boolean),
             header: {
-              levelBadge: l.levelBadge,
-              chapterLabel: l.chapterLabel,
-              lessonLabel: l.lessonTitle,
+              levelBadge: formatLevelBadge(l),
+              chapterLabel: formatChapterLabel(l),
+              lessonLabel: l.lessonTitle || `Lesson ${l.lessonNumber}: ${l.lessonName}`,
               goalText: l.goalTextEn || '',
+              backgroundImage: l.backgroundImage || '',
             }
           }
         }));
@@ -68,6 +111,11 @@ export default function ConversationalSkillsPage() {
 
   // Parse level number from lesson header (e.g., "LEVEL 1" -> 1)
   const getLevelNumber = (lesson: Lesson): number => {
+    const rawLevel = Number((lesson.lessonData as any)?.level);
+    if (Number.isFinite(rawLevel) && rawLevel > 0) {
+      return rawLevel;
+    }
+
     const levelBadge = lesson.lessonData?.header?.levelBadge || '';
     const match = levelBadge.match(/\d+/);
     return match ? parseInt(match[0], 10) : 1;
@@ -75,6 +123,11 @@ export default function ConversationalSkillsPage() {
 
   // Parse chapter number from lesson header (e.g., "Chapter 1: ..." -> 1)
   const getChapterNumber = (lesson: Lesson): number => {
+    const rawChapter = Number((lesson.lessonData as any)?.chapter);
+    if (Number.isFinite(rawChapter) && rawChapter > 0) {
+      return rawChapter;
+    }
+
     const chapterLabel = lesson.lessonData?.header?.chapterLabel || '';
     const match = chapterLabel.match(/Chapter\s*(\d+)/i);
     return match ? parseInt(match[1], 10) : 1;
@@ -82,6 +135,11 @@ export default function ConversationalSkillsPage() {
 
   // Parse lesson number from title or label (e.g., "Lesson 1: ..." -> 1)
   const getLessonNumber = (lesson: Lesson): number => {
+    const rawLessonNumber = Number((lesson.lessonData as any)?.lessonNumber);
+    if (Number.isFinite(rawLessonNumber) && rawLessonNumber > 0) {
+      return rawLessonNumber;
+    }
+
     const lessonLabel = lesson.lessonData?.header?.lessonLabel || lesson.title || '';
     const match = lessonLabel.match(/Lesson\s*(\d+)/i);
     return match ? parseInt(match[1], 10) : 1;
@@ -401,7 +459,8 @@ export default function ConversationalSkillsPage() {
                                               {getLessonNumber(lesson)}
                                             </td>
                                             <td className="lesson-col-skill">
-                                              {(lesson.lessonData as any)?.skill || 'Speaking'}
+                                              {String((lesson.lessonData as any)?.skill || 'speaking')
+                                                .replace(/^\w/, char => char.toUpperCase())}
                                             </td>
                                             <td className="lesson-col-title">
                                               {lesson.title}

@@ -607,3 +607,118 @@
   color: var(--primary, #0245ae);
   background: #f8fafc;
 }
+
+/* Dark mode host overrides for Conversational Skills editor */
+.csve-dark .tgs-tutor-guide {
+  background: var(--surface);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark .tgs-steps {
+  background: var(--surface);
+}
+
+.csve-dark .tgs-step {
+  background: var(--surface-raised);
+  border-color: var(--border-color);
+}
+
+.csve-dark .tgs-step:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.csve-dark .tgs-instruction-input,
+.csve-dark .tgs-question-box .tgs-question-input {
+  color: var(--text-primary);
+}
+
+.csve-dark .tgs-duration-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.6) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .tgs-duration-input:hover,
+.csve-dark .tgs-duration-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-bottom-color: #fff !important;
+}
+
+.csve-dark .tgs-instruction-input:hover,
+.csve-dark .tgs-instruction-input:focus,
+.csve-dark .tgs-script-input:hover,
+.csve-dark .tgs-script-input:focus,
+.csve-dark .tgs-tip-input:hover,
+.csve-dark .tgs-tip-input:focus {
+  background: var(--surface-soft);
+  border-color: var(--border-color);
+}
+
+.csve-dark .tgs-script-input {
+  color: #4ade80;
+}
+
+.csve-dark .tgs-script-input::placeholder {
+  color: rgba(74, 222, 128, 0.48);
+}
+
+.csve-dark .tgs-tip-input {
+  color: #f87171;
+}
+
+.csve-dark .tgs-tip-input::placeholder {
+  color: rgba(248, 113, 113, 0.48);
+}
+
+.csve-dark .tgs-questions-box,
+.csve-dark .tgs-question-box,
+.csve-dark .tgs-answer-key-box,
+.csve-dark .tgs-listening-script-box {
+  background: var(--surface-soft);
+  border-color: var(--border-color);
+}
+
+.csve-dark .tgs-question-box .tgs-question-bullet {
+  color: var(--text-secondary);
+}
+
+.csve-dark .tgs-question-input,
+.csve-dark .tgs-answer-hint-input,
+.csve-dark .tgs-answer-key-input,
+.csve-dark .tgs-listening-script-input {
+  background: var(--surface-raised);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark .tgs-question-input:focus,
+.csve-dark .tgs-answer-hint-input:focus,
+.csve-dark .tgs-answer-key-input:focus {
+  border-color: var(--primary);
+}
+
+.csve-dark .tgs-answer-key-items {
+  background: var(--surface-soft);
+}
+
+.csve-dark .tgs-remove-btn:hover,
+.csve-dark .tgs-remove-answer-btn:hover,
+.csve-dark .tgs-step-remove:hover {
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.csve-dark .tgs-add-script-btn:hover,
+.csve-dark .tgs-add-tip-btn:hover,
+.csve-dark .tgs-add-prompt-btn:hover,
+.csve-dark .tgs-add-question-btn:hover,
+.csve-dark .tgs-add-answer-key-btn:hover,
+.csve-dark .tgs-add-listening-script-btn:hover,
+.csve-dark .tgs-add-step-btn:hover,
+.csve-dark .tgs-add-answer-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}

@@ -477,13 +477,14 @@
 
 .csve-goal-badge {
   display: inline-block;
-  padding: 0.1875rem 0.5rem;
+  padding: 0.25rem 0.65rem;
   background: rgba(255, 255, 255, 0.95);
   color: #134e4a;
-  font-size: 0.5625rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  border-radius: 2px;
+  line-height: 1;
+  border-radius: 3px;
 }
 
 .csve-goal-en {
@@ -10508,6 +10509,94 @@
   );
 }
 
+.csve-dark .csve-lesson-issue {
+  background: #222222;
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
+.csve-dark .csve-issue-header {
+  background: #2a2a2a;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark .csve-issue-badges small:not(.csve-warning) {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.csve-dark .csve-issue-badges .csve-warning {
+  background: #ef4444;
+  color: #fff;
+}
+
+.csve-dark .csve-issue-content {
+  background: #222222;
+}
+
+.csve-dark .csve-intro-text-block {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.csve-dark .csve-intro-text.csve-editable-block {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.csve-dark .csve-intro-text.csve-editable-block:hover {
+  background: transparent;
+  outline: 1px dashed rgba(74, 158, 255, 0.32);
+  outline-offset: 6px;
+  box-shadow: none;
+}
+
+.csve-dark .csve-intro-textarea {
+  background: transparent;
+  border: 1px solid rgba(74, 158, 255, 0.45);
+  box-shadow: none;
+}
+
+.csve-dark .csve-issue-title-input {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark .csve-issue-point-item {
+  background: var(--surface-raised);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem 0.35rem 1.25rem;
+}
+
+.csve-dark .csve-issue-point-item::before {
+  left: 0.5rem;
+  background: var(--primary);
+}
+
+.csve-dark .csve-issue-point-input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+}
+
+.csve-dark .csve-add-point-btn {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.csve-dark .csve-add-point-btn:hover {
+  border-color: rgba(74, 158, 255, 0.55);
+  color: #dbeafe;
+}
+
 .csve-dark :is(
   .csve-section-header h2,
   .csve-section-title,
@@ -10618,6 +10707,175 @@
   border-color: transparent;
 }
 
+.csve-dark .csve-vocab-card {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-learn-step,
+.csve-dark .csve-learn-layout,
+.csve-dark .csve-learn-left,
+.csve-dark .csve-part-label-edit,
+.csve-dark .csve-vocab-grid {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-step-name-input,
+.csve-dark .csve-part-english-input,
+.csve-dark .csve-part-translation-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-step-name-input:hover,
+.csve-dark .csve-step-name-input:focus,
+.csve-dark .csve-part-english-input:hover,
+.csve-dark .csve-part-english-input:focus,
+.csve-dark .csve-part-translation-input:hover,
+.csve-dark .csve-part-translation-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-vocab-card:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-vocab-image {
+  border-color: rgba(255, 255, 255, 0.08);
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.csve-dark .csve-vocab-image:hover {
+  border-color: rgba(74, 158, 255, 0.45);
+}
+
+.csve-dark .csve-vocab-image img {
+  display: block;
+}
+
+.csve-dark .csve-vocab-english-input,
+.csve-dark .csve-vocab-highlight-input,
+.csve-dark .csve-vocab-translation-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-vocab-english-input:hover,
+.csve-dark .csve-vocab-english-input:focus,
+.csve-dark .csve-vocab-highlight-input:hover,
+.csve-dark .csve-vocab-highlight-input:focus,
+.csve-dark .csve-vocab-translation-input:hover,
+.csve-dark .csve-vocab-translation-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.csve-dark .csve-vocab-english-input {
+  color: var(--text-primary);
+}
+
+.csve-dark .csve-vocab-translation-input {
+  color: var(--text-secondary);
+}
+
+.csve-dark .csve-stepb-section {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.csve-dark .csve-step-type-switcher {
+  background: transparent;
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+.csve-dark .csve-switcher-label {
+  color: var(--text-secondary);
+}
+
+.csve-dark .csve-switcher-btn {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.csve-dark .csve-switcher-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(74, 158, 255, 0.45);
+  color: var(--text-primary);
+}
+
+.csve-dark .csve-switcher-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.csve-dark .csve-grammar-block,
+.csve-dark .csve-grammar-rule {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.csve-dark .csve-grammar-rule-input,
+.csve-dark .csve-grammar-translation,
+.csve-dark .csve-examples-title,
+.csve-dark .csve-example-sentence,
+.csve-dark .csve-example-translation {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.csve-dark .csve-grammar-rule-input:hover,
+.csve-dark .csve-grammar-rule-input:focus,
+.csve-dark .csve-grammar-translation:hover,
+.csve-dark .csve-grammar-translation:focus,
+.csve-dark .csve-example-sentence:hover,
+.csve-dark .csve-example-sentence:focus,
+.csve-dark .csve-example-translation:hover,
+.csve-dark .csve-example-translation:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+.csve-dark .csve-grammar-translation,
+.csve-dark .csve-example-translation {
+  color: var(--text-secondary);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.csve-dark .csve-grammar-examples-box {
+  background: transparent;
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+.csve-dark .csve-example-bullet,
+.csve-dark .csve-example-sentence {
+  color: var(--text-primary);
+}
+
 .csve-dark .csve-step-type-btn,
 .csve-dark .csve-add-btn,
 .csve-dark .csve-mission-add-step,
@@ -10654,4 +10912,2123 @@
 .csve-dark .csve-mission-tutor-step {
   background: var(--surface-raised);
   border-color: var(--border-color);
+}
+
+.csve-fullpage.csve-dark .csve-lesson-goal-box .tgs-header .tgs-duration-input,
+.csve-fullpage.csve-dark .csve-stepb-right .tgs-header .tgs-duration-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.6) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-lesson-goal-box .tgs-header .tgs-duration-input:hover,
+.csve-fullpage.csve-dark .csve-lesson-goal-box .tgs-header .tgs-duration-input:focus,
+.csve-fullpage.csve-dark .csve-stepb-right .tgs-header .tgs-duration-input:hover,
+.csve-fullpage.csve-dark .csve-stepb-right .tgs-header .tgs-duration-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-bottom-color: #fff !important;
+}
+
+.csve-dark .csve-apply-section {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-apply-content,
+.csve-dark .csve-apply-left,
+.csve-dark .csve-situation-block,
+.csve-dark .csve-dialogue-lines {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-apply-situation,
+.csve-dark .csve-translation-input,
+.csve-dark .csve-dialogue-speaker,
+.csve-dark .csve-dialogue-text,
+.csve-dark .csve-dialogue-action {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-apply-situation {
+  border-bottom-color: transparent !important;
+}
+
+.csve-dark .csve-apply-situation:hover,
+.csve-dark .csve-apply-situation:focus,
+.csve-dark .csve-translation-input:hover,
+.csve-dark .csve-translation-input:focus,
+.csve-dark .csve-dialogue-speaker:hover,
+.csve-dark .csve-dialogue-speaker:focus,
+.csve-dark .csve-dialogue-text:hover,
+.csve-dark .csve-dialogue-text:focus,
+.csve-dark .csve-dialogue-action:hover,
+.csve-dark .csve-dialogue-action:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-dialogue-line {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-dialogue-line:hover {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.csve-dark .csve-apply-image {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-apply-image:hover {
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-apply-img-placeholder {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-reading-text-box,
+.csve-dark .csve-reading-text-header,
+.csve-dark .csve-reading-text-content,
+.csve-dark .csve-reading-image-container {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-reading-text-box {
+  border-color: var(--border-color) !important;
+}
+
+.csve-dark .csve-reading-text-header {
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.csve-dark .csve-reading-text-input,
+.csve-dark .csve-reading-image-label-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-pronunciation-part,
+.csve-dark .csve-pronunciation-instruction,
+.csve-dark .csve-pronunciation-columns,
+.csve-dark .csve-pronunciation-column,
+.csve-dark .csve-pronunciation-words,
+.csve-dark .csve-pronunciation-word-row,
+.csve-dark .csve-pronunciation-word-content {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-pronunciation-columns {
+  border-color: var(--border-color) !important;
+}
+
+.csve-dark .csve-pronunciation-column:first-child {
+  border-right-color: var(--border-color) !important;
+}
+
+.csve-dark .csve-pronunciation-words {
+  border-top-color: var(--border-color) !important;
+}
+
+.csve-dark .csve-pronunciation-instr-input,
+.csve-dark .csve-pronunciation-instr-trans,
+.csve-dark .csve-pronunciation-sound,
+.csve-dark .csve-pronunciation-word,
+.csve-dark .csve-pronunciation-trans {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-dark .csve-pronunciation-instr-input,
+.csve-dark .csve-pronunciation-sound,
+.csve-dark .csve-pronunciation-word {
+  color: var(--text-primary) !important;
+}
+
+.csve-dark .csve-pronunciation-instr-trans,
+.csve-dark .csve-pronunciation-trans {
+  color: var(--text-secondary) !important;
+}
+
+.csve-dark .csve-pronunciation-instr-input:hover,
+.csve-dark .csve-pronunciation-instr-input:focus,
+.csve-dark .csve-pronunciation-instr-trans:hover,
+.csve-dark .csve-pronunciation-instr-trans:focus,
+.csve-dark .csve-pronunciation-sound:hover,
+.csve-dark .csve-pronunciation-sound:focus,
+.csve-dark .csve-pronunciation-word:hover,
+.csve-dark .csve-pronunciation-word:focus,
+.csve-dark .csve-pronunciation-trans:hover,
+.csve-dark .csve-pronunciation-trans:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-discuss-part,
+.csve-fullpage.csve-dark .csve-discuss-images,
+.csve-fullpage.csve-dark .csve-discuss-image-item,
+.csve-fullpage.csve-dark .csve-discuss-label-row,
+.csve-fullpage.csve-dark .csve-discuss-translation-row,
+.csve-fullpage.csve-dark .csve-pronunciation-part,
+.csve-fullpage.csve-dark .csve-pronunciation-instruction,
+.csve-fullpage.csve-dark .csve-pronunciation-columns,
+.csve-fullpage.csve-dark .csve-pronunciation-column,
+.csve-fullpage.csve-dark .csve-pronunciation-words,
+.csve-fullpage.csve-dark .csve-pronunciation-word-row,
+.csve-fullpage.csve-dark .csve-pronunciation-word-content {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-discuss-instruction-input,
+.csve-fullpage.csve-dark .csve-discuss-label-input,
+.csve-fullpage.csve-dark .csve-discuss-translation-input,
+.csve-fullpage.csve-dark .csve-pronunciation-instr-input,
+.csve-fullpage.csve-dark .csve-pronunciation-instr-trans,
+.csve-fullpage.csve-dark .csve-pronunciation-sound,
+.csve-fullpage.csve-dark .csve-pronunciation-word,
+.csve-fullpage.csve-dark .csve-pronunciation-trans {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-discuss-instruction-input:hover,
+.csve-fullpage.csve-dark .csve-discuss-instruction-input:focus,
+.csve-fullpage.csve-dark .csve-discuss-label-input:hover,
+.csve-fullpage.csve-dark .csve-discuss-label-input:focus,
+.csve-fullpage.csve-dark .csve-discuss-translation-input:hover,
+.csve-fullpage.csve-dark .csve-discuss-translation-input:focus,
+.csve-fullpage.csve-dark .csve-pronunciation-instr-input:hover,
+.csve-fullpage.csve-dark .csve-pronunciation-instr-input:focus,
+.csve-fullpage.csve-dark .csve-pronunciation-instr-trans:hover,
+.csve-fullpage.csve-dark .csve-pronunciation-instr-trans:focus,
+.csve-fullpage.csve-dark .csve-pronunciation-sound:hover,
+.csve-fullpage.csve-dark .csve-pronunciation-sound:focus,
+.csve-fullpage.csve-dark .csve-pronunciation-word:hover,
+.csve-fullpage.csve-dark .csve-pronunciation-word:focus,
+.csve-fullpage.csve-dark .csve-pronunciation-trans:hover,
+.csve-fullpage.csve-dark .csve-pronunciation-trans:focus {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-section,
+.csve-fullpage.csve-dark .csve-stepb-content,
+.csve-fullpage.csve-dark .csve-stepb-left,
+.csve-fullpage.csve-dark .csve-conversation,
+.csve-fullpage.csve-dark .csve-conversation-row,
+.csve-fullpage.csve-dark .csve-grammar-explanations,
+.csve-fullpage.csve-dark .csve-grammar-block,
+.csve-fullpage.csve-dark .csve-grammar-rule,
+.csve-fullpage.csve-dark .csve-examples-list,
+.csve-fullpage.csve-dark .csve-example-item,
+.csve-fullpage.csve-dark .csve-example-content,
+.csve-fullpage.csve-dark .csve-pronunciation-tip,
+.csve-fullpage.csve-dark .csve-pronunciation-table,
+.csve-fullpage.csve-dark .csve-pronunciation-row,
+.csve-fullpage.csve-dark .csve-pronunciation-col-phrase,
+.csve-fullpage.csve-dark .csve-pronunciation-col-example {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-name,
+.csve-fullpage.csve-dark .csve-stepb-explanation,
+.csve-fullpage.csve-dark .csve-speech-input,
+.csve-fullpage.csve-dark .csve-stepb-question,
+.csve-fullpage.csve-dark .csve-grammar-rule-input,
+.csve-fullpage.csve-dark .csve-grammar-translation,
+.csve-fullpage.csve-dark .csve-examples-title,
+.csve-fullpage.csve-dark .csve-example-sentence,
+.csve-fullpage.csve-dark .csve-example-translation,
+.csve-fullpage.csve-dark .csve-pronunciation-tip-input,
+.csve-fullpage.csve-dark .csve-phrase-text,
+.csve-fullpage.csve-dark .csve-phrase-guide,
+.csve-fullpage.csve-dark .csve-phrase-example {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-bubble {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-left::after {
+  border-color: transparent #1b1b1b transparent transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-right::after {
+  border-color: #1b1b1b transparent transparent transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-speaker-placeholder,
+.csve-fullpage.csve-dark .csve-grammar-examples-box {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-pronunciation-table,
+.csve-fullpage.csve-dark .csve-pronunciation-row,
+.csve-fullpage.csve-dark .csve-pronunciation-col-phrase,
+.csve-fullpage.csve-dark .csve-pronunciation-col-example,
+.csve-fullpage.csve-dark .csve-grammar-examples-box {
+  border-color: var(--border-color) !important;
+}
+
+.csve-fullpage.csve-dark .csve-add-phrase-btn {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-name:hover,
+.csve-fullpage.csve-dark .csve-stepb-name:focus,
+.csve-fullpage.csve-dark .csve-stepb-explanation:hover,
+.csve-fullpage.csve-dark .csve-stepb-explanation:focus,
+.csve-fullpage.csve-dark .csve-speech-input:hover,
+.csve-fullpage.csve-dark .csve-speech-input:focus,
+.csve-fullpage.csve-dark .csve-stepb-question:hover,
+.csve-fullpage.csve-dark .csve-stepb-question:focus,
+.csve-fullpage.csve-dark .csve-grammar-rule-input:hover,
+.csve-fullpage.csve-dark .csve-grammar-rule-input:focus,
+.csve-fullpage.csve-dark .csve-grammar-translation:hover,
+.csve-fullpage.csve-dark .csve-grammar-translation:focus,
+.csve-fullpage.csve-dark .csve-example-sentence:hover,
+.csve-fullpage.csve-dark .csve-example-sentence:focus,
+.csve-fullpage.csve-dark .csve-example-translation:hover,
+.csve-fullpage.csve-dark .csve-example-translation:focus,
+.csve-fullpage.csve-dark .csve-pronunciation-tip-input:hover,
+.csve-fullpage.csve-dark .csve-pronunciation-tip-input:focus,
+.csve-fullpage.csve-dark .csve-phrase-text:hover,
+.csve-fullpage.csve-dark .csve-phrase-text:focus,
+.csve-fullpage.csve-dark .csve-phrase-guide:hover,
+.csve-fullpage.csve-dark .csve-phrase-guide:focus,
+.csve-fullpage.csve-dark .csve-phrase-example:hover,
+.csve-fullpage.csve-dark .csve-phrase-example:focus {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-wrapper,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-grammar-rule-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-example-sentence .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-pronunciation-tip-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-phrase-example .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-speech-input .csve-rich-text-input {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input strong,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input b,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input span,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input div,
+.csve-fullpage.csve-dark .csve-stepb-left .csve-rich-text-input p {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-section,
+.csve-fullpage.csve-dark .csve-apply-content,
+.csve-fullpage.csve-dark .csve-apply-left,
+.csve-fullpage.csve-dark .csve-situation-block,
+.csve-fullpage.csve-dark .csve-dialogue-lines,
+.csve-fullpage.csve-dark .csve-dialogue-line,
+.csve-fullpage.csve-dark .csve-reading-text-box,
+.csve-fullpage.csve-dark .csve-reading-text-header,
+.csve-fullpage.csve-dark .csve-reading-text-content,
+.csve-fullpage.csve-dark .csve-reading-image-container {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-situation,
+.csve-fullpage.csve-dark .csve-translation-input,
+.csve-fullpage.csve-dark .csve-dialogue-speaker,
+.csve-fullpage.csve-dark .csve-dialogue-text,
+.csve-fullpage.csve-dark .csve-dialogue-action,
+.csve-fullpage.csve-dark .csve-reading-text-input,
+.csve-fullpage.csve-dark .csve-reading-image-label-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-dialogue-text .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-reading-text-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-reading-image-label-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-wrapper,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input:focus {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input strong,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input b,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input span,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input div,
+.csve-fullpage.csve-dark .csve-apply-left .csve-rich-text-input p,
+.csve-fullpage.csve-dark .csve-reading-text-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-dialogue-text .csve-rich-text-input * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-situation:hover,
+.csve-fullpage.csve-dark .csve-apply-situation:focus,
+.csve-fullpage.csve-dark .csve-translation-input:hover,
+.csve-fullpage.csve-dark .csve-translation-input:focus,
+.csve-fullpage.csve-dark .csve-dialogue-speaker:hover,
+.csve-fullpage.csve-dark .csve-dialogue-speaker:focus,
+.csve-fullpage.csve-dark .csve-dialogue-text:hover,
+.csve-fullpage.csve-dark .csve-dialogue-text:focus,
+.csve-fullpage.csve-dark .csve-dialogue-action:hover,
+.csve-fullpage.csve-dark .csve-dialogue-action:focus,
+.csve-fullpage.csve-dark .csve-reading-text-input:hover,
+.csve-fullpage.csve-dark .csve-reading-text-input:focus,
+.csve-fullpage.csve-dark .csve-reading-image-label-input:hover,
+.csve-fullpage.csve-dark .csve-reading-image-label-input:focus {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-trivia-content-row,
+.csve-fullpage.csve-dark .csve-trivia-left,
+.csve-fullpage.csve-dark .csve-trivia-box,
+.csve-fullpage.csve-dark .csve-trivia-body,
+.csve-fullpage.csve-dark .csve-trivia-image-container {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-trivia-header {
+  background: var(--primary, #4a9cf8) !important;
+  background-color: var(--primary, #4a9cf8) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-trivia-header-left {
+  color: #ffffff !important;
+}
+
+.csve-fullpage.csve-dark .csve-add-trivia-image-btn {
+  color: var(--primary, #4a9cf8) !important;
+  background: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.csve-fullpage.csve-dark .csve-trivia-text-input,
+.csve-fullpage.csve-dark .csve-trivia-text-input:hover,
+.csve-fullpage.csve-dark .csve-trivia-text-input:focus,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-trivia-body .csve-translation-input,
+.csve-fullpage.csve-dark .csve-trivia-body .csve-translation-input:hover,
+.csve-fullpage.csve-dark .csve-trivia-body .csve-translation-input:focus {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input strong,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input b,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input span,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input div,
+.csve-fullpage.csve-dark .csve-trivia-text-input .csve-rich-text-input p {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-section,
+.csve-fullpage.csve-dark .csve-exercise-row,
+.csve-fullpage.csve-dark .csve-exercise-left,
+.csve-fullpage.csve-dark .csve-exercise-instructions,
+.csve-fullpage.csve-dark .csve-expression-box,
+.csve-fullpage.csve-dark .csve-expression-items,
+.csve-fullpage.csve-dark .csve-expression-item,
+.csve-fullpage.csve-dark .csve-info-box,
+.csve-fullpage.csve-dark .csve-info-box-table,
+.csve-fullpage.csve-dark .csve-info-box-row,
+.csve-fullpage.csve-dark .csve-info-box-cell,
+.csve-fullpage.csve-dark .csve-exercise-example,
+.csve-fullpage.csve-dark .csve-example-content,
+.csve-fullpage.csve-dark .csve-example-sentence,
+.csve-fullpage.csve-dark .csve-example-answer,
+.csve-fullpage.csve-dark .csve-exercise-items,
+.csve-fullpage.csve-dark .csve-exercise-item,
+.csve-fullpage.csve-dark .csve-exercise-item-content,
+.csve-fullpage.csve-dark .csve-choose-items,
+.csve-fullpage.csve-dark .csve-choose-item,
+.csve-fullpage.csve-dark .csve-change-items,
+.csve-fullpage.csve-dark .csve-change-item,
+.csve-fullpage.csve-dark .csve-stepb-conversation-section,
+.csve-fullpage.csve-dark .csve-stepb-row,
+.csve-fullpage.csve-dark .csve-exercise-conversations,
+.csve-fullpage.csve-dark .csve-exercise-conv-row,
+.csve-fullpage.csve-dark .csve-exercise-speech-bubble,
+.csve-fullpage.csve-dark .csve-stepb-multiple-choice,
+.csve-fullpage.csve-dark .csve-stepb-speech-section,
+.csve-fullpage.csve-dark .csve-stepb-compare-section {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left input,
+.csve-fullpage.csve-dark .csve-exercise-left textarea,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-wrapper,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-instructions-input,
+.csve-fullpage.csve-dark .csve-translation-input,
+.csve-fullpage.csve-dark .csve-expression-input,
+.csve-fullpage.csve-dark .csve-info-box-title,
+.csve-fullpage.csve-dark .csve-info-box-cell input,
+.csve-fullpage.csve-dark .csve-info-box-row-label input,
+.csve-fullpage.csve-dark .csve-example-input,
+.csve-fullpage.csve-dark .csve-answer-example-input,
+.csve-fullpage.csve-dark .csve-item-sentence-input,
+.csve-fullpage.csve-dark .csve-choose-sentence-input,
+.csve-fullpage.csve-dark .csve-change-sentence-input,
+.csve-fullpage.csve-dark .csve-stepb-instruction-input,
+.csve-fullpage.csve-dark .csve-exercise-instruction,
+.csve-fullpage.csve-dark .csve-exercise-speech-bubble .csve-speech-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left input:hover,
+.csve-fullpage.csve-dark .csve-exercise-left input:focus,
+.csve-fullpage.csve-dark .csve-exercise-left textarea:hover,
+.csve-fullpage.csve-dark .csve-exercise-left textarea:focus,
+.csve-fullpage.csve-dark .csve-instructions-input:hover,
+.csve-fullpage.csve-dark .csve-instructions-input:focus,
+.csve-fullpage.csve-dark .csve-translation-input:hover,
+.csve-fullpage.csve-dark .csve-translation-input:focus,
+.csve-fullpage.csve-dark .csve-expression-input:hover,
+.csve-fullpage.csve-dark .csve-expression-input:focus,
+.csve-fullpage.csve-dark .csve-info-box-title:hover,
+.csve-fullpage.csve-dark .csve-info-box-title:focus,
+.csve-fullpage.csve-dark .csve-info-box-cell input:hover,
+.csve-fullpage.csve-dark .csve-info-box-cell input:focus,
+.csve-fullpage.csve-dark .csve-info-box-row-label input:hover,
+.csve-fullpage.csve-dark .csve-info-box-row-label input:focus,
+.csve-fullpage.csve-dark .csve-example-input:hover,
+.csve-fullpage.csve-dark .csve-example-input:focus,
+.csve-fullpage.csve-dark .csve-answer-example-input:hover,
+.csve-fullpage.csve-dark .csve-answer-example-input:focus,
+.csve-fullpage.csve-dark .csve-item-sentence-input:hover,
+.csve-fullpage.csve-dark .csve-item-sentence-input:focus,
+.csve-fullpage.csve-dark .csve-choose-sentence-input:hover,
+.csve-fullpage.csve-dark .csve-choose-sentence-input:focus,
+.csve-fullpage.csve-dark .csve-change-sentence-input:hover,
+.csve-fullpage.csve-dark .csve-change-sentence-input:focus,
+.csve-fullpage.csve-dark .csve-stepb-instruction-input:hover,
+.csve-fullpage.csve-dark .csve-stepb-instruction-input:focus,
+.csve-fullpage.csve-dark .csve-exercise-instruction:hover,
+.csve-fullpage.csve-dark .csve-exercise-instruction:focus,
+.csve-fullpage.csve-dark .csve-exercise-speech-bubble .csve-speech-input:hover,
+.csve-fullpage.csve-dark .csve-exercise-speech-bubble .csve-speech-input:focus {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input strong,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input b,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input span,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input div,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input p,
+.csve-fullpage.csve-dark .csve-instructions-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-translation-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-item-sentence-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-choose-sentence-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-change-sentence-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-example-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-answer-example-input .csve-rich-text-input * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-choose-image,
+.csve-fullpage.csve-dark .csve-choose-image-placeholder,
+.csve-fullpage.csve-dark .csve-exercise-item-image,
+.csve-fullpage.csve-dark .csve-exercise-image-placeholder {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-speech,
+.csve-fullpage.csve-dark .csve-speech-layout,
+.csve-fullpage.csve-dark .csve-speech-speaker-image,
+.csve-fullpage.csve-dark .csve-speech-image-preview,
+.csve-fullpage.csve-dark .csve-speech-bubble-container,
+.csve-fullpage.csve-dark .csve-stepb-compare,
+.csve-fullpage.csve-dark .csve-compare-wordbox,
+.csve-fullpage.csve-dark .csve-compare-wordbox-items,
+.csve-fullpage.csve-dark .csve-compare-word-item,
+.csve-fullpage.csve-dark .csve-compare-images,
+.csve-fullpage.csve-dark .csve-compare-image-item,
+.csve-fullpage.csve-dark .csve-compare-image-box,
+.csve-fullpage.csve-dark .csve-compare-image-preview,
+.csve-fullpage.csve-dark .csve-compare-example,
+.csve-fullpage.csve-dark .csve-compare-items,
+.csve-fullpage.csve-dark .csve-compare-item {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-image-placeholder,
+.csve-fullpage.csve-dark .csve-compare-image-box .csve-image-placeholder {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-content-input,
+.csve-fullpage.csve-dark .csve-speech-content-input:hover,
+.csve-fullpage.csve-dark .csve-speech-content-input:focus,
+.csve-fullpage.csve-dark .csve-speech-content-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-speech-content-input .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-speech-content-input .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-compare-word-input,
+.csve-fullpage.csve-dark .csve-compare-word-input:hover,
+.csve-fullpage.csve-dark .csve-compare-word-input:focus,
+.csve-fullpage.csve-dark .csve-compare-image-label,
+.csve-fullpage.csve-dark .csve-compare-image-label:hover,
+.csve-fullpage.csve-dark .csve-compare-image-label:focus,
+.csve-fullpage.csve-dark .csve-compare-example-input,
+.csve-fullpage.csve-dark .csve-compare-example-input:hover,
+.csve-fullpage.csve-dark .csve-compare-example-input:focus,
+.csve-fullpage.csve-dark .csve-compare-example-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-compare-example-input .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-compare-example-input .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-compare-item-input,
+.csve-fullpage.csve-dark .csve-compare-item-input:hover,
+.csve-fullpage.csve-dark .csve-compare-item-input:focus,
+.csve-fullpage.csve-dark .csve-compare-item-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-compare-item-input .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-compare-item-input .csve-rich-text-input:focus {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-bubble-container::after {
+  border-right-color: #1b1b1b !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-bubble-container::before {
+  border-right-color: var(--border-color) !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-content-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-compare-example-input .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-compare-item-input .csve-rich-text-input * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-compare-item-number,
+.csve-fullpage.csve-dark .csve-compare-example-label {
+  color: var(--text-secondary) !important;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-multiple-choice,
+.csve-fullpage.csve-dark .csve-mc-item,
+.csve-fullpage.csve-dark .csve-mc-item-header,
+.csve-fullpage.csve-dark .csve-mc-options,
+.csve-fullpage.csve-dark .csve-mc-option,
+.csve-fullpage.csve-dark .csve-mc-image-section,
+.csve-fullpage.csve-dark .csve-mc-image-upload,
+.csve-fullpage.csve-dark .csve-mc-image-preview,
+.csve-fullpage.csve-dark .csve-mc-image-placeholder {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mc-bold-sentence,
+.csve-fullpage.csve-dark .csve-mc-bold-sentence:hover,
+.csve-fullpage.csve-dark .csve-mc-bold-sentence:focus,
+.csve-fullpage.csve-dark .csve-mc-bold-sentence .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-mc-bold-sentence .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-mc-bold-sentence .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-mc-option-input,
+.csve-fullpage.csve-dark .csve-mc-option-input:hover,
+.csve-fullpage.csve-dark .csve-mc-option-input:focus,
+.csve-fullpage.csve-dark .csve-mc-option-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-mc-option-input .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-mc-option-input .csve-rich-text-input:focus {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mc-bold-sentence .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-mc-option-input .csve-rich-text-input * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-add-mc-item-btn,
+.csve-fullpage.csve-dark .csve-add-mc-item-btn:hover {
+  background: #1b1b1b !important;
+  background-color: #1b1b1b !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mc-number,
+.csve-fullpage.csve-dark .csve-mc-option-label {
+  color: var(--text-secondary) !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-section {
+  --csve-dark-editor-border: rgba(255, 255, 255, 0.12);
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left .csve-step-type-switcher,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-switcher-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-instructions-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-translation-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-translation-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-exercise-item-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-card-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-expression-box,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-info-box,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-info-box-header-row,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-info-box-cell input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-exercise-item-image,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-exercise-image-placeholder,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-item-sentence-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-choose-sentence-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-choose-image-placeholder,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-change-sentence-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-row,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-instruction-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-mc-item,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-mc-bold-sentence,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-mc-option-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-mc-item-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-mc-image-placeholder,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-speech-image-preview,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-speech-image-placeholder,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-speech-bubble-container,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-speech-content-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-wordbox,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-word-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-word-add,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-images,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-image-box,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-image-label,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-image-add,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-example,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-example-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-compare-example-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-item-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-item-add {
+  border-color: var(--csve-dark-editor-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-rich-text-input:focus {
+  border-color: var(--csve-dark-editor-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left .csve-switcher-btn.active {
+  border-color: var(--primary, #4a9cf8) !important;
+}
+
+.csve-fullpage.csve-dark .csve-section-line {
+  background: rgba(255, 255, 255, 0.24) !important;
+}
+
+.csve-fullpage.csve-dark :is(
+  .csve-toolbar-btn,
+  .csve-back-btn,
+  .csve-upload-btn,
+  .csve-image-actions button,
+  .csve-language-picker button,
+  .csve-cancel-btn,
+  .csve-image-overlay button,
+  .csve-add-image-btn,
+  .csve-add-card-btn,
+  .csve-add-btn,
+  .csve-add-point-btn,
+  .csve-add-script-btn,
+  .csve-add-tip-btn,
+  .csve-add-question-btn,
+  .csve-add-listening-script-btn,
+  .csve-add-answer-key-btn,
+  .csve-add-tutor-answer-btn,
+  .csve-add-translation-btn,
+  .csve-add-step-btn,
+  .csve-add-vocab-btn,
+  .csve-add-expr-btn,
+  .csve-add-extra-text-btn,
+  .csve-add-label-btn,
+  .csve-add-discuss-image-btn,
+  .csve-add-guide-script-btn,
+  .csve-add-guide-step-btn,
+  .csve-add-part-btn,
+  .csve-add-example-btn,
+  .csve-add-examples-btn,
+  .csve-add-explanation-btn,
+  .csve-add-phrase-btn,
+  .csve-add-exercise-conv-btn,
+  .csve-add-dialogue-btn,
+  .csve-add-reading-image-btn,
+  .csve-remove-reading-image-btn,
+  .csve-add-trivia-image-btn,
+  .csve-remove-trivia-image-btn,
+  .csve-trivia-guide .csve-add-question-btn,
+  .csve-trivia-guide .csve-add-step-btn,
+  .csve-add-expression-btn,
+  .csve-info-box-add-col-btn,
+  .csve-info-box-add-row-btn,
+  .csve-add-exercise-item-btn,
+  .csve-remove-stepb-btn,
+  .csve-add-stepb-btn,
+  .csve-mc-remove-btn,
+  .csve-add-mc-item-btn,
+  .csve-compare-word-add,
+  .csve-add-compare-example-btn,
+  .csve-compare-item-add,
+  .csve-add-grammar-item-btn,
+  .csve-add-grammar-tip-btn,
+  .csve-alignment-btn,
+  .csve-reading-add-block button,
+  .csve-expand-btn,
+  .tgs-add-script-btn,
+  .tgs-add-tip-btn,
+  .tgs-add-prompt-btn,
+  .tgs-add-question-btn,
+  .tgs-add-answer-key-btn,
+  .tgs-add-listening-script-btn,
+  .tgs-add-answer-btn,
+  .tgs-add-step-btn
+):not(.active):not(.csve-preview-btn):not(.csve-save-btn) {
+  background: #202020 !important;
+  background-color: #202020 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark :is(
+  .csve-toolbar-btn,
+  .csve-back-btn,
+  .csve-upload-btn,
+  .csve-image-actions button,
+  .csve-language-picker button,
+  .csve-cancel-btn,
+  .csve-image-overlay button,
+  .csve-add-image-btn,
+  .csve-add-card-btn,
+  .csve-add-btn,
+  .csve-add-point-btn,
+  .csve-add-script-btn,
+  .csve-add-tip-btn,
+  .csve-add-question-btn,
+  .csve-add-listening-script-btn,
+  .csve-add-answer-key-btn,
+  .csve-add-tutor-answer-btn,
+  .csve-add-translation-btn,
+  .csve-add-step-btn,
+  .csve-add-vocab-btn,
+  .csve-add-expr-btn,
+  .csve-add-extra-text-btn,
+  .csve-add-label-btn,
+  .csve-add-discuss-image-btn,
+  .csve-add-guide-script-btn,
+  .csve-add-guide-step-btn,
+  .csve-add-part-btn,
+  .csve-add-example-btn,
+  .csve-add-examples-btn,
+  .csve-add-explanation-btn,
+  .csve-add-phrase-btn,
+  .csve-add-exercise-conv-btn,
+  .csve-add-dialogue-btn,
+  .csve-add-reading-image-btn,
+  .csve-remove-reading-image-btn,
+  .csve-add-trivia-image-btn,
+  .csve-remove-trivia-image-btn,
+  .csve-trivia-guide .csve-add-question-btn,
+  .csve-trivia-guide .csve-add-step-btn,
+  .csve-add-expression-btn,
+  .csve-info-box-add-col-btn,
+  .csve-info-box-add-row-btn,
+  .csve-add-exercise-item-btn,
+  .csve-remove-stepb-btn,
+  .csve-add-stepb-btn,
+  .csve-mc-remove-btn,
+  .csve-add-mc-item-btn,
+  .csve-compare-word-add,
+  .csve-add-compare-example-btn,
+  .csve-compare-item-add,
+  .csve-add-grammar-item-btn,
+  .csve-add-grammar-tip-btn,
+  .csve-alignment-btn,
+  .csve-reading-add-block button,
+  .csve-expand-btn,
+  .tgs-add-script-btn,
+  .tgs-add-tip-btn,
+  .tgs-add-prompt-btn,
+  .tgs-add-question-btn,
+  .tgs-add-answer-key-btn,
+  .tgs-add-listening-script-btn,
+  .tgs-add-answer-btn,
+  .tgs-add-step-btn
+):not(.active):not(.csve-preview-btn):not(.csve-save-btn):hover {
+  background: #262626 !important;
+  background-color: #262626 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark :is(
+  .csve-remove-extra-btn,
+  .csve-remove-answer-key-btn,
+  .csve-remove-tutor-answer-btn,
+  .csve-remove-translation-btn,
+  .csve-remove-script-btn,
+  .csve-remove-part-btn,
+  .csve-remove-explanation-btn,
+  .csve-remove-expression-btn,
+  .csve-remove-optional-btn,
+  .csve-remove-item-btn,
+  .csve-compare-word-remove,
+  .csve-compare-example-remove,
+  .csve-compare-item-remove,
+  .csve-remove-grammar-tip-btn,
+  .csve-remove-grammar-item-btn,
+  .tgs-remove-btn,
+  .tgs-remove-answer-btn,
+  .tgs-remove-answer-key-btn
+) {
+  background: #241f1f !important;
+  background-color: #241f1f !important;
+  border-color: rgba(239, 68, 68, 0.26) !important;
+  color: #f87171 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark :is(
+  .csve-remove-extra-btn,
+  .csve-remove-answer-key-btn,
+  .csve-remove-tutor-answer-btn,
+  .csve-remove-translation-btn,
+  .csve-remove-script-btn,
+  .csve-remove-part-btn,
+  .csve-remove-explanation-btn,
+  .csve-remove-expression-btn,
+  .csve-remove-optional-btn,
+  .csve-remove-item-btn,
+  .csve-compare-word-remove,
+  .csve-compare-example-remove,
+  .csve-compare-item-remove,
+  .csve-remove-grammar-tip-btn,
+  .csve-remove-grammar-item-btn,
+  .tgs-remove-btn,
+  .tgs-remove-answer-btn,
+  .tgs-remove-answer-key-btn
+):hover {
+  background: #2e2020 !important;
+  background-color: #2e2020 !important;
+  border-color: rgba(239, 68, 68, 0.38) !important;
+  color: #fca5a5 !important;
+  box-shadow: none !important;
+}
+
+/* Section 5 Mission: keep every mission type on the dark editor surface. */
+.csve-fullpage.csve-dark .csve-mission-section {
+  --csve-mission-dark-bg: #1b1b1b;
+  --csve-mission-dark-panel: #202020;
+  --csve-mission-dark-field: #242424;
+  --csve-mission-dark-border: rgba(255, 255, 255, 0.12);
+  --csve-mission-dark-border-strong: rgba(255, 255, 255, 0.18);
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-content,
+.csve-fullpage.csve-dark .csve-mission-left,
+.csve-fullpage.csve-dark .csve-mission-right {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-situation-box,
+  .csve-mission-instruction-box,
+  .csve-mission-grammar-tip,
+  .csve-grammar-tip-header,
+  .csve-grammar-tip-items,
+  .csve-grammar-tip-item,
+  .csve-reading-passage,
+  .csve-reading-alignment-options,
+  .csve-reading-passage-header,
+  .csve-reading-blocks,
+  .csve-reading-block,
+  .csve-reading-paragraph-wrapper,
+  .csve-reading-images-wrapper,
+  .csve-reading-images,
+  .csve-reading-add-block,
+  .csve-reading-closing,
+  .csve-listening-script,
+  .csve-listening-script-header,
+  .csve-mission-topics,
+  .csve-mission-topic-card,
+  .csve-mission-topic-header,
+  .csve-mission-topic-questions,
+  .csve-mission-topic-question,
+  .csve-mission-transition-box,
+  .csve-mission-transition,
+  .csve-mission-transition-script
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-grammar-tip,
+  .csve-reading-passage,
+  .csve-listening-script,
+  .csve-mission-topic-card,
+  .csve-mission-topic-header,
+  .csve-reading-alignment-options,
+  .csve-reading-add-block,
+  .csve-mission-transition-box,
+  .csve-mission-topic-questions
+) {
+  border-color: var(--csve-mission-dark-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-situation,
+  .csve-mission-instruction,
+  .csve-mission-translation-input,
+  .csve-grammar-tip-title-input,
+  .csve-grammar-tip-input,
+  .csve-grammar-tip-item input,
+  .csve-reading-title,
+  .csve-reading-author-input,
+  .csve-reading-paragraph,
+  .csve-reading-closing-input,
+  .csve-listening-script-input,
+  .csve-mission-topic-title,
+  .csve-mission-topic-q-input,
+  .csve-rich-text-wrapper,
+  .csve-rich-text-input
+),
+.csve-fullpage.csve-dark .csve-mission-right :is(
+  .csve-mission-challenge-input,
+  .csve-mission-duration-input,
+  .tgs-instruction-input,
+  .tgs-script-input,
+  .tgs-prompt-input,
+  .tgs-tip-input,
+  .tgs-listening-script-input,
+  .csve-rich-text-wrapper,
+  .csve-rich-text-input
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-situation,
+  .csve-mission-instruction,
+  .csve-mission-translation-input,
+  .csve-grammar-tip-title-input,
+  .csve-grammar-tip-input,
+  .csve-grammar-tip-item input,
+  .csve-reading-title,
+  .csve-reading-author-input,
+  .csve-reading-paragraph,
+  .csve-reading-closing-input,
+  .csve-listening-script-input,
+  .csve-mission-topic-title,
+  .csve-mission-topic-q-input,
+  .csve-rich-text-input
+):is(:hover, :focus),
+.csve-fullpage.csve-dark .csve-mission-right :is(
+  .csve-mission-challenge-input,
+  .csve-mission-duration-input,
+  .tgs-instruction-input,
+  .tgs-script-input,
+  .tgs-prompt-input,
+  .tgs-tip-input,
+  .tgs-listening-script-input,
+  .csve-rich-text-input
+):is(:hover, :focus) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: var(--csve-mission-dark-border-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-situation-translation,
+  .csve-mission-instruction-translation,
+  .csve-reading-author,
+  .csve-reading-closing-input,
+  .csve-mission-transition-script,
+  .csve-mission-script-text
+) {
+  color: var(--text-secondary, #b8c2cc) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-situation,
+  .csve-mission-instruction,
+  .csve-mission-translation-input,
+  .csve-reading-paragraph,
+  .csve-reading-closing-input,
+  .csve-listening-script-input,
+  .csve-mission-topic-q-input
+) :is(p, div, span, strong, em, u),
+.csve-fullpage.csve-dark .csve-mission-right :is(
+  .tgs-listening-script-input,
+  .csve-rich-text-input
+) :is(p, div, span, strong, em, u) {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-reading-title,
+  .csve-grammar-tip-title-input,
+  .csve-mission-topic-title,
+  .csve-mission-topic-number,
+  .csve-reading-paragraph,
+  .csve-listening-script-header,
+  .csve-listening-script-header i
+) {
+  color: var(--text-primary, #f5f5f5) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-grammar-tip-bullet,
+  .csve-mission-topic-q-number,
+  .csve-alignment-label,
+  .csve-reading-author,
+  .csve-reading-author-input
+) {
+  color: var(--text-secondary, #b8c2cc) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left input::placeholder,
+.csve-fullpage.csve-dark .csve-mission-left textarea::placeholder,
+.csve-fullpage.csve-dark .csve-mission-left .csve-rich-text-input:empty::before,
+.csve-fullpage.csve-dark .csve-mission-right input::placeholder,
+.csve-fullpage.csve-dark .csve-mission-right textarea::placeholder,
+.csve-fullpage.csve-dark .csve-mission-right .csve-rich-text-input:empty::before {
+  color: var(--text-muted, #87919c) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-mission-situation-box,
+  .csve-mission-instruction-box,
+  .csve-mission-grammar-tip,
+  .csve-reading-passage,
+  .csve-listening-script,
+  .csve-mission-topic-card
+) {
+  border: 1px solid var(--csve-mission-dark-border) !important;
+  border-radius: 8px !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-reading-image-item,
+  .csve-reading-image-add,
+  .csve-mission-image,
+  .csve-image-placeholder,
+  .csve-mission-topic-card,
+  .csve-mission-add-topic
+) {
+  background: var(--csve-mission-dark-panel) !important;
+  background-color: var(--csve-mission-dark-panel) !important;
+  border-color: var(--csve-mission-dark-border) !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-reading-image-add:hover,
+  .csve-mission-image:hover,
+  .csve-mission-add-topic:hover
+) {
+  background: var(--csve-mission-dark-field) !important;
+  background-color: var(--csve-mission-dark-field) !important;
+  border-color: rgba(74, 158, 255, 0.45) !important;
+  color: #dbeafe !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-grammar-tip-add,
+  .csve-add-grammar-item-btn,
+  .csve-add-grammar-tip-btn,
+  .csve-reading-author-add,
+  .csve-reading-add-block button,
+  .csve-mission-add-topic-q,
+  .csve-mission-add-topic,
+  .csve-mission-add-question,
+  .csve-mission-add-hint
+) {
+  background: #202020 !important;
+  background-color: #202020 !important;
+  border-color: var(--csve-mission-dark-border) !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left :is(
+  .csve-grammar-tip-add,
+  .csve-add-grammar-item-btn,
+  .csve-add-grammar-tip-btn,
+  .csve-reading-author-add,
+  .csve-reading-add-block button,
+  .csve-mission-add-topic-q,
+  .csve-mission-add-topic,
+  .csve-mission-add-question,
+  .csve-mission-add-hint
+):hover {
+  background: #262626 !important;
+  background-color: #262626 !important;
+  border-color: rgba(74, 158, 255, 0.45) !important;
+  color: #dbeafe !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-right :is(
+  .tgs-tutor-guide,
+  .tgs-steps,
+  .tgs-step,
+  .tgs-listening-script-box,
+  .tgs-listening-script-header,
+  .csve-mission-tutor-subheader
+) {
+  background: var(--csve-mission-dark-panel) !important;
+  background-color: var(--csve-mission-dark-panel) !important;
+  border-color: var(--csve-mission-dark-border) !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-right .tgs-header {
+  background: var(--primary, #4a9cf8) !important;
+  border-color: var(--primary, #4a9cf8) !important;
+  color: #fff !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-right .csve-mission-tutor-subheader {
+  border-top: 0 !important;
+  border-bottom: 1px solid var(--csve-mission-dark-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-right .csve-mission-duration-wrapper,
+.csve-fullpage.csve-dark .csve-mission-right .csve-mission-duration-input {
+  color: #fff !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-right .csve-mission-duration-input {
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.6) !important;
+}
+
+.csve-fullpage.csve-dark :is(
+  .csve-grammar-tip-remove,
+  .csve-grammar-tip-remove-item,
+  .csve-mission-remove-script,
+  .csve-mission-remove-tip,
+  .csve-mission-remove-step,
+  .csve-mission-remove-hint,
+  .csve-mission-remove-question,
+  .csve-mission-remove-topic,
+  .csve-mission-remove-topic-q,
+  .csve-reading-author-remove,
+  .csve-reading-block-remove,
+  .csve-reading-image-remove,
+  .tgs-step-remove
+) {
+  background: #241f1f !important;
+  background-color: #241f1f !important;
+  border: 1px solid rgba(239, 68, 68, 0.26) !important;
+  color: #f87171 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark :is(
+  .csve-grammar-tip-remove,
+  .csve-grammar-tip-remove-item,
+  .csve-mission-remove-script,
+  .csve-mission-remove-tip,
+  .csve-mission-remove-step,
+  .csve-mission-remove-hint,
+  .csve-mission-remove-question,
+  .csve-mission-remove-topic,
+  .csve-mission-remove-topic-q,
+  .csve-reading-author-remove,
+  .csve-reading-block-remove,
+  .csve-reading-image-remove,
+  .tgs-step-remove
+):hover {
+  background: #2e2020 !important;
+  background-color: #2e2020 !important;
+  border-color: rgba(239, 68, 68, 0.38) !important;
+  color: #fca5a5 !important;
+}
+
+/* Mission challenge headings and Section 6 Feedback dark editor cleanup. */
+.csve-fullpage.csve-dark .csve-mission-left .csve-challenge-name-input,
+.csve-fullpage.csve-dark .csve-mission-left .csve-challenge-name-input:hover,
+.csve-fullpage.csve-dark .csve-mission-left .csve-challenge-name-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-section {
+  --csve-feedback-dark-bg: #1b1b1b;
+  --csve-feedback-dark-panel: #202020;
+  --csve-feedback-dark-field: #242424;
+  --csve-feedback-dark-border: rgba(255, 255, 255, 0.12);
+  --csve-feedback-dark-border-strong: rgba(255, 255, 255, 0.18);
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-content,
+.csve-fullpage.csve-dark .csve-feedback-left,
+.csve-fullpage.csve-dark .csve-feedback-right {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-goal-card,
+  .csve-fb-goal-body,
+  .csve-fb-rubric-card,
+  .csve-fb-rubric-title-row,
+  .csve-fb-rubric-scale,
+  .csve-fb-rubric-item,
+  .csve-fb-categories-header,
+  .csve-fb-category-card,
+  .csve-fb-cat-header,
+  .csve-fb-cat-assess,
+  .csve-fb-cat-focus,
+  .csve-fb-cat-examples,
+  .csve-fb-focus-tags,
+  .csve-fb-focus-tag,
+  .csve-fb-vocab-highlight,
+  .csve-fb-example-card,
+  .csve-fb-example-said,
+  .csve-fb-example-better
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-goal-card,
+  .csve-fb-rubric-card,
+  .csve-fb-category-card,
+  .csve-fb-example-card
+) {
+  border-color: var(--csve-feedback-dark-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-rubric-title-row,
+  .csve-fb-rubric-item,
+  .csve-fb-cat-header,
+  .csve-fb-cat-assess,
+  .csve-fb-cat-focus
+) {
+  border-bottom-color: var(--csve-feedback-dark-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-goal-text,
+  .csve-fb-goal-jp,
+  .csve-fb-rubric-title,
+  .csve-fb-rubric-label,
+  .csve-fb-rubric-desc,
+  .csve-fb-categories-title,
+  .csve-fb-cat-name,
+  .csve-fb-cat-jp,
+  .csve-fb-assess-text,
+  .csve-fb-tag-input,
+  .csve-fb-vocab-input,
+  .csve-fb-example-input,
+  .csve-fb-example-select
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-goal-text,
+  .csve-fb-goal-jp,
+  .csve-fb-rubric-title,
+  .csve-fb-rubric-label,
+  .csve-fb-rubric-desc,
+  .csve-fb-categories-title,
+  .csve-fb-cat-name,
+  .csve-fb-cat-jp,
+  .csve-fb-assess-text,
+  .csve-fb-tag-input,
+  .csve-fb-vocab-input,
+  .csve-fb-example-input,
+  .csve-fb-example-select
+):is(:hover, :focus) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: var(--csve-feedback-dark-border-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-goal-label,
+  .csve-fb-rubric-title,
+  .csve-fb-categories-title,
+  .csve-fb-assess-label,
+  .csve-fb-focus-label,
+  .csve-fb-examples-label
+) {
+  color: #72adff !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-goal-jp,
+  .csve-fb-rubric-desc,
+  .csve-fb-cat-jp,
+  .csve-fb-assess-text,
+  .csve-fb-tag-input,
+  .csve-fb-said-input
+) {
+  color: var(--text-secondary, #b8c2cc) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left input::placeholder,
+.csve-fullpage.csve-dark .csve-feedback-left textarea::placeholder {
+  color: var(--text-muted, #87919c) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-focus-tag,
+  .csve-fb-vocab-highlight,
+  .csve-fb-example-card
+) {
+  background: var(--csve-feedback-dark-panel) !important;
+  background-color: var(--csve-feedback-dark-panel) !important;
+  border-color: var(--csve-feedback-dark-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-focus-tag:hover,
+  .csve-fb-example-input:hover,
+  .csve-fb-example-input:focus,
+  .csve-fb-assess-text:hover,
+  .csve-fb-assess-text:focus
+) {
+  background: var(--csve-feedback-dark-field) !important;
+  background-color: var(--csve-feedback-dark-field) !important;
+  border-color: var(--csve-feedback-dark-border-strong) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-example-said .csve-fb-example-icon,
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-example-select {
+  background: #241f1f !important;
+  background-color: #241f1f !important;
+  border: 1px solid rgba(239, 68, 68, 0.26) !important;
+  color: #f87171 !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-better-input {
+  color: #86efac !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-add-tag,
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-add-example {
+  background: #202020 !important;
+  background-color: #202020 !important;
+  border-color: var(--csve-feedback-dark-border) !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-add-tag:hover,
+.csve-fullpage.csve-dark .csve-feedback-left .csve-fb-add-example:hover {
+  background: #262626 !important;
+  background-color: #262626 !important;
+  border-color: rgba(74, 158, 255, 0.45) !important;
+  color: #dbeafe !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-tag-remove,
+  .csve-fb-example-remove
+) {
+  background: #241f1f !important;
+  background-color: #241f1f !important;
+  border: 1px solid rgba(239, 68, 68, 0.26) !important;
+  color: #f87171 !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-left :is(
+  .csve-fb-tag-remove,
+  .csve-fb-example-remove
+):hover {
+  background: #2e2020 !important;
+  background-color: #2e2020 !important;
+  border-color: rgba(239, 68, 68, 0.38) !important;
+  color: #fca5a5 !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-right :is(
+  .tgs-tutor-guide,
+  .tgs-steps,
+  .tgs-step,
+  .csve-mission-tutor-subheader
+) {
+  background: #202020 !important;
+  background-color: #202020 !important;
+  border-color: var(--csve-feedback-dark-border) !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-right .tgs-header {
+  background: var(--primary, #4a9cf8) !important;
+  border-color: var(--primary, #4a9cf8) !important;
+  color: #fff !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-right .csve-mission-tutor-subheader {
+  border-top: 0 !important;
+  border-bottom: 1px solid var(--csve-feedback-dark-border) !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-right :is(
+  .csve-feedback-subheader-title,
+  .csve-mission-duration-wrapper,
+  .csve-mission-duration-input,
+  .tgs-instruction-input,
+  .tgs-script-input,
+  .tgs-prompt-input,
+  .tgs-tip-input
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-feedback-right .csve-mission-duration-input {
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Dark mode cleanup for Learn > Expressions editor/preview surface */
+.csve-fullpage.csve-dark .csve-expr-list,
+.csve-fullpage.csve-dark .csve-expr-item,
+.csve-fullpage.csve-dark .csve-expr-content,
+.csve-fullpage.csve-dark .csve-expr-fields,
+.csve-fullpage.csve-dark .csve-expr-def-row,
+.csve-fullpage.csve-dark .csve-expr-extra-wrap,
+.csve-fullpage.csve-dark .csve-expr-extra-rich,
+.csve-fullpage.csve-dark .csve-expr-definition-rich,
+.csve-fullpage.csve-dark .csve-expr-example-rich {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-wrapper,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input *,
+.csve-fullpage.csve-dark .csve-expr-expression-input,
+.csve-fullpage.csve-dark .csve-expr-definition-input,
+.csve-fullpage.csve-dark .csve-expr-example-input,
+.csve-fullpage.csve-dark .csve-expr-extra-rich .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-expr-extra-rich .csve-rich-text-input * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-expr-expression-input,
+.csve-fullpage.csve-dark .csve-expr-definition-input,
+.csve-fullpage.csve-dark .csve-expr-example-input {
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  border-bottom-color: #303030 !important;
+  color: var(--text-primary, #f5f5f5) !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input:hover,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input:focus,
+.csve-fullpage.csve-dark .csve-expr-expression-input:hover,
+.csve-fullpage.csve-dark .csve-expr-expression-input:focus,
+.csve-fullpage.csve-dark .csve-expr-definition-input:hover,
+.csve-fullpage.csve-dark .csve-expr-definition-input:focus,
+.csve-fullpage.csve-dark .csve-expr-example-input:hover,
+.csve-fullpage.csve-dark .csve-expr-example-input:focus {
+  border-bottom-color: #3a3a3a !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-image,
+.csve-fullpage.csve-dark .csve-expr-image-placeholder {
+  background: #242424 !important;
+  background-color: #242424 !important;
+  border-color: #303030 !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-number,
+.csve-fullpage.csve-dark .csve-expr-to {
+  color: var(--text-primary, #f5f5f5) !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-example-rich .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-expr-example-rich .csve-rich-text-input * {
+  color: #d7dbe2 !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input strong,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-rich-text-input b {
+  color: var(--primary, #4a9cf8) !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields .csve-translation-input,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-add-translation-btn,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-add-text-btn,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-add-extra-btn,
+.csve-fullpage.csve-dark .csve-expr-fields button {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: #303030 !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields .csve-translation-input:hover,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-translation-input:focus,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-add-translation-btn:hover,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-add-text-btn:hover,
+.csve-fullpage.csve-dark .csve-expr-fields .csve-add-extra-btn:hover {
+  border-color: #3a3a3a !important;
+  color: #dbeafe !important;
+}
+
+/* Dark mode speech bubbles: keep outlines muted instead of white */
+.csve-fullpage.csve-dark .csve-speech-bubble,
+.csve-fullpage.csve-dark .csve-speech-bubble-container,
+.csve-fullpage.csve-dark .csve-exercise-speech-bubble {
+  border-color: #333333 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-left::before {
+  border-color: transparent #333333 transparent transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-left::after {
+  border-color: transparent #1b1b1b transparent transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-right::before {
+  border-color: #333333 transparent transparent transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-right::after {
+  border-color: #1b1b1b transparent transparent transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-bubble-container::before,
+.csve-fullpage.csve-dark .csve-exercise-conv-left .csve-exercise-speech-bubble::before {
+  border-right-color: #333333 !important;
+}
+
+.csve-fullpage.csve-dark .csve-speech-bubble-container::after,
+.csve-fullpage.csve-dark .csve-exercise-conv-left .csve-exercise-speech-bubble::after {
+  border-right-color: #1b1b1b !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-conv-right .csve-exercise-speech-bubble::before {
+  border-left-color: #333333 !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-conv-right .csve-exercise-speech-bubble::after {
+  border-left-color: #1b1b1b !important;
+}
+
+/* Learn > Expressions translation inputs are plain csve-input fields. */
+.csve-fullpage.csve-dark .csve-expr-fields > .csve-input {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-left: 0 !important;
+  border-bottom: 1px dashed #303030 !important;
+  color: var(--text-secondary, #b8c2cc) !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields > .csve-input:hover,
+.csve-fullpage.csve-dark .csve-expr-fields > .csve-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-bottom-color: #3a3a3a !important;
+  color: var(--text-primary, #f5f5f5) !important;
+  outline: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-expr-fields > .csve-input::placeholder {
+  color: var(--text-muted, #7f8a96) !important;
+}
+
+/* Exercise Step B dashed borders should stay muted in dark mode. */
+.csve-fullpage.csve-dark .csve-exercise-section {
+  --csve-dark-editor-border: #303030;
+}
+
+.csve-fullpage.csve-dark .csve-stepb-row,
+.csve-fullpage.csve-dark .csve-stepb-header-row,
+.csve-fullpage.csve-dark .csve-stepb-conversation-section,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-step-type-switcher,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-exercise-instructions,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-instruction-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-instruction-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-translation-row,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-translation-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-translation-input .csve-rich-text-input,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-translation-btn,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-multiple-choice,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-speech,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-compare,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-wordbox,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-images,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-example,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-compare-items {
+  border-color: #303030 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-name {
+  border-bottom-color: #303030 !important;
+}
+
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-instruction-input:hover,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-stepb-instruction-input:focus,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-translation-input:hover,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-translation-input:focus,
+.csve-fullpage.csve-dark .csve-exercise-left .csve-add-translation-btn:hover {
+  border-color: #3a3a3a !important;
+}
+
+/* Apply section dark-mode dividers and translation controls */
+.csve-fullpage.csve-dark .csve-apply-section .csve-step-name {
+  border-bottom-color: #303030 !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-section .csve-section-line {
+  background: #303030 !important;
+  background-color: #303030 !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-left .csve-situation-block,
+.csve-fullpage.csve-dark .csve-apply-left .csve-translation-row,
+.csve-fullpage.csve-dark .csve-apply-left .csve-add-translation-btn {
+  border-color: #303030 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-apply-left .csve-add-translation-btn:hover,
+.csve-fullpage.csve-dark .csve-apply-left .csve-translation-input:hover,
+.csve-fullpage.csve-dark .csve-apply-left .csve-translation-input:focus {
+  border-color: #3a3a3a !important;
+}
+
+/* Challenge 2 topic cards: match the material preview while preserving inline editing. */
+.csve-fullpage .csve-mission-left .csve-mission-topics {
+  position: relative;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: none;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-header {
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  gap: 0.75rem;
+  background: var(--primary, #0245ae) !important;
+  background-color: var(--primary, #0245ae) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-number {
+  flex: 0 0 auto;
+  font-size: 0.625rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  border: 0 !important;
+  border-radius: 3px;
+  padding: 0.125rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-title {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 1.35rem;
+  padding: 0;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-title:hover,
+.csve-fullpage .csve-mission-left .csve-mission-topic-title:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: none !important;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-title::placeholder {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-remove-topic {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  opacity: 0;
+  background: rgba(15, 23, 42, 0.16) !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-card:hover .csve-mission-remove-topic,
+.csve-fullpage .csve-mission-left .csve-mission-remove-topic:focus {
+  opacity: 1;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-remove-topic:hover {
+  background: rgba(220, 38, 38, 0.9) !important;
+  color: #ffffff !important;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-questions {
+  padding: 1rem;
+  gap: 0.5rem;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-question {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-q-number {
+  min-width: 0;
+  padding-top: 0.375rem;
+  color: var(--text-primary, #1e293b);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-q-input {
+  padding: 0.375rem 0;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--text-primary, #1e293b);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-q-input:hover,
+.csve-fullpage .csve-mission-left .csve-mission-topic-q-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  outline: 1px dashed rgba(74, 158, 255, 0.35);
+  outline-offset: 2px;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-remove-topic-q {
+  position: absolute;
+  top: 0.375rem;
+  right: 0;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-add-topic-q {
+  max-height: 0;
+  margin: 0 1rem;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 0.15s ease, opacity 0.15s ease, margin 0.15s ease, padding 0.15s ease;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topic-card:hover .csve-mission-add-topic-q,
+.csve-fullpage .csve-mission-left .csve-mission-topic-card:focus-within .csve-mission-add-topic-q {
+  max-height: 36px;
+  margin: 0 1rem 1rem;
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-add-topic {
+  position: absolute;
+  left: 0;
+  bottom: -3rem;
+  z-index: 3;
+  min-height: 36px;
+  width: 180px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.csve-fullpage .csve-mission-left .csve-mission-topics:hover .csve-mission-add-topic,
+.csve-fullpage .csve-mission-left .csve-mission-add-topic:focus {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-challenge-name-input,
+.csve-fullpage.csve-dark .csve-mission-left .csve-challenge-name-input:hover,
+.csve-fullpage.csve-dark .csve-mission-left .csve-challenge-name-input:focus,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-instruction-box,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-instruction,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-instruction:hover,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-instruction:focus,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-translation-input,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-translation-input:hover,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-translation-input:focus {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-instruction-box {
+  padding: 0 !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-card {
+  background: #202020 !important;
+  background-color: #202020 !important;
+  border-color: #333333 !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-header {
+  background: var(--primary, #4a9cf8) !important;
+  background-color: var(--primary, #4a9cf8) !important;
+  border: 0 !important;
+  border-color: transparent !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-header,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-header * {
+  color: #ffffff !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-title,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-title:hover,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-title:focus {
+  color: #ffffff !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-number {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-q-number,
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-q-input {
+  color: #ffffff !important;
+}
+
+.csve-fullpage.csve-dark .csve-mission-left .csve-mission-topic-q-input::placeholder {
+  color: rgba(255, 255, 255, 0.55) !important;
 }

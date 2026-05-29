@@ -1,12 +1,82 @@
 /**
- * ConversationalSkillsLessonPage
- * Full-page standalone renderer for Conversational Skills lessons
+ * ConversationalSkillsPreview
+ * Full-page standalone preview renderer for Conversational Skills lessons
  * Matches the rarejob.com.ph lesson material design
  */
 import { useState, useEffect } from 'preact/hooks';
-import { useRoute, useLocation } from 'preact-iso';
+import { useLocation, useRoute } from 'preact-iso';
 import { lessonApi } from '../api/lesson.api';
 import './ConversationalSkillsLessonPage.css';
+
+type ConversationalTheme = 'light' | 'dark';
+
+interface LessonMaterial {
+  id?: string;
+  course?: string;
+  level?: number;
+  chapter?: number;
+  lessonNumber?: number;
+  skill?: string;
+  chapterName?: string;
+  lessonName?: string;
+  goalTextEn?: string;
+  goalTextJp?: string;
+  backgroundImage?: string;
+  overlayColor?: string;
+  status?: string;
+  levelBadge?: string;
+  introductionData?: IntroductionData;
+  learnData?: LearnSectionData;
+  stepBData?: StepBData;
+  applyData?: ApplySectionData;
+  exerciseData?: ExerciseSectionData;
+  missionData?: MissionSectionData;
+  missionData2?: MissionSectionData;
+  feedbackData?: FeedbackSectionData;
+  [key: string]: unknown;
+}
+
+const getCurrentStudentTheme = (): ConversationalTheme | null => {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+
+  const rootTheme = document.documentElement.dataset.theme;
+  const bodyTheme = document.body?.dataset.theme;
+
+  if (rootTheme === 'dark' || bodyTheme === 'dark') {
+    return 'dark';
+  }
+
+  if (rootTheme === 'light' || bodyTheme === 'light') {
+    return 'light';
+  }
+
+  return null;
+};
+
+const getStoredConversationalTheme = (): ConversationalTheme => {
+  try {
+    const studentTheme = getCurrentStudentTheme();
+    if (studentTheme) {
+      return studentTheme;
+    }
+
+    const storedTheme = localStorage.getItem('csve-theme');
+    return storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light';
+  } catch {
+    return 'light';
+  }
+};
+
+const getPreviewThemeFromQuery = (): ConversationalTheme | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const theme = new URLSearchParams(window.location.search).get('theme');
+  return theme === 'dark' || theme === 'light' ? theme : null;
+};
 
 // ============================================================================
 // SHARED TYPES (same as Visual Editor)
@@ -39,9 +109,9 @@ interface IntroductionData {
 // Default introduction data (fallback if no data saved)
 const DEFAULT_INTRODUCTION_DATA: IntroductionData = {
   introTexts: [
-    { 
-      language: "en", 
-      text: "Many Italians love to communicate not only through words but also through gestures. Knowing the meaning behind their gestures can save you from a lot of trouble!" 
+    {
+      language: "en",
+      text: "Many Italians love to communicate not only through words but also through gestures. Knowing the meaning behind their gestures can save you from a lot of trouble!"
     }
   ],
   introImage: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=400&fit=crop",
@@ -228,6 +298,7 @@ interface ApplyTutorStep {
   scripts?: TutorScriptBullet[];
   tips?: TutorTipItem[];
   questions?: TutorQuestion[];
+  prompts?: { text: string }[];
   listeningScript?: string; // Rich text HTML for listening script
 }
 
@@ -235,6 +306,7 @@ interface TriviaTutorStep {
   instruction: string;
   scripts?: TutorScriptBullet[];
   questions?: TutorQuestion[];
+  prompts?: { text: string }[];
 }
 
 interface ApplySectionData {
@@ -278,6 +350,7 @@ interface ExerciseTutorStep {
   scripts?: TutorScriptBullet[];
   tips?: TutorTipItem[];
   answerKey?: TutorAnswerKeyItem[];
+  prompts?: { text: string }[];
 }
 
 interface ExerciseConversation {
@@ -514,44 +587,99 @@ const DEFAULT_LEARN_DATA: LearnSectionData = {
 // MAIN COMPONENT
 // ============================================================================
 
-// Lesson Material type for Memgraph data
-interface LessonMaterialData {
-  id: string;
-  course: string;
-  level: number;
-  chapter: number;
-  lessonNumber: number;
-  skill: string;
-  chapterName: string;
-  lessonName: string;
-  goalTextEn: string;
-  goalTextJp: string;
-  backgroundImage?: string;
-  overlayColor?: string;
-  status: string;
-  levelBadge?: string;
-  introductionData?: IntroductionData;
-  learnData?: LearnSectionData;
-  stepBData?: StepBData;
-  applyData?: ApplySectionData;
-  exerciseData?: ExerciseSectionData;
-  missionData?: MissionSectionData;
-  missionData2?: MissionSectionData;
-  feedbackData?: FeedbackSectionData;
-}
-
-export default function ConversationalSkillsLessonPage() {
+export default function ConversationalSkillsPreview() {
   const { params, query } = useRoute();
   const { route } = useLocation();
-  const [lesson, setLesson] = useState<LessonMaterialData | null>(null);
+  const [lesson, setLesson] = useState<LessonMaterial | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>('');
+  const [previewOverrides, setPreviewOverrides] = useState<{
+    theme?: ConversationalTheme;
+    backgroundImage?: string;
+    overlayColor?: string;
+    chapterName?: string;
+    lessonName?: string;
+    goalTextEn?: string;
+    goalTextJp?: string;
+    introductionData?: IntroductionData;
+    learnData?: LearnSectionData;
+    stepBData?: StepBData;
+    applyData?: ApplySectionData;
+    exerciseData?: ExerciseSectionData;
+    missionData?: MissionSectionData;
+    missionData2?: MissionSectionData;
+    feedbackData?: FeedbackSectionData;
+  } | null>(null);
+  const [hasSessionData, setHasSessionData] = useState(false);
+  const [theme, setTheme] = useState<ConversationalTheme>(() => getPreviewThemeFromQuery() ?? getStoredConversationalTheme());
 
-  // Get lesson ID from params or query string
-  const id = params?.id || (query?.id as string);
+  const id = params?.id || (query?.id as string | undefined);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRootTheme = root.dataset.theme;
+    const previousBodyTheme = body?.dataset.theme;
+    const previousRootDarkMode = root.classList.contains('dark-mode');
+    const previousBodyDarkMode = body?.classList.contains('dark-mode') ?? false;
+    const previousColorScheme = root.style.colorScheme;
+    const isDark = theme === 'dark';
+
+    root.dataset.theme = theme;
+    root.classList.toggle('dark-mode', isDark);
+    root.style.colorScheme = theme;
+
+    if (body) {
+      body.dataset.theme = theme;
+      body.classList.toggle('dark-mode', isDark);
+    }
+
+    return () => {
+      if (previousRootTheme) {
+        root.dataset.theme = previousRootTheme;
+      } else {
+        delete root.dataset.theme;
+      }
+
+      root.classList.toggle('dark-mode', previousRootDarkMode);
+      root.style.colorScheme = previousColorScheme;
+
+      if (body) {
+        if (previousBodyTheme) {
+          body.dataset.theme = previousBodyTheme;
+        } else {
+          delete body.dataset.theme;
+        }
+        body.classList.toggle('dark-mode', previousBodyDarkMode);
+      }
+    };
+  }, [theme]);
 
   useEffect(() => {
     if (id) {
+      const queryTheme = getPreviewThemeFromQuery();
+      if (queryTheme) {
+        setTheme(queryTheme);
+      }
+
+      // Check sessionStorage for unsaved preview data
+      const storedData = sessionStorage.getItem(`preview-${id}`);
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          setPreviewOverrides(parsed);
+          if (!queryTheme && (parsed.theme === 'dark' || parsed.theme === 'light')) {
+            setTheme(parsed.theme);
+          }
+          setHasSessionData(true);
+        } catch (e) {
+          console.error('Failed to parse preview data:', e);
+        }
+      }
       loadLesson(id);
     } else {
       setError('No lesson ID provided');
@@ -562,27 +690,31 @@ export default function ConversationalSkillsLessonPage() {
   const loadLesson = async (lessonId: string) => {
     try {
       setLoading(true);
-      setError('');
       const result = await lessonApi.getPublicLessonMaterial(lessonId);
-      if (result.success && result.lesson) {
-        setLesson(result.lesson);
-      } else {
-        setError(result.error || 'Failed to load lesson');
+      if (!result.success || !result.lesson) {
+        throw new Error(result.error || 'Failed to load lesson preview');
       }
+
+      setLesson(result.lesson as LessonMaterial);
+      setError(null);
     } catch (err) {
-      console.error('Failed to load lesson:', err);
-      setError('Failed to load lesson');
+      console.error('Failed to load lesson from API:', err);
+      // Don't set error if we have session data - we can still preview
+      if (!sessionStorage.getItem(`preview-${lessonId}`)) {
+        setError('Failed to load lesson preview');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
+  const closePreview = () => {
     if (window.opener) {
       window.close();
-    } else {
-      route('/materials/conversational-skills');
+      return;
     }
+
+    route('/materials/conversational-skills');
   };
 
   if (loading) {
@@ -590,65 +722,93 @@ export default function ConversationalSkillsLessonPage() {
       <div className="csp-fullpage csp-loading">
         <div className="csp-loader">
           <i className="ri-loader-4-line" />
-          <p>Loading lesson...</p>
+          <p>Loading preview...</p>
         </div>
       </div>
     );
   }
 
-  if (error || !lesson) {
+  // Only show error if we have no lesson AND no session data to preview
+  if ((error || !lesson) && !hasSessionData) {
     return (
       <div className="csp-fullpage csp-error">
         <i className="ri-error-warning-line" />
         <h2>{error || 'Lesson not found'}</h2>
-        <button onClick={handleBack}>Back to Materials</button>
+        <button onClick={closePreview}>Back to Materials</button>
       </div>
     );
   }
 
-  // Use saved lesson data directly (no overrides for tutor view)
-  const backgroundImage = lesson.backgroundImage;
-  const overlayColor = lesson.overlayColor || '#134e4acc';
-  const chapterName = lesson.chapterName;
-  const lessonName = lesson.lessonName;
-  const goalTextEn = lesson.goalTextEn;
-  const goalTextJp = lesson.goalTextJp;
-  
-  // Introduction data: use saved lesson > default
-  const introductionData: IntroductionData = 
-    lesson.introductionData ?? 
+  // Apply overrides from sessionStorage if present, otherwise use saved lesson data (or defaults)
+  const backgroundImage = previewOverrides?.backgroundImage ?? lesson?.backgroundImage ?? '';
+  const overlayColor = previewOverrides?.overlayColor ?? (lesson?.overlayColor || '#134e4acc');
+  const chapterName = previewOverrides?.chapterName ?? lesson?.chapterName ?? 'Preview';
+  const lessonName = previewOverrides?.lessonName ?? lesson?.lessonName ?? 'Untitled Lesson';
+  const goalTextEn = previewOverrides?.goalTextEn ?? lesson?.goalTextEn ?? '';
+  const goalTextJp = previewOverrides?.goalTextJp ?? lesson?.goalTextJp ?? '';
+
+  // Introduction data: prioritize sessionStorage > saved lesson > default
+  const introductionData: IntroductionData =
+    previewOverrides?.introductionData ??
+    lesson?.introductionData ??
     DEFAULT_INTRODUCTION_DATA;
 
-  // Learn data: use saved lesson > default
-  const learnData: LearnSectionData = 
-    lesson.learnData ?? 
+  // Learn data: prioritize sessionStorage > saved lesson > default
+  const learnData: LearnSectionData =
+    previewOverrides?.learnData ??
+    lesson?.learnData ??
     DEFAULT_LEARN_DATA;
 
-  // Step B data: use saved lesson
-  const stepBData: StepBData | undefined = lesson.stepBData;
+  // Step B data: prioritize sessionStorage > saved lesson
+  const stepBData: StepBData | undefined =
+    previewOverrides?.stepBData ??
+    lesson?.stepBData;
 
-  // Apply data: use saved lesson
-  const applyData: ApplySectionData | undefined = lesson.applyData;
+  // Apply data: prioritize sessionStorage > saved lesson
+  const applyData: ApplySectionData | undefined =
+    previewOverrides?.applyData ??
+    lesson?.applyData;
 
-  // Exercise data: use saved lesson
-  const exerciseData: ExerciseSectionData | undefined = (lesson as any).exerciseData;
+  // Exercise data: prioritize sessionStorage > saved lesson
+  const exerciseData: ExerciseSectionData | undefined =
+    previewOverrides?.exerciseData ??
+    (lesson as any)?.exerciseData;
 
-  // Mission data: use saved lesson
-  const missionData: MissionSectionData | undefined = (lesson as any).missionData;
+  // Mission data: prioritize sessionStorage > saved lesson
+  const missionData: MissionSectionData | undefined =
+    previewOverrides?.missionData ??
+    (lesson as any)?.missionData;
 
-  // Mission data 2 (Challenge 2 / Discussion): use saved lesson
-  const missionData2: MissionSectionData | undefined = (lesson as any).missionData2;
+  // Mission data 2 (Challenge 2 / Discussion): prioritize sessionStorage > saved lesson
+  const missionData2: MissionSectionData | undefined =
+    previewOverrides?.missionData2 ??
+    (lesson as any)?.missionData2;
 
-  // Feedback data: use saved lesson
-  const feedbackData: FeedbackSectionData | undefined = (lesson as any).feedbackData;
+  // Feedback data: prioritize sessionStorage > saved lesson
+  const feedbackData: FeedbackSectionData | undefined =
+    previewOverrides?.feedbackData ??
+    (lesson as any)?.feedbackData;
+
+  // Get lesson metadata with fallbacks for unpublished lessons
+  const levelBadge = lesson?.levelBadge ?? 'L1';
+  const skill = lesson?.skill ?? 'speaking';
+  const chapter = lesson?.chapter ?? 1;
+  const lessonNumber = lesson?.lessonNumber ?? 1;
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    try {
+      localStorage.setItem('csve-theme', next);
+    } catch {}
+  };
 
   return (
-    <div className="csp-fullpage">
+    <div className={`csp-fullpage csp-${theme}`}>
       {/* Top Navigation Bar */}
       <nav className="csp-topbar">
         <div className="csp-topbar-content">
           <span className="csp-course-info">
-            Conversational Skills {lesson.levelBadge} | {lesson.skill.toUpperCase()} | Chapter {lesson.chapter}: {chapterName}
+            Conversational Skills {levelBadge} | {skill.toUpperCase()} | Chapter {chapter}: {chapterName}
           </span>
         </div>
       </nav>
@@ -662,9 +822,9 @@ export default function ConversationalSkillsLessonPage() {
       >
         <div className="csp-hero-overlay" style={{ backgroundColor: overlayColor }} />
         <div className="csp-hero-content">
-          <p className="csp-lesson-label">Lesson {lesson.lessonNumber}</p>
+          <p className="csp-lesson-label">Lesson {lessonNumber}</p>
           <h1 className="csp-lesson-name">{lessonName}</h1>
-          
+
           <div className="csp-goal-wrapper">
             <div className="csp-goal-row">
               <span className="csp-goal-badge">GOAL</span>
@@ -704,6 +864,15 @@ export default function ConversationalSkillsLessonPage() {
         </div>
       </main>
 
+      {/* Close Button */}
+      <button className="csp-theme-btn" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
+        <i className={theme === 'dark' ? 'ri-sun-line' : 'ri-moon-line'} />
+        <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
+      </button>
+
+      <button className="csp-close-btn" onClick={closePreview} title="Close Preview">
+        <i className="ri-close-line" />
+      </button>
     </div>
   );
 }
@@ -728,14 +897,14 @@ function IntroductionSection({ data }: IntroductionSectionProps) {
             <h2 className="csp-section-title">INTRODUCE</h2>
             <div className="csp-section-line" />
           </div>
-          
+
           {/* EDITABLE: Intro texts (supports multiple languages) */}
           {data.introTexts.map((introText, i) => (
             <p key={i} className="csp-intro-text" data-lang={introText.language}>
               {introText.text}
             </p>
           ))}
-          
+
           {/* EDITABLE: Optional intro image */}
           {data.introImage && (
             <div className="csp-intro-image">
@@ -818,10 +987,10 @@ function LearnSection({ data }: LearnSectionProps) {
   // Helper to render text with highlighted word (for vocabulary)
   const renderHighlightedText = (text: string, highlightedWord?: string) => {
     if (!highlightedWord) return text;
-    
+
     const parts = text.split(new RegExp(`(${highlightedWord})`, 'gi'));
-    return parts.map((part, i) => 
-      part.toLowerCase() === highlightedWord.toLowerCase() 
+    return parts.map((part, i) =>
+      part.toLowerCase() === highlightedWord.toLowerCase()
         ? <span key={i} className="csp-highlight">{part}</span>
         : part
     );
@@ -893,7 +1062,7 @@ function LearnSection({ data }: LearnSectionProps) {
                 {' '}
                 <span dangerouslySetInnerHTML={{ __html: item.definitionLine }} />
               </p>
-              <p 
+              <p
                 className="csp-expr-example"
                 dangerouslySetInnerHTML={{ __html: item.exampleSentence }}
               />
@@ -903,7 +1072,7 @@ function LearnSection({ data }: LearnSectionProps) {
                 </p>
               )}
               {item.extraText && (
-                <p 
+                <p
                   className="csp-expr-extra"
                   dangerouslySetInnerHTML={{ __html: item.extraText }}
                 />
@@ -928,7 +1097,7 @@ function LearnSection({ data }: LearnSectionProps) {
       {step.discussionPart!.instructionTranslation && (
         <p className="csp-discuss-instruction-trans">{step.discussionPart!.instructionTranslation}</p>
       )}
-      
+
       {/* Images Grid - Up to 3 images horizontally */}
       {step.discussionPart!.images && step.discussionPart!.images.length > 0 && (
         <div className={`csp-discuss-images csp-discuss-images-${step.discussionPart!.images.length}`}>
@@ -960,7 +1129,7 @@ function LearnSection({ data }: LearnSectionProps) {
       <div className="csp-pronunciation-part">
         <p className="csp-pronunciation-instruction">{numeral}. {step.pronunciationPart!.instruction}</p>
         <p className="csp-pronunciation-instruction-trans">{step.pronunciationPart!.instructionTranslation}</p>
-        
+
         <div className="csp-pronunciation-table">
           {/* Left Column */}
           <div className="csp-pronunciation-column">
@@ -1024,12 +1193,12 @@ function LearnSection({ data }: LearnSectionProps) {
         <div key={stepIndex} className="csp-learn-step">
           {/* Step Name */}
           <h3 className="csp-step-name">{step.stepName}</h3>
-          
+
           {/* Two-column layout: Content + Tutor Guide */}
           <div className="csp-learn-layout">
             {/* Left Column - Main Content */}
             <div className="csp-learn-left">
-              {step.stepType === 'expressions' 
+              {step.stepType === 'expressions'
                 ? renderExpressionsContent(step)
                 : renderVocabularyContent(step)
               }
@@ -1250,11 +1419,11 @@ function StepBSection({ data }: StepBSectionProps) {
         {grammarData.explanations.map((expl, explIdx) => (
           <div key={explIdx} className="csp-grammar-block">
             {/* Rule text with rich formatting */}
-            <p 
+            <p
               className="csp-grammar-rule"
               dangerouslySetInnerHTML={{ __html: expl.ruleText }}
             />
-            
+
             {/* Rule translation */}
             <p className="csp-grammar-translation">{expl.ruleTranslation}</p>
 
@@ -1265,7 +1434,7 @@ function StepBSection({ data }: StepBSectionProps) {
                 <ul className="csp-examples-list">
                   {expl.examples.map((ex, exIdx) => (
                     <li key={exIdx} className="csp-example-item">
-                      <p 
+                      <p
                         className="csp-example-sentence"
                         dangerouslySetInnerHTML={{ __html: ex.sentence }}
                       />
@@ -1287,7 +1456,7 @@ function StepBSection({ data }: StepBSectionProps) {
     return (
       <>
         {/* Tip */}
-        <p 
+        <p
           className="csp-pronunciation-tip"
           dangerouslySetInnerHTML={{ __html: pronData.tip }}
         />
@@ -1320,7 +1489,7 @@ function StepBSection({ data }: StepBSectionProps) {
     <section className="csp-stepb-section">
       {/* Step Name */}
       <h3 className="csp-step-name">{getStepName()}</h3>
-      
+
       {/* Two-column layout: Content + Tutor Guide */}
       <div className="csp-stepb-layout">
         {/* Left Column - Main Content */}
@@ -1406,7 +1575,7 @@ function ApplySection({ data }: ApplySectionProps) {
                 {line.isAction ? (
                   <span className="csp-dialogue-text csp-action-text">{line.text}</span>
                 ) : (
-                  <span 
+                  <span
                     className="csp-dialogue-text"
                     dangerouslySetInnerHTML={{ __html: line.text }}
                   />
@@ -1423,7 +1592,7 @@ function ApplySection({ data }: ApplySectionProps) {
                 <div className="csp-reading-image">
                   <img src={data.readingImage} alt="Reading" />
                   {data.readingImageLabel && (
-                    <div 
+                    <div
                       className="csp-reading-image-label"
                       dangerouslySetInnerHTML={{ __html: data.readingImageLabel }}
                     />
@@ -1431,7 +1600,7 @@ function ApplySection({ data }: ApplySectionProps) {
                 </div>
               )}
               {data.readingText && (
-                <div 
+                <div
                   className="csp-reading-text-content"
                   dangerouslySetInnerHTML={{ __html: data.readingText }}
                 />
@@ -1462,6 +1631,14 @@ function ApplySection({ data }: ApplySectionProps) {
                       </p>
                     ))}
 
+                    {/* Prompts (blue) */}
+                    {step.prompts && step.prompts.map((prompt, promptIdx) => (
+                      <p key={promptIdx} className="csp-apply-prompt">
+                        <span className="csp-prompt-bullet">▸</span>
+                        <span>{prompt.text}</span>
+                      </p>
+                    ))}
+
                     {/* Tips (red text) */}
                     {step.tips && step.tips.map((tip, tipIdx) => (
                       <p key={tipIdx} className="csp-apply-tip">
@@ -1472,7 +1649,7 @@ function ApplySection({ data }: ApplySectionProps) {
 
                     {/* Listening Script (green box - LISTENING only) */}
                     {step.listeningScript && (
-                      <div 
+                      <div
                         className="csp-listening-script-box"
                         dangerouslySetInnerHTML={{ __html: step.listeningScript }}
                       />
@@ -1519,7 +1696,7 @@ function ApplySection({ data }: ApplySectionProps) {
                   </div>
                 )}
                 {data.triviaText && (
-                  <div 
+                  <div
                     className="csp-trivia-content"
                     dangerouslySetInnerHTML={{ __html: data.triviaText }}
                   />
@@ -1552,6 +1729,14 @@ function ApplySection({ data }: ApplySectionProps) {
                           <p key={scriptIdx} className="csp-apply-script">
                             <span className="csp-script-bullet">●</span>
                             <span>"{script.text}"</span>
+                          </p>
+                        ))}
+
+                        {/* Prompts (blue) */}
+                        {step.prompts && step.prompts.map((prompt, promptIdx) => (
+                          <p key={promptIdx} className="csp-apply-prompt">
+                            <span className="csp-prompt-bullet">▸</span>
+                            <span>{prompt.text}</span>
                           </p>
                         ))}
 
@@ -1588,7 +1773,7 @@ function ApplySection({ data }: ApplySectionProps) {
 
 function ExerciseSection({ data }: { data: ExerciseSectionData }) {
   const stepAType = data.stepAType || 'rephrase';
-  
+
   return (
     <section className="csp-section csp-exercise-section">
       <div className="csp-section-number">
@@ -1798,6 +1983,14 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                       </p>
                     ))}
 
+                    {/* Prompts (blue) */}
+                    {step.prompts && step.prompts.map((prompt, promptIdx) => (
+                      <p key={promptIdx} className="csp-apply-prompt">
+                        <span className="csp-prompt-bullet">▸</span>
+                        <span>{prompt.text}</span>
+                      </p>
+                    ))}
+
                     {/* Tips (red text) */}
                     {step.tips && step.tips.map((tip, tipIdx) => (
                       <p key={tipIdx} className="csp-apply-tip">
@@ -1825,34 +2018,56 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
               ))}
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* STEP B ROW - Separate layout row */}
+      {/* STEP B ROW - Separate layout row for Step B */}
       {data.hasStepB && (
         <div className="csp-exercise-layout csp-stepb-row">
+          {/* Left Column - Step B Content */}
           <div className="csp-exercise-left">
             <div className="csp-stepb-section">
               <h3 className="csp-step-name csp-stepb-name">{data.stepBName || 'STEP B'}</h3>
+
+              {/* Step B Instruction */}
               <p className="csp-exercise-instructions">{data.stepBInstruction}</p>
               {data.stepBInstructionTranslation && (
                 <p className="csp-exercise-instructions-translation">{data.stepBInstructionTranslation}</p>
               )}
 
+              {/* Conversation Type */}
               {(!data.stepBType || data.stepBType === 'conversation') && (
                 <div className="csp-exercise-conversations">
                   {(data.conversations || []).map((conv, convIdx) => (
-                    <div key={convIdx} className={`csp-exercise-conv-row csp-exercise-conv-${conv.position}`}>
+                    <div
+                      key={convIdx}
+                      className={`csp-exercise-conv-row csp-exercise-conv-${conv.position}`}
+                    >
                       {conv.position === 'left' && (
                         <div className="csp-exercise-speaker-image">
-                          {conv.speakerImage ? <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} /> : <div className="csp-image-placeholder"><span className="csp-placeholder-dims">150 × 150</span></div>}
+                          {conv.speakerImage ? (
+                            <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} />
+                          ) : (
+                            <div className="csp-image-placeholder">
+                              <span className="csp-placeholder-dims">150 × 150</span>
+                            </div>
+                          )}
                         </div>
                       )}
-                      <div className="csp-exercise-speech-bubble"><p dangerouslySetInnerHTML={{ __html: conv.speechBubble }} /></div>
+
+                      <div className="csp-exercise-speech-bubble">
+                        <p dangerouslySetInnerHTML={{ __html: conv.speechBubble }} />
+                      </div>
+
                       {conv.position === 'right' && (
                         <div className="csp-exercise-speaker-image">
-                          {conv.speakerImage ? <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} /> : <div className="csp-image-placeholder"><span className="csp-placeholder-dims">150 × 150</span></div>}
+                          {conv.speakerImage ? (
+                            <img src={conv.speakerImage} alt={`Speaker ${convIdx + 1}`} />
+                          ) : (
+                            <div className="csp-image-placeholder">
+                              <span className="csp-placeholder-dims">150 × 150</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1860,28 +2075,47 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                 </div>
               )}
 
+              {/* Multiple Choice Type */}
               {data.stepBType === 'multiple-choice' && (
                 <div className="csp-stepb-multiple-choice">
                   {(data.multipleChoiceItems || []).map((item, mcIdx) => (
                     <div key={mcIdx} className="csp-mc-item">
-                      <p className="csp-mc-sentence"><span className="csp-mc-number">{mcIdx + 1}.</span><strong>{item.boldSentence}</strong></p>
+                      <p className="csp-mc-sentence">
+                        <span className="csp-mc-number">{mcIdx + 1}.</span>
+                        <strong>{item.boldSentence}</strong>
+                      </p>
                       <div className="csp-mc-options">
                         <p className="csp-mc-option"><span className="csp-mc-label">a.</span> <span dangerouslySetInnerHTML={{ __html: item.optionA }} /></p>
                         <p className="csp-mc-option"><span className="csp-mc-label">b.</span> <span dangerouslySetInnerHTML={{ __html: item.optionB }} /></p>
                       </div>
                     </div>
                   ))}
-                  {data.multipleChoiceImage && <div className="csp-mc-image"><img src={data.multipleChoiceImage} alt="Multiple choice" /></div>}
+
+                  {/* Optional Image */}
+                  {data.multipleChoiceImage && (
+                    <div className="csp-mc-image">
+                      <img src={data.multipleChoiceImage} alt="Multiple choice" />
+                    </div>
+                  )}
                 </div>
               )}
 
+              {/* Speech Type - Single speaker with speech bubble */}
               {data.stepBType === 'speech' && (
                 <div className="csp-stepb-speech">
                   <div className="csp-speech-layout">
                     <div className="csp-speech-speaker-image">
-                      {data.speechSpeakerImage ? <img src={data.speechSpeakerImage} alt="Speaker" /> : <div className="csp-image-placeholder"><span className="csp-placeholder-dims">150 × 200</span></div>}
+                      {data.speechSpeakerImage ? (
+                        <img src={data.speechSpeakerImage} alt="Speaker" />
+                      ) : (
+                        <div className="csp-image-placeholder">
+                          <span className="csp-placeholder-dims">150 × 200</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="csp-speech-bubble"><p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} /></div>
+                    <div className="csp-speech-bubble">
+                      <p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1904,7 +2138,9 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                             {item.image ? (
                               <img src={item.image} alt={item.label || `Compare option ${imageIdx + 1}`} />
                             ) : (
-                              <div className="csp-image-placeholder"><span className="csp-placeholder-dims">160 × 120</span></div>
+                              <div className="csp-image-placeholder">
+                                <span className="csp-placeholder-dims">160 × 120</span>
+                              </div>
                             )}
                           </div>
                           <p className="csp-compare-image-label">{item.label}</p>
@@ -1935,28 +2171,54 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
             </div>
           </div>
 
+          {/* Right Column - Step B Tutor Guide */}
           <div className="csp-exercise-right">
             {data.stepBTutorSteps && (
               <div className="csp-tutor-guide csp-stepb-tutor-guide">
-                <div className="csp-guide-header">{data.stepBName || 'STEP B'}</div>
+                <div className="csp-guide-header">
+                  {data.stepBName || 'STEP B'}
+                </div>
                 <div className="csp-guide-steps">
                   {data.stepBTutorSteps.map((step, stepIdx) => (
                     <div key={stepIdx} className="csp-guide-step csp-apply-step">
                       <span className="csp-guide-number">{stepIdx + 1}</span>
                       <div className="csp-guide-content">
                         <p className="csp-guide-instruction">{step.instruction}</p>
+
+                        {/* Scripts (green bullets) */}
                         {step.scripts && step.scripts.map((script, scriptIdx) => (
-                          <p key={scriptIdx} className="csp-apply-script"><span className="csp-script-bullet">●</span><span>"{script.text}"</span></p>
+                          <p key={scriptIdx} className="csp-apply-script">
+                            <span className="csp-script-bullet">●</span>
+                            <span>"{script.text}"</span>
+                          </p>
                         ))}
+
+                        {/* Prompts (blue) */}
+                        {step.prompts && step.prompts.map((prompt, promptIdx) => (
+                          <p key={promptIdx} className="csp-apply-prompt">
+                            <span className="csp-prompt-bullet">▸</span>
+                            <span>{prompt.text}</span>
+                          </p>
+                        ))}
+
+                        {/* Tips (red text) */}
                         {step.tips && step.tips.map((tip, tipIdx) => (
-                          <p key={tipIdx} className="csp-apply-tip"><span className="csp-tip-icon">◆</span><span>{tip.text}</span></p>
+                          <p key={tipIdx} className="csp-apply-tip">
+                            <span className="csp-tip-icon">◆</span>
+                            <span>{tip.text}</span>
+                          </p>
                         ))}
+
+                        {/* Answer Key Box */}
                         {step.answerKey && step.answerKey.length > 0 && (
                           <div className="csp-tutor-answer-key-box">
                             <div className="csp-tutor-answer-key-header">ANSWER KEY</div>
                             <div className="csp-tutor-answer-key-items">
                               {step.answerKey.map((answer, answerIdx) => (
-                                <p key={answerIdx} className="csp-tutor-answer-key-item"><span className="csp-tutor-answer-number">{answerIdx + 1}.</span><span>{answer.text}</span></p>
+                                <p key={answerIdx} className="csp-tutor-answer-key-item">
+                                  <span className="csp-tutor-answer-number">{answerIdx + 1}.</span>
+                                  <span>{answer.text}</span>
+                                </p>
                               ))}
                             </div>
                           </div>
@@ -1983,15 +2245,20 @@ interface MissionSectionProps {
   hideHeader?: boolean;
 }
 
+/** Detect if a script line is tutor dialogue (numbered) */
 const _isDlg = (t: string) => !t || /^\s*\d+[.):]/.test(t);
 
 /** Format a script line: put quotes only around the spoken text, not the number prefix */
 const _fmtScript = (text: string) => {
   const m = text.match(/^(\s*\d+[.):])\s*(.*)/);
-  if (m) return <>{m[1]} “{m[2]}”</>;
-  return <>“{text}”</>;
+  if (m) return <>{m[1]} "{m[2]}"</>;
+  return <>"{text}"</>;
 };
 
+/** Merge scripts + prompts into a single interleaved list.
+ *  Hints (prompts) are placed BEFORE each numbered question.
+ *  Non-numbered scripts before the first question go at the top (intro),
+ *  non-numbered scripts after the last question go at the bottom (closing). */
 function interleaveStepContent(
   scripts: { text: string }[],
   prompts: { text: string }[]
@@ -2009,6 +2276,7 @@ function interleaveStepContent(
     else if (firstNum === -1 || i < firstNum) beforeScripts.push(scripts[i]);
     else afterScripts.push(scripts[i]);
   }
+  // Intro scripts at top
   for (const s of beforeScripts) {
     items.push({ text: s.text, type: /^\s*\(/.test(s.text) ? 'prompt' : 'script' });
   }
@@ -2030,6 +2298,7 @@ function interleaveStepContent(
       items.push({ text: p.text, type: 'prompt' });
     }
   }
+  // Closing scripts at bottom
   for (const s of afterScripts) {
     items.push({ text: s.text, type: /^\s*\(/.test(s.text) ? 'prompt' : 'script' });
   }
@@ -2048,7 +2317,7 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
         )}
       </div>
 
-      {/* Instruction (only if present) */}
+      {/* Instruction (only for non-speaking types) */}
       {data.instruction && (
       <div className="csp-mission-instruction-box">
         <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
@@ -2160,7 +2429,7 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
         )}
       </div>
 
-      {/* Instruction (only if present) */}
+      {/* Instruction (only for non-listening types) */}
       {data.instruction && (
       <div className="csp-mission-instruction-box">
         <p className="csp-mission-instruction" dangerouslySetInnerHTML={{ __html: data.instruction }} />
@@ -2433,6 +2702,14 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
                       </p>
                     ))}
 
+                    {/* Prompts */}
+                    {step.prompts && step.prompts.map((prompt, promptIdx) => (
+                      <p key={promptIdx} className="csp-apply-prompt">
+                        <span className="csp-prompt-bullet">▸</span>
+                        <span>{prompt.text}</span>
+                      </p>
+                    ))}
+
                     {/* Tips */}
                     {step.tips && step.tips.map((tip, tipIdx) => (
                       <p key={tipIdx} className="csp-apply-tip">
@@ -2455,12 +2732,12 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
 // PLACEHOLDER SECTION COMPONENT
 // ============================================================================
 
-function PlaceholderSection({ 
-  icon, 
-  title, 
-  description 
-}: { 
-  icon: string; 
+function PlaceholderSection({
+  icon,
+  title,
+  description
+}: {
+  icon: string;
   title: string;
   description: string;
 }) {
