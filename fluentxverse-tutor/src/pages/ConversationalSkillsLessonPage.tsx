@@ -721,8 +721,8 @@ export default function ConversationalSkillsPreview() {
     return (
       <div className="csp-fullpage csp-loading">
         <div className="csp-loader">
-          <i className="ri-loader-4-line" />
-          <p>Loading preview...</p>
+          <div className="csp-loader-ring" aria-hidden="true" />
+          <p>Loading lesson, please wait...</p>
         </div>
       </div>
     );

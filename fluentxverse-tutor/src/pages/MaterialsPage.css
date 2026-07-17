@@ -4,8 +4,8 @@
 
 .materials-page {
   background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-  min-height: 100vh;
-  padding: 24px 20px 60px;
+  min-height: calc(100vh - 80px);
+  padding: 52px 20px 60px;
   animation: pageLoad 0.5s ease-out;
 }
 
@@ -21,15 +21,40 @@
 }
 
 .materials-container {
-  max-width: 1000px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 16px 15px 48px;
+  box-sizing: border-box;
+  position: relative;
+  left: 0;
+}
+
+@media (min-width: 1501px) {
+  .materials-container {
+    width: 1270px;
+    padding: 28px 0 48px;
+    left: calc(50vw - 771px);
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1500px) {
+  .materials-container {
+    width: 1140px;
+    padding: 28px 0 48px;
+    left: calc(50vw - 685px);
+  }
 }
 
 /* ================================
    Header
    ================================ */
 .materials-header {
-  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-top: 0;
 }
 
 .materials-page .back-link {
@@ -53,14 +78,15 @@
 }
 
 /* Page Title Row - Icon + Gradient Text */
-.materials-page .page-title-row {
+.materials-page .page-title-row,
+.materials-header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 14px;
 }
 
-.materials-page .page-title-icon {
+.materials-page .page-title-icon,
+.materials-page-icon {
   width: 48px;
   height: 48px;
   border-radius: 12px;
@@ -72,26 +98,29 @@
   flex-shrink: 0;
 }
 
-.materials-page .page-title-icon i {
+.materials-page .page-title-icon i,
+.materials-page-icon i {
   color: #fff;
   font-size: 22px;
 }
 
-.materials-page .page-title-gradient {
+.materials-page .page-title-gradient,
+.materials-page-title {
   margin: 0;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: 0.5px;
 }
 
-.materials-subtitle {
+.materials-subtitle,
+.materials-page-subtitle {
   color: #64748b;
-  font-size: 16px;
-  margin: 0;
+  font-size: 14px;
+  margin: 4px 0 0 0;
+  font-weight: 500;
 }
 
 /* Search */
@@ -102,6 +131,7 @@
 .materials-search {
   position: relative;
   width: 100%;
+  margin-bottom: 20px;
 }
 
 .materials-search i {
@@ -144,7 +174,7 @@
 
 .category-tab {
   padding: 10px 20px;
-  border: none;
+  border: 2px solid #e2e8f0;
   border-radius: 25px;
   background-color: #ffffff;
   color: #1e293b;
@@ -152,7 +182,6 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid #e2e8f0;
 }
 
 .category-tab:hover {
@@ -182,6 +211,7 @@
   border: 2px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .course-card:hover {
@@ -245,7 +275,7 @@
 
 .course-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
@@ -332,17 +362,22 @@
 /* Responsive */
 @media (max-width: 768px) {
   .materials-page {
-    padding: 16px 16px 40px;
+    padding: 72px 16px 40px;
   }
 
-  .materials-page .page-title-row {
-    flex-direction: column;
-    text-align: center;
+  .materials-container {
+    padding: 16px 16px 40px;
+    width: 100%;
+    left: 0;
+  }
+
+  .materials-header-left {
+    align-items: flex-start;
     gap: 12px;
   }
 
-  .materials-page .page-title-gradient {
-    font-size: 24px;
+  .materials-page-title {
+    font-size: 22px;
   }
 
   .category-tabs {
@@ -393,11 +428,12 @@
 }
 
 [data-theme='dark'] .materials-page {
-  background: #1a1a1a;
+  background: var(--fxv-bg);
 }
 
 [data-theme='dark'] .materials-page .back-link,
 [data-theme='dark'] .materials-subtitle,
+[data-theme='dark'] .materials-page-subtitle,
 [data-theme='dark'] .course-description,
 [data-theme='dark'] .course-lessons,
 [data-theme='dark'] .materials-empty p {
@@ -426,9 +462,11 @@
 }
 
 [data-theme='dark'] .course-title,
+[data-theme='dark'] .materials-page-title,
 [data-theme='dark'] .course-rating,
 [data-theme='dark'] .materials-empty h3 {
   color: var(--fxv-text);
+  -webkit-text-fill-color: currentColor;
 }
 
 [data-theme='dark'] .course-footer {

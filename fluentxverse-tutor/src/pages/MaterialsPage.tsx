@@ -11,10 +11,9 @@ interface Course {
   icon: string;
   category: string;
   lessons: number;
-  rating: number;
 }
 
-const COURSES: Course[] = [
+const courses: Course[] = [
   {
     id: 'business-english',
     title: 'Business English',
@@ -22,7 +21,6 @@ const COURSES: Course[] = [
     icon: '💼',
     category: 'Business',
     lessons: 24,
-    rating: 4.8,
   },
   {
     id: 'conversational-skills',
@@ -31,7 +29,6 @@ const COURSES: Course[] = [
     icon: '💬',
     category: 'Conversation',
     lessons: 30,
-    rating: 4.9,
   },
   {
     id: 'job-interview-prep',
@@ -40,7 +37,6 @@ const COURSES: Course[] = [
     icon: '👔',
     category: 'Career',
     lessons: 18,
-    rating: 4.8,
   },
   {
     id: 'travel-english',
@@ -49,7 +45,6 @@ const COURSES: Course[] = [
     icon: '✈️',
     category: 'Travel',
     lessons: 20,
-    rating: 4.7,
   },
   {
     id: 'academic-english',
@@ -58,7 +53,6 @@ const COURSES: Course[] = [
     icon: '🎓',
     category: 'Academic',
     lessons: 22,
-    rating: 4.8,
   },
   {
     id: 'pronunciation',
@@ -67,7 +61,6 @@ const COURSES: Course[] = [
     icon: '🎤',
     category: 'Speaking',
     lessons: 16,
-    rating: 4.9,
   },
   {
     id: 'grammar-improvement',
@@ -76,7 +69,6 @@ const COURSES: Course[] = [
     icon: '📝',
     category: 'Grammar',
     lessons: 28,
-    rating: 4.7,
   },
   {
     id: 'vocabulary-building',
@@ -85,7 +77,6 @@ const COURSES: Course[] = [
     icon: '📚',
     category: 'Vocabulary',
     lessons: 25,
-    rating: 4.8,
   },
   {
     id: 'daily-dispatch',
@@ -94,7 +85,6 @@ const COURSES: Course[] = [
     icon: '📰',
     category: 'News',
     lessons: 0,
-    rating: 4.9,
   }
 ];
 
@@ -109,7 +99,7 @@ const MaterialsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredCourses = COURSES.filter(course => {
+  const filteredCourses = courses.filter(course => {
     const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           course.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -131,34 +121,28 @@ const MaterialsPage = () => {
         <DashboardHeader user={user || undefined} />
         <div className="materials-page">
           <div className="materials-container">
-            {/* Page Header */}
+            {/* Header */}
             <div className="materials-header">
-              <a href="/home" className="back-link">
-                <i className="fi-sr-angle-left"></i>
-                Back to Dashboard
-              </a>
-              <div className="page-title-row">
-                <div className="page-title-icon">
-                  <i className="fi-sr-book-alt"></i>
+              <div className="materials-header-left">
+                <div className="materials-page-icon">
+                  <i className="fas fa-book-open"></i>
                 </div>
-                <h1 className="page-title-gradient">Teaching Materials</h1>
+                <div>
+                  <h1 className="materials-page-title">Learning Materials</h1>
+                  <p className="materials-page-subtitle">Explore our comprehensive collection of {courses.length} English learning courses</p>
+                </div>
               </div>
-              <p className="materials-subtitle">
-                {COURSES.length} courses available to help you deliver engaging lessons
-              </p>
             </div>
 
             {/* Search */}
-            <div className="materials-controls">
-              <div className="materials-search">
-                <i className="fi-sr-search"></i>
-                <input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={searchQuery}
-                  onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
-                />
-              </div>
+            <div className="materials-search">
+              <i className="fas fa-search"></i>
+              <input
+                type="text"
+                placeholder="Search courses..."
+                value={searchQuery}
+                onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+              />
             </div>
 
             {/* Category Tabs */}
@@ -188,14 +172,10 @@ const MaterialsPage = () => {
                     <p className="course-description">{course.description}</p>
                     <div className="course-meta">
                       <span className="course-lessons">
-                        <i className="fi-sr-document"></i> {course.lessons} Lessons
+                        <i className="fas fa-file-alt" /> {course.lessons} Lessons
                       </span>
                     </div>
                     <div className="course-footer">
-                      <div className="course-rating">
-                        <i className="fi-sr-star"></i>
-                        <span>{course.rating.toFixed(1)}</span>
-                      </div>
                       <span className="course-category">{course.category}</span>
                     </div>
                   </div>

@@ -18,6 +18,7 @@ import DailyDispatchArticlePage from './pages/DailyDispatchArticlePage';
 import DailyDispatchArchivePage from './pages/DailyDispatchArchivePage';
 import ConversationalSkillsPage from './pages/ConversationalSkillsPage';
 import ConversationalSkillsLessonPage from './pages/ConversationalSkillsLessonPage';
+import BusinessEnglishPage from './pages/BusinessEnglishPage';
 import BusinessEnglishPreviewPage from './pages/BusinessEnglishPreviewPage';
 import LessonViewPage from './pages/LessonViewPage';
 import InboxPage from './pages/InboxPage';
@@ -183,6 +184,7 @@ function AppShell() {
 							<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)} />
 							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)} />
 							<Route path="/materials/conversational-skills/:id" component={withProtected(ConversationalSkillsLessonPage)} />
+							<Route path="/materials/business-english" component={withProtected(BusinessEnglishPage)} />
 							<Route path="/materials/business-english/:id" component={withProtected(BusinessEnglishPreviewPage)} />
 							<Route path="/materials/young-learners" component={withProtected(YoungLearnersPage)} />
 							<Route path="/materials/young-learners/lesson/:id" component={withProtected(YoungLearnersLessonPage)} />
