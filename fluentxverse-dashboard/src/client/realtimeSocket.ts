@@ -32,7 +32,7 @@ const getSocketUrl = () => {
     const { protocol, hostname } = window.location;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
-    if (isProduction) return 'wss://ws.fluentxverse.xyz';
+    if (isProduction) return 'wss://api.fluentxverse.xyz';
     if (isLocalhost) return 'ws://localhost:8765';
     return toWebSocketUrl(`${protocol}//${hostname}:8765`);
   }
@@ -40,7 +40,15 @@ const getSocketUrl = () => {
   return 'ws://localhost:8765';
 };
 
-const getApiBaseUrl = () => (import.meta.env.VITE_API_URL || 'http://localhost:8765').replace(/\/+$/, '');
+const getApiBaseUrl = () => {
+  const envApiUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (envApiUrl) return envApiUrl.replace(/\/+$/, '');
+  if (typeof window !== 'undefined') {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost) return 'https://api.fluentxverse.xyz';
+  }
+  return 'http://localhost:8765';
+};
 
 const fetchAdminSocketToken = async () => {
   try {

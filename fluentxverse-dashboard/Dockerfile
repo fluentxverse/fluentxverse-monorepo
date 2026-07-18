@@ -3,6 +3,11 @@ FROM docker.io/oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
+ARG VITE_API_URL=https://api.fluentxverse.xyz
+ARG VITE_SOCKET_URL=wss://api.fluentxverse.xyz
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
+
 # Copy package files
 COPY package.json bun.lock* ./
 

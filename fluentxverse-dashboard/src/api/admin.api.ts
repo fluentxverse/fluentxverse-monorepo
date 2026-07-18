@@ -196,6 +196,15 @@ interface ApiResponse<T> {
 
 const asArray = <T,>(value: T[] | null | undefined): T[] => Array.isArray(value) ? value : [];
 
+const emptyAnalyticsSummary = {
+  totalTutors: 0,
+  totalStudents: 0,
+  suspendedTutors: 0,
+  suspendedStudents: 0,
+  newTutors: 0,
+  newStudents: 0,
+};
+
 export const adminApi = {
   /**
    * Get dashboard overview statistics
@@ -464,7 +473,18 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get analytics');
     }
-    return response.data.data!;
+    const data = response.data.data;
+    return {
+      period: data?.period || period,
+      tutorTrend: asArray(data?.tutorTrend),
+      studentTrend: asArray(data?.studentTrend),
+      examStats: asArray(data?.examStats),
+      suspensionStats: asArray(data?.suspensionStats),
+      summary: {
+        ...emptyAnalyticsSummary,
+        ...(data?.summary || {}),
+      },
+    };
   },
 
   /**
@@ -475,7 +495,12 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get suspension analytics');
     }
-    return response.data.data!;
+    const data = response.data.data;
+    return {
+      recentLogs: asArray(data?.recentLogs),
+      reasonDistribution: asArray(data?.reasonDistribution),
+      monthlyTrend: asArray(data?.monthlyTrend),
+    };
   },
 
   // ============ INBOX / SYSTEM MESSAGES ============

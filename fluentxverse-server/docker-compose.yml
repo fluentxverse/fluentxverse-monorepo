@@ -277,6 +277,9 @@ services:
     build:
       context: ../fluentxverse-dashboard
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://api.fluentxverse.xyz
+        VITE_SOCKET_URL: wss://api.fluentxverse.xyz
     container_name: fluentxverse-dashboard
     restart: unless-stopped
     logging: *default-logging

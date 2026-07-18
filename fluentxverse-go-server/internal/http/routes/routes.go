@@ -4324,8 +4324,8 @@ func registerAdmin(app *fiber.App, deps Dependencies) {
 	group.Put("/:id", adminUpdate(deps, service))
 	group.Delete("/:id", adminDelete(deps, service))
 	group.Post("/change-password", adminChangePassword(deps, service))
-	group.Get("/analytics", adminStats(deps, service))
-	group.Get("/analytics/suspensions", adminActivity(deps, service))
+	group.Get("/analytics", adminAnalytics(deps, service))
+	group.Get("/analytics/suspensions", adminSuspensionAnalytics(deps, service))
 	group.Get("/sessions", adminSessions(deps, service))
 	group.Get("/sessions/stats", adminSessionStats(deps, service))
 	group.Get("/sessions/:sessionId", adminSession(deps, service))
@@ -4441,6 +4441,71 @@ func adminExamStats(deps Dependencies, service *fxadmin.Service) fiber.Handler {
 			return err
 		}
 		return response.OK(c, stats)
+	}
+}
+
+func adminAnalytics(deps Dependencies, service *fxadmin.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if _, err := adminPayload(c, deps); err != nil {
+			return response.Error(c, fiber.StatusUnauthorized, "Unauthorized - Admin authentication required")
+		}
+		stats, err := service.DashboardStats(c.UserContext())
+		if err != nil {
+			return err
+		}
+		examStats, err := service.ExamStats(c.UserContext())
+		if err != nil {
+			return err
+		}
+		written, _ := examStats["writtenExams"].(map[string]any)
+		speaking, _ := examStats["speakingExams"].(map[string]any)
+		return response.OK(c, fiber.Map{
+			"period":          defaultRouteString(c.Query("period"), "week"),
+			"tutorTrend":      []fiber.Map{},
+			"studentTrend":    []fiber.Map{},
+			"suspensionStats": []fiber.Map{},
+			"examStats":       analyticsExamRows(written, speaking),
+			"summary":         analyticsSummary(stats),
+		})
+	}
+}
+
+func adminSuspensionAnalytics(deps Dependencies, service *fxadmin.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if _, err := adminPayload(c, deps); err != nil {
+			return response.Error(c, fiber.StatusUnauthorized, "Unauthorized - Admin authentication required")
+		}
+		return response.OK(c, fiber.Map{
+			"recentLogs":         []fiber.Map{},
+			"reasonDistribution": []fiber.Map{},
+			"monthlyTrend":       []fiber.Map{},
+		})
+	}
+}
+
+func analyticsSummary(stats map[string]any) fiber.Map {
+	return fiber.Map{
+		"totalTutors":       intValueRoute(stats["totalTutors"]),
+		"totalStudents":     intValueRoute(stats["totalStudents"]),
+		"suspendedTutors":   intValueRoute(stats["suspendedTutors"]),
+		"suspendedStudents": intValueRoute(stats["suspendedStudents"]),
+		"newTutors":         intValueRoute(stats["newTutors"]),
+		"newStudents":       intValueRoute(stats["newStudents"]),
+	}
+}
+
+func analyticsExamRows(written map[string]any, speaking map[string]any) []fiber.Map {
+	return []fiber.Map{
+		{
+			"type":   "written",
+			"total":  intValueRoute(written["total"]),
+			"passed": intValueRoute(written["passed"]),
+		},
+		{
+			"type":   "speaking",
+			"total":  intValueRoute(speaking["total"]),
+			"passed": intValueRoute(speaking["passed"]),
+		},
 	}
 }
 
