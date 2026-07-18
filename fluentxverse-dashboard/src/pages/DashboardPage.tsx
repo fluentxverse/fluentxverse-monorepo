@@ -271,6 +271,17 @@ const DashboardPage = () => {
     });
   };
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const passRate = Math.max(0, Math.min(100, Math.round(interviewStats?.passRate || 0)));
+  const passRateCircumference = 2 * Math.PI * 40;
+  const passRateOffset = passRateCircumference * (1 - passRate / 100);
+
   if (loading) {
     return (
       <div className="dashboard-page">
@@ -301,7 +312,7 @@ const DashboardPage = () => {
       <div className="page-header">
         <div className="page-header-content">
           <h1>
-            , {user?.username || 'Admin'}!</h1>
+            {getGreeting()}, {user?.username || 'Admin'}!</h1>
           <p>Here's an overview of your platform today.</p>
         </div>
         <div className="page-header-actions">
@@ -464,13 +475,13 @@ const DashboardPage = () => {
                     <circle 
                       cx="50" cy="50" r="40" fill="none" 
                       stroke="#10b981" strokeWidth="12"
-                      strokeDasharray={`${interviewStats.passRate * 2.51} 251`}
-                      strokeDashoffset="63"
+                      strokeDasharray={passRateCircumference}
+                      strokeDashoffset={passRateOffset}
                       strokeLinecap="round"
                       transform="rotate(-90 50 50)"
                     />
                     <text x="50" y="50" textAnchor="middle" dy="0.35em" className="donut-text">
-                      {interviewStats.passRate}%
+                      {passRate}%
                     </text>
                   </svg>
                   <div className="donut-label">Pass Rate</div>

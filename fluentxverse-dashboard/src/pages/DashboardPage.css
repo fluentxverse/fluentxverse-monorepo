@@ -52,17 +52,23 @@
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
+.page-header-content {
+  min-width: 0;
+}
+
 .page-header-content h1 {
-  font-size: 28px;
+  font-size: clamp(24px, 2.4vw, 32px);
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 8px 0;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .page-header-content p {
@@ -654,16 +660,23 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
+  min-width: 132px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--card-bg) 88%, var(--primary) 12%);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
 }
 
 .donut-chart {
-  width: 100px;
-  height: 100px;
+  width: 112px;
+  height: 112px;
+  overflow: visible;
 }
 
 .donut-text {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   fill: var(--text-primary);
 }
@@ -679,6 +692,7 @@
   gap: 16px;
   flex: 1;
   justify-content: space-around;
+  min-width: 220px;
 }
 
 .count-item {
@@ -686,6 +700,10 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  min-width: 68px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
 }
 
 .count-item i {
@@ -1114,11 +1132,27 @@
 
   .page-header {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .page-header-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .interview-stats-summary {
+    align-items: stretch;
+  }
+
+  .donut-chart-container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .interview-counts {
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
   }
 
   .system-status {
