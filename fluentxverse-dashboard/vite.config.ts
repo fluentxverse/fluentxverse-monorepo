@@ -57,7 +57,7 @@ const manualChunks = (id: string) => {
     if (normalizedId.includes('/node_modules/preact/') || normalizedId.includes('/node_modules/preact-iso/')) {
       return 'vendor-preact';
     }
-    if (normalizedId.includes('/node_modules/axios/') || normalizedId.includes('/node_modules/socket.io-client/')) {
+    if (normalizedId.includes('/node_modules/axios/')) {
       return 'vendor-network';
     }
   }

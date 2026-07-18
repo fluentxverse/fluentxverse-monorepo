@@ -5087,7 +5087,46 @@ func interviewStats(deps Dependencies) fiber.Handler {
 		if err != nil {
 			return err
 		}
-		return response.OK(c, rows)
+		total := 0
+		passed := 0
+		failed := 0
+		pending := 0
+		for _, row := range rows {
+			count := intValueRoute(row["count"])
+			total += count
+			result := strings.ToLower(stringValueRoute(row["result"]))
+			status := strings.ToLower(stringValueRoute(row["status"]))
+			switch {
+			case result == "pass":
+				passed += count
+			case result == "fail":
+				failed += count
+			case status == "open" || status == "booked":
+				pending += count
+			}
+		}
+		passRate := 0
+		if passed+failed > 0 {
+			passRate = int(float64(passed) / float64(passed+failed) * 100)
+		}
+
+		return response.OK(c, fiber.Map{
+			"total":    total,
+			"passed":   passed,
+			"failed":   failed,
+			"pending":  pending,
+			"passRate": passRate,
+			"avgScores": fiber.Map{
+				"grammar":         0,
+				"fluency":         0,
+				"pronunciation":   0,
+				"vocabulary":      0,
+				"professionalism": 0,
+				"overall":         0,
+			},
+			"weeklyData":         []fiber.Map{},
+			"rubricDistribution": []fiber.Map{},
+		})
 	}
 }
 
@@ -5101,7 +5140,22 @@ func interviewToday(deps Dependencies) fiber.Handler {
 		if err != nil {
 			return err
 		}
-		return response.OK(c, rows)
+		items := []fiber.Map{}
+		for _, row := range rows {
+			slot, _ := row["s"].(map[string]any)
+			if slot == nil {
+				slot = row
+			}
+			items = append(items, fiber.Map{
+				"id":         stringValueRoute(slot["id"]),
+				"time":       stringValueRoute(slot["time"]),
+				"tutorId":    stringValueRoute(slot["tutorId"]),
+				"tutorName":  defaultRouteString(slot["tutorName"], "Unknown tutor"),
+				"tutorEmail": defaultRouteString(slot["tutorEmail"], ""),
+				"status":     defaultRouteString(slot["status"], "scheduled"),
+			})
+		}
+		return response.OK(c, items)
 	}
 }
 

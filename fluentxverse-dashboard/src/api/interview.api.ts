@@ -2,6 +2,26 @@ import { apiClient } from './apiClient';
 
 const api = apiClient;
 
+const asArray = <T,>(value: T[] | null | undefined): T[] => Array.isArray(value) ? value : [];
+
+const emptyInterviewStats = {
+  total: 0,
+  passed: 0,
+  failed: 0,
+  pending: 0,
+  passRate: 0,
+  avgScores: {
+    grammar: 0,
+    fluency: 0,
+    pronunciation: 0,
+    vocabulary: 0,
+    professionalism: 0,
+    overall: 0,
+  },
+  weeklyData: [] as { week: string; passed: number; failed: number }[],
+  rubricDistribution: [] as { category: string; scores: number[] }[],
+};
+
 export interface InterviewSlot {
   id: string;
   date: string;
@@ -40,7 +60,7 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to create interview slots');
     }
-    return response.data.data;
+    return asArray(response.data.data);
   },
 
   /**
@@ -61,7 +81,14 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get interview schedule');
     }
-    return response.data.data;
+    const data = response.data.data;
+    return data && typeof data === 'object'
+      ? {
+          weekStart: data.weekStart || '',
+          weekEnd: data.weekEnd || '',
+          slots: asArray(data.slots || (Array.isArray(data) ? data : [])),
+        }
+      : { weekStart: '', weekEnd: '', slots: [] };
   },
 
   /**
@@ -72,7 +99,7 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get pending interviews');
     }
-    return response.data.data;
+    return asArray(response.data.data);
   },
 
   /**
@@ -144,7 +171,7 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get interview result');
     }
-    return response.data.data;
+    return response.data.data ?? null;
   },
 
   /**
@@ -171,7 +198,16 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get interview stats');
     }
-    return response.data.data;
+    const data = response.data.data;
+    return data && typeof data === 'object'
+      ? {
+          ...emptyInterviewStats,
+          ...data,
+          avgScores: { ...emptyInterviewStats.avgScores, ...(data.avgScores || {}) },
+          weeklyData: asArray(data.weeklyData),
+          rubricDistribution: asArray(data.rubricDistribution),
+        }
+      : emptyInterviewStats;
   },
 
   /**
@@ -189,6 +225,6 @@ export const interviewApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get today\'s queue');
     }
-    return response.data.data;
+    return asArray(response.data.data);
   }
 };

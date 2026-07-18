@@ -194,6 +194,8 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+const asArray = <T,>(value: T[] | null | undefined): T[] => Array.isArray(value) ? value : [];
+
 export const adminApi = {
   /**
    * Get dashboard overview statistics
@@ -203,7 +205,14 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get stats');
     }
-    return response.data.data!;
+    return response.data.data || {
+      totalTutors: 0,
+      certifiedTutors: 0,
+      pendingTutors: 0,
+      totalStudents: 0,
+      totalSessions: 0,
+      totalRevenue: 0,
+    };
   },
 
   /**
@@ -214,7 +223,10 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get exam stats');
     }
-    return response.data.data!;
+    return response.data.data || {
+      writtenExams: { total: 0, passed: 0, failed: 0 },
+      speakingExams: { total: 0, passed: 0, failed: 0, processing: 0 },
+    };
   },
 
   /**
@@ -227,7 +239,7 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get pending tutors');
     }
-    return response.data.data!;
+    return asArray(response.data.data);
   },
 
   /**
@@ -240,7 +252,7 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get pending profiles');
     }
-    return response.data.data!;
+    return asArray(response.data.data);
   },
 
   /**
@@ -285,7 +297,7 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get pending changes');
     }
-    return response.data.data!;
+    return asArray(response.data.data);
   },
 
   /**
@@ -317,7 +329,7 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get recent activity');
     }
-    return response.data.data!;
+    return asArray(response.data.data);
   },
 
   /**
@@ -335,7 +347,11 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get tutors');
     }
-    return response.data.data!;
+    const data = response.data.data;
+    return {
+      tutors: asArray(data?.tutors),
+      total: data?.total ?? 0,
+    };
   },
 
   /**
@@ -363,7 +379,11 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get students');
     }
-    return response.data.data!;
+    const data = response.data.data;
+    return {
+      students: asArray(data?.students),
+      total: data?.total ?? 0,
+    };
   },
 
   /**
