@@ -6,17 +6,18 @@ x-logging: &default-logging
 
 services:
   # ===========================================
-  # MAIN GO SERVER (API + WebSocket)
+  # MAIN BUN SERVER (API + Socket.IO)
   # ===========================================
   fluentxverse-server:
     build:
-      context: ../fluentxverse-go-server
+      context: .
       dockerfile: Dockerfile
     container_name: fluentxverse-server
     restart: unless-stopped
     logging: *default-logging
     ports:
       - "${API_PORT:-8765}:8765"
+      - "${SOCKET_PORT:-8767}:8767"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       # Database connections (using container names)
@@ -245,7 +246,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: https://api.fluentxverse.xyz
-        VITE_SOCKET_URL: wss://api.fluentxverse.xyz
+        VITE_SOCKET_URL: https://ws.fluentxverse.xyz
     container_name: fluentxverse-student
     restart: unless-stopped
     logging: *default-logging
@@ -264,7 +265,7 @@ services:
         # Public HTTPS API origin (baked into the Vite build)
         # IMPORTANT: Hardcoded to ensure consistent builds via webhook
         VITE_API_URL: https://api.fluentxverse.xyz
-        VITE_SOCKET_URL: wss://api.fluentxverse.xyz
+        VITE_SOCKET_URL: https://ws.fluentxverse.xyz
         VITE_ENABLE_NOTIFICATION_SOCKET: "true"
     container_name: fluentxverse-tutor
     restart: unless-stopped
@@ -282,7 +283,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_URL: https://api.fluentxverse.xyz
-        VITE_SOCKET_URL: wss://api.fluentxverse.xyz
+        VITE_SOCKET_URL: https://ws.fluentxverse.xyz
     container_name: fluentxverse-dashboard
     restart: unless-stopped
     logging: *default-logging

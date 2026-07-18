@@ -18,9 +18,9 @@ RUN apk add --no-cache nodejs npm && npm install -g snarkjs@0.7.6
 WORKDIR /app
 
 # Copy package files first (for better caching)
-COPY --chown=appuser:appgroup package.json ./
+COPY --chown=appuser:appgroup package.json bun.lock* ./
 
-# Install dependencies (--no-save prevents lockfile changes error)
+# Install dependencies without mutating the copied workspace lockfile.
 RUN bun install --production --no-save
 
 # Copy source code
