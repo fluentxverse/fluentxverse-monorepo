@@ -3,8 +3,6 @@ import StudentService from "../services/auth.services/student.service";
 import { verifyAuthToken, signAuthToken, refreshJwtCookie, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
 import { nanoid } from "nanoid";
 import { verifyMessage } from "viem";
-import { getUser } from "thirdweb/wallets";
-import { thirdwebClient } from "../services/utils.services/utils";
 import { ticketService } from "../services/ticket.services/ticket.service";
 import { favoritesService } from "../services/favorites.services/favorites.service";
 import { rateLimitMiddleware } from "../utils/rateLimiter";
@@ -655,7 +653,7 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
-  // Register new student with wallet (from Thirdweb social login) - requires signature verification
+  // Register new student with wallet - requires signature verification
   .post('/student/register/wallet', async ({ body, cookie, set }) => {
     try {
       const { walletAddress, signature, message, email, givenName, familyName, birthDate, mobileNumber } = body;
@@ -690,32 +688,6 @@ const Student = new Elysia({ name: "student" })
       if (!isValid) {
         set.status = 401;
         return { success: false, message: 'Invalid signature. Authentication failed.', user: null };
-      }
-      
-      // Verify email matches OAuth provider if email is provided
-      if (email) {
-        try {
-          const thirdwebUser = await getUser({
-            client: thirdwebClient,
-            walletAddress: walletAddress
-          });
-          
-          if (thirdwebUser && thirdwebUser.email) {
-            // Email must match what OAuth provider gave us
-            if (thirdwebUser.email.toLowerCase() !== email.toLowerCase()) {
-              set.status = 400;
-              return { 
-                success: false, 
-                message: 'Email does not match the authenticated account. Please use the email from your OAuth provider.', 
-                user: null 
-              };
-            }
-          }
-        } catch (verifyError) {
-          console.error('Failed to verify email with Thirdweb:', verifyError);
-          // Continue without email verification if Thirdweb check fails
-          // This allows fallback for edge cases
-        }
       }
       
       // Delete used nonce (one-time use)

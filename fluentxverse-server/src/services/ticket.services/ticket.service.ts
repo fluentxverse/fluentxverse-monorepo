@@ -1,34 +1,91 @@
-import { thirdwebClient } from "../utils.services/utils";
-import { defineChain, Engine, getContract, getRpcClient } from "thirdweb";
-import { eth_getTransactionReceipt } from "thirdweb/rpc";
-import { mintTo, mintAdditionalSupplyTo, getNFTs, getNFT, totalSupply, safeTransferFrom, balanceOf } from "thirdweb/extensions/erc1155";
-import { upload } from "thirdweb/storage";
-import * as fs from "fs";
 import * as path from "path";
+import {
+  createPublicClient,
+  getAddress,
+  http,
+  parseAbiItem,
+  parseEventLogs,
+  type Address,
+  type Hash,
+} from "viem";
+import { arbitrumSepolia } from "viem/chains";
 import { getIO } from "../../socket/socket.server";
 import { NotificationService } from "../notification.services/notification.service";
 import { getDriver } from "../../db/memgraph";
 import { v4 as uuidv4 } from "uuid";
 import { TICKETS_PER_LESSON, REFUND_POLICY } from "../../config/constant";
+import { gmrEngine } from "../web3.services/gmrEngine.service";
 
 // Contract configuration
 const TICKET_CONTRACT_ADDRESS = process.env.TICKET_CONTRACT_ADDRESS || "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db";
 const CHAIN_ID = Number(process.env.TICKET_CHAIN_ID) || 421614; // Arbitrum Sepolia testnet
-const VAULT_WALLET_ADDRESS = process.env.THIRDWEB_VAULT_WALLET_ADDRESS!;
+const VAULT_WALLET_ADDRESS = process.env.VAULT_WALLET_ADDRESS || "";
+const TICKET_RPC_URL = process.env.TICKET_RPC_URL || process.env.ARBITRUM_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc";
+const TICKET_BASIC_TOKEN_ID = process.env.TICKET_BASIC_TOKEN_ID || "";
+const TICKET_PREMIUM_TOKEN_ID = process.env.TICKET_PREMIUM_TOKEN_ID || "";
+const TICKET_TRIAL_TOKEN_ID = process.env.TICKET_TRIAL_TOKEN_ID || "";
 
-// Get contract instance
-const contract = getContract({
-  client: thirdwebClient,
-  chain: defineChain(CHAIN_ID),
-  address: TICKET_CONTRACT_ADDRESS,
+const publicClient = createPublicClient({
+  chain: arbitrumSepolia,
+  transport: http(TICKET_RPC_URL),
 });
 
-// Server wallet for minting
-const serverWallet = Engine.serverWallet({
-  client: thirdwebClient,
-  address: VAULT_WALLET_ADDRESS,
-  vaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN!,
-});
+const erc1155Abi = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "id", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "totalSupply",
+    stateMutability: "view",
+    inputs: [{ name: "id", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "safeTransferFrom",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { name: "id", type: "uint256" },
+      { name: "value", type: "uint256" },
+      { name: "data", type: "bytes" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "mintTo",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "uri", type: "string" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "tokenId", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "mintAdditionalSupplyTo",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "tokenId", type: "uint256" },
+      { name: "additionalSupply", type: "uint256" },
+    ],
+    outputs: [],
+  },
+] as const;
+
+const transferSingleEvent = parseAbiItem("event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)");
 
 // Notification service instance
 const notificationService = new NotificationService();
@@ -162,21 +219,54 @@ export class TicketService {
    * Upload ticket image to IPFS
    */
   async uploadTicketImage(tier: TicketTier): Promise<string> {
-    const imagePath = this.getTicketImagePath(tier);
-    
-    if (!fs.existsSync(imagePath)) {
-      throw new Error(`Ticket image not found: ${imagePath}`);
+    return `${process.env.API_PUBLIC_URL || process.env.API_BASE_URL || ""}/tickets/image/${tier}`;
+  }
+
+  private getContractAddress(): Address {
+    return getAddress(TICKET_CONTRACT_ADDRESS);
+  }
+
+  private getVaultWalletAddress(): Address {
+    if (!VAULT_WALLET_ADDRESS) {
+      throw new Error('VAULT_WALLET_ADDRESS is required for ticket transfers');
     }
+    return getAddress(VAULT_WALLET_ADDRESS);
+  }
 
-    const imageBuffer = fs.readFileSync(imagePath);
-    const imageFile = new File([imageBuffer], `${tier}_ticket.png`, { type: "image/png" });
-
-    const imageUri = await upload({
-      client: thirdwebClient,
-      files: [imageFile],
+  private async readTicketBalance(owner: string, tokenId: string): Promise<number> {
+    const balance = await publicClient.readContract({
+      address: this.getContractAddress(),
+      abi: erc1155Abi,
+      functionName: "balanceOf",
+      args: [getAddress(owner), BigInt(tokenId)],
     });
 
-    return imageUri;
+    return Number(balance);
+  }
+
+  private async enqueueTicketTransfer(params: {
+    from: string;
+    to: string;
+    tokenId: string;
+    quantity: number;
+    walletAddress?: string;
+  }): Promise<string> {
+    const transaction = await gmrEngine.contractWrite({
+      abi: erc1155Abi,
+      args: [
+        getAddress(params.from),
+        getAddress(params.to),
+        params.tokenId,
+        String(params.quantity),
+        "0x",
+      ],
+      chainId: CHAIN_ID,
+      contractAddress: TICKET_CONTRACT_ADDRESS,
+      functionName: "safeTransferFrom",
+      walletAddress: params.walletAddress || params.from,
+    });
+
+    return transaction.transactionHash || transaction.id;
   }
 
   /**
@@ -352,7 +442,6 @@ export class TicketService {
     const name = `${tierName} Lesson Ticket`;
     const description = `FluentXverse ${tierName} Lesson Ticket - Redeem for one 25-minute lesson session. Never expires.`;
 
-    // Create NFT metadata with simple attributes
     const nftMetadata = {
       name,
       description,
@@ -364,18 +453,15 @@ export class TicketService {
       ],
     };
 
-    // Mint NFTs to contract address
-    const transaction = mintTo({
-      contract,
-      to: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
-      nft: nftMetadata,
-      supply: BigInt(supply),
+    const transaction = await gmrEngine.contractWrite({
+      abi: erc1155Abi,
+      args: [VAULT_WALLET_ADDRESS, JSON.stringify(nftMetadata), String(supply)],
+      chainId: CHAIN_ID,
+      contractAddress: TICKET_CONTRACT_ADDRESS,
+      functionName: "mintTo",
+      walletAddress: VAULT_WALLET_ADDRESS,
     });
-
-    const { transactionId } = await serverWallet.enqueueTransaction({
-      transaction,
-      simulate: false,
-    });
+    const transactionId = transaction.id;
 
 
     // Send minting started notification
@@ -417,70 +503,41 @@ export class TicketService {
    * Filters out invalid NFTs that don't have proper ticket attributes
    */
   async getTickets(): Promise<Ticket[]> {
-    try {
-      const nfts = await getNFTs({
-        contract,
-        start: 0,
-        count: 100,
-      });
+    const configuredTicketCandidates: Array<{ tier: TicketTier; tokenId: string; price: number }> = [
+      { tier: "basic", tokenId: TICKET_BASIC_TOKEN_ID, price: 6 },
+      { tier: "premium", tokenId: TICKET_PREMIUM_TOKEN_ID, price: 9 },
+      { tier: "trial", tokenId: TICKET_TRIAL_TOKEN_ID, price: 0 },
+    ];
+    const configuredTickets = configuredTicketCandidates.filter((ticket) => ticket.tokenId);
 
-      const ticketPromises = nfts.map(async (nft) => {
-        const metadata = nft.metadata;
-        const attributes = metadata.attributes as Array<{ trait_type: string; value: string }> || [];
-        
-        // Extract tier attribute - this is required for valid tickets
-        const tierAttr = attributes.find(a => a.trait_type === 'Tier');
-        
-        // Skip NFTs that don't have a valid Tier attribute (Basic, Premium, or Trial)
-        if (!tierAttr?.value) {
-          return null;
-        }
-        
-        const tierValue = tierAttr.value.toLowerCase();
-        if (tierValue !== 'basic' && tierValue !== 'premium' && tierValue !== 'trial') {
-          return null;
-        }
+    const tickets = await Promise.all(configuredTickets.map(async ({ tier, tokenId, price }) => {
+      let supply = 0n;
+      try {
+        supply = await publicClient.readContract({
+          address: TICKET_CONTRACT_ADDRESS as Address,
+          abi: erc1155Abi,
+          functionName: "totalSupply",
+          args: [BigInt(tokenId)],
+        }) as bigint;
+      } catch (error) {
+        console.warn(`Could not read total supply for ${tier} ticket ${tokenId}:`, error);
+      }
 
-        // Note: Tickets never expire, no validity check needed
+      const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
+      return {
+        tokenId,
+        tier,
+        price,
+        supply: Number(supply),
+        name: `${tierName} Lesson Ticket`,
+        description: `FluentXVerse ${tierName} Lesson Ticket - Redeem for one 25-minute lesson session. Never expires.`,
+        imageUri: await this.uploadTicketImage(tier),
+        createdAt: new Date().toISOString(),
+        contractAddress: TICKET_CONTRACT_ADDRESS,
+      };
+    }));
 
-        // Get supply for this token
-        let supply = 0n;
-        try {
-          supply = await totalSupply({ contract, id: nft.id });
-        } catch (e) {
-          console.warn(`Could not get supply for token ${nft.id}:`, e);
-        }
-
-        // Extract other attributes from metadata
-        const priceAttr = attributes.find(a => a.trait_type === 'Price');
-        const createdAttr = attributes.find(a => a.trait_type === 'Created');
-        
-        const tier = tierValue as TicketTier;
-        const priceString = priceAttr?.value || (tier === 'basic' ? '$6' : tier === 'premium' ? '$9' : '$0');
-        const price = parseFloat(priceString.replace('$', '')) || (tier === 'basic' ? 6 : tier === 'premium' ? 9 : 0);
-        const createdAt = createdAttr?.value || new Date().toISOString();
-
-        return {
-          tokenId: nft.id.toString(),
-          tier,
-          price,
-          supply: Number(supply),
-          name: metadata.name || `${tier.charAt(0).toUpperCase() + tier.slice(1)} Lesson Ticket`,
-          description: metadata.description || '',
-          imageUri: metadata.image || undefined,
-          createdAt,
-          contractAddress: TICKET_CONTRACT_ADDRESS,
-        };
-      });
-
-      const results = await Promise.all(ticketPromises);
-      
-      // Filter out null values (invalid NFTs)
-      return results.filter((ticket): ticket is NonNullable<typeof ticket> => ticket !== null);
-    } catch (error) {
-      console.error("Error fetching tickets from contract:", error);
-      throw error;
-    }
+    return tickets;
   }
 
   /**
@@ -499,17 +556,15 @@ export class TicketService {
 
     const tierName = ticket.tier.charAt(0).toUpperCase() + ticket.tier.slice(1);
 
-    const transaction = mintAdditionalSupplyTo({
-      contract,
-      to: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
-      tokenId: BigInt(tokenId),
-      supply: BigInt(quantity),
+    const transaction = await gmrEngine.contractWrite({
+      abi: erc1155Abi,
+      args: [VAULT_WALLET_ADDRESS, tokenId, String(quantity)],
+      chainId: CHAIN_ID,
+      contractAddress: TICKET_CONTRACT_ADDRESS,
+      functionName: "mintAdditionalSupplyTo",
+      walletAddress: VAULT_WALLET_ADDRESS,
     });
-
-    const { transactionId } = await serverWallet.enqueueTransaction({
-      transaction,
-      simulate: false,
-    });
+    const transactionId = transaction.id;
 
 
     // Send minting started notification
@@ -567,15 +622,11 @@ export class TicketService {
   }
 
   /**
-   * Get minting transaction status from Thirdweb Engine
+   * Get minting transaction status from GMR Engine
    */
   private async getMintingStatus(transactionId: string): Promise<string> {
     try {
-      const status = await Engine.getTransactionStatus({
-        client: thirdwebClient,
-        transactionId,
-      });
-
+      const status = await gmrEngine.transaction(transactionId);
       return status.status;
     } catch (error) {
       console.error(`Error fetching transaction status for ${transactionId}:`, error);
@@ -611,8 +662,8 @@ export class TicketService {
       throw new Error('CRITICAL: Invalid buyer wallet address');
     }
     
-    const vaultWallet = process.env.THIRDWEB_VAULT_WALLET_ADDRESS;
-    if (vaultWallet && buyerWallet.toLowerCase() === vaultWallet.toLowerCase()) {
+    const vaultWallet = this.getVaultWalletAddress();
+    if (buyerWallet.toLowerCase() === vaultWallet.toLowerCase()) {
       throw new Error('CRITICAL: Cannot transfer tickets to vault wallet');
     }
 
@@ -625,36 +676,19 @@ export class TicketService {
       throw new Error(`${tier.charAt(0).toUpperCase() + tier.slice(1)} tickets not found. Please contact support.`);
     }
 
-    const tokenId = BigInt(ticket.tokenId);
-
     // Check if we have enough supply
     if (ticket.supply < quantity) {
       throw new Error(`Insufficient ${tier} tickets. Available: ${ticket.supply}, Requested: ${quantity}`);
     }
 
     try {
-      // Get current NFT metadata for logging
-      const nft = await getNFT({
-        contract,
-        tokenId,
+      const transferTxId = await this.enqueueTicketTransfer({
+        from: vaultWallet,
+        to: buyerWallet,
+        tokenId: ticket.tokenId,
+        quantity,
+        walletAddress: vaultWallet,
       });
-
-      // Transfer the NFT tickets from server wallet to buyer
-      
-      const transferTransaction = safeTransferFrom({
-        contract,
-        from: process.env.THIRDWEB_VAULT_WALLET_ADDRESS!,
-        to: buyerWallet as `0x${string}`,
-        tokenId,
-        value: BigInt(quantity),
-        data: "0x",
-      });
-
-      const { transactionId: transferTxId } = await serverWallet.enqueueTransaction({
-        transaction: transferTransaction,
-        simulate: false,
-      });
-
 
       // Send notification about the purchase
       const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
@@ -670,7 +704,6 @@ export class TicketService {
           purchaseDate,
           mockTransactionHash,
           action: 'purchase',
-          nftMetadata: nft.metadata,
         }
       );
 
@@ -759,12 +792,7 @@ export class TicketService {
     // Get basic ticket balance
     if (basicTicket) {
       try {
-        const balance = await balanceOf({
-          contract,
-          owner: walletAddress as `0x${string}`,
-          tokenId: BigInt(basicTicket.tokenId),
-        });
-        basicBalance = Number(balance);
+        basicBalance = await this.readTicketBalance(walletAddress, basicTicket.tokenId);
       } catch (error) {
         console.error('Error getting basic ticket balance:', error);
       }
@@ -773,12 +801,7 @@ export class TicketService {
     // Get premium ticket balance
     if (premiumTicket) {
       try {
-        const balance = await balanceOf({
-          contract,
-          owner: walletAddress as `0x${string}`,
-          tokenId: BigInt(premiumTicket.tokenId),
-        });
-        premiumBalance = Number(balance);
+        premiumBalance = await this.readTicketBalance(walletAddress, premiumTicket.tokenId);
       } catch (error) {
         console.error('Error getting premium ticket balance:', error);
       }
@@ -787,12 +810,7 @@ export class TicketService {
     // Get trial ticket balance
     if (trialTicket) {
       try {
-        const balance = await balanceOf({
-          contract,
-          owner: walletAddress as `0x${string}`,
-          tokenId: BigInt(trialTicket.tokenId),
-        });
-        trialBalance = Number(balance);
+        trialBalance = await this.readTicketBalance(walletAddress, trialTicket.tokenId);
       } catch (error) {
         console.error('Error getting trial ticket balance:', error);
       }
@@ -1094,18 +1112,6 @@ export class TicketService {
   // ==========================================
 
   /**
-   * Create a server wallet instance for a user (student) to execute transactions
-   * Uses Thirdweb Engine server wallet with the user's wallet address
-   */
-  private getStudentServerWallet(studentWalletAddress: string) {
-    return Engine.serverWallet({
-      client: thirdwebClient,
-      address: studentWalletAddress as `0x${string}`,
-      vaultAccessToken: process.env.THIRDWEB_VAULT_ACCESS_TOKEN!,
-    });
-  }
-
-  /**
    * Deduct a ticket from student when booking a lesson
    * Transfers the NFT ticket from student wallet to vault wallet ON-CHAIN
    */
@@ -1172,28 +1178,13 @@ export class TicketService {
         MERGE (s)-[:MADE_TRANSACTION]->(t)
       `, { transactionId, studentId });
 
-
-      // Execute on-chain transfer from student wallet to vault wallet
-      
-      // Get the student's server wallet to execute the transfer
-      const studentServerWallet = this.getStudentServerWallet(studentWallet);
-      
-      // Create the transfer transaction
-      const transferTransaction = safeTransferFrom({
-        contract,
-        from: studentWallet as `0x${string}`,
-        to: VAULT_WALLET_ADDRESS as `0x${string}`,
-        tokenId: BigInt(ticket.tokenId),
-        value: BigInt(TICKETS_PER_LESSON),
-        data: "0x",
+      const transferTxId = await this.enqueueTicketTransfer({
+        from: studentWallet,
+        to: this.getVaultWalletAddress(),
+        tokenId: ticket.tokenId,
+        quantity: TICKETS_PER_LESSON,
+        walletAddress: studentWallet,
       });
-
-      // Enqueue and execute the transaction
-      const { transactionId: transferTxId } = await studentServerWallet.enqueueTransaction({
-        transaction: transferTransaction,
-        simulate: false,
-      });
-
 
       // Update transaction to completed with the real transfer tx ID
       await session.run(`
@@ -1317,23 +1308,14 @@ export class TicketService {
         MERGE (s)-[:MADE_TRANSACTION]->(refund)
       `, { refundTxId, originalTxId, studentId });
 
-
-      // Execute on-chain transfer from vault wallet back to student
-      const transferTransaction = safeTransferFrom({
-        contract,
-        from: VAULT_WALLET_ADDRESS as `0x${string}`,
-        to: studentWallet as `0x${string}`,
-        tokenId: BigInt(originalTx.tokenId),
-        value: BigInt(quantity),
-        data: "0x",
+      const vaultWallet = this.getVaultWalletAddress();
+      const transferTxId = await this.enqueueTicketTransfer({
+        from: vaultWallet,
+        to: studentWallet,
+        tokenId: originalTx.tokenId,
+        quantity,
+        walletAddress: vaultWallet,
       });
-
-      // Use the vault server wallet to execute the refund
-      const { transactionId: transferTxId } = await serverWallet.enqueueTransaction({
-        transaction: transferTransaction,
-        simulate: false,
-      });
-
 
       // Mark refund as completed with real tx ID
       await session.run(`
@@ -1480,11 +1462,8 @@ export class TicketService {
   }> {
     try {
       
-      const chain = defineChain(CHAIN_ID);
-      const rpcRequest = getRpcClient({ client: thirdwebClient, chain });
-      
-      const receipt = await eth_getTransactionReceipt(rpcRequest, {
-        hash: txHash as `0x${string}`,
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: txHash as Hash,
       });
 
       if (!receipt) {
@@ -1497,52 +1476,25 @@ export class TicketService {
         return { valid: false, error: 'Transaction failed on blockchain' };
       }
 
-      // Check logs for a transfer event from the ticket contract to vault wallet
-      // ERC1155 TransferSingle event topic: TransferSingle(address operator, address from, address to, uint256 id, uint256 value)
-      const TRANSFER_SINGLE_TOPIC = '0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62';
-      
-      let foundValidTransfer = false;
-      
-      for (const log of receipt.logs) {
-        
-        // Check this log is from the ticket contract
-        if (log.address.toLowerCase() !== TICKET_CONTRACT_ADDRESS.toLowerCase()) {
-          continue;
+      const transferEvents = parseEventLogs({
+        abi: [transferSingleEvent],
+        logs: receipt.logs,
+        eventName: "TransferSingle",
+      });
+
+      const expectedFrom = getAddress(expectedFromWallet);
+      const expectedTo = this.getVaultWalletAddress();
+      const contractAddress = this.getContractAddress();
+      const foundValidTransfer = transferEvents.some((event) => {
+        if (getAddress(event.address) !== contractAddress) {
+          return false;
         }
-        
-        // Check for TransferSingle event
-        if (log.topics[0] !== TRANSFER_SINGLE_TOPIC) {
-          continue;
-        }
-        
-        // TransferSingle event topics:
-        // topics[0] = event signature
-        // topics[1] = operator (address, padded to 32 bytes)
-        // topics[2] = from (address, padded to 32 bytes)
-        // topics[3] = to (address, padded to 32 bytes)
-        // data = id (uint256) + value (uint256)
-        
-        const fromTopic = log.topics[2];
-        const toTopic = log.topics[3];
-        
-        if (!fromTopic || !toTopic) {
-          continue;
-        }
-        
-        // Extract addresses from padded topics (last 40 hex chars = 20 bytes = address)
-        const fromAddress = '0x' + fromTopic.slice(-40);
-        const toAddress = '0x' + toTopic.slice(-40);
-        
-        
-        // Verify the transfer is from the student's wallet to the vault
-        const isFromStudent = fromAddress.toLowerCase() === expectedFromWallet.toLowerCase();
-        const isToVault = toAddress.toLowerCase() === VAULT_WALLET_ADDRESS.toLowerCase();
-        
-        if (isFromStudent && isToVault) {
-          foundValidTransfer = true;
-          break;
-        }
-      }
+
+        const { from, to, value } = event.args;
+        return getAddress(from) === expectedFrom
+          && getAddress(to) === expectedTo
+          && value >= BigInt(TICKETS_PER_LESSON);
+      });
 
       if (!foundValidTransfer) {
         return { valid: false, error: 'No valid ticket transfer from student to vault found in transaction' };
@@ -1668,36 +1620,22 @@ export class TicketService {
         return { success: false, error: 'No trial tickets available' };
       }
       
-      const tokenId = BigInt(trialTicket.tokenId);
-      
       // Check vault balance for trial tickets
-      const vaultBalance = await balanceOf({
-        contract,
-        owner: VAULT_WALLET_ADDRESS,
-        tokenId,
-      });
+      const vaultWallet = this.getVaultWalletAddress();
+      const vaultBalance = await this.readTicketBalance(vaultWallet, trialTicket.tokenId);
       
-      if (vaultBalance < 1n) {
+      if (vaultBalance < 1) {
         return { success: false, error: 'No trial tickets available in vault' };
       }
       
-      // Transfer 1 trial ticket from vault to user
-      
-      const transferTransaction = safeTransferFrom({
-        contract,
-        from: VAULT_WALLET_ADDRESS,
-        to: userWallet as `0x${string}`,
-        tokenId,
-        value: 1n,
-        data: "0x",
+      const transactionId = await this.enqueueTicketTransfer({
+        from: vaultWallet,
+        to: userWallet,
+        tokenId: trialTicket.tokenId,
+        quantity: 1,
+        walletAddress: vaultWallet,
       });
-      
-      const { transactionId } = await serverWallet.enqueueTransaction({
-        transaction: transferTransaction,
-        simulate: false,
-      });
-      
-      
+
       // Send notification about the welcome gift
       await this.sendAdminNotification(
         'minting_success',

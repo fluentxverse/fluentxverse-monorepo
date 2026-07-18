@@ -33,7 +33,6 @@
     "nanoid": "^5.1.11",
     "neo4j-driver": "^6.0.1",
     "socket.io": "^4.8.3",
-    "thirdweb": "^5.119.4",
     "uuid": "^14.0.0",
     "viem": "^2.48.8",
     "zkverifyjs": "^2.3.0",

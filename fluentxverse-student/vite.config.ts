@@ -65,9 +65,6 @@ const manualChunks = (id: string) => {
 		if (normalizedId.includes('/node_modules/pdfjs-dist/')) {
 			return 'vendor-pdf';
 		}
-		if (normalizedId.includes('/node_modules/thirdweb/')) {
-			return 'vendor-thirdweb';
-		}
 	}
 
 	for (const [chunkName, files] of Object.entries(pageChunkFiles)) {
@@ -97,7 +94,6 @@ export default defineConfig({
 			'@client': path.resolve(__dirname, 'src/client'),
 			'@components': path.resolve(__dirname, 'src/Components'),
 			'@context': path.resolve(__dirname, 'src/context'),
-			// Alias React to Preact compat for libraries like thirdweb
 			'react': 'preact/compat',
 			'react-dom': 'preact/compat',
 			'react/jsx-runtime': 'preact/jsx-runtime',

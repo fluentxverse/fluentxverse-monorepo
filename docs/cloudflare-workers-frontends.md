@@ -30,9 +30,9 @@ Required build variables:
 ```text
 VITE_API_URL=https://api.fluentxverse.xyz
 VITE_SOCKET_URL=https://ws.fluentxverse.xyz
-VITE_THIRDWEB_CLIENT_ID=<thirdweb client id>
 VITE_TICKET_CHAIN_ID=421614
 VITE_TICKET_CONTRACT_ADDRESS=<ticket contract>
+VITE_TICKET_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
 VITE_VAULT_WALLET_ADDRESS=<vault wallet>
 ```
 
@@ -65,7 +65,6 @@ Required build variables:
 VITE_API_URL=https://api.fluentxverse.xyz
 VITE_SOCKET_URL=https://ws.fluentxverse.xyz
 VITE_ENABLE_NOTIFICATION_SOCKET=true
-VITE_THIRDWEB_CLIENT_ID=<thirdweb client id>
 ```
 
 ## Notes

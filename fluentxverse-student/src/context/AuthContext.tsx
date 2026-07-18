@@ -326,7 +326,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
     setLoginInProgress(true);
     
     try {
-      // Disconnect Thirdweb wallet FIRST to clear the wallet session
+      // Disconnect browser wallet state first to clear the local wallet session
       try {
         await appWallet.disconnect();
       } catch (walletErr) {

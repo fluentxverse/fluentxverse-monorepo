@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { io, type Socket } from 'socket.io-client';
 import './TicketsPage.css';
+import { createRealtimeSocket, type RealtimeSocket } from '../client/realtimeSocket';
 import {
   getTickets,
   getTicketStats,
@@ -44,7 +44,7 @@ const TicketsPage = () => {
 
   // Toast notifications
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<RealtimeSocket | null>(null);
 
   // Form state for creating new ticket
   const [newTicket, setNewTicket] = useState<{
@@ -74,11 +74,7 @@ const TicketsPage = () => {
 
   // Setup socket connection for minting updates
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:8767', {
-      transports: ['websocket', 'polling'],
-      withCredentials: true
-    });
-
+    const socket = createRealtimeSocket();
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -130,6 +126,8 @@ const TicketsPage = () => {
         }
       }
     });
+
+    void socket.connect();
 
     return () => {
       socket.off('minting:update');

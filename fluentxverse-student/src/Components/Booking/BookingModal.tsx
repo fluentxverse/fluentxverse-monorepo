@@ -2,12 +2,10 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi, AvailableSlot } from '../../api/schedule.api';
 import { transferTicketForBooking, getTicketBalance, type TicketBalance } from '../../services/ticket.service';
-import { useActiveAccount, useAutoConnect, useConnect } from 'thirdweb/react';
-import { arbitrumSepolia } from 'thirdweb/chains';
 import { getErrorMessage } from '../../api/utils';
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
-import { thirdwebClient, appWallet } from '../../config/wallet';
+import { appWallet, autoConnectWallet, connectWallet, type WalletAccount } from '../../config/wallet';
 import './BookingModal.css';
 
 interface BookingModalProps {
@@ -44,35 +42,39 @@ export const BookingModal = ({
   const [transferringTicket, setTransferringTicket] = useState(false);
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const { user } = useAuthContext();
-
-  // Get the connected account for ticket transfer
-  const activeAccount = useActiveAccount();
-  const { connect, isConnecting: isWalletConnecting } = useConnect();
-  const { isLoading: isWalletAutoConnecting } = useAutoConnect({
-    client: thirdwebClient,
-    wallets: [appWallet],
-  });
-  const connectedAccount = activeAccount || appWallet.getAccount();
+  const [connectedAccount, setConnectedAccount] = useState<WalletAccount | null>(appWallet.getAccount());
+  const [isWalletConnecting, setIsWalletConnecting] = useState(false);
+  const [isWalletAutoConnecting, setIsWalletAutoConnecting] = useState(true);
   const walletAddress = connectedAccount?.address || user?.walletAddress || user?.smartWalletAddress;
 
   const reconnectWallet = async () => {
     setError(null);
+    setIsWalletConnecting(true);
 
     try {
-      await connect(async () => {
-        if (!appWallet.getAccount()) {
-          await appWallet.connect({
-            client: thirdwebClient,
-            chain: arbitrumSepolia,
-          });
-        }
-
-        return appWallet;
-      });
+      const account = await connectWallet();
+      setConnectedAccount(account);
     } catch (err: any) {
       setError(err?.message || 'Unable to reconnect wallet. Please sign in with your wallet again.');
+    } finally {
+      setIsWalletConnecting(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsWalletAutoConnecting(true);
+    autoConnectWallet()
+      .then((account) => {
+        if (!cancelled && account) setConnectedAccount(account);
+      })
+      .finally(() => {
+        if (!cancelled) setIsWalletAutoConnecting(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Fetch ticket balance when modal opens
   useEffect(() => {
@@ -227,7 +229,7 @@ export const BookingModal = ({
   const handleBookSlot = async () => {
     if (!selectedSlot) return;
 
-    let bookingAccount = activeAccount || appWallet.getAccount();
+    let bookingAccount = connectedAccount || appWallet.getAccount();
 
     if (!bookingAccount && (isWalletAutoConnecting || isWalletConnecting)) {
       setError('Wallet is reconnecting, please wait a moment and try again.');

@@ -531,7 +531,7 @@ class StudentService {
   }
 
   /**
-   * Register a new student with wallet address (from Thirdweb social login)
+   * Register a new student with wallet address
    * Creates a new student node linked to the external wallet address
    */
   public async registerByWallet(params: {

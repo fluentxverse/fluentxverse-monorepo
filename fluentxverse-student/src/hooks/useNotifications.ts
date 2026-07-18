@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
+import { connectSocket, initSocket } from '../client/socket/socket.client';
 
 interface Notification {
   id: string;
@@ -21,31 +22,23 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Initialize Socket.IO connection
-    const initSocket = async () => {
+    // Initialize native WebSocket connection through the shared realtime adapter.
+    const initNotificationSocket = async () => {
       try {
-        const io = (window as any).io;
-        if (!io) {
-          setIsLoading(false);
-          return;
-        }
+        const socket = initSocket();
+        socketRef.current = socket;
 
-        socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
-          withCredentials: true,
-          transports: ['websocket', 'polling']
+        socket.on('connect', () => {
+          socket.emit('notification:subscribe');
         });
 
-        socketRef.current.on('connect', () => {
-          socketRef.current.emit('notification:subscribe');
-        });
-
-        socketRef.current.on('notification:list', (data: any) => {
-          setNotifications(data.notifications);
-          setUnreadCount(data.unreadCount);
+        socket.on('notification:list', (data: any) => {
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
           setIsLoading(false);
         });
 
-        socketRef.current.on('notification:new', (notification: Notification) => {
+        socket.on('notification:new', (notification: Notification) => {
           setNotifications((prev) => [notification, ...prev]);
           if (!notification.isRead) {
             setUnreadCount((prev) => prev + 1);
@@ -60,22 +53,27 @@ export const useNotifications = () => {
           }
         });
 
-        socketRef.current.on('notification:read', (data: any) => {
+        socket.on('notification:read', (data: any) => {
           setUnreadCount(data.unreadCount);
           setNotifications((prev) =>
             prev.map((n) => (n.id === data.notificationId ? { ...n, isRead: true } : n))
           );
         });
 
-        socketRef.current.on('notification:read-all', (data: any) => {
+        socket.on('notification:read-all', (data: any) => {
           setUnreadCount(data.unreadCount);
           setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
         });
 
-        socketRef.current.on('notification:delete', (data: any) => {
+        socket.on('notification:delete', (data: any) => {
           setUnreadCount(data.unreadCount);
           setNotifications((prev) => prev.filter((n) => n.id !== data.notificationId));
         });
+
+        connectSocket();
+        if (socket.connected) {
+          socket.emit('notification:subscribe');
+        }
       } catch (err) {
         console.error('Socket initialization error:', err);
         setError(err instanceof Error ? err.message : 'Connection error');
@@ -83,7 +81,7 @@ export const useNotifications = () => {
       }
     };
 
-    initSocket();
+    initNotificationSocket();
 
     // Request browser notification permission
     if ('Notification' in window && Notification.permission === 'default') {
@@ -92,7 +90,11 @@ export const useNotifications = () => {
 
     return () => {
       if (socketRef.current) {
-        socketRef.current.disconnect();
+        socketRef.current.off('notification:list');
+        socketRef.current.off('notification:new');
+        socketRef.current.off('notification:read');
+        socketRef.current.off('notification:read-all');
+        socketRef.current.off('notification:delete');
       }
     };
   }, [user]);

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "preact/hooks";
 import { LocationProvider, Router, Route, hydrate, prerender as ssr, useLocation } from 'preact-iso';
-import { ThirdwebProvider, useAutoConnect } from "thirdweb/react";
 
 import Home from './pages/Home';
 import HomeProtected from './pages/HomeProtected';
@@ -28,11 +27,9 @@ import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import ContactPage from "./pages/ContactPage";
 
-// Import shared wallet config (prevents circular imports)
-import { thirdwebClient, appWallet } from './config/wallet';
+import { appWallet, autoConnectWallet } from './config/wallet';
 
-// Re-export for other components that import from index
-export { thirdwebClient, appWallet };
+export { appWallet };
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -72,14 +69,21 @@ function AppShell() {
 		(path === '/browse-tutors' && !isAuthenticated && !initialLoading);
 	const effectiveTheme = isThemeLockedLight ? 'light' : (isDarkMode ? 'dark' : 'light');
 	
-	// Auto-connect wallet if user has previously connected
-	// This restores the wallet session on page reload
-	const { data: autoConnected } = useAutoConnect({
-		client: thirdwebClient,
-		wallets: [appWallet],
-		onConnect: (wallet) => {
-		},
-	});
+	const [autoConnected, setAutoConnected] = useState(false);
+
+	useEffect(() => {
+		let cancelled = false;
+		autoConnectWallet()
+			.then((account) => {
+				if (!cancelled) setAutoConnected(Boolean(account));
+			})
+			.catch(() => {
+				if (!cancelled) setAutoConnected(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
 
 	// Disconnect wallet if user is not authenticated (logged out)
 	// This ensures wallet state stays in sync with auth state
@@ -203,16 +207,13 @@ export function AppInner() {
 
 export function App() {
 	return (
-		<ThirdwebProvider>
-			{/* @ts-expect-error Preact/React type mismatch with thirdweb */}
-			<AuthProvider>
-				<ToastProvider>
-					<ErrorBoundary>
-						<AppInner />
-					</ErrorBoundary>
-				</ToastProvider>
-			</AuthProvider>
-		</ThirdwebProvider>
+		<AuthProvider>
+			<ToastProvider>
+				<ErrorBoundary>
+					<AppInner />
+				</ErrorBoundary>
+			</ToastProvider>
+		</AuthProvider>
 	);
 }
 

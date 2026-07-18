@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import { io, Socket } from 'socket.io-client';
 import axios from 'axios';
+import { createRealtimeSocket, type RealtimeSocket } from '../client/realtimeSocket';
 import './InterviewRoomPage.css';
 
 interface InterviewRoomPageProps {
@@ -78,7 +78,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<RealtimeSocket | null>(null);
   const callTimerRef = useRef<number | null>(null);
   const roomIdRef = useRef<string>(`interview-${interviewId || 'default'}`);
   const autoSaveTimerRef = useRef<number | null>(null);
@@ -356,10 +356,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     setIsConnecting(true);
     
     try {
-      const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:8767', {
-        transports: ['websocket'],
-        auth: { token: 'admin-interview' }
-      });
+      const socket = createRealtimeSocket();
       
       socketRef.current = socket;
       const pc = createPeerConnection();
@@ -397,6 +394,8 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       socket.on('interview:ended', () => {
         handleEndCall();
       });
+
+      await socket.connect();
       
       setSetupComplete(true);
     } catch (err) {

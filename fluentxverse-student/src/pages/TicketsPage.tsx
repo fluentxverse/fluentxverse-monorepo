@@ -1,21 +1,14 @@
 import { useState, useEffect, useCallback } from 'preact/hooks';
-import { BridgePrepareResult, CheckoutWidget, CompletedStatusResult, lightTheme, useActiveAccount, useAutoConnect } from "thirdweb/react";
-import { defineChain } from "thirdweb";
-import { Bridge } from "thirdweb";
 import { useAuthContext } from '../context/AuthContext';
 import { useTicketNotifications } from '../hooks/useTicketNotifications';
 import { useToastContext } from '../context/ToastContext';
 import { toast } from '../Components/Common/Toast';
 
-// Development mode flag - set to true to use mock checkout
-const DEV_MODE = true;
-
 // Type for checkout success callback
 type CheckoutSuccessData = {
-  quote: BridgePrepareResult;
-  statuses: Array<CompletedStatusResult>;
+  statuses: Array<{ originTxHash?: string }>;
 };
-import { thirdwebClient, appWallet } from '../config/wallet';
+import { appWallet, autoConnectWallet, type WalletAccount } from '../config/wallet';
 import { API_BASE_URL } from '../config/api';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
@@ -27,59 +20,6 @@ const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
   if (tier === 'premium') return '/assets/img/icons/premium_ticket2.webp';
   return '/assets/img/icons/trial_ticket.webp';
 };
-
-// Arbitrum chain
-const CHAIN = defineChain(42161);
-
-// Seller wallet address - replace with your actual seller wallet
-const SELLER_ADDRESS = "0x0000000000000000000000000000000000000000";
-
-// USDC token address on Arbitrum
-const USDC_ADDRESS = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
-
-// Custom theme matching FluentXVerse style - Basic (blue)
-const fluentXVerseTheme = lightTheme({
-  colors: {
-    accentText: "#0245ae",
-    accentButtonBg: "#0245ae",
-    accentButtonText: "#ffffff",
-    primaryButtonBg: "#0245ae",
-    primaryButtonText: "#ffffff",
-    primaryText: "#1e293b",
-    secondaryText: "#64748b",
-    modalBg: "#ffffff",
-    borderColor: "#e2e8f0",
-    separatorLine: "#f1f5f9",
-    tertiaryBg: "#f8fafc",
-    secondaryButtonBg: "#f1f5f9",
-    secondaryButtonHoverBg: "#e2e8f0",
-    secondaryButtonText: "#475569",
-    success: "#10b981",
-    danger: "#ef4444",
-  },
-});
-
-// Premium theme with gold colors
-const premiumTheme = lightTheme({
-  colors: {
-    accentText: "#d97706",
-    accentButtonBg: "#f59e0b",
-    accentButtonText: "#ffffff",
-    primaryButtonBg: "#f59e0b",
-    primaryButtonText: "#ffffff",
-    primaryText: "#1e293b",
-    secondaryText: "#64748b",
-    modalBg: "#ffffff",
-    borderColor: "#fcd34d",
-    separatorLine: "#fef3c7",
-    tertiaryBg: "#fffbeb",
-    secondaryButtonBg: "#fef3c7",
-    secondaryButtonHoverBg: "#fde68a",
-    secondaryButtonText: "#92400e",
-    success: "#10b981",
-    danger: "#ef4444",
-  },
-});
 
 interface TicketPackage {
   id: string;
@@ -190,28 +130,11 @@ function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckout
       
       // After showing success for 1.5 seconds, call onSuccess
       setTimeout(() => {
-        // Create mock success data - cast through unknown to bypass strict type checking
         const mockSuccessData = {
-          quote: {} as BridgePrepareResult,
           statuses: [{
-            type: 'transfer',
-            status: 'COMPLETED',
-            paymentId: `mock_payment_${Date.now()}`,
-            originAmount: BigInt(pkg.price * 1_000_000),
-            destinationAmount: BigInt(pkg.price * 1_000_000),
-            originChainId: 42161,
-            destinationChainId: 42161,
-            originTokenAddress: '0x0',
-            destinationTokenAddress: '0x0',
-            sender: '0x0',
-            receiver: '0x0',
             originTxHash: `0xmock_${Date.now().toString(16)}`,
-            destinationTxHash: `0xmock_${Date.now().toString(16)}`,
-            originToken: { chainId: 42161, address: '0x0', decimals: 6, symbol: 'USDC', name: 'USD Coin' },
-            destinationToken: { chainId: 42161, address: '0x0', decimals: 6, symbol: 'USDC', name: 'USD Coin' },
-            transactions: [],
           }],
-        } as unknown as CheckoutSuccessData;
+        };
         onSuccess(mockSuccessData);
       }, 1500);
     }, 2000 + Math.random() * 1000); // 2-3 second random delay
@@ -346,13 +269,8 @@ export default function TicketsPage() {
   const [showQuantitySelector, setShowQuantitySelector] = useState(false);
   const [packageForQuantity, setPackageForQuantity] = useState<TicketPackage | null>(null);
   
-  const activeAccount = useActiveAccount();
-  
-  // Check if wallet is still auto-connecting (loading state)
-  const { isLoading: isWalletConnecting } = useAutoConnect({
-    client: thirdwebClient,
-    wallets: [appWallet],
-  });
+  const [activeAccount, setActiveAccount] = useState<WalletAccount | null>(appWallet.getAccount());
+  const [isWalletConnecting, setIsWalletConnecting] = useState(true);
 
   // Get wallet address from connected wallet or from user's profile
   const walletAddress = activeAccount?.address || user?.walletAddress || user?.smartWalletAddress;
@@ -373,6 +291,21 @@ export default function TicketsPage() {
 
   useEffect(() => {
     document.title = 'Buy Tickets | FluentXVerse';
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsWalletConnecting(true);
+    autoConnectWallet()
+      .then((account) => {
+        if (!cancelled && account) setActiveAccount(account);
+      })
+      .finally(() => {
+        if (!cancelled) setIsWalletConnecting(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Fetch user's ticket balance from blockchain
@@ -408,51 +341,12 @@ export default function TicketsPage() {
     ? ticketPackages 
     : ticketPackages.filter(pkg => pkg.tier === selectedTier);
 
-  // Fetch quote and calculate adjusted amount to compensate for fees
   const fetchQuoteAndAdjust = async (pkg: TicketPackage) => {
     setIsLoadingQuote(true);
     setSelectedPackage(pkg);
-    
-    try {
-      // Convert USD price to USDC amount (6 decimals)
-      const targetAmountWei = BigInt(Math.floor(pkg.price * 1_000_000));
-      const receiverAddress = activeAccount?.address || SELLER_ADDRESS;
-      
-      // Get quote from Stripe onramp
-      const quote = await Bridge.Onramp.prepare({
-        client: thirdwebClient,
-        onramp: "stripe",
-        chainId: 42161, // Arbitrum chain
-        tokenAddress: USDC_ADDRESS as `0x${string}`,
-        receiver: receiverAddress as `0x${string}`,
-        amount: targetAmountWei,
-        currency: "USD",
-      });
-      
-      // Debug: log the full quote response
-      
-      // currencyAmount is what the user will actually pay in fiat (ensure it's a number)
-      const actualFiatCost = Number(quote.currencyAmount);
-      const targetPrice = pkg.price;
-      
-      // Calculate the fee/markup
-      const feeAmount = actualFiatCost - targetPrice;
-      
-      // Adjust: reduce the USDC amount so final fiat cost = target price
-      // newAmount = targetAmount - (feeAmount in USDC terms)
-      const adjustedUsdcAmount = targetPrice - feeAmount;
-      
-      
-      setAdjustedAmount(adjustedUsdcAmount.toFixed(2));
-      setShowCheckout(true);
-    } catch (error) {
-      console.error('Error fetching quote:', error);
-      // Fallback to original price if quote fails
-      setAdjustedAmount(pkg.price.toString());
-      setShowCheckout(true);
-    } finally {
-      setIsLoadingQuote(false);
-    }
+    setAdjustedAmount(pkg.price.toString());
+    setShowCheckout(true);
+    setIsLoadingQuote(false);
   };
 
   const handlePurchase = (pkg: TicketPackage) => {
@@ -923,39 +817,12 @@ export default function TicketsPage() {
               <p>You're buying: <strong>{packageForQuantity?.name}{quantity > 1 ? ` ×${quantity}` : ''}</strong></p>
             </div>
             <div className="checkout-body">
-              {DEV_MODE ? (
-                <MockCheckoutWidget
-                  pkg={selectedPackage}
-                  onSuccess={handleCheckoutSuccess}
-                  onCancel={handleCheckoutCancel}
-                  imageUrl={getTicketImageUrl(selectedPackage.tier)}
-                />
-              ) : (
-                <CheckoutWidget
-                  client={thirdwebClient}
-                  
-                  chain={CHAIN}
-                  amount={adjustedAmount || selectedPackage.price.toString()}
-                  currency="USD"
-                  tokenAddress={USDC_ADDRESS}
-                  feePayer='seller'
-                  seller={SELLER_ADDRESS}
-                  name={selectedPackage.name}
-                  description={`${selectedPackage.tickets} ${selectedPackage.tier} ticket${selectedPackage.tickets > 1 ? 's' : ''} for FluentXVerse lessons`}
-                  image={getTicketImageUrl(selectedPackage.tier)}
-                  theme={selectedPackage.tier === 'premium' ? premiumTheme : fluentXVerseTheme}
-                  buttonLabel={`Pay $${selectedPackage.price}`}
-                  onSuccess={handleCheckoutSuccess}
-                  onCancel={handleCheckoutCancel}
-                  showThirdwebBranding={false}
-                  paymentMethods={["crypto", "card"]}
-                  connectOptions={{
-                    connectModal: {
-                      size: "compact",
-                    },
-                  }}
-                />
-              )}
+              <MockCheckoutWidget
+                pkg={selectedPackage}
+                onSuccess={handleCheckoutSuccess}
+                onCancel={handleCheckoutCancel}
+                imageUrl={getTicketImageUrl(selectedPackage.tier)}
+              />
             </div>
           </div>
         </div>

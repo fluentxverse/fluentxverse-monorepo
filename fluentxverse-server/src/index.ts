@@ -87,7 +87,6 @@ const app = new Elysia({
       };
     }
   })
-  // @ts-expect-error - Elysia type conflict from monorepo hoisting (runtime works correctly)
   .use(swagger({
     documentation: {
       info: {
@@ -175,13 +174,14 @@ const app = new Elysia({
     let userMessage = 'An unexpected error occurred. Please try again.';
     
     // Handle Elysia error codes
-    if (code === 'VALIDATION') {
+    const errorCode = String(code);
+    if (errorCode === 'VALIDATION') {
       statusCode = 400;
       userMessage = 'Invalid request data. Please check your input.';
-    } else if (code === 'NOT_FOUND') {
+    } else if (errorCode === 'NOT_FOUND') {
       statusCode = 404;
       userMessage = 'The requested resource was not found.';
-    } else if (code === 'PARSE') {
+    } else if (errorCode === 'PARSE') {
       statusCode = 400;
       userMessage = 'Invalid request format.';
     }

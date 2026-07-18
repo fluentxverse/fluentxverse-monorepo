@@ -171,7 +171,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
   /**
    * Process ticket purchase - transfers NFT to buyer
    * SECURITY: This endpoint is DISABLED in production.
-   * In production, purchases are processed via Thirdweb Pay webhooks which verify payment.
+   * In production, purchases must be processed through the configured payment gateway/webhook.
    * This endpoint only exists for development/testing with mock transactions.
    * POST /tickets/purchase
    */
@@ -206,7 +206,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       }
       
       // CRITICAL: Prevent sending to vault/server wallet (would be sending to ourselves!)
-      const vaultWallet = process.env.THIRDWEB_VAULT_WALLET_ADDRESS?.toLowerCase();
+      const vaultWallet = process.env.VAULT_WALLET_ADDRESS?.toLowerCase();
       if (vaultWallet && buyerWallet.toLowerCase() === vaultWallet) {
         return {
           success: false,

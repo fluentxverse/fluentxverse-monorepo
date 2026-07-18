@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
-import { io, type Socket } from 'socket.io-client';
 import { useAuthContext } from '../context/AuthContext';
 import { adminApi, RecentActivity } from '../api/admin.api';
+import { createRealtimeSocket, type RealtimeSocket } from '../client/realtimeSocket';
 import './Header.css';
 
 export function Header() {
@@ -10,7 +10,7 @@ export function Header() {
   const [notifications, setNotifications] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const { user, logout } = useAuthContext();
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<RealtimeSocket | null>(null);
   
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -54,15 +54,11 @@ export function Header() {
     }
   }, []);
 
-  // Real-time activity feed updates via Socket.IO notifications
+  // Real-time activity feed updates via native WebSocket notifications
   useEffect(() => {
     if (!user?.userId) return;
 
-    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:8767', {
-      transports: ['websocket', 'polling'],
-      withCredentials: true
-    });
-
+    const socket = createRealtimeSocket();
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -80,6 +76,8 @@ export function Header() {
     socket.on('minting:update', (data: any) => {
       loadNotifications();
     });
+
+    void socket.connect();
 
     return () => {
       socket.off('notification:new');

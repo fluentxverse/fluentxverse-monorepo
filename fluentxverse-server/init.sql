@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS system_messages (
   category VARCHAR(50) NOT NULL DEFAULT 'announcement' CHECK (category IN ('announcement', 'update', 'alert', 'news', 'promotion')),
   target_audience VARCHAR(20) NOT NULL DEFAULT 'all' CHECK (target_audience IN ('all', 'students', 'tutors')),
   priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
-  created_by VARCHAR(255),  -- User ID from thirdweb (not UUID)
+  created_by VARCHAR(255),  -- External auth user ID (not UUID)
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS system_messages (
 CREATE TABLE IF NOT EXISTS system_message_recipients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   message_id UUID REFERENCES system_messages(id) ON DELETE CASCADE,
-  user_id VARCHAR(255) NOT NULL,  -- User ID from thirdweb (not UUID)
+  user_id VARCHAR(255) NOT NULL,  -- External auth user ID (not UUID)
   user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('tutor', 'student')),
   is_read BOOLEAN DEFAULT false,
   is_pinned BOOLEAN DEFAULT false,
@@ -148,7 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_system_message_recipients_read ON system_message_
 -- These are idempotent and safe to run multiple times
 -- ===========================================
 
--- Fix: system_messages.created_by should be VARCHAR, not UUID (thirdweb user IDs are strings)
+-- Fix: system_messages.created_by should be VARCHAR, not UUID (external auth user IDs are strings)
 -- Drop FK constraint if it exists (from older schema versions)
 ALTER TABLE system_messages DROP CONSTRAINT IF EXISTS system_messages_created_by_fkey;
 

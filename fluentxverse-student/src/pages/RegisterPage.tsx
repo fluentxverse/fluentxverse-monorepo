@@ -7,8 +7,6 @@ import { register } from '../api/auth.api';
 import { useAuthContext } from '../context/AuthContext';
 import { getErrorMessage } from '../api/utils';
 import './RegisterPage.css';
-import { getUserEmail } from 'thirdweb/wallets/in-app';
-import { thirdwebClient } from '../config/wallet';
 
 const RegisterPage = () => {
   const { login, registerByWallet } = useAuthContext();
@@ -19,8 +17,6 @@ const RegisterPage = () => {
   const [step, setStep] = useState(1);
   const [tutorId, setTutorId] = useState<string | null>(null);
   const [pendingWallet, setPendingWallet] = useState<string | null>(null);
-  const [isLoadingEmail, setIsLoadingEmail] = useState(false);
-  const [oauthEmail, setOauthEmail] = useState<string | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   
   
@@ -49,24 +45,6 @@ const RegisterPage = () => {
     const walletAddress = localStorage.getItem('fxv_pending_wallet');
     if (walletAddress) {
       setPendingWallet(walletAddress);
-      
-      // Fetch email from OAuth provider
-      const fetchOAuthEmail = async () => {
-        setIsLoadingEmail(true);
-        try {
-          const email = await getUserEmail({ client: thirdwebClient });
-          if (email) {
-            setOauthEmail(email);
-            setFormData(prev => ({ ...prev, email }));
-          }
-        } catch (err) {
-          console.error('Failed to fetch OAuth email:', err);
-        } finally {
-          setIsLoadingEmail(false);
-        }
-      };
-      
-      fetchOAuthEmail();
     }
     
     return () => {
@@ -374,26 +352,14 @@ const RegisterPage = () => {
                         <div className="form-row">
                           <div className="form-group">
                             <label className="form-label">이메일 <span className={pendingWallet ? '' : 'required'}>{pendingWallet ? '(선택사항)' : '*'}</span></label>
-                            {isLoadingEmail ? (
-                              <div className="form-input form-input-loading">
-                                <span>이메일 불러오는 중...</span>
-                              </div>
-                            ) : (
-                              <input 
-                                type="email" 
-                                className={`form-input ${oauthEmail ? 'form-input-readonly' : ''}`}
-                                placeholder="your@email.com" 
-                                value={formData.email} 
-                                onChange={(e) => !oauthEmail && handleChange('email', (e.target as HTMLInputElement).value)} 
-                                readOnly={!!oauthEmail}
-                                required={!pendingWallet} 
-                              />
-                            )}
-                            {oauthEmail && (
-                              <span className="form-hint">
-                                <i className="ri-shield-check-line"></i> OAuth 인증으로 확인된 이메일입니다
-                              </span>
-                            )}
+                            <input
+                              type="email"
+                              className="form-input"
+                              placeholder="your@email.com"
+                              value={formData.email}
+                              onChange={(e) => handleChange('email', (e.target as HTMLInputElement).value)}
+                              required={!pendingWallet}
+                            />
                           </div>
                           <div className="form-group">
                             <label className="form-label">휴대폰 번호 <span className={pendingWallet ? '' : 'required'}>{pendingWallet ? '(선택사항)' : '*'}</span></label>

@@ -365,26 +365,6 @@
   color: #64748b;
 }
 
-/* Thirdweb Badge */
-.thirdweb-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.thirdweb-badge svg {
-  opacity: 0.7;
-}
-
-.dark-mode .thirdweb-badge {
-  color: #64748b;
-}
-
 /* Footer */
 .social-login-modal .modal-footer {
   text-align: center;

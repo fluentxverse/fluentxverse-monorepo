@@ -6,18 +6,17 @@ x-logging: &default-logging
 
 services:
   # ===========================================
-  # MAIN BUN SERVER (API + WebSocket)
+  # MAIN GO SERVER (API + WebSocket)
   # ===========================================
   fluentxverse-server:
     build:
-      context: .
+      context: ../fluentxverse-go-server
       dockerfile: Dockerfile
     container_name: fluentxverse-server
     restart: unless-stopped
     logging: *default-logging
     ports:
       - "${API_PORT:-8765}:8765"
-      - "${SOCKET_PORT:-8767}:8767"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       # Database connections (using container names)
@@ -40,12 +39,10 @@ services:
       - FRONTEND_URLS=${FRONTEND_URLS:-http://localhost:5173,http://localhost:5174,http://localhost:5175,https://student.fluentxverse.xyz,https://tutor.fluentxverse.xyz,https://dashboard.fluentxverse.xyz}
       # Notifications
       - NOTIFICATION_RETENTION_DAYS=${NOTIFICATION_RETENTION_DAYS:-30}
-      # Thirdweb
-      - THIRDWEB_SECRET_KEY=${THIRDWEB_SECRET_KEY}
-      - THIRDWEB_CLIENT_ID=${THIRDWEB_CLIENT_ID}
-      - THIRDWEB_VAULT_WALLET_ADDRESS=${THIRDWEB_VAULT_WALLET_ADDRESS}
-      - THIRDWEB_VAULT_ACCESS_TOKEN=${THIRDWEB_VAULT_ACCESS_TOKEN}
-      - THIRDWEB_VAULT_ADMIN_KEY=${THIRDWEB_VAULT_ADMIN_KEY}
+      # GMR Engine / Web3
+      - GMR_ENGINE_API_BASE=${GMR_ENGINE_API_BASE}
+      - GMR_ENGINE_API_KEY=${GMR_ENGINE_API_KEY}
+      - VAULT_WALLET_ADDRESS=${VAULT_WALLET_ADDRESS}
       # OpenAI
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       # Tutor certification proof issuance
@@ -60,6 +57,10 @@ services:
       # Ticket Contract (optional)
       - TICKET_CONTRACT_ADDRESS=${TICKET_CONTRACT_ADDRESS:-0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db}
       - TICKET_CHAIN_ID=${TICKET_CHAIN_ID:-421614}
+      - TICKET_RPC_URL=${TICKET_RPC_URL:-https://sepolia-rollup.arbitrum.io/rpc}
+      - TICKET_BASIC_TOKEN_ID=${TICKET_BASIC_TOKEN_ID}
+      - TICKET_PREMIUM_TOKEN_ID=${TICKET_PREMIUM_TOKEN_ID}
+      - TICKET_TRIAL_TOKEN_ID=${TICKET_TRIAL_TOKEN_ID}
     depends_on:
       fluentxverse-postgres:
         condition: service_healthy
