@@ -576,7 +576,17 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get sessions');
     }
-    return response.data.data!;
+    const data = response.data.data as any;
+    const rawSessions = asArray<SessionListItem>(data?.sessions || data);
+    const sessions = rawSessions.map(normalizeSessionListItem);
+    const total = data?.total ?? sessions.length;
+    const limit = params?.limit || 15;
+    return {
+      sessions,
+      total,
+      page: data?.page ?? params?.page ?? 1,
+      totalPages: data?.totalPages ?? Math.max(1, Math.ceil(total / limit)),
+    };
   },
 
   /**
@@ -587,7 +597,7 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get session stats');
     }
-    return response.data.data!;
+    return normalizeSessionStats(response.data.data);
   },
 
   /**
@@ -598,8 +608,103 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get session details');
     }
-    return response.data.data!;
+    return normalizeSessionDetails(response.data.data);
   }
+};
+
+const emptySessionStats: SessionStats = {
+  totalBookings: 0,
+  completedSessions: 0,
+  cancelledSessions: 0,
+  upcomingSessions: 0,
+  todaySessions: 0,
+  thisWeekSessions: 0,
+  thisMonthSessions: 0,
+  noShowSessions: 0,
+  completionRate: 0,
+  totalHours: 0,
+};
+
+const normalizeSessionStats = (value: any): SessionStats => {
+  if (!Array.isArray(value)) {
+    return { ...emptySessionStats, ...(value || {}) };
+  }
+  const stats = { ...emptySessionStats };
+  value.forEach((row) => {
+    const status = String(row?.status || '').toLowerCase();
+    const count = Number(row?.count || 0);
+    stats.totalBookings += count;
+    if (status === 'completed') stats.completedSessions += count;
+    if (status === 'cancelled') stats.cancelledSessions += count;
+    if (status === 'confirmed' || status === 'booked' || status === 'scheduled') stats.upcomingSessions += count;
+    if (status === 'no_show' || status === 'no-show') stats.noShowSessions += count;
+  });
+  stats.completionRate = stats.totalBookings > 0 ? Math.round((stats.completedSessions / stats.totalBookings) * 100) : 0;
+  return stats;
+};
+
+const unwrapSession = (value: any) => value?.s || value?.session || value || {};
+
+const normalizeSessionListItem = (value: any): SessionListItem => {
+  const session = unwrapSession(value);
+  return {
+    id: String(session.id || ''),
+    tutorId: String(session.tutorId || ''),
+    tutorName: String(session.tutorName || session.tutor || 'Unknown tutor'),
+    tutorEmail: String(session.tutorEmail || ''),
+    tutorAvatar: session.tutorAvatar || session.tutorProfilePicture,
+    studentId: String(session.studentId || ''),
+    studentName: String(session.studentName || session.student || 'Unknown student'),
+    studentEmail: String(session.studentEmail || ''),
+    studentAvatar: session.studentAvatar || session.studentProfilePicture,
+    slotDate: String(session.slotDate || session.date || ''),
+    slotTime: String(session.slotTime || session.time || ''),
+    durationMinutes: Number(session.durationMinutes || session.duration || 25),
+    status: String(session.status || 'confirmed'),
+    attendanceTutor: session.attendanceTutor || session.tutorAttendance || null,
+    attendanceStudent: session.attendanceStudent || session.studentAttendance || null,
+    bookedAt: String(session.bookedAt || session.createdAt || ''),
+    completedAt: session.completedAt || null,
+    cancelledAt: session.cancelledAt || null,
+    cancelReason: session.cancelReason || null,
+  };
+};
+
+const normalizeSessionDetails = (value: any): SessionDetails => {
+  const session = normalizeSessionListItem(value);
+  return {
+    id: session.id,
+    tutor: {
+      id: session.tutorId,
+      name: session.tutorName,
+      email: session.tutorEmail,
+      avatar: session.tutorAvatar,
+    },
+    student: {
+      id: session.studentId,
+      name: session.studentName,
+      email: session.studentEmail,
+      avatar: session.studentAvatar,
+    },
+    schedule: {
+      date: session.slotDate,
+      time: session.slotTime,
+      durationMinutes: session.durationMinutes,
+      timezone: 'KST',
+    },
+    status: session.status,
+    attendance: {
+      tutor: session.attendanceTutor,
+      student: session.attendanceStudent,
+    },
+    timestamps: {
+      bookedAt: session.bookedAt,
+      completedAt: session.completedAt,
+      cancelledAt: session.cancelledAt,
+    },
+    cancelReason: session.cancelReason,
+    ticketUsed: unwrapSession(value).ticketUsed || unwrapSession(value).ticketId || null,
+  };
 };
 
 // Session types

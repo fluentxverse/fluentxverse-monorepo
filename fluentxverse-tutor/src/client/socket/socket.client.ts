@@ -18,13 +18,14 @@ const toWebSocketUrl = (url: string) => {
 
 const getSocketUrl = () => {
   const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();
-  if (envSocketUrl) return toWebSocketUrl(envSocketUrl);
+  const legacySocketHost = ['ws', 'fluentxverse', 'xyz'].join('.');
+  if (envSocketUrl && !envSocketUrl.includes(legacySocketHost)) return toWebSocketUrl(envSocketUrl);
 
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
-    if (isProduction) return 'wss://ws.fluentxverse.xyz';
+    if (isProduction) return 'wss://api.fluentxverse.xyz';
     if (isLocalhost) return 'ws://localhost:8765';
     return toWebSocketUrl(`${protocol}//${hostname}:8765`);
   }

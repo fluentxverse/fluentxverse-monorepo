@@ -243,6 +243,9 @@ services:
     build:
       context: ../fluentxverse-student
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://api.fluentxverse.xyz
+        VITE_SOCKET_URL: wss://api.fluentxverse.xyz
     container_name: fluentxverse-student
     restart: unless-stopped
     logging: *default-logging
@@ -261,7 +264,7 @@ services:
         # Public HTTPS API origin (baked into the Vite build)
         # IMPORTANT: Hardcoded to ensure consistent builds via webhook
         VITE_API_URL: https://api.fluentxverse.xyz
-        VITE_SOCKET_URL: https://ws.fluentxverse.xyz
+        VITE_SOCKET_URL: wss://api.fluentxverse.xyz
         VITE_ENABLE_NOTIFICATION_SOCKET: "true"
     container_name: fluentxverse-tutor
     restart: unless-stopped
