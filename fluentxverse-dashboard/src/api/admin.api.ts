@@ -495,7 +495,11 @@ export const adminApi = {
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to get system messages');
     }
-    return response.data.data!;
+    const data = response.data.data;
+    return {
+      messages: asArray(data?.messages),
+      total: data?.total ?? 0,
+    };
   },
 
   /**

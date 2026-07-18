@@ -148,7 +148,7 @@ func (s *Service) AdminMessages(ctx context.Context, filters AdminFilters) (map[
 		return nil, err
 	}
 	defer rows.Close()
-	var messages []map[string]any
+	messages := []map[string]any{}
 	for rows.Next() {
 		item, err := scanSystemMessage(rows)
 		if err != nil {
@@ -213,7 +213,7 @@ func (s *Service) UserMessages(ctx context.Context, filters UserFilters) (map[st
 		return nil, err
 	}
 	defer rows.Close()
-	var messages []map[string]any
+	messages := []map[string]any{}
 	for rows.Next() {
 		item, err := scanSystemMessageWithStatus(rows)
 		if err != nil {

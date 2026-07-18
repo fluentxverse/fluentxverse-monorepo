@@ -43,7 +43,7 @@ const InboxPage = () => {
         targetAudience: filterAudience || undefined,
         limit: 100
       });
-      setMessages(result.messages);
+      setMessages(Array.isArray(result.messages) ? result.messages : []);
     } catch (err: any) {
       setError(err.message || 'Failed to load messages');
     } finally {
