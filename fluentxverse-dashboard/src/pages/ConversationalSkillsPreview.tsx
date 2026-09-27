@@ -10,6 +10,22 @@ import './ConversationalSkillsPreview.css';
 
 type ConversationalTheme = 'light' | 'dark';
 
+const legacyLessonAssetBase = 'http://localhost:8765/lesson/files/';
+const lessonAssetBase = `${(import.meta.env.VITE_API_URL || 'http://localhost:8765').replace(/\/$/, '')}/lesson/files/`;
+
+function resolveLegacyLessonAssets<T>(value: T): T {
+  if (typeof value === 'string') {
+    return (value.startsWith(legacyLessonAssetBase)
+      ? lessonAssetBase + value.slice(legacyLessonAssetBase.length)
+      : value) as T;
+  }
+  if (Array.isArray(value)) return value.map(resolveLegacyLessonAssets) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveLegacyLessonAssets(item)])) as T;
+  }
+  return value;
+}
+
 const getStoredConversationalTheme = (): ConversationalTheme => {
   try {
     return (localStorage.getItem('csve-theme') as ConversationalTheme) || 'light';
@@ -563,7 +579,7 @@ export default function ConversationalSkillsPreview() {
       if (storedData) {
         try {
           const parsed = JSON.parse(storedData);
-          setPreviewOverrides(parsed);
+          setPreviewOverrides(resolveLegacyLessonAssets(parsed));
           if (parsed.theme === 'dark' || parsed.theme === 'light') {
             setTheme(parsed.theme);
           }
@@ -581,7 +597,7 @@ export default function ConversationalSkillsPreview() {
       setLoading(true);
       // Use public endpoint so it works from student/tutor apps (iframe)
       const data = await getPublicLessonById(lessonId);
-      setLesson(data);
+      setLesson(resolveLegacyLessonAssets(data));
       setError(null);
     } catch (err) {
       console.error('Failed to load lesson from API:', err);
