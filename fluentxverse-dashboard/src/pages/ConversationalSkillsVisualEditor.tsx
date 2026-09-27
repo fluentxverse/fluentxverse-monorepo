@@ -2042,7 +2042,7 @@ export default function ConversationalSkillsVisualEditor() {
     reader.readAsDataURL(file);
   };
 
-  const handleOpenPreview = () => {
+  const handleOpenPreview = (layout: 1 | 2) => {
     if (!lesson) return;
     sessionStorage.setItem(`preview-${lesson.id}`, JSON.stringify({
       theme,
@@ -2061,7 +2061,8 @@ export default function ConversationalSkillsVisualEditor() {
       missionData2,
       feedbackData,
     }));
-    window.open(`/conversational-skills-preview/${lesson.id}`, '_blank');
+    const url = `/conversational-skills-preview/${lesson.id}${layout === 2 ? '?layout=2' : ''}`;
+    window.open(url, '_blank');
   };
 
   const toggleTheme = () => {
@@ -2337,9 +2338,13 @@ export default function ConversationalSkillsVisualEditor() {
             <i className="ri-question-line" />
             <span>Help</span>
           </button>
-          <button className="csve-toolbar-btn csve-preview-btn" onClick={handleOpenPreview}>
+          <button className="csve-toolbar-btn csve-preview-btn" onClick={() => handleOpenPreview(1)}>
             <i className="ri-eye-line" />
             <span>Preview</span>
+          </button>
+          <button className="csve-toolbar-btn csve-preview-btn" onClick={() => handleOpenPreview(2)} title="Open the alternate lesson layout">
+            <i className="ri-layout-grid-line" />
+            <span>Preview 2</span>
           </button>
           <button 
             className="csve-toolbar-btn csve-save-btn" 
@@ -2923,7 +2928,7 @@ function StoryOverviewEditor({ data, onChange, lessonId }: StoryOverviewEditorPr
         <div className="csve-story-header-left">
           <i className="ri-movie-2-line" />
           <h2>📺 Story Mode</h2>
-          <span className="csve-story-badge">K-Drama Style</span>
+          <span className="csve-story-badge">Story Series</span>
         </div>
         <div className="csve-story-header-right">
           <label className="csve-story-toggle" onClick={(e) => e.stopPropagation()}>
@@ -3012,7 +3017,7 @@ function StoryOverviewEditor({ data, onChange, lessonId }: StoryOverviewEditorPr
                             className="csve-char-korean"
                             value={char.koreanName || ''}
                             onChange={(e) => updateCharacter(char.id, { koreanName: (e.target as HTMLInputElement).value })}
-                            placeholder="한글 이름"
+                            placeholder="Name in support language"
                           />
                           <button 
                             className="csve-char-remove"
@@ -7140,6 +7145,40 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
     onChange({ ...data, ...updates });
   };
 
+  const renderInstructionEditor = () => (
+    <div className="csve-mission-instruction-box">
+      <RichTextInput
+        className="csve-mission-instruction"
+        value={data.instruction}
+        onChange={html => updateData({ instruction: html })}
+        placeholder="Describe what the learner should do..."
+        singleLine={false}
+      />
+      {data.instructionTranslation !== undefined ? (
+        <div className="csve-mission-instruction-translation">
+          <RichTextInput
+            className="csve-mission-translation-input"
+            value={data.instructionTranslation || ''}
+            onChange={html => updateData({ instructionTranslation: html })}
+            placeholder="Japanese translation..."
+            singleLine={false}
+          />
+          <button
+            className="csve-remove-translation-btn"
+            title="Remove translation"
+            onClick={() => updateData({ instructionTranslation: undefined })}
+          >
+            <i className="ri-close-line" />
+          </button>
+        </div>
+      ) : (
+        <button className="csve-add-translation-btn" onClick={() => updateData({ instructionTranslation: '' })}>
+          <i className="ri-translate-2" /> Add Translation
+        </button>
+      )}
+    </div>
+  );
+
   const handleImageUpload = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -7358,6 +7397,8 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
               </div>
 
               {/* Grammar Tip (Optional) */}
+              {renderInstructionEditor()}
+
               {data.showGrammarTip ? (
                 <div className="csve-mission-grammar-tip">
                   <div className="csve-grammar-tip-header">
@@ -7827,6 +7868,8 @@ function MissionSectionEditor({ data, onChange, hideHeader = false }: MissionSec
               </div>
 
               {/* Grammar Tip */}
+              {renderInstructionEditor()}
+
               {data.showGrammarTip ? (
                 <div className="csve-mission-grammar-tip">
                   <div className="csve-grammar-tip-header">

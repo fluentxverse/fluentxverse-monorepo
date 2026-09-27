@@ -396,6 +396,7 @@ interface MissionQuestion {
 
 interface MissionTutorStep {
   instruction: string;
+  listeningScript?: string;
   scripts?: { text: string }[];
   prompts?: { text: string }[];
   tips?: { text: string }[];
@@ -553,6 +554,7 @@ export default function ConversationalSkillsPreview() {
   const [theme, setTheme] = useState<ConversationalTheme>(getStoredConversationalTheme);
 
   const id = params?.id;
+  const isLayoutTwo = new URLSearchParams(window.location.search).get('layout') === '2';
 
   useEffect(() => {
     if (id) {
@@ -669,6 +671,16 @@ export default function ConversationalSkillsPreview() {
   const skill = lesson?.skill ?? 'speaking';
   const chapter = lesson?.chapter ?? 1;
   const lessonNumber = lesson?.lessonNumber ?? 1;
+  const outlineSections: { label: string; selector: string; occurrence?: number; available: boolean }[] = [
+    { label: 'Introduce', selector: '.csp-intro-section', available: true },
+    { label: 'Learn', selector: '.csp-learn-section', available: true },
+    { label: 'Language Focus', selector: '.csp-stepb-section', available: !!stepBData },
+    { label: 'Apply', selector: '.csp-apply-section', available: !!applyData },
+    { label: 'Exercise', selector: '.csp-exercise-section', available: !!exerciseData },
+    { label: 'Challenge 1', selector: '.csp-mission-section', available: !!missionData },
+    { label: 'Challenge 2', selector: '.csp-mission-section', occurrence: 1, available: !!missionData2 },
+    { label: 'Feedback', selector: '.csp-feedback-section', available: !!feedbackData },
+  ].filter(section => section.available);
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
@@ -678,7 +690,7 @@ export default function ConversationalSkillsPreview() {
   };
 
   return (
-    <div className={`csp-fullpage csp-${theme}`}>
+    <div className={`csp-fullpage csp-${theme}${isLayoutTwo ? ' csp-preview-2' : ''}`}>
       {/* Top Navigation Bar */}
       <nav className="csp-topbar">
         <div className="csp-topbar-content">
@@ -712,6 +724,21 @@ export default function ConversationalSkillsPreview() {
 
       {/* Content Sections */}
       <main className="csp-main">
+        {isLayoutTwo && (
+          <nav className="csp-preview-outline" aria-label="Lesson sections">
+            <span className="csp-preview-outline-title">LESSON SECTIONS</span>
+            {outlineSections.map((section, index) => (
+              <button
+                key={section.label}
+                type="button"
+                onClick={() => document.querySelectorAll(section.selector)[section.occurrence ?? 0]?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              >
+                <span className="csp-preview-outline-number">{String(index + 1).padStart(2, '0')}</span>
+                <span>{section.label}</span>
+              </button>
+            ))}
+          </nav>
+        )}
         <div className="csp-sections">
           {/* Introduction Section */}
           <IntroductionSection data={introductionData} />
@@ -1433,6 +1460,9 @@ function ApplySection({ data }: ApplySectionProps) {
         <div className="csp-apply-left">
           {/* Situation Text */}
           <p className="csp-apply-situation">{data.situationText}</p>
+          {data.situationTranslation && (
+            <p className="csp-mission-translation">{data.situationTranslation}</p>
+          )}
 
           {/* Situation Image */}
           {data.situationImage && (
@@ -2404,6 +2434,13 @@ function MissionSection({ data, hideHeader = false }: MissionSectionProps) {
                   <span className="csp-guide-number">{stepIdx + 1}</span>
                   <div className="csp-guide-content">
                     <p className="csp-guide-instruction">{step.instruction}</p>
+
+                    {step.listeningScript && (
+                      <div className="csp-listening-script-box">
+                        <strong>Listening script</strong>
+                        <div dangerouslySetInnerHTML={{ __html: step.listeningScript }} />
+                      </div>
+                    )}
 
                     {/* Scripts + Prompts interleaved */}
                     {interleaveStepContent(step.scripts || [], step.prompts || []).map((item, idx) => (

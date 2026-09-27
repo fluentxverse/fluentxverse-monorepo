@@ -2454,8 +2454,9 @@
 }
 
 .csp-trivia-image img {
-  max-width: 200px;
-  max-height: 200px;
+  width: 25%;
+  max-width: 100%;
+  height: auto;
   object-fit: contain;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -4730,7 +4731,6 @@
   .csp-intro-image img,
   .csp-apply-image img,
   .csp-reading-image img,
-  .csp-trivia-image img,
   .csp-mission-image img,
   .csp-choose-image img,
   .csp-mc-image img,
@@ -4739,6 +4739,11 @@
     max-width: 100%;
     height: auto;
     object-fit: cover;
+  }
+
+  .csp-trivia-image img {
+    width: 25%;
+    max-width: 100%;
   }
 
   .csp-pronunciation-table,
@@ -4934,5 +4939,278 @@
 
   .csp-fb-focus-tag {
     white-space: normal;
+  }
+}
+
+/* Alternate lesson layout used only by Preview 2. */
+.csp-fullpage.csp-preview-2 {
+  --primary: #177f79;
+  --primary-dark: #116b66;
+  background: #eef3f3;
+}
+
+.csp-fullpage.csp-preview-2.csp-dark {
+  --primary: #168980;
+  --primary-dark: #0d7169;
+  background: #171c1d;
+}
+
+.csp-preview-2 .csp-hero {
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
+  padding: 3.25rem 2rem 1.75rem;
+}
+
+.csp-preview-2 .csp-hero-content {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.csp-preview-2 .csp-lesson-name {
+  font-size: 2rem;
+  font-style: normal;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+.csp-preview-2 .csp-goal-wrapper {
+  display: block;
+  text-align: left;
+}
+
+.csp-preview-2 .csp-goal-row {
+  display: flex;
+  flex-wrap: wrap;
+  line-height: 1.4;
+}
+
+.csp-preview-2 .csp-goal-en {
+  line-height: 1.4;
+}
+
+.csp-preview-2 .csp-main {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 2rem;
+  max-width: 1480px;
+  padding: 2rem 1.5rem 5rem;
+}
+
+.csp-preview-2 .csp-preview-outline {
+  position: sticky;
+  top: 1.5rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: #fff;
+  border: 1px solid #d6e1e2;
+  border-radius: 6px;
+}
+
+.csp-preview-2.csp-dark .csp-preview-outline {
+  background: #252b2d;
+  border-color: #424b4d;
+}
+
+.csp-preview-2 .csp-preview-outline-title {
+  padding: 0.5rem 0.65rem 0.75rem;
+  color: #577174;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.csp-preview-2.csp-dark .csp-preview-outline-title {
+  color: #aec6c7;
+}
+
+.csp-preview-2 .csp-preview-outline button {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 38px;
+  padding: 0.5rem 0.65rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #26393b;
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.csp-preview-2 .csp-preview-outline button:hover,
+.csp-preview-2 .csp-preview-outline button:focus-visible {
+  background: #e5f3f1;
+  outline-color: #177f79;
+}
+
+.csp-preview-2.csp-dark .csp-preview-outline button {
+  color: #eef3f3;
+}
+
+.csp-preview-2.csp-dark .csp-preview-outline button:hover,
+.csp-preview-2.csp-dark .csp-preview-outline button:focus-visible {
+  background: #314746;
+}
+
+.csp-preview-2 .csp-preview-outline-number {
+  color: #b16343;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.csp-preview-2.csp-dark .csp-preview-outline-number {
+  color: #e0a88a;
+}
+
+.csp-preview-2 .csp-sections {
+  min-width: 0;
+  gap: 0;
+}
+
+.csp-preview-2 .csp-sections > * {
+  min-width: 0;
+  margin: 0;
+  padding: 1.25rem 0 2.5rem;
+  border-bottom: 1px solid #d4dfe0;
+  scroll-margin-top: 1.5rem;
+}
+
+.csp-preview-2.csp-dark .csp-sections > * {
+  border-bottom-color: #394345;
+}
+
+.csp-preview-2 .csp-sections > *:first-child {
+  padding-top: 0;
+}
+
+.csp-preview-2 :is(.csp-intro-layout, .csp-learn-layout, .csp-stepb-layout, .csp-apply-layout, .csp-trivia-row, .csp-exercise-layout, .csp-mission-layout, .csp-feedback-layout) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+.csp-preview-2 :is(.csp-intro-left, .csp-intro-right, .csp-learn-left, .csp-stepb-left, .csp-exercise-layout) {
+  padding-top: 0;
+}
+
+.csp-preview-2 :is(.csp-intro-right-sticky, .csp-learn-right .csp-tutor-guide:first-child, .csp-stepb-right, .csp-apply-right, .csp-exercise-right, .csp-mission-right, .csp-feedback-right) {
+  position: static;
+  top: auto;
+}
+
+.csp-preview-2 .csp-vocab-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.csp-preview-2 .csp-learn-right {
+  order: initial;
+}
+
+.csp-preview-2 .csp-vocab-image {
+  aspect-ratio: 3 / 2;
+}
+
+.csp-preview-2 .csp-guide-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.csp-preview-2 .csp-tutor-guide {
+  border-radius: 4px;
+  border-left: 3px solid var(--primary);
+}
+
+.csp-preview-2 .csp-guide-step {
+  min-width: 0;
+  border-radius: 4px;
+}
+
+.csp-preview-2 .csp-guide-header {
+  text-decoration: none;
+}
+
+.csp-preview-2 .csp-trivia-row {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 1000px) {
+  .csp-preview-2 .csp-main {
+    display: block;
+    padding: 1.25rem 1rem 4rem;
+  }
+
+  .csp-preview-2 .csp-preview-outline {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .csp-preview-2 .csp-preview-outline-title {
+    display: none;
+  }
+
+  .csp-preview-2 .csp-preview-outline button {
+    flex: 0 0 auto;
+    width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .csp-preview-2 .csp-topbar {
+    min-height: 44px;
+    padding-right: 6rem;
+  }
+
+  .csp-preview-2 .csp-course-info {
+    font-size: 0.625rem;
+    line-height: 1.2;
+  }
+
+  .csp-preview-2 .csp-theme-btn,
+  .csp-preview-2 .csp-close-btn {
+    top: 0.25rem;
+  }
+
+  .csp-preview-2 .csp-theme-btn {
+    right: 3.25rem;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .csp-preview-2 .csp-theme-btn span {
+    display: none;
+  }
+
+  .csp-preview-2 .csp-close-btn {
+    right: 0.75rem;
+  }
+
+  .csp-preview-2 .csp-hero {
+    min-height: 180px;
+    padding: 3rem 1rem 1.25rem;
+  }
+
+  .csp-preview-2 .csp-lesson-name {
+    font-size: 1.5rem;
+  }
+
+  .csp-preview-2 .csp-vocab-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .csp-preview-2 .csp-guide-steps {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
