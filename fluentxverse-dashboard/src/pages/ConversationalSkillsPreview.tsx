@@ -550,6 +550,10 @@ export default function ConversationalSkillsPreview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>('');
   const [previewOverrides, setPreviewOverrides] = useState<{
+    levelBadge?: LessonMaterial['levelBadge'];
+    skill?: LessonMaterial['skill'];
+    chapter?: number;
+    lessonNumber?: number;
     theme?: ConversationalTheme;
     backgroundImage?: string;
     overlayColor?: string;
@@ -683,10 +687,10 @@ export default function ConversationalSkillsPreview() {
     (lesson as any)?.feedbackData;
 
   // Get lesson metadata with fallbacks for unpublished lessons
-  const levelBadge = lesson?.levelBadge ?? 'L1';
-  const skill = lesson?.skill ?? 'speaking';
-  const chapter = lesson?.chapter ?? 1;
-  const lessonNumber = lesson?.lessonNumber ?? 1;
+  const levelBadge = previewOverrides?.levelBadge ?? lesson?.levelBadge ?? 'L1';
+  const skill = previewOverrides?.skill ?? lesson?.skill ?? 'speaking';
+  const chapter = previewOverrides?.chapter ?? lesson?.chapter ?? 1;
+  const lessonNumber = previewOverrides?.lessonNumber ?? lesson?.lessonNumber ?? 1;
   const outlineSections: { label: string; selector: string; occurrence?: number; available: boolean }[] = [
     { label: 'Introduce', selector: '.csp-intro-section', available: true },
     { label: 'Learn', selector: '.csp-learn-section', available: true },

@@ -2045,6 +2045,10 @@ export default function ConversationalSkillsVisualEditor() {
   const handleOpenPreview = (layout: 1 | 2) => {
     if (!lesson) return;
     sessionStorage.setItem(`preview-${lesson.id}`, JSON.stringify({
+      levelBadge: lesson.levelBadge,
+      skill: lesson.skill,
+      chapter: lesson.chapter,
+      lessonNumber: lesson.lessonNumber,
       theme,
       backgroundImage,
       overlayColor,
