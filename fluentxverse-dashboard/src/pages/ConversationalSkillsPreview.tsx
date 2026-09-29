@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
+import { FixedFeedbackGuide } from '../components/FixedFeedbackGuide';
 import './ConversationalSkillsPreview.css';
 
 type ConversationalTheme = 'light' | 'dark';
@@ -75,7 +76,7 @@ const DEFAULT_INTRODUCTION_DATA: IntroductionData = {
   lessonGoalDuration: "1 minute",
   lessonGoalSteps: [
     { instruction: "Introduce the lesson topic.", script: "Today, let's talk about gestures.", question: null },
-    { instruction: "Read the lesson goal and ask if it's clear.", script: null, question: null },
+    { instruction: "Read the lesson objective and ask if it's clear.", script: null, question: null },
     { instruction: "Read the Introduce explanation.", script: null, question: null },
     { instruction: "Ask the question below.", script: null, question: null },
     { instruction: "Transition to the next section.", script: "Good! Let's go to the next part!", question: null }
@@ -734,7 +735,7 @@ export default function ConversationalSkillsPreview() {
           
           <div className="csp-goal-wrapper">
             <div className="csp-goal-row">
-              <span className="csp-goal-badge">GOAL</span>
+              <span className="csp-goal-badge">LESSON OBJECTIVE</span>
               <p className="csp-goal-en">{goalTextEn}</p>
             </div>
             <p className="csp-goal-jp">{goalTextJp}</p>
@@ -864,7 +865,7 @@ function IntroductionSection({ data }: IntroductionSectionProps) {
             {/* Lesson Goal Box */}
             <div className="csp-lesson-goal-box">
               {/* FIXED: "LESSON GOAL" label, EDITABLE: duration */}
-              <div className="csp-goal-header">LESSON GOAL ({data.lessonGoalDuration})</div>
+              <div className="csp-goal-header">LESSON OBJECTIVE ({data.lessonGoalDuration})</div>
               {/* EDITABLE: Steps */}
               <div className="csp-goal-steps">
                 {data.lessonGoalSteps.map((step, i) => (
@@ -2528,7 +2529,7 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
           <div className="csp-fb-goal-card">
             <div className="csp-fb-goal-accent" />
             <div className="csp-fb-goal-body">
-              <span className="csp-fb-goal-label">SESSION OBJECTIVE</span>
+              <span className="csp-fb-goal-label">LESSON OBJECTIVE</span>
               <p className="csp-fb-goal-text">{data.goal}</p>
               <p className="csp-fb-goal-jp">{data.goalJp}</p>
             </div>
@@ -2550,67 +2551,7 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
             </div>
           </div>
 
-          {/* Assessment Areas */}
-          <div className="csp-fb-categories-header">{data.personalizedFeedbackTitle}</div>
-
-          {/* Category Cards */}
-          {data.categories.map((cat) => (
-            <div key={cat.id} className={`csp-fb-category-card csp-fb-cat-${cat.id}`}>
-              {/* Category Header */}
-              <div className="csp-fb-cat-header">
-                <div className="csp-fb-cat-icon">
-                  {cat.id === 'range' && <i className="ri-compass-3-line" />}
-                  {cat.id === 'accuracy' && <i className="ri-focus-2-line" />}
-                  {cat.id === 'fluency' && <i className="ri-speed-line" />}
-                </div>
-                <div className="csp-fb-cat-titles">
-                  <span className="csp-fb-cat-name">{cat.title}</span>
-                  <span className="csp-fb-cat-jp">{cat.titleJp}</span>
-                </div>
-              </div>
-
-              {/* Assessment Criteria */}
-              <div className="csp-fb-cat-assess">
-                <span className="csp-fb-assess-label">Assessment criteria</span>
-                <p className="csp-fb-assess-text">{cat.focusOn}</p>
-              </div>
-
-              {/* Key Indicators */}
-              <div className="csp-fb-cat-focus">
-                <span className="csp-fb-focus-label">Key indicators</span>
-                <div className="csp-fb-focus-tags">
-                  {cat.exampleFeedbackItems.map((item, idx) => (
-                    <span key={idx} className="csp-fb-focus-tag">{item}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sample Corrections */}
-              <div className="csp-fb-cat-examples">
-                <span className="csp-fb-examples-label">Sample corrections</span>
-
-                {cat.id === 'range' && cat.vocabularyExample && (
-                  <div className="csp-fb-vocab-highlight">
-                    <i className="ri-book-2-line" />
-                    <span>{cat.vocabularyExample}</span>
-                  </div>
-                )}
-
-                {cat.examples.map((ex, exIdx) => (
-                  <div key={exIdx} className="csp-fb-example-card">
-                    <div className="csp-fb-example-said">
-                      <span className="csp-fb-example-icon">✗</span>
-                      <span className="csp-fb-said-text">{ex.youSaid}</span>
-                    </div>
-                    <div className="csp-fb-example-better">
-                      <span className="csp-fb-better-icon">✓</span>
-                      <span className="csp-fb-better-text">{ex.correction}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+          <FixedFeedbackGuide />
         </div>
 
         {/* Right Column - Tutor Guide */}

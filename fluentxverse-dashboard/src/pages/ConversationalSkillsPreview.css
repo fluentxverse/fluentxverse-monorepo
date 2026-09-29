@@ -4072,6 +4072,20 @@
   color: var(--csp-dark-text) !important;
 }
 
+.csp-fullpage.csp-dark .csp-fb-goal-label {
+  color: #93c5fd;
+  font-size: 0.75rem;
+}
+
+.csp-fullpage.csp-dark .csp-fb-rubric-title-row,
+.csp-fullpage.csp-dark .csp-fb-categories-header {
+  color: #e2e8f0;
+}
+
+.csp-fullpage.csp-dark .csp-fb-rubric-title-row {
+  font-size: 0.75rem;
+}
+
 .csp-fullpage.csp-dark .csp-goal-jp,
 .csp-fullpage.csp-dark .csp-tutor-note-details,
 .csp-fullpage.csp-dark .csp-vocab-translation,

@@ -13,6 +13,7 @@ import {
 import { toast } from '../Components/Toast/Toast';
 import { TutorGuide, type UniversalTutorStep, type TutorGuideFeatures } from '../components/TutorGuideStep';
 import { AIContentGenerator } from '../components/AIContentGenerator';
+import { FixedFeedbackGuide } from '../components/FixedFeedbackGuide';
 import './ConversationalSkillsVisualEditor.css';
 import '../components/TutorGuideStep.css';
 
@@ -107,7 +108,7 @@ const DEFAULT_INTRODUCTION_DATA: IntroductionData = {
   lessonGoalDuration: "1 minute",
   lessonGoalSteps: [
     { instruction: "Introduce the lesson topic.", script: "Today, let's talk about gestures.", question: null },
-    { instruction: "Read the lesson goal and ask if it's clear.", script: null, question: null },
+    { instruction: "Read the lesson objective and ask if it's clear.", script: null, question: null },
     { instruction: "Read the Introduce explanation.", script: null, question: null },
     { instruction: "Ask the question below.", script: null, question: null },
     { instruction: "Transition to the next section.", script: "Good! Let's go to the next part!", question: null }
@@ -940,7 +941,7 @@ const DEFAULT_FEEDBACK_DATA: FeedbackSectionData = {
   goal: "I can listen to and understand a description of food.",
   goalJp: "食べ物の説明を聞いて理解できるようになる。",
   // Rubric
-  rubricTitle: "LESSON GOAL ACHIEVEMENT",
+  rubricTitle: "LESSON OBJECTIVE ACHIEVEMENT",
   rubricLevels: [
     { score: 4, label: "Very Good", description: "Could complete the task with ease" },
     { score: 3, label: "Good", description: "Could complete the task with some clarifications" },
@@ -955,26 +956,25 @@ const DEFAULT_FEEDBACK_DATA: FeedbackSectionData = {
   tutorSteps: [
     {
       instruction: "Introduce Feedback.",
-      scripts: [{ text: '"Okay, now let\'s do Feedback."' }]
+      scripts: [{ text: "Okay, now let's do Feedback." }]
     },
     {
-      instruction: "Have the student read the lesson goal."
+      instruction: "Have the student read the lesson objective."
     },
     {
-      instruction: "Ask if they achieved the lesson goal.",
-      scripts: [{ text: '"Did you achieve the lesson goal?"' }]
+      instruction: "Ask if they achieved the lesson objective.",
+      scripts: [{ text: "Did you achieve the lesson objective?" }]
     },
     {
-      instruction: "Give the student a score for their lesson goal achievement using the rubric.",
-      tips: [{ text: "Base your score on how well they did Challenge 1." }]
+      instruction: "Give the student a score for their objective achievement using the rubric.",
+      tips: [{ text: "Base your score mainly on Challenge 1." }]
     },
     {
-      instruction: "Give feedback on the student's range, accuracy, and fluency using the template below.",
-      tips: [{ text: "Refer to the Personalized Feedback Guide for more information." }]
+      instruction: "Give feedback on the student's range, accuracy, and fluency using the guide below."
     },
     {
       instruction: "Wrap up the lesson.",
-      scripts: [{ text: '"You did a great job! Thank you very much for today."' }]
+      scripts: [{ text: "You did a great job today. Thank you very much!" }]
     }
   ],
   categories: [
@@ -2410,7 +2410,7 @@ export default function ConversationalSkillsVisualEditor() {
                 <ul>
                   <li>Intro paragraphs (multilingual) + optional image</li>
                   <li>Lesson Issue callout (title + bullet points)</li>
-                  <li>Lesson Goal Steps (tutor guide)</li>
+                  <li>Lesson Objective Steps (tutor guide)</li>
                 </ul>
 
                 <h3>2. Learn (Step A + Step B)</h3>
@@ -2540,7 +2540,7 @@ export default function ConversationalSkillsVisualEditor() {
             
             <div className="csve-goal-wrapper">
               <div className="csve-goal-row">
-                <span className="csve-goal-badge">GOAL</span>
+                <span className="csve-goal-badge">LESSON OBJECTIVE</span>
                 {/* Goal Text English - Editable */}
                 <p className="csve-goal-en">
                   <EditableText
@@ -3483,7 +3483,7 @@ function IntroductionSectionEditor({ data, onChange }: IntroductionSectionEditor
           {/* EDITABLE: Lesson Goal */}
           <div className="csve-lesson-goal-box csve-editable-card">
             <TutorGuide
-              title="LESSON GOAL"
+              title="LESSON OBJECTIVE"
               duration={lessonGoalDuration}
               steps={lessonGoalSteps.map(s => ({ ...s, tip: s.question })) as UniversalTutorStep[]}
               onStepsChange={(steps) => updateData({ 
@@ -8285,64 +8285,6 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
     onChange({ ...data, ...updates });
   };
 
-  const updateCategory = (categoryIdx: number, updates: Partial<FeedbackCategory>) => {
-    const newCategories = [...data.categories];
-    newCategories[categoryIdx] = { ...newCategories[categoryIdx], ...updates };
-    updateData({ categories: newCategories });
-  };
-
-  const updateExampleFeedbackItem = (categoryIdx: number, itemIdx: number, value: string) => {
-    const newCategories = [...data.categories];
-    const newItems = [...newCategories[categoryIdx].exampleFeedbackItems];
-    newItems[itemIdx] = value;
-    newCategories[categoryIdx] = { ...newCategories[categoryIdx], exampleFeedbackItems: newItems };
-    updateData({ categories: newCategories });
-  };
-
-  const addExampleFeedbackItem = (categoryIdx: number) => {
-    const newCategories = [...data.categories];
-    newCategories[categoryIdx] = {
-      ...newCategories[categoryIdx],
-      exampleFeedbackItems: [...newCategories[categoryIdx].exampleFeedbackItems, '']
-    };
-    updateData({ categories: newCategories });
-  };
-
-  const removeExampleFeedbackItem = (categoryIdx: number, itemIdx: number) => {
-    const newCategories = [...data.categories];
-    newCategories[categoryIdx] = {
-      ...newCategories[categoryIdx],
-      exampleFeedbackItems: newCategories[categoryIdx].exampleFeedbackItems.filter((_, i) => i !== itemIdx)
-    };
-    updateData({ categories: newCategories });
-  };
-
-  const updateExample = (categoryIdx: number, exampleIdx: number, updates: Partial<FeedbackExample>) => {
-    const newCategories = [...data.categories];
-    const newExamples = [...newCategories[categoryIdx].examples];
-    newExamples[exampleIdx] = { ...newExamples[exampleIdx], ...updates };
-    newCategories[categoryIdx] = { ...newCategories[categoryIdx], examples: newExamples };
-    updateData({ categories: newCategories });
-  };
-
-  const addExample = (categoryIdx: number) => {
-    const newCategories = [...data.categories];
-    newCategories[categoryIdx] = {
-      ...newCategories[categoryIdx],
-      examples: [...newCategories[categoryIdx].examples, { youSaid: '', correction: '', correctionLabel: 'Better:' }]
-    };
-    updateData({ categories: newCategories });
-  };
-
-  const removeExample = (categoryIdx: number, exampleIdx: number) => {
-    const newCategories = [...data.categories];
-    newCategories[categoryIdx] = {
-      ...newCategories[categoryIdx],
-      examples: newCategories[categoryIdx].examples.filter((_, i) => i !== exampleIdx)
-    };
-    updateData({ categories: newCategories });
-  };
-
   // Tutor step handlers
   const updateTutorStep = (stepIdx: number, field: keyof FeedbackTutorStep, value: unknown) => {
     const newSteps = [...data.tutorSteps];
@@ -8387,7 +8329,7 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
           <div className="csve-fb-goal-card">
             <div className="csve-fb-goal-accent" />
             <div className="csve-fb-goal-body">
-              <span className="csve-fb-goal-label">SESSION OBJECTIVE</span>
+              <span className="csve-fb-goal-label">LESSON OBJECTIVE</span>
               <input
                 type="text"
                 className="csve-fb-goal-text"
@@ -8449,156 +8391,7 @@ function FeedbackSectionEditor({ data, onChange }: FeedbackSectionEditorProps) {
             </div>
           </div>
 
-          {/* Assessment Areas */}
-          <div className="csve-fb-categories-header">
-            <input
-              type="text"
-              className="csve-fb-categories-title"
-              value={data.personalizedFeedbackTitle}
-              onChange={e => updateData({ personalizedFeedbackTitle: (e.target as HTMLInputElement).value })}
-            />
-          </div>
-
-          {/* Category Cards */}
-          {data.categories.map((category, categoryIdx) => (
-            <div key={category.id} className={`csve-fb-category-card csve-fb-cat-${category.id}`}>
-              {/* Category Header */}
-              <div className="csve-fb-cat-header">
-                <div className="csve-fb-cat-icon">
-                  {category.id === 'range' && <i className="ri-compass-3-line" />}
-                  {category.id === 'accuracy' && <i className="ri-focus-2-line" />}
-                  {category.id === 'fluency' && <i className="ri-speed-line" />}
-                </div>
-                <div className="csve-fb-cat-titles">
-                  <input
-                    type="text"
-                    className="csve-fb-cat-name"
-                    value={category.title}
-                    onChange={e => updateCategory(categoryIdx, { title: (e.target as HTMLInputElement).value })}
-                  />
-                  <textarea
-                    className="csve-fb-cat-jp"
-                    value={category.titleJp}
-                    onChange={e => updateCategory(categoryIdx, { titleJp: (e.target as HTMLTextAreaElement).value })}
-                    rows={1}
-                  />
-                </div>
-              </div>
-
-              {/* Assessment Criteria */}
-              <div className="csve-fb-cat-assess">
-                <span className="csve-fb-assess-label">Assessment criteria</span>
-                <textarea
-                  className="csve-fb-assess-text"
-                  value={category.focusOn}
-                  onChange={e => updateCategory(categoryIdx, { focusOn: (e.target as HTMLTextAreaElement).value })}
-                  placeholder="Evaluate the student's ability to..."
-                  rows={1}
-                  ref={el => {
-                    if (el) {
-                      el.style.height = 'auto';
-                      el.style.height = el.scrollHeight + 'px';
-                    }
-                  }}
-                  onInput={e => {
-                    const target = e.target as HTMLTextAreaElement;
-                    target.style.height = 'auto';
-                    target.style.height = target.scrollHeight + 'px';
-                  }}
-                />
-              </div>
-
-              {/* Key Indicators */}
-              <div className="csve-fb-cat-focus">
-                <span className="csve-fb-focus-label">Key indicators</span>
-                <div className="csve-fb-focus-tags">
-                  {category.exampleFeedbackItems.map((item, itemIdx) => (
-                    <div key={itemIdx} className="csve-fb-focus-tag">
-                      <input
-                        type="text"
-                        className="csve-fb-tag-input"
-                        value={item}
-                        onChange={e => updateExampleFeedbackItem(categoryIdx, itemIdx, (e.target as HTMLInputElement).value)}
-                        placeholder="feedback item..."
-                      />
-                      {category.exampleFeedbackItems.length > 1 && (
-                        <button
-                          className="csve-fb-tag-remove"
-                          onClick={() => removeExampleFeedbackItem(categoryIdx, itemIdx)}
-                        >
-                          <i className="ri-close-line" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button className="csve-fb-add-tag" onClick={() => addExampleFeedbackItem(categoryIdx)}>
-                    <i className="ri-add-line" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Sample Corrections */}
-              <div className="csve-fb-cat-examples">
-                <span className="csve-fb-examples-label">Sample corrections</span>
-
-                {category.id === 'range' && (
-                  <div className="csve-fb-vocab-highlight">
-                    <i className="ri-book-2-line" />
-                    <input
-                      type="text"
-                      className="csve-fb-vocab-input"
-                      value={category.vocabularyExample || ''}
-                      onChange={e => updateCategory(categoryIdx, { vocabularyExample: (e.target as HTMLInputElement).value })}
-                      placeholder="target word — brief definition or usage note"
-                    />
-                  </div>
-                )}
-
-                {category.examples.map((example, exampleIdx) => (
-                  <div key={exampleIdx} className="csve-fb-example-card">
-                    <div className="csve-fb-example-said">
-                      <span className="csve-fb-example-icon">✗</span>
-                      <input
-                        type="text"
-                        className="csve-fb-example-input csve-fb-said-input"
-                        value={example.youSaid}
-                        onChange={e => updateExample(categoryIdx, exampleIdx, { youSaid: (e.target as HTMLInputElement).value })}
-                        placeholder="Student's original attempt..."
-                      />
-                    </div>
-                    <div className="csve-fb-example-better">
-                      <select
-                        className="csve-fb-example-select"
-                        value={example.correctionLabel}
-                        onChange={e => updateExample(categoryIdx, exampleIdx, { correctionLabel: (e.target as HTMLSelectElement).value })}
-                      >
-                        <option value="Better:">✓</option>
-                        <option value="Correct:">✓✓</option>
-                      </select>
-                      <input
-                        type="text"
-                        className="csve-fb-example-input csve-fb-better-input"
-                        value={example.correction}
-                        onChange={e => updateExample(categoryIdx, exampleIdx, { correction: (e.target as HTMLInputElement).value })}
-                        placeholder="Suggested improvement..."
-                      />
-                    </div>
-                    {category.examples.length > 1 && (
-                      <button
-                        className="csve-fb-example-remove"
-                        onClick={() => removeExample(categoryIdx, exampleIdx)}
-                      >
-                        <i className="ri-close-line" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button className="csve-fb-add-example" onClick={() => addExample(categoryIdx)}>
-                  <i className="ri-add-line" /> Add Example
-                </button>
-              </div>
-            </div>
-          ))}
+          <FixedFeedbackGuide />
         </div>
 
         {/* Right Column - Tutor Guide (unchanged) */}

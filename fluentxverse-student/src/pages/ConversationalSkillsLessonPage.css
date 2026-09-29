@@ -2454,8 +2454,9 @@
 }
 
 .csp-trivia-image img {
-  max-width: 200px;
-  max-height: 200px;
+  width: 25%;
+  max-width: 100%;
+  height: auto;
   object-fit: contain;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -4071,6 +4072,20 @@
   color: var(--csp-dark-text) !important;
 }
 
+.csp-fullpage.csp-dark .csp-fb-goal-label {
+  color: #93c5fd;
+  font-size: 0.75rem;
+}
+
+.csp-fullpage.csp-dark .csp-fb-rubric-title-row,
+.csp-fullpage.csp-dark .csp-fb-categories-header {
+  color: #e2e8f0;
+}
+
+.csp-fullpage.csp-dark .csp-fb-rubric-title-row {
+  font-size: 0.75rem;
+}
+
 .csp-fullpage.csp-dark .csp-goal-jp,
 .csp-fullpage.csp-dark .csp-tutor-note-details,
 .csp-fullpage.csp-dark .csp-vocab-translation,
@@ -4730,7 +4745,6 @@
   .csp-intro-image img,
   .csp-apply-image img,
   .csp-reading-image img,
-  .csp-trivia-image img,
   .csp-mission-image img,
   .csp-choose-image img,
   .csp-mc-image img,
@@ -4739,6 +4753,11 @@
     max-width: 100%;
     height: auto;
     object-fit: cover;
+  }
+
+  .csp-trivia-image img {
+    width: 25%;
+    max-width: 100%;
   }
 
   .csp-pronunciation-table,
