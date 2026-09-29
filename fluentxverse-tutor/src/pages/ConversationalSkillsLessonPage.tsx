@@ -7,6 +7,8 @@ import { useState, useEffect } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
 import { lessonApi } from '../api/lesson.api';
 import { FixedFeedbackGuide } from '../Components/FixedFeedbackGuide';
+import { ConversationalExerciseMarking } from '../Components/ConversationalExerciseMarking';
+import { getMarkableExerciseItems } from '../utils/conversationalExerciseMarks';
 import './ConversationalSkillsLessonPage.css';
 
 type ConversationalTheme = 'light' | 'dark';
@@ -616,6 +618,9 @@ export default function ConversationalSkillsPreview() {
   const [theme, setTheme] = useState<ConversationalTheme>(() => getPreviewThemeFromQuery() ?? getStoredConversationalTheme());
 
   const id = params?.id || (query?.id as string | undefined);
+  const classroomSessionId = typeof window === 'undefined'
+    ? null
+    : new URLSearchParams(window.location.search).get('sessionId');
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -853,7 +858,7 @@ export default function ConversationalSkillsPreview() {
           {applyData && <ApplySection data={applyData} />}
 
           {/* Exercise Section */}
-          {exerciseData && <ExerciseSection data={exerciseData} />}
+          {exerciseData && <ExerciseSection data={exerciseData} sessionId={classroomSessionId} lessonId={id} />}
 
           {/* Mission Section (Challenge 1) */}
           {missionData && <MissionSection data={missionData} />}
@@ -1776,8 +1781,9 @@ function ApplySection({ data }: ApplySectionProps) {
 // EXERCISE SECTION COMPONENT (Section 4)
 // ============================================================================
 
-function ExerciseSection({ data }: { data: ExerciseSectionData }) {
+function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionData; sessionId?: string | null; lessonId?: string }) {
   const stepAType = data.stepAType || 'rephrase';
+  const markingItems = getMarkableExerciseItems(data);
 
   return (
     <section className="csp-section csp-exercise-section">
@@ -2022,6 +2028,9 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                 </div>
               ))}
             </div>
+            {sessionId && lessonId && (
+              <ConversationalExerciseMarking sessionId={sessionId} lessonId={lessonId} step="A" items={markingItems.A} />
+            )}
           </div>
         </div>
       </div>
@@ -2232,6 +2241,9 @@ function ExerciseSection({ data }: { data: ExerciseSectionData }) {
                     </div>
                   ))}
                 </div>
+                {sessionId && lessonId && (
+                  <ConversationalExerciseMarking sessionId={sessionId} lessonId={lessonId} step="B" items={markingItems.B} />
+                )}
               </div>
             )}
           </div>

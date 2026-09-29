@@ -25,6 +25,7 @@ RUN bun install --production --no-save
 
 # Copy source code
 COPY --chown=appuser:appgroup src ./src
+COPY --chown=appuser:appgroup scripts/migrate-classroom-learning-data-to-memgraph.ts ./scripts/
 COPY --chown=appuser:appgroup circuits ./circuits
 COPY --chown=appuser:appgroup tsconfig.json ./
 

@@ -3,6 +3,7 @@ import { TutorService } from '../services/tutor.services/tutor.service';
 import StudentService from '../services/auth.services/student.service';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
 import { ClassroomNotesService } from '../services/classroomNotes.services/classroomNotes.service';
+import { ClassroomExerciseMarksService } from '../services/classroomExerciseMarks.services/classroomExerciseMarks.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
@@ -11,6 +12,7 @@ import { cacheGetOrSet, invalidateCache } from '../db/redis';
 const tutorService = new TutorService();
 const scheduleService = new ScheduleService();
 const classroomNotesService = new ClassroomNotesService();
+const classroomExerciseMarksService = new ClassroomExerciseMarksService();
 
 const Tutor = new Elysia({ prefix: '/tutor' })
   /**
@@ -666,6 +668,94 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       studentComment: t.Optional(t.String()),
       tutorMemo: t.Optional(t.String()),
     })
+  })
+
+  .get('/classroom-exercise-marks/:sessionId', async ({ params, query, cookie, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid token' };
+      }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      await scheduleService.getTutorLessonDetails(params.sessionId, payload.userId);
+      if (!query.lessonId.startsWith('conversational-skills-')) {
+        set.status = 400;
+        return { success: false, error: 'A Conversational Skills lesson is required' };
+      }
+      const marks = await classroomExerciseMarksService.getMarks(params.sessionId, query.lessonId);
+      return { success: true, data: marks };
+    } catch (error: any) {
+      console.error('[TutorRoute] Error loading classroom exercise marks:', error);
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: error.message || 'Failed to load exercise marks' };
+    }
+  }, {
+    query: t.Object({ lessonId: t.String() }),
+  })
+
+  .put('/classroom-exercise-marks/:sessionId', async ({ params, body, cookie, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      if (!raw) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+      const payload = await verifyAuthToken(String(raw));
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid token' };
+      }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      const lessonDetails = await scheduleService.getTutorLessonDetails(params.sessionId, payload.userId);
+      if (!body.lessonId.startsWith('conversational-skills-') || !Number.isInteger(body.itemIndex) || body.itemIndex < 0 || body.itemIndex > 99) {
+        set.status = 400;
+        return { success: false, error: 'Invalid lesson or exercise item' };
+      }
+
+      if (body.isCorrect === null) {
+        await classroomExerciseMarksService.deleteMark(params.sessionId, body.lessonId, body.step, body.itemIndex);
+        return { success: true, data: null };
+      }
+      if (!lessonDetails.studentId || !body.prompt.trim() || body.prompt.length > 2000 || body.answerKey.length > 1000 || (body.studentResponse || '').length > 2000) {
+        set.status = 400;
+        return { success: false, error: 'Invalid exercise mark' };
+      }
+      const mark = await classroomExerciseMarksService.saveMark({
+        sessionId: params.sessionId,
+        tutorId: payload.userId,
+        studentId: lessonDetails.studentId,
+        lessonId: body.lessonId,
+        step: body.step,
+        itemIndex: body.itemIndex,
+        itemType: body.itemType,
+        prompt: body.prompt.trim(),
+        answerKey: body.answerKey.trim(),
+        isCorrect: body.isCorrect,
+        studentResponse: body.isCorrect ? '' : (body.studentResponse || '').trim(),
+      });
+      return { success: true, data: mark };
+    } catch (error: any) {
+      console.error('[TutorRoute] Error saving classroom exercise mark:', error);
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: error.message || 'Failed to save exercise mark' };
+    }
+  }, {
+    body: t.Object({
+      lessonId: t.String(),
+      step: t.Union([t.Literal('A'), t.Literal('B')]),
+      itemIndex: t.Number(),
+      itemType: t.String(),
+      prompt: t.String(),
+      answerKey: t.String(),
+      isCorrect: t.Nullable(t.Boolean()),
+      studentResponse: t.Optional(t.String()),
+    }),
   })
 
 

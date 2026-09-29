@@ -1,0 +1,84 @@
+.csp-exercise-marking {
+  border-top: 1px solid #dbe4ef;
+  padding: 12px 14px 14px;
+}
+
+.csp-exercise-marking-header,
+.csp-exercise-marking-row,
+.csp-exercise-marking-actions,
+.csp-exercise-marking-response {
+  display: flex;
+  align-items: center;
+}
+
+.csp-exercise-marking-header {
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  color: #36516d;
+  font-size: 11px;
+}
+
+.csp-exercise-marking-header strong { color: #154d8d; }
+.csp-exercise-marking-header span { text-align: right; }
+.csp-exercise-marking-item { border-top: 1px solid #e7edf4; padding: 8px 0; }
+.csp-exercise-marking-row { gap: 7px; min-height: 28px; }
+.csp-exercise-marking-number { flex: 0 0 19px; font-weight: 700; color: #52677d; }
+.csp-exercise-marking-prompt {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: #26374c;
+}
+.csp-exercise-marking-actions { flex: 0 0 auto; gap: 5px; }
+.csp-exercise-marking-button,
+.csp-exercise-marking-response button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid #cbd7e4;
+  border-radius: 4px;
+  background: #fff;
+  color: #52677d;
+  cursor: pointer;
+}
+.csp-exercise-marking-button.is-correct:hover,
+.csp-exercise-marking-button.is-correct.is-selected { color: #fff; background: #16834a; border-color: #16834a; }
+.csp-exercise-marking-button.is-incorrect:hover,
+.csp-exercise-marking-button.is-incorrect.is-selected { color: #fff; background: #c33135; border-color: #c33135; }
+.csp-exercise-marking-button:disabled,
+.csp-exercise-marking-response button:disabled { opacity: .55; cursor: default; }
+.csp-exercise-marking-response { gap: 5px; margin: 7px 0 0 26px; }
+.csp-exercise-marking-response input {
+  flex: 1;
+  min-width: 0;
+  height: 29px;
+  padding: 0 7px;
+  border: 1px solid #cbd7e4;
+  border-radius: 4px;
+  color: #26374c;
+  background: #fff;
+  font-size: 11px;
+}
+.csp-exercise-marking-error { color: #b4232a; font-size: 11px; margin: 5px 0; }
+
+.csp-fullpage.csp-dark .csp-exercise-marking { border-color: #3b4552; }
+.csp-fullpage.csp-dark .csp-exercise-marking-item { border-color: #39424d; }
+.csp-fullpage.csp-dark .csp-exercise-marking-header,
+.csp-fullpage.csp-dark .csp-exercise-marking-number,
+.csp-fullpage.csp-dark .csp-exercise-marking-prompt { color: #d7e2ee; }
+.csp-fullpage.csp-dark .csp-exercise-marking-header strong { color: #8cc7ff; }
+.csp-fullpage.csp-dark .csp-exercise-marking-button,
+.csp-fullpage.csp-dark .csp-exercise-marking-response button,
+.csp-fullpage.csp-dark .csp-exercise-marking-response input {
+  background: #292d33;
+  border-color: #4b5969;
+  color: #edf4fc;
+}
+.csp-fullpage.csp-dark .csp-exercise-marking-button.is-correct.is-selected { background: #16834a; border-color: #16834a; }
+.csp-fullpage.csp-dark .csp-exercise-marking-button.is-incorrect.is-selected { background: #c33135; border-color: #c33135; }

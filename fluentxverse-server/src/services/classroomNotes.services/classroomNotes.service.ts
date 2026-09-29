@@ -1,4 +1,4 @@
-import { db, query } from '../../db/postgres';
+import { getDriver } from '../../db/memgraph';
 
 export interface ClassroomVocabularyNote {
   word: string;
@@ -87,82 +87,67 @@ const parseJsonArray = <T>(value: unknown): T[] => {
 };
 
 export class ClassroomNotesService {
-  private static initPromise: Promise<void> | null = null;
+  private static schemaPromise: Promise<void> | null = null;
 
-  private async ensureTable(): Promise<void> {
-    if (!ClassroomNotesService.initPromise) {
-      ClassroomNotesService.initPromise = (async () => {
-        await db`
-          CREATE TABLE IF NOT EXISTS classroom_material_notes (
-            id TEXT PRIMARY KEY,
-            session_id TEXT NOT NULL,
-            tutor_id TEXT NOT NULL,
-            student_id TEXT,
-            material_type TEXT NOT NULL,
-            material_id TEXT NOT NULL,
-            course_id TEXT,
-            lesson_id TEXT,
-            article_id TEXT,
-            vocabulary_items JSONB NOT NULL DEFAULT '[]'::jsonb,
-            grammar_items JSONB NOT NULL DEFAULT '[]'::jsonb,
-            pronunciation_items JSONB NOT NULL DEFAULT '[]'::jsonb,
-            student_comment TEXT NOT NULL DEFAULT '',
-            tutor_memo TEXT NOT NULL DEFAULT '',
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            UNIQUE (session_id, material_type, material_id)
-          )
-        `;
-
-        await db`
-          CREATE INDEX IF NOT EXISTS classroom_material_notes_session_idx
-          ON classroom_material_notes (session_id)
-        `;
-      })();
+  private async ensureSchema(): Promise<void> {
+    if (!ClassroomNotesService.schemaPromise) {
+      ClassroomNotesService.schemaPromise = (async () => {
+        const session = getDriver().session();
+        try {
+          await session.run('CREATE CONSTRAINT ON (note:ClassroomMaterialNote) ASSERT note.key IS UNIQUE');
+        } finally {
+          await session.close();
+        }
+      })().catch(error => {
+        ClassroomNotesService.schemaPromise = null;
+        throw error;
+      });
     }
-
-    await ClassroomNotesService.initPromise;
+    await ClassroomNotesService.schemaPromise;
   }
 
-  private mapRow(row: any): ClassroomNotesRecord {
+  private key(sessionId: string, materialType: string, materialId: string): string {
+    return JSON.stringify([sessionId, materialType, materialId]);
+  }
+
+  private mapNode(row: any): ClassroomNotesRecord {
     return {
       id: row.id,
-      sessionId: row.session_id,
-      tutorId: row.tutor_id,
-      studentId: row.student_id ?? null,
-      materialType: row.material_type,
-      materialId: row.material_id,
-      courseId: row.course_id ?? null,
-      lessonId: row.lesson_id ?? null,
-      articleId: row.article_id ?? null,
-      vocabularyItems: parseJsonArray<ClassroomVocabularyNote>(row.vocabulary_items),
-      grammarItems: parseJsonArray<ClassroomGrammarNote>(row.grammar_items),
-      pronunciationItems: parseJsonArray<ClassroomPronunciationNote>(row.pronunciation_items),
-      studentComment: row.student_comment || '',
-      tutorMemo: row.tutor_memo || '',
-      createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
-      updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : String(row.updated_at),
+      sessionId: row.sessionId,
+      tutorId: row.tutorId,
+      studentId: row.studentId ?? null,
+      materialType: row.materialType,
+      materialId: row.materialId,
+      courseId: row.courseId ?? null,
+      lessonId: row.lessonId ?? null,
+      articleId: row.articleId ?? null,
+      vocabularyItems: parseJsonArray<ClassroomVocabularyNote>(row.vocabularyItemsJson),
+      grammarItems: parseJsonArray<ClassroomGrammarNote>(row.grammarItemsJson),
+      pronunciationItems: parseJsonArray<ClassroomPronunciationNote>(row.pronunciationItemsJson),
+      studentComment: row.studentComment || '',
+      tutorMemo: row.tutorMemo || '',
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   }
 
   async getNotes(sessionId: string, materialType: string, materialId: string): Promise<ClassroomNotesRecord | null> {
-    await this.ensureTable();
-
-    const result = await query(
-      `SELECT *
-       FROM classroom_material_notes
-       WHERE session_id = $1 AND material_type = $2 AND material_id = $3
-       LIMIT 1`,
-      [sessionId, materialType, materialId]
-    );
-
-    const row = result.rows[0];
-    return row ? this.mapRow(row) : null;
+    await this.ensureSchema();
+    const session = getDriver().session();
+    try {
+      const result = await session.run(
+        'MATCH (note:ClassroomMaterialNote {key: $key}) RETURN note LIMIT 1',
+        { key: this.key(sessionId, materialType, materialId) },
+      );
+      const node = result.records[0]?.get('note');
+      return node ? this.mapNode(node.properties) : null;
+    } finally {
+      await session.close();
+    }
   }
 
   async saveNotes(input: SaveClassroomNotesInput): Promise<ClassroomNotesRecord> {
-    await this.ensureTable();
-
+    await this.ensureSchema();
     const {
       sessionId,
       tutorId,
@@ -179,74 +164,51 @@ export class ClassroomNotesService {
       tutorMemo = '',
     } = input;
 
-    const existing = await this.getNotes(sessionId, materialType, materialId);
-    const noteId = existing?.id || generateNoteId();
-
-    const result = await query(
-      `INSERT INTO classroom_material_notes (
-          id,
-          session_id,
-          tutor_id,
-          student_id,
-          material_type,
-          material_id,
-          course_id,
-          lesson_id,
-          article_id,
-          vocabulary_items,
-          grammar_items,
-          pronunciation_items,
-          student_comment,
-          tutor_memo
-        )
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          $7,
-          $8,
-          $9,
-          $10::jsonb,
-          $11::jsonb,
-          $12::jsonb,
-          $13,
-          $14
-        )
-        ON CONFLICT (session_id, material_type, material_id)
-        DO UPDATE SET
-          tutor_id = EXCLUDED.tutor_id,
-          student_id = EXCLUDED.student_id,
-          course_id = EXCLUDED.course_id,
-          lesson_id = EXCLUDED.lesson_id,
-          article_id = EXCLUDED.article_id,
-          vocabulary_items = EXCLUDED.vocabulary_items,
-          grammar_items = EXCLUDED.grammar_items,
-          pronunciation_items = EXCLUDED.pronunciation_items,
-          student_comment = EXCLUDED.student_comment,
-          tutor_memo = EXCLUDED.tutor_memo,
-          updated_at = NOW()
-        RETURNING *`,
-      [
-        noteId,
-        sessionId,
-        tutorId,
-        studentId,
-        materialType,
-        materialId,
-        courseId,
-        lessonId,
-        articleId,
-        JSON.stringify(vocabularyItems || []),
-        JSON.stringify(grammarItems || []),
-        JSON.stringify(pronunciationItems || []),
-        studentComment,
-        tutorMemo,
-      ]
-    );
-
-    return this.mapRow(result.rows[0]);
+    const key = this.key(sessionId, materialType, materialId);
+    const session = getDriver().session();
+    try {
+      const result = await session.run(
+        `MERGE (note:ClassroomMaterialNote {key: $key})
+         ON CREATE SET note.id = $id, note.createdAt = $now
+         SET note.sessionId = $sessionId, note.tutorId = $tutorId,
+             note.studentId = $studentId, note.materialType = $materialType,
+             note.materialId = $materialId, note.courseId = $courseId,
+             note.lessonId = $lessonId, note.articleId = $articleId,
+             note.vocabularyItemsJson = $vocabularyItemsJson,
+             note.grammarItemsJson = $grammarItemsJson,
+             note.pronunciationItemsJson = $pronunciationItemsJson,
+             note.studentComment = $studentComment, note.tutorMemo = $tutorMemo,
+             note.updatedAt = $now
+         RETURN note`,
+        {
+          key, id: generateNoteId(), now: new Date().toISOString(), sessionId, tutorId,
+          studentId, materialType, materialId, courseId, lessonId, articleId,
+          vocabularyItemsJson: JSON.stringify(vocabularyItems || []),
+          grammarItemsJson: JSON.stringify(grammarItems || []),
+          pronunciationItemsJson: JSON.stringify(pronunciationItems || []),
+          studentComment, tutorMemo,
+        },
+      );
+      const record = result.records[0];
+      if (!record) throw new Error('Failed to save classroom notes');
+      await session.run(
+        `MATCH (note:ClassroomMaterialNote {key: $key})
+         MATCH (booking:Booking {bookingId: $sessionId})-[:BOOKED_BY]->(student)
+         MERGE (booking)-[:HAS_CLASSROOM_NOTE]->(note)
+         MERGE (student)-[:HAS_CLASSROOM_NOTE]->(note)`,
+        { key, sessionId },
+      );
+      if (lessonId) {
+        await session.run(
+          `MATCH (note:ClassroomMaterialNote {key: $key})
+           MATCH (lesson:LessonMaterial {id: $lessonId})
+           MERGE (lesson)-[:HAS_CLASSROOM_NOTE]->(note)`,
+          { key, lessonId },
+        );
+      }
+      return this.mapNode(record.get('note').properties);
+    } finally {
+      await session.close();
+    }
   }
 }

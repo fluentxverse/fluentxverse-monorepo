@@ -70,6 +70,33 @@ export interface SaveClassroomNotesInput {
   tutorMemo?: string;
 }
 
+export interface ClassroomExerciseMark {
+  sessionId: string;
+  tutorId: string;
+  studentId: string;
+  lessonId: string;
+  step: 'A' | 'B';
+  itemIndex: number;
+  itemType: string;
+  prompt: string;
+  answerKey: string;
+  isCorrect: boolean;
+  studentResponse: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveClassroomExerciseMarkInput {
+  lessonId: string;
+  step: 'A' | 'B';
+  itemIndex: number;
+  itemType: string;
+  prompt: string;
+  answerKey: string;
+  isCorrect: boolean | null;
+  studentResponse?: string;
+}
+
 export const tutorApi = {
   /**
    * Search tutors with filters
@@ -232,5 +259,26 @@ export const tutorApi = {
     }
 
     return response.data.data;
-  }
+  },
+
+  getClassroomExerciseMarks: async (sessionId: string, lessonId: string): Promise<ClassroomExerciseMark[]> => {
+    const response = await api.get<{ success: boolean; data: ClassroomExerciseMark[] }>(
+      `/tutor/classroom-exercise-marks/${encodeURIComponent(sessionId)}`,
+      { params: { lessonId } },
+    );
+    if (!response.data.success) throw new Error('Failed to load exercise marks');
+    return response.data.data;
+  },
+
+  saveClassroomExerciseMark: async (
+    sessionId: string,
+    payload: SaveClassroomExerciseMarkInput,
+  ): Promise<ClassroomExerciseMark | null> => {
+    const response = await api.put<{ success: boolean; data: ClassroomExerciseMark | null }>(
+      `/tutor/classroom-exercise-marks/${encodeURIComponent(sessionId)}`,
+      payload,
+    );
+    if (!response.data.success) throw new Error('Failed to save exercise mark');
+    return response.data.data;
+  },
 };

@@ -121,7 +121,7 @@ interface ClassroomPersistedState {
 }
 
 interface ActiveNotesTarget {
-  materialType: 'business-english' | 'daily-dispatch';
+  materialType: 'business-english' | 'daily-dispatch' | 'conversational-skills';
   materialId: string;
   courseId?: string | null;
   lessonId?: string | null;
@@ -1342,6 +1342,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const activeNotesMaterial = !showLessonRequest
     ? viewingDispatchArticle
       ? 'daily-dispatch'
+      : viewingConversationalLesson
+        ? 'conversational-skills'
       : isViewingBusinessEnglishMaterial
         ? 'business-english'
         : null
@@ -1349,12 +1351,18 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const showNotesWidgetTrigger = Boolean(activeNotesMaterial);
   const notesWidgetTitle = activeNotesMaterial === 'business-english'
     ? 'Business English Notes'
+    : activeNotesMaterial === 'conversational-skills'
+      ? 'Conversational Skills Notes'
     : 'Daily Dispatch Notes';
   const notesWidgetFabTitle = activeNotesMaterial === 'business-english'
     ? 'Business English Notes'
+    : activeNotesMaterial === 'conversational-skills'
+      ? 'Conversational Skills Notes'
     : 'Daily Dispatch Notes';
   const notesWidgetIconClass = activeNotesMaterial === 'business-english'
     ? 'fas fa-briefcase'
+    : activeNotesMaterial === 'conversational-skills'
+      ? 'fas fa-comments'
     : 'fas fa-newspaper';
   const notesWidgetClassName = activeNotesMaterial === 'business-english'
     ? `dispatch-notes-widget dispatch-notes-widget--business-english dispatch-notes-widget--business-english-${businessEnglishTheme}`
@@ -1370,6 +1378,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           courseId: 'daily-dispatch',
           articleId: viewingDispatchArticle.id,
         }
+      : viewingConversationalLesson
+        ? {
+            materialType: 'conversational-skills',
+            materialId: viewingConversationalLesson.id,
+            courseId: 'conversational-skills',
+            lessonId: viewingConversationalLesson.id,
+          }
       : isViewingBusinessEnglishMaterial && studentLessonRequest?.lessonId
         ? {
             materialType: 'business-english',
@@ -4137,7 +4152,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             />
           ) : !showLessonRequest && viewingConversationalLesson && conversationalViewUrl ? (
             <iframe 
-              src={conversationalViewUrl}
+              src={currentSessionId
+                ? `${conversationalViewUrl}${conversationalViewUrl.includes('?') ? '&' : '?'}sessionId=${encodeURIComponent(currentSessionId)}`
+                : conversationalViewUrl}
               className="dispatch-article-iframe conversational-iframe"
               title={viewingConversationalLesson.title}
             />

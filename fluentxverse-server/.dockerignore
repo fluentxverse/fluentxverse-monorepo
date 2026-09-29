@@ -1,7 +1,8 @@
 node_modules/
 dist/
 tests/
-scripts/
+scripts/*
+!scripts/migrate-classroom-learning-data-to-memgraph.ts
 *.md
 docker-compose.yml
 Dockerfile*
