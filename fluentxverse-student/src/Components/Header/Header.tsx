@@ -139,7 +139,7 @@ const Header = () => {
 
 
   return (
-    <header className={`${isLandingPage ? 'landing-header-shell' : ''}${isPublicBrowsePage ? ' public-browse-header-shell' : ''}${showLoginModal ? ' header-modal-open' : ''}`}>
+    <header className={`${!isLandingPage && !isPublicBrowsePage ? 'app-header-shell' : ''}${isLandingPage ? ' landing-header-shell' : ''}${isPublicBrowsePage ? ' public-browse-header-shell' : ''}${showLoginModal ? ' header-modal-open' : ''}`}>
       <div id='sticky-header' className={`menu-area ${isLandingPage ? 'landing-header-bar' : ''}${isPublicBrowsePage ? ' public-browse-header-bar' : ''}`}>
         <div className="container">
           <div className="row">

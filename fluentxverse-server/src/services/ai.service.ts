@@ -1188,12 +1188,13 @@ Generate introduction content including:
    - For Levels 2-4: Maximum 3 sentences, simple vocabulary appropriate for level, substantive context
    - For Levels 5+: Up to 3-4 sentences, standard vocabulary for intermediate+, practical relevance
 2. Lesson issue (OPTIONAL) - a common problem or interesting fact related to the topic (ENGLISH ONLY - do not translate)
-3. Lesson goal steps - 5 sequential tutor instructions with ONLY step 4 needing a generated script/question
+3. Lesson goal steps - 5 sequential tutor instructions; steps 1 and 2 use the required opening scripts, and step 4 needs a generated question
 
 CRITICAL REQUIREMENTS FOR LESSON GOAL STEPS:
-- Step 1 (Introduce): instruction only, script = null
-- Step 2 (Read goal): instruction only, script = "Is it clear?"
-- Step 3 (Read Introduce): instruction only, script = null
+- Step 1 (Read goal): introduce the goal before any situation or topic context. Use script = "Our goal for today is: [lesson goal]. Is it clear?"
+- Step 2 (Read Introduce): introduce the context next. Use script = "Here's our situation. [short situation]"
+- Never introduce the situation before the goal.
+- Never combine translations, HTML tags, or comprehension questions into a situation field.
 - Step 4 (Ask question): ONLY this step has a generated SHORT, practical question (max 15 words) that asks about real-world application of the skill, NOT about "learning English"
   * DO NOT mention "English" in the question
   * Focus on the skill/topic itself (e.g., "When would you greet someone new?" not "Can you say hello in English?")
@@ -1237,13 +1238,13 @@ Respond ONLY in this JSON format:
   "lessonGoalDuration": "1 minute",
   "lessonGoalSteps": [
     {
-      "instruction": "Introduce the lesson topic.",
-      "script": null,
+      "instruction": "Introduce today's goal and check understanding.",
+      "script": "Our goal for today is: [lesson goal]. Is it clear?",
       "question": null
     },
     {
-      "instruction": "Read the lesson goal and confirm understanding.",
-      "script": "Is it clear?",
+      "instruction": "Introduce the situation.",
+      "script": "Here's our situation. [short situation]",
       "question": null
     },
     {
@@ -1569,7 +1570,7 @@ Respond ONLY in JSON format:
   "applyData": {
     "activityType": "speaking",
     "activityDuration": "3 minutes",
-    "situationText": "A short description of the scenario (1 sentence)",
+    "situationText": "A short plain-text description of the scenario (1 sentence; no HTML, translation, or questions)",
     "situationTranslation": "Translation of the situation in target language",
     "dialogueLines": [
       { "speaker": "Character1", "text": "First line of dialogue with <u>key vocabulary</u>", "isAction": false },
@@ -2185,6 +2186,8 @@ SITUATION TEXT RULES — NO GRAMMAR PATTERNS:
 
 TUTOR GUIDE RULES:
 - tutorSteps should be exactly 5 steps as shown in the example.
+- The tutor ALWAYS speaks first in the roleplay. The first numbered question must be a natural in-character line the tutor can say immediately.
+- Prefer direct conversational questions such as "Where are you from?" or "What is your job?" Avoid vague teacher prompts such as "Tell me one thing about yourself" or "What can you ask me?".
 - Step 5 scripts should ONLY be the questionsIntro and questions. Do NOT add scene-narration scripts like "Action! We're in the lobby now!" or "Alright-scene start." — these are cringy and unnecessary. The tutor just starts talking in character.
 - Do NOT include grammar tip steps or grammar reminders in tutorSteps. Grammar is handled by the grammarTip section separately.
 - Keep the tutor guide SHORT and practical. No filler.
@@ -3177,7 +3180,7 @@ Return ONLY JSON in the format specified.`;
         applyData: {
           activityType: applyType,
           activityDuration: apply.activityDuration || '3 minutes',
-          situationText: apply.situationText || '',
+          situationText: stripHtml(apply.situationText || ''),
           situationTranslation: shouldIncludeTranslation ? (apply.situationTranslation || '') : '',
           dialogueLines: (apply.dialogueLines || []).slice(0, dialogueCount).map((line: any) => ({
             speaker: line.speaker || '',
@@ -3573,7 +3576,7 @@ ${baseInstructions ? `BASE INSTRUCTIONS: ${baseInstructions}` : ''}`;
           challengeNumber: challengeNum,
           challengeName: mission.challengeName || `Challenge ${challengeNum}`,
           duration: mission.duration || '5-6 minutes',
-          situation: mission.situation || '',
+          situation: stripHtml(mission.situation || ''),
           situationTranslation: shouldIncludeTranslation ? (mission.situationTranslation || '') : '',
           instruction: (missionType === 'speaking' || missionType === 'listening') ? '' : (mission.instruction || ''),
           instructionTranslation: (missionType === 'speaking' || missionType === 'listening') ? '' : (shouldIncludeTranslation ? (mission.instructionTranslation || '') : ''),
@@ -3750,11 +3753,13 @@ ${lessonGoal ? `- Lesson Goal: ${lessonGoal}` : ''}`;
         throw new Error('Invalid response structure - missing lessonGoalSteps');
       }
 
-      // Enforce fixed scripts for steps 1, 2, 3, 5; only step 4 has generated script
+      // Enforce the house-standard opening: goal first, then situation.
       if (result.lessonGoalSteps && result.lessonGoalSteps.length >= 5) {
-        result.lessonGoalSteps[0].script = null; // Step 1: no script
-        result.lessonGoalSteps[1].script = "Is it clear?"; // Step 2: fixed script
-        result.lessonGoalSteps[2].script = null; // Step 3: no script
+        result.lessonGoalSteps[0].instruction = "Introduce today's goal and check understanding.";
+        result.lessonGoalSteps[0].script = `Our goal for today is: ${lessonGoal || topic}. Is it clear?`;
+        result.lessonGoalSteps[1].instruction = 'Introduce the situation.';
+        result.lessonGoalSteps[1].script = `Here's our situation. ${stripHtml(result.introTexts?.find((item: any) => item.language === 'en')?.text || topic)}`;
+        result.lessonGoalSteps[2].script = null;
         // Step 4 keeps its generated question script
         result.lessonGoalSteps[4].script = "Thank you, let's go to the next part."; // Step 5: fixed script
       }

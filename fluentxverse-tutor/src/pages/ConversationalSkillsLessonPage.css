@@ -408,7 +408,6 @@
 .csp-dark .csp-exercise-example,
 .csp-dark .csp-exercise-item,
 .csp-dark .csp-exercise-speech-bubble,
-.csp-dark .csp-stepb-multiple-choice,
 .csp-dark .csp-stepb-compare,
 .csp-dark .csp-stepb-speech,
 .csp-dark .csp-tutor-answer-key-box,
@@ -1136,6 +1135,10 @@
   height: 100%;
   object-fit: cover;
 }
+
+.csp-checkpoint .csp-vocab-image { display: none; }
+.csp-checkpoint .csp-vocab-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+.csp-checkpoint .csp-vocab-card { text-align: left; padding: 0.75rem; border: 1px solid var(--border-color, #dbe2ea); border-radius: 6px; }
 
 .csp-vocab-english {
   font-size: 1rem;
@@ -4158,7 +4161,6 @@
 .csp-fullpage.csp-dark .csp-exercise-example,
 .csp-fullpage.csp-dark .csp-exercise-item,
 .csp-fullpage.csp-dark .csp-answer-key-box,
-.csp-fullpage.csp-dark .csp-stepb-multiple-choice,
 .csp-fullpage.csp-dark .csp-stepb-compare,
 .csp-fullpage.csp-dark .csp-stepb-speech,
 .csp-fullpage.csp-dark .csp-tutor-answer-key-box,

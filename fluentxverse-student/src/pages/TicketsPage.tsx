@@ -2,24 +2,23 @@ import { useState, useEffect, useCallback } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { useTicketNotifications } from '../hooks/useTicketNotifications';
 import { useToastContext } from '../context/ToastContext';
-import { toast } from '../Components/Common/Toast';
 
 // Type for checkout success callback
 type CheckoutSuccessData = {
   statuses: Array<{ originTxHash?: string }>;
 };
+
+type CheckoutResult = {
+  success: boolean;
+  error?: string;
+};
 import { appWallet, autoConnectWallet, type WalletAccount } from '../config/wallet';
 import { API_BASE_URL } from '../config/api';
+import { getMe } from '../api/auth.api';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
+import TicketArtwork from '../Components/Common/TicketArtwork';
 import './TicketsPage.css';
-
-// Get ticket image URL from local assets
-const getTicketImageUrl = (tier: 'basic' | 'premium' | 'trial'): string => {
-  if (tier === 'basic') return '/assets/img/icons/basic_ticket2.webp';
-  if (tier === 'premium') return '/assets/img/icons/premium_ticket2.webp';
-  return '/assets/img/icons/trial_ticket.webp';
-};
 
 interface TicketPackage {
   id: string;
@@ -109,35 +108,33 @@ const ticketPackages: TicketPackage[] = [
 // Mock Checkout Widget for Development Testing
 interface MockCheckoutWidgetProps {
   pkg: TicketPackage;
-  onSuccess: (data: CheckoutSuccessData) => void;
+  onSuccess: (data: CheckoutSuccessData) => Promise<CheckoutResult>;
   onCancel: () => void;
-  imageUrl: string;
 }
 
-function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckoutWidgetProps) {
+function MockCheckoutWidget({ pkg, onSuccess, onCancel }: MockCheckoutWidgetProps) {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto'>('card');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [step, setStep] = useState<'select' | 'processing' | 'success'>('select');
+  const [step, setStep] = useState<'select' | 'processing' | 'success' | 'error'>('select');
+  const [paymentError, setPaymentError] = useState('');
   const isPremium = pkg.tier === 'premium';
 
-  const simulatePayment = () => {
-    setIsProcessing(true);
+  const simulatePayment = async () => {
     setStep('processing');
-    
-    // Simulate payment processing (2-3 seconds)
-    setTimeout(() => {
-      setStep('success');
-      
-      // After showing success for 1.5 seconds, call onSuccess
-      setTimeout(() => {
-        const mockSuccessData = {
-          statuses: [{
-            originTxHash: `0xmock_${Date.now().toString(16)}`,
-          }],
-        };
-        onSuccess(mockSuccessData);
-      }, 1500);
-    }, 2000 + Math.random() * 1000); // 2-3 second random delay
+    setPaymentError('');
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    const result = await onSuccess({
+      statuses: [{ originTxHash: `mock-payment-${Date.now().toString(16)}` }],
+    });
+
+    if (!result.success) {
+      setPaymentError(result.error || 'The purchase could not be completed.');
+      setStep('error');
+      return;
+    }
+
+    setStep('success');
+    setTimeout(onCancel, 1500);
   };
 
   return (
@@ -146,7 +143,7 @@ function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckout
         <>
           <div className="mock-checkout-summary">
             <div className="mock-checkout-product">
-              <img src={imageUrl} alt={pkg.name} className="mock-checkout-image" />
+              <TicketArtwork tier={pkg.tier} />
               <div className="mock-checkout-details">
                 <span className="mock-checkout-name">{pkg.name}</span>
                 <span className="mock-checkout-desc">{pkg.tickets} {pkg.tier} ticket{pkg.tickets > 1 ? 's' : ''}</span>
@@ -241,6 +238,17 @@ function MockCheckoutWidget({ pkg, onSuccess, onCancel, imageUrl }: MockCheckout
           <p>You've purchased {pkg.tickets} {pkg.tier} ticket{pkg.tickets > 1 ? 's' : ''}</p>
         </div>
       )}
+
+      {step === 'error' && (
+        <div className="mock-error">
+          <div className="mock-error-icon"><i className="fas fa-exclamation"></i></div>
+          <h3>Purchase Not Completed</h3>
+          <p>{paymentError}</p>
+          <button className="mock-retry-button" onClick={() => setStep('select')}>
+            Try Again
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -257,7 +265,7 @@ interface TicketBalance {
 
 export default function TicketsPage() {
   const { user } = useAuthContext();
-  const { showSuccess, showInfo, showError } = useToastContext();
+  const { showSuccess, showError } = useToastContext();
   const [selectedPackage, setSelectedPackage] = useState<TicketPackage | null>(null);
   const [showCheckout, setShowCheckout] = useState(false);
   const [ticketBalance, setTicketBalance] = useState<TicketBalance>({ basic: 0, premium: 0, trial: 0, basicTokenId: null, premiumTokenId: null, trialTokenId: null });
@@ -270,10 +278,19 @@ export default function TicketsPage() {
   const [packageForQuantity, setPackageForQuantity] = useState<TicketPackage | null>(null);
   
   const [activeAccount, setActiveAccount] = useState<WalletAccount | null>(appWallet.getAccount());
+  const [profileWalletAddress, setProfileWalletAddress] = useState<string | null>(null);
   const [isWalletConnecting, setIsWalletConnecting] = useState(true);
 
   // Get wallet address from connected wallet or from user's profile
-  const walletAddress = activeAccount?.address || user?.walletAddress || user?.smartWalletAddress;
+  const walletAddress = user?.walletAddress || user?.smartWalletAddress || profileWalletAddress || activeAccount?.address;
+
+  useEffect(() => {
+    if (walletAddress) return;
+
+    getMe()
+      .then((response) => setProfileWalletAddress(response?.user?.walletAddress || null))
+      .catch(() => setProfileWalletAddress(null));
+  }, [walletAddress]);
 
   // Handle balance update from socket notification
   const handleBalanceUpdate = useCallback((balance: { basic: number; premium: number; trial: number; total: number }) => {
@@ -380,37 +397,36 @@ export default function TicketsPage() {
     return packageForQuantity.price * quantity;
   };
 
-  const handleCheckoutSuccess = async (transactionData: CheckoutSuccessData) => {
+  const handleCheckoutSuccess = async (transactionData: CheckoutSuccessData): Promise<CheckoutResult> => {
     
     if (!selectedPackage) {
       console.error('Missing selectedPackage');
-      setShowCheckout(false);
-      setSelectedPackage(null);
-      setAdjustedAmount(null);
-      return;
+      return { success: false, error: 'No ticket package was selected.' };
     }
 
     // CRITICAL: Get the buyer's wallet address - use connected wallet first, then user profile wallet
     // NEVER fall back to a hardcoded address in production!
-    const buyerWallet = activeAccount?.address || user?.walletAddress || user?.smartWalletAddress;
+    let buyerWallet = user?.walletAddress || user?.smartWalletAddress || profileWalletAddress || activeAccount?.address;
+
+    if (!buyerWallet) {
+      try {
+        const response = await getMe();
+        buyerWallet = response?.user?.walletAddress;
+        if (buyerWallet) setProfileWalletAddress(buyerWallet);
+      } catch {
+        // The error state below provides the actionable message.
+      }
+    }
     
     if (!buyerWallet) {
       console.error('❌ CRITICAL: No wallet address available for purchase!');
-      toast.error('No wallet address found. Please make sure you are logged in and have a wallet connected.');
-      setShowCheckout(false);
-      setSelectedPackage(null);
-      setAdjustedAmount(null);
-      return;
+      return { success: false, error: 'No wallet address was found for your account.' };
     }
     
     // Validate wallet address format
     if (!buyerWallet.startsWith('0x') || buyerWallet.length !== 42) {
       console.error('❌ CRITICAL: Invalid wallet address format:', buyerWallet);
-      toast.error('Invalid wallet address. Please contact support.');
-      setShowCheckout(false);
-      setSelectedPackage(null);
-      setAdjustedAmount(null);
-      return;
+      return { success: false, error: 'Your wallet address is invalid. Please contact support.' };
     }
     
 
@@ -418,6 +434,7 @@ export default function TicketsPage() {
       // Call backend to process the purchase and transfer NFT tickets
       const response = await fetch(`${API_BASE_URL}/tickets/purchase`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           buyerWallet,
@@ -433,83 +450,21 @@ export default function TicketsPage() {
       const result = await response.json();
 
       if (result.success) {
-        
-        // The blockchain transaction is queued but not yet confirmed
-        // We need to wait for it to be mined before the balance updates
         if (walletAddress) {
-          // Store initial balance for comparison
-          const initialBalance = {
-            basic: ticketBalance.basic,
-            premium: ticketBalance.premium,
-            trial: ticketBalance.trial,
-          };
-          const expectedIncrease = selectedPackage.tickets;
-          const expectedTier = selectedPackage.tier;
-          
-          // Function to invalidate cache and fetch balance, returning the fresh balance
-          const invalidateAndFetch = async (): Promise<typeof initialBalance | null> => {
-            try {
-              // First invalidate the cache on backend
-              await fetch(`${API_BASE_URL}/tickets/invalidate-cache/${walletAddress}`, {
-                method: 'POST',
-              });
-            } catch (e) {
-              console.warn('Cache invalidation failed, continuing anyway:', e);
-            }
-            return await fetchTicketBalance(walletAddress);
-          };
-          
-          // Polling function to check for balance update
-          const pollForBalanceUpdate = async () => {
-            const maxAttempts = 10;
-            const delays = [2000, 3000, 3000, 4000, 4000, 5000, 5000, 5000, 5000, 5000]; // ~40s total
-            
-            for (let i = 0; i < maxAttempts; i++) {
-              await new Promise(resolve => setTimeout(resolve, delays[i]));
-              
-              const newBalance = await invalidateAndFetch();
-              
-              if (newBalance) {
-                // Check if balance increased for the expected tier
-                const currentBalance = newBalance[expectedTier];
-                const expectedBalance = initialBalance[expectedTier] + expectedIncrease;
-                
-                
-                if (currentBalance >= expectedBalance) {
-                  return; // Balance updated, stop polling
-                }
-              }
-            }
-            
-          };
-          
-          // Start polling in the background
-          pollForBalanceUpdate();
-          
-          // Show success message using toast
-          showSuccess(`🎉 Purchase successful! Your ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s) are being transferred.`, 6000);
-          showInfo('Your balance will update shortly once the blockchain confirms the transfer.', 5000);
+          await fetchTicketBalance(walletAddress);
         }
+        showSuccess(`Purchase successful. ${selectedPackage.tickets} ${selectedPackage.tier} ticket(s) were added.`, 5000);
+        return { success: true };
       } else {
         console.error('❌ Purchase failed:', result.error);
         showError(`Purchase failed: ${result.error}`, 5000);
-        // Still refresh balance to show actual on-chain state
-        if (walletAddress) {
-          fetchTicketBalance(walletAddress);
-        }
+        return { success: false, error: result.error || 'The server rejected the purchase.' };
       }
     } catch (error) {
       console.error('Error calling purchase API:', error);
       showError('Purchase failed. Please try again.', 5000);
-      // Still refresh balance to show actual on-chain state
-      if (walletAddress) {
-        fetchTicketBalance(walletAddress);
-      }
+      return { success: false, error: 'The purchase service is unavailable. Please try again.' };
     }
-    
-    setShowCheckout(false);
-    setSelectedPackage(null);
-    setAdjustedAmount(null);
   };
 
   const handleCheckoutCancel = () => {
@@ -543,7 +498,7 @@ export default function TicketsPage() {
                     <div className="balance-tickets-display">
                       <div className="balance-ticket-card basic">
                         <div className="balance-ticket-icon">
-                          <img src={getTicketImageUrl('basic')} alt="Basic" />
+                          <TicketArtwork tier="basic" />
                         </div>
                         <div className="balance-ticket-info">
                           <span className="balance-ticket-number">{ticketBalance?.basic || 0}</span>
@@ -552,7 +507,7 @@ export default function TicketsPage() {
                       </div>
                       <div className="balance-ticket-card premium">
                         <div className="balance-ticket-icon">
-                          <img src={getTicketImageUrl('premium')} alt="Premium" />
+                          <TicketArtwork tier="premium" />
                         </div>
                         <div className="balance-ticket-info">
                           <span className="balance-ticket-number">{ticketBalance?.premium || 0}</span>
@@ -562,7 +517,7 @@ export default function TicketsPage() {
                       {ticketBalance?.trial > 0 && (
                         <div className="balance-ticket-card trial">
                           <div className="balance-ticket-icon">
-                            <img src={getTicketImageUrl('trial')} alt="Trial" />
+                            <TicketArtwork tier="trial" />
                           </div>
                           <div className="balance-ticket-info">
                             <span className="balance-ticket-number">{ticketBalance?.trial || 0}</span>
@@ -653,7 +608,7 @@ export default function TicketsPage() {
                     </div>
                     
                     <div className="package-visual">
-                      <img src={getTicketImageUrl(pkg.tier)} alt={`${pkg.tier} ticket`} />
+                      <TicketArtwork tier={pkg.tier} />
                       <div className="package-ticket-count">
                         <span className="count">{pkg.tickets}</span>
                         <span className="label">{pkg.tickets === 1 ? 'Ticket' : 'Tickets'}</span>
@@ -709,7 +664,7 @@ export default function TicketsPage() {
             
             <div className={`quantity-header ${packageForQuantity.tier === 'premium' ? 'premium-header' : ''}`}>
               <div className="quantity-header-icon">
-                <img src={getTicketImageUrl(packageForQuantity.tier)} alt={`${packageForQuantity.tier} ticket`} />
+                <TicketArtwork tier={packageForQuantity.tier} />
               </div>
               <h2>Select Quantity</h2>
               <p>How many <strong>{packageForQuantity.name}</strong> do you want?</p>
@@ -811,7 +766,7 @@ export default function TicketsPage() {
             </button>
             <div className={`checkout-header ${selectedPackage.tier === 'premium' ? 'premium-header' : ''}`}>
               <div className="checkout-header-icon">
-                <img src={getTicketImageUrl(selectedPackage.tier)} alt={`${selectedPackage.tier} ticket`} />
+                <TicketArtwork tier={selectedPackage.tier} />
               </div>
               <h2>Complete Your Purchase</h2>
               <p>You're buying: <strong>{packageForQuantity?.name}{quantity > 1 ? ` ×${quantity}` : ''}</strong></p>
@@ -821,7 +776,6 @@ export default function TicketsPage() {
                 pkg={selectedPackage}
                 onSuccess={handleCheckoutSuccess}
                 onCancel={handleCheckoutCancel}
-                imageUrl={getTicketImageUrl(selectedPackage.tier)}
               />
             </div>
           </div>

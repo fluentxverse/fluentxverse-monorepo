@@ -67,6 +67,10 @@ export const RATE_LIMITS = {
   
   // Auth endpoints - strict to prevent brute force
   auth: { windowMs: 15 * 60 * 1000, maxRequests: 10 },   // 10 attempts per 15 minutes
+
+  // OAuth exchanges are already backed by verified provider tokens. Keep their
+  // limit separate from password attempts and allow normal session recovery.
+  privyAuth: { windowMs: 15 * 60 * 1000, maxRequests: 30 },
   
   // General API - fallback
   general: { windowMs: 60 * 1000, maxRequests: 100 },    // 100 requests per minute

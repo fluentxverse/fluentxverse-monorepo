@@ -491,7 +491,7 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    * Get student's lesson request (last viewed lesson + preferences)
    * GET /tutor/student/:studentId/lesson-request
    */
-  .get('/student/:studentId/lesson-request', async ({ params, cookie, set }) => {
+  .get('/student/:studentId/lesson-request', async ({ params, query, cookie, set }) => {
     
     try {
       const raw = cookie.tutorAuth?.value;
@@ -517,8 +517,9 @@ const Tutor = new Elysia({ prefix: '/tutor' })
 
       // Get student's last viewed lesson and profile
       const studentService = new StudentService();
+      const sessionId = typeof query.sessionId === 'string' ? query.sessionId : undefined;
       const [lessonResult, profileResult] = await Promise.all([
-        studentService.getLastViewedLesson(studentId),
+        studentService.getLastViewedLesson(studentId, sessionId),
         tutorService.getStudentProfile(studentId, payload.userId)
       ]);
 

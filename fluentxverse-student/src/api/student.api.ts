@@ -14,6 +14,7 @@ export interface AboutMe {
 }
 
 export interface LastViewedLesson {
+  sessionId?: string;
   courseId: string;
   lessonId: string;
   lessonNumber: number;
@@ -121,9 +122,11 @@ export const saveLastViewedLesson = async (lesson: LastViewedLesson): Promise<{ 
 /**
  * Get the last viewed lesson for the student
  */
-export const getLastViewedLesson = async (): Promise<{ success: boolean; data?: LastViewedLesson; error?: string }> => {
+export const getLastViewedLesson = async (sessionId?: string): Promise<{ success: boolean; data?: LastViewedLesson; error?: string }> => {
   try {
-    const { data } = await client.get('/student/last-viewed-lesson');
+    const { data } = await client.get('/student/last-viewed-lesson', {
+      params: sessionId ? { sessionId } : undefined,
+    });
     return data;
   } catch (error: any) {
     console.error('[StudentAPI] Failed to get last viewed lesson:', error);

@@ -19,13 +19,14 @@
 
 .social-login-modal {
   background: #ffffff;
-  border-radius: 24px;
-  padding: 40px;
-  max-width: 420px;
+  border-radius: 18px;
+  padding: 36px;
+  max-width: 400px;
   width: 100%;
   position: relative;
   pointer-events: auto;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -66,7 +67,9 @@
 /* Header */
 .social-login-modal .modal-header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding: 0;
+  border: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -74,15 +77,15 @@
 }
 
 .social-login-modal .modal-logo {
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .social-login-modal .modal-logo img {
-  height: 56px;
+  height: 52px;
   width: auto;
   filter: drop-shadow(0 2px 8px rgba(2, 69, 174, 0.2));
 }
@@ -92,7 +95,7 @@
 }
 
 .social-login-modal .modal-brand-text {
-  font-size: 25px;
+  font-size: 24px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: 0.01em;
@@ -121,18 +124,24 @@
 /* Title */
 .login-title {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 26px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .login-title h2 {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 25px;
+  font-weight: 800;
   color: #1e293b;
   margin: 0 0 8px 0;
 }
 
 .dark-mode .login-title h2 {
   color: #ffffff;
+}
+
+.dark-mode .login-title {
+  border-top-color: #334155;
 }
 
 .login-title p {
@@ -149,28 +158,129 @@
 .social-login-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 24px;
 }
 
 .social-btn {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  border: 1px solid #d8e0ea;
+  background: #ffffff;
+  color: #172033;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.social-btn::after {
+  content: '';
+  width: 32px;
+}
+
+.social-btn-label {
+  grid-column: 2;
+  text-align: center;
+}
+
+.social-btn-end {
+  position: absolute;
+  right: 8px;
+  top: 0;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+}
+
+.last-used-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 3px 7px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.social-icon-slot {
+  grid-column: 1;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 20px;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
+  color: #111827;
+}
+
+.social-icon-slot svg {
+  width: 25px;
+  height: 25px;
+  display: block;
+  fill: currentColor;
+}
+
+.social-icon-slot .google-mark {
+  width: 25px;
+  height: 25px;
+  fill: none;
+}
+
+.social-icon-slot .x-mark {
+  width: 24px;
+  height: 24px;
+}
+
+.social-icon-slot .apple-mark {
+  width: 27px;
+  height: 27px;
 }
 
 .social-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.62;
   cursor: not-allowed;
+}
+
+.social-btn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 2px;
+}
+
+.dark-mode .social-btn {
+  background: #232b3a;
+  border-color: #3d485a;
+  color: #f1f5f9;
+  box-shadow: none;
+}
+
+.dark-mode .social-icon-slot {
+  color: #f1f5f9;
+}
+
+.dark-mode .last-used-badge {
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(37, 99, 235, 0.18);
+  color: #bfdbfe;
+}
+
+.dark-mode .social-btn:hover:not(:disabled) {
+  background: #2b3546;
+  border-color: #536177;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
 }
 
 .social-icon {
@@ -182,23 +292,36 @@
   flex-shrink: 0;
 }
 
+.x-btn {
+  background: #ffffff;
+  border-color: #d8e0ea;
+  color: #172033;
+}
+
+.x-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #aebbc9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.09);
+}
+
 /* Google Button */
 .google-btn {
   background: #ffffff;
-  border-color: #e2e8f0;
-  color: #1e293b;
+  border-color: #d8e0ea;
+  color: #172033;
 }
 
 .google-btn:hover:not(:disabled) {
   background: #f8fafc;
-  border-color: #cbd5e1;
+  border-color: #aebbc9;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .dark-mode .google-btn {
-  background: #0f172a;
-  border-color: #334155;
+  background: #232b3a;
+  border-color: #3d485a;
   color: #f1f5f9;
 }
 
@@ -209,29 +332,31 @@
 
 /* Apple Button */
 .apple-btn {
-  background: #000000;
-  color: #ffffff;
-  border-color: #000000;
+  background: #ffffff;
+  color: #172033;
+  border-color: #d8e0ea;
 }
 
 .apple-btn:hover:not(:disabled) {
-  background: #1a1a1a;
+  background: #f8fafc;
+  border-color: #aebbc9;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.09);
 }
 
 .dark-mode .apple-btn {
-  background: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
+  background: #232b3a;
+  color: #f1f5f9;
+  border-color: #3d485a;
 }
 
 .dark-mode .apple-btn:hover:not(:disabled) {
-  background: #f1f5f9;
+  background: #2b3546;
+  border-color: #536177;
 }
 
 .dark-mode .apple-btn .social-icon {
-  color: #000000;
+  color: #f1f5f9;
 }
 
 /* LINE Button */
@@ -296,6 +421,7 @@
 /* Loading State */
 .btn-loading {
   display: flex;
+  grid-column: 1 / -1;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -305,7 +431,7 @@
   width: 18px;
   height: 18px;
   border: 2px solid rgba(0, 0, 0, 0.1);
-  border-top-color: #0245ae;
+  border-top-color: #2563eb;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

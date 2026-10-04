@@ -94,7 +94,7 @@ export default defineConfig({
 		strictPort: true,
 		host: '0.0.0.0', // Listen on all interfaces for LAN access
 		hmr: {
-			port: 5173,
+			port: Number(process.env.VITE_HMR_PORT || 5173),
 		},
 		// Proxy API requests to backend - this makes cookies work (same origin)
 		proxy: {

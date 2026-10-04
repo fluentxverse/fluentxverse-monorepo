@@ -1,5 +1,5 @@
 import Elysia, { t } from 'elysia';
-import { ticketService, type TicketTier } from '@/services/ticket.services/ticket.service';
+import { isMockTicketMode, ticketService, type TicketTier } from '@/services/ticket.services/ticket.service';
 import { cacheGetOrSet, invalidateCache } from '@/db/redis';
 import { getIO } from '@/socket/socket.server';
 import { notifyTicketReceived } from '@/socket/handlers/ticket.handler';
@@ -177,7 +177,7 @@ const Ticket = new Elysia({ prefix: '/tickets' })
    */
   .post('/purchase', async ({ body, cookie, set }) => {
     // CRITICAL SECURITY: Disable in production - purchases should go through verified payment flow
-    if (isProduction) {
+    if (isProduction && !isMockTicketMode) {
       set.status = 403;
       return {
         success: false,
@@ -187,7 +187,18 @@ const Ticket = new Elysia({ prefix: '/tickets' })
     
     
     try {
-      const { buyerWallet, tier, quantity, mockTransactionHash, userId } = body;
+      const { buyerWallet, tier, quantity, mockTransactionHash } = body;
+      let userId = body.userId;
+
+      if (isMockTicketMode) {
+        const raw = cookie.studentAuth?.value;
+        const payload = raw ? await verifyAuthToken(String(raw)) : null;
+        if (!payload) {
+          set.status = 401;
+          return { success: false, error: 'Please sign in before purchasing tickets' };
+        }
+        userId = payload.userId;
+      }
 
       // CRITICAL VALIDATION: Ensure buyer wallet is valid
       if (!buyerWallet || !buyerWallet.startsWith('0x')) {
@@ -305,6 +316,44 @@ const Ticket = new Elysia({ prefix: '/tickets' })
       quantity: t.Number(),
       mockTransactionHash: t.Optional(t.String()),
       userId: t.Optional(t.String()),
+    })
+  })
+
+  .post('/consume', async ({ body, cookie, set }) => {
+    if (!isMockTicketMode) {
+      set.status = 404;
+      return { success: false, error: 'Not found' };
+    }
+
+    try {
+      const raw = cookie.studentAuth?.value;
+      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Please sign in before booking a lesson' };
+      }
+
+      const data = await ticketService.consumeMockTicket({
+        walletAddress: body.walletAddress,
+        studentId: payload.userId,
+        tier: body.tier,
+        quantity: body.quantity,
+      });
+      await invalidateCache(`ticket:balance:${body.walletAddress.toLowerCase()}`);
+
+      return { success: true, data };
+    } catch (error) {
+      set.status = 400;
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to use ticket',
+      };
+    }
+  }, {
+    body: t.Object({
+      walletAddress: t.String({ minLength: 42, maxLength: 42 }),
+      tier: t.Union([t.Literal('basic'), t.Literal('premium'), t.Literal('trial')]),
+      quantity: t.Number({ minimum: 1, maximum: 10 }),
     })
   })
 

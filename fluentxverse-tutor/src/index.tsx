@@ -40,6 +40,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
 import { OfflineBanner } from './Components/Common/OfflineBanner';
+import AttendanceReminder from './Components/Common/AttendanceReminder';
 import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
 import { useThemeStore } from './context/ThemeContext';
@@ -158,6 +159,7 @@ function AppShell() {
 						<MobileHeader />
 						<main>
 							<OfflineBanner />
+							<AttendanceReminder />
 							{/* Session expiry warning modal visible when authenticated */}
 							<SessionExpiryModal isAuthenticated={isAuthenticated} />
 							{/* Session expired modal - shows when 401 received */}

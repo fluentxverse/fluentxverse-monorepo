@@ -10,6 +10,7 @@
  */
 
 import { describe, test, expect, beforeAll } from 'bun:test';
+import { canOpenSlot, canReserveForBooking } from '../src/services/schedule.services/bookingPolicy';
 
 // Import penalty configuration for testing
 const PENALTY_RULES = {
@@ -144,44 +145,33 @@ describe('Date/Time Validation', () => {
 // =====================================
 
 describe('Booking Time Windows', () => {
-  const canBookSlot = (slotDateTime: Date, minAdvanceMinutes: number = 5): boolean => {
-    const now = new Date();
-    const minBookTime = new Date(now.getTime() + minAdvanceMinutes * 60 * 1000);
-    return slotDateTime > minBookTime;
-  };
-
-  const canOpenSlot = (slotDateTime: Date, minAdvanceMinutes: number = 5): boolean => {
-    const now = new Date();
-    const minOpenTime = new Date(now.getTime() + minAdvanceMinutes * 60 * 1000);
-    return slotDateTime > minOpenTime;
-  };
-
   describe('Minimum Booking Advance', () => {
-    test('should allow booking 10 minutes ahead', () => {
-      const futureSlot = new Date(Date.now() + 10 * 60 * 1000);
-      expect(canBookSlot(futureSlot)).toBe(true);
+    test('should allow a Present slot 10 minutes ahead', () => {
+      const now = Date.now();
+      expect(canReserveForBooking(now + 10 * 60_000, now, true)).toBe(true);
+      expect(canReserveForBooking(now + 10 * 60_000, now)).toBe(false);
     });
 
     test('should reject booking less than 5 minutes ahead', () => {
-      const tooSoonSlot = new Date(Date.now() + 3 * 60 * 1000);
-      expect(canBookSlot(tooSoonSlot)).toBe(false);
+      const now = Date.now();
+      expect(canReserveForBooking(now + 3 * 60_000, now)).toBe(false);
     });
 
     test('should reject booking past slots', () => {
-      const pastSlot = new Date(Date.now() - 60 * 1000);
-      expect(canBookSlot(pastSlot)).toBe(false);
+      const now = Date.now();
+      expect(canReserveForBooking(now - 60_000, now)).toBe(false);
     });
   });
 
   describe('Minimum Slot Opening Advance', () => {
     test('should allow opening slot 1 hour ahead', () => {
-      const futureSlot = new Date(Date.now() + 60 * 60 * 1000);
-      expect(canOpenSlot(futureSlot)).toBe(true);
+      const now = Date.now();
+      expect(canOpenSlot(now + 60 * 60_000, now)).toBe(true);
     });
 
-    test('should reject opening slot less than 5 minutes ahead', () => {
-      const tooSoonSlot = new Date(Date.now() + 2 * 60 * 1000);
-      expect(canOpenSlot(tooSoonSlot)).toBe(false);
+    test('should reject opening slot less than 11 minutes ahead', () => {
+      const now = Date.now();
+      expect(canOpenSlot(now + 10 * 60_000, now)).toBe(false);
     });
   });
 });

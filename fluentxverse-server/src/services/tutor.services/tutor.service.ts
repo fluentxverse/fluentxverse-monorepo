@@ -3,6 +3,7 @@ import neo4j from 'neo4j-driver';
 import type { Tutor, TutorProfile, TutorSearchParams, TutorSearchResponse } from './tutor.interface';
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
+import { canReserveForBooking } from '../schedule.services/bookingPolicy';
 
 // Helper to convert Neo4j DateTime to ISO string
 function neo4jDateTimeToISO(dt: any): string | undefined {
@@ -46,16 +47,15 @@ function convert12hTo24h(time12: string): string {
   return `${String(hours).padStart(2, '0')}:${minutes}`;
 }
 
-// Helper to check if a slot is still bookable (not past and at least 5 min away)
-function isSlotBookable(slotDate: string, slotTime: string): boolean {
+// Keep tutor discovery aligned with the booking endpoint's attendance cutoff.
+function isSlotBookable(slotDate: string, slotTime: string, attendanceMarked?: string): boolean {
   const now = new Date();
-  const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 min from now
   
   const time24h = convert12hTo24h(slotTime);
   // Slot times are in PHT (UTC+8)
   const slotDateTime = new Date(`${slotDate}T${time24h}:00+08:00`);
   
-  return slotDateTime > minBookTime;
+  return canReserveForBooking(slotDateTime.getTime(), now.getTime(), attendanceMarked === 'present');
 }
 
 function toTutorProofSummary(credentialNode: any) {
@@ -239,7 +239,7 @@ export class TutorService {
           ${matchPattern}
           ${whereClause}
           OPTIONAL MATCH (u)-[:HAS_CERTIFICATION_CREDENTIAL]->(cred:TutorCertificationCredential)
-          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots, cred
+          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime, attendanceMarked: s.attendanceMarked}) as slots, cred
         `;
         
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
@@ -248,7 +248,7 @@ export class TutorService {
         countQuery = `
           ${matchPattern}
           OPTIONAL MATCH (u)-[:HAS_CERTIFICATION_CREDENTIAL]->(cred:TutorCertificationCredential)
-          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime}) as slots, cred
+          RETURN DISTINCT u, collect({date: s.slotDate, time: s.slotTime, attendanceMarked: s.attendanceMarked}) as slots, cred
         `;
         
         tutorsQuery = countQuery; // Same query, we'll handle pagination in code
@@ -261,17 +261,17 @@ export class TutorService {
       // All modes now use slot-level filtering to exclude past/close slots
       const result = await session.run(countQuery, queryParams);
       
-      // Filter tutors who have at least one BOOKABLE slot (not past and at least 5 min away)
+      // Filter tutors who have at least one bookable slot under the attendance policy.
       const filteredTutors: Tutor[] = [];
       
       for (const record of result.records) {
         const user = record.get('u').properties;
-        const slots: Array<{date: string; time: string}> = record.get('slots') || [];
+        const slots: Array<{date: string; time: string; attendanceMarked?: string}> = record.get('slots') || [];
         const proofSummary = toTutorProofSummary(record.get('cred'));
         
-        // Filter to only bookable slots (not past and at least 5 min away)
-        const bookableSlots = slots.filter((slot: {date: string; time: string}) => 
-          isSlotBookable(slot.date, slot.time)
+        // Filter to only bookable slots.
+        const bookableSlots = slots.filter((slot: {date: string; time: string; attendanceMarked?: string}) =>
+          isSlotBookable(slot.date, slot.time, slot.attendanceMarked)
         );
         
         // If time range filter is applied, also check that

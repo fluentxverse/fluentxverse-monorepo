@@ -204,7 +204,7 @@ export const tutorApi = {
   /**
    * Get student's lesson request (for tutor's classroom view)
    */
-  getStudentLessonRequest: async (studentId: string): Promise<{
+  getStudentLessonRequest: async (studentId: string, sessionId?: string): Promise<{
     lessonId: string;
     courseId: string;
     title: string;
@@ -217,7 +217,9 @@ export const tutorApi = {
       otherRequests?: string;
     };
   } | null> => {
-    const response = await api.get<{ success: boolean; data: any }>(`/tutor/student/${studentId}/lesson-request`);
+    const response = await api.get<{ success: boolean; data: any }>(`/tutor/student/${studentId}/lesson-request`, {
+      params: sessionId ? { sessionId } : undefined,
+    });
 
     if (!response.data.success) {
       return null;

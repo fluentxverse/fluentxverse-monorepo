@@ -15,6 +15,8 @@ import { getDriver } from "../../db/memgraph";
 import { v4 as uuidv4 } from "uuid";
 import { TICKETS_PER_LESSON, REFUND_POLICY } from "../../config/constant";
 import { gmrEngine } from "../web3.services/gmrEngine.service";
+import { attendanceStartMs } from "../schedule.services/attendanceWindow";
+import { canReserveForBooking } from "../schedule.services/bookingPolicy";
 
 // Contract configuration
 const TICKET_CONTRACT_ADDRESS = process.env.TICKET_CONTRACT_ADDRESS || "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db";
@@ -24,6 +26,10 @@ const TICKET_RPC_URL = process.env.TICKET_RPC_URL || process.env.ARBITRUM_RPC_UR
 const TICKET_BASIC_TOKEN_ID = process.env.TICKET_BASIC_TOKEN_ID || "";
 const TICKET_PREMIUM_TOKEN_ID = process.env.TICKET_PREMIUM_TOKEN_ID || "";
 const TICKET_TRIAL_TOKEN_ID = process.env.TICKET_TRIAL_TOKEN_ID || "";
+
+export const isMockTicketMode = process.env.ALLOW_MOCK_TICKET_PURCHASES === "true";
+
+const mockTokenId = (tier: TicketTier) => `mock-${tier}`;
 
 const publicClient = createPublicClient({
   chain: arbitrumSepolia,
@@ -661,6 +667,55 @@ export class TicketService {
     if (!buyerWallet || !buyerWallet.startsWith('0x') || buyerWallet.length !== 42) {
       throw new Error('CRITICAL: Invalid buyer wallet address');
     }
+
+    if (isMockTicketMode) {
+      const transactionId = `mock-purchase-${uuidv4()}`;
+      const pricePerTicket = tier === 'basic' ? 6 : tier === 'premium' ? 9 : 0;
+      const driver = getDriver();
+      const session = driver.session();
+
+      try {
+        const wallet = buyerWallet.toLowerCase();
+        const increments = {
+          basic: tier === 'basic' ? quantity : 0,
+          premium: tier === 'premium' ? quantity : 0,
+          trial: tier === 'trial' ? quantity : 0,
+        };
+
+        await session.run(`
+          MERGE (balance:MockTicketBalance {walletAddress: $wallet})
+          SET balance.basic = coalesce(balance.basic, 0) + $basic,
+              balance.premium = coalesce(balance.premium, 0) + $premium,
+              balance.trial = coalesce(balance.trial, 0) + $trial,
+              balance.updatedAt = datetime()
+        `, { wallet, ...increments });
+
+        await this.saveTicketPurchase({
+          buyerWallet: wallet,
+          userId,
+          tokenId: mockTokenId(tier),
+          tier,
+          quantity,
+          pricePerTicket,
+          totalPrice: pricePerTicket * quantity,
+          transferTxId: transactionId,
+          paymentTxHash: mockTransactionHash,
+          purchaseDate,
+          status: 'completed',
+        });
+
+        return {
+          success: true,
+          transactionId,
+          tokenId: mockTokenId(tier),
+          tier,
+          quantity,
+          purchaseDate,
+        };
+      } finally {
+        await session.close();
+      }
+    }
     
     const vaultWallet = this.getVaultWalletAddress();
     if (buyerWallet.toLowerCase() === vaultWallet.toLowerCase()) {
@@ -778,6 +833,34 @@ export class TicketService {
     premiumTokenId: string | null;
     trialTokenId: string | null;
   }> {
+
+    if (isMockTicketMode) {
+      const driver = getDriver();
+      const session = driver.session();
+      try {
+        const result = await session.run(`
+          OPTIONAL MATCH (balance:MockTicketBalance {walletAddress: $wallet})
+          RETURN coalesce(balance.basic, 0) AS basic,
+                 coalesce(balance.premium, 0) AS premium,
+                 coalesce(balance.trial, 0) AS trial
+        `, { wallet: walletAddress.toLowerCase() });
+        const record = result.records[0];
+        const asNumber = (value: any) => typeof value === 'object' && value?.toNumber
+          ? value.toNumber()
+          : Number(value || 0);
+
+        return {
+          basic: asNumber(record?.get('basic')),
+          premium: asNumber(record?.get('premium')),
+          trial: asNumber(record?.get('trial')),
+          basicTokenId: mockTokenId('basic'),
+          premiumTokenId: mockTokenId('premium'),
+          trialTokenId: mockTokenId('trial'),
+        };
+      } finally {
+        await session.close();
+      }
+    }
 
     // Get all tickets to find token IDs for basic, premium, and trial
     const tickets = await this.getTickets();
@@ -1459,8 +1542,35 @@ export class TicketService {
   async verifyTicketTransfer(txHash: string, expectedFromWallet: string): Promise<{
     valid: boolean;
     error?: string;
+    tier?: TicketTier;
+    tokenId?: string;
   }> {
     try {
+      if (isMockTicketMode && txHash.startsWith('mock-ticket-')) {
+        const driver = getDriver();
+        const session = driver.session();
+        try {
+          const result = await session.run(`
+            MATCH (transfer:MockTicketTransfer {
+              transactionHash: $txHash,
+              walletAddress: $wallet,
+              status: 'pending'
+            })
+            RETURN transfer.transactionHash AS transactionHash, transfer.tier AS tier
+          `, { txHash, wallet: expectedFromWallet.toLowerCase() });
+
+          if (result.records.length === 0) {
+            return { valid: false, error: 'Mock ticket transfer was not found or has already been used' };
+          }
+
+          return {
+            valid: true,
+            tier: result.records[0]?.get('tier') as TicketTier,
+          };
+        } finally {
+          await session.close();
+        }
+      }
       
       const receipt = await publicClient.getTransactionReceipt({
         hash: txHash as Hash,
@@ -1485,7 +1595,7 @@ export class TicketService {
       const expectedFrom = getAddress(expectedFromWallet);
       const expectedTo = this.getVaultWalletAddress();
       const contractAddress = this.getContractAddress();
-      const foundValidTransfer = transferEvents.some((event) => {
+      const foundValidTransfer = transferEvents.find((event) => {
         if (getAddress(event.address) !== contractAddress) {
           return false;
         }
@@ -1500,10 +1610,129 @@ export class TicketService {
         return { valid: false, error: 'No valid ticket transfer from student to vault found in transaction' };
       }
 
-      return { valid: true };
+      const tokenId = foundValidTransfer.args.id?.toString();
+      const tier = (await this.getTickets()).find(ticket => ticket.tokenId === tokenId)?.tier;
+      if (!tier) return { valid: false, error: 'Transfer is not for a recognized lesson ticket' };
+      return { valid: true, tokenId, tier };
     } catch (error: any) {
       console.error('[TicketService] Error verifying transaction:', error);
       return { valid: false, error: `Verification failed: ${error.message}` };
+    }
+  }
+
+  async recoverUnbookedTransfer(studentId: string, txHash: string, slotId: string, reservationId: string): Promise<{
+    status: 'booked' | 'refunded' | 'processing'; bookingId?: string; refundTxHash?: string;
+  }> {
+    const session = getDriver().session();
+    try {
+      const student = await session.run(
+        `MATCH (s:Student {id: $studentId})
+         RETURN s.externalWalletAddress AS external, s.smartWalletAddress AS smart`,
+        { studentId }
+      );
+      const wallet = student.records[0]?.get('external') || student.records[0]?.get('smart');
+      if (!wallet) throw new Error('Student wallet not found');
+
+      const booked = await session.run(
+        `MATCH (b:Booking {studentId: $studentId, ticketTransferTxHash: $txHash})
+         RETURN b.bookingId AS bookingId`,
+        { studentId, txHash }
+      );
+      if (booked.records.length) {
+        return { status: 'booked', bookingId: booked.records[0]!.get('bookingId') };
+      }
+      // A booking request may still be committing after the client times out.
+      const activeHold = await session.run(
+        `MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
+                            reservationId: $reservationId})
+         WHERE s.pendingUntil > datetime()
+         RETURN s.slotDate AS date, s.slotTime AS time,
+                s.attendanceMarked AS attendanceMarked`,
+        { slotId, studentId, reservationId }
+      );
+      if (activeHold.records.length) {
+        const hold = activeHold.records[0]!;
+        const startMs = attendanceStartMs({ date: hold.get('date'), time: hold.get('time') });
+        if (canReserveForBooking(startMs, Date.now(), hold.get('attendanceMarked') === 'present')) {
+          return { status: 'processing' };
+        }
+      }
+      const recorded = await session.run(
+        `MATCH (t:TicketTransaction {transferTxId: $txHash}) RETURN t.id AS id`, { txHash }
+      );
+      if (recorded.records.length) throw new Error('This ticket transfer is already linked to a transaction');
+
+      const priorRecovery = await session.run(
+        `MATCH (r:TicketRecovery {txHash: $txHash})
+         RETURN r.status AS status, r.refundTxHash AS refundTxHash`, { txHash }
+      );
+      if (priorRecovery.records.length) {
+        const row = priorRecovery.records[0]!;
+        if (row.get('status') === 'refunded') {
+          return { status: 'refunded', refundTxHash: row.get('refundTxHash') || undefined };
+        }
+        return { status: 'processing' };
+      }
+
+      const verification = await this.verifyTicketTransfer(txHash, wallet);
+      if (!verification.valid) throw new Error(verification.error || 'Ticket transfer could not be verified');
+
+      if (isMockTicketMode && txHash.startsWith('mock-ticket-')) {
+        const tier = verification.tier;
+        if (!tier) throw new Error('Mock ticket tier is missing');
+        const property = tier === 'basic' ? 'basic' : tier === 'premium' ? 'premium' : 'trial';
+        const restored = await session.executeWrite(async tx => tx.run(
+          `MATCH (transfer:MockTicketTransfer {transactionHash: $txHash,
+                                               studentId: $studentId, status: 'pending'})
+           MATCH (balance:MockTicketBalance {walletAddress: $wallet})
+           WHERE NOT EXISTS { MATCH (:Booking {ticketTransferTxHash: $txHash}) }
+           SET transfer.status = 'refunded', transfer.refundedAt = datetime(),
+               balance.${property} = coalesce(balance.${property}, 0) + transfer.quantity,
+               balance.updatedAt = datetime()
+           CREATE (r:TicketRecovery {txHash: $txHash, studentId: $studentId,
+                                     status: 'refunded', createdAt: datetime(), completedAt: datetime()})
+           RETURN r.txHash AS txHash`,
+          { txHash, studentId, wallet: wallet.toLowerCase() }
+        ));
+        if (!restored.records.length) throw new Error('Ticket was already used or recovered');
+        return { status: 'refunded' };
+      }
+
+      if (!verification.tokenId) throw new Error('Ticket token ID could not be verified');
+      const claimed = await session.executeWrite(async tx => tx.run(
+        `MATCH (s:Student {id: $studentId})
+         WHERE NOT EXISTS { MATCH (:Booking {ticketTransferTxHash: $txHash}) }
+           AND NOT EXISTS { MATCH (:TicketRecovery {txHash: $txHash}) }
+         CREATE (r:TicketRecovery {txHash: $txHash, studentId: $studentId,
+                                   walletAddress: $wallet, tokenId: $tokenId,
+                                   status: 'processing', createdAt: datetime()})
+         RETURN r.txHash AS txHash`,
+        { txHash, studentId, wallet, tokenId: verification.tokenId }
+      ));
+      if (!claimed.records.length) throw new Error('Ticket transfer is already booked or being recovered');
+      try {
+        const refundTxHash = await this.enqueueTicketTransfer({
+          from: this.getVaultWalletAddress(), to: wallet,
+          tokenId: verification.tokenId, quantity: TICKETS_PER_LESSON,
+          walletAddress: this.getVaultWalletAddress()
+        });
+        await session.run(
+          `MATCH (r:TicketRecovery {txHash: $txHash})
+           SET r.status = 'refunded', r.refundTxHash = $refundTxHash,
+               r.completedAt = datetime()`,
+          { txHash, refundTxHash }
+        );
+        return { status: 'refunded', refundTxHash };
+      } catch (error) {
+        await session.run(
+          `MATCH (r:TicketRecovery {txHash: $txHash})
+           SET r.status = 'failed', r.error = $error`,
+          { txHash, error: error instanceof Error ? error.message : String(error) }
+        );
+        throw new Error('Ticket recovery needs support review; keep your transfer hash');
+      }
+    } finally {
+      await session.close();
     }
   }
 
@@ -1579,6 +1808,13 @@ export class TicketService {
         MERGE (s)-[:MADE_TRANSACTION]->(t)
       `, { transactionId, studentId });
 
+      if (isMockTicketMode && transferTxHash?.startsWith('mock-ticket-')) {
+        await session.run(`
+          MATCH (transfer:MockTicketTransfer {transactionHash: $transferTxHash, status: 'pending'})
+          SET transfer.status = 'used', transfer.bookingId = $bookingId, transfer.usedAt = datetime()
+        `, { transferTxHash, bookingId });
+      }
+
 
       return {
         id: transactionId,
@@ -1603,6 +1839,59 @@ export class TicketService {
     } finally {
       await session.close();
     }
+  }
+
+  async consumeMockTicket(params: {
+    walletAddress: string;
+    studentId: string;
+    tier: TicketTier;
+    quantity: number;
+  }): Promise<{ transactionHash: string; balance: Awaited<ReturnType<TicketService['getWalletTicketBalance']>> }> {
+    if (!isMockTicketMode) {
+      throw new Error('Mock ticket transfers are disabled');
+    }
+
+    const { walletAddress, studentId, tier, quantity } = params;
+    const wallet = walletAddress.toLowerCase();
+    const property = tier === 'basic' ? 'basic' : tier === 'premium' ? 'premium' : 'trial';
+    const transactionHash = `mock-ticket-${uuidv4()}`;
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(`
+        MATCH (balance:MockTicketBalance {walletAddress: $wallet})
+        WHERE coalesce(balance.${property}, 0) >= $quantity
+        SET balance.${property} = balance.${property} - $quantity,
+            balance.updatedAt = datetime()
+        CREATE (transfer:MockTicketTransfer {
+          transactionHash: $transactionHash,
+          walletAddress: $wallet,
+          studentId: $studentId,
+          tier: $tier,
+          quantity: $quantity,
+          status: 'pending',
+          createdAt: datetime()
+        })
+        RETURN balance.${property} AS remaining
+      `, { wallet, studentId, tier, quantity, transactionHash });
+
+      if (result.records.length === 0) {
+        throw new Error(`Insufficient ${tier} tickets`);
+      }
+
+      await session.run(`
+        MATCH (student:Student {id: $studentId})
+        SET student.externalWalletAddress = $wallet
+      `, { studentId, wallet });
+    } finally {
+      await session.close();
+    }
+
+    return {
+      transactionHash,
+      balance: await this.getWalletTicketBalance(wallet),
+    };
   }
 
   /**

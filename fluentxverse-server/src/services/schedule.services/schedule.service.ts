@@ -25,8 +25,14 @@ import { emitSlotBooked, emitSlotCancelled } from '../../socket/handlers/schedul
 import { ticketService } from '../ticket.services/ticket.service';
 import { REFUND_POLICY } from '../../config/constant';
 import { invalidateCache } from '../../db/redis';
+import { ClassroomActivityService } from '../classroomActivity.services/classroomActivity.service';
+import { attendanceDeadlineMs, attendanceStartMs, validateAttendanceWindow, validateAttendanceWithPresentNeighbors, NORMAL_DEADLINE_MINUTES, type AttendanceSlotTime } from './attendanceWindow';
+import { ABSENCE_REASONS, isShortNoticeCancellation, validateAbsenceTime, validateReopenPolicy, type AbsenceReason } from './cancellationPolicy';
+import type { ManagedTransaction } from 'neo4j-driver';
+import { BOOKING_CUTOFF_MESSAGE, BOOKING_CUTOFF_MINUTES, SLOT_OPEN_LEAD_MINUTES, bookingCutoffMs, canOpenSlot, canReserveForBooking, CHECKOUT_HOLD_MINUTES } from './bookingPolicy';
 
 const notificationService = new NotificationService();
+const classroomActivityService = new ClassroomActivityService();
 
 export class ScheduleService {
   
@@ -52,13 +58,12 @@ export class ScheduleService {
   /**
    * Open time slots for tutoring
    */
-  async openSlots(input: OpenSlotsInput): Promise<void> {
+  async openSlots(input: OpenSlotsInput): Promise<Array<{ date: string; time: string; slotId: string; status: string }>> {
     const driver = getDriver();
     const session = driver.session();
     
     try {
-      const now = new Date();
-      const minOpenTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes ahead
+      const openedSlots: Array<{ date: string; time: string; slotId: string; status: string }> = [];
       
       
       // First verify the tutor exists
@@ -78,42 +83,75 @@ export class ScheduleService {
         const slotDateTime = new Date(`${slot.date}T${time24h}:00+08:00`);
         
         
-        // Validate: slot must be at least 5 minutes in the future
-        if (slotDateTime <= minOpenTime) {
-          throw new Error(`Cannot open slot at ${slot.date} ${slot.time} - must be at least 5 minutes in the future`);
+        if (!canOpenSlot(slotDateTime.getTime(), Date.now())) {
+          throw new Error(`Cannot open slot at ${slot.date} ${slot.time} - must be at least 11 minutes in the future`);
         }
         
-        const slotId = nanoid(16);
-        
-        // Create TimeSlot node in Memgraph
-        const createResult = await session.run(
-          `
-          MATCH (t:User {id: $tutorId})
-          CREATE (s:TimeSlot {
-            slotId: $slotId,
-            tutorId: $tutorId,
-            slotDate: $slotDate,
-            slotTime: $slotTime,
-            durationMinutes: 25,
-            status: 'open',
-            isRecurring: false,
-            createdAt: datetime(),
-            updatedAt: datetime()
-          })
-          CREATE (t)-[:OPENS_SLOT]->(s)
-          RETURN s
-          `,
-          {
-            tutorId: input.tutorId,
-            slotId,
-            slotDate: slot.date,
-            slotTime: slot.time
+        const opened = await session.executeWrite(async tx => {
+          const result = await tx.run(
+            `MATCH (t:User {id: $tutorId})
+             WHERE datetime() <= datetime($openUntil)
+             MERGE (t)-[:OPENS_SLOT]->(s:TimeSlot {
+               tutorId: $tutorId, slotDate: $slotDate, slotTime: $slotTime
+             })
+             ON CREATE SET s.slotId = $slotId, s.durationMinutes = 25,
+                           s.status = 'open', s.isRecurring = false, s.attendanceAutoEnforce = true,
+                           s.createdAt = datetime(), s.updatedAt = datetime()
+             RETURN s`,
+            {
+              tutorId: input.tutorId, slotId: nanoid(16), slotDate: slot.date, slotTime: slot.time,
+              openUntil: new Date(slotDateTime.getTime() - SLOT_OPEN_LEAD_MINUTES * 60_000).toISOString()
+            }
+          );
+          const saved = result.records[0]?.get('s')?.properties;
+          if (!saved?.slotId) throw new Error('Could not open the slot');
+          if (saved.status === 'booked') throw new Error('A booked slot cannot be reopened');
+          if (saved.status === 'pending') {
+            const expiresAt = saved.pendingUntil?.toStandardDate?.().getTime() ??
+              (saved.pendingAt?.toStandardDate?.().getTime() ?? 0) + CHECKOUT_HOLD_MINUTES * 60_000;
+            if (expiresAt > Date.now()) throw new Error('This slot is reserved for checkout');
+            await tx.run(
+              `MATCH (s:TimeSlot {slotId: $slotId, status: 'pending'})
+               SET s.status = 'open', s.updatedAt = datetime()
+               REMOVE s.pendingBy, s.pendingAt, s.pendingUntil, s.reservationId`,
+              { slotId: saved.slotId }
+            );
           }
-        );
-        
-        if (createResult.records.length > 0) {
-        }
+          if (saved.status === 'available') {
+            if (saved.penaltyCode === '302') throw new Error('A TA-302 slot cannot be reopened');
+            const penalties = await tx.run(
+              `MATCH (p:Penalty {tutorId: $tutorId, slotId: $slotId, penaltyCode: '303'})
+               RETURN p.createdAt AS createdAt ORDER BY p.createdAt DESC`,
+              { tutorId: input.tutorId, slotId: saved.slotId }
+            );
+            validateReopenPolicy({
+              slotDate: slot.date,
+              nowMs: Date.now(),
+              penaltyCount: penalties.records.length,
+              reopenCount: saved.ta303ReopenCount?.toNumber?.() ?? Number(saved.ta303ReopenCount ?? 0),
+              lastPenaltyMs: penalties.records[0]?.get('createdAt')?.toStandardDate?.().getTime()
+            });
+            await tx.run(
+              `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId})
+               SET s.status = 'open', s.ta303ReopenCount = $reopenCount,
+                   s.updatedAt = datetime()
+               REMOVE s.penaltyCode, s.penaltyReason`,
+              {
+                slotId: saved.slotId, tutorId: input.tutorId,
+                reopenCount: (saved.ta303ReopenCount?.toNumber?.() ?? Number(saved.ta303ReopenCount ?? 0)) + (penalties.records.length ? 1 : 0)
+              }
+            );
+          }
+          await tx.run(
+            `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId})
+             SET s.attendanceAutoEnforce = true`,
+            { slotId: saved.slotId, tutorId: input.tutorId }
+          );
+          return { date: slot.date, time: slot.time, slotId: saved.slotId, status: 'open' };
+        });
+        openedSlots.push(opened);
       }
+      return openedSlots;
     } finally {
       await session.close();
     }
@@ -123,60 +161,87 @@ export class ScheduleService {
    * Close open time slots
    */
   async closeSlots(input: CloseSlotsInput): Promise<void> {
-    const driver = getDriver();
-    const session = driver.session();
-    
+    this.validateAbsenceDetails(input.reason, input.additionalInfo);
+    const session = getDriver().session();
     try {
-      const now = new Date();
-      const shortNoticeThreshold = new Date(now.getTime() + PENALTY_RULES.SHORT_NOTICE_HOURS * 60 * 60 * 1000);
-      
-      for (const slotId of input.slotIds) {
-        // Check slot status and time
-        const result = await session.run(
-          `
-          MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId})
-          RETURN s
-          `,
-          { slotId, tutorId: input.tutorId }
-        );
-        
-        if (result.records.length === 0) {
-          throw new Error(`Slot ${slotId} not found or doesn't belong to tutor`);
+      await session.executeWrite(async tx => {
+        for (const slotId of input.slotIds) {
+          await this.cancelOpenSlot(tx, input.tutorId, slotId, input.reason, input.additionalInfo);
         }
-        
-        const slot = result.records[0]?.get('s').properties;
-        
-        if (slot.status === 'booked') {
-          throw new Error(`Cannot close booked slot ${slotId}`);
-        }
-        
-        // Convert 12h time to 24h for proper Date parsing
-        const time24h = this.convert12hTo24h(slot.slotTime);
-        // Use PHT timezone (+08:00) since slot times are stored in Philippine time
-        const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00+08:00`);
-        
-        // Check for short notice cancellation (TA-303)
-        if (slotDateTime <= shortNoticeThreshold && slot.status === 'open') {
-          // Assign TA-303 penalty
-          await this.assignPenalty({
-            tutorId: input.tutorId,
-            slotId,
-            penaltyCode: '303',
-            reason: `Closed open slot with less than ${PENALTY_RULES.SHORT_NOTICE_HOURS} hours notice`
-          });
-        }
-        
-        // Update slot status to available (closed)
-        await session.run(
-          `
-          MATCH (s:TimeSlot {slotId: $slotId})
-          SET s.status = 'available', s.updatedAt = datetime()
-          `,
-          { slotId }
-        );
-      }
+      });
     } finally {
       await session.close();
+    }
+  }
+
+  private validateAbsenceDetails(reason?: AbsenceReason, additionalInfo?: string): void {
+    if (!reason || !ABSENCE_REASONS.includes(reason)) throw new Error('Select an absence reason');
+    if (additionalInfo && additionalInfo.length > 1000) throw new Error('Additional information must be 1000 characters or fewer');
+  }
+
+  private async cancelOpenSlot(
+    tx: ManagedTransaction, tutorId: string, slotId: string,
+    reason: AbsenceReason, additionalInfo?: string
+  ): Promise<void> {
+    await tx.run(
+      `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId, status: 'pending'})
+       WHERE s.pendingUntil <= datetime() OR
+         (s.pendingUntil IS NULL AND (s.pendingAt IS NULL OR s.pendingAt <= datetime($expiredBefore)))
+       SET s.status = 'open', s.updatedAt = datetime()
+       REMOVE s.pendingBy, s.pendingAt, s.pendingUntil, s.reservationId`,
+      { slotId, tutorId, expiredBefore: new Date(Date.now() - CHECKOUT_HOLD_MINUTES * 60_000).toISOString() }
+    );
+    const result = await tx.run(
+      `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId, status: 'open'})
+       RETURN s.slotDate AS date, s.slotTime AS time`,
+      { slotId, tutorId }
+    );
+    const record = result.records[0];
+    if (!record) throw new Error('Open slot not found for this tutor');
+    const startMs = Date.parse(`${record.get('date')}T${this.convert12hTo24h(record.get('time'))}:00+08:00`);
+    const nowMs = Date.now();
+    validateAbsenceTime(startMs, nowMs);
+    const penalized = isShortNoticeCancellation(startMs, nowMs);
+    const penaltyReason = `${reason}${additionalInfo?.trim() ? `: ${additionalInfo.trim()}` : ''}`;
+    await tx.run(
+      `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId, status: 'open'})
+       SET s.status = 'available', s.attendanceMarked = null,
+           s.absenceReason = $reason, s.absenceAdditionalInfo = $additionalInfo,
+           s.updatedAt = datetime(), s.penaltyCode = $penaltyCode,
+           s.penaltyReason = $penaltyReason,
+           s.ta303Count = coalesce(s.ta303Count, 0) + $penaltyIncrement,
+           s.lastTa303At = CASE WHEN $penalized THEN datetime() ELSE s.lastTa303At END
+       CREATE (c:SlotCancellation {
+         cancellationId: $cancellationId, tutorId: $tutorId, slotId: $slotId,
+         reason: $reason, additionalInfo: $additionalInfo,
+         penaltyCode: $penaltyCode, createdAt: datetime()
+       })
+       CREATE (s)-[:HAS_CANCELLATION]->(c)`,
+      {
+        slotId, tutorId, reason, additionalInfo: additionalInfo?.trim() || null,
+        penaltyCode: penalized ? '303' : null,
+        penaltyReason: penalized ? penaltyReason : null,
+        penalized, penaltyIncrement: penalized ? 1 : 0,
+        cancellationId: nanoid(16)
+      }
+    );
+    if (penalized) {
+      const penalty = PENALTY_CODE_DETAILS['303'];
+      await tx.run(
+        `MATCH (t:User {id: $tutorId})
+         CREATE (p:Penalty {
+           penaltyId: $penaltyId, tutorId: $tutorId, slotId: $slotId,
+           penaltyCode: '303', penaltyReason: $penaltyReason,
+           absenceReason: $reason, additionalInfo: $additionalInfo,
+           severity: $severity, affectsCompensation: false, createdAt: datetime()
+         })
+         CREATE (t)-[:HAS_PENALTY]->(p)`,
+        {
+          tutorId, slotId, penaltyId: nanoid(16), penaltyReason,
+          reason, additionalInfo: additionalInfo?.trim() || null,
+          severity: penalty.severity
+        }
+      );
     }
   }
 
@@ -191,7 +256,6 @@ export class ScheduleService {
       const startDate = new Date(input.startDate);
       const endDate = new Date(input.endDate);
       const now = new Date();
-      const minOpenTime = new Date(now.getTime() + 5 * 60 * 1000);
       
       const slots: Array<{ date: string; time: string }> = [];
       
@@ -207,7 +271,7 @@ export class ScheduleService {
           // Use PHT timezone (+08:00) since slot times are stored in Philippine time
           const slotDateTime = new Date(`${d.toISOString().split('T')[0]}T${time}:00+08:00`);
           
-          if (slotDateTime > minOpenTime) {
+          if (canOpenSlot(slotDateTime.getTime(), now.getTime())) {
             slots.push({
               date: d.toISOString().split('T')[0] || '',
               time
@@ -234,14 +298,28 @@ export class ScheduleService {
     const session = driver.session();
     
     try {
-      const today = new Date();
+      // Schedule dates are stored and displayed in PHT. Build the week from the
+      // PHT calendar date so Sundays and the UTC/PHT day boundary stay aligned
+      // with the tutor's grid.
+      const phtParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).formatToParts(new Date());
+      const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+        Number(phtParts.find(part => part.type === type)?.value);
+      const today = new Date(Date.UTC(
+        getPart('year'),
+        getPart('month') - 1,
+        getPart('day')
+      ));
+      const daysSinceMonday = today.getUTCDay() === 0 ? 6 : today.getUTCDay() - 1;
       const monday = new Date(today);
-      monday.setDate(today.getDate() - today.getDay() + 1 + (params.weekOffset * 7));
-      monday.setHours(0, 0, 0, 0);
+      monday.setUTCDate(today.getUTCDate() - daysSinceMonday + (params.weekOffset * 7));
       
       const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      sunday.setHours(23, 59, 59, 999);
+      sunday.setUTCDate(monday.getUTCDate() + 6);
       
       const startDate = monday.toISOString().split('T')[0];
       const endDate = sunday.toISOString().split('T')[0];
@@ -259,24 +337,61 @@ export class ScheduleService {
         `,
         { tutorId: params.tutorId, startDate, endDate }
       );
+
+      const slotIds = [...new Set(result.records.map(record => record.get('s')?.properties?.slotId).filter(Boolean))];
+      const penaltyHistory = slotIds.length ? await session.run(
+        `MATCH (p:Penalty {tutorId: $tutorId, penaltyCode: '303'})
+         WHERE p.slotId IN $slotIds
+         RETURN p.slotId AS slotId, p.createdAt AS createdAt, p.penaltyReason AS reason
+         ORDER BY p.createdAt DESC`,
+        { tutorId: params.tutorId, slotIds }
+      ) : null;
+      const ta303History = new Map<string, { count: number; lastAt?: string; reason?: string }>();
+      for (const record of penaltyHistory?.records || []) {
+        const slotId = record.get('slotId') as string;
+        const existing = ta303History.get(slotId);
+        ta303History.set(slotId, {
+          count: (existing?.count || 0) + 1,
+          lastAt: existing?.lastAt || record.get('createdAt')?.toStandardDate?.().toISOString(),
+          reason: existing?.reason || record.get('reason')
+        });
+      }
       
       
       const slots = result.records.map(record => {
         const slot = record.get('s')?.properties;
         const booking = record.get('b')?.properties;
         const student = record.get('student')?.properties;
+        const history = ta303History.get(slot.slotId);
         
         
         return {
           date: slot.slotDate,
           time: slot.slotTime,
-          status: slot.status,
+          status: slot.status === 'pending' &&
+            (slot.pendingUntil?.toStandardDate?.().getTime() ??
+              (slot.pendingAt?.toStandardDate?.().getTime() ?? 0) + CHECKOUT_HOLD_MINUTES * 60_000) <= Date.now()
+            ? 'open' : slot.status,
+          reservationExpiresAt: slot.pendingUntil?.toStandardDate?.().toISOString(),
+          slotId: slot.slotId,
           bookingId: booking?.bookingId,
+          bookedAt: booking?.bookedAt?.toStandardDate?.().toISOString(),
+          attendanceWindowOpenedAt: booking?.attendancePolicyActivatedAt?.toStandardDate?.().toISOString()
+            || booking?.bookedAt?.toStandardDate?.().toISOString(),
+          tutorRoomEnteredAt: booking?.tutorRoomEnteredAt?.toStandardDate?.().toISOString(),
+          roomEntryPolicyActivatedAt: booking?.roomEntryPolicyActivatedAt?.toStandardDate?.().toISOString(),
+          roomEntryCheckCompletedAt: booking?.roomEntryCheckCompletedAt?.toStandardDate?.().toISOString(),
+          attendanceSource: booking?.attendanceSource || slot.attendanceSource,
           studentId: student?.id,
           studentName: student ? `${student.givenName} ${student.familyName}` : undefined,
-          penaltyCode: booking?.penaltyCode,
+          penaltyCode: slot.status === 'available' ? (slot.penaltyCode || (history ? '303' : undefined)) : booking?.penaltyCode,
+          penaltyReason: slot.status === 'available' ? (slot.penaltyReason || history?.reason) : booking?.penaltyReason,
+          ta303Count: history?.count ?? (slot.ta303Count?.toNumber?.() ?? Number(slot.ta303Count ?? 0)),
+          ta303ReopenCount: slot.ta303ReopenCount?.toNumber?.() ?? Number(slot.ta303ReopenCount ?? 0),
+          lastTa303At: history?.lastAt || slot.lastTa303At?.toStandardDate?.().toISOString(),
           attendanceTutor: booking?.attendanceTutor,
-          attendanceStudent: booking?.attendanceStudent
+          attendanceStudent: booking?.attendanceStudent,
+          attendanceMarked: slot.attendanceMarked
         };
       });
       
@@ -300,14 +415,13 @@ export class ScheduleService {
     
     try {
       const now = new Date();
-      const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 min ahead (students can book until 5 min before start)
       
       const result = await session.run(
         `
         MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
         WHERE s.slotDate >= $startDate 
           AND s.slotDate <= $endDate
-          AND s.status = 'open'
+          AND s.status IN ['open', 'pending']
         RETURN s
         ORDER BY s.slotDate, s.slotTime
         `,
@@ -323,8 +437,11 @@ export class ScheduleService {
           // Slot times are stored in PHT (UTC+8), parse as PHT
           const slotDateTime = new Date(`${slot.slotDate}T${time24h}:00+08:00`);
           
-          // Filter out slots less than 5 minutes away
-          if (slotDateTime <= minBookTime) {
+          const holdExpired = slot.status === 'pending' &&
+            (slot.pendingUntil?.toStandardDate?.().getTime() ??
+              (slot.pendingAt?.toStandardDate?.().getTime() ?? 0) + CHECKOUT_HOLD_MINUTES * 60_000) <= now.getTime();
+          if (slot.status === 'pending' && !holdExpired) return null;
+          if (!canReserveForBooking(slotDateTime.getTime(), now.getTime(), slot.attendanceMarked === 'present')) {
             return null;
           }
           
@@ -342,6 +459,75 @@ export class ScheduleService {
     }
   }
 
+  async reserveSlotForCheckout(studentId: string, slotId: string): Promise<{ reservationId: string; expiresAt: string; bookBy: string }> {
+    const session = getDriver().session();
+    try {
+      return await session.executeWrite(async tx => {
+        const nowMs = Date.now();
+        const result = await tx.run(
+          `MATCH (s:TimeSlot {slotId: $slotId}) RETURN s`, { slotId }
+        );
+        const slot = result.records[0]?.get('s')?.properties;
+        if (!slot) throw new Error('Slot not found');
+        const startMs = attendanceStartMs({ date: slot.slotDate, time: slot.slotTime });
+        const existingExpiry = slot.pendingUntil?.toStandardDate?.().getTime() ??
+          (slot.pendingAt?.toStandardDate?.().getTime() ?? 0) + CHECKOUT_HOLD_MINUTES * 60_000;
+        if (!canReserveForBooking(startMs, nowMs, slot.attendanceMarked === 'present')) {
+          throw new Error(BOOKING_CUTOFF_MESSAGE);
+        }
+        const bookBy = (expiryMs: number, present: boolean) => new Date(Math.min(
+          expiryMs, bookingCutoffMs(startMs, present)
+        )).toISOString();
+        if (slot.status === 'pending' && existingExpiry > nowMs && slot.pendingBy === studentId && slot.reservationId) {
+          return { reservationId: slot.reservationId, expiresAt: new Date(existingExpiry).toISOString(), bookBy: bookBy(existingExpiry, slot.attendanceMarked === 'present') };
+        }
+        if (slot.status !== 'open' && !(slot.status === 'pending' && existingExpiry <= nowMs)) {
+          throw new Error('This slot is no longer available');
+        }
+        const reservationId = nanoid(24);
+        const expiresAt = new Date(Math.min(nowMs + CHECKOUT_HOLD_MINUTES * 60_000, startMs)).toISOString();
+        const reserved = await tx.run(
+          `MATCH (s:TimeSlot {slotId: $slotId})
+           WHERE ((s.attendanceMarked = 'present' AND datetime() <= datetime($cutoffAt))
+              OR (coalesce(s.attendanceMarked, '') <> 'present' AND datetime() < datetime($unconfirmedCutoffAt)))
+             AND (s.status = 'open' OR
+               (s.status = 'pending' AND (s.pendingUntil <= datetime($now) OR
+                 (s.pendingUntil IS NULL AND (s.pendingAt IS NULL OR s.pendingAt <= datetime($expiredBefore))))))
+           SET s.status = 'pending', s.pendingBy = $studentId,
+               s.pendingAt = datetime($now), s.pendingUntil = datetime($expiresAt),
+               s.reservationId = $reservationId, s.updatedAt = datetime()
+           RETURN s.slotId AS slotId, s.attendanceMarked AS attendanceMarked`,
+          {
+            slotId, studentId, reservationId, expiresAt,
+            cutoffAt: new Date(startMs - BOOKING_CUTOFF_MINUTES * 60_000).toISOString(),
+            unconfirmedCutoffAt: new Date(startMs - SLOT_OPEN_LEAD_MINUTES * 60_000).toISOString(),
+            now: new Date(nowMs).toISOString(),
+            expiredBefore: new Date(nowMs - CHECKOUT_HOLD_MINUTES * 60_000).toISOString()
+          }
+        );
+        if (!reserved.records.length) throw new Error('This slot was just reserved by someone else');
+        return { reservationId, expiresAt, bookBy: bookBy(Date.parse(expiresAt), reserved.records[0]!.get('attendanceMarked') === 'present') };
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  async releaseSlotReservation(studentId: string, slotId: string, reservationId: string): Promise<void> {
+    const session = getDriver().session();
+    try {
+      await session.run(
+        `MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
+                            reservationId: $reservationId})
+         SET s.status = 'open', s.updatedAt = datetime()
+         REMOVE s.pendingBy, s.pendingAt, s.pendingUntil, s.reservationId`,
+        { studentId, slotId, reservationId }
+      );
+    } finally {
+      await session.close();
+    }
+  }
+
   /**
    * Book a time slot (student action)
    * Uses atomic update to prevent duplicate bookings
@@ -352,32 +538,42 @@ export class ScheduleService {
     
     try {
       
-      // ATOMIC: Check slot availability AND lock it in a single transaction
-      // This prevents race conditions where two users try to book the same slot
+      const existingBooking = await session.run(
+        `MATCH (b:Booking {reservationId: $reservationId, studentId: $studentId})
+         RETURN b`,
+        { reservationId: input.reservationId, studentId: input.studentId }
+      );
+      if (existingBooking.records.length) {
+        const booking = existingBooking.records[0]!.get('b').properties;
+        return {
+          ...booking,
+          slotDateTime: booking.slotDateTime?.toStandardDate?.() ?? booking.slotDateTime,
+          bookedAt: booking.bookedAt?.toStandardDate?.() ?? booking.bookedAt
+        } as Booking;
+      }
+
       const slotResult = await session.run(
         `
-        MATCH (s:TimeSlot {slotId: $slotId, status: 'open'})
-        SET s.status = 'pending', s.pendingBy = $studentId, s.pendingAt = datetime()
+        MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
+                            reservationId: $reservationId})
+        WHERE s.pendingUntil > datetime()
+          AND NOT EXISTS { MATCH (:TicketRecovery {txHash: $ticketTransferTxHash}) }
         RETURN s
         `,
-        { slotId: input.slotId, studentId: input.studentId }
+        { slotId: input.slotId, studentId: input.studentId, reservationId: input.reservationId,
+          ticketTransferTxHash: input.ticketTransferTxHash }
       );
       
       
       if (slotResult.records.length === 0) {
-        // Check if slot exists but is already taken
-        const existingSlot = await session.run(
-          `MATCH (s:TimeSlot {slotId: $slotId}) RETURN s.status as status`,
-          { slotId: input.slotId }
-        );
-        if (existingSlot.records.length > 0) {
-          const status = existingSlot.records[0]?.get('status');
-          throw new Error('This slot has already been booked by another student. Please choose a different time.');
-        }
-        throw new Error('Slot not available for booking');
+        throw new Error('Checkout reservation expired or is no longer available');
       }
       
       const slot = slotResult.records[0]?.get('s').properties;
+      const startMs = attendanceStartMs({ date: slot.slotDate, time: slot.slotTime });
+      if (!canReserveForBooking(startMs, Date.now(), slot.attendanceMarked === 'present')) {
+        throw new Error(BOOKING_CUTOFF_MESSAGE);
+      }
       
       // Check if tutor is certified (passed both exams AND profile approved)
       // OR is a test account (bypass for development)
@@ -455,11 +651,8 @@ export class ScheduleService {
       }
       
       const now = new Date();
-      const minBookTime = new Date(now.getTime() + 5 * 60 * 1000); // Changed to 5 minutes
-      
-      
-      if (slotDateTime <= minBookTime) {
-        throw new Error('Cannot book slot less than 5 minutes in advance');
+      if (slotDateTime <= now) {
+        throw new Error('The lesson has already started');
       }
       
       const bookingId = nanoid(16);
@@ -493,16 +686,27 @@ export class ScheduleService {
       // Check if this transaction hash has already been used for a booking
       const existingTxResult = await session.run(
         `
-        MATCH (t:TicketTransaction {transferTxHash: $txHash})
+        MATCH (t:TicketTransaction {transferTxId: $txHash})
         RETURN t.id as id, t.bookingId as bookingId
         `,
         { txHash: input.ticketTransferTxHash }
       );
       
       if (existingTxResult.records.length > 0) {
-        const existingBookingId = existingTxResult.records[0]?.get('bookingId');
         throw new Error('This transaction has already been used for a booking. Please make a new ticket transfer.');
       }
+      const existingTransferBooking = await session.run(
+        `MATCH (b:Booking {ticketTransferTxHash: $txHash}) RETURN b.bookingId AS bookingId`,
+        { txHash: input.ticketTransferTxHash }
+      );
+      if (existingTransferBooking.records.length) {
+        throw new Error('This ticket transfer has already been used for a booking');
+      }
+      const claimedRecovery = await session.run(
+        `MATCH (r:TicketRecovery {txHash: $txHash}) RETURN r.txHash AS txHash`,
+        { txHash: input.ticketTransferTxHash }
+      );
+      if (claimedRecovery.records.length) throw new Error('This ticket transfer is already being recovered');
       // === END TRANSACTION REPLAY PROTECTION ===
       
       // === SERVER-SIDE TICKET VERIFICATION ===
@@ -518,37 +722,35 @@ export class ScheduleService {
       
       // === END SERVER-SIDE TICKET VERIFICATION ===
       
-      // Record the ticket transaction in database (transfer already happened on frontend)
-      try {
-        await ticketService.recordTicketDeduction({
-          studentId: input.studentId,
-          studentWallet,
-          tutorId: slot.tutorId,
-          bookingId,
-          slotId: input.slotId,
-          tier: 'basic',
-          transferTxHash: input.ticketTransferTxHash,
-        });
-      } catch (ticketError: any) {
-        console.error('WARNING: Failed to record ticket transaction:', ticketError.message);
-        // Don't fail the booking if recording fails - the transfer already happened on-chain
-      }
-      
-      
       // Create booking and update slot
       const bookingResult = await session.run(
         `
-        MATCH (s:TimeSlot {slotId: $slotId})
+        MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
+                            reservationId: $reservationId})
+        WHERE s.pendingUntil > datetime()
+          AND datetime() <= datetime($cutoffAt)
+          AND (s.attendanceMarked = 'present' OR datetime() < datetime($unconfirmedCutoffAt))
+          AND NOT EXISTS { MATCH (:TicketRecovery {txHash: $ticketTransferTxHash}) }
+          AND NOT EXISTS { MATCH (:Booking {ticketTransferTxHash: $ticketTransferTxHash}) }
         MATCH (student:Student {id: $studentId})
+        WITH s, student, s.attendanceMarked AS preconfirmed
         SET s.status = 'booked', s.studentId = $studentId, s.updatedAt = datetime()
+        REMOVE s.pendingBy, s.pendingAt, s.pendingUntil, s.reservationId
         CREATE (b:Booking {
           bookingId: $bookingId,
           slotId: $slotId,
+          reservationId: $reservationId,
           tutorId: $tutorId,
           studentId: $studentId,
+          ticketTransferTxHash: $ticketTransferTxHash,
           slotDateTime: datetime($slotDateTime),
           durationMinutes: $durationMinutes,
           status: 'confirmed',
+          attendanceAutoEnforce: true,
+          attendanceTutor: CASE WHEN preconfirmed = 'present' THEN 'present' ELSE null END,
+          attendanceSource: CASE WHEN preconfirmed = 'present' THEN 'open_slot_confirmation'
+            ELSE s.attendanceSource END,
+          roomEntryPolicyActivatedAt: CASE WHEN preconfirmed = 'present' THEN datetime() ELSE null END,
           bookedAt: datetime()
         })
         CREATE (b)-[:BOOKS]->(s)
@@ -557,14 +759,32 @@ export class ScheduleService {
         `,
         {
           slotId: input.slotId,
+          reservationId: input.reservationId,
+          ticketTransferTxHash: input.ticketTransferTxHash,
           bookingId,
           studentId: input.studentId,
           tutorId: slot.tutorId,
           slotDateTime: slotDateTime.toISOString(),
+          cutoffAt: new Date(startMs - BOOKING_CUTOFF_MINUTES * 60_000).toISOString(),
+          unconfirmedCutoffAt: new Date(startMs - SLOT_OPEN_LEAD_MINUTES * 60_000).toISOString(),
           durationMinutes: slot.durationMinutes
         }
       );
-      
+      if (!bookingResult.records.length) throw new Error('Checkout reservation expired before booking could finish');
+
+      try {
+        await ticketService.recordTicketDeduction({
+          studentId: input.studentId,
+          studentWallet,
+          tutorId: slot.tutorId,
+          bookingId,
+          slotId: input.slotId,
+          tier: verificationResult.tier || 'basic',
+          transferTxHash: input.ticketTransferTxHash,
+        });
+      } catch (ticketError: any) {
+        console.error('WARNING: Booking confirmed but ticket transaction recording failed:', ticketError.message);
+      }
       
       // Send notification to tutor about new booking
       try {
@@ -643,19 +863,6 @@ export class ScheduleService {
         bookedAt: now
       };
     } catch (error: any) {
-      // Release the slot lock if booking fails (only if we locked it)
-      try {
-        await session.run(
-          `
-          MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId})
-          SET s.status = 'open', s.pendingBy = null, s.pendingAt = null
-          RETURN s
-          `,
-          { slotId: input.slotId, studentId: input.studentId }
-        );
-      } catch (releaseError) {
-        console.error('Failed to release slot lock:', releaseError);
-      }
       throw error;
     } finally {
       await session.close();
@@ -860,6 +1067,518 @@ export class ScheduleService {
   /**
    * Mark attendance for a session
    */
+  async enableAutoAttendanceForUpcomingBookings(): Promise<void> {
+    const session = getDriver().session();
+    try {
+      const now = new Date();
+      await session.run(
+        `MATCH (b:Booking {status: 'confirmed'})-[:BOOKS]->(s:TimeSlot {status: 'booked'})
+         WHERE b.attendanceAutoEnforce IS NULL AND b.attendanceTutor IS NULL
+           AND b.slotDateTime >= datetime($eligibleAfter)
+         SET b.attendanceAutoEnforce = true,
+             b.attendancePolicyActivatedAt = datetime($activatedAt)`,
+        {
+          eligibleAfter: new Date(now.getTime() + NORMAL_DEADLINE_MINUTES * 60_000).toISOString(),
+          activatedAt: now.toISOString()
+        }
+      );
+    } finally {
+      await session.close();
+    }
+  }
+
+  async enableRoomEntryPolicyForUpcomingBookings(now = new Date()): Promise<void> {
+    const session = getDriver().session();
+    try {
+      await session.run(
+        `MATCH (b:Booking {status: 'confirmed', attendanceTutor: 'present'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
+         WHERE b.roomEntryPolicyActivatedAt IS NULL
+           AND b.slotDateTime >= datetime($eligibleAfter)
+         SET b.roomEntryPolicyActivatedAt = datetime($activatedAt)`,
+        {
+          eligibleAfter: new Date(now.getTime() + NORMAL_DEADLINE_MINUTES * 60_000).toISOString(),
+          activatedAt: now.toISOString()
+        }
+      );
+    } finally {
+      await session.close();
+    }
+  }
+
+  async markTutorRoomEntry(bookingId: string, tutorId: string): Promise<boolean> {
+    const session = getDriver().session();
+    try {
+      return await session.executeWrite(async tx => {
+        const match = await tx.run(
+          `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId, status: 'confirmed'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
+           RETURN b.slotDateTime AS startsAt, b.tutorRoomEnteredAt AS enteredAt`,
+          { bookingId, tutorId }
+        );
+        const record = match.records[0];
+        if (!record) return false;
+        const startsAt = record.get('startsAt')?.toStandardDate?.().getTime();
+        if (!Number.isFinite(startsAt)) return false;
+        const joinedAt = Date.now();
+        const enteredAt = record.get('enteredAt')?.toStandardDate?.().getTime() ?? joinedAt;
+        await tx.run(
+          `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
+           SET b.tutorRoomEnteredAt = coalesce(b.tutorRoomEnteredAt, datetime($enteredAt)),
+               b.roomEntryCheckCompletedAt = CASE WHEN $onTime
+                 THEN coalesce(b.roomEntryCheckCompletedAt, datetime())
+                 ELSE b.roomEntryCheckCompletedAt END`,
+          {
+            bookingId, tutorId, enteredAt: new Date(enteredAt).toISOString(),
+            onTime: joinedAt >= startsAt - 5 * 60_000 && joinedAt <= startsAt + 5 * 60_000
+          }
+        );
+        return true;
+      });
+    } finally {
+      await session.close();
+    }
+  }
+
+  async canStudentJoinRoom(bookingId: string, studentId: string): Promise<boolean> {
+    const session = getDriver().session();
+    try {
+      const result = await session.run(
+        `MATCH (b:Booking {bookingId: $bookingId, studentId: $studentId, status: 'confirmed'})
+         -[:BOOKS]->(:TimeSlot {status: 'booked'})
+         RETURN b.bookingId AS bookingId LIMIT 1`,
+        { bookingId, studentId }
+      );
+      return result.records.length > 0;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async reconcileMissedTutorRoomEntry(
+    now = new Date(),
+    hasEnteredForLesson = (bookingId: string, tutorId: string, start: Date, deadline: Date) =>
+      classroomActivityService.hasTutorEnteredForLesson(bookingId, tutorId, start, deadline)
+  ): Promise<number> {
+    const session = getDriver().session();
+    let missed = 0;
+    try {
+      const candidates = await session.run(
+        `MATCH (b:Booking {status: 'confirmed', attendanceTutor: 'present'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
+         WHERE b.roomEntryPolicyActivatedAt IS NOT NULL
+           AND b.roomEntryCheckCompletedAt IS NULL
+           AND b.slotDateTime <= datetime($through)
+         RETURN b.bookingId AS bookingId, b.tutorId AS tutorId, b.slotDateTime AS startsAt
+         ORDER BY b.slotDateTime ASC`,
+        { through: new Date(now.getTime() - 5 * 60_000).toISOString() }
+      );
+      for (const record of candidates.records) {
+        const bookingId = record.get('bookingId') as string;
+        const tutorId = record.get('tutorId') as string;
+        const startMs = record.get('startsAt')?.toStandardDate?.().getTime();
+        if (!Number.isFinite(startMs)) continue;
+        const deadline = new Date(startMs + 5 * 60_000);
+        if (await hasEnteredForLesson(bookingId, tutorId, new Date(startMs), deadline)) {
+          await session.run(
+            `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
+             WHERE b.roomEntryCheckCompletedAt IS NULL
+             SET b.roomEntryCheckCompletedAt = datetime($now)`,
+            { bookingId, tutorId, now: now.toISOString() }
+          );
+          continue;
+        }
+
+        const applied = await session.executeWrite(async tx => {
+          const first = await tx.run(
+            `MATCH (t:User {id: $tutorId})
+             MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId,
+                               status: 'confirmed', attendanceTutor: 'present'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
+             WHERE b.roomEntryPolicyActivatedAt IS NOT NULL
+               AND b.roomEntryCheckCompletedAt IS NULL
+             SET b.attendanceTutor = 'absent', b.attendanceSource = 'automatic_room_no_show',
+                 b.penaltyCode = '301', b.penaltyReason = $reason,
+                 b.penaltyTimestamp = datetime($now), b.roomEntryCheckCompletedAt = datetime($now),
+                 b.updatedAt = datetime($now)
+             MERGE (p:Penalty {tutorId: $tutorId, bookingId: $bookingId, penaltyCode: '301'})
+             ON CREATE SET p.penaltyId = $penaltyId, p.penaltyReason = $reason,
+                           p.severity = 'critical', p.affectsCompensation = true,
+                           p.createdAt = datetime($now)
+             MERGE (t)-[:HAS_PENALTY]->(p)
+             RETURN b.bookingId AS bookingId`,
+            {
+              bookingId, tutorId, now: now.toISOString(),
+              penaltyId: nanoid(16),
+              reason: 'Tutor did not enter the classroom within five minutes of the booked lesson start'
+            }
+          );
+          if (!first.records.length) return false;
+
+          const day = new Date(startMs + 8 * 60 * 60_000).toISOString().slice(0, 10);
+          const nextDay = new Date(startMs + 32 * 60 * 60_000).toISOString().slice(0, 10);
+          const future = await tx.run(
+            `MATCH (s:TimeSlot {tutorId: $tutorId})
+             WHERE s.slotDate IN [$day, $nextDay]
+             OPTIONAL MATCH (b:Booking)-[:BOOKS]->(s)
+             RETURN s.slotId AS slotId, s.slotDate AS date, s.slotTime AS time,
+                    s.status AS status, s.attendanceMarked AS slotAttendance,
+                    b.bookingId AS bookingId, b.status AS bookingStatus,
+                    b.attendanceTutor AS bookingAttendance,
+                    b.roomEntryCheckCompletedAt AS roomEntryCompleted`,
+            { tutorId, day, nextDay }
+          );
+          const following = future.records.flatMap(item => {
+            try {
+              return [{ item, startsAt: attendanceStartMs({ date: item.get('date'), time: item.get('time') }) }];
+            } catch { return []; }
+          }).filter(item => item.startsAt > startMs).sort((a, b) => a.startsAt - b.startsAt);
+          let previousStart = startMs;
+          for (const { item, startsAt } of following) {
+            if (startsAt !== previousStart + 30 * 60_000) break;
+            if (startsAt - now.getTime() < NORMAL_DEADLINE_MINUTES * 60_000) break;
+            const slotId = item.get('slotId') as string;
+            if (item.get('status') === 'booked' && item.get('bookingStatus') === 'confirmed' &&
+                item.get('bookingAttendance') === 'present' && !item.get('roomEntryCompleted')) {
+              await tx.run(
+                `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId, attendanceTutor: 'present'})
+                 SET b.attendanceTutor = null, b.attendanceSource = 'room_entry_reset',
+                     b.updatedAt = datetime($now)`,
+                { bookingId: item.get('bookingId'), tutorId, now: now.toISOString() }
+              );
+            } else if (['open', 'pending'].includes(item.get('status')) && item.get('slotAttendance') === 'present') {
+              await tx.run(
+                `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId})
+                 SET s.attendanceMarked = null, s.attendanceSource = 'room_entry_reset',
+                     s.updatedAt = datetime($now)`,
+                { slotId, tutorId, now: now.toISOString() }
+              );
+            } else break;
+            previousStart = startsAt;
+          }
+          return true;
+        });
+        if (applied) {
+          missed++;
+          await this.checkAndApplyAutoBlock(tutorId);
+        }
+      }
+      return missed;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async reconcileMissedTutorAttendance(now = new Date()): Promise<number> {
+    const session = getDriver().session();
+    let marked = 0;
+    try {
+      const candidates = await session.run(
+        `MATCH (b:Booking {status: 'confirmed', attendanceAutoEnforce: true})-[:BOOKS]->(s:TimeSlot {status: 'booked'})
+         WHERE b.attendanceTutor IS NULL AND b.slotDateTime <= datetime($candidateThrough)
+         RETURN b.bookingId AS bookingId, b.tutorId AS tutorId,
+                b.slotDateTime AS startsAt, b.bookedAt AS bookedAt,
+                b.attendancePolicyActivatedAt AS activatedAt
+         ORDER BY b.slotDateTime ASC`,
+        { candidateThrough: new Date(now.getTime() + NORMAL_DEADLINE_MINUTES * 60_000).toISOString() }
+      );
+
+      for (const record of candidates.records) {
+        const startMs = record.get('startsAt')?.toStandardDate?.().getTime();
+        if (!Number.isFinite(startMs)) continue;
+        if (now.getTime() <= attendanceDeadlineMs(startMs)) continue;
+
+        const bookingId = record.get('bookingId') as string;
+        const tutorId = record.get('tutorId') as string;
+        const applied = await session.executeWrite(async tx => {
+          const result = await tx.run(
+            `MATCH (t:User {id: $tutorId})
+             MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId, status: 'confirmed', attendanceAutoEnforce: true})-[:BOOKS]->(s:TimeSlot {status: 'booked'})
+             WHERE b.attendanceTutor IS NULL
+             SET b.attendanceTutor = 'absent', b.attendanceSource = 'automatic',
+                 b.penaltyCode = '301', b.penaltyReason = $reason,
+                 b.penaltyTimestamp = datetime(), b.updatedAt = datetime()
+             MERGE (p:Penalty {tutorId: $tutorId, bookingId: $bookingId, penaltyCode: '301'})
+             ON CREATE SET p.penaltyId = $penaltyId, p.penaltyReason = $reason,
+                           p.severity = 'critical', p.affectsCompensation = true,
+                           p.createdAt = datetime()
+             MERGE (t)-[:HAS_PENALTY]->(p)
+             RETURN b.bookingId AS bookingId`,
+            {
+              bookingId, tutorId, penaltyId: nanoid(16),
+              reason: 'Tutor did not confirm attendance before the lesson deadline'
+            }
+          );
+          return result.records.length > 0;
+        });
+        if (applied) {
+          marked++;
+          await this.checkAndApplyAutoBlock(tutorId);
+        }
+      }
+      return marked;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async enableAutoAttendanceForUpcomingOpenSlots(now = new Date()): Promise<void> {
+    const session = getDriver().session();
+    try {
+      const phtToday = new Date(now.getTime() + 8 * 60 * 60_000).toISOString().slice(0, 10);
+      const candidates = await session.run(
+        `MATCH (s:TimeSlot)
+         WHERE s.status IN ['open', 'pending'] AND s.attendanceAutoEnforce IS NULL
+           AND s.slotDate >= $today
+         RETURN s.slotId AS slotId, s.slotDate AS date, s.slotTime AS time`,
+        { today: phtToday }
+      );
+      const eligibleIds = candidates.records.flatMap(record => {
+        try {
+          const startMs = attendanceStartMs({ date: record.get('date'), time: record.get('time') });
+          return startMs - now.getTime() >= NORMAL_DEADLINE_MINUTES * 60_000
+            ? [record.get('slotId') as string] : [];
+        } catch {
+          return [];
+        }
+      });
+      if (eligibleIds.length) {
+        await session.run(
+          `UNWIND $slotIds AS slotId
+           MATCH (s:TimeSlot {slotId: slotId})
+           WHERE s.status IN ['open', 'pending'] AND s.attendanceAutoEnforce IS NULL
+           SET s.attendanceAutoEnforce = true`,
+          { slotIds: eligibleIds }
+        );
+      }
+    } finally {
+      await session.close();
+    }
+  }
+
+  async reconcileMissedOpenSlotAttendance(now = new Date()): Promise<number> {
+    const session = getDriver().session();
+    let marked = 0;
+    try {
+      const candidates = await session.run(
+        `MATCH (t:User)-[:OPENS_SLOT]->(s:TimeSlot)
+         WHERE s.status IN ['open', 'pending'] AND s.attendanceAutoEnforce = true
+           AND coalesce(s.attendanceMarked, '') <> 'present'
+           AND s.slotDate <= $throughDate
+         RETURN t.id AS tutorId, s.slotId AS slotId, s.slotDate AS date, s.slotTime AS time
+         ORDER BY s.slotDate, s.slotTime`,
+        { throughDate: new Date(now.getTime() + 8 * 60 * 60_000).toISOString().slice(0, 10) }
+      );
+
+      for (const record of candidates.records) {
+        const startMs = attendanceStartMs({ date: record.get('date'), time: record.get('time') });
+        if (now.getTime() <= attendanceDeadlineMs(startMs)) continue;
+        const tutorId = record.get('tutorId') as string;
+        const slotId = record.get('slotId') as string;
+        const applied = await session.executeWrite(async tx => {
+          const result = await tx.run(
+            `MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot {slotId: $slotId})
+             WHERE s.status IN ['open', 'pending'] AND s.attendanceAutoEnforce = true
+               AND coalesce(s.attendanceMarked, '') <> 'present'
+               AND datetime($now) > datetime($deadlineAt)
+             SET s.status = 'available', s.penaltyCode = '302', s.penaltyReason = $reason,
+                 s.attendanceMarked = 'absent', s.updatedAt = datetime()
+             REMOVE s.pendingBy, s.pendingAt, s.pendingUntil, s.reservationId
+             MERGE (p:Penalty {tutorId: $tutorId, slotId: $slotId, penaltyCode: '302'})
+             ON CREATE SET p.penaltyId = $penaltyId, p.penaltyReason = $reason,
+                           p.severity = 'high', p.affectsCompensation = true, p.createdAt = datetime()
+             MERGE (t)-[:HAS_PENALTY]->(p)
+             RETURN s.slotId AS slotId`,
+            {
+              tutorId, slotId, now: now.toISOString(),
+              deadlineAt: new Date(attendanceDeadlineMs(startMs)).toISOString(),
+              reason: 'Tutor did not confirm attendance for an open, unbooked slot before the 11-minute deadline',
+              penaltyId: nanoid(16)
+            }
+          );
+          return result.records.length > 0;
+        });
+        if (applied) marked++;
+      }
+      if (marked) await invalidateCache('tutor:search:*');
+      return marked;
+    } finally {
+      await session.close();
+    }
+  }
+
+  async markTutorAttendance(input: {
+    tutorId: string;
+    bookingIds: string[];
+    slotIds: string[];
+    status: 'present' | 'absent';
+    reason?: AbsenceReason;
+    additionalInfo?: string;
+  }): Promise<void> {
+    const { bookingIds, slotIds, tutorId, status, reason, additionalInfo } = input;
+    if (status === 'absent') this.validateAbsenceDetails(reason, additionalInfo);
+    const ids = [...bookingIds, ...slotIds];
+    if (new Set(ids).size !== ids.length || ids.length < 1 || ids.length > 12) {
+      throw new Error('Select 1 to 12 distinct attendance slots');
+    }
+
+    const session = getDriver().session();
+    try {
+      const changedBookedAttendance = await session.executeWrite(async tx => {
+        let changedBooked = false;
+        const slots: AttendanceSlotTime[] = [];
+        const bookedAttendanceSlots: AttendanceSlotTime[] = [];
+        const openAttendanceSlots: AttendanceSlotTime[] = [];
+        const updates: Array<{ id: string; type: 'booking' | 'slot'; previous?: string }> = [];
+        for (const bookingId of bookingIds) {
+          const result = await tx.run(
+            `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})-[:BOOKS]->(s:TimeSlot)
+             WHERE b.status IN ['confirmed', 'completed'] AND s.status = 'booked'
+             RETURN s.slotDate AS date, s.slotTime AS time,
+                    b.attendanceTutor AS previous, b.bookedAt AS bookedAt,
+                    b.attendancePolicyActivatedAt AS activatedAt`,
+            { bookingId, tutorId }
+          );
+          if (result.records.length !== 1) throw new Error('Booked lesson not found for this tutor');
+          const record = result.records[0]!;
+          const attendanceSlot = {
+            date: record.get('date'), time: record.get('time'),
+            bookedAtMs: Math.max(
+              record.get('bookedAt')?.toStandardDate?.().getTime() ?? 0,
+              record.get('activatedAt')?.toStandardDate?.().getTime() ?? 0
+            ) || undefined
+          };
+          slots.push(attendanceSlot);
+          bookedAttendanceSlots.push(attendanceSlot);
+          updates.push({ id: bookingId, type: 'booking', previous: record.get('previous') });
+        }
+        for (const slotId of slotIds) {
+          const result = await tx.run(
+            `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId})
+             WHERE s.status IN ['open', 'pending']
+             RETURN s.slotDate AS date, s.slotTime AS time, s.attendanceMarked AS previous,
+                    s.status AS slotStatus, s.pendingUntil AS pendingUntil, s.pendingAt AS pendingAt`,
+            { slotId, tutorId }
+          );
+          if (result.records.length !== 1) throw new Error('Open slot not found for this tutor');
+          const record = result.records[0]!;
+          if (status === 'absent' && record.get('slotStatus') === 'pending') {
+            const expiry = record.get('pendingUntil')?.toStandardDate?.().getTime() ??
+              (record.get('pendingAt')?.toStandardDate?.().getTime() ?? 0) + CHECKOUT_HOLD_MINUTES * 60_000;
+            if (expiry > Date.now()) {
+              throw new Error('A checkout is in progress; wait for it to finish before marking this slot absent');
+            }
+          }
+          const attendanceSlot = { date: record.get('date'), time: record.get('time') };
+          slots.push(attendanceSlot);
+          openAttendanceSlots.push(attendanceSlot);
+          updates.push({ id: slotId, type: 'slot', previous: record.get('previous') });
+        }
+        const presentSlots: AttendanceSlotTime[] = [];
+        if (status === 'present') {
+          const dates = [...new Set(slots.map(slot => slot.date))];
+          for (const date of dates) {
+            const result = await tx.run(
+              `MATCH (s:TimeSlot {tutorId: $tutorId, slotDate: $date})
+               OPTIONAL MATCH (b:Booking)-[:BOOKS]->(s)
+               WHERE (s.status IN ['open', 'pending'] AND s.attendanceMarked = 'present')
+                  OR (s.status = 'booked' AND b.tutorId = $tutorId
+                      AND b.status IN ['confirmed', 'completed'] AND b.attendanceTutor = 'present')
+               RETURN s.slotTime AS time, s.status AS slotStatus,
+                      s.attendanceMarked AS slotAttendance, b.attendanceTutor AS bookingAttendance,
+                      b.bookedAt AS bookedAt, b.attendancePolicyActivatedAt AS activatedAt`,
+              { tutorId, date }
+            );
+            for (const record of result.records) {
+              const marked = record.get('slotStatus') !== 'booked'
+                ? record.get('slotAttendance') : record.get('bookingAttendance');
+              if (marked !== 'present') continue;
+              presentSlots.push({
+                date, time: record.get('time'),
+                bookedAtMs: record.get('slotStatus') === 'booked' ? Math.max(
+                  record.get('bookedAt')?.toStandardDate?.().getTime() ?? 0,
+                  record.get('activatedAt')?.toStandardDate?.().getTime() ?? 0
+                ) || undefined : undefined
+              });
+            }
+          }
+        }
+        if (status === 'present') {
+          validateAttendanceWithPresentNeighbors(slots, presentSlots, status);
+        } else {
+          if (bookedAttendanceSlots.length) validateAttendanceWindow(bookedAttendanceSlots);
+          openAttendanceSlots.forEach(slot => validateAbsenceTime(attendanceStartMs(slot), Date.now()));
+        }
+
+        for (const update of updates) {
+          if (update.type === 'booking') {
+            await tx.run(
+              `MATCH (b:Booking {bookingId: $id, tutorId: $tutorId})
+               SET b.attendanceTutor = $status, b.attendanceSource = 'manual',
+                   b.roomEntryPolicyActivatedAt = CASE WHEN $status = 'present'
+                     THEN coalesce(b.roomEntryPolicyActivatedAt, datetime())
+                     ELSE b.roomEntryPolicyActivatedAt END,
+                   b.absenceReason = $reason, b.absenceAdditionalInfo = $additionalInfo,
+                   b.updatedAt = datetime()`,
+              {
+                id: update.id, tutorId, status,
+                reason: status === 'absent' ? reason : null,
+                additionalInfo: status === 'absent' ? additionalInfo?.trim() || null : null
+              }
+            );
+            if (status === 'absent' && update.previous !== 'absent') {
+              const result = await tx.run(
+                `MATCH (t:User {id: $tutorId})
+                 MATCH (b:Booking {bookingId: $id, tutorId: $tutorId})
+                 SET b.penaltyCode = '301', b.penaltyReason = $penaltyReason, b.penaltyTimestamp = datetime()
+                 MERGE (p:Penalty {tutorId: $tutorId, bookingId: $id, penaltyCode: '301'})
+                 ON CREATE SET p.penaltyId = $penaltyId, p.penaltyReason = $penaltyReason,
+                               p.severity = 'critical', p.affectsCompensation = true, p.createdAt = datetime()
+                 SET p.absenceReason = $reason, p.additionalInfo = $additionalInfo
+                 MERGE (t)-[:HAS_PENALTY]->(p)
+                 RETURN p.penaltyId AS penaltyId`,
+                {
+                  id: update.id, tutorId, penaltyId: nanoid(16),
+                  penaltyReason: `Tutor marked absent for booked session: ${reason}`,
+                  reason, additionalInfo: additionalInfo?.trim() || null
+                }
+              );
+              if (!result.records.length) throw new Error('Could not record TA-301 penalty');
+              changedBooked = true;
+            } else if (status === 'present' && update.previous === 'absent') {
+              await tx.run(
+                `MATCH (p:Penalty {tutorId: $tutorId, bookingId: $id, penaltyCode: '301'}) DETACH DELETE p`,
+                { id: update.id, tutorId }
+              );
+              await tx.run(
+                `MATCH (b:Booking {bookingId: $id, tutorId: $tutorId})
+                 WHERE b.penaltyCode = '301'
+                 REMOVE b.penaltyCode, b.penaltyReason, b.penaltyTimestamp`,
+                { id: update.id, tutorId }
+              );
+              changedBooked = true;
+            }
+          } else if (status === 'absent') {
+            await this.cancelOpenSlot(tx, tutorId, update.id, reason!, additionalInfo);
+          } else {
+            await tx.run(
+              `MATCH (s:TimeSlot {slotId: $id, tutorId: $tutorId})
+               SET s.attendanceMarked = $status, s.attendanceSource = 'manual',
+                   s.updatedAt = datetime()`,
+              { id: update.id, tutorId, status }
+            );
+            if (update.previous === 'absent') {
+              await tx.run(
+                `MATCH (p:Penalty {tutorId: $tutorId, slotId: $id, penaltyCode: '302'}) DETACH DELETE p`,
+                { id: update.id, tutorId }
+              );
+            }
+          }
+        }
+        return changedBooked;
+      });
+      if (changedBookedAttendance) await this.checkAndApplyAutoBlock(tutorId, true);
+    } finally {
+      await session.close();
+    }
+  }
+
   async markAttendance(input: MarkAttendanceInput): Promise<void> {
     const driver = getDriver();
     const session = driver.session();
@@ -867,14 +1586,16 @@ export class ScheduleService {
     try {
       if (input.bookingId) {
         // Mark attendance for booked session
-        await session.run(
+        const attendanceResult = await session.run(
           `
-          MATCH (b:Booking {bookingId: $bookingId})
+          MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
           SET b.${input.role === 'tutor' ? 'attendanceTutor' : 'attendanceStudent'} = $status,
               b.updatedAt = datetime()
+          RETURN b
           `,
-          { bookingId: input.bookingId, status: input.status }
+          { bookingId: input.bookingId, tutorId: input.tutorId, status: input.status }
         );
+        if (!attendanceResult.records.length) throw new Error('Booking not found for tutor');
         
         // Check if both attendances marked and auto-assign penalties if needed
         const result = await session.run(
@@ -1007,7 +1728,7 @@ export class ScheduleService {
   /**
    * Check if tutor should be auto-blocked based on penalty count
    */
-  private async checkAndApplyAutoBlock(tutorId: string): Promise<void> {
+  private async checkAndApplyAutoBlock(tutorId: string, clearInvalidBlock = false): Promise<void> {
     const driver = getDriver();
     const session = driver.session();
     
@@ -1036,6 +1757,7 @@ export class ScheduleService {
         await session.run(
           `
           MATCH (t:User {id: $tutorId})
+          WHERE coalesce(t.isBlocked, false) = false OR t.blockExpiresAt <= datetime()
           CREATE (p:Penalty {
             penaltyId: $penaltyId,
             tutorId: $tutorId,
@@ -1055,6 +1777,16 @@ export class ScheduleService {
             reason: `Automatic block: ${count} TA-301 penalties in ${PENALTY_RULES.PENALTY_WINDOW_DAYS} days`,
             blockUntil: blockUntil.toISOString()
           }
+        );
+      } else if (clearInvalidBlock) {
+        await session.run(
+          `MATCH (t:User {id: $tutorId})-[:HAS_PENALTY]->(p:Penalty {penaltyCode: '601'})
+           WHERE p.blockUntil > datetime()
+           DETACH DELETE p
+           WITH t
+           SET t.isBlocked = false
+           REMOVE t.blockExpiresAt`,
+          { tutorId }
         );
       }
     } finally {

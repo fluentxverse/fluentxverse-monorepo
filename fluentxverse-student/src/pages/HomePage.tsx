@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
+import TicketArtwork from '../Components/Common/TicketArtwork';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi, StudentStats, RecentActivity } from '../api/schedule.api';
 import { getTicketBalance, TicketBalance } from '../services/ticket.service';
@@ -469,20 +470,14 @@ const HomePage = () => {
                       <div className="ticket-balance-grid">
                         <div className="ticket-balance-item basic">
                           <div className="ticket-balance-icon">
-                            <picture>
-                              <source srcSet="/assets/img/icons/basic_ticket2.webp" type="image/webp" />
-                              <img src="/assets/img/icons/basic_ticket2.png" alt="Basic" loading="lazy" />
-                            </picture>
+                            <TicketArtwork tier="basic" compact />
                           </div>
                           <div className="ticket-balance-count">{ticketBalance?.basic || 0}</div>
                           <div className="ticket-balance-label">Basic</div>
                         </div>
                         <div className="ticket-balance-item premium">
                           <div className="ticket-balance-icon">
-                            <picture>
-                              <source srcSet="/assets/img/icons/premium_ticket2.webp" type="image/webp" />
-                              <img src="/assets/img/icons/premium_ticket2.png" alt="Premium" loading="lazy" />
-                            </picture>
+                            <TicketArtwork tier="premium" compact />
                           </div>
                           <div className="ticket-balance-count">{ticketBalance?.premium || 0}</div>
                           <div className="ticket-balance-label">Premium</div>
@@ -490,10 +485,7 @@ const HomePage = () => {
                         {ticketBalance?.trial ? (
                           <div className="ticket-balance-item trial">
                             <div className="ticket-balance-icon">
-                              <picture>
-                                <source srcSet="/assets/img/icons/trial_ticket.webp" type="image/webp" />
-                                <img src="/assets/img/icons/trial_ticket.png" alt="Trial" loading="lazy" />
-                              </picture>
+                              <TicketArtwork tier="trial" compact />
                             </div>
                             <div className="ticket-balance-count">{ticketBalance?.trial || 0}</div>
                             <div className="ticket-balance-label">Trial</div>

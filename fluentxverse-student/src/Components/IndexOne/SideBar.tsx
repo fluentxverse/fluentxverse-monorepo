@@ -1,21 +1,23 @@
 import { useLocation } from 'preact-iso';
 import { useCallback, useState } from "preact/hooks";
 import { JSX } from "preact";
+import { BookOpen, CalendarDays, House, Settings, Ticket, UserRound } from 'lucide-preact';
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
 
 interface MenuItem {
   href: string;
-  icon: string;
+  label: string;
+  icon: typeof House;
 }
 
 // Menu items for the static site
 const menuItems: MenuItem[] = [
-  { href: "/home", icon: "fi-sr-home" },
-  { href: "/schedule", icon: "fi-sr-calendar" },
-  { href: "/tickets", icon: "fi-sr-ticket" },
-  { href: "/materials", icon: "fi-sr-book-alt" },
-  { href: "/profile", icon: "fi-sr-user" }
+  { href: "/home", label: "Home", icon: House },
+  { href: "/schedule", label: "Schedule", icon: CalendarDays },
+  { href: "/tickets", label: "Tickets", icon: Ticket },
+  { href: "/materials", label: "Materials", icon: BookOpen },
+  { href: "/profile", label: "Profile", icon: UserRound }
 ];
 
 const SideBar = (): JSX.Element | null => {
@@ -51,7 +53,9 @@ const SideBar = (): JSX.Element | null => {
       </div>
       <div className="sidebar-icon">
         <ul>
-          {menuItems.map((item) => (
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
             <li
               key={item.href}
               className={path === item.href ? "active" : ""}
@@ -59,11 +63,14 @@ const SideBar = (): JSX.Element | null => {
               <a
                 href={item.href}
                 onClick={(e) => handleClick(e, item.href)}
+                aria-label={item.label}
+                title={item.label}
               >
-                <i className={item.icon}></i>
+                <Icon size={26} strokeWidth={2.5} aria-hidden="true" />
               </a>
             </li>
-          ))}
+            );
+          })}
           
           {/* Settings Button as last menu item */}
           <li className={showSettings ? "active" : ""}>
@@ -75,7 +82,7 @@ const SideBar = (): JSX.Element | null => {
               }}
               title="Settings"
             >
-              <i className="fi-sr-settings"></i>
+              <Settings size={26} strokeWidth={2.5} aria-hidden="true" />
             </a>
           </li>
         </ul>
@@ -92,9 +99,9 @@ const SideBar = (): JSX.Element | null => {
           transform: scale(1.05);
         }
         
-        .sidebar-icon ul li.active a i {
+        .sidebar-icon ul li.active a svg {
           color: #fff;
-          text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+          filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
         }
 
         .sidebar-icon ul li a {

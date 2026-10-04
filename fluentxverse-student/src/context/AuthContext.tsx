@@ -2,11 +2,12 @@
   const allowedRole = 'student';
 import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
-import { loginUser, logoutUser, getMe, loginWithWallet, registerWithWallet, type WalletAuthResponse, type WalletRegisterParams } from '../api/auth.api';
+import { loginUser, logoutUser, getMe, loginWithWallet, registerWithWallet, loginWithPrivy, registerWithPrivy, type PrivyProfile, type PrivyRegisterParams, type WalletRegisterParams } from '../api/auth.api';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
 import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
 import { appWallet } from '../config/wallet';
 import { scheduleApi } from '../api/schedule.api';
+import { usePrivyIntegration } from './PrivyContext';
 
 interface AuthUser {
   userId: string;
@@ -45,6 +46,9 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   loginByWallet: (params: WalletAuthParams) => Promise<WalletLoginResult>;
   registerByWallet: (params: WalletRegisterParams) => Promise<void>;
+  registerByPrivy: (params: PrivyRegisterParams) => Promise<void>;
+  privyProfile: PrivyProfile | null;
+  isPrivyAuthenticated: boolean;
   logout: () => Promise<void>;
   getUserId: () => string | undefined;
   clearSessionExpired: () => void;
@@ -58,6 +62,18 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
+  const [privyProfile, setPrivyProfile] = useState<PrivyProfile | null>(null);
+  const [socialAuthError, setSocialAuthError] = useState<string | null>(null);
+  const privyAttemptRef = useRef<string | null>(null);
+  const loggingOutRef = useRef(false);
+  const exchangeRef = useRef<Promise<void> | null>(null);
+  const {
+    ready: privyReady,
+    authenticated: isPrivyAuthenticated,
+    userId: privyUserId,
+    getAccessToken,
+    logout: logoutPrivy,
+  } = usePrivyIntegration();
 
   // Clear session expired state
   const clearSessionExpired = () => {
@@ -71,9 +87,15 @@ export const AuthProvider = ({ children }: { children: any }) => {
       try {
         const me = await getMe();
 
-        if (me?.user) {
+        if (me?.user && !loggingOutRef.current) {
           // /me returns { userId, email }
-          setUser(me.user as AuthUser);
+          const restoredUser = me.user as AuthUser;
+          setUser(restoredUser);
+          try {
+            if (restoredUser.userId) localStorage.setItem('fxv_user_id', restoredUser.userId);
+          } catch {
+            // Browser storage is optional; the server session is authoritative.
+          }
         }
       } catch (err) {
         // Not authenticated or session expired
@@ -84,6 +106,76 @@ export const AuthProvider = ({ children }: { children: any }) => {
     };
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (loggingOutRef.current || sessionStorage.getItem('fxv_pending_logout') === 'true') return;
+    if (!isPrivyAuthenticated) privyAttemptRef.current = null;
+    if (initialLoading || !privyReady || !isPrivyAuthenticated || !privyUserId || user) return;
+    if (privyAttemptRef.current === privyUserId) return;
+
+    privyAttemptRef.current = privyUserId;
+    setSocialAuthError(null);
+    setLoginLoading(true);
+    setLoginInProgress(true);
+
+    const exchangePrivySession = async () => {
+      try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) throw new Error('Privy session is unavailable');
+
+        const response = await loginWithPrivy(accessToken);
+        if (loggingOutRef.current) return;
+        if (response.status === 'authenticated' && response.user) {
+          const loggedInUser = response.user as AuthUser;
+          setUser(loggedInUser);
+          setPrivyProfile(null);
+          sessionStorage.removeItem('fxv_privy_auth_error');
+          sessionStorage.removeItem('fxv_pending_privy_profile');
+          const fullName = `${loggedInUser.givenName || ''} ${loggedInUser.familyName || ''}`.trim();
+          if (fullName) localStorage.setItem('fxv_user_fullname', fullName);
+          if (loggedInUser.userId) localStorage.setItem('fxv_user_id', loggedInUser.userId);
+          const authProvider = sessionStorage.getItem('fxv_pending_auth_provider');
+          if (authProvider === 'twitter' || authProvider === 'google' || authProvider === 'apple') {
+            localStorage.setItem('fxv_last_auth_provider', authProvider);
+          }
+          sessionStorage.removeItem('fxv_pending_auth_provider');
+
+          if (sessionStorage.getItem('fxv_privy_login_pending') === 'true') {
+            sessionStorage.removeItem('fxv_privy_login_pending');
+            window.location.replace('/home');
+          }
+          return;
+        }
+
+        if (response.status === 'registration_required' && response.profile) {
+          const profile = response.profile as PrivyProfile;
+          setPrivyProfile(profile);
+          sessionStorage.setItem('fxv_pending_privy_profile', JSON.stringify(profile));
+          sessionStorage.removeItem('fxv_privy_login_pending');
+          if (window.location.pathname !== '/register') {
+            window.location.assign('/register?auth=privy');
+          }
+          return;
+        }
+
+        throw new Error(response.error || 'Unable to sign in with Privy');
+      } catch (error: any) {
+        console.error('Privy session exchange failed:', error);
+        const message = error?.response?.status === 429
+          ? error?.response?.data?.error || 'Too many sign-in attempts. Please try again later.'
+          : 'Sign-in could not be completed. Please open Login and try again.';
+        sessionStorage.setItem('fxv_privy_auth_error', message);
+        setSocialAuthError(message);
+        sessionStorage.removeItem('fxv_privy_login_pending');
+        sessionStorage.removeItem('fxv_pending_auth_provider');
+      } finally {
+        setLoginLoading(false);
+        setTimeout(() => setLoginInProgress(false), 500);
+      }
+    };
+
+    exchangeRef.current = exchangePrivySession();
+  }, [initialLoading, privyReady, isPrivyAuthenticated, privyUserId, user]);
 
   // Preload dashboard data when user is authenticated
   useEffect(() => {
@@ -308,7 +400,39 @@ export const AuthProvider = ({ children }: { children: any }) => {
     }
   };
 
+  const registerByPrivy = async (params: PrivyRegisterParams): Promise<void> => {
+    setLoginLoading(true);
+    setLoginInProgress(true);
+    try {
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        throw new Error('Your social sign-in session expired. Please sign in again.');
+      }
+
+      const response = await registerWithPrivy(accessToken, params);
+      if (!response.success || !response.user) {
+        throw new Error(response.error || 'Registration failed');
+      }
+      setUser(response.user as AuthUser);
+      setPrivyProfile(null);
+      sessionStorage.removeItem('fxv_pending_privy_profile');
+      const authProvider = sessionStorage.getItem('fxv_pending_auth_provider');
+      if (authProvider === 'twitter' || authProvider === 'google' || authProvider === 'apple') {
+        localStorage.setItem('fxv_last_auth_provider', authProvider);
+      }
+      sessionStorage.removeItem('fxv_pending_auth_provider');
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.error || error?.message || 'Registration failed');
+    } finally {
+      setLoginLoading(false);
+      setTimeout(() => setLoginInProgress(false), 500);
+    }
+  };
+
   const logout = async () => {
+    if (loggingOutRef.current) return;
+    loggingOutRef.current = true;
+    setLoginLoading(true);
     // IMPORTANT: Clear local state FIRST to prevent race conditions
     // This ensures checkAuth won't find a session and auto-login won't trigger
     setUser(null);
@@ -319,6 +443,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
     // Set a flag so the landing page knows we're attempting logout
     // If the cookie doesn't get cleared, the landing page will retry
     try {
+      // Finish any request that can set the cookie before deleting that cookie.
+      await exchangeRef.current;
+      sessionStorage.removeItem('fxv_privy_login_pending');
+      sessionStorage.removeItem('fxv_pending_auth_provider');
+      sessionStorage.removeItem('fxv_pending_privy_profile');
       sessionStorage.setItem('fxv_pending_logout', 'true');
     } catch (e) {}
     
@@ -331,6 +460,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
         await appWallet.disconnect();
       } catch (walletErr) {
         console.warn('Failed to disconnect wallet:', walletErr);
+      }
+
+      try {
+        await logoutPrivy();
+      } catch (privyError) {
+        console.warn('Failed to clear Privy session:', privyError);
       }
       
       // Call server to clear cookie
@@ -370,11 +505,15 @@ export const AuthProvider = ({ children }: { children: any }) => {
       login, 
       loginByWallet, 
       registerByWallet, 
+      registerByPrivy,
+      privyProfile,
+      isPrivyAuthenticated,
       logout, 
       getUserId,
       clearSessionExpired
     }}>
       {children}
+      {socialAuthError && <div role="alert" style={{ position: 'fixed', bottom: '16px', left: '16px', right: '16px', zIndex: 100001, padding: '16px', background: '#fff', color: '#b42318', border: '1px solid #b42318', borderRadius: '8px' }}>{socialAuthError}</div>}
     </AuthContext.Provider>
   );
 };

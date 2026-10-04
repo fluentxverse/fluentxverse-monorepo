@@ -36,6 +36,8 @@ try {
   assert.equal(updatedNote.id, firstNote.id);
   assert.equal((await notes.getNotes(sessionId, 'conversational-skills', lessonId))?.tutorMemo,
     'Practice follow-up questions');
+  assert.equal((await notes.listForStudent(studentId, [lessonId]))[0]?.tutorMemo,
+    'Practice follow-up questions');
 
   const markInput = {
     sessionId, tutorId: 'test-tutor', studentId, lessonId,
@@ -45,6 +47,7 @@ try {
   await marks.saveMark({ ...markInput, isCorrect: false, studentResponse: 'go' });
   assert.equal((await marks.getMarks(sessionId, lessonId))[0]?.studentResponse, 'go');
   assert.equal((await marks.listIncorrectForStudent(studentId, [lessonId])).length, 1);
+  assert.equal((await marks.listForStudent(studentId, [lessonId]))[0]?.studentResponse, 'go');
 
   const links = await graph.run(
     `MATCH (student:Student {id: $studentId})-[:HAS_CLASSROOM_NOTE]->(:ClassroomMaterialNote)
@@ -56,6 +59,7 @@ try {
 
   await marks.saveMark({ ...markInput, isCorrect: true, studentResponse: '' });
   assert.equal((await marks.listIncorrectForStudent(studentId, [lessonId])).length, 0);
+  assert.equal((await marks.listForStudent(studentId, [lessonId]))[0]?.isCorrect, true);
   await marks.deleteMark(sessionId, lessonId, 'A', 0);
   assert.equal((await marks.getMarks(sessionId, lessonId)).length, 0);
   console.log('PASS: Memgraph notes, item marks, student links, and missed-item lookup');

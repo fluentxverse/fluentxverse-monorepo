@@ -85,7 +85,7 @@ export default defineConfig({
 		port: 5174,
 		strictPort: true,
 		hmr: {
-			port: 5174,
+			port: Number(process.env.VITE_HMR_PORT || 5174),
 		},
 	},
 	resolve: {

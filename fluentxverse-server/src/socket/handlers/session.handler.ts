@@ -2,6 +2,7 @@ import type { Server, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/socket.types';
 import { SessionService } from '../../services/session.services/session.service';
 import { ClassroomActivityService } from '../../services/classroomActivity.services/classroomActivity.service';
+import { ScheduleService } from '../../services/schedule.services/schedule.service';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
@@ -16,6 +17,7 @@ const memParticipants: Record<string, {
 }> = {};
 
 export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
+  if (socket.data.userType === 'admin') return;
   const logActivity = async (
     sessionId: string,
     userId: string,
@@ -44,7 +46,36 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
     try {
       const { sessionId } = data;
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
+
+      if (typeof sessionId !== 'string' || !sessionId || !['tutor', 'student'].includes(userType)) {
+        socket.emit('session:error', { message: 'Invalid lesson room' });
+        return;
+      }
+
+      if (userType === 'tutor') {
+        const ownsBooking = await new ScheduleService().markTutorRoomEntry(sessionId, userId);
+        if (!ownsBooking) {
+          socket.emit('session:error', { message: 'You do not have access to this lesson' });
+          return;
+        }
+      } else if (!await new ScheduleService().canStudentJoinRoom(sessionId, userId)) {
+        socket.emit('session:error', { message: 'You do not have access to this lesson' });
+        return;
+      }
+
+      if (socket.data.sessionId && socket.data.sessionId !== sessionId) {
+        await socket.leave(socket.data.sessionId);
+        await sessionService.removeParticipant(socket.data.sessionId, userId, userType, socket.id);
+      }
+
+      const existingSockets = await io.in(sessionId).fetchSockets();
+      for (const existing of existingSockets) {
+        if (existing.id !== socket.id && existing.data.userId === userId) {
+          await existing.leave(sessionId);
+          existing.data.sessionId = undefined;
+        }
+      }
 
       // Join the socket.io room
       await socket.join(sessionId);
@@ -106,18 +137,19 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
 
     } catch (error) {
       console.error('Error handling session:join:', error);
+      socket.emit('session:error', { message: 'Unable to join the lesson right now' });
     }
   });
 
   socket.on('classroom:video-state', (data) => {
     try {
-      const sessionId = data.sessionId || socket.data.sessionId;
-      if (!sessionId) return;
+      const sessionId = socket.data.sessionId;
+      if (!sessionId || !socket.rooms.has(sessionId)) return;
 
       const payload = {
         sessionId,
         userId: socket.data.userId,
-        userType: socket.data.userType,
+        userType: socket.data.userType as 'tutor' | 'student',
         enabled: data.enabled
       };
 
@@ -137,19 +169,21 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
     try {
       const sessionId = socket.data.sessionId;
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
 
       if (!sessionId) {
         return;
       }
 
-      // Remove participant, prefer DB then fallback
+      // Remove only the participant represented by this socket.
+      let removed = false;
       try {
-        await sessionService.removeParticipant(sessionId, userId, userType);
+        removed = await sessionService.removeParticipant(sessionId, userId, userType, socket.id);
       } catch (err) {
         // Remove from in-memory store
-        if (memParticipants[sessionId] && userType) {
+        if (memParticipants[sessionId]?.[userType]?.socket_id === socket.id) {
           delete memParticipants[sessionId][userType];
+          removed = true;
         }
       }
 
@@ -158,6 +192,8 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       socket.data.sessionId = undefined;
 
       // Notify others in the session
+      if (!removed) return;
+      socket.to(sessionId).emit('webrtc:peer-left');
       socket.to(sessionId).emit('session:user-left', {
         userId,
         userType
@@ -201,7 +237,7 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
     try {
       const sessionId = socket.data.sessionId;
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
 
       if (!sessionId) {
         console.error('No session ID found for end-lesson');
@@ -229,6 +265,7 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
   socket.on('classroom:request-activity-history', async (data) => {
     try {
       const { sessionId } = data;
+      if (!sessionId || socket.data.sessionId !== sessionId) return;
       const history = await classroomActivityService.getSessionActivity(sessionId);
       socket.emit('classroom:activity-history', history);
     } catch (error) {
@@ -242,18 +279,22 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
     try {
       const sessionId = socket.data.sessionId;
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
 
       if (sessionId) {
+        let removed = false;
         try {
-          await sessionService.removeParticipant(sessionId, userId, userType);
+          removed = await sessionService.removeParticipant(sessionId, userId, userType, socket.id);
         } catch {
           // Remove from in-memory store
-          if (memParticipants[sessionId] && userType) {
+          if (memParticipants[sessionId]?.[userType]?.socket_id === socket.id) {
             delete memParticipants[sessionId][userType];
+            removed = true;
           }
         }
-        
+
+        if (!removed) return;
+        socket.to(sessionId).emit('webrtc:peer-left');
         socket.to(sessionId).emit('session:user-left', {
           userId,
           userType

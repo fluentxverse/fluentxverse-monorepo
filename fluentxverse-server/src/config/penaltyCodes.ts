@@ -31,7 +31,7 @@ export const PENALTY_CODE_DETAILS: Record<PenaltyCode, PenaltyCodeInfo> = {
   [PenaltyCode.TA_BOOKED]: {
     code: PenaltyCode.TA_BOOKED,
     label: 'TA-301',
-    description: 'Tutor failed to attend a booked lesson slot. Includes short-notice cancellations (less than 48 hours), failure to confirm attendance, or technical issues not properly reported.',
+    description: 'Tutor reports absence for a booked lesson or fails to confirm attendance. The student reserved this time, so the booking remains protected and TA-301 applies.',
     affectsCompensation: true,
     severity: 'critical',
     color: '#dc2626' // red-600
@@ -40,7 +40,7 @@ export const PENALTY_CODE_DETAILS: Record<PenaltyCode, PenaltyCodeInfo> = {
   [PenaltyCode.TA_UNBOOKED]: {
     code: PenaltyCode.TA_UNBOOKED,
     label: 'TA-302',
-    description: 'Tutor failed to attend an unbooked (open) lesson slot or failed to confirm attendance for an open slot.',
+    description: 'An open, unbooked slot without a Present confirmation becomes TA-302 after the 11-minute attendance deadline. It closes and cannot be reopened.',
     affectsCompensation: true,
     severity: 'high',
     color: '#ea580c' // orange-600
@@ -49,7 +49,7 @@ export const PENALTY_CODE_DETAILS: Record<PenaltyCode, PenaltyCodeInfo> = {
   [PenaltyCode.TA_SHORT_NOTICE]: {
     code: PenaltyCode.TA_SHORT_NOTICE,
     label: 'TA-303',
-    description: 'Open slot cancelled on short notice (within 48 hours of lesson time). Multiple occurrences may lead to slot restrictions.',
+    description: 'Unbooked slot cancelled less than 48 hours before start. A same-day cancellation may reopen once after 30 minutes; an earlier cancellation may reopen once on the lesson day. A second TA-303 permanently closes that slot.',
     affectsCompensation: false,
     severity: 'medium',
     color: '#f59e0b' // amber-500
@@ -137,6 +137,11 @@ export function determinePenaltyCode(params: {
     }
     return PenaltyCode.SYSTEM_ISSUE;
   }
+
+  if (!wasBooked && cancellationNoticeHours !== undefined) {
+    return cancellationNoticeHours < PENALTY_RULES.SHORT_NOTICE_HOURS
+      ? PenaltyCode.TA_SHORT_NOTICE : null;
+  }
   
   // Tutor absence cases
   if (!tutorPresent) {
@@ -145,11 +150,6 @@ export function determinePenaltyCode(params: {
     } else {
       return PenaltyCode.TA_UNBOOKED;
     }
-  }
-  
-  // Short notice cancellation (only for unbooked slots)
-  if (!wasBooked && cancellationNoticeHours !== undefined && cancellationNoticeHours < PENALTY_RULES.SHORT_NOTICE_HOURS) {
-    return PenaltyCode.TA_SHORT_NOTICE;
   }
   
   return null;

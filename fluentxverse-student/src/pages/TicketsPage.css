@@ -116,15 +116,28 @@
 }
 
 .balance-ticket-icon {
-  width: 48px;
+  width: 68px;
   height: 48px;
   flex-shrink: 0;
 }
 
-.balance-ticket-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.balance-ticket-icon .ticket-artwork {
+  width: 68px;
+  height: 42px;
+  padding: 6px 9px;
+}
+
+.balance-ticket-icon .ticket-artwork__brand {
+  top: 5px;
+  left: 9px;
+}
+
+.balance-ticket-icon .ticket-artwork strong {
+  font-size: 11px;
+}
+
+.balance-ticket-icon .ticket-artwork small {
+  font-size: 5px;
 }
 
 .balance-ticket-info {
@@ -451,10 +464,9 @@
   padding: 16px 0;
 }
 
-.package-visual img {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
+.package-visual .ticket-artwork {
+  width: 112px;
+  height: 68px;
 }
 
 .package-ticket-count {
@@ -684,9 +696,9 @@
     padding: 20px;
   }
   
-  .package-visual img {
-    width: 64px;
-    height: 64px;
+  .package-visual .ticket-artwork {
+    width: 96px;
+    height: 58px;
   }
   
   .package-ticket-count .count {
@@ -1315,11 +1327,23 @@
   overflow: hidden;
 }
 
-.checkout-header-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 12px;
+.checkout-header-icon .ticket-artwork {
+  width: 70px;
+  height: 44px;
+  padding: 6px 9px;
+}
+
+.checkout-header-icon .ticket-artwork__brand {
+  top: 5px;
+  left: 9px;
+}
+
+.checkout-header-icon .ticket-artwork strong {
+  font-size: 11px;
+}
+
+.checkout-header-icon .ticket-artwork small {
+  font-size: 5px;
 }
 
 @keyframes iconPulse {
@@ -1479,11 +1503,23 @@
   gap: 12px;
 }
 
-.mock-checkout-image {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
-  object-fit: cover;
+.mock-checkout-product .ticket-artwork {
+  width: 72px;
+  height: 44px;
+  padding: 6px 9px;
+}
+
+.mock-checkout-product .ticket-artwork__brand {
+  top: 5px;
+  left: 9px;
+}
+
+.mock-checkout-product .ticket-artwork strong {
+  font-size: 11px;
+}
+
+.mock-checkout-product .ticket-artwork small {
+  font-size: 5px;
 }
 
 .mock-checkout-details {
@@ -1808,6 +1844,58 @@
   margin: 0;
 }
 
+.mock-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.mock-error-icon {
+  display: flex;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  color: #fff;
+  background: #dc2626;
+}
+
+.mock-error h3 {
+  margin: 0 0 8px;
+  color: #b91c1c;
+  font-size: 20px;
+}
+
+.mock-error p {
+  max-width: 360px;
+  margin: 0 0 22px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.mock-retry-button {
+  min-width: 140px;
+  padding: 11px 20px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  background: #1268d5;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dark-mode .mock-error h3 {
+  color: #fca5a5;
+}
+
+.dark-mode .mock-error p {
+  color: #cbd5e1;
+}
+
 /* Dark mode for mock checkout */
 .dark-mode .mock-checkout {
   background: #1e293b;
@@ -1948,11 +2036,11 @@
 }
 
 .quantity-header-icon {
-  width: 72px;
-  height: 72px;
+  width: 116px;
+  height: 76px;
   margin: 0 auto 16px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1960,10 +2048,23 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.quantity-header-icon img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
+.quantity-header-icon .ticket-artwork {
+  width: 104px;
+  height: 62px;
+  padding: 9px 13px;
+}
+
+.quantity-header-icon .ticket-artwork__brand {
+  top: 8px;
+  left: 12px;
+}
+
+.quantity-header-icon .ticket-artwork strong {
+  font-size: 15px;
+}
+
+.quantity-header-icon .ticket-artwork small {
+  font-size: 7px;
 }
 
 .quantity-header h2 {
@@ -2254,11 +2355,20 @@
 }
 
 .dark-mode .summary-label {
-  color: #94a3b8;
+  color: #b6c2d2;
 }
 
 .dark-mode .summary-value {
   color: #f1f5f9;
+}
+
+.dark-mode .summary-row.total-tickets .summary-label,
+.dark-mode .summary-row.total-price .summary-label {
+  color: #e2e8f0;
+}
+
+.dark-mode .summary-divider {
+  background: linear-gradient(90deg, transparent, #475569, transparent);
 }
 
 .dark-mode .package-tickets-info,

@@ -4,7 +4,11 @@
  */
 import { Elysia, t } from 'elysia';
 import { lessonMaterialService, type Skill } from '../services/lessonMaterial.service';
-import { createAdminGuard } from '../middleware/auth.middleware';
+import { createAdminGuard, createStudentGuard, createTutorGuard } from '../middleware/auth.middleware';
+import { addAvailableCheckpoints, checkpointIdPattern, checkpointLessonService, studentCheckpointLesson } from '../services/checkpointLesson.service';
+import { ScheduleService } from '../services/schedule.services/schedule.service';
+
+const scheduleService = new ScheduleService();
 
 // Helper to get dashboard public URL
 const getDashboardPublicUrl = (): string => {
@@ -83,7 +87,8 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
     '/published/:course',
     async ({ params }) => {
       try {
-        const lessons = await lessonMaterialService.listPublishedByCourse(params.course);
+        const stored = await lessonMaterialService.listPublishedByCourse(params.course);
+        const lessons = params.course === 'conversational-skills' ? addAvailableCheckpoints(stored) : stored;
         return { success: true, lessons };
       } catch (error) {
         console.error('Error fetching published lessons:', error);
@@ -99,6 +104,50 @@ export const lessonMaterialRoutes = new Elysia({ prefix: '/lesson-materials' })
         summary: 'Get all published lessons for a course',
       },
     }
+  )
+
+  .get(
+    '/checkpoint/:id',
+    async ({ params, query, cookie, set }) => {
+      set.headers['Cache-Control'] = 'private, no-store';
+      if (!checkpointIdPattern.test(params.id)) {
+        set.status = 400;
+        return { success: false, error: 'Invalid checkpoint lesson' };
+      }
+      try {
+        let studentId: string;
+        const isTutor = Boolean(cookie.tutorAuth?.value);
+        if (isTutor) {
+          const tutor = await createTutorGuard(cookie, set);
+          if (!tutor) return { success: false, error: 'Unauthorized' };
+          if (!query.sessionId) {
+            set.status = 400;
+            return { success: false, error: 'Open this checkpoint from an active class session' };
+          }
+          const details = await scheduleService.getTutorLessonDetails(query.sessionId, tutor.userId);
+          if (!details.studentId) {
+            set.status = 404;
+            return { success: false, error: 'No student is assigned to this session' };
+          }
+          studentId = details.studentId;
+        } else {
+          const student = await createStudentGuard(cookie, set);
+          if (!student) return { success: false, error: 'Unauthorized' };
+          studentId = student.userId;
+        }
+        const lesson = await checkpointLessonService.getOrCreate(studentId, params.id);
+        return { success: true, lesson: isTutor ? lesson : studentCheckpointLesson(lesson) };
+      } catch (error: any) {
+        console.error('Error loading checkpoint lesson:', error);
+        set.status = error?.message?.includes('do not have access') ? 403 : 500;
+        return { success: false, error: error?.message || 'Failed to load checkpoint lesson' };
+      }
+    },
+    {
+      params: t.Object({ id: t.String() }),
+      query: t.Object({ sessionId: t.Optional(t.String()) }),
+      detail: { tags: ['Lesson Materials'], summary: 'Get a persisted student checkpoint lesson' },
+    },
   )
   
   // ============================================================================

@@ -38,6 +38,7 @@ import SessionExpiryModal from './Components/SessionExpiryModal';
 import { useAuthContext } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { useThemeStore } from './context/ThemeContext';
+import { PrivyIntegrationProvider } from './context/PrivyContext';
 
 // Performance: Link prefetching on hover
 import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
@@ -207,13 +208,15 @@ export function AppInner() {
 
 export function App() {
 	return (
-		<AuthProvider>
-			<ToastProvider>
-				<ErrorBoundary>
-					<AppInner />
-				</ErrorBoundary>
-			</ToastProvider>
-		</AuthProvider>
+		<PrivyIntegrationProvider>
+			<AuthProvider>
+				<ToastProvider>
+					<ErrorBoundary>
+						<AppInner />
+					</ErrorBoundary>
+				</ToastProvider>
+			</AuthProvider>
+		</PrivyIntegrationProvider>
 	);
 }
 

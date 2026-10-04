@@ -22,6 +22,7 @@ import { initSocketServer } from './socket/socket.server';
 import { startReminderService } from './services/notification.services/reminder.service';
 import { NotificationService } from './services/notification.services/notification.service';
 import { startSuspensionJob } from './services/admin.services/suspension.job';
+import { startAttendanceJob } from './services/schedule.services/attendance.job';
 import { initRedis, logRetentionCleanup, isRedisConnected } from './db/redis';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
@@ -363,6 +364,7 @@ httpServer.listen(8767, '0.0.0.0', async () => {
   
   // Start the auto-unsuspend background job (now Memgraph is ready)
   startSuspensionJob();
+  startAttendanceJob();
 
   // Start daily notification retention cleanup (delete read > N days)
   const notificationService = new NotificationService();

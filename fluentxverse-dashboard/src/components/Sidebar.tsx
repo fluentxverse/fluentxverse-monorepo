@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { path: '/tutors', icon: 'ri-user-star-line', label: 'Tutors' },
   { path: '/students', icon: 'ri-graduation-cap-line', label: 'Students' },
   { path: '/inbox', icon: 'ri-mail-send-line', label: 'Inbox Messages' },
+  { path: '/tasks', icon: 'ri-list-check-3', label: 'Tasks & Suggestions' },
   { path: '/tickets', icon: 'ri-ticket-2-line', label: 'Ticket NFTs' },
   { path: '/lesson-material-maker', icon: 'ri-draft-line', label: 'Lesson Maker' },
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
@@ -57,8 +58,8 @@ export function Sidebar() {
   }, []);
 
   // Filter nav items based on role
-  const mainNavItems = navItems.slice(0, 6);
-  const managementNavItems = navItems.slice(6).filter(
+  const mainNavItems = navItems.slice(0, 7);
+  const managementNavItems = navItems.slice(7).filter(
     (item) => !item.superadminOnly || isSuperAdmin
   );
 

@@ -9,7 +9,7 @@ import { getErrorMessage } from '../api/utils';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
-  const { login, registerByWallet } = useAuthContext();
+  const { login, registerByWallet, registerByPrivy, privyProfile } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,6 +17,7 @@ const RegisterPage = () => {
   const [step, setStep] = useState(1);
   const [tutorId, setTutorId] = useState<string | null>(null);
   const [pendingWallet, setPendingWallet] = useState<string | null>(null);
+  const [pendingPrivy, setPendingPrivy] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   
   
@@ -35,6 +36,37 @@ const RegisterPage = () => {
     referral: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
   });
+  const [birthParts, setBirthParts] = useState({ year: '', month: '', day: '' });
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const selectedYear = Number(birthParts.year);
+  const selectedMonth = Number(birthParts.month);
+  const lastMonth = selectedYear === currentYear ? today.getMonth() + 1 : 12;
+  const lastDay = birthParts.year && birthParts.month
+    ? selectedYear === currentYear && selectedMonth === today.getMonth() + 1
+      ? today.getDate()
+      : new Date(selectedYear, selectedMonth, 0).getDate()
+    : 0;
+
+  const handleBirthPartChange = (part: 'year' | 'month' | 'day', value: string) => {
+    const next = { ...birthParts, [part]: value };
+    if (part === 'year' && Number(next.month) > (Number(value) === currentYear ? today.getMonth() + 1 : 12)) {
+      next.month = '';
+    }
+    const maxDay = next.year && next.month
+      ? Number(next.year) === currentYear && Number(next.month) === today.getMonth() + 1
+        ? today.getDate()
+        : new Date(Number(next.year), Number(next.month), 0).getDate()
+      : 0;
+    if (Number(next.day) > maxDay) next.day = '';
+    setBirthParts(next);
+    setFormData(previous => ({
+      ...previous,
+      birthDate: next.year && next.month && next.day
+        ? `${next.year}-${next.month.padStart(2, '0')}-${next.day.padStart(2, '0')}`
+        : ''
+    }));
+  };
 
   useEffect(() => {
     document.title = 'Register | FluentXVerse';
@@ -52,6 +84,27 @@ const RegisterPage = () => {
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  useEffect(() => {
+    const storedProfile = sessionStorage.getItem('fxv_pending_privy_profile');
+    let savedProfile = null;
+    try {
+      savedProfile = storedProfile ? JSON.parse(storedProfile) : null;
+    } catch {
+      sessionStorage.removeItem('fxv_pending_privy_profile');
+    }
+    const profile = privyProfile || savedProfile;
+    if (!profile) return;
+
+    setPendingPrivy(true);
+    setPendingWallet(null);
+    setFormData(previous => ({
+      ...previous,
+      email: profile.email || previous.email,
+      givenName: profile.givenName || previous.givenName,
+      familyName: profile.familyName || previous.familyName,
+    }));
+  }, [privyProfile]);
 
   // Get tutor ID from URL if booking directly
   useEffect(() => {
@@ -102,7 +155,20 @@ const RegisterPage = () => {
     setIsSubmitting(true);
     
     try {
-      if (pendingWallet) {
+      if (pendingPrivy) {
+        await registerByPrivy({
+          email: formData.email,
+          givenName: formData.givenName,
+          familyName: formData.familyName,
+          birthDate: formData.birthDate,
+          mobileNumber: formData.mobileNumber,
+        });
+        sessionStorage.removeItem('fxv_pending_privy_profile');
+        setSuccess(true);
+        setTimeout(() => {
+          window.location.href = tutorId ? `/tutor/${tutorId}` : '/home';
+        }, 1500);
+      } else if (pendingWallet) {
         // Wallet-based registration (from social login)
         // Get stored signature and message from SIWE flow
         const signature = localStorage.getItem('fxv_pending_signature');
@@ -272,6 +338,13 @@ const RegisterPage = () => {
                   <span>Wallet connected! Complete your profile below.</span>
                 </div>
               )}
+
+              {pendingPrivy && (
+                <div className="wallet-connected-banner">
+                  <i className="fas fa-user-check"></i>
+                  <span>Social account verified. Complete your profile below.</span>
+                </div>
+              )}
               
               {tutorId && (
                 <div className="tutor-booking-banner">
@@ -283,33 +356,22 @@ const RegisterPage = () => {
               <h2 className="form-title">
                 {step === 1 ? 'Create Your Account' : 'Tell Us About Your English Goals'}
               </h2>
+              <p className="register-form-intro">
+                {step === 1 ? 'Start with your details. Your lessons are just a step away.' : 'Help us shape your learning experience.'}
+              </p>
               
               {/* Step Indicator */}
                 <div className="step-indicator">
-                  {/* Step 1 dot - allow click to go back to step 1 */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className={`step-dot ${step === 1 ? 'active' : ''} ${step === 2 ? 'gray' : ''}`}
-                    onClick={() => setStep(1)}
-                    onKeyDown={(e) => { if ((e as unknown as KeyboardEvent).key === 'Enter') setStep(1); }}
-                    aria-label="Go to step 1"
-                  >
-                    {step === 1 ? '1' : (step === 2 ? '1' : <i className="ri-check-line"></i>)}
-                  </div>
+                  <button type="button" className={`register-step ${step === 1 ? 'current' : 'complete'}`} onClick={() => setStep(1)} aria-current={step === 1 ? 'step' : undefined}>
+                    <span className="step-dot">{step === 1 ? '1' : <i className="ri-check-line" aria-hidden="true"></i>}</span>
+                    <span>Your details</span>
+                  </button>
 
                   <div className={`step-line ${step >= 2 ? 'active' : ''}`}></div>
 
-                  {/* Step 2 dot - click to jump to step 2 */}
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    className={`step-dot ${step === 2 ? 'active' : ''}`}
-                    onClick={() => setStep(2)}
-                    onKeyDown={(e) => { if ((e as unknown as KeyboardEvent).key === 'Enter') setStep(2); }}
-                    aria-label="Go to step 2"
-                  >
-                    2
+                  <div className={`register-step ${step === 2 ? 'current' : ''}`} aria-current={step === 2 ? 'step' : undefined}>
+                    <span className="step-dot">2</span>
+                    <span>Learning goals</span>
                   </div>
                 </div>
 
@@ -344,9 +406,22 @@ const RegisterPage = () => {
                             <label className="form-label">이름 (Given Name) <span className="required">*</span></label>
                             <input type="text" className="form-input" placeholder="예: 민수" value={formData.givenName} onChange={(e) => handleChange('givenName', (e.target as HTMLInputElement).value)} required />
                           </div>
-                          <div className="form-group">
-                            <label className="form-label">생년월일 <span className="required">*</span></label>
-                            <input type="date" className="form-input" value={formData.birthDate} onChange={(e) => handleChange('birthDate', (e.target as HTMLInputElement).value)} required max={new Date().toISOString().split('T')[0]} />
+                        </div>
+                        <div className="form-group register-birth-group">
+                          <span className="form-label" id="register-birth-label">생년월일 <span className="required">*</span></span>
+                          <div className="register-birth-selects" role="group" aria-labelledby="register-birth-label">
+                            <select className="form-select" aria-label="Birth year" value={birthParts.year} onChange={(e) => handleBirthPartChange('year', (e.target as HTMLSelectElement).value)} required>
+                              <option value="">연도</option>
+                              {Array.from({ length: currentYear - 1899 }, (_, index) => currentYear - index).map(year => <option key={year} value={year}>{year}</option>)}
+                            </select>
+                            <select className="form-select" aria-label="Birth month" value={birthParts.month} onChange={(e) => handleBirthPartChange('month', (e.target as HTMLSelectElement).value)} required disabled={!birthParts.year}>
+                              <option value="">월</option>
+                              {Array.from({ length: lastMonth }, (_, index) => index + 1).map(month => <option key={month} value={month}>{month}월</option>)}
+                            </select>
+                            <select className="form-select" aria-label="Birth day" value={birthParts.day} onChange={(e) => handleBirthPartChange('day', (e.target as HTMLSelectElement).value)} required disabled={!birthParts.month}>
+                              <option value="">일</option>
+                              {Array.from({ length: lastDay }, (_, index) => index + 1).map(day => <option key={day} value={day}>{day}일</option>)}
+                            </select>
                           </div>
                         </div>
                         <div className="form-row">
@@ -366,7 +441,7 @@ const RegisterPage = () => {
                             <input type="tel" className="form-input" placeholder="예: 010-1234-5678" value={formData.mobileNumber} onChange={(e) => handleChange('mobileNumber', (e.target as HTMLInputElement).value)} required={!pendingWallet} />
                           </div>
                         </div>
-                        {!pendingWallet && (
+                        {!pendingWallet && !pendingPrivy && (
                           <div className="form-group">
                             <label className="form-label">비밀번호 <span className="required">*</span></label>
                             <div className="password-wrapper">

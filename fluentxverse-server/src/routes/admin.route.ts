@@ -5,6 +5,7 @@ import { signAuthToken, verifyAuthToken, getCookieConfig } from '../utils/jwt';
 import { createAdminGuard } from '../middleware/auth.middleware';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
 import { retryTutorCertificationZkVerifySubmission } from '../services/proof.services/tutorCertificationWorkflow.service';
+import { adminTaskService } from '../services/admin.services/adminTask.service';
 
 const adminService = new AdminService();
 
@@ -38,6 +39,98 @@ const Admin = new Elysia({ prefix: '/admin' })
     // Store admin info in request context for use in handlers
     return;
   })
+  .get('/socket-token', async ({ cookie, set }) => {
+    const admin = await createAdminGuard(cookie, set);
+    if (!admin) return { success: false, error: 'Unauthorized' };
+    const token = await signAuthToken({
+      userId: admin.userId,
+      email: admin.email,
+      role: 'admin'
+    }, 10 * 60);
+    set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+    set.headers['Pragma'] = 'no-cache';
+    return { success: true, token };
+  })
+  .get('/tasks', async ({ cookie, set }) => {
+    const admin = await createAdminGuard(cookie, set);
+    if (!admin) return { success: false, error: 'Unauthorized' };
+    try {
+      return { success: true, data: await adminTaskService.list() };
+    } catch (error) {
+      console.error('Failed to list admin tasks:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to load tasks' };
+    }
+  })
+  .get('/tasks/assignees', async ({ cookie, set }) => {
+    const admin = await createAdminGuard(cookie, set);
+    if (!admin) return { success: false, error: 'Unauthorized' };
+    try {
+      const admins = await adminService.listAdmins();
+      return { success: true, data: admins.map(({ id, username, firstName, lastName }) => ({ id, username, firstName, lastName })) };
+    } catch (error) {
+      console.error('Failed to list task assignees:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to load admins' };
+    }
+  })
+  .post('/tasks', async ({ body, cookie, set }) => {
+    const admin = await createAdminGuard(cookie, set);
+    if (!admin) return { success: false, error: 'Unauthorized' };
+    if (!body.title.trim()) {
+      set.status = 400;
+      return { success: false, error: 'Title is required' };
+    }
+    try {
+      if (!await adminService.getById(body.assigneeId)) {
+        set.status = 400;
+        return { success: false, error: 'Assignee is not an active admin' };
+      }
+      const task = await adminTaskService.create(body.title.trim(), body.description.trim(), body.kind, admin.userId, body.assigneeId);
+      set.status = 201;
+      return { success: true, data: task };
+    } catch (error) {
+      console.error('Failed to create admin task:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to create task' };
+    }
+  }, { body: t.Object({ title: t.String({ minLength: 1, maxLength: 200 }), description: t.String({ maxLength: 5000 }), kind: t.Union([t.Literal('task'), t.Literal('suggestion')]), assigneeId: t.String({ minLength: 1 }) }) })
+  .patch('/tasks/:id/assignee', async ({ params, body, cookie, set }) => {
+    const admin = await createAdminGuard(cookie, set);
+    if (!admin) return { success: false, error: 'Unauthorized' };
+    try {
+      if (!await adminService.getById(body.assigneeId)) {
+        set.status = 400;
+        return { success: false, error: 'Assignee is not an active admin' };
+      }
+      const task = await adminTaskService.assign(params.id, body.assigneeId, admin.userId);
+      if (!task) {
+        set.status = 404;
+        return { success: false, error: 'Task not found' };
+      }
+      return { success: true, data: task };
+    } catch (error) {
+      console.error('Failed to assign admin task:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to assign task' };
+    }
+  }, { params: t.Object({ id: t.String({ format: 'uuid' }) }), body: t.Object({ assigneeId: t.String({ minLength: 1 }) }) })
+  .patch('/tasks/:id/status', async ({ params, body, cookie, set }) => {
+    const admin = await createAdminGuard(cookie, set);
+    if (!admin) return { success: false, error: 'Unauthorized' };
+    try {
+      const task = await adminTaskService.updateStatus(params.id, body.status, admin.userId);
+      if (!task) {
+        set.status = 404;
+        return { success: false, error: 'Task not found' };
+      }
+      return { success: true, data: task };
+    } catch (error) {
+      console.error('Failed to update admin task:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to update task' };
+    }
+  }, { params: t.Object({ id: t.String({ format: 'uuid' }) }), body: t.Object({ status: t.Union([t.Literal('pending'), t.Literal('in_progress'), t.Literal('completed'), t.Literal('rejected')]) }) })
   /**
    * Get dashboard overview stats
    * GET /admin/stats

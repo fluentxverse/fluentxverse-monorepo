@@ -214,6 +214,14 @@ const InterviewRoomPage = ({ interviewId }: InterviewRoomProps) => {
       
       const socket = getSocket();
       const pc = createPeerConnection();
+      socket.on('interview:error', (data: { message: string }) => {
+        setIsConnecting(false);
+        setWaitingForAdmin(false);
+        setError(data.message);
+      });
+      socket.on('webrtc:ice-configuration', (configuration: RTCConfiguration) => {
+        pc.setConfiguration(configuration);
+      });
       
       // Join the interview room
       socket.emit('interview:join', {

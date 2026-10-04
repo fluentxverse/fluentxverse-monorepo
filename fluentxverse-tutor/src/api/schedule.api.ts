@@ -6,19 +6,34 @@ export interface TimeSlot {
   time: string;  // Time string (HH:MM AM/PM)
 }
 
+export type AbsenceReason = 'Internet Outage' | 'Electric Outage' | 'Emergency' | 'Disaster' | 'Health' | 'Others';
+
 export interface WeekSchedule {
   weekStart: string;
   weekEnd: string;
   slots: {
     date: string;
     time: string;
-    status: 'open' | 'booked' | 'closed';
+    status: 'open' | 'booked' | 'closed' | 'pending';
+    reservationExpiresAt?: string;
+    slotId?: string;
     bookingId?: string;
+    bookedAt?: string;
+    attendanceWindowOpenedAt?: string;
+    tutorRoomEnteredAt?: string;
+    roomEntryPolicyActivatedAt?: string;
+    roomEntryCheckCompletedAt?: string;
+    attendanceSource?: string;
     studentId?: string;
     studentName?: string;
     penaltyCode?: string;
+    penaltyReason?: string;
+    ta303Count?: number;
+    ta303ReopenCount?: number;
+    lastTa303At?: string;
     attendanceTutor?: 'present' | 'absent';
     attendanceStudent?: 'present' | 'absent';
+    attendanceMarked?: 'present' | 'absent';
   }[];
 }
 
@@ -26,13 +41,14 @@ export const scheduleApi = {
   /**
    * Open time slots
    */
-  openSlots: async (slots: TimeSlot[]): Promise<void> => {
+  openSlots: async (slots: TimeSlot[]): Promise<Array<TimeSlot & { slotId: string; status: string }>> => {
     try {
       const response = await api.post('/schedule/open', { slots });
       
       if (!response.data.success) {
         throw new Error(response.data.error || 'Failed to open slots');
       }
+      return response.data.data;
     } catch (error) {
       console.error('scheduleApi.openSlots error:', error);
       throw new Error(getErrorMessage(error));
@@ -42,8 +58,8 @@ export const scheduleApi = {
   /**
    * Close time slots
    */
-  closeSlots: async (slotIds: string[]): Promise<void> => {
-    const response = await api.post('/schedule/close', { slotIds });
+  closeSlots: async (slotIds: string[], reason: AbsenceReason, additionalInfo?: string): Promise<void> => {
+    const response = await api.post('/schedule/close', { slotIds, reason, additionalInfo });
     
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to close slots');
@@ -68,15 +84,27 @@ export const scheduleApi = {
   /**
    * Mark attendance for a booking
    */
-  markAttendance: async (bookingId: string, status: 'present' | 'absent'): Promise<void> => {
+  markAttendance: async (
+    bookingId: string, status: 'present' | 'absent', reason?: AbsenceReason, additionalInfo?: string
+  ): Promise<void> => {
     const response = await api.post('/schedule/attendance', {
       bookingId,
-      status
+      status,
+      reason,
+      additionalInfo
     });
 
     if (!response.data.success) {
       throw new Error(response.data.error || 'Failed to mark attendance');
     }
+  },
+
+  markAttendanceBulk: async (
+    bookingIds: string[], slotIds: string[], status: 'present' | 'absent',
+    reason?: AbsenceReason, additionalInfo?: string
+  ): Promise<void> => {
+    const response = await api.post('/schedule/attendance', { bookingIds, slotIds, status, reason, additionalInfo });
+    if (!response.data.success) throw new Error(response.data.error || 'Failed to mark attendance');
   },
 
   /**

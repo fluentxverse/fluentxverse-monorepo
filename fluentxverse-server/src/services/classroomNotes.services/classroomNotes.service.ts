@@ -146,6 +146,23 @@ export class ClassroomNotesService {
     }
   }
 
+  async listForStudent(studentId: string, lessonIds: string[]): Promise<ClassroomNotesRecord[]> {
+    if (!lessonIds.length) return [];
+    await this.ensureSchema();
+    const session = getDriver().session();
+    try {
+      const result = await session.run(
+        `MATCH (note:ClassroomMaterialNote {studentId: $studentId})
+         WHERE note.lessonId IN $lessonIds AND note.materialType = 'conversational-skills'
+         RETURN note ORDER BY note.updatedAt DESC`,
+        { studentId, lessonIds },
+      );
+      return result.records.map(record => this.mapNode(record.get('note').properties));
+    } finally {
+      await session.close();
+    }
+  }
+
   async saveNotes(input: SaveClassroomNotesInput): Promise<ClassroomNotesRecord> {
     await this.ensureSchema();
     const {

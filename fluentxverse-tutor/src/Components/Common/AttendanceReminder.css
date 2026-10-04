@@ -1,0 +1,95 @@
+.tutor-reminder-stack {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 1500;
+  display: grid;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
+}
+
+.attendance-reminder {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #f0c46d;
+  border-left: 4px solid #e99b11;
+  border-radius: 8px;
+  background: #fffdf7;
+  color: #202a39;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
+}
+
+.attendance-reminder--room { border-color: #f0a4a4; border-left-color: #dc4242; background: #fffafa; }
+.attendance-reminder--room .attendance-reminder__icon { background: #ffe7e7; color: #ad2525; }
+
+.attendance-reminder__icon {
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: #fff0cb;
+  color: #a86400;
+}
+
+.attendance-reminder__body { min-width: 0; flex: 1; }
+.attendance-reminder__title { font-size: 14px; font-weight: 700; line-height: 1.35; }
+.attendance-reminder__body p { margin: 4px 0 10px; color: #526070; font-size: 12px; line-height: 1.45; }
+.attendance-reminder__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #115ab5;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.attendance-reminder__action:hover { text-decoration: underline; }
+.attendance-reminder__snooze {
+  flex: 0 0 24px;
+  display: grid;
+  place-items: center;
+  align-self: flex-start;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #718096;
+  cursor: pointer;
+}
+.attendance-reminder__snooze:hover { background: #fff0cb; color: #202a39; }
+.attendance-reminder button:focus-visible { outline: 2px solid #2879df; outline-offset: 3px; }
+
+[data-theme='dark'] .attendance-reminder,
+.dark-mode .attendance-reminder {
+  border-color: #725420;
+  border-left-color: #edaa2b;
+  background: #272522;
+  color: #f6f3ed;
+}
+[data-theme='dark'] .attendance-reminder--room,
+.dark-mode .attendance-reminder--room { border-color: #754040; border-left-color: #ef6666; background: #2a2222; }
+[data-theme='dark'] .attendance-reminder--room .attendance-reminder__icon,
+.dark-mode .attendance-reminder--room .attendance-reminder__icon { background: #4a2929; color: #ffaaaa; }
+[data-theme='dark'] .attendance-reminder__icon,
+.dark-mode .attendance-reminder__icon { background: #44361e; color: #ffcb70; }
+[data-theme='dark'] .attendance-reminder__body p,
+.dark-mode .attendance-reminder__body p { color: #c6c0b4; }
+[data-theme='dark'] .attendance-reminder__action,
+.dark-mode .attendance-reminder__action { color: #8bbcff; }
+[data-theme='dark'] .attendance-reminder__snooze,
+.dark-mode .attendance-reminder__snooze { color: #c6c0b4; }
+[data-theme='dark'] .attendance-reminder__snooze:hover,
+.dark-mode .attendance-reminder__snooze:hover { background: #44361e; color: #fff; }
+
+@media (max-width: 767px) {
+  .tutor-reminder-stack { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+}

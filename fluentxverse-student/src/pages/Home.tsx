@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'preact/hooks';
+import { useLocation } from 'preact-iso';
 import Footer from '../Components/Footer/Footer';
 import Header from '../Components/Header/Header';
 import IndexOne from '../Components/IndexOne/IndexOne';
-import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 
 const Home = () => {
-  const { isAuthenticated, initialLoading, logout, user } = useAuthContext();
+  const { isAuthenticated, initialLoading, logout } = useAuthContext();
+  const { route } = useLocation();
   const logoutRetryRef = useRef(false);
 
   useEffect(() => {
@@ -27,24 +28,16 @@ const Home = () => {
       }
     }
     
-    // Only redirect if:
-    // 1. Initial auth check is complete (not still loading)
-    // 2. User is actually authenticated
-    // 3. Not coming from a logout (check localStorage as source of truth)
-    const hasLocalSession = localStorage.getItem('fxv_user_id');
-    
-    if (!initialLoading && isAuthenticated && hasLocalSession) {
-      window.location.href = '/home';
+    if (!initialLoading && isAuthenticated) {
+      route('/home');
     }
-  }, [isAuthenticated, initialLoading, logout]);
+  }, [isAuthenticated, initialLoading, logout, route]);
 
-  // Landing page - no redirect needed for unauthenticated users
-  const showSidebar = Boolean(isAuthenticated && user);
+  if (isAuthenticated) return null;
 
   return (
     <>
-      {showSidebar ? <SideBar /> : null}
-      <div className={`main-content ${showSidebar ? '' : 'no-sidebar'}`}>
+      <div className="main-content no-sidebar">
         <Header/>
         <IndexOne/>
         {/* <CallToAction /> */}

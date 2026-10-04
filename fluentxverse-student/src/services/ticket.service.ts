@@ -58,18 +58,10 @@ export const getTicketBalance = async (walletAddress: string): Promise<TicketBal
 };
 
 export const transferTicketForBooking = async (
-  account: WalletAccount,
+  account: Pick<WalletAccount, 'address'>,
   tier: TicketTier = 'basic',
   quantity = 1
 ): Promise<TransferResult> => {
-  if (!VAULT_WALLET_ADDRESS) {
-    return { success: false, error: 'Vault wallet address not configured' };
-  }
-
-  if (typeof window === 'undefined' || !window.ethereum) {
-    return { success: false, error: 'No EVM wallet found. Please connect a wallet.' };
-  }
-
   try {
     const balance = await getTicketBalance(account.address);
     const tokenIdStr = tier === 'basic' ? balance.basicTokenId : tier === 'premium' ? balance.premiumTokenId : balance.trialTokenId;
@@ -81,6 +73,27 @@ export const transferTicketForBooking = async (
 
     if (availableBalance < quantity) {
       return { success: false, error: `Insufficient ${tier} tickets. You have ${availableBalance} but need ${quantity}.` };
+    }
+
+    if (tokenIdStr.startsWith('mock-')) {
+      const response = await fetch(`${API_BASE_URL}/tickets/consume`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress: account.address, tier, quantity }),
+      });
+      const result = await response.json();
+      return result.success
+        ? { success: true, transactionHash: result.data.transactionHash }
+        : { success: false, error: result.error || 'Failed to use ticket' };
+    }
+
+    if (!VAULT_WALLET_ADDRESS) {
+      return { success: false, error: 'Vault wallet address not configured' };
+    }
+
+    if (typeof window === 'undefined' || !window.ethereum) {
+      return { success: false, error: 'This ticket requires an EVM wallet. Please connect the wallet that holds your ticket.' };
     }
 
     const walletClient = createWalletClient({

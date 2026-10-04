@@ -40,6 +40,7 @@ const toClientMessage = (message: Awaited<ReturnType<ChatService['saveMessage']>
 });
 
 export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
+  if (socket.data.userType === 'admin') return;
   const loadSessionHistory = async (sessionId: string): Promise<InMemoryMessage[]> => {
     try {
       const messages = await chatService.getSessionMessages(sessionId);
@@ -65,8 +66,9 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   socket.on('chat:send', async (data) => {
     try {
       const { sessionId, text, correction, fileUrl, fileName, fileType, fileSize } = data;
+      if (!sessionId || socket.data.sessionId !== sessionId) return;
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
 
       let messageData: InMemoryMessage;
 
@@ -131,6 +133,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   socket.on('chat:edit', async (data) => {
     try {
       const { sessionId, messageId, text } = data;
+      if (!sessionId || socket.data.sessionId !== sessionId) return;
       const nextText = text.trim();
 
       if (!nextText) {
@@ -139,7 +142,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
       }
 
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
       let updatedMessage: InMemoryMessage | null = null;
 
       try {
@@ -182,7 +185,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
     try {
       const { sessionId, messageId } = data;
       const userId = socket.data.userId;
-      const userType = socket.data.userType;
+      const userType = socket.data.userType as 'tutor' | 'student';
       let deleted = false;
 
       if (!sessionId || !messageId) {
@@ -191,7 +194,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
         return;
       }
 
-      if (socket.data.sessionId && socket.data.sessionId !== sessionId) {
+      if (socket.data.sessionId !== sessionId) {
         callback?.({ success: false, message: 'You are not in this classroom session' });
         socket.emit('chat:error', { message: 'You are not in this classroom session' });
         return;
@@ -278,6 +281,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   socket.on('chat:request-history', async (data) => {
     try {
       const { sessionId } = data;
+      if (!sessionId || socket.data.sessionId !== sessionId) return;
       const historyMessages = await loadSessionHistory(sessionId);
 
       // Send history to requesting client

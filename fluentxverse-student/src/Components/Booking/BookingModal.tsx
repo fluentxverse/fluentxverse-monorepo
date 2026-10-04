@@ -6,6 +6,7 @@ import { getErrorMessage } from '../../api/utils';
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import { appWallet, autoConnectWallet, connectWallet, type WalletAccount } from '../../config/wallet';
+import { getMe } from '../../api/auth.api';
 import './BookingModal.css';
 
 interface BookingModalProps {
@@ -18,6 +19,19 @@ interface BookingModalProps {
   preSelectedDate?: string;
   preSelectedTime?: string;
   filterDate?: string; // YYYY-MM-DD format - only show slots for this date
+}
+
+const pendingTransferKey = 'fxv:pending-booking-transfer';
+type PendingTransfer = { hash: string; wallet: string; slotId: string; reservationId: string };
+
+function readPendingTransfer(): PendingTransfer | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(pendingTransferKey) || 'null');
+    return value && typeof value.hash === 'string' && typeof value.wallet === 'string' &&
+      typeof value.slotId === 'string' && typeof value.reservationId === 'string' ? value : null;
+  } catch {
+    return null;
+  }
 }
 
 export const BookingModal = ({ 
@@ -40,12 +54,31 @@ export const BookingModal = ({
   const [ticketBalance, setTicketBalance] = useState<TicketBalance | null>(null);
   const [ticketLoading, setTicketLoading] = useState(true);
   const [transferringTicket, setTransferringTicket] = useState(false);
+  const [unresolvedTransferHash, setUnresolvedTransferHash] = useState<string | null>(null);
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
   const { user } = useAuthContext();
   const [connectedAccount, setConnectedAccount] = useState<WalletAccount | null>(appWallet.getAccount());
+  const [profileWalletAddress, setProfileWalletAddress] = useState<string | null>(null);
   const [isWalletConnecting, setIsWalletConnecting] = useState(false);
   const [isWalletAutoConnecting, setIsWalletAutoConnecting] = useState(true);
-  const walletAddress = connectedAccount?.address || user?.walletAddress || user?.smartWalletAddress;
+  const walletAddress = user?.walletAddress || user?.smartWalletAddress || profileWalletAddress || connectedAccount?.address;
+
+  useEffect(() => {
+    if (!isOpen || !walletAddress) return;
+    const pending = readPendingTransfer();
+    if (pending?.wallet.toLowerCase() === walletAddress.toLowerCase()) {
+      setUnresolvedTransferHash(pending.hash);
+      setError('A previous ticket transfer is awaiting booking confirmation or recovery. Check its status before booking again.');
+    }
+  }, [isOpen, walletAddress]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    getMe()
+      .then((response) => setProfileWalletAddress(response?.user?.walletAddress || null))
+      .catch(() => setProfileWalletAddress(null));
+  }, [isOpen]);
 
   const reconnectWallet = async () => {
     setError(null);
@@ -191,7 +224,7 @@ export const BookingModal = ({
 
   const fetchAvailableSlots = async () => {
     setLoading(true);
-    setError(null);
+    if (!readPendingTransfer()) setError(null);
     try {
       // filterDate is a PHT date (same as tutor's timezone)
       // We fetch slots for that exact PHT date
@@ -226,10 +259,55 @@ export const BookingModal = ({
     }
   };
 
+  const completeBooking = (wallet?: string) => {
+    localStorage.removeItem(pendingTransferKey);
+    setUnresolvedTransferHash(null);
+    setBookingSuccess(true);
+    if (wallet) getTicketBalance(wallet).then(setTicketBalance).catch(console.error);
+    setTimeout(() => {
+      setBookingSuccess(false);
+      onClose();
+      window.location.href = '/schedule';
+    }, 2000);
+  };
+
+  const retryTransferRecovery = async () => {
+    if (!unresolvedTransferHash) return;
+    const pending = readPendingTransfer();
+    if (!pending || pending.hash !== unresolvedTransferHash) {
+      setError('Transfer details are missing. Please contact support with your transaction hash.');
+      return;
+    }
+    setBooking(true);
+    try {
+      const recovery = await scheduleApi.recoverTransfer(pending.hash, pending.slotId, pending.reservationId);
+      if (recovery.status === 'booked') {
+        completeBooking(walletAddress || undefined);
+      } else if (recovery.status === 'refunded') {
+        localStorage.removeItem(pendingTransferKey);
+        setUnresolvedTransferHash(null);
+        setError('The booking did not complete. Your ticket has been returned.');
+        if (walletAddress) getTicketBalance(walletAddress).then(setTicketBalance).catch(console.error);
+      } else {
+        setError(`The reservation is still being checked. Try again after it expires. Transfer: ${unresolvedTransferHash}`);
+      }
+    } catch (err: any) {
+      setError(`Ticket recovery needs support review. Keep this transfer hash: ${unresolvedTransferHash}. ${getErrorMessage(err)}`);
+    } finally {
+      setBooking(false);
+    }
+  };
+
   const handleBookSlot = async () => {
     if (!selectedSlot) return;
+    if (unresolvedTransferHash) {
+      setError('Check your previous ticket transfer before booking another lesson.');
+      return;
+    }
 
-    let bookingAccount = connectedAccount || appWallet.getAccount();
+    let bookingAccount: Pick<WalletAccount, 'address'> | null = walletAddress
+      ? { address: walletAddress as WalletAccount['address'] }
+      : connectedAccount || appWallet.getAccount();
 
     if (!bookingAccount && (isWalletAutoConnecting || isWalletConnecting)) {
       setError('Wallet is reconnecting, please wait a moment and try again.');
@@ -266,39 +344,65 @@ export const BookingModal = ({
     const ticketTier = hasBasicTickets ? 'basic' : 'premium';
     
     setBooking(true);
-    setTransferringTicket(true);
     setError(null);
-    
+    let reservationId: string | null = null;
+    let transferHash: string | null = null;
+    let completed = false;
+    let refunded = false;
     try {
-      // Step 1: Transfer ticket to vault wallet (on-chain)
+      const reservation = await scheduleApi.reserveSlot(selectedSlot.slotId);
+      reservationId = reservation.reservationId;
+      if (Date.now() >= Date.parse(reservation.bookBy)) {
+        throw new Error('The booking deadline for this slot has passed. Please choose another time.');
+      }
+      setTransferringTicket(true);
       const transferResult = await transferTicketForBooking(bookingAccount, ticketTier as 'basic' | 'premium', 1);
       
       if (!transferResult.success) {
         throw new Error(transferResult.error || 'Failed to transfer ticket');
       }
-      
+      if (!transferResult.transactionHash) throw new Error('Ticket transfer hash is unavailable');
+      transferHash = transferResult.transactionHash;
+      localStorage.setItem(pendingTransferKey, JSON.stringify({
+        hash: transferHash, wallet: bookingAccount.address,
+        slotId: selectedSlot.slotId, reservationId
+      } satisfies PendingTransfer));
+      setUnresolvedTransferHash(transferHash);
       setTransferringTicket(false);
-      
-      // Step 2: Create booking on backend (pass transaction hash for verification)
-      await scheduleApi.bookSlot(selectedSlot.slotId, transferResult.transactionHash);
-      
-      setBookingSuccess(true);
-      
-      // Refresh ticket balance
-      if (bookingAccount.address) {
-        getTicketBalance(bookingAccount.address).then(setTicketBalance).catch(console.error);
+      try {
+        await scheduleApi.bookSlot(selectedSlot.slotId, transferHash, reservationId);
+      } catch {
+        await scheduleApi.bookSlot(selectedSlot.slotId, transferHash, reservationId);
       }
-      
-      // Close modal after 2 seconds and redirect to schedule page
-      setTimeout(() => {
-        setBookingSuccess(false);
-        onClose();
-        window.location.href = '/schedule';
-      }, 2000);
+      completed = true;
+      completeBooking(bookingAccount.address);
     } catch (err: any) {
       console.error('❌ Booking failed:', err);
-      setError(getErrorMessage(err));
+      if (transferHash) {
+        try {
+          const recovery = await scheduleApi.recoverTransfer(transferHash, selectedSlot.slotId, reservationId!);
+          if (recovery.status === 'booked') {
+            completed = true;
+            completeBooking(bookingAccount.address);
+          } else if (recovery.status === 'refunded') {
+            refunded = true;
+            localStorage.removeItem(pendingTransferKey);
+            setUnresolvedTransferHash(null);
+            setError('The slot could not be booked. Your ticket has been returned.');
+            getTicketBalance(bookingAccount.address).then(setTicketBalance).catch(console.error);
+          } else {
+            setError(`The reservation is still being checked. Try again after it expires. Transfer: ${transferHash}`);
+          }
+        } catch (recoveryError: any) {
+          setError(`Booking could not be confirmed. Keep this transfer hash: ${transferHash}. ${getErrorMessage(recoveryError)}`);
+        }
+      } else {
+        setError(getErrorMessage(err));
+      }
     } finally {
+      if (reservationId && !completed && (!transferHash || refunded)) {
+        await scheduleApi.releaseReservation(selectedSlot.slotId, reservationId).catch(console.error);
+      }
       setBooking(false);
       setTransferringTicket(false);
     }
@@ -441,11 +545,11 @@ export const BookingModal = ({
             </svg>
             <span>{error}</span>
             <button
-              onClick={error.toLowerCase().includes('wallet') ? reconnectWallet : fetchAvailableSlots}
+              onClick={unresolvedTransferHash ? retryTransferRecovery : error.toLowerCase().includes('wallet') ? reconnectWallet : fetchAvailableSlots}
               className="booking-modal-retry"
               disabled={isWalletConnecting || isWalletAutoConnecting}
             >
-              {isWalletConnecting || isWalletAutoConnecting ? 'Connecting...' : 'Retry'}
+              {isWalletConnecting || isWalletAutoConnecting ? 'Connecting...' : unresolvedTransferHash ? 'Check Ticket' : 'Retry'}
             </button>
           </div>
         )}

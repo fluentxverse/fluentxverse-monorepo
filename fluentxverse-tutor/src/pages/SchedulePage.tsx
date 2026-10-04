@@ -4,18 +4,17 @@ import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { useThemeStore } from '../context/ThemeContext';
-import { scheduleApi } from '../api/schedule.api';
+import { scheduleApi, type AbsenceReason } from '../api/schedule.api';
 import { initSocket, getSocket, connectSocket, disconnectSocket } from '../client/socket/socket.client';
 import type { Notification } from '../types/notification.types';
+import { getSchedulePeriod } from '../utils/schedulePeriod';
 
 // Penalty code types
 type PenaltyCode = '301' | '302' | '303' | '401' | '501' | '502' | '601';
 
 interface SlotPenalty {
   code: PenaltyCode;
-  label: string;
   reason: string;
-  timestamp: Date;
 }
 
 const PENALTY_LABELS: Record<PenaltyCode, { label: string; color: string; bgColor: string }> = {
@@ -28,6 +27,9 @@ const PENALTY_LABELS: Record<PenaltyCode, { label: string; color: string; bgColo
   '601': { label: 'BLK-601', color: '#991b1b', bgColor: '#fef2f2' }, // Penalty Block
 };
 
+const BOOKING_NOTICE = 'Confirm attendance 35 to 11 minutes before class. Unconfirmed booked slots receive TA-301; unbooked open slots receive TA-302. Enter the classroom by 5 minutes after a booked lesson starts. Only Present slots can be booked until 5 minutes before class.';
+const ABSENCE_REASONS: AbsenceReason[] = ['Internet Outage', 'Electric Outage', 'Emergency', 'Disaster', 'Health', 'Others'];
+
 const SchedulePage = () => {
   useEffect(() => {
     document.title = 'Schedule | FluentXVerse';
@@ -37,7 +39,9 @@ const SchedulePage = () => {
   const isDarkMode = useThemeStore((state) => state.resolvedTheme === 'dark');
   const { route } = useLocation();
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<Set<string>>(new Set());
-  const [attendanceMarked, setAttendanceMarked] = useState<Set<string>>(new Set()); // Track which open slots are marked as present
+  const [attendanceBySlot, setAttendanceBySlot] = useState<Map<string, 'present' | 'absent'>>(new Map());
+  const [openSlotIds, setOpenSlotIds] = useState<Map<string, string>>(new Map());
+  const [ta303BySlot, setTa303BySlot] = useState<Map<string, { count: number; reopenCount: number; lastAt?: string }>>(new Map());
   const [slotPenalties, setSlotPenalties] = useState<Map<string, SlotPenalty>>(new Map()); // Track penalty codes per slot
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,20 +51,56 @@ const SchedulePage = () => {
     studentId: string;
     bookingId: string;
     studentName?: string;
+    attendanceWindowOpenedAt?: string;
   }
   
   // Initialize booked slots map
   const [bookedSlots, setBookedSlots] = useState<Map<string, BookedSlotInfo>>(new Map()); // Map of slot key to booking info
+  const [closedTimeSlots, setClosedTimeSlots] = useState<Set<string>>(new Set()); // Opened slots that elapsed without a booking
+  const [reservedTimeSlots, setReservedTimeSlots] = useState<Set<string>>(new Set());
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-  const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('evening');
+  const [selectedPeriod, setSelectedPeriod] = useState(() => getSchedulePeriod(Date.now()));
   const [showModal, setShowModal] = useState(false);
   const [pendingSelections, setPendingSelections] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<'open' | 'close' | 'attendance' | null>(null);
   const [attendanceStatus, setAttendanceStatus] = useState<'present' | 'absent' | null>(null);
+  const [showAbsenceReasonModal, setShowAbsenceReasonModal] = useState(false);
+  const [absenceReason, setAbsenceReason] = useState<AbsenceReason | ''>('');
+  const [absenceAdditionalInfo, setAbsenceAdditionalInfo] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [bookingToast, setBookingToast] = useState<{ studentName?: string; time: string; date: string } | null>(null);
   const [isConfirming, setIsConfirming] = useState(false); // Loading state for confirm button
   const [showSuccess, setShowSuccess] = useState(false); // Success animation state
+  const [nowMs, setNowMs] = useState(Date.now());
+  const currentPeriod = getSchedulePeriod(nowMs);
+  const previousPeriodRef = useRef(currentPeriod);
+  const lastLoadedWeekRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (previousPeriodRef.current !== currentPeriod) {
+      previousPeriodRef.current = currentPeriod;
+      setSelectedPeriod(currentPeriod);
+    }
+  }, [currentPeriod]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 15_000);
+    const syncClock = () => {
+      setNowMs(Date.now());
+      if (!document.hidden) setRefreshTrigger(previous => previous + 1);
+    };
+    const poll = window.setInterval(() => {
+      if (!document.hidden) setRefreshTrigger(previous => previous + 1);
+    }, 30_000);
+    window.addEventListener('focus', syncClock);
+    document.addEventListener('visibilitychange', syncClock);
+    return () => {
+      window.clearInterval(timer);
+      window.clearInterval(poll);
+      window.removeEventListener('focus', syncClock);
+      document.removeEventListener('visibilitychange', syncClock);
+    };
+  }, []);
 
   const pageBackground = isDarkMode ? '#1a1a1a' : 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)';
   const cardBackground = isDarkMode
@@ -76,8 +116,6 @@ const SchedulePage = () => {
   const textSoft = isDarkMode ? '#737373' : '#94a3b8';
   const boxShadowSoft = isDarkMode ? '0 4px 14px rgba(0, 0, 0, 0.16)' : '0 4px 12px rgba(2, 69, 174, 0.3)';
   const boxShadowCard = isDarkMode ? '0 10px 26px rgba(0, 0, 0, 0.2)' : '0 8px 32px rgba(2, 69, 174, 0.12)';
-  const warningBannerBackground = isDarkMode ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255, 255, 255, 0.9)';
-  const warningBannerText = isDarkMode ? '#fcd34d' : '#92400e';
   const darkSlotBackground = '#242424';
   const darkSlotAltBackground = '#2b2b2b';
   const darkSlotHoverBackground = '#2b2b2b';
@@ -113,7 +151,11 @@ const SchedulePage = () => {
 
   // Generate current week dates
   const getWeekDates = (offset: number) => {
-    const today = new Date();
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date(nowMs));
+    const part = (name: string) => Number(parts.find(item => item.type === name)?.value);
+    const today = new Date(part('year'), part('month') - 1, part('day'), 12);
     
     // If today is Sunday (day 0), start from the current week's Monday
     // Otherwise, include today's date in the week view
@@ -208,6 +250,7 @@ const SchedulePage = () => {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+  const weekStartKey = formatDateISO(weekDates[0]);
 
   const resolveRealtimeSlotKey = (slotDate?: string, slotTime?: string): string | null => {
     if (!slotDate || !slotTime) {
@@ -286,7 +329,7 @@ const SchedulePage = () => {
     const loadSchedule = async () => {
       if (!userId) return;
       
-      setLoading(true);
+      if (lastLoadedWeekRef.current !== weekStartKey) setLoading(true);
       setError(null);
       
       try {
@@ -296,6 +339,12 @@ const SchedulePage = () => {
         // Convert schedule data to local state format
         const newSelectedSlots = new Set<string>();
         const newBookedSlots = new Map<string, BookedSlotInfo>();
+        const newClosedSlots = new Set<string>();
+        const newReservedSlots = new Set<string>();
+        const newAttendance = new Map<string, 'present' | 'absent'>();
+        const newOpenSlotIds = new Map<string, string>();
+        const newTa303 = new Map<string, { count: number; reopenCount: number; lastAt?: string }>();
+        const newPenalties = new Map<string, SlotPenalty>();
         
         scheduleData.slots.forEach(slot => {
           
@@ -314,37 +363,55 @@ const SchedulePage = () => {
             // Convert 24h time from API to 12h format used by UI grid
             const time12h = convertTo12Hour(slot.time);
             const key = `${dayIdx}-${time12h}`;
+            if ((slot.status === 'open' || slot.status === 'pending') && slot.slotId) newOpenSlotIds.set(key, slot.slotId);
+            if (slot.status === 'pending') newReservedSlots.add(key);
+            if (slot.ta303Count || slot.penaltyCode === '303') {
+              newTa303.set(key, {
+                count: slot.ta303Count || 1,
+                reopenCount: slot.ta303ReopenCount || 0,
+                lastAt: slot.lastTa303At
+              });
+            }
+            const marked = slot.status === 'booked' ? slot.attendanceTutor : slot.attendanceMarked;
+            if (marked === 'present' || marked === 'absent') newAttendance.set(key, marked);
+            if (slot.penaltyCode && slot.penaltyCode in PENALTY_LABELS) {
+              newPenalties.set(key, {
+                code: slot.penaltyCode as PenaltyCode,
+                reason: slot.penaltyReason || PENALTY_LABELS[slot.penaltyCode as PenaltyCode].label
+              });
+            }
             
-            // Parse slot time and check if it's in the past (use 24h format for parsing)
-            const [hourStr, minuteStr] = slot.time.split(':');
-            const hour = parseInt(hourStr, 10);
-            const minute = parseInt(minuteStr || '0', 10);
-            const slotDateTime = new Date(slotDate);
-            slotDateTime.setHours(hour, minute, 0, 0);
-            const now = new Date();
-            const isPast = slotDateTime < now;
+            const isPast = Date.parse(`${slot.date}T${convertTo24Hour(time12h)}:00+08:00`) <= Date.now();
 
 
-            if (slot.status === 'open' && !isPast) {
-              // Only add to selected slots if not in the past
+            if ((slot.status === 'open' || slot.status === 'pending') && !isPast) {
               newSelectedSlots.add(key);
+            } else if (slot.status === 'open' && isPast) {
+              newClosedSlots.add(key);
             } else if (slot.status === 'booked' && slot.studentId && slot.bookingId) {
               newSelectedSlots.add(key); // Keep as open slot visually
               newBookedSlots.set(key, {
                 studentId: slot.studentId,
                 bookingId: slot.bookingId,
-                studentName: slot.studentName
+                studentName: slot.studentName,
+                attendanceWindowOpenedAt: slot.attendanceWindowOpenedAt
               });
             } else {
             }
-            // Past open slots are simply not added, so they show as PAST
           } else {
           }
         });
         
         
         setSelectedTimeSlots(newSelectedSlots);
+        setReservedTimeSlots(newReservedSlots);
+        setTa303BySlot(newTa303);
         setBookedSlots(newBookedSlots);
+        setClosedTimeSlots(newClosedSlots);
+        setAttendanceBySlot(newAttendance);
+        setOpenSlotIds(newOpenSlotIds);
+        setSlotPenalties(newPenalties);
+        lastLoadedWeekRef.current = weekStartKey;
       } catch (err: any) {
         console.error('Failed to load schedule:', err);
         setError(err.message || 'Failed to load schedule');
@@ -354,7 +421,7 @@ const SchedulePage = () => {
     };
     
     loadSchedule();
-  }, [currentWeekOffset, userId, refreshTrigger]);
+  }, [currentWeekOffset, userId, refreshTrigger, weekStartKey]);
 
   // WebSocket subscription for real-time schedule updates
   useEffect(() => {
@@ -469,42 +536,89 @@ const SchedulePage = () => {
     };
   }, [currentWeekOffset]);
 
-  // Check if slot can be opened (more than 5 minutes away)
+  // Check if slot can be opened at least 11 minutes ahead.
   const canOpenSlot = (date: Date, timeStr: string): boolean => {
-    const now = new Date();
-    const { hour, minute } = parseTimeString(timeStr);
-    const slotDateTime = new Date(date);
-    slotDateTime.setHours(hour, minute, 0, 0);
-    const diffInMinutes = (slotDateTime.getTime() - now.getTime()) / (1000 * 60);
-    return diffInMinutes > 5;
+    return attendanceStartMs(date, timeStr) - nowMs >= 11 * 60_000;
   };
 
-  // Check if slot can be marked for attendance (current day, more than 5 minutes before)
-  const canMarkAttendance = (date: Date, timeStr: string): boolean => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const slotDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    // Must be today
-    if (slotDate.getTime() !== today.getTime()) {
-      return false;
+  const reopenRestriction = (key: string): string | null => {
+    const policy = ta303BySlot.get(key);
+    if (!policy) return null;
+    if (policy.count >= 2 || policy.reopenCount >= 1) return 'TA-303 reopening has already been used';
+    const [dayIdx] = key.split('-');
+    const slotDate = formatDateISO(weekDates[Number(dayIdx)]);
+    const todayPht = new Date(nowMs + 8 * 60 * 60_000).toISOString().slice(0, 10);
+    if (todayPht !== slotDate) return 'This TA-303 slot can reopen on its lesson day';
+    if (policy.lastAt) {
+      const lastMs = Date.parse(policy.lastAt);
+      const penaltyDay = new Date(lastMs + 8 * 60 * 60_000).toISOString().slice(0, 10);
+      if (penaltyDay === slotDate && nowMs - lastMs < 30 * 60_000) {
+        return 'Wait 30 minutes after TA-303 before reopening';
+      }
     }
-    
-    // Must be more than 5 minutes before slot time
-    const { hour, minute } = parseTimeString(timeStr);
-    const slotDateTime = new Date(date);
-    slotDateTime.setHours(hour, minute, 0, 0);
-    const diffInMinutes = (slotDateTime.getTime() - now.getTime()) / (1000 * 60);
-    return diffInMinutes > 5;
+    return null;
   };
 
-  const handleSlotDoubleClick = (dayIdx: number, time: string) => {
+  const attendanceStartMs = (date: Date, timeStr: string): number =>
+    Date.parse(`${formatDateISO(date)}T${convertTo24Hour(timeStr)}:00+08:00`);
+
+  // Attendance is recorded in Philippine time, regardless of the tutor's browser timezone.
+  const canMarkAttendance = (date: Date, timeStr: string, _bookedAt?: string): boolean => {
+    const startMs = attendanceStartMs(date, timeStr);
+    const minutesUntilStart = (startMs - nowMs) / 60_000;
+    return minutesUntilStart >= 11 && minutesUntilStart <= 35;
+  };
+
+  const isValidAttendanceSelection = (keys: string[], status: 'present' | 'absent' = 'present'): boolean => {
+    if (!keys.length || keys.length > 12) return false;
+    const slots = keys.map(key => {
+      const [dayIdx, time] = key.split('-');
+      return { dayIdx, time, start: attendanceStartMs(weekDates[Number(dayIdx)], time) };
+    }).sort((a, b) => a.start - b.start);
+    const first = slots[0];
+    const firstKey = `${first.dayIdx}-${first.time}`;
+    if (!slots.every((slot, index) =>
+      slot.dayIdx === first.dayIdx && (index === 0 || slot.start - slots[index - 1].start === 30 * 60_000))) return false;
+    if (status === 'absent') {
+      if (slots.some(slot => reservedTimeSlots.has(`${slot.dayIdx}-${slot.time}`))) return false;
+      const booked = slots.filter(slot => bookedSlots.has(`${slot.dayIdx}-${slot.time}`));
+      const open = slots.filter(slot => !bookedSlots.has(`${slot.dayIdx}-${slot.time}`));
+      return open.every(slot => slot.start - nowMs >= 11 * 60_000) &&
+        (!booked.length || canMarkAttendance(weekDates[Number(booked[0].dayIdx)], booked[0].time,
+          bookedSlots.get(`${booked[0].dayIdx}-${booked[0].time}`)?.attendanceWindowOpenedAt));
+    }
+    if (canMarkAttendance(weekDates[Number(first.dayIdx)], first.time, bookedSlots.get(firstKey)?.attendanceWindowOpenedAt)) return true;
+
+    let precedingStart = first.start;
+    for (let count = slots.length; count < 12; count++) {
+      precedingStart -= 30 * 60_000;
+      const neighbor = [...attendanceBySlot.entries()].find(([key, marked]) => {
+        if (marked !== 'present') return false;
+        const [neighborDay, neighborTime] = key.split('-');
+        return Number(neighborDay) === Number(first.dayIdx) &&
+          attendanceStartMs(weekDates[Number(neighborDay)], neighborTime) === precedingStart;
+      });
+      if (!neighbor) return false;
+      const [, neighborTime] = neighbor[0].split('-');
+      if (canMarkAttendance(weekDates[Number(first.dayIdx)], neighborTime,
+        bookedSlots.get(neighbor[0])?.attendanceWindowOpenedAt)) return true;
+    }
+    return false;
+  };
+
+  const canSelectAttendanceSlot = (dayIdx: number, time: string): boolean => {
+    const key = `${dayIdx}-${time}`;
+    return pendingSelections.has(key) ||
+      isValidAttendanceSelection([...pendingSelections, key], 'present') ||
+      isValidAttendanceSelection([...pendingSelections, key], 'absent');
+  };
+
+  const openBookedLesson = (dayIdx: number, time: string) => {
     const key = `${dayIdx}-${time}`;
     const bookingInfo = bookedSlots.get(key);
     
     if (bookingInfo) {
-      // Navigate to lesson details page in new tab
-      window.open(`/lesson/${bookingInfo.bookingId}`, '_blank');
+      window.open(`/lesson/${bookingInfo.bookingId}`, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -516,18 +630,13 @@ const SchedulePage = () => {
     const isCurrentlyOpen = selectedTimeSlots.has(key);
     
     // Check if slot is in the past or too close (but allow booked slots)
-    if (!canOpenSlot(date, time) && !isCurrentlyOpen && !isBooked) {
+    if ((!canOpenSlot(date, time) || reopenRestriction(key)) && !isCurrentlyOpen && !isBooked) {
       return; // Don't select past/near slots
     }
 
     // For open slots, check if they can be marked for attendance
-    if (isCurrentlyOpen && !canMarkAttendance(date, time)) {
-      return; // Can't mark attendance for non-current-day or too-close slots
-    }
-
-    // For booked slots, check if they can be marked for attendance
-    if (isBooked && !canMarkAttendance(date, time)) {
-      return; // Can't mark attendance for non-current-day or too-close slots
+    if ((isCurrentlyOpen || isBooked) && !pendingSelections.has(key) && !canSelectAttendanceSlot(dayIdx, time)) {
+      return;
     }
 
     // Determine slot type: "available", "open", or "booked"
@@ -554,6 +663,9 @@ const SchedulePage = () => {
     // Toggle selection for bulk action
     const newPendingSelections = new Set(pendingSelections);
     if (newPendingSelections.has(key)) {
+      if ((isCurrentlyOpen || isBooked) && newPendingSelections.size > 2 &&
+          !isValidAttendanceSelection([...newPendingSelections].filter(selected => selected !== key), 'present') &&
+          !isValidAttendanceSelection([...newPendingSelections].filter(selected => selected !== key), 'absent')) return;
       newPendingSelections.delete(key);
     } else {
       newPendingSelections.add(key);
@@ -571,10 +683,7 @@ const SchedulePage = () => {
     
     if (isOpenSlots || isBookedSlots) {
       setBulkAction('attendance');
-      // If booked slots are selected, default to absent (disable present)
-      if (isBookedSlots) {
-        setAttendanceStatus(null);
-      }
+      setAttendanceStatus(null);
     } else {
       setBulkAction('open');
     }
@@ -587,16 +696,49 @@ const SchedulePage = () => {
 
     try {
       if (bulkAction === 'attendance') {
-        // For attendance, update the attendanceMarked set
-        const newAttendanceMarked = new Set(attendanceMarked);
-        
-        if (attendanceStatus === 'present') {
-          pendingSelections.forEach(key => newAttendanceMarked.add(key));
-        } else if (attendanceStatus === 'absent') {
-          pendingSelections.forEach(key => newAttendanceMarked.delete(key));
+        if (!attendanceStatus || !isValidAttendanceSelection([...pendingSelections], attendanceStatus)) {
+          throw new Error('Selected slots are outside the allowed attendance or cancellation window');
         }
-        
-        setAttendanceMarked(newAttendanceMarked);
+        if (attendanceStatus === 'absent' && !absenceReason) throw new Error('Select an absence reason');
+        const bookingIds: string[] = [];
+        const slotIds: string[] = [];
+        for (const key of pendingSelections) {
+          const bookingId = bookedSlots.get(key)?.bookingId;
+          const slotId = openSlotIds.get(key);
+          if (bookingId) bookingIds.push(bookingId);
+          else if (slotId) slotIds.push(slotId);
+          else throw new Error('Slot data is unavailable. Refresh the schedule and try again.');
+        }
+        await scheduleApi.markAttendanceBulk(
+          bookingIds, slotIds, attendanceStatus,
+          attendanceStatus === 'absent' ? absenceReason as AbsenceReason : undefined,
+          attendanceStatus === 'absent' ? absenceAdditionalInfo.trim() : undefined
+        );
+        setAttendanceBySlot(previous => {
+          const updated = new Map(previous);
+          pendingSelections.forEach(key => {
+            if (attendanceStatus === 'absent' && !bookedSlots.has(key)) updated.delete(key);
+            else updated.set(key, attendanceStatus);
+          });
+          return updated;
+        });
+        if (attendanceStatus === 'absent' && slotIds.length) {
+          setSelectedTimeSlots(previous => {
+            const updated = new Set(previous);
+            pendingSelections.forEach(key => {
+              if (!bookedSlots.has(key)) updated.delete(key);
+            });
+            return updated;
+          });
+          setOpenSlotIds(previous => {
+            const updated = new Map(previous);
+            pendingSelections.forEach(key => {
+              if (!bookedSlots.has(key)) updated.delete(key);
+            });
+            return updated;
+          });
+        }
+        setRefreshTrigger(previous => previous + 1);
       } else {
         const newSet = new Set(selectedTimeSlots);
         
@@ -616,10 +758,19 @@ const SchedulePage = () => {
           
           
           // Call API to open slots
-          const result = await scheduleApi.openSlots(slotsToOpen);
+          const openedSlots = await scheduleApi.openSlots(slotsToOpen);
+          const openedIds = new Map<string, string>();
+          for (const slot of openedSlots) {
+            if (slot.status !== 'open') continue;
+            const dayIdx = weekDates.findIndex(date => formatDateISO(date) === slot.date);
+            if (dayIdx >= 0) openedIds.set(`${dayIdx}-${convertTo12Hour(slot.time)}`, slot.slotId);
+          }
+          setOpenSlotIds(previous => new Map([...previous, ...openedIds]));
           
           // Update local state only after successful API call
-          pendingSelections.forEach(key => newSet.add(key));
+          pendingSelections.forEach(key => {
+            if (openedIds.has(key)) newSet.add(key);
+          });
         } else if (bulkAction === 'close') {
           // For closing, we need slot IDs which we don't have in current state
           // For now, just update local state
@@ -627,15 +778,23 @@ const SchedulePage = () => {
           pendingSelections.forEach(key => {
             newSet.delete(key);
             // Also remove from attendance if closing
-            const newAttendanceMarked = new Set(attendanceMarked);
-            newAttendanceMarked.delete(key);
-            setAttendanceMarked(newAttendanceMarked);
+            setAttendanceBySlot(previous => {
+              const updated = new Map(previous);
+              updated.delete(key);
+              return updated;
+            });
           });
         }
         
         setSelectedTimeSlots(newSet);
       }
+      window.dispatchEvent(new Event('fxv:tutor-schedule-updated'));
       
+      if (showAbsenceReasonModal) {
+        setShowAbsenceReasonModal(false);
+        setShowModal(true);
+      }
+
       // Show success animation
       setIsConfirming(false);
       setShowSuccess(true);
@@ -645,8 +804,11 @@ const SchedulePage = () => {
         setShowSuccess(false);
         setPendingSelections(new Set());
         setShowModal(false);
+        setShowAbsenceReasonModal(false);
         setBulkAction(null);
         setAttendanceStatus(null);
+        setAbsenceReason('');
+        setAbsenceAdditionalInfo('');
       }, 1200);
     } catch (err: any) {
       console.error('Failed to perform action:', err);
@@ -657,8 +819,11 @@ const SchedulePage = () => {
 
   const closeModal = () => {
     setShowModal(false);
+    setShowAbsenceReasonModal(false);
     setBulkAction(null);
     setAttendanceStatus(null);
+    setAbsenceReason('');
+    setAbsenceAdditionalInfo('');
   };
 
   const clearSelections = () => {
@@ -679,7 +844,7 @@ const SchedulePage = () => {
       const isAlreadyOpen = selectedTimeSlots.has(key);
       const canOpen = canOpenSlot(date, time);
       
-      if (!isBooked && !isAlreadyOpen && canOpen) {
+      if (!isBooked && !isAlreadyOpen && !reservedTimeSlots.has(key) && canOpen && !reopenRestriction(key)) {
         availableKeys.push(key);
       }
     });
@@ -710,25 +875,12 @@ const SchedulePage = () => {
       const isAlreadyOpen = selectedTimeSlots.has(key);
       const canOpen = canOpenSlot(date, time);
       
-      if (!isBooked && !isAlreadyOpen && canOpen) {
+      if (!isBooked && !isAlreadyOpen && !reservedTimeSlots.has(key) && canOpen && !reopenRestriction(key)) {
         count++;
       }
     });
     
     return count;
-  };
-
-  // Check if any pending selection is booked
-  const hasBookedSlots = () => {
-    return Array.from(pendingSelections).some(key => bookedSlots.has(key));
-  };
-
-  // Check if we can change attendance to absent (must be more than 5 minutes before)
-  const canChangeToAbsent = () => {
-    return Array.from(pendingSelections).every(key => {
-      const details = getSlotDetails(key);
-      return canMarkAttendance(details.date, details.time);
-    });
   };
 
   // Get slot details from key
@@ -839,7 +991,7 @@ const SchedulePage = () => {
       <SideBar />
       <div className="main-content">
         <DashboardHeader user={user || undefined} />
-        <main style={{ padding: '40px 0', background: pageBackground, minHeight: '100vh' }}>
+        <main className="tutor-schedule-page" style={{ padding: '40px 0', background: pageBackground, minHeight: '100vh' }}>
           <style>{`
             /* Custom scrollbar styling for schedule page */
             .schedule-scrollable::-webkit-scrollbar {
@@ -857,14 +1009,54 @@ const SchedulePage = () => {
             .schedule-scrollable::-webkit-scrollbar-thumb:hover {
               background: ${isDarkMode ? 'linear-gradient(135deg, #4a4a4a 0%, #6a6a6a 100%)' : 'linear-gradient(135deg, #023a8f 0%, #3d8ce6 100%)'};
             }
+            .schedule-ticker { height: 28px; margin-bottom: 8px; overflow: hidden; white-space: nowrap; }
+            .schedule-ticker-track { display: flex; width: max-content; animation: schedule-ticker-scroll 28s linear infinite; }
+            .schedule-ticker:hover .schedule-ticker-track { animation-play-state: paused; }
+            .schedule-ticker-item { flex: none; padding: 0 44px; line-height: 28px; font-size: 12px; font-weight: 700; }
+            @keyframes schedule-ticker-scroll { to { transform: translateX(-25%); } }
+            @media (prefers-reduced-motion: reduce) {
+              .schedule-ticker { overflow-x: auto; }
+              .schedule-ticker-track { animation: none; }
+            }
+            .schedule-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; margin-bottom: 16px; }
+            .schedule-toolbar .schedule-prev { justify-self: start; }
+            .schedule-toolbar .schedule-next { justify-self: end; }
+            .schedule-toolbar .schedule-periods { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+            .schedule-penalty-list { display: grid; grid-template-columns: 1fr; column-gap: 24px; }
+            @media (min-width: 1050px) {
+              .schedule-penalty-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            }
+            @media (max-width: 767px) {
+              .schedule-toolbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+              .schedule-toolbar .schedule-periods { grid-column: 1 / -1; grid-row: 2; }
+              .schedule-toolbar .schedule-next { grid-column: 2; grid-row: 1; }
+              .schedule-toolbar .schedule-week-button { padding: 8px 10px !important; font-size: 12px !important; white-space: nowrap; }
+              .schedule-toolbar .schedule-periods button { padding: 8px 12px !important; font-size: 12px !important; }
+            }
+            @media (min-width: 768px) {
+              .tutor-schedule-page { padding: 16px 0 !important; min-height: calc(100vh - 60px) !important; }
+              .tutor-schedule-page .tutor-schedule-container { max-width: 1280px !important; }
+              .tutor-schedule-page .schedule-title-row { margin-bottom: 4px !important; }
+              .tutor-schedule-page .schedule-card { padding: 12px !important; border-radius: 8px !important; }
+              .tutor-schedule-page .schedule-toolbar { margin-bottom: 8px !important; }
+              .tutor-schedule-page .schedule-week-button { padding: 8px 14px !important; border-radius: 6px !important; }
+              .tutor-schedule-page .schedule-periods button { padding: 6px 14px !important; border-radius: 6px !important; }
+              .tutor-schedule-page .schedule-grid { border-spacing: 3px !important; }
+              .tutor-schedule-page .schedule-grid thead tr:first-child th { padding: 4px 8px !important; border-radius: 6px !important; }
+              .tutor-schedule-page .schedule-grid thead tr:nth-child(2) th { padding: 1px !important; }
+              .tutor-schedule-page .schedule-grid thead tr:nth-child(2) button { padding: 3px !important; }
+              .tutor-schedule-page .schedule-grid tbody td { padding: 1px !important; }
+              .tutor-schedule-page .schedule-grid tbody button { height: 28px !important; padding: 4px 3px !important; border-radius: 6px !important; }
+              .tutor-schedule-page .schedule-grid tbody td > div { gap: 3px !important; }
+            }
           `}</style>
-          <div className="container">
+          <div className="container tutor-schedule-container">
             {/* Header Section */}
-            <div style={{ 
+            <div className="schedule-title-row" style={{
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'space-between',
-              marginBottom: '32px',
+              marginBottom: '4px',
               flexWrap: 'wrap',
               gap: '16px'
             }}>
@@ -922,35 +1114,17 @@ const SchedulePage = () => {
               </div>
             </div>
 
-            {/* Info Banner */}
-            <div style={{
-              background: warningBannerBackground,
-              backdropFilter: 'blur(10px)',
-              padding: '20px 24px',
-              borderRadius: '16px',
-              marginBottom: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              boxShadow: isDarkMode ? '0 4px 14px rgba(0, 0, 0, 0.16)' : '0 4px 20px rgba(251, 191, 36, 0.15)',
-              border: '1px solid rgba(251, 191, 36, 0.3)'
+            <div className="schedule-ticker" role="note" aria-label={BOOKING_NOTICE} style={{
+              background: isDarkMode ? 'rgba(245, 158, 11, 0.07)' : 'rgba(245, 158, 11, 0.08)',
+              color: isDarkMode ? '#fcd34d' : '#92400e',
+              borderTop: '1px solid rgba(245, 158, 11, 0.2)',
+              borderBottom: '1px solid rgba(245, 158, 11, 0.2)'
             }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-              }}>
-                <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '22px' }}></i>
+              <div className="schedule-ticker-track" aria-hidden="true">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <span className="schedule-ticker-item" key={index}>{BOOKING_NOTICE}</span>
+                ))}
               </div>
-              <p style={{ margin: 0, fontSize: '14px', color: warningBannerText, lineHeight: '1.6', fontWeight: 500 }}>
-                Students can reserve your lessons 3 minutes before the lesson time starts. Please click refresh to get your latest reservation status.
-              </p>
             </div>
 
             {/* Error Message */}
@@ -993,7 +1167,7 @@ const SchedulePage = () => {
             )}
 
             {/* Main Schedule Card */}
-            <div style={{
+            <div className="schedule-card" style={{
               background: cardBackground,
               backdropFilter: 'blur(10px)',
               borderRadius: '24px',
@@ -1001,16 +1175,10 @@ const SchedulePage = () => {
               boxShadow: boxShadowCard,
               border: borderSoft
             }}>
-              {/* Week Navigation */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '24px',
-                paddingBottom: '20px',
-                borderBottom: borderAccentSoft
-              }}>
+              <div className="schedule-toolbar">
                 <button
+                  className="schedule-week-button schedule-prev"
+                  type="button"
                   onClick={() => {
                     setCurrentWeekOffset(currentWeekOffset - 1);
                     setPendingSelections(new Set());
@@ -1033,18 +1201,47 @@ const SchedulePage = () => {
                   <i className="fas fa-chevron-left"></i>
                   Previous Week
                 </button>
-                
-                <h3 style={{
-                  margin: 0,
-                  fontSize: '20px',
-                  fontWeight: 800,
-                  color: isDarkMode ? '#93c5fd' : '#0245ae',
-                  letterSpacing: '0.5px'
-                }}>
-                  This Week
-                </h3>
+
+                <div className="schedule-periods" role="group" aria-label="Time of day">
+                  {(['morning', 'afternoon', 'evening'] as const).map((period) => {
+                    const periodStyle = periodStyles[period];
+                    const isActive = selectedPeriod === period;
+
+                    return (
+                      <button
+                        key={period}
+                        type="button"
+                        aria-pressed={isActive}
+                        onClick={() => setSelectedPeriod(period)}
+                        style={{
+                          background: isActive
+                            ? periodStyle.background
+                            : isDarkMode ? '#2b2b2b' : 'rgba(15, 23, 42, 0.05)',
+                          color: isActive ? '#fff' : textMuted,
+                          border: isDarkMode && !isActive ? `1px solid ${darkSlotBorder}` : 'none',
+                          padding: '10px 24px',
+                          borderRadius: '12px',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          boxShadow: isActive ? periodStyle.shadow : 'none',
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        <i className={`fas fa-${period === 'morning' ? 'sun' : period === 'afternoon' ? 'cloud-sun' : 'moon'}`}></i>
+                        {period}
+                      </button>
+                    );
+                  })}
+                </div>
 
                 <button
+                  className="schedule-week-button schedule-next"
+                  type="button"
                   onClick={() => {
                     setCurrentWeekOffset(currentWeekOffset + 1);
                     setPendingSelections(new Set());
@@ -1069,56 +1266,20 @@ const SchedulePage = () => {
                 </button>
               </div>
 
-              {/* Period Toggle */}
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                marginBottom: '16px',
-                justifyContent: 'center',
-                flexWrap: 'wrap'
-              }}>
-                {(['morning', 'afternoon', 'evening'] as const).map((period) => {
-                  const periodStyle = periodStyles[period];
-                  const isActive = selectedPeriod === period;
-
-                  return (
-                    <button
-                      key={period}
-                      onClick={() => setSelectedPeriod(period)}
-                      style={{
-                        background: isActive
-                          ? periodStyle.background
-                          : isDarkMode ? '#2b2b2b' : 'rgba(15, 23, 42, 0.05)',
-                        color: isActive ? '#fff' : textMuted,
-                        border: isDarkMode && !isActive ? `1px solid ${darkSlotBorder}` : 'none',
-                        padding: '10px 24px',
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        boxShadow: isActive ? periodStyle.shadow : 'none',
-                        textTransform: 'capitalize'
-                      }}
-                    >
-                      <i className={`fas fa-${period === 'morning' ? 'sun' : period === 'afternoon' ? 'cloud-sun' : 'moon'}`}></i>
-                      {period}
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Calendar Grid */}
               <div style={{ overflowX: 'auto' }} className="schedule-scrollable">
-                <table style={{
+                <table className="schedule-grid" style={{
                   width: '100%',
+                  minWidth: '900px',
+                  tableLayout: 'fixed',
                   borderCollapse: 'separate',
                   borderSpacing: '4px',
                   background: isDarkMode ? '#1f1f1f' : 'transparent'
                 }}>
+                  <colgroup>
+                    <col style={{ width: '14%' }} />
+                    <col span={7} style={{ width: `${86 / 7}%` }} />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th style={{
@@ -1230,13 +1391,19 @@ const SchedulePage = () => {
                         {weekDates.map((date, dayIdx) => {
                           const key = `${dayIdx}-${time}`;
                           const isBooked = bookedSlots.has(key);
+                          const isReserved = reservedTimeSlots.has(key);
                           const bookingInfo = bookedSlots.get(key);
                           const isSelected = selectedTimeSlots.has(key);
-                          const isMarkedPresent = attendanceMarked.has(key);
+                          const hasStarted = attendanceStartMs(date, time) <= nowMs;
+                          const isClosed = closedTimeSlots.has(key) || (isSelected && !isBooked && hasStarted);
+                          const isOpen = isSelected && !isBooked && !isClosed;
+                          const isMarkedPresent = attendanceBySlot.get(key) === 'present';
+                          const isMarkedAbsent = attendanceBySlot.get(key) === 'absent';
                           const isPendingSelection = pendingSelections.has(key);
                           const canOpen = canOpenSlot(date, time);
-                          const isPastOrNear = !canOpen && !isSelected && !isBooked;
-                          const canMarkAttend = isSelected && canMarkAttendance(date, time);
+                          const reopenBlocked = !isSelected && reopenRestriction(key);
+                          const isPastOrNear = (isReserved || !canOpen || Boolean(reopenBlocked)) && !isSelected && !isBooked;
+                          const canMarkAttend = isOpen && canSelectAttendanceSlot(dayIdx, time);
                           const penalty = slotPenalties.get(key);
                           
                           // Check if booked slot is marked present
@@ -1266,40 +1433,58 @@ const SchedulePage = () => {
                           
                           // Determine slot display label
                           let slotLabel = 'AVAILABLE';
-                          if (penalty) {
+                          if (isReserved) {
+                            slotLabel = 'RESERVED';
+                          } else if (penalty) {
                             const penaltyInfo = PENALTY_LABELS[penalty.code];
                             slotLabel = penaltyInfo.label;
                           } else if (isBooked && bookingInfo) {
-                            // Truncate student ID to 6 characters to prevent cell width expansion
-                            const studentId = bookingInfo.studentId || 'BOOKED';
-                            slotLabel = studentId.length > 6 ? studentId.substring(0, 6) : studentId;
+                            slotLabel = bookingInfo.studentId?.slice(-6) || 'BOOKED';
+                          } else if (isClosed) {
+                            slotLabel = 'CLOSED';
                           } else if (isPastOrNear) {
-                            slotLabel = 'PAST';
+                            slotLabel = hasStarted ? 'PAST' : 'UNAVAILABLE';
                           } else if (isPendingSelection) {
                             slotLabel = 'SELECTED';
                           } else if (isMarkedPresent) {
                             slotLabel = 'PRESENT';
-                          } else if (isSelected) {
+                          } else if (isMarkedAbsent) {
+                            slotLabel = 'ABSENT';
+                          } else if (isOpen) {
                             slotLabel = 'OPEN';
                           }
                           
                           return (
                             <td key={dayIdx} style={{ padding: '2px', background: isDarkMode ? darkRowBackground : 'transparent' }}>
-                              <button
+                              <div
+                                title={reopenBlocked || undefined}
+                                style={{ display: 'flex', alignItems: 'stretch', gap: '4px', width: '100%' }}
+                              >
+                                <button
                                 key={`${key}-${isDarkMode ? 'dark' : 'light'}-${isBooked ? 'booked' : 'idle'}`}
-                                onClick={() => handleSlotClick(dayIdx, time)}
-                                onDblClick={() => handleSlotDoubleClick(dayIdx, time)}
+                                type="button"
+                                onClick={() => isBooked ? openBookedLesson(dayIdx, time) : handleSlotClick(dayIdx, time)}
                                 disabled={!isBooked && (isPastOrNear || (isSelected && !canMarkAttend))}
+                                aria-label={isBooked ? `Open lesson with ${bookingInfo?.studentName || bookingInfo?.studentId || 'student'}` : `${slotLabel} ${time}`}
+                                title={isBooked ? `Open lesson with ${bookingInfo?.studentName || bookingInfo?.studentId || 'student'}` : reopenBlocked || penalty?.reason}
                                 style={{
-                                  width: '100%',
+                                  width: isBooked ? 'auto' : '100%',
+                                  flex: isBooked ? 1 : undefined,
+                                  minWidth: 0,
+                                  height: '38px',
                                   display: 'block',
-                                  padding: '10px 6px',
+                                  padding: isBooked ? '10px 3px' : '10px 6px',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
                                   borderRadius: '8px',
                                   outline: 'none',
                                   appearance: 'none',
                                   cursor: isBooked ? 'pointer' : isPastOrNear || (isSelected && !canMarkAttend) ? 'not-allowed' : 'pointer',
                                   background: penalty
                                     ? PENALTY_LABELS[penalty.code].bgColor
+                                    : isClosed
+                                    ? (isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(148, 163, 184, 0.2)')
                                     : isPastOrNear
                                     ? (isDarkMode ? darkSlotPastBackground : 'rgba(203, 213, 225, 0.5)')
                                     : isBookedAndPresent
@@ -1311,14 +1496,14 @@ const SchedulePage = () => {
                                     : isMarkedPresent
                                     ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                                     : isSelected
-                                    ? (isDarkMode ? darkRowBackground : 'rgba(255, 255, 255, 0.9)')
-                                    : (isDarkMode ? darkRowBackground : 'rgba(255, 255, 255, 0.9)'),
+                                    ? (isDarkMode ? 'rgba(59, 130, 246, 0.18)' : 'rgba(59, 130, 246, 0.1)')
+                                    : (isDarkMode ? 'rgba(16, 185, 129, 0.13)' : 'rgba(16, 185, 129, 0.08)'),
                                   color: penalty
                                     ? PENALTY_LABELS[penalty.code].color
-                                    : isPendingSelection || isMarkedPresent ? '#fff' : isBooked ? (isDarkMode ? '#e5e7eb' : '#fff') : isPastOrNear ? textSoft : isSelected ? '#10b981' : textMuted,
+                                    : isPendingSelection || isMarkedPresent ? '#fff' : isBooked ? (isDarkMode ? '#e5e7eb' : '#fff') : isClosed ? (isDarkMode ? '#cbd5e1' : '#475569') : isPastOrNear ? textSoft : isSelected ? (isDarkMode ? '#93c5fd' : '#1d4ed8') : isDarkMode ? '#6ee7b7' : '#047857',
                                   fontWeight: 800,
-                                  fontSize: isBooked || penalty ? '13px' : '11px',
-                                  transition: 'all 0.2s ease',
+                                  fontSize: isBooked ? '11px' : penalty ? '13px' : '11px',
+                                  transition: 'background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
                                   backgroundSize: isBooked && !penalty ? '220% 100%, 100% 100%' : undefined,
                                   animation: isBooked && !penalty ? 'bookedSlotShimmer 2.4s linear infinite' : undefined,
                                   animationPlayState: isBooked && !penalty ? 'running' : undefined,
@@ -1334,7 +1519,7 @@ const SchedulePage = () => {
                                     : isMarkedPresent
                                     ? '0 2px 8px rgba(16, 185, 129, 0.3)'
                                     : isDarkMode ? 'none' : '0 1px 3px rgba(0, 0, 0, 0.05)',
-                                  letterSpacing: isBooked || penalty ? '1px' : '0.5px',
+                                  letterSpacing: isBooked ? '0' : penalty ? '1px' : '0.5px',
                                   border: penalty
                                     ? `2px solid ${PENALTY_LABELS[penalty.code].color}`
                                     : isBookedAndPresent
@@ -1343,12 +1528,14 @@ const SchedulePage = () => {
                                     ? (isDarkMode ? `2px solid ${darkSlotBookedBorder}` : '2px solid transparent')
                                     : isPendingSelection
                                     ? '2px solid rgba(251, 191, 36, 0.6)'
-                                    : isSelected && !isMarkedPresent
-                                    ? '2px solid #10b981' 
+                                    : isClosed
+                                    ? (isDarkMode ? '2px solid rgba(148, 163, 184, 0.35)' : '2px solid rgba(100, 116, 139, 0.3)')
+                                    : isOpen && !isMarkedPresent
+                                    ? (isDarkMode ? '2px solid rgba(96, 165, 250, 0.8)' : '2px solid #3b82f6')
                                     : !isSelected && !isPastOrNear
-                                    ? isDarkMode ? `1px solid ${darkSlotBorder}` : '2px solid rgba(2, 69, 174, 0.1)' 
-                                    : isDarkMode ? `1px solid ${darkSlotBorder}` : '2px solid transparent',
-                                  opacity: isSelected && !canMarkAttend && !isBooked ? 0.5 : 1,
+                                    ? isDarkMode ? '2px solid rgba(52, 211, 153, 0.42)' : '2px solid rgba(16, 185, 129, 0.3)'
+                                    : isDarkMode ? `2px solid ${darkSlotBorder}` : '2px solid transparent',
+                                  opacity: isSelected && !canMarkAttend && !isBooked ? 0.85 : 1,
                                   boxSizing: 'border-box'
                                 }}
                                 onMouseEnter={(e) => {
@@ -1361,8 +1548,8 @@ const SchedulePage = () => {
                                     e.currentTarget.style.backgroundSize = '220% 100%, 100% 100%';
                                     e.currentTarget.style.boxShadow = isDarkMode ? darkSlotBookedHoverShadow : '0 4px 12px rgba(59, 130, 246, 0.5)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = isDarkMode ? darkRowHoverBackground : 'rgba(2, 69, 174, 0.1)';
-                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.18)' : 'rgba(2, 69, 174, 0.3)';
+                                    e.currentTarget.style.background = isDarkMode ? 'rgba(16, 185, 129, 0.22)' : 'rgba(16, 185, 129, 0.14)';
+                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(110, 231, 183, 0.72)' : 'rgba(5, 150, 105, 0.55)';
                                   }
                                 }}
                                 onMouseLeave={(e) => {
@@ -1375,14 +1562,39 @@ const SchedulePage = () => {
                                     e.currentTarget.style.backgroundSize = '220% 100%, 100% 100%';
                                     e.currentTarget.style.boxShadow = isDarkMode ? darkSlotBookedShadow : '0 2px 8px rgba(59, 130, 246, 0.4)';
                                   } else if (!isSelected && !isPastOrNear && !isPendingSelection) {
-                                    e.currentTarget.style.background = isDarkMode ? darkRowBackground : 'rgba(255, 255, 255, 0.9)';
-                                    e.currentTarget.style.borderColor = isDarkMode ? darkSlotBorder : 'rgba(2, 69, 174, 0.1)';
+                                    e.currentTarget.style.background = isDarkMode ? 'rgba(16, 185, 129, 0.13)' : 'rgba(16, 185, 129, 0.08)';
+                                    e.currentTarget.style.borderColor = isDarkMode ? 'rgba(52, 211, 153, 0.42)' : 'rgba(16, 185, 129, 0.3)';
                                   }
                                 }}
-                                title={penalty ? penalty.reason : undefined}
                               >
+                                {isBooked && <i className="fas fa-book-open" aria-hidden="true" style={{ marginRight: '3px', fontSize: '10px' }} />}
                                 {slotLabel}
-                              </button>
+                                </button>
+                                {isBooked && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSlotClick(dayIdx, time)}
+                                  disabled={!canSelectAttendanceSlot(dayIdx, time)}
+                                  aria-label={`Update attendance for ${bookingInfo?.studentName || bookingInfo?.studentId || 'student'} at ${time}`}
+                                  aria-pressed={isPendingSelection}
+                                  title={canSelectAttendanceSlot(dayIdx, time) ? `Update attendance${attendanceBySlot.has(key) ? ` (currently ${attendanceBySlot.get(key)})` : ''}` : 'Attendance updates are available 35 to 11 minutes before the first lesson'}
+                                  style={{
+                                    width: '32px',
+                                    height: '38px',
+                                    flexShrink: 0,
+                                    boxSizing: 'border-box',
+                                    borderRadius: '8px',
+                                    border: isPendingSelection ? '2px solid #fbbf24' : (isDarkMode ? '2px solid #60a5fa' : '2px solid #3b82f6'),
+                                    background: isPendingSelection ? '#b45309' : (isDarkMode ? '#26384f' : '#e8f1ff'),
+                                    color: isPendingSelection ? '#fff' : (isDarkMode ? '#bfdbfe' : '#1d4ed8'),
+                                    cursor: canSelectAttendanceSlot(dayIdx, time) ? 'pointer' : 'not-allowed',
+                                    opacity: canSelectAttendanceSlot(dayIdx, time) ? 1 : 0.5,
+                                  }}
+                                >
+                                  <i className="fas fa-clipboard-check" aria-hidden="true" />
+                                </button>
+                                )}
+                              </div>
                             </td>
                           );
                         })}
@@ -1464,9 +1676,9 @@ const SchedulePage = () => {
               {[
                 {
                   label: 'Available',
-                  color: isDarkMode ? darkSlotBackground : 'rgba(255, 255, 255, 0.9)',
-                  textColor: isDarkMode ? textMuted : '#64748b',
-                  border: isDarkMode ? `1px solid ${darkSlotBorder}` : '1px solid rgba(2, 69, 174, 0.1)'
+                  color: isDarkMode ? 'rgba(16, 185, 129, 0.13)' : 'rgba(16, 185, 129, 0.08)',
+                  textColor: isDarkMode ? '#6ee7b7' : '#047857',
+                  border: isDarkMode ? '2px solid rgba(52, 211, 153, 0.42)' : '2px solid rgba(16, 185, 129, 0.3)'
                 },
                 {
                   label: 'Booked',
@@ -1477,10 +1689,16 @@ const SchedulePage = () => {
                 { label: 'Selected', color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', textColor: '#fff' },
                 {
                   label: 'Your Open Slots',
-                  color: isDarkMode ? darkSlotBackground : 'rgba(255, 255, 255, 0.9)',
-                  textColor: '#10b981',
-                  border: '2px solid #10b981',
-                  boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.2)'
+                  color: isDarkMode ? 'rgba(59, 130, 246, 0.18)' : 'rgba(59, 130, 246, 0.1)',
+                  textColor: isDarkMode ? '#93c5fd' : '#1d4ed8',
+                  border: isDarkMode ? '2px solid rgba(96, 165, 250, 0.8)' : '2px solid #3b82f6',
+                  boxShadow: isDarkMode ? 'none' : '0 2px 8px rgba(59, 130, 246, 0.2)'
+                },
+                {
+                  label: 'Closed',
+                  color: isDarkMode ? 'rgba(71, 85, 105, 0.3)' : 'rgba(148, 163, 184, 0.2)',
+                  textColor: isDarkMode ? '#cbd5e1' : '#475569',
+                  border: isDarkMode ? '2px solid rgba(148, 163, 184, 0.35)' : '2px solid rgba(100, 116, 139, 0.3)'
                 },
                 {
                   label: 'Past/Unavailable',
@@ -1507,68 +1725,64 @@ const SchedulePage = () => {
 
             {/* Penalty Code Reference */}
             <div style={{
-              marginTop: '32px',
+              marginTop: '20px',
               background: cardBackground,
-              borderRadius: '16px',
-              padding: '24px',
+              borderRadius: '8px',
+              padding: '16px',
               boxShadow: boxShadowSoft,
               border: borderSoft
             }}>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                marginBottom: '20px'
+                gap: '8px',
+                marginBottom: '8px'
               }}>
                 <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '10px',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
                   background: 'linear-gradient(135deg, #0245ae 0%, #4a9eff 100%)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  flexShrink: 0
                 }}>
-                  <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '18px' }}></i>
+                  <i className="fas fa-info-circle" style={{ color: '#fff', fontSize: '14px' }}></i>
                 </div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: textPrimary }}>
-                    Penalty Code Reference
-                  </h4>
-                  <p style={{ margin: 0, fontSize: '12px', color: textMuted }}>
-                    Applied to schedule slots for attendance and compliance tracking
-                  </p>
-                </div>
+                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: textPrimary }}>
+                  Penalty Code Reference
+                </h4>
               </div>
+              <p style={{ margin: '0 0 10px', color: textMuted, fontSize: '12px', lineHeight: 1.5 }}>
+                Booked time is protected because a student has committed to it. Unbooked time cancelled at least 48 hours ahead has no penalty; later cancellations receive TA-303 because students may have planned around that opening. One delayed reopening allows a genuine recovery without repeated last-minute changes.
+              </p>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="schedule-penalty-list">
                 {[
                   {
                     code: '301',
                     label: 'TA-301',
                     title: 'Tutor Absence (Booked)',
-                    description: 'Tutor failed to attend a booked lesson slot. Includes short-notice cancellations (less than 48 hours), failure to confirm attendance, or technical issues not properly reported.',
+                    description: 'Booked lesson marked absent, not confirmed by the 11-minute deadline, or not entered in the classroom by 5 minutes after start. Later consecutive Present slots return to standby for reconfirmation.',
                     severity: 'critical',
-                    color: '#dc2626',
-                    bgColor: '#fef2f2'
+                    color: '#dc2626'
                   },
                   {
                     code: '302',
                     label: 'TA-302',
                     title: 'Tutor Absence (Unbooked)',
-                    description: 'Tutor failed to attend an unbooked (open) lesson slot or failed to confirm attendance for an open slot.',
+                    description: 'Unbooked open slot without Present confirmation at the 11-minute deadline. It closes with TA-302 and cannot be reopened.',
                     severity: 'high',
-                    color: '#ea580c',
-                    bgColor: '#fff7ed'
+                    color: '#ea580c'
                   },
                   {
                     code: '303',
                     label: 'TA-303',
                     title: 'Short Notice Cancellation',
-                    description: 'Open slot cancelled on short notice (within 48 hours of lesson time). Multiple occurrences may lead to slot restrictions.',
+                    description: 'Unbooked slot cancelled under 48 hours before start. It can reopen once: after 30 minutes if cancelled on the lesson day, or on the lesson day if cancelled earlier. A second TA-303 keeps it closed.',
                     severity: 'medium',
-                    color: '#f59e0b',
-                    bgColor: '#fffbeb'
+                    color: '#f59e0b'
                   },
                   {
                     code: '401',
@@ -1576,8 +1790,7 @@ const SchedulePage = () => {
                     title: 'Substitution',
                     description: 'Slot temporarily closed for potential substitution. Becomes available again 30 minutes before lesson if no transfer occurs.',
                     severity: 'low',
-                    color: '#6366f1',
-                    bgColor: '#eef2ff'
+                    color: '#6366f1'
                   },
                   {
                     code: '501',
@@ -1585,8 +1798,7 @@ const SchedulePage = () => {
                     title: 'System Issue',
                     description: 'Lesson terminated or not conducted due to system or student-side issues. Tutor is compensated.',
                     severity: 'low',
-                    color: '#8b5cf6',
-                    bgColor: '#f5f3ff'
+                    color: '#8b5cf6'
                   },
                   {
                     code: '502',
@@ -1594,8 +1806,7 @@ const SchedulePage = () => {
                     title: 'Student Absent',
                     description: 'Student failed to attend the booked lesson. Tutor is compensated.',
                     severity: 'low',
-                    color: '#06b6d4',
-                    bgColor: '#ecfeff'
+                    color: '#06b6d4'
                   },
                   {
                     code: '601',
@@ -1603,38 +1814,33 @@ const SchedulePage = () => {
                     title: 'Penalty Block',
                     description: 'Temporary block on future unbooked slots due to repeated absences (3+ TA-301 codes in 30 days).',
                     severity: 'critical',
-                    color: '#991b1b',
-                    bgColor: '#fef2f2'
+                    color: '#991b1b'
                   }
                 ].map((item) => (
                   <div
                     key={item.code}
                     style={{
-                      display: 'flex',
-                      gap: '16px',
-                      padding: '16px',
-                      background: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : item.bgColor,
-                      borderRadius: '12px',
-                      border: isDarkMode ? '1px solid rgba(255, 255, 255, 0.08)' : `1px solid ${item.color}20`,
-                      boxShadow: isDarkMode ? 'inset 0 1px 0 rgba(255, 255, 255, 0.02)' : 'none',
-                      alignItems: 'flex-start'
+                      display: 'grid',
+                      gridTemplateColumns: '72px minmax(0, 1fr)',
+                      gap: '10px',
+                      padding: '9px 2px',
+                      borderBottom: borderSoft,
+                      alignItems: 'start'
                     }}
                   >
                     <div style={{
                       display: 'flex',
                       flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                      minWidth: '70px'
+                      alignItems: 'flex-start',
+                      gap: '2px'
                     }}>
                       <span style={{
                         fontWeight: 800,
-                        fontSize: '12px',
+                        fontSize: '11px',
                         color: item.color,
-                        letterSpacing: '0.5px',
                         background: isDarkMode ? `${item.color}1f` : `${item.color}15`,
-                        padding: '4px 8px',
-                        borderRadius: '6px',
+                        padding: '2px 5px',
+                        borderRadius: '4px',
                         border: isDarkMode ? `1px solid ${item.color}22` : 'none'
                       }}>
                         {item.label}
@@ -1644,24 +1850,24 @@ const SchedulePage = () => {
                         fontWeight: 600,
                         color: isDarkMode ? '#94a3b8' : item.color,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
+                        paddingLeft: '3px'
                       }}>
                         {item.severity}
                       </span>
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ minWidth: 0 }}>
                       <div style={{
                         fontWeight: 700,
                         fontSize: '13px',
                         color: isDarkMode ? '#f8fafc' : textPrimary,
-                        marginBottom: '4px'
+                        marginBottom: '2px'
                       }}>
                         {item.title}
                       </div>
                       <div style={{
                         fontSize: '12px',
                         color: isDarkMode ? '#cbd5e1' : textMuted,
-                        lineHeight: 1.5
+                        lineHeight: 1.35
                       }}>
                         {item.description}
                       </div>
@@ -1848,25 +2054,19 @@ const SchedulePage = () => {
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                   <button
                     onClick={() => setAttendanceStatus('present')}
-                    disabled={hasBookedSlots()}
+                    disabled={!isValidAttendanceSelection([...pendingSelections], 'present')}
                     style={{
                       flex: 1,
-                      background: hasBookedSlots()
-                        ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(203, 213, 225, 0.3)')
-                        : attendanceStatus === 'present' 
+                      background: attendanceStatus === 'present'
                         ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                         : 'rgba(16, 185, 129, 0.1)',
-                      color: hasBookedSlots()
-                        ? textSoft
-                        : attendanceStatus === 'present' ? '#fff' : '#10b981',
-                      border: hasBookedSlots()
-                        ? (isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(203, 213, 225, 0.3)')
-                        : attendanceStatus === 'present' ? 'none' : '2px solid rgba(16, 185, 129, 0.3)',
+                      color: attendanceStatus === 'present' ? '#fff' : '#10b981',
+                      border: attendanceStatus === 'present' ? '2px solid transparent' : '2px solid rgba(16, 185, 129, 0.3)',
                       padding: '12px 16px',
                       borderRadius: '10px',
                       fontWeight: 800,
                       fontSize: '14px',
-                      cursor: hasBookedSlots() ? 'not-allowed' : 'pointer',
+                      cursor: isValidAttendanceSelection([...pendingSelections], 'present') ? 'pointer' : 'not-allowed',
                       letterSpacing: '0.5px',
                       transition: 'all 0.3s ease',
                       display: 'flex',
@@ -1874,7 +2074,7 @@ const SchedulePage = () => {
                       justifyContent: 'center',
                       gap: '8px',
                       boxShadow: attendanceStatus === 'present' ? (isDarkMode ? '0 4px 14px rgba(16, 185, 129, 0.22)' : '0 4px 16px rgba(16, 185, 129, 0.4)') : 'none',
-                      opacity: hasBookedSlots() ? 0.5 : 1
+                      opacity: isValidAttendanceSelection([...pendingSelections], 'present') ? 1 : 0.45
                     }}
                   >
                     <i className="fas fa-check-circle" style={{ fontSize: '18px' }}></i>
@@ -1882,32 +2082,27 @@ const SchedulePage = () => {
                   </button>
                   <button
                     onClick={() => setAttendanceStatus('absent')}
-                    disabled={!canChangeToAbsent()}
+                    disabled={!isValidAttendanceSelection([...pendingSelections], 'absent')}
                     style={{
                       flex: 1,
-                      background: !canChangeToAbsent()
-                        ? (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(203, 213, 225, 0.3)')
-                        : attendanceStatus === 'absent' 
+                      background: attendanceStatus === 'absent'
                         ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
                         : 'rgba(239, 68, 68, 0.1)',
-                      color: !canChangeToAbsent()
-                        ? textSoft
-                        : attendanceStatus === 'absent' ? '#fff' : '#ef4444',
-                      border: !canChangeToAbsent()
-                        ? (isDarkMode ? '2px solid rgba(255, 255, 255, 0.08)' : '2px solid rgba(203, 213, 225, 0.3)')
-                        : attendanceStatus === 'absent' ? 'none' : '2px solid rgba(239, 68, 68, 0.3)',
+                      color: attendanceStatus === 'absent' ? '#fff' : '#ef4444',
+                      border: attendanceStatus === 'absent' ? '2px solid transparent' : '2px solid rgba(239, 68, 68, 0.3)',
                       padding: '12px 16px',
                       borderRadius: '10px',
                       fontWeight: 800,
                       fontSize: '14px',
-                      cursor: !canChangeToAbsent() ? 'not-allowed' : 'pointer',
+                      cursor: isValidAttendanceSelection([...pendingSelections], 'absent') ? 'pointer' : 'not-allowed',
                       letterSpacing: '0.5px',
                       transition: 'all 0.3s ease',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      boxShadow: attendanceStatus === 'absent' ? (isDarkMode ? '0 4px 14px rgba(239, 68, 68, 0.22)' : '0 4px 16px rgba(239, 68, 68, 0.4)') : 'none'
+                      boxShadow: attendanceStatus === 'absent' ? (isDarkMode ? '0 4px 14px rgba(239, 68, 68, 0.22)' : '0 4px 16px rgba(239, 68, 68, 0.4)') : 'none',
+                      opacity: isValidAttendanceSelection([...pendingSelections], 'absent') ? 1 : 0.45
                     }}
                   >
                     <i className="fas fa-times-circle" style={{ fontSize: '18px' }}></i>
@@ -1932,6 +2127,7 @@ const SchedulePage = () => {
             )}
 
             {/* Action Buttons */}
+            {error && <p role="alert" style={{ color: '#f87171', fontSize: '13px', margin: '0 0 12px' }}>{error}</p>}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={closeModal}
@@ -1954,7 +2150,15 @@ const SchedulePage = () => {
                 Cancel
               </button>
               <button
-                onClick={confirmBulkAction}
+                onClick={() => {
+                  if (bulkAction === 'attendance' && attendanceStatus === 'absent') {
+                    setError(null);
+                    setShowModal(false);
+                    setShowAbsenceReasonModal(true);
+                  } else {
+                    void confirmBulkAction();
+                  }
+                }}
                 disabled={(bulkAction === 'attendance' && !attendanceStatus) || isConfirming}
                 style={{
                   flex: 1,
@@ -2010,6 +2214,94 @@ const SchedulePage = () => {
                     : `Close ${pendingSelections.size} Slot${pendingSelections.size > 1 ? 's' : ''}`
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showAbsenceReasonModal && bulkAction === 'attendance' && pendingSelections.size > 0 && (
+        <div
+          role="presentation"
+          onClick={closeModal}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 10000, padding: '20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0, 0, 0, 0.72)', backdropFilter: 'blur(8px)'
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="absence-reason-title"
+            onClick={event => event.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: '440px', maxHeight: '90vh', overflowY: 'auto',
+              padding: '24px', borderRadius: '8px', background: elevatedBackground,
+              border: borderSoft, boxShadow: '0 24px 64px rgba(0, 0, 0, 0.4)',
+              color: textPrimary
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+              <i className="fas fa-clipboard-list" aria-hidden="true" style={{ fontSize: '20px', color: '#f59e0b' }} />
+              <div>
+                <h3 id="absence-reason-title" style={{ margin: 0, fontSize: '19px' }}>Report Absence</h3>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: textMuted }}>
+                  {pendingSelections.size} selected slot{pendingSelections.size === 1 ? '' : 's'}
+                </p>
+              </div>
+            </div>
+            <p style={{ fontSize: '13px', color: textMuted, lineHeight: 1.5, margin: '0 0 18px' }}>
+              Booked lessons receive TA-301. Unbooked slots return to Available; cancellations under 48 hours receive TA-303.
+            </p>
+            <label htmlFor="absence-reason" style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '7px' }}>
+              Reason <span style={{ color: '#f87171' }}>*</span>
+            </label>
+            <select
+              id="absence-reason"
+              value={absenceReason}
+              onChange={event => setAbsenceReason(event.currentTarget.value as AbsenceReason | '')}
+              style={{
+                width: '100%', height: '44px', padding: '0 12px', borderRadius: '6px',
+                border: borderSoft, background: cardBackgroundMuted, color: textPrimary,
+                fontSize: '14px', marginBottom: '18px'
+              }}
+            >
+              <option value="">Select a reason</option>
+              {ABSENCE_REASONS.map(reason => <option key={reason} value={reason}>{reason}</option>)}
+            </select>
+            <label htmlFor="absence-details" style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '7px' }}>
+              Additional information <span style={{ color: textMuted, fontWeight: 400 }}>(optional)</span>
+            </label>
+            <textarea
+              id="absence-details"
+              value={absenceAdditionalInfo}
+              onInput={event => setAbsenceAdditionalInfo(event.currentTarget.value)}
+              maxLength={1000}
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box', padding: '10px 12px',
+                resize: 'vertical', borderRadius: '6px', border: borderSoft,
+                background: cardBackgroundMuted, color: textPrimary, fontSize: '14px'
+              }}
+            />
+            {error && <p role="alert" style={{ color: '#f87171', fontSize: '13px', margin: '12px 0 0' }}>{error}</p>}
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button
+                type="button"
+                disabled={isConfirming}
+                onClick={() => { setError(null); setShowAbsenceReasonModal(false); setShowModal(true); }}
+                style={{ flex: 1, height: '44px', borderRadius: '6px', border: borderSoft, background: cardBackgroundMuted, color: textPrimary, fontWeight: 700 }}
+              >Back</button>
+              <button
+                type="button"
+                disabled={isConfirming || !absenceReason}
+                onClick={() => void confirmBulkAction()}
+                style={{
+                  flex: 1, height: '44px', borderRadius: '6px', border: 'none',
+                  background: '#dc2626', color: '#fff', fontWeight: 700,
+                  opacity: isConfirming || !absenceReason ? 0.5 : 1,
+                  cursor: isConfirming || !absenceReason ? 'not-allowed' : 'pointer'
+                }}
+              >{isConfirming ? 'Submitting...' : 'Confirm Absence'}</button>
             </div>
           </div>
         </div>

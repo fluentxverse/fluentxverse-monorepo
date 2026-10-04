@@ -107,4 +107,26 @@ export class ClassroomActivityService {
 
     return result.rows.map((row: any) => this.mapRow(row));
   }
+
+  async hasTutorEnteredForLesson(sessionId: string, tutorId: string, start: Date, deadline: Date): Promise<boolean> {
+    await this.ensureTable();
+    const result = await query(
+      `SELECT 1 FROM classroom_activity_logs entered
+       WHERE entered.session_id = $1 AND entered.user_id = $2 AND entered.user_type = 'tutor'
+         AND entered.event_type = 'entered' AND entered.created_at <= $4
+         AND (entered.created_at >= $3 OR NOT EXISTS (
+           SELECT 1 FROM classroom_activity_logs left_event
+           WHERE left_event.session_id = $1 AND left_event.user_id = $2
+             AND left_event.user_type = 'tutor' AND left_event.event_type = 'left'
+             AND left_event.created_at > entered.created_at AND left_event.created_at < $3
+         ))
+       UNION ALL
+       SELECT 1 FROM session_participants
+       WHERE session_id = $1 AND user_id = $2 AND user_type = 'tutor'
+         AND is_active = true AND joined_at <= $4
+       LIMIT 1`,
+      [sessionId, tutorId, start, deadline]
+    );
+    return result.rows.length > 0;
+  }
 }

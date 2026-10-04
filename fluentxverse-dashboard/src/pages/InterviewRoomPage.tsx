@@ -360,6 +360,13 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       
       socketRef.current = socket;
       const pc = createPeerConnection();
+      socket.on('interview:error', (data: { message: string }) => {
+        setIsConnecting(false);
+        setError(data.message);
+      });
+      socket.on('webrtc:ice-configuration', (configuration: RTCConfiguration) => {
+        pc.setConfiguration(configuration);
+      });
       
       socket.on('connect', () => {
         socket.emit('interview:join', {

@@ -87,6 +87,7 @@ export default function ConversationalSkillsPage() {
               l.exerciseData,
               l.missionData,
               l.missionData2,
+              l.missionData3,
               l.feedbackData,
             ].filter(Boolean),
             header: {
@@ -207,6 +208,9 @@ export default function ConversationalSkillsPage() {
       getLevelNumber(lesson) === level && getChapterNumber(lesson) === chapter
     ).length;
   };
+
+  const formatLessonCount = (count: number, includeAvailability = false): string =>
+    `${count} ${count === 1 ? 'lesson' : 'lessons'}${includeAvailability ? ' available' : ''}`;
 
   const toggleLevel = (level: number) => {
     setExpandedLevels(prev => 
@@ -404,14 +408,17 @@ export default function ConversationalSkillsPage() {
                   const isExpanded = expandedLevels.includes(level);
                   
                   return (
-                    <div key={level} className={`level-group ${isExpanded ? 'expanded' : ''}`}>
+                    <div
+                      key={level}
+                      className={`level-group ${isExpanded ? 'expanded' : ''} ${levelLessons > 0 ? 'has-lessons' : 'is-empty'}`}
+                    >
                       <button 
                         className="level-header"
                         onClick={() => toggleLevel(level)}
                       >
                         <div className="level-info">
                           <span className="level-badge-large">Level {level}</span>
-                          <span className="level-lesson-count">{levelLessons} lessons available</span>
+                          <span className="level-lesson-count">{formatLessonCount(levelLessons, true)}</span>
                         </div>
                         <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
                       </button>
@@ -431,7 +438,7 @@ export default function ConversationalSkillsPage() {
                                 >
                                   <div className="chapter-info">
                                     <span className="chapter-title">Chapter {chapter}</span>
-                                    <span className="chapter-lesson-count">{chapterLessons.length} lessons</span>
+                                    <span className="chapter-lesson-count">{formatLessonCount(chapterLessons.length)}</span>
                                   </div>
                                   <i className={`fas fa-chevron-${isChapterExpanded ? 'up' : 'down'}`}></i>
                                 </button>
@@ -469,7 +476,11 @@ export default function ConversationalSkillsPage() {
                                               {lesson.lessonData?.header?.goalText || 'English conversation practice'}
                                             </td>
                                             <td className="lesson-col-action">
-                                              <button className="btn-start-lesson">
+                                              <button
+                                                className="btn-start-lesson"
+                                                aria-label={`Open ${lesson.title}`}
+                                                title="Open lesson"
+                                              >
                                                 <i className="fas fa-play"></i>
                                               </button>
                                             </td>

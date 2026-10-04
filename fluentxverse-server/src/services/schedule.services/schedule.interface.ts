@@ -68,6 +68,8 @@ export interface OpenSlotsInput {
 export interface CloseSlotsInput {
   tutorId: string;
   slotIds: string[];
+  reason: 'Internet Outage' | 'Electric Outage' | 'Emergency' | 'Disaster' | 'Health' | 'Others';
+  additionalInfo?: string;
 }
 
 export interface BulkOpenSlotsInput {
@@ -98,12 +100,25 @@ export interface WeekSchedule {
     date: string;
     time: string;
     status: string;
+    reservationExpiresAt?: string;
+    slotId?: string;
     bookingId?: string;
+    bookedAt?: string;
+    attendanceWindowOpenedAt?: string;
+    tutorRoomEnteredAt?: string;
+    roomEntryPolicyActivatedAt?: string;
+    roomEntryCheckCompletedAt?: string;
+    attendanceSource?: string;
     studentId?: string;
     studentName?: string;
     penaltyCode?: string;
+    penaltyReason?: string;
+    ta303Count?: number;
+    ta303ReopenCount?: number;
+    lastTa303At?: string;
     attendanceTutor?: string;
     attendanceStudent?: string;
+    attendanceMarked?: string;
   }>;
 }
 
@@ -118,6 +133,7 @@ export interface AvailableSlot {
 export interface BookSlotInput {
   studentId: string;
   slotId: string;
+  reservationId: string;
   ticketTransferTxHash?: string; // Transaction hash from frontend ticket transfer
 }
 

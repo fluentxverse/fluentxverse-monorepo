@@ -144,4 +144,21 @@ export class ClassroomExerciseMarksService {
       await session.close();
     }
   }
+
+  async listForStudent(studentId: string, lessonIds: string[]): Promise<ClassroomExerciseMark[]> {
+    if (!lessonIds.length) return [];
+    await this.ensureSchema();
+    const session = getDriver().session();
+    try {
+      const result = await session.run(
+        `MATCH (mark:ClassroomExerciseMark {studentId: $studentId})
+         WHERE mark.lessonId IN $lessonIds
+         RETURN mark ORDER BY mark.updatedAt DESC`,
+        { studentId, lessonIds },
+      );
+      return result.records.map(record => mapNode(record.get('mark').properties));
+    } finally {
+      await session.close();
+    }
+  }
 }

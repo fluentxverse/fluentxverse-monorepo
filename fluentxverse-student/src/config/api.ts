@@ -4,28 +4,28 @@
 const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
 
 // Known production domains - if we detect these, use the production API
-const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'tutor.fluentxverse.xyz', 'student.fluentxverse.xyz'];
+const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'student.fluentxverse.xyz'];
 const PRODUCTION_API_URL = 'https://api.fluentxverse.xyz';
 
+export const isProductionHost = (hostname: string) => PRODUCTION_DOMAINS.includes(hostname);
+
 const getApiBaseUrl = () => {
-  // 1. First priority: explicit env var (set at build time)
+  // A local build can be served through the production tunnel; its baked-in
+  // localhost URL must never become the public site's API destination.
+  if (typeof window !== 'undefined' && isProductionHost(window.location.hostname)) {
+    return PRODUCTION_API_URL;
+  }
+
   const envUrl = (import.meta.env.VITE_API_URL || '').trim();
   if (envUrl) {
     return normalizeBaseUrl(envUrl);
   }
 
-  // 2. Runtime detection
+  // Runtime detection for local and preview hosts.
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    // Check if we're on a known production domain
-    const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
-    
-    if (isProduction) {
-      return PRODUCTION_API_URL;
-    }
-
     // Local dev: backend runs on 8765 over http.
     if (isLocalhost) {
       return 'http://localhost:8765';

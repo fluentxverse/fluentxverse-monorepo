@@ -58,6 +58,17 @@
   letter-spacing: 0.01em;
 }
 
+/* Authenticated app header: keep the shell and floating panel on one surface. */
+.app-header-shell #sticky-header,
+.app-header-shell #sticky-header.sticky-menu {
+  background: var(--fxv-surface) !important;
+}
+
+.app-header-shell #sticky-header .menu-wrap.main-menu,
+.app-header-shell #sticky-header .menu-nav {
+  background: var(--fxv-surface) !important;
+}
+
 .landing-header-shell {
   position: absolute;
   inset: 0 0 auto;

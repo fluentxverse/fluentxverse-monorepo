@@ -7,8 +7,49 @@ import {
 import { generateLocalTutorCertificationProof } from '../services/proof.services/localGroth16.service';
 import { submitTutorCertificationProofToZkVerify } from '../services/proof.services/zkVerifySubmit.service';
 import { refreshJwtCookie, verifyAuthToken } from '../utils/jwt';
+import { claimStudentLessonProof, getPublicStudentLessonProof, listStudentLessonProofs } from '../services/proof.services/studentLessonProof.service';
 
 const Proof = new Elysia({ prefix: '/proof' })
+  .get('/student-lessons/public/:commitment', async ({ params, set }) => {
+    if (!/^\d{1,78}$/.test(params.commitment)) {
+      set.status = 400;
+      return { success: false, error: 'Invalid commitment' };
+    }
+    const result = await getPublicStudentLessonProof(params.commitment);
+    if (!result) {
+      set.status = 404;
+      return { success: false, error: 'Proof not found' };
+    }
+    return { success: true, data: result };
+  })
+  .get('/student-lessons/me', async ({ cookie, set }) => {
+    const payload = cookie.studentAuth?.value ? await verifyAuthToken(String(cookie.studentAuth.value)) : null;
+    if (!payload) {
+      set.status = 401;
+      return { success: false, error: 'Authentication required' };
+    }
+    await refreshJwtCookie(cookie, payload, 'studentAuth');
+    return { success: true, data: await listStudentLessonProofs(payload.userId) };
+  })
+  .post('/student-lessons/:bookingId/claim', async ({ cookie, params, set }) => {
+    const payload = cookie.studentAuth?.value ? await verifyAuthToken(String(cookie.studentAuth.value)) : null;
+    if (!payload) {
+      set.status = 401;
+      return { success: false, error: 'Authentication required' };
+    }
+    await refreshJwtCookie(cookie, payload, 'studentAuth');
+    if (!params.bookingId || params.bookingId.length > 128) {
+      set.status = 400;
+      return { success: false, error: 'Invalid booking' };
+    }
+    try {
+      return { success: true, data: await claimStudentLessonProof(payload.userId, params.bookingId) };
+    } catch (error) {
+      console.error('Student lesson proof claim failed:', error);
+      set.status = error instanceof Error && /Booking not found|Tutor-confirmed attendance/.test(error.message) ? 400 : 500;
+      return { success: false, error: set.status === 400 ? (error as Error).message : 'Proof generation failed. Please try again later.' };
+    }
+  })
   /**
    * Public credential lookup by commitment.
    * GET /proof/tutor-certification/public/:credentialCommitment

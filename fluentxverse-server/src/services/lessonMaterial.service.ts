@@ -4,6 +4,7 @@
  */
 import { getDriver } from '../db/memgraph';
 import neo4j from 'neo4j-driver';
+import { conversationalLessonErrors } from '../utils/conversationalLessonValidation';
 
 // ============================================================================
 // TYPES
@@ -298,6 +299,7 @@ export interface LessonMaterial {
   storyData?: StoryData;
   missionData?: any;
   missionData2?: any;
+  missionData3?: any;
   feedbackData?: any;
   discussionQuestionsData?: any;
   beData?: any;
@@ -349,6 +351,7 @@ export interface UpdateHeaderInput {
   storyData?: StoryData;
   missionData?: any;
   missionData2?: any;
+  missionData3?: any;
   feedbackData?: any;
   discussionQuestionsData?: any;
   beData?: any;
@@ -508,6 +511,15 @@ function transformLesson(record: any): LessonMaterial {
     }
   }
 
+  let missionData3: any | undefined;
+  if (props.missionData3) {
+    try {
+      missionData3 = typeof props.missionData3 === 'string' ? JSON.parse(props.missionData3) : props.missionData3;
+    } catch (e) {
+      console.error('Failed to parse missionData3:', e);
+    }
+  }
+
   // Parse feedbackData from JSON string if present
   let feedbackData: any | undefined;
   if (props.feedbackData) {
@@ -566,6 +578,7 @@ function transformLesson(record: any): LessonMaterial {
     storyData,
     missionData,
     missionData2,
+    missionData3,
     feedbackData,
     discussionQuestionsData,
     beData,
@@ -883,6 +896,11 @@ export const lessonMaterialService = {
         params.missionData2 = JSON.stringify(input.missionData2);
       }
 
+      if (input.missionData3 !== undefined) {
+        setClauses.push('l.missionData3 = $missionData3');
+        params.missionData3 = JSON.stringify(input.missionData3);
+      }
+
       if (input.feedbackData !== undefined) {
         setClauses.push('l.feedbackData = $feedbackData');
         params.feedbackData = JSON.stringify(input.feedbackData);
@@ -1091,18 +1109,23 @@ export const lessonMaterialService = {
    * Publish a lesson (change status from 'draft' to 'published')
    */
   async publish(id: string): Promise<LessonMaterial | null> {
+    const lesson = await this.getById(id);
+    if (!lesson) return null;
+    const errors = conversationalLessonErrors(lesson);
+    if (errors.length) throw new Error(`Complete the lesson before publishing: ${errors.join(' ')}`);
     const driver = getDriver();
     const session = driver.session();
     
     try {
       const result = await session.run(
         `MATCH (l:LessonMaterial {id: $id})
+        WHERE l.updatedAt = $previousUpdatedAt
         SET l.status = 'published', l.updatedAt = $updatedAt
         RETURN l`,
-        { id, updatedAt: new Date().toISOString() }
+        { id, previousUpdatedAt: lesson.updatedAt, updatedAt: new Date().toISOString() }
       );
       
-      if (result.records.length === 0 || !result.records[0]) return null;
+      if (result.records.length === 0 || !result.records[0]) throw new Error('Lesson changed during validation. Reload and publish again.');
       return transformLesson(result.records[0].get('l'));
     } finally {
       await session.close();

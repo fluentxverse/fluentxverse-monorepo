@@ -138,6 +138,14 @@ export const lessonApi = {
     return response.data;
   },
 
+  async getCheckpointLessonMaterial(lessonId: string, sessionId: string | null): Promise<{ success: boolean; lesson: any | null; error?: string }> {
+    const response = await client.get(`/lesson-materials/checkpoint/${encodeURIComponent(lessonId)}`, {
+      params: sessionId ? { sessionId } : undefined,
+      timeout: 120000,
+    });
+    return response.data;
+  },
+
   // ============================================================================
   // YOUNG LEARNERS API
   // ============================================================================

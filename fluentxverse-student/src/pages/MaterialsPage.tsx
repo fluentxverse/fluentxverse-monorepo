@@ -7,7 +7,8 @@ interface Course {
   id: string;
   title: string;
   description: string;
-  icon: string;
+  image: string;
+  imageAlt: string;
   category: string;
   lessons: number;
 }
@@ -17,7 +18,8 @@ const courses: Course[] = [
     id: 'business-english',
     title: 'Business English',
     description: 'Professional communication, meetings, presentations, and workplace vocabulary.',
-    icon: '💼',
+    image: '/assets/img/materials/business-english.webp',
+    imageAlt: 'Briefcase, presentation chart, and microphone for Business English',
     category: 'Business',
     lessons: 24,
   },
@@ -25,7 +27,8 @@ const courses: Course[] = [
     id: 'conversational-skills',
     title: 'Conversational Skills',
     description: 'Everyday conversations, casual discussions, and natural speaking patterns.',
-    icon: '💬',
+    image: '/assets/img/materials/conversational-skills.webp',
+    imageAlt: 'Microphone and speech bubbles for conversational practice',
     category: 'Conversation',
     lessons: 30,
   },
@@ -33,7 +36,8 @@ const courses: Course[] = [
     id: 'job-interview-prep',
     title: 'Job Interview Preparation',
     description: 'Interview techniques, common questions, and confidence building.',
-    icon: '👔',
+    image: '/assets/img/materials/job-interview-prep.webp',
+    imageAlt: 'Professional suit, resume, and approval mark for interview preparation',
     category: 'Career',
     lessons: 18,
   },
@@ -41,7 +45,8 @@ const courses: Course[] = [
     id: 'travel-english',
     title: 'Travel English',
     description: 'Airport, hotel, restaurant, and tourism-related vocabulary and phrases.',
-    icon: '✈️',
+    image: '/assets/img/materials/travel-english.webp',
+    imageAlt: 'Suitcase, airplane, and location marker for Travel English',
     category: 'Travel',
     lessons: 20,
   },
@@ -49,7 +54,8 @@ const courses: Course[] = [
     id: 'academic-english',
     title: 'Academic English',
     description: 'Essay writing, research presentations, and academic vocabulary.',
-    icon: '🎓',
+    image: '/assets/img/materials/academic-english.webp',
+    imageAlt: 'Graduation cap, books, and globe for Academic English',
     category: 'Academic',
     lessons: 22,
   },
@@ -57,7 +63,8 @@ const courses: Course[] = [
     id: 'pronunciation',
     title: 'Pronunciation',
     description: 'Phonetics, intonation, stress patterns, and accent improvement.',
-    icon: '🎤',
+    image: '/assets/img/materials/pronunciation.webp',
+    imageAlt: 'Studio microphone, headphones, and sound waves for pronunciation',
     category: 'Speaking',
     lessons: 16,
   },
@@ -65,7 +72,8 @@ const courses: Course[] = [
     id: 'grammar-improvement',
     title: 'Grammar Improvement',
     description: 'Tenses, sentence structure, common mistakes, and advanced grammar.',
-    icon: '📝',
+    image: '/assets/img/materials/grammar-improvement.webp',
+    imageAlt: 'Open notebook, correction marks, and sentence blocks for grammar practice',
     category: 'Grammar',
     lessons: 28,
   },
@@ -73,7 +81,8 @@ const courses: Course[] = [
     id: 'vocabulary-building',
     title: 'Vocabulary Building',
     description: 'Word roots, synonyms, idioms, and expanding your word bank.',
-    icon: '📚',
+    image: '/assets/img/materials/vocabulary-building.webp',
+    imageAlt: 'Open book and branching flashcards for vocabulary building',
     category: 'Vocabulary',
     lessons: 25,
   },
@@ -81,28 +90,25 @@ const courses: Course[] = [
     id: 'daily-dispatch',
     title: 'Daily Dispatch',
     description: 'Current news articles with vocabulary, comprehension questions, and discussion topics.',
-    icon: '📰',
+    image: '/assets/img/materials/daily-dispatch.webp',
+    imageAlt: 'Newspaper, globe, and broadcast microphone for Daily Dispatch',
     category: 'News',
     lessons: 0,
   }
 ];
 
-const categories = ['All', 'Business', 'Conversation', 'Career', 'Travel', 'Academic', 'Speaking', 'Grammar', 'Vocabulary', 'News'];
-
 export default function MaterialsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     document.title = 'Materials | FluentXVerse';
   }, []);
 
-  const filteredCourses = courses.filter(course => {
-    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory;
-    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const visibleCourses = courses.filter(course =>
+    course.title.toLowerCase().includes(normalizedSearch) ||
+    course.description.toLowerCase().includes(normalizedSearch)
+  );
 
   const handleCourseClick = (courseId: string) => {
     if (courseId === 'daily-dispatch') {
@@ -143,28 +149,17 @@ export default function MaterialsPage() {
               />
             </div>
 
-            {/* Category Tabs */}
-            <div className="category-tabs">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
             {/* Courses Grid */}
             <div className="courses-grid">
-              {filteredCourses.map(course => (
+              {visibleCourses.map(course => (
                 <div
                   key={course.id}
                   className="course-card"
                   onClick={() => handleCourseClick(course.id)}
                 >
-                  <div className="course-icon">{course.icon}</div>
+                  <div className="course-artwork">
+                    <img src={course.image} alt={course.imageAlt} loading="lazy" />
+                  </div>
                   <div className="course-content">
                     <h3 className="course-title">{course.title}</h3>
                     <p className="course-description">{course.description}</p>

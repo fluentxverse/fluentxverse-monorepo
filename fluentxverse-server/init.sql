@@ -111,6 +111,22 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 
 -- System Messages (Inbox) table - for admin-to-user communications
+CREATE TABLE IF NOT EXISTS admin_tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title VARCHAR(200) NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  kind VARCHAR(20) NOT NULL CHECK (kind IN ('task', 'suggestion')),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'rejected')),
+  created_by VARCHAR(255) NOT NULL,
+  assignee_id VARCHAR(255),
+  updated_by VARCHAR(255),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE admin_tasks ADD COLUMN IF NOT EXISTS assignee_id VARCHAR(255);
+UPDATE admin_tasks SET assignee_id = created_by WHERE assignee_id IS NULL;
+CREATE INDEX IF NOT EXISTS admin_tasks_status_created_idx ON admin_tasks (status, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS system_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title VARCHAR(255) NOT NULL,

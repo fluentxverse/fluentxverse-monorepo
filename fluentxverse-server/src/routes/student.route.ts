@@ -7,6 +7,47 @@ import { ticketService } from "../services/ticket.services/ticket.service";
 import { favoritesService } from "../services/favorites.services/favorites.service";
 import { rateLimitMiddleware } from "../utils/rateLimiter";
 import type { StudentUserData, NormalizedStudentUser } from "../services/auth.services/auth.interface";
+import { verifyPrivySession } from "../services/auth.services/privy.service";
+import { getDriver } from "../db/memgraph";
+
+function normalizeStudentUser(userData: StudentUserData | any): NormalizedStudentUser {
+  return {
+    id: userData.id,
+    userId: userData.id,
+    email: userData.email,
+    givenName: userData.givenName || null,
+    familyName: userData.familyName || null,
+    mobileNumber: userData.mobileNumber || null,
+    tier: userData.tier ?? 0,
+    role: userData.role || 'student',
+    walletAddress: userData.externalWalletAddress || (typeof userData.smartWalletAddress === 'string'
+      ? userData.smartWalletAddress
+      : userData.smartWalletAddress?.address || null),
+  };
+}
+
+async function setStudentSession(cookie: any, user: NormalizedStudentUser) {
+  const token = await signAuthToken({
+    userId: user.userId,
+    email: user.email || '',
+    familyName: user.familyName || undefined,
+    givenName: user.givenName || undefined,
+    mobileNumber: user.mobileNumber || undefined,
+    tier: user.tier,
+    role: user.role,
+    walletAddress: user.walletAddress || undefined,
+  });
+  cookie.studentAuth?.set({
+    value: token,
+    ...getCookieConfig(process.env.NODE_ENV === 'production'),
+  });
+}
+
+function getBearerToken(request: Request): string | null {
+  const authorization = request.headers.get('authorization');
+  if (!authorization?.startsWith('Bearer ')) return null;
+  return authorization.slice(7).trim() || null;
+}
 
 // In-memory nonce store (use Redis in production for multi-instance deployments)
 const nonceStore = new Map<string, { nonce: string; expires: number }>();
@@ -169,6 +210,86 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
+  .post('/student/auth/privy', async ({ body, cookie, request, set }) => {
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || 'unknown';
+    const rateLimitResult = await rateLimitMiddleware(clientIp, 'privyAuth', set as any);
+    if (rateLimitResult) return rateLimitResult;
+
+    const accessToken = getBearerToken(request);
+    if (!accessToken) {
+      set.status = 401;
+      return { success: false, error: 'Missing Privy access token' };
+    }
+
+    try {
+      const identity = await verifyPrivySession(accessToken);
+      const userData = await new StudentService().loginByPrivy(identity);
+      if (!userData) {
+        return {
+          success: true,
+          status: 'registration_required',
+          profile: {
+            provider: identity.provider,
+            email: identity.email,
+            givenName: identity.givenName,
+            familyName: identity.familyName,
+          },
+        };
+      }
+
+      const user = normalizeStudentUser(userData);
+      await setStudentSession(cookie, user);
+      return { success: true, status: 'authenticated', user };
+    } catch (error: any) {
+      console.error('Privy student authentication failed:', error);
+      set.status = 401;
+      return { success: false, error: 'Invalid Privy session' };
+    }
+  }, {
+    body: t.Object({}),
+  })
+
+  .post('/student/register/privy', async ({ body, cookie, request, set }) => {
+    const accessToken = getBearerToken(request);
+    if (!accessToken) {
+      set.status = 401;
+      return { success: false, error: 'Missing Privy access token' };
+    }
+
+    try {
+      const identity = await verifyPrivySession(accessToken);
+      const userData = await new StudentService().registerByPrivy({
+        identity,
+        email: body.email,
+        givenName: body.givenName,
+        familyName: body.familyName,
+        birthDate: body.birthDate,
+        mobileNumber: body.mobileNumber,
+      });
+      const user = normalizeStudentUser(userData);
+      await setStudentSession(cookie, user);
+      return { success: true, user };
+    } catch (error: any) {
+      if (error?.code === 'EMAIL_EXISTS' || error?.message === 'EMAIL_EXISTS') {
+        set.status = 409;
+        return { success: false, error: 'Email is already registered' };
+      }
+      console.error('Privy student registration failed:', error);
+      set.status = 401;
+      return { success: false, error: 'Invalid Privy session' };
+    }
+  }, {
+    body: t.Object({
+      email: t.String({ minLength: 3 }),
+      familyName: t.String({ minLength: 1 }),
+      givenName: t.String({ minLength: 1 }),
+      birthDate: t.String({ minLength: 1 }),
+      mobileNumber: t.String({ minLength: 1 }),
+    }),
+  })
+
   .post('/student/logout', async ({ cookie, set }) => {
     // Aggressively clear the student cookie with all possible methods
     const isProduction = process.env.NODE_ENV === 'production';
@@ -275,15 +396,47 @@ const Student = new Elysia({ name: "student" })
   .get('/student/me', async ({ cookie, set }) => {
     try {
       const raw = cookie.studentAuth?.value;
-      if (!raw) throw new Error('Not authenticated');
+      if (!raw) {
+        set.status = 401;
+        return { user: null, error: 'Not authenticated' };
+      }
       const payload = await verifyAuthToken(raw as string);
       if (!payload) {
         set.status = 401;
         return { user: null, error: 'Invalid or expired token' };
       }
 
-      // Refresh cookie on every /me call
-      await refreshJwtCookie(cookie, payload, 'studentAuth');
+      const session = getDriver().session();
+      let storedUser: Record<string, any> | null = null;
+      try {
+        const result = await session.run(
+          `MATCH (student:Student {id: $userId}) RETURN student`,
+          { userId: payload.userId }
+        );
+        storedUser = result.records[0]?.get('student')?.properties || null;
+      } finally {
+        await session.close();
+      }
+
+      const walletAddress = storedUser?.externalWalletAddress
+        || (typeof storedUser?.smartWalletAddress === 'string'
+          ? storedUser.smartWalletAddress
+          : storedUser?.smartWalletAddress?.address)
+        || payload.walletAddress
+        || undefined;
+
+      // Refresh the session with current database-backed profile fields.
+      await setStudentSession(cookie, {
+        id: payload.userId,
+        userId: payload.userId,
+        email: storedUser?.email || payload.email,
+        givenName: storedUser?.givenName || payload.givenName || payload.firstName || null,
+        familyName: storedUser?.familyName || payload.familyName || payload.lastName || null,
+        mobileNumber: storedUser?.mobileNumber || payload.mobileNumber || null,
+        tier: storedUser?.tier ?? payload.tier ?? 0,
+        role: storedUser?.role || payload.role || 'student',
+        walletAddress: walletAddress || null,
+      });
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -292,25 +445,27 @@ const Student = new Elysia({ name: "student" })
       const normalized = {
         userId: payload.userId || null,
         id: payload.userId || null,
-        email: payload.email,
-        givenName: payload.givenName ?? payload.firstName ?? undefined,
-        familyName: payload.familyName ?? payload.lastName ?? undefined,
-        firstName: payload.firstName ?? payload.givenName ?? undefined,
-        lastName: payload.lastName ?? payload.familyName ?? undefined,
-        walletAddress: payload.walletAddress ?? undefined,
-        mobileNumber: payload.mobileNumber ?? undefined,
-        tier: payload.tier ?? 0,
-        role: payload.role ?? 'student'
+        email: storedUser?.email || payload.email,
+        givenName: storedUser?.givenName || payload.givenName || payload.firstName || undefined,
+        familyName: storedUser?.familyName || payload.familyName || payload.lastName || undefined,
+        firstName: storedUser?.givenName || payload.firstName || payload.givenName || undefined,
+        lastName: storedUser?.familyName || payload.lastName || payload.familyName || undefined,
+        walletAddress,
+        mobileNumber: storedUser?.mobileNumber || payload.mobileNumber || undefined,
+        tier: storedUser?.tier ?? payload.tier ?? 0,
+        role: storedUser?.role || payload.role || 'student'
       };
 
       return { user: normalized };
     } catch (error: any) {
       console.error('Error parsing student auth cookie:', error);
-      throw new Error('Invalid session');
+      set.status = 401;
+      return { user: null, error: 'Invalid session' };
     }
   }, {
     response: {
-      200: t.Object({ user: t.Any() })
+      200: t.Object({ user: t.Any() }),
+      401: t.Object({ user: t.Null(), error: t.String() })
     }
   })
 
@@ -908,6 +1063,7 @@ const Student = new Elysia({ name: "student" })
       const studentId = payload.userId;
 
       const lesson = body as {
+        sessionId?: string;
         courseId: string;
         lessonId: string;
         lessonNumber: number;
@@ -931,7 +1087,7 @@ const Student = new Elysia({ name: "student" })
    * Get last viewed lesson for student
    * GET /student/last-viewed-lesson
    */
-  .get('/student/last-viewed-lesson', async ({ cookie, set }) => {
+  .get('/student/last-viewed-lesson', async ({ cookie, set, query }) => {
     try {
       const authCookie = cookie.studentAuth?.value;
       if (!authCookie) {
@@ -947,7 +1103,8 @@ const Student = new Elysia({ name: "student" })
       const studentId = payload.userId;
 
       const studentService = new StudentService();
-      const result = await studentService.getLastViewedLesson(studentId);
+      const sessionId = typeof query.sessionId === 'string' ? query.sessionId : undefined;
+      const result = await studentService.getLastViewedLesson(studentId, sessionId);
 
       return result;
     } catch (error: any) {

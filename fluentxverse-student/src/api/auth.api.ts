@@ -88,6 +88,42 @@ export const loginUser = async (email: string, password: string) => {
   return data;
 };
 
+export interface PrivyProfile {
+  provider: 'google' | 'twitter' | 'apple';
+  email?: string;
+  givenName?: string;
+  familyName?: string;
+}
+
+export interface PrivyRegisterParams {
+  email: string;
+  familyName: string;
+  givenName: string;
+  birthDate: string;
+  mobileNumber: string;
+}
+
+export const loginWithPrivy = async (accessToken: string) => {
+  const { data } = await client.post(
+    '/student/auth/privy',
+    {},
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  return data;
+};
+
+export const registerWithPrivy = async (
+  accessToken: string,
+  params: PrivyRegisterParams,
+) => {
+  const { data } = await client.post(
+    '/student/register/privy',
+    params,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  return data;
+};
+
 // Wallet-based authentication types and methods
 export interface WalletAuthResponse {
   success: boolean;

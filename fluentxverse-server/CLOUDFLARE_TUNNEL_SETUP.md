@@ -56,11 +56,11 @@ ingress:
   
   # Student Frontend (if hosting yourself)
   - hostname: student.yourdomain.com
-    service: http://localhost:5173
+    service: http://localhost:5174
   
   # Tutor Frontend (if hosting yourself)
   - hostname: tutor.yourdomain.com
-    service: http://localhost:5174
+    service: http://localhost:5173
   
   # Dashboard Frontend (if hosting yourself)
   - hostname: dashboard.yourdomain.com

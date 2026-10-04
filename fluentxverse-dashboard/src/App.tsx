@@ -38,6 +38,7 @@ import DiscussionQuestionsVisualEditor from './pages/DiscussionQuestionsVisualEd
 import BusinessEnglishEditorPage from './pages/BusinessEnglishEditorPage';
 import BusinessEnglishPreview from './pages/BusinessEnglishPreview';
 import BusinessEnglishVisualEditor from './pages/BusinessEnglishVisualEditor';
+import AdminTasksPage from './pages/AdminTasksPage';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -232,6 +233,7 @@ const AppContent = () => {
         <Route path="/sessions" component={SessionsPage} />
         <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/inbox" component={InboxPage} />
+        <Route path="/tasks" component={AdminTasksPage} />
         <Route path="/tickets" component={TicketsPage} />
         <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
         <Route path="/conversational-skills-editor" component={ConversationalSkillsEditorPage} />

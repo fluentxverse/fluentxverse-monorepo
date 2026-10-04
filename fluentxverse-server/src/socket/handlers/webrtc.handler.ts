@@ -1,18 +1,32 @@
 import type { Server, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/socket.types';
+import { getIceConfiguration } from '../iceConfiguration';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
+  socket.on('webrtc:ice-config', callback => {
+    if (typeof callback === 'function' && (socket.data.sessionId || socket.data.interviewRoomId)) {
+      callback(getIceConfiguration(socket.data.userId));
+    }
+  });
+
+  socket.on('webrtc:ready', () => {
+    const sessionId = socket.data.sessionId;
+    if (sessionId && socket.rooms.has(sessionId) && socket.data.userType === 'student') {
+      socket.to(sessionId).emit('webrtc:ready', { from: socket.data.userId });
+    }
+  });
+
   // Handle WebRTC offer
-  socket.on('webrtc:offer', async (data) => {
+  socket.on('webrtc:offer', async (data, callback) => {
     try {
       const { offer, to } = data;
       const from = socket.data.userId;
       const sessionId = socket.data.sessionId;
 
-      if (!sessionId) {
+      if (!sessionId || !socket.rooms.has(sessionId) || !offer || typeof to !== 'string') {
         console.error('No session ID found for WebRTC offer');
         return;
       }
@@ -23,11 +37,14 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
 
       if (targetSocket) {
         targetSocket.emit('webrtc:offer', { offer, from });
+        callback?.({ delivered: true });
       } else {
         console.error(`Target socket not found for user ${to}`);
+        callback?.({ delivered: false });
       }
     } catch (error) {
       console.error('Error handling webrtc:offer:', error);
+      callback?.({ delivered: false });
     }
   });
 
@@ -38,7 +55,7 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
       const from = socket.data.userId;
       const sessionId = socket.data.sessionId;
 
-      if (!sessionId) {
+      if (!sessionId || !socket.rooms.has(sessionId) || !answer || typeof to !== 'string') {
         console.error('No session ID found for WebRTC answer');
         return;
       }
@@ -64,7 +81,7 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
       const from = socket.data.userId;
       const sessionId = socket.data.sessionId;
 
-      if (!sessionId) {
+      if (!sessionId || !socket.rooms.has(sessionId) || !candidate || typeof to !== 'string') {
         console.error('No session ID found for ICE candidate');
         return;
       }
@@ -83,16 +100,4 @@ export const webrtcHandler = (io: TypedServer, socket: TypedSocket) => {
     }
   });
 
-  // Handle peer leaving
-  socket.on('disconnect', async () => {
-    try {
-      const sessionId = socket.data.sessionId;
-      if (sessionId) {
-        // Notify other peers that this user left
-        socket.to(sessionId).emit('webrtc:peer-left');
-      }
-    } catch (error) {
-      console.error('Error handling peer disconnect:', error);
-    }
-  });
 };

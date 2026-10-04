@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
 import { refreshSession } from '../api/auth.api';
+import { useToastContext } from '../context/ToastContext';
 import './SessionExpiryModal.css';
 
 interface Props {
@@ -18,8 +19,10 @@ export default function SessionExpiryModal({
   warnMinutes = 3
 }: Props) {
   const [show, setShow] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [remaining, setRemaining] = useState(sessionMinutes * 60); // seconds
   const startTimeRef = useRef<number>(Date.now());
+  const { showSuccess, showError } = useToastContext();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,6 +51,8 @@ export default function SessionExpiryModal({
   }, [isAuthenticated, sessionMinutes, warnMinutes]);
 
   const onRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
     try {
       const res = await refreshSession();
       if (res?.success) {
@@ -56,9 +61,14 @@ export default function SessionExpiryModal({
         setShow(false);
         setRemaining(sessionMinutes * 60);
         if (onRefreshed) onRefreshed();
+        showSuccess('Session refreshed. You can continue where you left off.');
+      } else {
+        showError('Could not refresh your session. Please try again.');
       }
     } catch (e) {
-      // keep modal open to let user retry
+      showError('Could not refresh your session. Please try again.');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -74,8 +84,8 @@ export default function SessionExpiryModal({
           Your session will expire in <strong>{minutes}:{seconds.toString().padStart(2,'0')}</strong>.
         </div>
         <div className="session-actions">
-          <button className="session-refresh" onClick={onRefresh}>
-            Refresh Session
+          <button className="session-refresh" onClick={onRefresh} disabled={refreshing}>
+            {refreshing ? 'Refreshing...' : 'Refresh Session'}
           </button>
           <button className="session-dismiss" onClick={() => setShow(false)}>
             Dismiss

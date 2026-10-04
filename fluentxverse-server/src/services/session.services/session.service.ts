@@ -115,26 +115,14 @@ export class SessionService {
     return result.rows[0];
   }
 
-  async removeParticipant(sessionId: string, userId: string, userType?: string): Promise<boolean> {
-    // If userType is provided, use it for more reliable removal
-    if (userType) {
-      const result = await query(
-        `UPDATE session_participants
-         SET is_active = false, left_at = NOW()
-         WHERE session_id = $1 AND user_type = $2 AND is_active = true
-         RETURNING id`,
-        [sessionId, userType]
-      );
-      return (result.rowCount || 0) > 0;
-    }
-    
-    // Fallback to user_id based removal
+  async removeParticipant(sessionId: string, userId: string, userType: 'tutor' | 'student', socketId: string): Promise<boolean> {
     const result = await query(
       `UPDATE session_participants
        SET is_active = false, left_at = NOW()
-       WHERE session_id = $1 AND user_id = $2 AND is_active = true
+       WHERE session_id = $1 AND user_id = $2 AND user_type = $3
+         AND socket_id = $4 AND is_active = true
        RETURNING id`,
-      [sessionId, userId]
+      [sessionId, userId, userType, socketId]
     );
 
     return (result.rowCount || 0) > 0;

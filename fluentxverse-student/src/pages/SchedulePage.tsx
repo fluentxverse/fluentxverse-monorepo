@@ -3,6 +3,8 @@ import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi, type StudentBooking } from '../api/schedule.api';
+import { lessonProofApi, type LessonProof } from '../api/lessonProof.api';
+import { API_BASE_URL } from '../config/api';
 import './SchedulePage.css';
 
 interface Booking {
@@ -93,6 +95,9 @@ const SchedulePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [lessonProofs, setLessonProofs] = useState<Record<string, LessonProof>>({});
+  const [proofLoading, setProofLoading] = useState<string | null>(null);
+  const [proofError, setProofError] = useState<Record<string, string>>({});
   
   // Cancel modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -208,7 +213,11 @@ const SchedulePage = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await scheduleApi.getStudentBookings();
+        const [data, proofResult] = await Promise.all([
+          scheduleApi.getStudentBookings(),
+          lessonProofApi.list().catch(() => null),
+        ]);
+        if (proofResult) setLessonProofs(Object.fromEntries(proofResult.map(proof => [proof.bookingId, proof])));
 
         const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes
         
@@ -254,6 +263,19 @@ const SchedulePage = () => {
 
     fetchBookings();
   }, [user]);
+
+  const claimLessonProof = async (bookingId: string) => {
+    setProofLoading(bookingId);
+    setProofError(previous => ({ ...previous, [bookingId]: '' }));
+    try {
+      const proof = await lessonProofApi.claim(bookingId);
+      setLessonProofs(previous => ({ ...previous, [bookingId]: { ...proof, eligible: true } }));
+    } catch (err) {
+      setProofError(previous => ({ ...previous, [bookingId]: err instanceof Error ? err.message : 'Could not generate proof' }));
+    } finally {
+      setProofLoading(null);
+    }
+  };
 
   const now = new Date();
   const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes in milliseconds
@@ -555,6 +577,30 @@ const SchedulePage = () => {
                         </>
                       ) : (
                         <>
+                          {lessonProofs[lesson.id]?.eligible && ['ready', 'failed'].includes(lessonProofs[lesson.id].status) && (
+                            <button className="action-btn primary" disabled={proofLoading === lesson.id}
+                              onClick={() => claimLessonProof(lesson.id)}>
+                              <i className={`fas ${proofLoading === lesson.id ? 'fa-spinner fa-spin' : 'fa-shield-alt'}`}></i>
+                              {proofLoading === lesson.id ? 'Generating...' : lessonProofs[lesson.id].status === 'failed' ? 'Retry proof' : 'Claim proof'}
+                            </button>
+                          )}
+                          {lessonProofs[lesson.id]?.eligible && lessonProofs[lesson.id].status === 'local_proof_generated' && (lessonProofs[lesson.id].submissionAvailable ? (
+                            <button className="action-btn primary" disabled={proofLoading === lesson.id} onClick={() => claimLessonProof(lesson.id)}>
+                              <i className={`fas ${proofLoading === lesson.id ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>
+                              {proofLoading === lesson.id ? 'Submitting...' : 'Submit proof'}
+                            </button>
+                          ) : <span className="lesson-proof-pending">Local proof ready</span>)}
+                          {lessonProofs[lesson.id]?.commitment && (
+                            <a className="action-btn secondary" target="_blank" rel="noopener noreferrer"
+                              href={`${API_BASE_URL}/proof/student-lessons/public/${lessonProofs[lesson.id].commitment}`}>
+                              <i className="fas fa-external-link-alt"></i>
+                              {lessonProofs[lesson.id].status === 'verified' ? 'Verified proof' : 'View proof status'}
+                            </a>
+                          )}
+                          {lessonProofs[lesson.id] && !lessonProofs[lesson.id].eligible && lessonProofs[lesson.id].status === 'ready' && (
+                            <span className="lesson-proof-pending">Attendance not confirmed</span>
+                          )}
+                          {proofError[lesson.id] && <span role="alert" className="lesson-proof-error">{proofError[lesson.id]}</span>}
                           <a href={`/tutor/${lesson.tutorId}`} className="action-btn secondary">
                             <i className="fas fa-redo"></i>
                             Book Again

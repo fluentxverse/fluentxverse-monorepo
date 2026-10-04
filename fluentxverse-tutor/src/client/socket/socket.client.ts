@@ -82,7 +82,7 @@ export const initSocket = (token?: string): Socket => {
     withCredentials: true,
     autoConnect: false,
     auth: async callback => {
-      const socketToken = immediateToken || await fetchTutorSocketToken();
+      const socketToken = await fetchTutorSocketToken() || immediateToken;
       callback(socketToken ? { token: socketToken } : {});
     },
     reconnection: true,

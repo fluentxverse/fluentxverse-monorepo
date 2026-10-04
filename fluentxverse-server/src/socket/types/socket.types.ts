@@ -14,6 +14,7 @@ export interface ServerToClientEvents {
   'session:user-left': (data: { userId: string; userType: string }) => void;
   'session:state': (data: SessionState) => void;
   'session:lesson-ended': (data: { tutorId: string; message?: string }) => void;
+  'session:error': (data: { message: string }) => void;
   'classroom:video-state': (data: { sessionId: string; userId: string; userType: 'tutor' | 'student'; enabled: boolean }) => void;
   'classroom:activity-history': (data: ClassroomActivityLogData[]) => void;
   'classroom:activity-log': (data: ClassroomActivityLogData) => void;
@@ -23,6 +24,7 @@ export interface ServerToClientEvents {
   'webrtc:answer': (data: { answer: any; from: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: any; from: string }) => void;
   'webrtc:peer-left': () => void;
+  'webrtc:ready': (data: { from: string }) => void;
   
   // Interview events
   'interview:admin-joined': () => void;
@@ -33,6 +35,8 @@ export interface ServerToClientEvents {
   'interview:ended': () => void;
   'interview:tutor-left': () => void;
   'interview:admin-left': () => void;
+  'interview:error': (data: { message: string }) => void;
+  'webrtc:ice-configuration': (configuration: { iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }> }) => void;
   
   // Schedule events
   'schedule:slot-booked': (data: { tutorId: string; slotKey: string; bookingId?: string; studentId: string; studentName?: string; date: string; time: string }) => void;
@@ -65,9 +69,11 @@ export interface ClientToServerEvents {
   'classroom:request-activity-history': (data: { sessionId: string }) => void;
   
   // WebRTC signaling events
-  'webrtc:offer': (data: { offer: any; to: string }) => void;
+  'webrtc:offer': (data: { offer: any; to: string }, callback?: (result: { delivered: boolean }) => void) => void;
   'webrtc:answer': (data: { answer: any; to: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: any; to: string }) => void;
+  'webrtc:ready': () => void;
+  'webrtc:ice-config': (callback: (config: { iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }> }) => void) => void;
   
   // Interview events
   'interview:join': (data: { roomId: string; odIuser?: string; role: 'tutor' | 'admin' }) => void;
@@ -97,7 +103,7 @@ export interface InterServerEvents {
 
 export interface SocketData {
   userId: string;
-  userType: 'tutor' | 'student';
+  userType: 'tutor' | 'student' | 'admin';
   sessionId?: string;
   interviewRoomId?: string;
   interviewRole?: 'tutor' | 'admin';

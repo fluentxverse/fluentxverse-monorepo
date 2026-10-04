@@ -505,7 +505,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     // Wait for connection before joining
     const onConnect = () => {
       socket.emit('session:join', { sessionId: currentSessionId });
-      socket.emit('chat:request-history', { sessionId: currentSessionId });
     };
     
     // Handle incoming chat messages
@@ -599,7 +598,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     // Fetch student's lesson request - declared early so it can be used in multiple handlers
     const fetchStudentLessonRequest = async (studentId: string) => {
       try {
-        const lessonRequest = await tutorApi.getStudentLessonRequest(studentId);
+        const lessonRequest = await tutorApi.getStudentLessonRequest(studentId, currentSessionId);
         if (lessonRequest) {
           const restoredOpenMaterial = restoredClassroomStateRef.current?.openMaterial;
 
@@ -644,6 +643,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle session state
     const onSessionState = (data: any) => {
+      if (data.sessionId !== currentSessionId) return;
+      socket.emit('chat:request-history', { sessionId: currentSessionId });
       if (data.status === 'active') {
         setIsConnecting(false);
       }
@@ -663,9 +664,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         setStudentInfo(null);
       }
     };
+
+    const onSessionError = (data: { message: string }) => toast.error(data.message);
     
     // Handle user joined
     const onUserJoined = (data: { userId: string; userType: string }) => {
+      if (data.userType === 'tutor') window.dispatchEvent(new Event('fxv:tutor-schedule-updated'));
       if (data.userType === 'student') {
         setIsConnecting(false);
         // Always update with the latest student ID
@@ -711,6 +715,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     socket.on('chat:typing', onTyping);
     socket.on('chat:error', onChatError);
     socket.on('session:state', onSessionState);
+    socket.on('session:error', onSessionError);
     socket.on('session:user-joined', onUserJoined);
     socket.on('session:user-left', onUserLeft);
     socket.on('classroom:video-state', onVideoState);
@@ -731,6 +736,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       socket.off('chat:typing', onTyping);
       socket.off('chat:error', onChatError);
       socket.off('session:state', onSessionState);
+      socket.off('session:error', onSessionError);
       socket.off('session:user-joined', onUserJoined);
       socket.off('session:user-left', onUserLeft);
       socket.off('classroom:video-state', onVideoState);
@@ -2316,7 +2322,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     toggleVideo,
     switchMediaDevices,
     cleanup
-  } = useWebRTC({ remoteUserId: studentInfo?.id, socket: socketInstance });
+  } = useWebRTC({ remoteUserId: studentInfo?.id, socket: socketInstance, initiator: true });
   const localHasVideo = Boolean(localStream?.getVideoTracks().some(track => track.readyState === 'live'));
   const remoteHasVideo = remoteVideoEnabled && Boolean(remoteStream?.getVideoTracks().some(track => track.readyState === 'live'));
 
@@ -2422,13 +2428,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
     initWebRTC();
   }, []); // Empty deps - only run once on mount
-
-  // When student info is known and local stream is ready, tutor initiates offer
-  useEffect(() => {
-    if (studentInfo?.id && localStream) {
-      createOffer();
-    }
-  }, [studentInfo?.id, localStream, createOffer]);
 
   // Attach all streams to all video refs - robust effect with interval checking
   useEffect(() => {

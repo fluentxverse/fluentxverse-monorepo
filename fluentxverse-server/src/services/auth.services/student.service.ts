@@ -4,6 +4,7 @@ import { getDriver } from "../../db/memgraph";
 import type { RegisterParams, LoginParams, RegisteredParams, Suspended, RegisterStudentParams, UpdatePersonalInfoParams, UpdateEmailParams, UpdatePasswordParams } from "./auth.interface";
 import { invalidateUserTokens } from '../../db/redis';
 import WalletService from "../wallet.services/wallet.service";
+import type { VerifiedPrivyIdentity } from "./privy.service";
 
 function parseJsonValue(value: any) {
   if (!value || typeof value !== 'string') return value;
@@ -81,6 +82,122 @@ function buildLevelAssessment(rawAssessment: any, studentData: any) {
 }
 
 class StudentService {
+  public async loginByPrivy(identity: VerifiedPrivyIdentity): Promise<any | null> {
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const result = await session.run(
+        `MATCH (s:Student)
+         WHERE s.privyUserId = $privyUserId
+            OR ($canMatchEmail = true AND toLower(s.email) = $email)
+         SET s.privyUserId = $privyUserId,
+             s.authProvider = $provider,
+             s.verifiedEmail = CASE WHEN $emailVerified THEN true ELSE s.verifiedEmail END
+         RETURN s
+         LIMIT 1`,
+        {
+          privyUserId: identity.privyUserId,
+          provider: identity.provider,
+          email: identity.email || '',
+          emailVerified: identity.emailVerified,
+          canMatchEmail: Boolean(identity.email && identity.emailVerified),
+        },
+      );
+
+      if (result.records.length === 0) return null;
+
+      const user = result.records[0]?.get('s').properties;
+      if (user.suspendedUntil && new Date(user.suspendedUntil) > new Date()) {
+        throw new Error(`Your account is suspended until ${new Date(user.suspendedUntil).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. Reason: ${user.suspendedReason || 'Not specified'}`);
+      }
+
+      const { password, tier, ...safeProperties } = user;
+      return { ...safeProperties, tier: Number(tier) || 0 };
+    } finally {
+      await session.close();
+    }
+  }
+
+  public async registerByPrivy(params: {
+    identity: VerifiedPrivyIdentity;
+    email: string;
+    familyName: string;
+    givenName: string;
+    birthDate: string;
+    mobileNumber: string;
+  }): Promise<any> {
+    const { identity } = params;
+    const email = (identity.emailVerified && identity.email ? identity.email : params.email).trim().toLowerCase();
+    const id = nanoid(12);
+    const signUpdate = Date.now();
+    const driver = getDriver();
+    const session = driver.session();
+
+    try {
+      const existing = await session.run(
+        `MATCH (account)
+         WHERE (account:Student OR account:User)
+           AND (account.privyUserId = $privyUserId OR toLower(account.email) = $email)
+         RETURN account LIMIT 1`,
+        { privyUserId: identity.privyUserId, email },
+      );
+      if (existing.records.length > 0) {
+        const error: any = new Error('EMAIL_EXISTS');
+        error.code = 'EMAIL_EXISTS';
+        throw error;
+      }
+
+      const walletService = new WalletService();
+      const [encrypted, smartWalletAddress] = await Promise.all([
+        hash(nanoid(48), 10),
+        walletService.createServerWallet(id),
+      ]);
+
+      const result = await session.run(
+        `CREATE (s:Student {
+          id: $id,
+          email: $email,
+          password: $encrypted,
+          role: 'student',
+          familyName: $familyName,
+          givenName: $givenName,
+          birthDate: $birthDate,
+          mobileNumber: $mobileNumber,
+          signUpdate: $signUpdate,
+          suspendedUntil: null,
+          suspendedReason: '',
+          smartWalletAddress: $smartWalletAddress,
+          privyUserId: $privyUserId,
+          authProvider: $provider,
+          verifiedEmail: $verifiedEmail,
+          verifiedMobile: false
+        })
+        RETURN s`,
+        {
+          id,
+          email,
+          encrypted,
+          familyName: params.familyName,
+          givenName: params.givenName,
+          birthDate: params.birthDate,
+          mobileNumber: params.mobileNumber,
+          signUpdate,
+          smartWalletAddress,
+          privyUserId: identity.privyUserId,
+          provider: identity.provider,
+          verifiedEmail: identity.emailVerified,
+        },
+      );
+
+      const user = result.records[0]?.get('s').properties;
+      const { password, tier, ...safeProperties } = user;
+      return { ...safeProperties, tier: Number(tier) || 0 };
+    } finally {
+      await session.close();
+    }
+  }
+
   public async register(params: RegisterStudentParams & { familyName: string; givenName: string }): Promise<{ message: string }> {
     try {
       const id = nanoid(12);
@@ -844,6 +961,7 @@ class StudentService {
    * Save last viewed lesson for student
    */
   public async saveLastViewedLesson(studentId: string, lesson: {
+    sessionId?: string;
     courseId: string;
     lessonId: string;
     lessonNumber: number;
@@ -856,6 +974,43 @@ class StudentService {
     const session = driver.session();
 
     try {
+      if (lesson.sessionId) {
+        const result = await session.run(
+          `
+          MATCH (s:Student {id: $studentId})
+          MERGE (selection:ClassroomLessonSelection {
+            studentId: $studentId,
+            sessionId: $sessionId
+          })
+          SET selection.courseId = $courseId,
+              selection.lessonId = $lessonId,
+              selection.lessonNumber = $lessonNumber,
+              selection.title = $title,
+              selection.goal = $goal,
+              selection.viewedAt = $viewedAt,
+              selection.updatedAt = datetime()
+          MERGE (s)-[:SELECTED_MATERIAL_FOR]->(selection)
+          RETURN selection.sessionId AS sessionId
+          `,
+          {
+            studentId,
+            sessionId: lesson.sessionId,
+            courseId: lesson.courseId,
+            lessonId: lesson.lessonId,
+            lessonNumber: lesson.lessonNumber,
+            title: lesson.title,
+            goal: lesson.goal,
+            viewedAt: lesson.viewedAt,
+          }
+        );
+
+        if (result.records.length === 0) {
+          throw new Error('Student not found');
+        }
+
+        return { success: true, message: 'Classroom lesson selection saved' };
+      }
+
       const result = await session.run(
         `
         MATCH (s:Student {id: $studentId})
@@ -894,12 +1049,89 @@ class StudentService {
   /**
    * Get last viewed lesson for student
    */
-  public async getLastViewedLesson(studentId: string) {
+  public async getLastViewedLesson(studentId: string, sessionId?: string) {
     
     const driver = getDriver();
     const session = driver.session();
 
     try {
+      if (sessionId) {
+        const scopedResult = await session.run(
+          `
+          MATCH (:Student {id: $studentId})-[:SELECTED_MATERIAL_FOR]->
+                (selection:ClassroomLessonSelection {studentId: $studentId, sessionId: $sessionId})
+          RETURN selection.courseId AS courseId,
+                 selection.lessonId AS lessonId,
+                 selection.lessonNumber AS lessonNumber,
+                 selection.title AS title,
+                 selection.goal AS goal,
+                 selection.viewedAt AS viewedAt
+          `,
+          { studentId, sessionId }
+        );
+
+        if (scopedResult.records.length > 0) {
+          const record = scopedResult.records[0]!;
+          return {
+            success: true,
+            data: {
+              courseId: record.get('courseId'),
+              lessonId: record.get('lessonId'),
+              lessonNumber: record.get('lessonNumber'),
+              title: record.get('title'),
+              goal: record.get('goal'),
+              viewedAt: record.get('viewedAt'),
+            }
+          };
+        }
+
+        // Preserve one legacy selection by assigning it to the first classroom
+        // session that requests it. Subsequent sessions remain independent.
+        const migrationResult = await session.run(
+          `
+          MATCH (s:Student {id: $studentId})
+          WHERE s.lastViewedCourseId IS NOT NULL
+            AND NOT (s)-[:SELECTED_MATERIAL_FOR]->(:ClassroomLessonSelection)
+          CREATE (selection:ClassroomLessonSelection {
+            studentId: $studentId,
+            sessionId: $sessionId,
+            courseId: s.lastViewedCourseId,
+            lessonId: s.lastViewedLessonId,
+            lessonNumber: s.lastViewedLessonNumber,
+            title: s.lastViewedLessonTitle,
+            goal: s.lastViewedLessonGoal,
+            viewedAt: s.lastViewedAt,
+            updatedAt: datetime()
+          })
+          CREATE (s)-[:SELECTED_MATERIAL_FOR]->(selection)
+          RETURN selection.courseId AS courseId,
+                 selection.lessonId AS lessonId,
+                 selection.lessonNumber AS lessonNumber,
+                 selection.title AS title,
+                 selection.goal AS goal,
+                 selection.viewedAt AS viewedAt
+          `,
+          { studentId, sessionId }
+        );
+
+        if (migrationResult.records.length === 0) {
+          return { success: true, data: null };
+        }
+
+        const migrated = migrationResult.records[0]!;
+        return {
+          success: true,
+          data: {
+            courseId: migrated.get('courseId'),
+            lessonId: migrated.get('lessonId'),
+            lessonNumber: migrated.get('lessonNumber'),
+            title: migrated.get('title'),
+            goal: migrated.get('goal'),
+            viewedAt: migrated.get('viewedAt'),
+          }
+        };
+      }
+
       const result = await session.run(
         `
         MATCH (s:Student {id: $studentId})

@@ -498,7 +498,18 @@
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
+
+.lesson-proof-pending, .lesson-proof-error {
+  font-size: 12px;
+  align-self: center;
+  max-width: 220px;
+  line-height: 1.3;
+}
+.lesson-proof-pending { color: #606772; }
+.lesson-proof-error { color: #b42318; }
+.schedule-card-actions .action-btn:disabled { opacity: .65; cursor: wait; }
 
 .action-btn {
   display: flex;

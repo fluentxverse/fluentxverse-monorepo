@@ -113,11 +113,30 @@ export const scheduleApi = {
    * @param slotId - The ID of the slot to book
    * @param ticketTransferTxHash - Optional transaction hash of the ticket transfer (for on-chain verification)
    */
-  bookSlot: async (slotId: string, ticketTransferTxHash?: string): Promise<any> => {
+  reserveSlot: async (slotId: string): Promise<{ reservationId: string; expiresAt: string; bookBy: string }> => {
+    const response = await api.post('/schedule/reserve', { slotId });
+    if (!response.data.success) throw new Error(response.data.error || 'Could not reserve slot');
+    return response.data.data;
+  },
+
+  releaseReservation: async (slotId: string, reservationId: string): Promise<void> => {
+    await api.post('/schedule/release-reservation', { slotId, reservationId });
+  },
+
+  recoverTransfer: async (ticketTransferTxHash: string, slotId: string, reservationId: string): Promise<{
+    status: 'booked' | 'refunded' | 'processing'; bookingId?: string; refundTxHash?: string;
+  }> => {
+    const response = await api.post('/schedule/recover-transfer', { ticketTransferTxHash, slotId, reservationId });
+    if (!response.data.success) throw new Error(response.data.error || 'Could not recover ticket');
+    return response.data.data;
+  },
+
+  bookSlot: async (slotId: string, ticketTransferTxHash: string, reservationId: string): Promise<any> => {
     try {
       const response = await api.post('/schedule/book', { 
         slotId,
-        ticketTransferTxHash, // Pass the tx hash for backend to verify/record
+        ticketTransferTxHash,
+        reservationId,
       });
       
       if (!response.data.success) {

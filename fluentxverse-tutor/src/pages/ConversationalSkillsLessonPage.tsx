@@ -35,6 +35,7 @@ interface LessonMaterial {
   exerciseData?: ExerciseSectionData;
   missionData?: MissionSectionData;
   missionData2?: MissionSectionData;
+  missionData3?: MissionSectionData;
   feedbackData?: FeedbackSectionData;
   [key: string]: unknown;
 }
@@ -319,6 +320,7 @@ interface ApplySectionData {
   activityTitle: string;
   activityDuration: string;
   situationText: string;
+  situationTranslation?: string;
   situationImage: string;
   dialogueLines: DialogueLine[];
   readingText?: string; // Rich text HTML for reading passage
@@ -612,6 +614,7 @@ export default function ConversationalSkillsPreview() {
     exerciseData?: ExerciseSectionData;
     missionData?: MissionSectionData;
     missionData2?: MissionSectionData;
+    missionData3?: MissionSectionData;
     feedbackData?: FeedbackSectionData;
   } | null>(null);
   const [hasSessionData, setHasSessionData] = useState(false);
@@ -697,7 +700,9 @@ export default function ConversationalSkillsPreview() {
   const loadLesson = async (lessonId: string) => {
     try {
       setLoading(true);
-      const result = await lessonApi.getPublicLessonMaterial(lessonId);
+      const result = /-(?:5|10)-review(?:-\d+)?$/.test(lessonId)
+        ? await lessonApi.getCheckpointLessonMaterial(lessonId, classroomSessionId)
+        : await lessonApi.getPublicLessonMaterial(lessonId);
       if (!result.success || !result.lesson) {
         throw new Error(result.error || 'Failed to load lesson preview');
       }
@@ -791,6 +796,10 @@ export default function ConversationalSkillsPreview() {
     previewOverrides?.missionData2 ??
     (lesson as any)?.missionData2;
 
+  const missionData3: MissionSectionData | undefined =
+    previewOverrides?.missionData3 ??
+    (lesson as any)?.missionData3;
+
   // Feedback data: prioritize sessionStorage > saved lesson
   const feedbackData: FeedbackSectionData | undefined =
     previewOverrides?.feedbackData ??
@@ -810,7 +819,7 @@ export default function ConversationalSkillsPreview() {
   };
 
   return (
-    <div className={`csp-fullpage csp-${theme}`}>
+    <div className={`csp-fullpage csp-${theme}${missionData3 ? ' csp-checkpoint' : ''}`}>
       {/* Top Navigation Bar */}
       <nav className="csp-topbar">
         <div className="csp-topbar-content">
@@ -865,6 +874,8 @@ export default function ConversationalSkillsPreview() {
 
           {/* Mission Section 2 (Challenge 2 / Discussion) */}
           {missionData2 && <MissionSection data={missionData2} hideHeader />}
+
+          {missionData3 && <MissionSection data={missionData3} hideHeader />}
 
           {/* Feedback Section */}
           {feedbackData && <FeedbackSection data={feedbackData} />}

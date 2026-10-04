@@ -81,7 +81,7 @@ export const authMiddleware = async (
 
     // Attach user data to socket
     socket.data.userId = authPayload.userId;
-    socket.data.userType = authPayload.role === 'admin'
+    socket.data.userType = authPayload.role === 'admin' || authPayload.role === 'superadmin'
       ? 'admin'
       : authPayload.role === 'tutor'
         ? 'tutor'

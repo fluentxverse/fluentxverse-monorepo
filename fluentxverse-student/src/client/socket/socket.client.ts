@@ -1,12 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
-import { API_BASE_URL, getAuthToken } from '../../config/api';
-
-const PRODUCTION_DOMAINS = [
-  'fluentxverse.xyz',
-  'tutor.fluentxverse.xyz',
-  'student.fluentxverse.xyz',
-  'dashboard.fluentxverse.xyz'
-];
+import { API_BASE_URL, getAuthToken, isProductionHost } from '../../config/api';
 
 const normalizeSocketUrl = (url: string) => url.trim().replace(/\/+$/, '');
 
@@ -16,14 +9,16 @@ const toHttpUrl = (url: string) => {
 };
 
 const getSocketUrl = () => {
+  if (typeof window !== 'undefined' && isProductionHost(window.location.hostname)) {
+    return 'https://ws.fluentxverse.xyz';
+  }
+
   const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();
   if (envSocketUrl) return toHttpUrl(envSocketUrl);
 
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
-    if (isProduction) return 'https://ws.fluentxverse.xyz';
     if (isLocalhost) return 'http://localhost:8767';
     return `${protocol}//${hostname}:8767`;
   }
@@ -74,7 +69,7 @@ export const initSocket = (token?: string): Socket => {
     withCredentials: true,
     autoConnect: false,
     auth: async callback => {
-      const socketToken = resolvedToken || await fetchSocketAuthToken();
+      const socketToken = await fetchSocketAuthToken() || resolvedToken;
       callback(socketToken ? { token: socketToken } : {});
     },
     reconnection: true,

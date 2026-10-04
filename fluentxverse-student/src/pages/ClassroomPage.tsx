@@ -172,12 +172,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
     let socket: Socket | null = null;
     let isCancelled = false;
+    let readyInterval: ReturnType<typeof setInterval> | null = null;
 
     // Wait for connection before joining
     const onConnect = () => {
       if (!socket) return;
       socket.emit('session:join', { sessionId: currentSessionId });
-      socket.emit('chat:request-history', { sessionId: currentSessionId });
     };
     
     // Handle incoming chat messages
@@ -244,6 +244,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     const onChatError = (data: { message: string }) => {
       toast.error(data.message);
     };
+    const onSessionError = (data: { message: string }) => toast.error(data.message);
     
     // Handle chat history
     const onChatHistory = (messages: ChatMessageData[]) => {
@@ -270,6 +271,14 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Handle session state
     const onSessionState = (data: any) => {
+      if (data.sessionId !== currentSessionId) return;
+      socket?.emit('chat:request-history', { sessionId: currentSessionId });
+      if (readyInterval) clearInterval(readyInterval);
+      readyInterval = null;
+      if (data.status === 'active' && data.participants?.tutorId) {
+        socket?.emit('webrtc:ready');
+        readyInterval = setInterval(() => socket?.connected && socket.emit('webrtc:ready'), 4000);
+      }
       if (data.status === 'active') {
         setIsConnecting(false);
       }
@@ -348,6 +357,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       socket.on('chat:typing', onTyping);
       socket.on('chat:error', onChatError);
       socket.on('session:state', onSessionState);
+      socket.on('session:error', onSessionError);
       socket.on('session:user-joined', onUserJoined);
       socket.on('session:user-left', onUserLeft);
       socket.on('session:lesson-ended', onLessonEnded);
@@ -368,6 +378,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     return () => {
       isCancelled = true;
+      if (readyInterval) clearInterval(readyInterval);
       if (!socket) return;
       socket.off('connect', onConnect);
       socket.off('chat:message', onChatMessage);
@@ -377,6 +388,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       socket.off('chat:typing', onTyping);
       socket.off('chat:error', onChatError);
       socket.off('session:state', onSessionState);
+      socket.off('session:error', onSessionError);
       socket.off('session:user-joined', onUserJoined);
       socket.off('session:user-left', onUserLeft);
       socket.off('session:lesson-ended', onLessonEnded);
@@ -843,6 +855,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       // Save to backend
       try {
         await studentApi.saveLastViewedLesson({
+          sessionId: currentSessionId,
           courseId: newLesson.courseId,
           lessonId: newLesson.lessonId,
           lessonNumber: newLesson.lessonNumber,
@@ -877,13 +890,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Fetch last viewed lesson and student profile on mount
   useEffect(() => {
+    setChosenLesson(null);
+    setLessonViewUrl(null);
+
     const fetchData = async () => {
       try {
         setLoadingLesson(true);
         
         // Fetch both lesson and profile in parallel
         const [lessonResponse, profileResponse] = await Promise.all([
-          studentApi.getLastViewedLesson(),
+          studentApi.getLastViewedLesson(currentSessionId),
           studentApi.getStudentProfile()
         ]);
         
@@ -919,7 +935,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
     
     fetchData();
-  }, []);
+  }, [currentSessionId]);
 
   // Try to enable audio - will succeed if user has engagement history with the site
   useEffect(() => {

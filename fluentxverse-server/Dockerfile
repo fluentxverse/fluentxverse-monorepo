@@ -29,7 +29,7 @@ COPY --chown=appuser:appgroup scripts/migrate-classroom-learning-data-to-memgrap
 COPY --chown=appuser:appgroup circuits ./circuits
 COPY --chown=appuser:appgroup tsconfig.json ./
 
-RUN mkdir -p zk-artifacts && chown -R appuser:appgroup zk-artifacts circuits
+RUN mkdir -p zk-artifacts/student-lesson circuits/student-lesson/build && chown -R appuser:appgroup zk-artifacts circuits
 
 # Switch to non-root user
 USER appuser

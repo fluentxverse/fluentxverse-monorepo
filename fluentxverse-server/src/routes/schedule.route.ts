@@ -1,5 +1,6 @@
 import Elysia, { t } from 'elysia';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
+import { ticketService } from '../services/ticket.services/ticket.service';
 import { ClassroomNotesService } from '../services/classroomNotes.services/classroomNotes.service';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
@@ -37,7 +38,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       // Refresh JWT cookie on every request
       await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
-      await scheduleService.openSlots({
+      const openedSlots = await scheduleService.openSlots({
         tutorId,
         slots: body.slots
       });
@@ -47,7 +48,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       return {
         success: true,
-        message: 'Slots opened successfully'
+        message: 'Slots opened successfully',
+        data: openedSlots
       };
     } catch (error: any) {
       console.error('Error in /schedule/open:', error);
@@ -90,7 +92,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
 
       await scheduleService.closeSlots({
         tutorId,
-        slotIds: body.slotIds
+        slotIds: body.slotIds,
+        reason: body.reason,
+        additionalInfo: body.additionalInfo
       });
 
       // Invalidate tutor search cache since availability changed
@@ -110,7 +114,13 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, {
     body: t.Object({
-      slotIds: t.Array(ID(), { minItems: 1, maxItems: 100 })
+      slotIds: t.Array(ID(), { minItems: 1, maxItems: 100 }),
+      reason: t.Union([
+        t.Literal('Internet Outage'), t.Literal('Electric Outage'),
+        t.Literal('Emergency'), t.Literal('Disaster'),
+        t.Literal('Health'), t.Literal('Others')
+      ]),
+      additionalInfo: t.Optional(t.String({ maxLength: 1000 }))
     })
   })
 
@@ -181,12 +191,18 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       // Refresh JWT cookie on every request
       await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
-      await scheduleService.markAttendance({
-        bookingId: body.bookingId,
+      await scheduleService.markTutorAttendance({
+        bookingIds: body.bookingIds || (body.bookingId ? [body.bookingId] : []),
+        slotIds: body.slotIds || [],
         tutorId,
-        role: 'tutor',
-        status: body.status
+        status: body.status,
+        reason: body.reason,
+        additionalInfo: body.additionalInfo
       });
+
+      if (body.status === 'absent' && body.slotIds?.length) {
+        await invalidateCache('tutor:search:*');
+      }
 
       return {
         success: true,
@@ -202,8 +218,16 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, {
     body: t.Object({
-      bookingId: t.String(),
-      status: t.Union([t.Literal('present'), t.Literal('absent')])
+      bookingId: t.Optional(t.String()),
+      bookingIds: t.Optional(t.Array(t.String(), { maxItems: 12 })),
+      slotIds: t.Optional(t.Array(t.String(), { maxItems: 12 })),
+      status: t.Union([t.Literal('present'), t.Literal('absent')]),
+      reason: t.Optional(t.Union([
+        t.Literal('Internet Outage'), t.Literal('Electric Outage'),
+        t.Literal('Emergency'), t.Literal('Disaster'),
+        t.Literal('Health'), t.Literal('Others')
+      ])),
+      additionalInfo: t.Optional(t.String({ maxLength: 1000 }))
     })
   })
 
@@ -476,6 +500,62 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   })
 
+  .post('/reserve', async ({ body, cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+      const data = await scheduleService.reserveSlotForCheckout(payload.userId, body.slotId);
+      await invalidateCache('tutor:search:*');
+      await refreshJwtCookie(cookie, payload, 'studentAuth');
+      return { success: true, data };
+    } catch (error: any) {
+      set.status = 400;
+      return { success: false, error: error.message || 'Could not reserve slot' };
+    }
+  }, { body: t.Object({ slotId: ID() }) })
+
+  .post('/release-reservation', async ({ body, cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+      await scheduleService.releaseSlotReservation(payload.userId, body.slotId, body.reservationId);
+      await invalidateCache('tutor:search:*');
+      return { success: true };
+    } catch (error: any) {
+      set.status = 400;
+      return { success: false, error: error.message || 'Could not release reservation' };
+    }
+  }, { body: t.Object({ slotId: ID(), reservationId: ID() }) })
+
+  .post('/recover-transfer', async ({ body, cookie, set }) => {
+    try {
+      const raw = cookie.studentAuth?.value;
+      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+      const data = await ticketService.recoverUnbookedTransfer(
+        payload.userId, body.ticketTransferTxHash, body.slotId, body.reservationId
+      );
+      return { success: true, data };
+    } catch (error: any) {
+      set.status = 400;
+      return { success: false, error: error.message || 'Could not recover transfer' };
+    }
+  }, { body: t.Object({
+    ticketTransferTxHash: t.String({ minLength: 8, maxLength: 100 }),
+    slotId: ID(), reservationId: ID()
+  }) })
+
   /**
    * Book a time slot
    * POST /schedule/book
@@ -513,6 +593,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
       const booking = await scheduleService.bookSlot({
         studentId,
         slotId: body.slotId,
+        reservationId: body.reservationId,
         ticketTransferTxHash: body.ticketTransferTxHash
       });
       
@@ -542,7 +623,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
   }, {
     body: t.Object({
       slotId: ID(),
-      ticketTransferTxHash: t.Optional(t.String({ maxLength: 66 }))
+      reservationId: ID(),
+      ticketTransferTxHash: t.String({ minLength: 8, maxLength: 100 })
     })
   })
 
