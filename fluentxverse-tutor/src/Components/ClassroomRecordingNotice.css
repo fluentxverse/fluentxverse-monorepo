@@ -1,0 +1,12 @@
+.classroom-recording-notice{padding:12px 16px;border-bottom:1px solid var(--border-color,#d5dce4);font-size:13px;background:var(--bg-secondary,#f4f7fa);color:var(--text-primary,#202934);overflow-wrap:anywhere}
+.classroom-recording-notice p{margin:8px 0;line-height:1.5;font-size:13px}
+.classroom-recording-notice label{display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.classroom-recording-notice input{margin-top:4px;flex-shrink:0}
+.qa-notice-status{display:flex;align-items:center;gap:8px;font-weight:600}
+.qa-recording-active{color:#d83535}
+.qa-notice-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.qa-notice-actions button,.qa-withdraw{border:1px solid #8b99ab;border-radius:6px;padding:8px 10px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.qa-notice-actions button:first-child{background:#125bcb;border-color:#125bcb;color:#fff}
+.qa-notice-actions button:disabled,.qa-withdraw:disabled{opacity:.55;cursor:default}
+.qa-withdraw{margin-top:8px;font-size:12px}
+.qa-notice-declined{display:block;margin-top:6px}

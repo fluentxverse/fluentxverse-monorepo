@@ -4,6 +4,8 @@ import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import { useAuthContext } from '../context/AuthContext';
 import { useNotifications, getNotificationIcon, formatRelativeTime } from '../hooks/useNotifications';
 import { useNotificationStore } from '../context/NotificationContext';
+import { notificationLink } from '../utils/notificationLink';
+import { notificationApi } from '../api/notification.api';
 import './NotificationsPage.css';
 
 const NotificationsPage = () => {
@@ -32,9 +34,9 @@ const NotificationsPage = () => {
       await markAsRead(notification.id);
     }
     
-    // Navigate if there's a link
-    if (notification.data?.link) {
-      window.location.href = notification.data.link;
+    const link = notificationLink(notification);
+    if (link) {
+      window.location.href = link;
     }
   };
 
@@ -76,19 +78,14 @@ const NotificationsPage = () => {
                 onClick={() => {
                   const next = !filterUnread;
                   setFilterUnread(next);
-                  const params = new URLSearchParams();
-                  params.set('limit', String(pageLimit));
-                  params.set('offset', '0');
-                  if (next) params.set('isRead', 'false');
-                  fetch(`/notifications?${params.toString()}`, { credentials: 'include' })
-                    .then(r => r.json())
-                    .then(({ data }) => {
+                  notificationApi.getNotifications(pageLimit, 0, next ? false : undefined)
+                    .then(data => {
                       setStoreState({
                         notifications: data.notifications,
                         unreadCount: data.unreadCount
                       });
                       pageOffsetRef.current = 0;
-                    });
+                    }).catch(() => setStoreState({ error: 'Could not load notifications.' }));
                 }}
               >
                 <i className="fas fa-filter"></i>
@@ -169,19 +166,15 @@ const NotificationsPage = () => {
                   <button
                     className="btn-load-more"
                     onClick={() => {
-                      const params = new URLSearchParams();
-                      params.set('limit', String(pageLimit));
-                      pageOffsetRef.current += pageLimit;
-                      params.set('offset', String(pageOffsetRef.current));
-                      if (filterUnread) params.set('isRead', 'false');
-                      fetch(`/notifications?${params.toString()}`, { credentials: 'include' })
-                        .then(r => r.json())
-                        .then(({ data }) => {
+                      const nextOffset = pageOffsetRef.current + pageLimit;
+                      notificationApi.getNotifications(pageLimit, nextOffset, filterUnread ? false : undefined)
+                        .then(data => {
+                          pageOffsetRef.current = nextOffset;
                           setStoreState((state: any) => ({
                             notifications: [...state.notifications, ...data.notifications],
                             unreadCount: data.unreadCount
                           }));
-                        });
+                        }).catch(() => setStoreState({ error: 'Could not load notifications.' }));
                     }}
                   >
                     <i className="fas fa-chevron-down"></i>

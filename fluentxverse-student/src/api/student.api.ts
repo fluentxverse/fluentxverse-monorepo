@@ -56,6 +56,7 @@ export interface StudentProfile {
   preferredLearningStyle?: string;
   availability?: string[];
   country?: string;
+  regionName?: string;
   timezone?: string;
   interests?: string;
   preferredTopics?: string[];

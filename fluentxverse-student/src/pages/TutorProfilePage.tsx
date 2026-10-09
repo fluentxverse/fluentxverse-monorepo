@@ -5,6 +5,8 @@ import { tutorApi } from '../api/tutor.api';
 import { favoritesApi } from '../api/favorites.api';
 import { scheduleApi, type AvailableSlot } from '../api/schedule.api';
 import type { TutorProfile } from '../types/tutor.types';
+import ProfileAvatar from '../Components/Common/ProfileAvatar';
+import { mediaUrl } from '../utils/mediaUrl';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
@@ -78,8 +80,8 @@ export const TutorProfilePage = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<'morning' | 'afternoon' | 'evening'>('evening');
   const [preSelectedSlot, setPreSelectedSlot] = useState<{ date: string; time: string } | null>(null);
 
-  // Convert PHT time to KST (add 1 hour, handle date rollover)
-  const convertPHTtoKST = (phDateString: string, phTimeString: string): { date: string; time: string } => {
+  // Convert PHT time to JST (add 1 hour, handle date rollover)
+  const convertPHTtoJST = (phDateString: string, phTimeString: string): { date: string; time: string } => {
     let hours: number;
     let minutes: string;
     
@@ -109,7 +111,7 @@ export const TutorProfilePage = () => {
       }
     }
 
-    // Add 1 hour for KST
+    // Add 1 hour for JST
     hours += 1;
 
     // Handle date rollover
@@ -124,27 +126,27 @@ export const TutorProfilePage = () => {
     return { date: resultDate, time: `${String(hours).padStart(2, '0')}:${minutes}` };
   };
 
-  // Generate 30-minute interval time slots for Asia/Seoul based on selected period
-  // Tutor opens Philippine time 06:00 - 23:30; student sees equivalent in Asia/Seoul (+1 hour).
-  // PHT 06:00-23:30 => KST 07:00-00:30 (next day)
+  // Generate 30-minute interval time slots for Asia/Tokyo based on selected period
+  // Tutor opens Philippine time 06:00 - 23:30; student sees equivalent in Asia/Tokyo (+1 hour).
+  // PHT 06:00-23:30 => JST 07:00-00:30 (next day)
   const getPeriodTimeSlots = (period: 'morning' | 'afternoon' | 'evening') => {
     let slots: string[] = [];
     if (period === 'morning') {
-      // KST 06:00 - 11:30
+      // JST 06:00 - 11:30
       for (let h = 6; h < 12; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
     } else if (period === 'afternoon') {
-      // KST 12:00 - 17:30
+      // JST 12:00 - 17:30
       for (let h = 12; h < 18; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
       }
     } else if (period === 'evening') {
-      // KST 18:00 - 00:30 (next day)
-      // PHT 6:00 PM (18:00) = KST 19:00
-      // PHT 11:30 PM (23:30) = KST 00:30 next day
+      // JST 18:00 - 00:30 (next day)
+      // PHT 6:00 PM (18:00) = JST 19:00
+      // PHT 11:30 PM (23:30) = JST 00:30 next day
       for (let h = 19; h < 24; h++) {
         slots.push(`${String(h).padStart(2, '0')}:00`);
         slots.push(`${String(h).padStart(2, '0')}:30`);
@@ -160,7 +162,7 @@ export const TutorProfilePage = () => {
 
   // Helper to format next 7 days with weekday and month abbreviation
   // We use PHT dates for the columns since tutors schedule in PHT
-  // Times are converted to KST for display, but slots are grouped by PHT date
+  // Times are converted to JST for display, but slots are grouped by PHT date
   const getNextSevenDays = () => {
     const days: { key: string; label: string; phtDate: string }[] = [];
     
@@ -222,15 +224,15 @@ export const TutorProfilePage = () => {
         const slots = await scheduleApi.getAvailableSlots(tutorId, startDate, endDate);
         setRawSlots(slots);
         
-        // Keep PHT dates, but convert times to KST for display
+        // Keep PHT dates, but convert times to JST for display
         // This way slots are grouped by PHT date (tutor's schedule date)
-        // but times shown to student are in KST
+        // but times shown to student are in JST
         const convertedSlots = slots.map(slot => {
-          // Convert time only (PHT to KST is +1 hour)
-          const { time: kstTime } = convertPHTtoKST(slot.date, slot.time);
+          // Convert time only (PHT to JST is +1 hour)
+          const { time: jstTime } = convertPHTtoJST(slot.date, slot.time);
           return {
             date: slot.date, // Keep PHT date for grouping by tutor's schedule date
-            time: kstTime,   // Convert time to KST for display
+            time: jstTime,   // Convert time to JST for display
             status: 'AVAIL' as const,
             slotId: slot.slotId // Keep slotId for booking
           };
@@ -309,8 +311,8 @@ export const TutorProfilePage = () => {
 
   const handleSlotClick = (date: string, time: string, status: string) => {
     if (status === 'AVAIL') {
-      // time is already in 24h KST format (e.g., "19:00")
-      // Pass it directly - the BookingModal will convert PHT slots to KST for matching
+      // time is already in 24h JST format (e.g., "19:00")
+      // Pass it directly - the BookingModal will convert PHT slots to JST for matching
       setPreSelectedSlot({ date, time });
       setBookingModalOpen(true);
     }
@@ -367,11 +369,7 @@ export const TutorProfilePage = () => {
                   {/* Left: Avatar & Basic Info */}
                   <div className="profile-header-left">
                     <div className="profile-avatar-wrapper">
-                      {tutor.profilePicture ? (
-                      <img src={tutor.profilePicture} alt={displayName} className="profile-avatar-large" />
-                    ) : (
-                      <div className="profile-avatar-large profile-avatar-placeholder">{initials}</div>
-                    )}
+                      <ProfileAvatar src={tutor.profilePicture} alt={displayName} className="profile-avatar-large" fallbackClassName="profile-avatar-placeholder" fallback={initials} />
                     {tutor.isAvailable && (
                       <div className="availability-badge">
                         <span className="pulse-dot"></span>
@@ -461,7 +459,7 @@ export const TutorProfilePage = () => {
                     <i className="fi-sr-play"></i>
                     Introduction Video
                   </h3>
-                  <VideoPlayer src={tutor.videoIntroUrl} />
+                  <VideoPlayer src={mediaUrl(tutor.videoIntroUrl)!} />
                 </div>
               )}
             </div>
@@ -601,7 +599,7 @@ export const TutorProfilePage = () => {
                     <button className={`period-tab ${selectedPeriod === 'evening' ? 'active' : ''}`} onClick={() => setSelectedPeriod('evening')}>Evening</button>
                     <div className="timezone-note">
                       <img src="https://flagcdn.com/w40/kr.png" alt="KR" style={{ width: '24px', height: '16px', borderRadius: '3px' }} />
-                      <span>Seoul Time (Asia/Seoul)</span>
+                      <span>Japan Time (Asia/Tokyo)</span>
                       <span style={{ marginLeft: '8px', color: '#94a3b8' }}>(Tutor opens slots in Philippine Time 06:00–23:30)</span>
                     </div>
                   </div>
@@ -609,7 +607,7 @@ export const TutorProfilePage = () => {
                     <table className="schedule-table">
                       <thead>
                         <tr>
-                          <th>Time (KST)</th>
+                          <th>Time (JST)</th>
                           {getNextSevenDays().map((d, i) => (
                             <th key={i}>{d.label}</th>
                           ))}
@@ -621,7 +619,7 @@ export const TutorProfilePage = () => {
                             <td className="time-col">{time}</td>
                             {getNextSevenDays().map((d, dayIdx) => {
                               // Use PHT date directly - slots are now grouped by PHT date
-                              // This ensures 00:00 and 00:30 KST times (which are 11:00 PM and 11:30 PM PHT)
+                              // This ensures 00:00 and 00:30 JST times (which are 11:00 PM and 11:30 PM PHT)
                               // appear in the same column as other evening slots for that PHT date
                               const dateStr = d.key;
                               

@@ -1,0 +1,13 @@
+.lesson-workflow-status { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border-color,#dce4ef); font-size:13px; }
+.lesson-workflow-status > div { display:grid; gap:4px; flex:1; min-width:180px; }
+.lesson-workflow-status span { color:var(--lne-muted,var(--notes-muted,#64748b)); }
+.lesson-workflow-status button { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 12px; border:1px solid #3978df; border-radius:6px; background:#195bc5; color:white; white-space:normal; }
+.lesson-workflow-status button:disabled { opacity:.5; cursor:not-allowed; }
+.lesson-workflow-status > .lesson-workflow-error { display:flex; flex-wrap:wrap; align-items:center; gap:12px; flex:0 0 100%; min-width:0; }
+.lesson-workflow-error p { flex:1 1 180px; margin:0; color:#c43d52; overflow-wrap:anywhere; }
+.lesson-workflow-error button { flex-shrink:0; margin:0; }
+.lesson-report-outcome { padding:16px 0; border-bottom:1px solid var(--border-color,#dce4ef); }
+.lesson-report-outcome h2 { font-size:16px; }
+[data-theme='dark'] :is(.lesson-workflow-status,.lesson-report-outcome) { border-color:#454545; }
+[data-theme='dark'] .lesson-workflow-status span { color:#aeb9c9; }
+[data-theme='dark'] .lesson-workflow-status p { color:#fda4af; }

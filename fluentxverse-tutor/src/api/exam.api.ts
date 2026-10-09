@@ -204,10 +204,10 @@ export const getExamResult = async (
  * Check exam status for tutor (has taken, passed, etc.)
  */
 export const getExamStatus = async (
-  tutorId: string
+  _tutorId: string
 ): Promise<{ success: boolean; status?: ExamStatus }> => {
   try {
-    const response = await client.get(`/exam/status/${tutorId}`);
+    const response = await client.get('/exam/status');
     return response.data;
   } catch (error) {
     console.error('Failed to get exam status:', error);
@@ -427,10 +427,10 @@ export const getSpeakingExamResult = async (
  * Get speaking exam status for tutor
  */
 export const getSpeakingExamStatus = async (
-  tutorId: string
+  _tutorId: string
 ): Promise<{ success: boolean; status?: SpeakingExamStatus }> => {
   try {
-    const response = await client.get(`/exam/speaking/status/${tutorId}`);
+    const response = await client.get('/exam/speaking/status');
     return response.data;
   } catch (error) {
     console.error('Failed to get speaking exam status:', error);

@@ -37,6 +37,7 @@ export const loginUser = async (email: string, password: string) => {
 
 export const logoutUser = async () => {
     const { data } = await client.post('/tutor/logout')
+    if (data?.success !== true) throw new Error('Logout was not confirmed by the server');
     return data;
 }
 

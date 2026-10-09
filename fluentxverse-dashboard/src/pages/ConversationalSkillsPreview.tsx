@@ -3,16 +3,17 @@
  * Full-page standalone preview renderer for Conversational Skills lessons
  * Matches the rarejob.com.ph lesson material design
  */
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
 import { FixedFeedbackGuide } from '../components/FixedFeedbackGuide';
+import { API_BASE_URL } from '../config/api';
 import './ConversationalSkillsPreview.css';
 
 type ConversationalTheme = 'light' | 'dark';
 
 const legacyLessonAssetBase = 'http://localhost:8765/lesson/files/';
-const lessonAssetBase = `${(import.meta.env.VITE_API_URL || 'http://localhost:8765').replace(/\/$/, '')}/lesson/files/`;
+const lessonAssetBase = `${API_BASE_URL}/lesson/files/`;
 
 function resolveLegacyLessonAssets<T>(value: T): T {
   if (typeof value === 'string') {
@@ -28,6 +29,8 @@ function resolveLegacyLessonAssets<T>(value: T): T {
 }
 
 const getStoredConversationalTheme = (): ConversationalTheme => {
+  const requestedTheme = new URLSearchParams(window.location.search).get('theme');
+  if (requestedTheme === 'dark' || requestedTheme === 'light') return requestedTheme;
   try {
     return (localStorage.getItem('csve-theme') as ConversationalTheme) || 'light';
   } catch {
@@ -575,6 +578,10 @@ export default function ConversationalSkillsPreview() {
   } | null>(null);
   const [hasSessionData, setHasSessionData] = useState(false);
   const [theme, setTheme] = useState<ConversationalTheme>(getStoredConversationalTheme);
+  useLayoutEffect(() => {
+    document.documentElement.dataset.materialTheme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
 
   const id = params?.id;
   const isLayoutTwo = new URLSearchParams(window.location.search).get('layout') === '2';
@@ -587,7 +594,7 @@ export default function ConversationalSkillsPreview() {
         try {
           const parsed = JSON.parse(storedData);
           setPreviewOverrides(resolveLegacyLessonAssets(parsed));
-          if (parsed.theme === 'dark' || parsed.theme === 'light') {
+          if (!new URLSearchParams(window.location.search).has('theme') && (parsed.theme === 'dark' || parsed.theme === 'light')) {
             setTheme(parsed.theme);
           }
           setHasSessionData(true);

@@ -1,5 +1,5 @@
-import { useLocation } from "wouter";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useLocation } from "preact-iso";
+import { useEffect, useState } from "preact/hooks";
 import { JSX } from "preact";
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
@@ -21,7 +21,7 @@ const menuItems: MenuItem[] = [
 ];
 
 const SideBar = (): JSX.Element | null => {
-  const [location, setLocation] = useLocation();
+  const { path: location } = useLocation();
   const { user } = useAuthContext();
   const [showSettings, setShowSettings] = useState(false);
   const [isCertified, setIsCertified] = useState<boolean | null>(null);
@@ -73,14 +73,6 @@ const SideBar = (): JSX.Element | null => {
     return true;
   });
 
-  const handleClick = useCallback(
-    (e: JSX.TargetedMouseEvent<HTMLAnchorElement>, href: string) => {
-      e.preventDefault();
-      setLocation(href);
-    },
-    [setLocation]
-  );
-
   // Menu items for the static site
 
   return (
@@ -99,7 +91,6 @@ const SideBar = (): JSX.Element | null => {
             >
               <a
                 href={item.href}
-                onClick={(e) => handleClick(e, item.href)}
               >
                 <i className={item.icon}></i>
               </a>

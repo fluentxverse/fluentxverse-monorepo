@@ -3,10 +3,10 @@ import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi, AvailableSlot } from '../../api/schedule.api';
 import { transferTicketForBooking, getTicketBalance, type TicketBalance } from '../../services/ticket.service';
 import { getErrorMessage } from '../../api/utils';
+import ProfileAvatar from '../Common/ProfileAvatar';
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import { appWallet, autoConnectWallet, connectWallet, type WalletAccount } from '../../config/wallet';
-import { getMe } from '../../api/auth.api';
 import './BookingModal.css';
 
 interface BookingModalProps {
@@ -56,7 +56,7 @@ export const BookingModal = ({
   const [transferringTicket, setTransferringTicket] = useState(false);
   const [unresolvedTransferHash, setUnresolvedTransferHash] = useState<string | null>(null);
   const isDarkMode = useThemeStore((state) => state.isDarkMode);
-  const { user } = useAuthContext();
+  const { user, ensureSession } = useAuthContext();
   const [connectedAccount, setConnectedAccount] = useState<WalletAccount | null>(appWallet.getAccount());
   const [profileWalletAddress, setProfileWalletAddress] = useState<string | null>(null);
   const [isWalletConnecting, setIsWalletConnecting] = useState(false);
@@ -74,10 +74,18 @@ export const BookingModal = ({
 
   useEffect(() => {
     if (!isOpen) return;
-
-    getMe()
-      .then((response) => setProfileWalletAddress(response?.user?.walletAddress || null))
-      .catch(() => setProfileWalletAddress(null));
+    let cancelled = false;
+    ensureSession()
+      .then((student) => {
+        if (!cancelled) setProfileWalletAddress(student.walletAddress || null);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setProfileWalletAddress(null);
+          setError(getErrorMessage(err));
+        }
+      });
+    return () => { cancelled = true; };
   }, [isOpen]);
 
   const reconnectWallet = async () => {
@@ -131,10 +139,10 @@ export const BookingModal = ({
     }
   }, [isOpen, walletAddress, isWalletAutoConnecting, isWalletConnecting]);
 
-  // Helper function to convert PHT time to KST time
-  // Returns the ACTUAL KST date (may be next day for late-night PHT times)
+  // Helper function to convert PHT time to JST time
+  // Returns the ACTUAL JST date (may be next day for late-night PHT times)
   // Handles both 12-hour format (6:00 PM) and 24-hour format (18:00)
-  const convertToKoreanTimeWithDate = (phDateString: string, phTimeString: string): { date: string; time: string; dateRolledOver: boolean } => {
+  const convertToJapaneseTimeWithDate = (phDateString: string, phTimeString: string): { date: string; time: string; dateRolledOver: boolean } => {
     let hours: number;
     let minutes: string;
     
@@ -166,7 +174,7 @@ export const BookingModal = ({
       }
     }
 
-    // Add 1 hour for Korean timezone (UTC+9 vs UTC+8)
+    // Add 1 hour for Japanese timezone (UTC+9 vs UTC+8)
     hours += 1;
 
     // Handle hour overflow - roll to next day
@@ -186,8 +194,8 @@ export const BookingModal = ({
   };
 
   // Simple time-only conversion for display (keeps original PHT date for display grouping)
-  const convertToKoreanTime = (phTimeString: string): string => {
-    const result = convertToKoreanTimeWithDate('2000-01-01', phTimeString);
+  const convertToJapaneseTime = (phTimeString: string): string => {
+    const result = convertToJapaneseTimeWithDate('2000-01-01', phTimeString);
     return result.time;
   };
 
@@ -198,15 +206,15 @@ export const BookingModal = ({
   }, [isOpen, tutorId]);
 
   // Auto-select slot when preSelectedDate/Time are provided
-  // preSelectedDate is now PHT date, preSelectedTime is KST time
+  // preSelectedDate is now PHT date, preSelectedTime is JST time
   // We need to find the PHT slot that matches
   useEffect(() => {
     if (preSelectedDate && preSelectedTime && availableSlots.length > 0) {
       const matchingSlot = availableSlots.find(slot => {
-        // Convert slot's PHT time to KST time for comparison
-        const kstTime = convertToKoreanTime(slot.time);
-        // Compare PHT date directly and KST time
-        return slot.date === preSelectedDate && kstTime === preSelectedTime;
+        // Convert slot's PHT time to JST time for comparison
+        const jstTime = convertToJapaneseTime(slot.time);
+        // Compare PHT date directly and JST time
+        return slot.date === preSelectedDate && jstTime === preSelectedTime;
       });
       if (matchingSlot) {
         setSelectedSlot(matchingSlot);
@@ -216,8 +224,8 @@ export const BookingModal = ({
 
   // Helper to check if a PHT slot belongs to a specific PHT date
   // The date filter now represents PHT dates (tutor's timezone)
-  // Students see all slots from that PHT date, with times converted to KST for display
-  // e.g., Jan 6 PHT 11:00 PM displays as Jan 7 00:00 KST, but it's still a "Jan 6" slot
+  // Students see all slots from that PHT date, with times converted to JST for display
+  // e.g., Jan 6 PHT 11:00 PM displays as Jan 7 00:00 JST, but it's still a "Jan 6" slot
   const slotBelongsToPHTDate = (slotDate: string, targetPHTDate: string): boolean => {
     return slotDate === targetPHTDate;
   };
@@ -236,17 +244,17 @@ export const BookingModal = ({
       // Debug: Log conversion for each slot
       if (filterDate) {
         slots.forEach(slot => {
-          const converted = convertToKoreanTimeWithDate(slot.date, slot.time);
+          const converted = convertToJapaneseTimeWithDate(slot.date, slot.time);
         });
       }
       
       // If filterDate is set, filter to show slots that belong to this PHT date
-      // All slots from that PHT date are shown, with times converted to KST for display
-      // e.g., Jan 6 PHT 11:00 PM -> displays as 00:00 KST (next day in KST, but still Jan 6 slot)
+      // All slots from that PHT date are shown, with times converted to JST for display
+      // e.g., Jan 6 PHT 11:00 PM -> displays as 00:00 JST (next day in JST, but still Jan 6 slot)
       const filteredSlots = filterDate 
         ? slots.filter(slot => {
             const belongs = slotBelongsToPHTDate(slot.date, filterDate);
-            const converted = convertToKoreanTimeWithDate(slot.date, slot.time);
+            const converted = convertToJapaneseTimeWithDate(slot.date, slot.time);
             return belongs;
           })
         : slots;
@@ -350,6 +358,8 @@ export const BookingModal = ({
     let completed = false;
     let refunded = false;
     try {
+      // Confirm/repair the API cookie before reserving or spending a ticket.
+      await ensureSession();
       const reservation = await scheduleApi.reserveSlot(selectedSlot.slotId);
       reservationId = reservation.reservationId;
       if (Date.now() >= Date.parse(reservation.bookBy)) {
@@ -418,33 +428,33 @@ export const BookingModal = ({
     }
   };
 
-  // Helper to check if a slot has already elapsed (for today's date in KST)
+  // Helper to check if a slot has already elapsed (for today's date in JST)
   const isSlotElapsed = (slotDate: string, slotTime: string): boolean => {
-    // Get current time in KST (Korea Standard Time, UTC+9)
+    // Get current time in JST (Japan Standard Time, UTC+9)
     const now = new Date();
     const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const kstTime = new Date(utcTime + (9 * 60 * 60000)); // UTC+9
+    const jstTime = new Date(utcTime + (9 * 60 * 60000)); // UTC+9
     
-    // Format today's date in KST without using toISOString (which converts to UTC)
-    const todayKST = `${kstTime.getFullYear()}-${String(kstTime.getMonth() + 1).padStart(2, '0')}-${String(kstTime.getDate()).padStart(2, '0')}`;
+    // Format today's date in JST without using toISOString (which converts to UTC)
+    const todayJST = `${jstTime.getFullYear()}-${String(jstTime.getMonth() + 1).padStart(2, '0')}-${String(jstTime.getDate()).padStart(2, '0')}`;
     
-    // Convert slot PHT date/time to actual KST date/time
-    const { date: kstDate, time: kstTimeStr } = convertToKoreanTimeWithDate(slotDate, slotTime);
+    // Convert slot PHT date/time to actual JST date/time
+    const { date: jstDate, time: jstTimeStr } = convertToJapaneseTimeWithDate(slotDate, slotTime);
     
-    // If slot's KST date is in the future, not elapsed
-    if (kstDate > todayKST) {
+    // If slot's JST date is in the future, not elapsed
+    if (jstDate > todayJST) {
       return false;
     }
     
-    // If slot's KST date is in the past, it's elapsed
-    if (kstDate < todayKST) {
+    // If slot's JST date is in the past, it's elapsed
+    if (jstDate < todayJST) {
       return true;
     }
     
     // Same day - check time
-    const [slotHours, slotMinutes] = kstTimeStr.split(':').map(Number);
+    const [slotHours, slotMinutes] = jstTimeStr.split(':').map(Number);
     const slotTotalMinutes = slotHours * 60 + slotMinutes;
-    const nowTotalMinutes = kstTime.getHours() * 60 + kstTime.getMinutes();
+    const nowTotalMinutes = jstTime.getHours() * 60 + jstTime.getMinutes();
     
     // Slot is elapsed if its time has already passed
     return slotTotalMinutes <= nowTotalMinutes;
@@ -483,8 +493,8 @@ export const BookingModal = ({
   };
 
   const formatTime = (timeString: string) => {
-    // Convert Philippine time to Korean time (add 1 hour) - returns 24h format
-    return convertToKoreanTime(timeString);
+    // Convert Philippine time to Japanese time (add 1 hour) - returns 24h format
+    return convertToJapaneseTime(timeString);
   };
 
   if (!isOpen) return null;
@@ -499,13 +509,7 @@ export const BookingModal = ({
         {/* Header */}
         <div className="booking-modal-header">
           <div className="booking-modal-tutor">
-            {tutorAvatar ? (
-              <img src={tutorAvatar} alt={tutorName} className="booking-modal-avatar" />
-            ) : (
-              <div className="booking-modal-avatar booking-modal-avatar-placeholder">
-                {tutorName.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <ProfileAvatar src={tutorAvatar} alt={tutorName} className="booking-modal-avatar" fallbackClassName="booking-modal-avatar-placeholder" fallback={tutorName.charAt(0).toUpperCase()} />
             <div className="booking-modal-tutor-info">
               <h2 className="booking-modal-title">Book a Lesson</h2>
               <p className="booking-modal-tutor-name">{tutorName}</p>
@@ -581,7 +585,7 @@ export const BookingModal = ({
                             className={`booking-modal-time-slot ${selectedSlot?.slotId === slot.slotId ? 'selected' : ''}`}
                             onClick={() => setSelectedSlot(slot)}
                           >
-                            <span>{formatTime(slot.time)} KST</span>
+                            <span>{formatTime(slot.time)} JST</span>
                           </button>
                         ))}
                       </div>
@@ -600,7 +604,7 @@ export const BookingModal = ({
                     <polyline points="12 6 12 12 16 14"/>
                   </svg>
                   <span>
-                    {formatDate(selectedSlot.date)} at {formatTime(selectedSlot.time)} KST
+                    {formatDate(selectedSlot.date)} at {formatTime(selectedSlot.time)} JST
                     <span className="booking-modal-duration"> ({(() => {
                       // Neo4j Integer object has 'low' and 'high' properties
                       const duration = typeof selectedSlot.durationMinutes === 'object' && selectedSlot.durationMinutes !== null

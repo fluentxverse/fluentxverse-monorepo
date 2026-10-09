@@ -3,6 +3,14 @@ import { useState, useEffect } from 'preact/hooks';
 import { scheduleApi } from '../api/schedule.api';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
+import StudentLessonRecap from '../Components/StudentLessonRecap';
+import ClassroomLessonSurvey from '../Components/ClassroomLessonSurvey';
+import StudentLessonMaterialRequest from '../Components/StudentLessonMaterialRequest';
+import StudentLessonIssueReport from '../Components/StudentLessonIssueReport';
+import ProfileAvatar from '../Components/Common/ProfileAvatar';
+import { useCurrentTime } from '../hooks/useCurrentTime';
+import { canCancelLesson } from '../utils/lessonCancellation';
+import { canJoinClassroom } from '../utils/classroomWindow';
 import './LessonPage.css';
 
 interface LessonDetails {
@@ -18,6 +26,8 @@ interface LessonDetails {
   status: string;
   bookedAt: Date;
   sessionId?: string;
+  startsAt?: string;
+  surveyReadyAt?: string | null;
 }
 
 interface LessonPageProps {
@@ -31,7 +41,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   const [lesson, setLesson] = useState<LessonDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [canJoin, setCanJoin] = useState(false);
+  const now = useCurrentTime();
   
   // Cancel modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -48,25 +58,6 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
     }
   }, [bookingId]);
 
-  // Check if lesson can be joined (within time window)
-  useEffect(() => {
-    if (!lesson) return;
-
-    const checkJoinability = () => {
-      const lessonDateTime = parseDateTime(lesson.slotDate, lesson.slotTime);
-      const now = new Date();
-      const diffMinutes = (lessonDateTime.getTime() - now.getTime()) / (1000 * 60);
-      
-      // Can join 15 minutes before and up to 30 minutes after scheduled time
-      setCanJoin(diffMinutes >= -30 && diffMinutes <= lesson.durationMinutes + 15);
-    };
-
-    checkJoinability();
-    const interval = setInterval(checkJoinability, 60000); // Check every minute
-    
-    return () => clearInterval(interval);
-  }, [lesson]);
-
   const parseDateTime = (date: string, time: string) => {
     const timeMatch = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!timeMatch) return new Date(date);
@@ -78,21 +69,31 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
     if (period === 'PM' && hours !== 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
 
-    // Time is in PHT (UTC+8), convert to KST (UTC+9) by adding 1 hour
-    let kstHours = hours + 1;
-    let kstDate = date;
+    // Time is in PHT (UTC+8), convert to JST (UTC+9) by adding 1 hour
+    let jstHours = hours + 1;
+    let jstDate = date;
     
-    if (kstHours >= 24) {
-      kstHours -= 24;
+    if (jstHours >= 24) {
+      jstHours -= 24;
       // Calculate next day
       const [year, month, day] = date.split('-').map(Number);
       const nextDay = new Date(year, month - 1, day + 1);
-      kstDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+      jstDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
     }
 
-    // Create Date with explicit KST timezone (UTC+9)
-    return new Date(`${kstDate}T${String(kstHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+09:00`);
+    // Create Date with explicit JST timezone (UTC+9)
+    return new Date(`${jstDate}T${String(jstHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+09:00`);
   };
+
+  const startsAt = lesson ? (lesson.startsAt ? new Date(lesson.startsAt) : parseDateTime(lesson.slotDate, lesson.slotTime)).getTime() : NaN;
+  const endsAt = startsAt + (lesson?.durationMinutes || 25) * 60_000;
+  const canCancel = canCancelLesson(lesson?.status || '', startsAt, now);
+  const hasEnded = lesson?.status !== 'cancelled' && now >= endsAt;
+  const canJoin = canJoinClassroom(lesson?.status || '', startsAt, endsAt, now);
+
+  useEffect(() => {
+    if (!canCancel && !cancelling) setCancelModalOpen(false);
+  }, [canCancel, cancelling]);
 
   const fetchLessonDetails = async () => {
     setLoading(true);
@@ -113,6 +114,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   };
 
   const formatDate = (dateString: string) => {
+    if (lesson?.startsAt) return new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tokyo', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(lesson.startsAt));
     const date = new Date(dateString + 'T00:00:00');
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -123,6 +125,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   };
 
   const formatTime = (timeString: string) => {
+    if (lesson?.startsAt) return `${new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Tokyo', hour: 'numeric', minute: '2-digit' }).format(new Date(lesson.startsAt))} JST`;
     const timeMatch = timeString.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!timeMatch) return timeString;
 
@@ -139,17 +142,18 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
     const koreanPeriod = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
 
-    return `${displayHours}:${minutes} ${koreanPeriod} KST`;
+    return `${displayHours}:${minutes} ${koreanPeriod} JST`;
   };
 
   const getTimeUntil = () => {
     if (!lesson) return '';
     
-    const lessonDateTime = parseDateTime(lesson.slotDate, lesson.slotTime);
+    const lessonDateTime = lesson.startsAt ? new Date(lesson.startsAt) : parseDateTime(lesson.slotDate, lesson.slotTime);
     const now = new Date();
     const diff = lessonDateTime.getTime() - now.getTime();
     
-    if (diff < 0) return 'Started';
+    if (hasEnded) return 'Lesson ended';
+    if (diff <= 0) return 'In progress';
     
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -161,12 +165,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   };
 
   const handleJoinClassroom = () => {
-    if (lesson?.sessionId) {
-      window.location.href = `/classroom/${lesson.sessionId}`;
-    } else {
-      // Fallback: use bookingId as sessionId
-      window.location.href = `/classroom/${bookingId}`;
-    }
+    if (canJoin) window.open(`/classroom/${encodeURIComponent(lesson?.sessionId || bookingId!)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleViewTutorProfile = () => {
@@ -178,7 +177,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   // Check if cancellation is eligible for refund (more than 1 hour before lesson)
   const isRefundEligible = (): boolean => {
     if (!lesson) return false;
-    const lessonDateTime = parseDateTime(lesson.slotDate, lesson.slotTime);
+    const lessonDateTime = lesson.startsAt ? new Date(lesson.startsAt) : parseDateTime(lesson.slotDate, lesson.slotTime);
     const now = new Date();
     const oneHourBefore = new Date(lessonDateTime.getTime() - 60 * 60 * 1000);
     return now < oneHourBefore;
@@ -187,6 +186,10 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
   // Handle cancel confirmation
   const handleConfirmCancel = async () => {
     if (!lesson) return;
+    if (!canCancelLesson(lesson.status, startsAt)) {
+      setCancelModalOpen(false);
+      return;
+    }
     
     setCancelling(true);
     try {
@@ -315,12 +318,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                     <h2>Your Tutor</h2>
                   </div>
                   <div className="tutor-profile">
-                    <div 
-                      className={lesson.tutorAvatar ? "tutor-avatar" : "tutor-avatar placeholder"}
-                      style={lesson.tutorAvatar ? { backgroundImage: `url(${lesson.tutorAvatar})` } : undefined}
-                    >
-                      {!lesson.tutorAvatar && <i className="fas fa-user"></i>}
-                    </div>
+                    <ProfileAvatar src={lesson.tutorAvatar} alt={lesson.tutorName} className="tutor-avatar" fallbackClassName="placeholder" style={{ objectFit: 'cover' }} fallback={<i className="fas fa-user" aria-hidden="true" />} />
                     <div className="tutor-info">
                       <h3 className="tutor-name">{lesson.tutorName}</h3>
                       {lesson.tutorBio && (
@@ -376,10 +374,10 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                     </div>
                   </div>
                   
-                  {lesson.status === 'confirmed' && (
+                  {canCancel && (
                     <button 
                       className="lesson-cancel-btn-card"
-                      onClick={() => setCancelModalOpen(true)}
+                      onClick={() => { if (canCancelLesson(lesson.status, startsAt)) setCancelModalOpen(true); }}
                     >
                       <i className="fas fa-times-circle"></i>
                       Cancel Lesson
@@ -396,16 +394,16 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                     <h2>Classroom</h2>
                   </div>
                   
-                  {lesson.status === 'confirmed' ? (
+                  {canJoin || (lesson.status === 'confirmed' && !hasEnded) ? (
                     <div className="classroom-content">
                       {canJoin ? (
                         <>
                           <div className="classroom-icon ready">
                             <i className="fas fa-check-circle"></i>
                           </div>
-                          <h3 className="classroom-status">Ready to Join!</h3>
+                          <h3 className="classroom-status">{hasEnded ? 'Lesson Wrap-up' : 'Ready to Join!'}</h3>
                           <p className="classroom-message">
-                            Your classroom is ready. Click below to start your lesson.
+                            {hasEnded ? 'The classroom stays open for three minutes after the lesson ends.' : 'Your classroom is ready. Click below to start your lesson.'}
                           </p>
                           <button onClick={handleJoinClassroom} className="btn-join-classroom">
                             <i className="fas fa-video"></i>
@@ -419,27 +417,23 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                           </div>
                           <h3 className="classroom-status">Not Yet Available</h3>
                           <p className="classroom-message">
-                            The classroom will be available 15 minutes before your scheduled lesson time.
+                            The classroom will be available 5 minutes before your scheduled lesson time.
                           </p>
                           <div className="classroom-countdown">
                             <span className="countdown-label">Starts</span>
                             <span className="countdown-value">{getTimeUntil()}</span>
                           </div>
-                          <button onClick={handleJoinClassroom} className="btn-join-classroom debug">
-                            <i className="fas fa-bug"></i>
-                            Test Enter (Debug)
-                          </button>
                         </>
                       )}
                     </div>
-                  ) : lesson.status === 'completed' ? (
+                  ) : lesson.status === 'completed' || hasEnded ? (
                     <div className="classroom-content">
                       <div className="classroom-icon completed">
                         <i className="fas fa-check-double"></i>
                       </div>
-                      <h3 className="classroom-status">Lesson Completed</h3>
+                      <h3 className="classroom-status">{lesson.status === 'completed' ? 'Lesson Completed' : 'Lesson Ended'}</h3>
                       <p className="classroom-message">
-                        Great job! You've completed this lesson.
+                        This lesson's scheduled time has ended.
                       </p>
                       <button onClick={() => window.location.href = '/browse-tutors'} className="btn-book-again">
                         <i className="fas fa-calendar-plus"></i>
@@ -461,9 +455,13 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
                       </button>
                     </div>
                   )}
+                  <StudentLessonMaterialRequest key={`request-${bookingId}`} bookingId={bookingId!} />
+                  {(hasEnded || (lesson.status !== 'cancelled' && lesson.surveyReadyAt)) && <ClassroomLessonSurvey key={`survey-${bookingId}`} bookingId={bookingId!} placement="lesson" />}
                 </div>
               </div>
             </div>
+            <StudentLessonIssueReport key={`report-${bookingId}`} bookingId={bookingId!} />
+            <StudentLessonRecap key={bookingId} bookingId={bookingId!} />
           </div>
         </main>
       </div>
@@ -486,13 +484,7 @@ export const LessonPage = ({ bookingId: propBookingId }: LessonPageProps) => {
             <div className="cancel-modal-body">
               <div className="cancel-lesson-info">
                 <div className="cancel-tutor-avatar">
-                  {lesson.tutorAvatar ? (
-                    <img src={lesson.tutorAvatar} alt={lesson.tutorName} />
-                  ) : (
-                    <div className="avatar-placeholder">
-                      <i className="fas fa-user"></i>
-                    </div>
-                  )}
+                  <ProfileAvatar src={lesson.tutorAvatar} alt={lesson.tutorName} fallbackClassName="avatar-placeholder" fallback={<i className="fas fa-user" aria-hidden="true" />} />
                 </div>
                 <div className="cancel-lesson-details">
                   <h4>{lesson.tutorName}</h4>

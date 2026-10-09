@@ -24,11 +24,37 @@ export default function AdminTasksPage() {
   const [saving, setSaving] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [listError, setListError] = useState('');
+  const [assigneesError, setAssigneesError] = useState('');
+
+  const loadTasks = async () => {
+    setLoading(true);
+    setListError('');
+    try {
+      setTasks(await adminTasksApi.list());
+    } catch (err: any) {
+      setListError(err.message || 'Could not load items');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAssignees = async () => {
+    setAssigneesLoading(true);
+    setAssigneesError('');
+    try {
+      setAssignees(await adminTasksApi.assignees());
+    } catch (err: any) {
+      setAssigneesError(err.message || 'Could not load admins');
+    } finally {
+      setAssigneesLoading(false);
+    }
+  };
 
   useEffect(() => {
     document.title = 'Tasks | FluentXVerse Admin';
-    adminTasksApi.list().then(setTasks).catch(err => setError(err.message || 'Could not load tasks')).finally(() => setLoading(false));
-    adminTasksApi.assignees().then(setAssignees).catch(err => setError(err.message || 'Could not load admins')).finally(() => setAssigneesLoading(false));
+    void loadTasks();
+    void loadAssignees();
   }, []);
 
   useEffect(() => {
@@ -110,6 +136,7 @@ export default function AdminTasksPage() {
       </div>
       <label>Details <span>(optional)</span><textarea value={description} onInput={event => setDescription(event.currentTarget.value)} maxLength={5000} rows={3} placeholder="Add context or acceptance criteria" /></label>
       <div className="admin-tasks-form-actions"><button type="submit" disabled={saving || !title.trim() || assigneesLoading || !assignees.some(admin => admin.id === assigneeId)}><i className="ri-add-line" aria-hidden="true"/> {saving ? 'Adding...' : 'Add item'}</button></div>
+      {assigneesError && <div className="admin-tasks-error" role="alert">Could not load assignees: {assigneesError} <button type="button" onClick={loadAssignees}>Retry</button></div>}
     </form>
 
     <section className="admin-tasks-list" aria-label="Tasks and suggestions">
@@ -118,7 +145,7 @@ export default function AdminTasksPage() {
         {statuses.map(status => <button type="button" key={status.value} className={filter === status.value ? 'active' : ''} onClick={() => setFilter(status.value)}>{status.label} <span>{tasks.filter(task => task.status === status.value).length}</span></button>)}
       </div></div>
       {error && <div className="admin-tasks-error" role="alert">{error}</div>}
-      {loading ? <div className="admin-tasks-empty">Loading items...</div> : visible.length === 0 ? <div className="admin-tasks-empty">No items in this view.</div> :
+      {loading ? <div className="admin-tasks-empty">Loading items...</div> : listError ? <div className="admin-tasks-error" role="alert">Could not load items: {listError} <button type="button" onClick={loadTasks}>Retry</button></div> : visible.length === 0 ? <div className="admin-tasks-empty">No items in this view.</div> :
         <div className="admin-tasks-rows">{visible.map(task => <article className="admin-task-row" key={task.id}>
           <div className="admin-task-main"><div className="admin-task-title"><span className={`admin-task-kind ${task.kind}`}>{task.kind}</span><h3>{task.title}</h3></div>{task.description && <p>{task.description}</p>}<small>Added {new Date(task.created_at).toLocaleString()}</small></div>
           <div className="admin-task-controls">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import TicketArtwork from '../Components/Common/TicketArtwork';
+import ProfileAvatar from '../Components/Common/ProfileAvatar';
 import { useAuthContext } from '../context/AuthContext';
 import { scheduleApi, StudentStats, RecentActivity } from '../api/schedule.api';
 import { getTicketBalance, TicketBalance } from '../services/ticket.service';
@@ -120,7 +121,7 @@ const HomePage = () => {
     fetchFavorites();
   }, [user]);
 
-  // Parse slot time (12-hour or 24-hour format) and convert to KST for accurate countdown
+  // Parse slot time (12-hour or 24-hour format) and convert to JST for accurate countdown
   // Parse slot time and return the actual moment in time (for comparisons)
   // Slot times are stored in PHT (UTC+8) - the Date object handles timezone conversion internally
   const parseSlotDateTime = (slotDate: string, slotTime: string): Date => {
@@ -157,8 +158,8 @@ const HomePage = () => {
     return new Date(`${slotDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00+08:00`);
   };
 
-  // Convert Philippine time string to Korean time display
-  const convertToKoreanTime = (slotTime: string): string => {
+  // Convert Philippine time string to Japanese time display
+  const convertToJapaneseTime = (slotTime: string): string => {
     let hours: number;
     let minutes: number;
     
@@ -186,7 +187,7 @@ const HomePage = () => {
       }
     }
     
-    // Add 1 hour for Korean timezone
+    // Add 1 hour for Japanese timezone
     hours += 1;
     
     // Handle day rollover
@@ -246,46 +247,46 @@ const HomePage = () => {
     }
   };
 
-  // Format date for display in KST timezone
+  // Format date for display in JST timezone
   const formatDate = (date: Date) => {
-    // Get the date components in KST (UTC+9)
-    const kstFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Seoul',
+    // Get the date components in JST (UTC+9)
+    const jstFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Tokyo',
       year: 'numeric',
       month: 'numeric',
       day: 'numeric'
     });
-    const kstParts = kstFormatter.formatToParts(date);
-    const kstYear = parseInt(kstParts.find(p => p.type === 'year')?.value || '0');
-    const kstMonth = parseInt(kstParts.find(p => p.type === 'month')?.value || '0') - 1;
-    const kstDay = parseInt(kstParts.find(p => p.type === 'day')?.value || '0');
+    const jstParts = jstFormatter.formatToParts(date);
+    const jstYear = parseInt(jstParts.find(p => p.type === 'year')?.value || '0');
+    const jstMonth = parseInt(jstParts.find(p => p.type === 'month')?.value || '0') - 1;
+    const jstDay = parseInt(jstParts.find(p => p.type === 'day')?.value || '0');
     
-    // Get today in KST
+    // Get today in JST
     const now = new Date();
-    const todayParts = kstFormatter.formatToParts(now);
+    const todayParts = jstFormatter.formatToParts(now);
     const todayYear = parseInt(todayParts.find(p => p.type === 'year')?.value || '0');
     const todayMonth = parseInt(todayParts.find(p => p.type === 'month')?.value || '0') - 1;
     const todayDay = parseInt(todayParts.find(p => p.type === 'day')?.value || '0');
     
-    // Check if same day in KST
-    if (kstYear === todayYear && kstMonth === todayMonth && kstDay === todayDay) {
+    // Check if same day in JST
+    if (jstYear === todayYear && jstMonth === todayMonth && jstDay === todayDay) {
       return 'Today';
     }
     
-    // Check if tomorrow in KST
+    // Check if tomorrow in JST
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const tomorrowParts = kstFormatter.formatToParts(tomorrow);
+    const tomorrowParts = jstFormatter.formatToParts(tomorrow);
     const tomorrowYear = parseInt(tomorrowParts.find(p => p.type === 'year')?.value || '0');
     const tomorrowMonth = parseInt(tomorrowParts.find(p => p.type === 'month')?.value || '0') - 1;
     const tomorrowDay = parseInt(tomorrowParts.find(p => p.type === 'day')?.value || '0');
     
-    if (kstYear === tomorrowYear && kstMonth === tomorrowMonth && kstDay === tomorrowDay) {
+    if (jstYear === tomorrowYear && jstMonth === tomorrowMonth && jstDay === tomorrowDay) {
       return 'Tomorrow';
     }
     
-    // Format as readable date in KST
+    // Format as readable date in JST
     return date.toLocaleDateString('en-US', { 
-      timeZone: 'Asia/Seoul',
+      timeZone: 'Asia/Tokyo',
       weekday: 'short', 
       month: 'short', 
       day: 'numeric' 
@@ -408,12 +409,7 @@ const HomePage = () => {
                       </div>
                     ) : stats?.nextLesson ? (
                       <div className="next-lesson-content">
-                        <div 
-                          className={stats.nextLesson.tutorAvatar ? "next-lesson-avatar" : "next-lesson-avatar placeholder"}
-                          style={stats.nextLesson.tutorAvatar ? { backgroundImage: `url(${stats.nextLesson.tutorAvatar})` } : undefined}
-                        >
-                          {!stats.nextLesson.tutorAvatar && <i className="fas fa-user"></i>}
-                        </div>
+                        <ProfileAvatar src={stats.nextLesson.tutorAvatar} alt={stats.nextLesson.tutorName} className="next-lesson-avatar" fallbackClassName="placeholder" style={{ objectFit: 'cover' }} fallback={<i className="fas fa-user" aria-hidden="true" />} />
                         <div className="next-lesson-info">
                           <div className="next-lesson-tutor">{stats.nextLesson.tutorName}</div>
                           <div className="next-lesson-details">
@@ -423,7 +419,7 @@ const HomePage = () => {
                             </span>
                             <span className="next-lesson-detail">
                               <i className="fas fa-clock"></i>
-                              {convertToKoreanTime(stats.nextLesson.slotTime)} KST
+                              {convertToJapaneseTime(stats.nextLesson.slotTime)} JST
                             </span>
                           </div>
                         </div>
@@ -530,12 +526,7 @@ const HomePage = () => {
                             href={`/tutor/${tutor.tutorId}`}
                             className="favorite-tutor-item"
                           >
-                            <div 
-                              className={tutor.tutorAvatar ? "favorite-tutor-avatar" : "favorite-tutor-avatar placeholder"}
-                              style={tutor.tutorAvatar ? { backgroundImage: `url(${tutor.tutorAvatar})` } : undefined}
-                            >
-                              {!tutor.tutorAvatar && <i className="fas fa-user"></i>}
-                            </div>
+                            <ProfileAvatar src={tutor.tutorAvatar} alt={tutor.tutorName} className="favorite-tutor-avatar" fallbackClassName="placeholder" style={{ objectFit: 'cover' }} fallback={<i className="fas fa-user" aria-hidden="true" />} />
                             <span className="favorite-tutor-name">{tutor.tutorName}</span>
                             <i className="fas fa-chevron-right"></i>
                           </a>

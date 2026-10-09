@@ -11,14 +11,14 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ Component }: ProtectedRouteProps): JSX.Element | null => {
-  const { user, initialLoading, loginLoading } = useAuthContext();
+  const { user, initialLoading, loginLoading, logoutLoading } = useAuthContext();
   const { route } = useLocation();
 
   useEffect(() => {
-    if (!initialLoading && !user && !loginLoading) {
+    if (!initialLoading && !user && !loginLoading && !logoutLoading) {
       route('/');
     }
-  }, [initialLoading, user, loginLoading, route]);
+  }, [initialLoading, user, loginLoading, logoutLoading, route]);
 
   if (initialLoading || loginLoading) return <LoadingSpinner />;
   if (!user) return null;
@@ -40,20 +40,21 @@ interface CertifiedRouteProps {
 }
 
 export const CertifiedRoute = ({ Component }: CertifiedRouteProps): JSX.Element | null => {
-  const { user, initialLoading, loginLoading } = useAuthContext();
+  const { user, initialLoading, loginLoading, logoutLoading } = useAuthContext();
   const { route } = useLocation();
   const [certificationLoading, setCertificationLoading] = useState(true);
   const [isCertified, setIsCertified] = useState(false);
 
   // Check authentication
   useEffect(() => {
-    if (!initialLoading && !user && !loginLoading) {
+    if (!initialLoading && !user && !loginLoading && !logoutLoading) {
       route('/');
     }
-  }, [initialLoading, user, loginLoading, route]);
+  }, [initialLoading, user, loginLoading, logoutLoading, route]);
 
   // Check certification status
   useEffect(() => {
+    let active = true;
     const checkCertification = async () => {
       if (!user?.userId) return;
       
@@ -66,6 +67,7 @@ export const CertifiedRoute = ({ Component }: CertifiedRouteProps): JSX.Element 
       
       try {
         const certification = await proofApi.getTutorCertificationStatus();
+        if (!active) return;
         const hasAllRequirements = certification.snapshot.missingRequirements.length === 0;
 
         if (hasAllRequirements) {
@@ -75,17 +77,19 @@ export const CertifiedRoute = ({ Component }: CertifiedRouteProps): JSX.Element 
           route('/home?certification=required');
         }
       } catch (err) {
+        if (!active) return;
         console.error('Failed to check certification:', err);
         route('/home?certification=error');
       } finally {
-        setCertificationLoading(false);
+        if (active) setCertificationLoading(false);
       }
     };
 
-    if (user?.userId && !initialLoading) {
+    if (user?.userId && !initialLoading && !logoutLoading) {
       checkCertification();
     }
-  }, [user?.userId, initialLoading, route]);
+    return () => { active = false; };
+  }, [user?.userId, initialLoading, logoutLoading, route]);
 
   if (initialLoading || loginLoading || certificationLoading) return <LoadingSpinner />;
   if (!user) return null;

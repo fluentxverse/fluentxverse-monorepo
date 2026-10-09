@@ -44,6 +44,7 @@ import AttendanceReminder from './Components/Common/AttendanceReminder';
 import MobileHeader from './Components/Header/MobileHeader';
 import { useAuthContext } from './context/AuthContext';
 import { useThemeStore } from './context/ThemeContext';
+import { useEmbeddedTheme } from './hooks/useEmbeddedTheme';
 
 // Performance: Link prefetching on hover
 import { initPrefetching, prefetchCriticalRoutes } from './utils/prefetch';
@@ -65,12 +66,13 @@ if (typeof window !== 'undefined') {
 
 function AppShell() {
 	const [menuActive, setMenuActive] = useState(false);
-	const { isAuthenticated } = useAuthContext();
+	const { isAuthenticated, logoutLoading } = useAuthContext();
 	const { path } = useLocation();
 	const resolvedTheme = useThemeStore((state) => state.resolvedTheme);
 	const hydrateTheme = useThemeStore((state) => state.hydrateTheme);
 	const syncSystemTheme = useThemeStore((state) => state.syncSystemTheme);
-	const effectiveTheme = path === '/' ? 'light' : resolvedTheme;
+	const embeddedTheme = useEmbeddedTheme();
+	const effectiveTheme = embeddedTheme ?? (path === '/' ? 'light' : resolvedTheme);
 	// Auth state for session modal
 	// We'll read isAuthenticated via context inside the tree
 
@@ -161,7 +163,7 @@ function AppShell() {
 							<OfflineBanner />
 							<AttendanceReminder />
 							{/* Session expiry warning modal visible when authenticated */}
-							<SessionExpiryModal isAuthenticated={isAuthenticated} />
+							<SessionExpiryModal isAuthenticated={isAuthenticated && !logoutLoading} autoRefresh={path.startsWith('/classroom/')} />
 							{/* Session expired modal - shows when 401 received */}
 							<SessionExpiredModal />
 						<Router>

@@ -97,6 +97,10 @@ const courses: Course[] = [
   }
 ];
 
+const availableCourses = courses.filter(course =>
+  ['business-english', 'conversational-skills', 'daily-dispatch'].includes(course.id)
+);
+
 export default function MaterialsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -105,7 +109,7 @@ export default function MaterialsPage() {
   }, []);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const visibleCourses = courses.filter(course =>
+  const visibleCourses = availableCourses.filter(course =>
     course.title.toLowerCase().includes(normalizedSearch) ||
     course.description.toLowerCase().includes(normalizedSearch)
   );
@@ -133,7 +137,7 @@ export default function MaterialsPage() {
                 </div>
                 <div>
                   <h1 className="materials-page-title">Learning Materials</h1>
-                  <p className="materials-page-subtitle">Explore our comprehensive collection of {courses.length} English learning courses</p>
+                  <p className="materials-page-subtitle">Explore our comprehensive collection of {availableCourses.length} English learning courses</p>
                 </div>
               </div>
             </div>

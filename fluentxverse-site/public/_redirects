@@ -1,0 +1,1 @@
+# SPA fallback is configured in wrangler.toml; do not rewrite asset requests.

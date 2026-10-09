@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'preact/hooks';
-import { Link, useLocation } from 'wouter';
+import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
 import ThemeSwitch from '../Common/ThemeSwitch';
+import ProfileAvatar from '../Common/ProfileAvatar';
 import './MobileHeader.css';
 
 interface MenuItem {
@@ -15,14 +16,14 @@ const menuItems: MenuItem[] = [
   { href: "/home", icon: "fi-sr-home", label: "Home" },
   { href: "/profile", icon: "fi-sr-user", label: "My Profile" },
   { href: "/schedule", icon: "fi-sr-calendar", label: "Schedule" },
-  { href: "/material", icon: "fi-sr-book-alt", label: "Materials" },
-  { href: "/metrics", icon: "fi-sr-chart-histogram", label: "Metrics" },
+  { href: "/materials", icon: "fi-sr-book-alt", label: "Materials" },
+  { href: "/performance-metrics", icon: "fi-sr-chart-histogram", label: "Metrics" },
   { href: "/about", icon: "fi-sr-info", label: "About" },
 ];
 
 const MobileHeader = () => {
-  const { user, logout } = useAuthContext();
-  const [location] = useLocation();
+  const { user, logout, logoutLoading, logoutError } = useAuthContext();
+  const { path: location } = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -42,10 +43,8 @@ const MobileHeader = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    closeMenu();
     await logout();
-    window.location.href = '/';
-  }, [logout, closeMenu]);
+  }, [logout]);
 
   const openSettings = useCallback(() => {
     closeMenu();
@@ -70,24 +69,18 @@ const MobileHeader = () => {
             <span className="mobile-header-brand">Fluent<span className="brand-x">X</span>Verse</span>
           </div>
 
-          <Link href="/profile" className="mobile-header-user">
-            {user.profilePicture ? (
-              <img 
-                src={user.profilePicture} 
-                alt="Profile" 
-                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
-              />
-            ) : (
-              <i className="fas fa-user-circle"></i>
-            )}
-          </Link>
+          <a href="/profile" className="mobile-header-user">
+            <ProfileAvatar src={user.profilePicture} alt="Profile" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', display: 'grid', placeItems: 'center' }} fallback={<i className="fas fa-user-circle" aria-hidden="true" />} />
+          </a>
         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="mobile-menu-overlay" onClick={closeMenu}>
-          <div className="mobile-menu-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="mobile-menu-overlay" onClick={(event) => {
+          if (event.target === event.currentTarget) closeMenu();
+        }}>
+          <div className="mobile-menu-panel">
             {/* Menu Header */}
             <div className="mobile-menu-header">
               <div className="mobile-menu-logo">
@@ -102,19 +95,7 @@ const MobileHeader = () => {
             {/* User Info */}
             <div className="mobile-menu-user">
               <div className="user-avatar">
-                {user.profilePicture ? (
-                  <img 
-                    src={user.profilePicture} 
-                    alt="Profile" 
-                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      (e.target as HTMLImageElement).parentElement?.querySelector('i')?.style.setProperty('display', 'block');
-                    }}
-                  />
-                ) : (
-                  <i className="fas fa-user-circle"></i>
-                )}
+                <ProfileAvatar src={user.profilePicture} alt="Profile" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'grid', placeItems: 'center' }} fallback={<i className="fas fa-user-circle" aria-hidden="true" />} />
               </div>
               <div className="user-info">
                 <span className="user-name">{user.firstName} {user.lastName}</span>
@@ -135,10 +116,10 @@ const MobileHeader = () => {
               <ul>
                 {menuItems.map((item) => (
                   <li key={item.href} className={location === item.href ? 'active' : ''}>
-                    <Link href={item.href} onClick={closeMenu}>
+                    <a href={item.href} onClick={closeMenu}>
                       <i className={item.icon}></i>
                       <span>{item.label}</span>
-                    </Link>
+                    </a>
                   </li>
                 ))}
                 {/* Settings */}
@@ -153,10 +134,11 @@ const MobileHeader = () => {
 
             {/* Logout Button */}
             <div className="mobile-menu-footer">
-              <button className="logout-btn" onClick={handleLogout}>
+              <button className="logout-btn" onClick={handleLogout} disabled={logoutLoading}>
                 <i className="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+                <span>{logoutLoading ? 'Signing out...' : 'Logout'}</span>
               </button>
+              {logoutError && <p className="mobile-logout-error" role="alert">{logoutError}</p>}
             </div>
           </div>
         </div>

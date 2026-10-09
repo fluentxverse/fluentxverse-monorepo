@@ -1,4 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
+import { productionEndpoints } from '../../config/productionDomains';
 import { API_BASE_URL, getAuthToken, isProductionHost } from '../../config/api';
 
 const normalizeSocketUrl = (url: string) => url.trim().replace(/\/+$/, '');
@@ -10,7 +11,7 @@ const toHttpUrl = (url: string) => {
 
 const getSocketUrl = () => {
   if (typeof window !== 'undefined' && isProductionHost(window.location.hostname)) {
-    return 'https://ws.fluentxverse.xyz';
+    return productionEndpoints(window.location.hostname)!.socketUrl;
   }
 
   const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();

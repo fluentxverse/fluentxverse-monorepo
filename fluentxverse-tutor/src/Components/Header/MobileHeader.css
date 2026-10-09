@@ -348,6 +348,13 @@
   font-size: 18px;
 }
 
+.mobile-logout-error {
+  margin: 12px 0 0;
+  color: #b91c1c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 /* Show only on mobile/tablet */
 @media screen and (max-width: 991px) {
   .mobile-header-logged {

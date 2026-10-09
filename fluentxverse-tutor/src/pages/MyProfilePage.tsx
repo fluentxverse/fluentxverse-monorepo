@@ -3,11 +3,14 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { getPersonalInfo, PersonalInfoData } from '../api/auth.api';
 import { client } from '../api/utils';
+import { getTutorPerformance, type TutorPerformance } from '../api/performance.api';
 import SideBar from '../Components/IndexOne/SideBar';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SettingsModal from '../Components/Settings/SettingsModal';
 import ImageCropper from '../Components/Common/ImageCropper';
 import VideoPlayer from '../Components/Common/VideoPlayer';
+import ProfileAvatar from '../Components/Common/ProfileAvatar';
+import { mediaUrl } from '../utils/mediaUrl';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import './MyProfilePage.css';
 
@@ -72,6 +75,15 @@ export const MyProfilePage = () => {
   const [personalInfo, setPersonalInfo] = useState<PersonalInfoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'about' | 'stats' | 'settings'>('about');
+  const [performance, setPerformance] = useState<TutorPerformance | null>(null);
+  const [performanceError, setPerformanceError] = useState('');
+  useEffect(() => {
+    if (activeTab !== 'stats') return;
+    const controller = new AbortController();
+    getTutorPerformance('all', undefined, 1, controller.signal).then(data => { setPerformance(data); setPerformanceError(''); })
+      .catch(() => { if (!controller.signal.aborted) setPerformanceError('Could not load performance metrics.'); });
+    return () => controller.abort();
+  }, [activeTab]);
   const [uploading, setUploading] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -326,11 +338,16 @@ export const MyProfilePage = () => {
   };
 
   const viewAvatar = () => {
-    const currentAvatarUrl = avatarUrl || profileData?.profilePicture || user?.profilePicture;
+    const currentAvatarUrl = mediaUrl(avatarUrl || profileData?.profilePicture || user?.profilePicture);
     if (!currentAvatarUrl) return;
     const w = window.open('', '_blank');
     if (w) {
-      w.document.write(`<title>Profile Picture</title><img style="max-width:100%;display:block;margin:0 auto" src="${currentAvatarUrl}" />`);
+      const image = w.document.createElement('img');
+      image.src = currentAvatarUrl;
+      image.alt = 'Profile Picture';
+      image.style.cssText = 'max-width:100%;display:block;margin:0 auto';
+      w.document.title = 'Profile Picture';
+      w.document.body.appendChild(image);
     }
   };
 
@@ -482,14 +499,8 @@ export const MyProfilePage = () => {
                       <div className="profile-avatar-large profile-avatar-uploading">
                         <div className="upload-spinner"></div>
                       </div>
-                    ) : currentAvatar ? (
-                      <img 
-                        src={currentAvatar} 
-                        alt={displayName} 
-                        className="profile-avatar-large" 
-                      />
                     ) : (
-                      <div className="profile-avatar-large profile-avatar-placeholder">{initials}</div>
+                      <ProfileAvatar src={currentAvatar} alt={displayName} className="profile-avatar-large" fallbackClassName="profile-avatar-placeholder" fallback={initials} />
                     )}
                     <div className="avatar-overlay">
                       <label className="avatar-btn" title="Upload new avatar">
@@ -581,7 +592,7 @@ export const MyProfilePage = () => {
                 </h3>
                 {profileData?.videoIntroUrl ? (
                   <div className="hero-video-container">
-                    <VideoPlayer src={profileData.videoIntroUrl} hideBigPlayButton={true} />
+                    <VideoPlayer src={mediaUrl(profileData.videoIntroUrl)!} hideBigPlayButton={true} />
                     <label className="video-replace-overlay">
                       <input
                         type="file"
@@ -973,33 +984,34 @@ export const MyProfilePage = () => {
                       <i className="fi-sr-chart-histogram"></i>
                       Your Performance
                     </h2>
+                    {performanceError && <p role="alert">{performanceError}</p>}
                     <div className="stats-grid">
-                      <a href="/performance-metrics#lessons" className="profile-stat-card profile-stat-card-clickable">
+                      <a href="/performance-metrics?period=all#lessons" className="profile-stat-card profile-stat-card-clickable">
                         <div className="profile-stat-card-icon">
                           <i className="fi-sr-book-alt"></i>
                         </div>
-                        <div className="profile-stat-card-value">{profileData?.totalSessions || 0}</div>
-                        <div className="profile-stat-card-label">Total Lessons</div>
+                        <div className="profile-stat-card-value">{performance?.lessons.total ?? '-'}</div>
+                        <div className="profile-stat-card-label">Booked Lessons</div>
                       </a>
-                      <a href="/performance-metrics#rating" className="profile-stat-card profile-stat-card-clickable">
+                      <a href="/performance-metrics?period=all#rating" className="profile-stat-card profile-stat-card-clickable">
                         <div className="profile-stat-card-icon">
                           <i className="fi-sr-star"></i>
                         </div>
-                        <div className="profile-stat-card-value">{profileData?.rating?.toFixed(1) || '-'}</div>
+                        <div className="profile-stat-card-value">{performance?.rating.average?.toFixed(1) ?? '-'}</div>
                         <div className="profile-stat-card-label">Average Rating</div>
                       </a>
-                      <a href="/performance-metrics#rating" className="profile-stat-card profile-stat-card-clickable">
+                      <a href="/performance-metrics?period=all#rating" className="profile-stat-card profile-stat-card-clickable">
                         <div className="profile-stat-card-icon">
                           <i className="fi-sr-comment"></i>
                         </div>
-                        <div className="profile-stat-card-value">{profileData?.totalReviews || 0}</div>
+                        <div className="profile-stat-card-value">{performance?.rating.totalReviews ?? '-'}</div>
                         <div className="profile-stat-card-label">Total Reviews</div>
                       </a>
-                      <a href="/performance-metrics#reliability" className="profile-stat-card profile-stat-card-clickable">
+                      <a href="/performance-metrics?period=all#reliability" className="profile-stat-card profile-stat-card-clickable">
                         <div className="profile-stat-card-icon">
                           <i className="fi-sr-shield-check"></i>
                         </div>
-                        <div className="profile-stat-card-value">100%</div>
+                        <div className="profile-stat-card-value">{performance ? performance.reliability.score === null ? 'No data' : `${performance.reliability.score}%` : '-'}</div>
                         <div className="profile-stat-card-label">Reliability</div>
                       </a>
                     </div>

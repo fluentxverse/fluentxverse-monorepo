@@ -1,12 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
-import { API_BASE_URL } from '../../config/api';
-
-const PRODUCTION_DOMAINS = [
-  'fluentxverse.xyz',
-  'tutor.fluentxverse.xyz',
-  'student.fluentxverse.xyz',
-  'dashboard.fluentxverse.xyz'
-];
+import { productionEndpoints } from '../../config/productionDomains';
+import { API_BASE_URL, isProductionHost } from '../../config/api';
 
 const normalizeSocketUrl = (url: string) => url.trim().replace(/\/+$/, '');
 
@@ -16,14 +10,16 @@ const toHttpUrl = (url: string) => {
 };
 
 const getSocketUrl = () => {
+  if (typeof window !== 'undefined' && isProductionHost(window.location.hostname)) {
+    return productionEndpoints(window.location.hostname)!.socketUrl;
+  }
+
   const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();
   if (envSocketUrl) return toHttpUrl(envSocketUrl);
 
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
-    if (isProduction) return 'https://ws.fluentxverse.xyz';
     if (isLocalhost) return 'http://localhost:8767';
     return `${protocol}//${hostname}:8767`;
   }
@@ -46,7 +42,7 @@ const isJwtLikeToken = (token?: string) => Boolean(token && token.split('.').len
 
 const fetchTutorSocketToken = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/socket-token`, {
+    const response = await fetch(`${API_BASE_URL}/tutor/socket-token`, {
       method: 'GET',
       credentials: 'include',
       cache: 'no-store',
@@ -67,7 +63,7 @@ const fetchTutorSocketToken = async () => {
 const resolveAuthToken = (token?: string) => {
   if (isJwtLikeToken(token)) return token;
   const authCookie = document.cookie.split('; ').find(row => row.startsWith('tutorAuth='))?.split('=')[1];
-  return isJwtLikeToken(authCookie) ? decodeURIComponent(authCookie) : undefined;
+  return authCookie && isJwtLikeToken(authCookie) ? decodeURIComponent(authCookie) : undefined;
 };
 
 export const initSocket = (token?: string): Socket => {

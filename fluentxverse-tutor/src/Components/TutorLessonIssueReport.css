@@ -1,0 +1,73 @@
+.trouble-report-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.trouble-report-modal {
+  width: min(100%, 500px);
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #1e293b;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.24);
+}
+
+.trouble-report-header,
+.trouble-report-actions { display: flex; align-items: center; gap: 10px; padding: 16px 20px; }
+.trouble-report-header { justify-content: space-between; border-bottom: 1px solid #e2e8f0; }
+.trouble-report-step { display: block; margin-bottom: 5px; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.trouble-report-header h2 { display: flex; align-items: center; gap: 9px; margin: 0; font-size: 18px; line-height: 1.3; }
+.trouble-report-header h2 i { color: #d97706; }
+.trouble-report-close { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; height: 32px; border: 0; border-radius: 5px; background: #f1f5f9; color: #475569; cursor: pointer; }
+.trouble-report-close:disabled { cursor: not-allowed; opacity: 0.5; }
+.trouble-report-content { padding: 20px; }
+.trouble-report-content h3 { margin: 0 0 14px; color: inherit; font-size: 15px; }
+.trouble-report-options { display: grid; gap: 8px; }
+.trouble-report-options button { min-height: 42px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #334155; font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+.trouble-report-options button:hover { border-color: #60a5fa; background: #eff6ff; }
+.trouble-report-options button.selected { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+.trouble-report-reasons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.trouble-report-error { margin: 14px 0 0; color: #b91c1c; font-size: 12px; line-height: 1.4; }
+.trouble-report-actions { justify-content: flex-end; border-top: 1px solid #e2e8f0; }
+.trouble-report-actions button { min-height: 36px; padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #334155; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.trouble-report-actions .trouble-report-back { margin-right: auto; }
+.trouble-report-actions .trouble-report-submit { border-color: #2563eb; background: #2563eb; color: #fff; }
+.trouble-report-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+.trouble-report-modal button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+
+[data-theme='dark'] .trouble-report-modal { border-color: var(--fxv-border); background: var(--fxv-surface); color: var(--fxv-text); }
+[data-theme='dark'] .trouble-report-header,
+[data-theme='dark'] .trouble-report-actions { border-color: var(--fxv-border); }
+[data-theme='dark'] .trouble-report-step { color: var(--fxv-text-muted); }
+[data-theme='dark'] .trouble-report-close,
+[data-theme='dark'] .trouble-report-options button,
+[data-theme='dark'] .trouble-report-actions button:not(.trouble-report-submit) { border-color: var(--fxv-border); background: var(--fxv-surface-soft); color: var(--fxv-text); }
+[data-theme='dark'] .trouble-report-options button:hover,
+[data-theme='dark'] .trouble-report-options button.selected { border-color: #60a5fa; background: rgba(37, 99, 235, 0.18); }
+[data-theme='dark'] .trouble-report-error { color: #fca5a5; }
+
+.trouble-report-dialog { position: fixed; inset: 0; margin: auto; width: min(500px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 0; background: transparent; overflow: hidden; }
+.trouble-report-dialog::backdrop { background: rgba(0, 0, 0, .65); }
+.trouble-report-dialog .trouble-report-modal { display: flex; flex-direction: column; width: 100%; max-height: calc(100dvh - 32px); overflow: hidden; box-sizing: border-box; }
+.trouble-report-dialog .trouble-report-header, .trouble-report-dialog .trouble-report-actions { flex-shrink: 0; }
+.trouble-report-dialog .trouble-report-content { overflow-y: auto; min-height: 0; }
+[data-theme='dark'] .trouble-report-modal { background: #242424; color: #f1f1f1; border-color: #484848; }
+[data-theme='dark'] .trouble-report-modal :is(.trouble-report-header, .trouble-report-actions) { border-color: #484848; }
+[data-theme='dark'] .trouble-report-modal :is(.trouble-report-close, .trouble-report-options button, .trouble-report-actions button:not(.trouble-report-submit)) { border-color: #484848; background: #303030; color: #f1f1f1; }
+[data-theme='dark'] .trouble-report-modal .trouble-report-step { color: #b1b1b1; }
+[data-theme='dark'] .trouble-report-modal .trouble-report-options button.selected { border-color: #60a5fa; background: #244064; color: #fff; }
+.classroom-tutor-report-control { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 6px 12px; flex-shrink: 0; border-bottom: 1px solid #dbe3ee; background: #fff; color: #64748b; font-size: 11px; }
+.classroom-tutor-report-control button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid #dbe3ee; border-radius: 4px; background: #fff; color: #202020; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.classroom-tutor-report-control button:disabled { opacity: .5; cursor: default; }
+.classroom-tutor-report-control button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 3px; }
+[data-theme='dark'] .classroom-tutor-report-control { background: #242424; color: #b1b1b1; border-color: #484848; }
+[data-theme='dark'] .classroom-tutor-report-control button { background: #242424; color: #f1f1f1; border-color: #484848; }
+@media (max-width: 480px) { .trouble-report-reasons { grid-template-columns: minmax(0, 1fr); } .trouble-report-header h2 { font-size: 16px; } }

@@ -318,6 +318,7 @@ const StudentsPage = () => {
                   <i className="ri-time-line"></i> {student.lastActive}
                 </span>
                 <div className="actions">
+                  <a className="action-btn" title="Operations detail" aria-label="Operations detail" href={`/operations/people/student/${encodeURIComponent(student.id)}`}><i className="ri-dashboard-line" /></a>
                   <button 
                     className="action-btn" 
                     title="View Profile"

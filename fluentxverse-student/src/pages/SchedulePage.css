@@ -27,6 +27,18 @@
   max-width: 1400px;
 }
 
+@media (max-width: 600px) {
+  .schedule-page .container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .schedule-page .schedule-tab {
+    min-width: 0;
+    padding: 10px 12px;
+  }
+}
+
 /* Header Section */
 .schedule-header {
   display: flex;

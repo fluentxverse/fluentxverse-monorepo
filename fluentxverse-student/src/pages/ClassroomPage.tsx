@@ -3,24 +3,24 @@ import type { JSX } from 'preact';
 import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../context/AuthContext';
 import { initSocket, connectSocket, getSocket, destroySocket, fetchSocketAuthToken } from '../client/socket/socket.client';
-import { useWebRTC } from '../hooks/useWebRTC';
+import { useClassroomMedia } from '../hooks/useClassroomMedia';
+import { ClassroomRecordingNotice } from '../Components/ClassroomRecordingNotice';
+import { useClassroomStart } from '../hooks/useClassroomStart';
+import { classroomCallStatus } from '../utils/classroomCallStatus';
 import PdfViewer from '../Components/PdfViewer/PdfViewer';
+import StudentLessonIssueReport from '../Components/StudentLessonIssueReport';
+import ClassroomLessonSurvey from '../Components/ClassroomLessonSurvey';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import { studentApi, type StudentProfile, type LessonPreferences } from '../api/student.api';
 import { lessonApi, type Lesson } from '../api/lesson.api';
-import type { ChatMessageData, ClassroomActivityLogData } from '../types/socket.types';
+import type { ChatMessageData, ClassroomActivityLogData, SharedClassroomMaterial, ShareMaterialResult } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
-import { API_BASE_URL } from '../config/api';
+import DispatchMaterialPicker from '../Components/DispatchMaterialPicker';
+import CurriculumMaterialPicker from '../Components/CurriculumMaterialPicker';
+import { dispatchPostDate, type DispatchArticle } from '../utils/dispatchLibrary';
+import { useThemeStore } from '../context/ThemeContext';
+import { materialFrameUrl } from '../utils/materialFrameUrl';
 import './ClassroomPage.css';
-
-// Daily Dispatch article interface
-interface DispatchArticle {
-  id: string;
-  title: string;
-  topic: string;
-  category: string;
-  createdAt: string;
-}
 
 // Conversational Skills lesson interface for viewing
 interface ConversationalLesson {
@@ -38,6 +38,7 @@ interface ClassroomPageProps {
 }
 
 interface ChatMessage {
+  material?: SharedClassroomMaterial;
   id: string;
   sender: 'tutor' | 'student';
   text: string;
@@ -131,17 +132,18 @@ const formatFileSize = (bytes?: number): string => {
 };
 
 const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
+  const [mediaProvider, setMediaProvider] = useState<'webrtc' | 'realtimekit'>();
   useEffect(() => {
     document.title = 'Classroom | FluentXVerse';
   }, []);
 
   const { user } = useAuthContext();
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
+  const materialLoadId = useRef(0);
+  const materialOpenId = useRef(0);
   const { route } = useLocation();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const courseDropdownRef = useRef<HTMLDivElement>(null);
-  const levelDropdownRef = useRef<HTMLDivElement>(null);
-  const chapterDropdownRef = useRef<HTMLDivElement>(null);
-  const lessonDropdownRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localPipRef = useRef<HTMLVideoElement>(null);
@@ -153,6 +155,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   
   // Socket state for passing to child components
   const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+  const [classroomJoined, setClassroomJoined] = useState(false);
+  const lastSharedMaterial = useRef<string | null>(null);
+  const [signalingConnected, setSignalingConnected] = useState(false);
+  const [signalingError, setSignalingError] = useState<string | null>(null);
   
   // Extract sessionId from router params first, then pathname as fallback
   const routeSessionId = (route as any)?.params?.sessionId as string | undefined;
@@ -165,6 +171,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     }
   })();
   const currentSessionId = sessionId || routeSessionId || querySessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
+  const lessonStart = useClassroomStart(socketInstance, currentSessionId);
   
   // Initialize socket and join session
   useEffect(() => {
@@ -172,13 +179,21 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
     let socket: Socket | null = null;
     let isCancelled = false;
-    let readyInterval: ReturnType<typeof setInterval> | null = null;
 
     // Wait for connection before joining
     const onConnect = () => {
       if (!socket) return;
+      setClassroomJoined(false);
+      setSignalingConnected(true);
+      setSignalingError(null);
       socket.emit('session:join', { sessionId: currentSessionId });
     };
+    const onDisconnect = () => {
+      setClassroomJoined(false);
+      setSignalingConnected(false);
+      setIsConnecting(true);
+    };
+    const onConnectError = () => setSignalingError('Unable to connect to the lesson. Check your connection and try again.');
     
     // Handle incoming chat messages
     const onChatMessage = (data: ChatMessageData) => {
@@ -200,7 +215,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         fileUrl: data.fileUrl,
         fileName: data.fileName,
         fileType: data.fileType,
-        fileSize: data.fileSize
+        fileSize: data.fileSize,
+        material: data.material
       };
       setChatMessages(prev => {
         // Avoid duplicates
@@ -244,7 +260,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     const onChatError = (data: { message: string }) => {
       toast.error(data.message);
     };
-    const onSessionError = (data: { message: string }) => toast.error(data.message);
+    const onSessionError = (data: { message: string }) => {
+      setSignalingError(data.message);
+      toast.error(data.message);
+    };
     
     // Handle chat history
     const onChatHistory = (messages: ChatMessageData[]) => {
@@ -259,7 +278,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         fileUrl: msg.fileUrl,
         fileName: msg.fileName,
         fileType: msg.fileType,
-        fileSize: msg.fileSize
+        fileSize: msg.fileSize,
+        material: msg.material
       }));
       setChatMessages(formattedMessages);
     };
@@ -272,16 +292,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     // Handle session state
     const onSessionState = (data: any) => {
       if (data.sessionId !== currentSessionId) return;
+      setMediaProvider(previous => data.mediaProvider || previous || 'webrtc');
+      setClassroomJoined(true);
       socket?.emit('chat:request-history', { sessionId: currentSessionId });
-      if (readyInterval) clearInterval(readyInterval);
-      readyInterval = null;
-      if (data.status === 'active' && data.participants?.tutorId) {
-        socket?.emit('webrtc:ready');
-        readyInterval = setInterval(() => socket?.connected && socket.emit('webrtc:ready'), 4000);
-      }
-      if (data.status === 'active') {
-        setIsConnecting(false);
-      }
+      setIsConnecting(!data.participants?.tutorId);
       // Always update tutor info with latest from session state
       if (data.participants?.tutorId) {
         setTutorInfo({
@@ -314,6 +328,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     const onUserLeft = (data: { userId: string; userType: string }) => {
       if (data.userType === 'tutor') {
         setTutorInfo(null);
+        setIsConnecting(true);
       }
     };
 
@@ -350,6 +365,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
       // Set up listeners before connecting so the first connect event is not missed.
       socket.on('connect', onConnect);
+      socket.on('disconnect', onDisconnect);
+      socket.on('connect_error', onConnectError);
       socket.on('chat:message', onChatMessage);
       socket.on('chat:message-updated', onChatMessageUpdated);
       socket.on('chat:message-deleted', onChatMessageDeleted);
@@ -374,13 +391,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
     void setupSocket().catch((error) => {
       console.error('Failed to initialize classroom socket:', error);
+      if (!isCancelled) onConnectError();
     });
     
     return () => {
       isCancelled = true;
-      if (readyInterval) clearInterval(readyInterval);
       if (!socket) return;
       socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
       socket.off('chat:message', onChatMessage);
       socket.off('chat:message-updated', onChatMessageUpdated);
       socket.off('chat:message-deleted', onChatMessageDeleted);
@@ -395,13 +414,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       socket.off('classroom:video-state', onVideoState);
       socket.off('classroom:activity-history', onActivityHistory);
       socket.off('classroom:activity-log', onActivityLog);
+      if (socket.connected) socket.emit('session:leave');
+      socket.disconnect();
       setSocketInstance(null);
     };
   }, [currentSessionId]);
   
   // State
   const [message, setMessage] = useState('');
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const elapsedTime = lessonStart.elapsed;
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSwapped, setIsSwapped] = useState(true);
@@ -440,30 +461,20 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [availableLessons, setAvailableLessons] = useState<Lesson[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-  const [selectedLessonId, setSelectedLessonId] = useState<string>('');
   const [showLessonRequest, setShowLessonRequest] = useState(true);
   const [lessonViewUrl, setLessonViewUrl] = useState<string | null>(null);
   const [loadingViewUrl, setLoadingViewUrl] = useState(false);
   const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
   const [courseDropdownMenuStyle, setCourseDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
-  const [levelDropdownMenuStyle, setLevelDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [isChapterDropdownOpen, setIsChapterDropdownOpen] = useState(false);
-  const [chapterDropdownMenuStyle, setChapterDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [isLessonDropdownOpen, setIsLessonDropdownOpen] = useState(false);
-  const [lessonDropdownMenuStyle, setLessonDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
   
   // Course definitions
   const courses = [
     { id: 'conversational-skills', name: 'Conversational Skills', icon: '💬', description: 'Conversation lessons for practical speaking practice.' },
     { id: 'business-english', name: 'Business English', icon: '💼', description: 'Workplace English lessons and professional scenarios.' },
-    { id: 'young-learners', name: 'Young Learners', icon: '🎨', description: 'Visual lessons designed for younger students.' },
     { id: 'daily-dispatch', name: 'Daily Dispatch', icon: '📰', description: 'News-based reading and discussion material.' },
   ];
   const selectedCourseOption = courses.find(course => course.id === selectedCourse) || null;
-  const showSelectedCourseDetails = Boolean(selectedCourse) && !isCourseDropdownOpen;
+  const showSelectedCourseDetails = Boolean(selectedCourse);
 
   const buildDropdownMenuStyle = (container: HTMLDivElement | null): JSX.CSSProperties | null => {
     if (!container) return null;
@@ -491,102 +502,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     setCourseDropdownMenuStyle(buildDropdownMenuStyle(courseDropdownRef.current));
   };
 
-  const updateLevelDropdownMenuPosition = () => {
-    setLevelDropdownMenuStyle(buildDropdownMenuStyle(levelDropdownRef.current));
-  };
-
-  const updateChapterDropdownMenuPosition = () => {
-    setChapterDropdownMenuStyle(buildDropdownMenuStyle(chapterDropdownRef.current));
-  };
-
-  const updateLessonDropdownMenuPosition = () => {
-    setLessonDropdownMenuStyle(buildDropdownMenuStyle(lessonDropdownRef.current));
-  };
-
   const toggleCourseDropdown = () => {
     if (isCourseDropdownOpen) {
       setIsCourseDropdownOpen(false);
       return;
     }
-
     updateCourseDropdownMenuPosition();
-    setIsLevelDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
     setIsCourseDropdownOpen(true);
-  };
-
-  const toggleLevelDropdown = () => {
-    if (!availableLevels.length) return;
-    if (isLevelDropdownOpen) {
-      setIsLevelDropdownOpen(false);
-      return;
-    }
-
-    updateLevelDropdownMenuPosition();
-    setIsCourseDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
-    setIsLevelDropdownOpen(true);
-  };
-
-  const toggleChapterDropdown = () => {
-    if (selectedLevel === null || !availableChapters.length) return;
-    if (isChapterDropdownOpen) {
-      setIsChapterDropdownOpen(false);
-      return;
-    }
-
-    updateChapterDropdownMenuPosition();
-    setIsCourseDropdownOpen(false);
-    setIsLevelDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
-    setIsChapterDropdownOpen(true);
-  };
-
-  const toggleLessonDropdown = () => {
-    if (!filteredLessons.length) return;
-    if (isLessonDropdownOpen) {
-      setIsLessonDropdownOpen(false);
-      return;
-    }
-
-    updateLessonDropdownMenuPosition();
-    setIsCourseDropdownOpen(false);
-    setIsLevelDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    setIsLessonDropdownOpen(true);
   };
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      const clickedInsideSelector =
-        courseDropdownRef.current?.contains(target) ||
-        levelDropdownRef.current?.contains(target) ||
-        chapterDropdownRef.current?.contains(target) ||
-        lessonDropdownRef.current?.contains(target);
-
-      if (!clickedInsideSelector) {
-        setIsCourseDropdownOpen(false);
-        setIsLevelDropdownOpen(false);
-        setIsChapterDropdownOpen(false);
-        setIsLessonDropdownOpen(false);
-      }
+      if (!courseDropdownRef.current?.contains(event.target as Node)) setIsCourseDropdownOpen(false);
     };
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsCourseDropdownOpen(false);
-        setIsLevelDropdownOpen(false);
-        setIsChapterDropdownOpen(false);
-        setIsLessonDropdownOpen(false);
-      }
+      if (event.key === 'Escape') setIsCourseDropdownOpen(false);
     };
-
     document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
@@ -594,30 +527,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   }, []);
 
   useEffect(() => {
-    if (!isCourseDropdownOpen && !isLevelDropdownOpen && !isChapterDropdownOpen && !isLessonDropdownOpen) {
+    if (!isCourseDropdownOpen) {
       setCourseDropdownMenuStyle(null);
-      setLevelDropdownMenuStyle(null);
-      setChapterDropdownMenuStyle(null);
-      setLessonDropdownMenuStyle(null);
       return;
     }
-
-    const syncDropdownPosition = () => {
-      if (isCourseDropdownOpen) updateCourseDropdownMenuPosition();
-      if (isLevelDropdownOpen) updateLevelDropdownMenuPosition();
-      if (isChapterDropdownOpen) updateChapterDropdownMenuPosition();
-      if (isLessonDropdownOpen) updateLessonDropdownMenuPosition();
-    };
-
-    syncDropdownPosition();
-    window.addEventListener('resize', syncDropdownPosition);
-    window.addEventListener('scroll', syncDropdownPosition, true);
-
+    const syncPosition = () => updateCourseDropdownMenuPosition();
+    syncPosition();
+    window.addEventListener('resize', syncPosition);
+    window.addEventListener('scroll', syncPosition, true);
     return () => {
-      window.removeEventListener('resize', syncDropdownPosition);
-      window.removeEventListener('scroll', syncDropdownPosition, true);
+      window.removeEventListener('resize', syncPosition);
+      window.removeEventListener('scroll', syncPosition, true);
     };
-  }, [isCourseDropdownOpen, isLevelDropdownOpen, isChapterDropdownOpen, isLessonDropdownOpen]);
+  }, [isCourseDropdownOpen]);
+
+  useEffect(() => () => {
+    materialLoadId.current += 1;
+    materialOpenId.current += 1;
+  }, []);
 
   const isLessonMaterialCourse = (courseId?: string | null) =>
     courseId === 'conversational-skills' || courseId === 'business-english';
@@ -677,14 +604,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   };
   
   // Daily Dispatch state
-  const [dispatchArticles, setDispatchArticles] = useState<DispatchArticle[]>([]);
-  const [loadingDispatch, setLoadingDispatch] = useState(false);
   const [viewingDispatchArticle, setViewingDispatchArticle] = useState<DispatchArticle | null>(null);
   
   // Conversational Skills viewing state
   const [viewingConversationalLesson, setViewingConversationalLesson] = useState<ConversationalLesson | null>(null);
   const [conversationalViewUrl, setConversationalViewUrl] = useState<string | null>(null);
-  const [loadingConversationalView, setLoadingConversationalView] = useState(false);
   
   // File sharing state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -711,75 +635,29 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     return match ? parseInt(match[1], 10) : 1;
   };
 
-  // Handle course selection - load lessons for that course
   const handleCourseChange = async (courseId: string) => {
+    const requestId = ++materialLoadId.current;
     setSelectedCourse(courseId);
-    setSelectedLevel(null);
-    setSelectedChapter(null);
-    setSelectedLessonId('');
-    setDispatchArticles([]);
-    
-    if (!courseId) return;
-    
-    // Handle Daily Dispatch separately
-    if (courseId === 'daily-dispatch') {
-      setLoadingDispatch(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/dispatch`, {
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Handle both array response and wrapped response
-          const articles: DispatchArticle[] = Array.isArray(data) ? data : (data.articles || data.data || []);
-          // Sort articles by date (most recent first)
-          const sortedArticles = articles.sort((a, b) => 
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          setDispatchArticles(sortedArticles);
-        }
-      } catch (err) {
-        console.error('Failed to load dispatch articles:', err);
-      } finally {
-        setLoadingDispatch(false);
-      }
-      return;
-    }
-    
+    setAvailableLessons([]);
+    setLoadingMaterials(false);
+    if (!courseId || courseId === 'daily-dispatch') return;
     setLoadingMaterials(true);
     try {
-      // Use lesson-materials endpoint for builder-backed courses
-      if (isLessonMaterialCourse(courseId)) {
-        const result = await lessonApi.getPublishedLessonMaterials(courseId);
-        if (result.success && result.lessons) {
-          setAvailableLessons(result.lessons.map(transformLessonMaterialToLesson));
-        }
-      } else {
-        // Use regular lesson endpoint for other courses
-        const result = await lessonApi.getPublishedLessons(courseId);
-        if (result.success && result.lessons) {
-          setAvailableLessons(result.lessons);
-        }
-      }
+      const result = isLessonMaterialCourse(courseId)
+        ? await lessonApi.getPublishedLessonMaterials(courseId)
+        : await lessonApi.getPublishedLessons(courseId);
+      if (requestId !== materialLoadId.current) return;
+      if (!result.success || !result.lessons) throw new Error('Could not load course');
+      setAvailableLessons(isLessonMaterialCourse(courseId)
+        ? result.lessons.map(transformLessonMaterialToLesson)
+        : result.lessons);
     } catch (err) {
-      console.error('Failed to load lessons:', err);
+      if (requestId === materialLoadId.current) toast.error('Could not load lessons. Please choose the course again.');
     } finally {
-      setLoadingMaterials(false);
+      if (requestId === materialLoadId.current) setLoadingMaterials(false);
     }
   };
 
-  // Get unique levels from available lessons
-  const availableLevels = [...new Set(availableLessons.map(l => getLevelNumber(l)))].sort((a, b) => a - b);
-  
-  // Get chapters for selected level
-  const availableChapters = selectedLevel !== null 
-    ? [...new Set(availableLessons.filter(l => getLevelNumber(l) === selectedLevel).map(l => getChapterNumber(l)))].sort((a, b) => a - b)
-    : [];
-  
-  // Get lessons for selected level and chapter
-  const filteredLessons = selectedLevel !== null && selectedChapter !== null
-    ? availableLessons.filter(l => getLevelNumber(l) === selectedLevel && getChapterNumber(l) === selectedChapter)
-    : [];
   const chosenCourseLabel = chosenLesson
     ? courses.find(course => course.id === chosenLesson.courseId)?.name || 'Lesson Material'
     : 'Not selected';
@@ -789,36 +667,30 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const previousLessonMeta = chosenLesson && chosenLesson.lessonNumber > 1
     ? 'Completed before your current material'
     : 'This is the first lesson in the sequence';
-  const recommendedLessonLabel = chosenLesson
-    ? `Lesson ${chosenLesson.lessonNumber + 1}`
-    : 'Choose a material below';
-  const recommendedLessonMeta = chosenLesson
-    ? 'Recommended next step in this course'
-    : 'Your recommendation appears after selecting a lesson';
-  const selectedCourseLevelLessons = selectedLevel !== null
-    ? availableLessons.filter(lesson => getLevelNumber(lesson) === selectedLevel)
-    : [];
-  const selectedLevelSummary = selectedLevel !== null
-    ? `${selectedCourseLevelLessons.length} lesson${selectedCourseLevelLessons.length === 1 ? '' : 's'} available`
-    : availableLevels.length > 0
-      ? `${availableLevels.length} level${availableLevels.length === 1 ? '' : 's'} available`
-      : 'Levels will appear here';
-  const selectedChapterSummary = selectedLevel === null
-    ? 'Choose a level first'
-    : availableChapters.length > 0
-      ? `${availableChapters.length} chapter${availableChapters.length === 1 ? '' : 's'} in this level`
-      : 'No chapters available yet';
-  const selectedLesson = selectedLessonId
-    ? filteredLessons.find(lesson => lesson.id === selectedLessonId) || null
-    : null;
-  const selectedLessonSummary = selectedLesson
-    ? selectedLesson.lessonData?.header?.goalText || selectedLesson.title
-    : filteredLessons.length > 0
-      ? `${filteredLessons.length} lesson${filteredLessons.length === 1 ? '' : 's'} in this chapter`
-      : selectedChapter === null
-        ? 'Choose a chapter first'
-        : 'No lessons available yet';
   const hasOpenMaterial = Boolean(chosenLesson || viewingDispatchArticle || viewingConversationalLesson);
+  const openedMaterialId = viewingDispatchArticle?.id || viewingConversationalLesson?.id || chosenLesson?.lessonId;
+  const openedMaterialCourse = viewingDispatchArticle ? 'daily-dispatch'
+    : viewingConversationalLesson ? 'conversational-skills' : chosenLesson?.courseId;
+
+  useEffect(() => {
+    if (!lessonStart.live || showLessonRequest || loadingLesson || loadingViewUrl || !classroomJoined || !socketInstance?.connected
+      || !openedMaterialId || !openedMaterialCourse || !currentSessionId
+      || (!viewingDispatchArticle && !viewingConversationalLesson && !lessonViewUrl)
+      || !['daily-dispatch', 'conversational-skills', 'business-english'].includes(openedMaterialCourse)) return;
+    const key = `${currentSessionId}:${openedMaterialCourse}:${openedMaterialId}`;
+    if (lastSharedMaterial.current === key) return;
+    lastSharedMaterial.current = key;
+    socketInstance.timeout(10000).emit('chat:share-material', {
+      sessionId: currentSessionId, courseId: openedMaterialCourse, materialId: openedMaterialId,
+    }, (error: Error | null, result?: ShareMaterialResult) => {
+      if (error || !result?.success) {
+        if (lastSharedMaterial.current === key) lastSharedMaterial.current = null;
+        toast.error(result?.message || 'Material was not sent to your tutor. Reopen it to try again.');
+      }
+    });
+  }, [lessonStart.live, showLessonRequest, loadingLesson, loadingViewUrl, classroomJoined, socketInstance,
+    openedMaterialId, openedMaterialCourse, currentSessionId, lessonViewUrl]);
+  const isViewingBusinessEnglishMaterial = !showLessonRequest && !viewingDispatchArticle && !viewingConversationalLesson && chosenLesson?.courseId === 'business-english';
   const materialTabTitle = viewingDispatchArticle?.title
     || viewingConversationalLesson?.title
     || chosenLesson?.title
@@ -836,55 +708,40 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       ? 'fas fa-comments'
       : 'fas fa-book-open';
 
-  // Handle selecting a new material
-  const handleApplyMaterial = async () => {
-    if (!selectedLessonId) return;
-    
-    const selectedLesson = availableLessons.find(l => l.id === selectedLessonId);
-    if (selectedLesson) {
-      const newLesson = {
-        lessonId: selectedLesson.id,
-        courseId: selectedCourse,
-        title: selectedLesson.title,
-        lessonNumber: getLessonNumber(selectedLesson),
-        goal: selectedLesson.lessonData?.header?.goalText || ''
-      };
-      
-      setChosenLesson(newLesson);
-      
-      // Save to backend
-      try {
-        await studentApi.saveLastViewedLesson({
-          sessionId: currentSessionId,
-          courseId: newLesson.courseId,
-          lessonId: newLesson.lessonId,
-          lessonNumber: newLesson.lessonNumber,
-          title: newLesson.title,
-          goal: newLesson.goal,
-          viewedAt: Date.now()
-        });
-      } catch (err) {
-        console.error('Failed to save lesson selection:', err);
-      }
-      
-      // Fetch the lesson viewUrl for iframe display
-      setLoadingViewUrl(true);
-      try {
-        const nextViewUrl = await resolveStudentMaterialViewUrl(selectedCourse, selectedLesson.id);
-        setLessonViewUrl(nextViewUrl);
-      } catch (err) {
-        console.error('Failed to get lesson view URL:', err);
-      } finally {
-        setLoadingViewUrl(false);
-      }
-      
-      // Reset selectors and hide lesson request to show material
-      setSelectedCourse('');
-      setSelectedLevel(null);
-      setSelectedChapter(null);
-      setSelectedLessonId('');
-      setAvailableLessons([]);
-      setShowLessonRequest(false);
+  const handleApplyMaterial = async (lessonId: string) => {
+    const selectedLesson = availableLessons.find(lesson => lesson.id === lessonId);
+    if (!selectedLesson) return;
+    const requestId = ++materialOpenId.current;
+    const newLesson = {
+      lessonId: selectedLesson.id, courseId: selectedCourse, title: selectedLesson.title,
+      lessonNumber: getLessonNumber(selectedLesson),
+      goal: selectedLesson.lessonData?.header?.goalText || '',
+    };
+    setChosenLesson(newLesson);
+    setViewingDispatchArticle(null);
+    setViewingConversationalLesson(selectedCourse === 'conversational-skills' ? {
+      id: newLesson.lessonId, title: newLesson.title, level: getLevelNumber(selectedLesson),
+      chapter: getChapterNumber(selectedLesson), lessonNumber: newLesson.lessonNumber, goalTextEn: newLesson.goal,
+    } : null);
+    setConversationalViewUrl(selectedCourse === 'conversational-skills'
+      ? `/materials/conversational-skills/${selectedLesson.id}` : null);
+    setLessonViewUrl(null);
+    setLoadingViewUrl(true);
+    setShowLessonRequest(false);
+    try {
+      const nextViewUrl = await resolveStudentMaterialViewUrl(newLesson.courseId, selectedLesson.id);
+      if (requestId === materialOpenId.current) setLessonViewUrl(nextViewUrl);
+    } catch (err) {
+      if (requestId === materialOpenId.current) toast.error('Could not open this lesson. Please try again.');
+    } finally {
+      if (requestId === materialOpenId.current) setLoadingViewUrl(false);
+    }
+    try {
+      await studentApi.saveLastViewedLesson({
+        sessionId: currentSessionId, ...newLesson, viewedAt: Date.now(),
+      });
+    } catch (err) {
+      console.error('Failed to save lesson selection:', err);
     }
   };
 
@@ -987,13 +844,46 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     localStream,
     remoteStream,
     isConnected,
+    isConnecting: isMediaConnecting,
     error: webrtcError,
     startLocalStream,
     toggleAudio,
     toggleVideo,
     switchMediaDevices,
     cleanup
-  } = useWebRTC({ remoteUserId: tutorInfo?.id, socket: socketInstance });
+  } = useClassroomMedia({ provider: mediaProvider, sessionId: currentSessionId, remoteUserId: tutorInfo?.id, socket: socketInstance, enabled: lessonStart.live });
+  useEffect(() => { if (lessonStart.closed) cleanup(); }, [lessonStart.closed, cleanup]);
+  useEffect(() => {
+    if (mediaProvider !== 'webrtc' || !lessonStart.live || !tutorInfo?.id || !socketInstance) return;
+    const ready = () => { if (socketInstance.connected) socketInstance.emit('webrtc:ready'); };
+    ready();
+    const timer = window.setInterval(ready, 4000);
+    return () => window.clearInterval(timer);
+  }, [mediaProvider, lessonStart.live, tutorInfo?.id, socketInstance]);
+  const callConnected = isConnected && signalingConnected && !signalingError && !webrtcError;
+  useEffect(() => {
+    const update = () => socketInstance?.emit('classroom:call-state', { connected: Boolean(callConnected) });
+    update(); socketInstance?.on('connect', update);
+    return () => { socketInstance?.off('connect', update); };
+  }, [socketInstance, callConnected]);
+  const callStatus = classroomCallStatus({
+    signalingConnected,
+    localMediaReady: Boolean(localStream?.getTracks().some(track => track.readyState === 'live')),
+    peerPresent: !isConnecting,
+    peerConnecting: isMediaConnecting,
+    peerConnected: isConnected,
+    remoteRole: 'tutor',
+    error: signalingError || webrtcError,
+  });
+  const [connectedBannerDismissed, setConnectedBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    setConnectedBannerDismissed(false);
+    if (!callConnected) return;
+    const timer = window.setTimeout(() => setConnectedBannerDismissed(true), 3000);
+    return () => window.clearTimeout(timer);
+  }, [callConnected, currentSessionId]);
+
   const localHasVideo = Boolean(localStream?.getVideoTracks().some(track => track.readyState === 'live'));
   const remoteHasVideo = remoteVideoEnabled && Boolean(remoteStream?.getVideoTracks().some(track => track.readyState === 'live'));
 
@@ -1081,14 +971,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       ? new Date(createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
       : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-  // Timer effect
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Start local media when component mounts (only once)
   useEffect(() => {
     const initWebRTC = async () => {
@@ -1103,7 +985,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
 
     initWebRTC();
-  }, []); // Empty deps - only run once on mount
+  }, [startLocalStream]);
 
   // The tutor side owns WebRTC offer creation. The student waits for the offer
   // and answers it, which avoids simultaneous-offer glare.
@@ -1176,7 +1058,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Detect local speaking using a calibrated noise floor so room noise does not flicker the mic indicator.
   useEffect(() => {
-    if (!localStream) return;
+    if (!localStream?.getAudioTracks().some(track => track.readyState === 'live')) return;
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(localStream);
     const analyser = audioCtx.createAnalyser();
@@ -1256,9 +1138,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // Listen for close messages from iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'close-lesson-material') {
-        setViewingConversationalLesson(null);
-        setConversationalViewUrl(null);
+      if (event.origin === window.location.origin && event.data?.type === 'close-lesson-material') {
+        setShowLessonRequest(true);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -1274,6 +1155,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // File handling functions
   const handleFileSelect = (e: Event) => {
+    if (!lessonStart.live) return;
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];
     if (!file) return;
@@ -1326,6 +1208,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   };
 
   const handleSendMessage = async () => {
+    if (!lessonStart.live) return;
     if ((!message.trim() && !selectedFile) || !currentSessionId) return;
     
     try {
@@ -1464,6 +1347,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Handle typing indicator
   const handleTyping = (typing: boolean) => {
+    if (!lessonStart.live) return;
     try {
       const socket = getSocket();
       socket.emit('chat:typing', { isTyping: typing });
@@ -1478,8 +1362,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   const handleLeaveClassroom = async () => {
     if (await toastConfirm('Are you sure you want to leave the classroom?', 'Leave Classroom')) {
-      cleanup();
-      getSocket().emit('session:leave');
       route('/schedule');
     }
   };
@@ -1502,16 +1384,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           </div>
         </div>
 
+        {currentSessionId && <StudentLessonIssueReport key={currentSessionId} bookingId={currentSessionId} compact presenceRevision={activityLogs.at(-1)?.id} />}
+        {currentSessionId && <ClassroomLessonSurvey key={`survey-${currentSessionId}`} bookingId={currentSessionId} socket={socketInstance} />}
+        {!lessonStart.live && <div className="classroom-start-wait" role={signalingError ? 'alert' : 'status'}>{lessonStart.closed ? lessonStart.message : signalingError || lessonStart.message}</div>}
+        {lessonStart.wrapUp && <div className="classroom-start-wait" role="status">{lessonStart.wrapUpMessage}</div>}
+
         {/* Video Area */}
+        <ClassroomRecordingNotice key={currentSessionId} socket={socketInstance} provider={mediaProvider} />
         <div className="video-section">
           {/* Main Video */}
           <div className="video-main">
             {/* Connection Status overlay inside video */}
-            {isConnecting && (
-              <div className="connection-status overlay-top">
-                <div className="spinner"></div>
-                <p>Waiting for tutor to join...</p>
-              </div>
+            {lessonStart.live && (!callConnected || !connectedBannerDismissed) && (
+            <div className={`connection-status overlay-top${callStatus.state === 'error' ? ' call-error' : callConnected ? ' call-connected' : ''}`}
+              role={callStatus.state === 'error' ? 'alert' : 'status'}
+              data-call-state={callStatus.state}>
+              {callStatus.spinning && <div className="spinner"></div>}
+              <p>{callStatus.message}</p>
+            </div>
             )}
             {/* All video elements always rendered, visibility controlled by isSwapped */}
             {/* Remote video in main (visible when swapped) */}
@@ -1618,6 +1508,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <button
               className={`control-btn ${isMuted ? 'active' : ''}`}
               onClick={() => setIsMuted(prev => !prev)}
+              disabled={!lessonStart.live}
               title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
@@ -1640,6 +1531,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <button
               className={`control-btn ${isVideoOff ? 'active' : ''}`}
               onClick={() => setIsVideoOff(prev => !prev)}
+              disabled={!lessonStart.live}
               title={isVideoOff ? 'Turn on camera' : 'Turn off camera'}
             >
               {isVideoOff ? (
@@ -1778,7 +1670,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               // In student app: student messages are "self" (right), tutor messages are "other" (left)
               const isOwnMessage = msg.sender === 'student';
               const canManageMessage = isOwnMessage && !msg.correction && msg.id !== 'error';
-              const canEditMessage = canManageMessage && shouldShowMessageText(msg);
+              const canEditMessage = canManageMessage && !msg.material && shouldShowMessageText(msg);
               const isEditingMessage = editingMessageId === msg.id;
               return (
               <div key={msg.id} className={`chat-message ${isOwnMessage ? 'self' : 'other'}`}>
@@ -1845,7 +1737,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                             </a>
                           )}
                           {/* Display formatted text */}
-                          {shouldShowMessageText(msg) && (
+                          {msg.material && (
+                            <div className="chat-material-share">
+                              <strong>{msg.material.title}</strong>
+                              <span>Shared with your tutor</span>
+                            </div>
+                          )}
+                          {!msg.material && shouldShowMessageText(msg) && (
                             <span>{formatMessageText(msg.text)}</span>
                           )}
                           {msg.isEdited && <span className="message-edited-label">edited</span>}
@@ -1920,12 +1818,12 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               className="attach-btn" 
               onClick={() => fileInputRef.current?.click()}
               title="Attach file"
-              disabled={isUploading}
+              disabled={!lessonStart.live || isUploading}
             >
               <i className="fi fi-sr-clip"></i>
             </button>
             <textarea
-              placeholder="Type a message..."
+              placeholder={lessonStart.live ? 'Type a message...' : 'Chat opens at lesson start'}
               aria-label="Chat message. Press Shift and Enter for a new line."
               value={message}
               onChange={(e) => {
@@ -1937,13 +1835,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 handleChatInputKeyDown(e as KeyboardEvent);
               }}
               onBlur={() => handleTyping(false)}
-              disabled={isUploading}
+              disabled={!lessonStart.live || isUploading}
               rows={1}
             />
             <button 
               className="send-btn" 
               onClick={handleSendMessage}
-              disabled={isUploading || (!message.trim() && !selectedFile)}
+              disabled={!lessonStart.live || isUploading || (!message.trim() && !selectedFile)}
             >
               {isUploading ? (
                 <span className="upload-spinner"></span>
@@ -1996,18 +1894,19 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
         {/* Material Header - conditionally show dispatch/conversational header */}
         {!showLessonRequest && viewingDispatchArticle ? (
-          <div className={`dispatch-view-header ${selectedCourse === 'daily-dispatch' ? 'daily-dispatch-theme' : ''}`}>
+          <div className="dispatch-view-header daily-dispatch-theme">
             <button 
               className="btn-back-to-request"
-              onClick={() => setViewingDispatchArticle(null)}
+              onClick={() => setShowLessonRequest(true)}
             >
               <i className="fi fi-sr-arrow-left"></i>
-              Back to Selection
+              Go to Selection Tab
             </button>
             <div className="dispatch-view-meta">
               <span className="dispatch-view-category">{viewingDispatchArticle.category}</span>
               <span className="dispatch-view-date">
-                {new Date(viewingDispatchArticle.createdAt).toLocaleDateString('en-US', {
+                {new Date(`${dispatchPostDate(viewingDispatchArticle)}T00:00:00Z`).toLocaleDateString('en-US', {
+                  timeZone: 'UTC',
                   month: 'long',
                   day: 'numeric',
                   year: 'numeric'
@@ -2019,19 +1918,26 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           <div className="dispatch-view-header conversational-theme">
             <button 
               className="btn-back-to-request"
-              onClick={() => {
-                setViewingConversationalLesson(null);
-                setConversationalViewUrl(null);
-              }}
+              onClick={() => setShowLessonRequest(true)}
             >
               <i className="fi fi-sr-arrow-left"></i>
-              Back to Selection
+              Go to Selection Tab
             </button>
             <div className="dispatch-view-meta">
               <span className="dispatch-view-category">Level {viewingConversationalLesson.level}</span>
               <span className="dispatch-view-date">
                 Chapter {viewingConversationalLesson.chapter} • Lesson {viewingConversationalLesson.lessonNumber}
               </span>
+            </div>
+          </div>
+        ) : isViewingBusinessEnglishMaterial ? (
+          <div className={`dispatch-view-header business-english-theme business-english-theme--${isDarkMode ? 'dark' : 'light'}`}>
+            <button type="button" className="btn-back-to-request" onClick={() => setShowLessonRequest(true)}>
+              <i className="fi fi-sr-arrow-left" />Go to Selection Tab
+            </button>
+            <div className="dispatch-view-meta">
+              <span className="dispatch-view-category">Business English</span>
+              <span className="dispatch-view-date">{chosenLesson?.title}</span>
             </div>
           </div>
         ) : null}
@@ -2056,7 +1962,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               title={viewingConversationalLesson.title}
             />
           ) : showLessonRequest ? (
-            <div className="lesson-request-container">
+            <div className="lesson-request-container lesson-request-container--dispatch">
               {/* Lesson Plan Section - always show */}
               <div className="lesson-request-section">
                 <div className="lesson-request-header">
@@ -2104,9 +2010,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                           </div>
 
                           <div className="request-stat-card request-stat-card--wide">
-                            <span className="request-detail-label">Recommended next lesson</span>
-                            <span className="request-detail-value request-detail-value--text">{recommendedLessonLabel}</span>
-                            <span className="request-detail-meta">{recommendedLessonMeta}</span>
+                            <span className="request-detail-label">Current material chosen</span>
+                            <span className="request-detail-value request-detail-value--text">{chosenLesson?.title || 'No material selected yet'}</span>
                           </div>
                         </div>
                       </div>
@@ -2134,7 +2039,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   )}
                 </div>
                 <div className="material-selector-body">
-                  <div className="material-selector-layout">
+                  <div className="material-selector-layout material-selector-layout--dispatch">
                     <div className="material-selector-primary">
                       {/* Course Selector */}
                       <div className="material-selector-row material-selector-row--course">
@@ -2227,424 +2132,34 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                           </div>
                         </div>
                       )}
-                {/* Daily Dispatch Card - shows when Daily Dispatch is selected */}
-                {showSelectedCourseDetails && selectedCourse === 'daily-dispatch' && (
-                  <>
-                    {/* Latest Article Card */}
-                    <div className="dispatch-article-card">
-                      <div className="dispatch-card-label">Latest Article</div>
-                      {loadingDispatch ? (
-                        <div className="dispatch-loading">
-                          <div className="spinner-small"></div>
-                          <span>Loading...</span>
-                        </div>
-                      ) : dispatchArticles.length > 0 ? (
-                        <>
-                          <div className="dispatch-table-header">
-                            <span className="dispatch-col-date">Post Date</span>
-                            <span className="dispatch-col-title">Title</span>
-                            <span className="dispatch-col-category">Category</span>
-                            <span className="dispatch-col-action">Action</span>
-                          </div>
-                          <div className="dispatch-table-row">
-                            <span className="dispatch-col-date">
-                              {new Date(dispatchArticles[0].createdAt).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <span className="dispatch-col-title">{dispatchArticles[0].title}</span>
-                            <span className="dispatch-col-category">{dispatchArticles[0].category}</span>
-                            <button 
-                              className="dispatch-col-action dispatch-open-link"
-                              onClick={() => setViewingDispatchArticle(dispatchArticles[0])}
-                            >
-                              Open Article
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="dispatch-empty">
-                          <p>No articles available</p>
-                        </div>
+                      {showSelectedCourseDetails && selectedCourse === 'daily-dispatch' && (
+                        <DispatchMaterialPicker onOpen={article => {
+                          materialOpenId.current += 1;
+                          setLoadingViewUrl(false);
+                          setViewingDispatchArticle(article);
+                          setViewingConversationalLesson(null);
+                          setConversationalViewUrl(null);
+                          setLessonViewUrl(null);
+                          setShowLessonRequest(false);
+                        }} />
+                      )}
+                      {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && (
+                        <CurriculumMaterialPicker
+                          key={selectedCourse}
+                          loading={loadingMaterials}
+                          currentId={chosenLesson?.courseId === selectedCourse ? chosenLesson.lessonId : undefined}
+                          materials={availableLessons.map(item => ({
+                            id: item.id, title: item.title, level: getLevelNumber(item),
+                            chapter: getChapterNumber(item), lesson: getLessonNumber(item),
+                            goal: item.lessonData?.header?.goalText || '',
+                          }))}
+                          onOpen={item => void handleApplyMaterial(item.id)}
+                        />
                       )}
                     </div>
-                    
-                    {/* Previous Articles Card */}
-                    {dispatchArticles.length > 1 && (
-                      <div className="dispatch-article-card dispatch-previous-card">
-                        <div className="dispatch-card-label">Previous Articles</div>
-                        <div className="dispatch-table-header">
-                          <span className="dispatch-col-date">Post Date</span>
-                          <span className="dispatch-col-title">Title</span>
-                          <span className="dispatch-col-category">Category</span>
-                          <span className="dispatch-col-action">Action</span>
-                        </div>
-                        {dispatchArticles.slice(1).map((article) => (
-                          <div className="dispatch-table-row" key={article.id}>
-                            <span className="dispatch-col-date">
-                              {new Date(article.createdAt).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <span className="dispatch-col-title">{article.title}</span>
-                            <span className="dispatch-col-category">{article.category}</span>
-                            <button 
-                              className="dispatch-col-action dispatch-open-link"
-                              onClick={() => setViewingDispatchArticle(article)}
-                            >
-                              Open Article
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                {/* Conversational Skills Card - shows when Conversational Skills is selected */}
-                {selectedCourse === 'conversational-skills' && (
-                  <>
-                    {loadingMaterials ? (
-                      <div className="dispatch-article-card">
-                        <div className="dispatch-loading">
-                          <div className="spinner-small"></div>
-                          <span>Loading lessons...</span>
-                        </div>
-                      </div>
-                    ) : availableLessons.length > 0 ? (
-                      <>
-                        {/* Group lessons by Level, then Chapter */}
-                        {availableLevels.map(level => {
-                          const levelLessons = availableLessons.filter(l => getLevelNumber(l) === level);
-                          const chaptersInLevel = [...new Set(levelLessons.map(l => getChapterNumber(l)))].sort((a, b) => a - b);
-                          
-                          return (
-                            <div key={level} className="lesson-card conversational-skills-card">
-                              <div className="lesson-card-label">Level {level}</div>
-                              {chaptersInLevel.map(chapter => {
-                                const chapterLessons = levelLessons
-                                  .filter(l => getChapterNumber(l) === chapter)
-                                  .sort((a, b) => getLessonNumber(a) - getLessonNumber(b));
-                                
-                                return (
-                                  <div key={chapter} className="lesson-chapter-group">
-                                    <div className="lesson-chapter-header">Chapter {chapter}</div>
-                                    <div className="lesson-table-header conversational-header">
-                                      <span className="lesson-col-number">Lesson</span>
-                                      <span className="lesson-col-title">Title</span>
-                                      <span className="lesson-col-goal">Goal</span>
-                                      <span className="lesson-col-action">Action</span>
-                                    </div>
-                                    {chapterLessons.map(lesson => {
-                                      const goalText = lesson.lessonData?.header?.goalText || '';
-                                      return (
-                                        <div className="lesson-table-row conversational-row" key={lesson.id}>
-                                          <span className="lesson-col-number">Lesson {getLessonNumber(lesson)}</span>
-                                          <span className="lesson-col-title">{lesson.title}</span>
-                                          <span className="lesson-col-goal" title={goalText}>
-                                            {goalText || '—'}
-                                          </span>
-                                          <button 
-                                            className="dispatch-open-link"
-                                            onClick={async () => {
-                                              // Set the viewing lesson to show in material area
-                                              const viewLesson: ConversationalLesson = {
-                                                id: lesson.id,
-                                                title: lesson.title,
-                                                level: level,
-                                                chapter: chapter,
-                                                lessonNumber: getLessonNumber(lesson),
-                                                goalTextEn: goalText
-                                              };
-                                              setViewingConversationalLesson(viewLesson);
-                                              // Use local route directly instead of API call
-                                              setConversationalViewUrl(`/materials/conversational-skills/${lesson.id}`);
-                                            }}
-                                          >
-                                            Open Material
-                                          </button>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </>
-                    ) : (
-                      <div className="dispatch-article-card">
-                        <div className="dispatch-empty">
-                          <p>No lessons available</p>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                {/* Level and chapter selectors - shows for lesson-library courses */}
-                {selectedCourse && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && availableLevels.length > 0 && (
-                  <div className="material-selector-filter-grid">
-                    <div className="material-selector-field">
-                      <span className="material-selector-field-label">Level</span>
-                      <div
-                        className={`material-selector-combobox material-selector-combobox--filter ${isLevelDropdownOpen ? 'is-open' : ''}`}
-                        ref={levelDropdownRef}
-                      >
-                        <button
-                          type="button"
-                          className="material-selector-trigger material-selector-trigger--filter"
-                          onClick={toggleLevelDropdown}
-                          aria-haspopup="listbox"
-                          aria-expanded={isLevelDropdownOpen}
-                        >
-                          <span className="material-selector-trigger-content">
-                            <span className="material-selector-trigger-icon material-selector-trigger-icon--level" aria-hidden="true">
-                              <i className="fas fa-layer-group"></i>
-                            </span>
-                            <span className="material-selector-trigger-copy">
-                              <span className="material-selector-trigger-title">
-                                {selectedLevel !== null ? `Level ${selectedLevel}` : 'Select a level'}
-                              </span>
-                              <span className="material-selector-trigger-subtitle">{selectedLevelSummary}</span>
-                            </span>
-                          </span>
-                          <span className="material-selector-trigger-arrow" aria-hidden="true">
-                            <i className={`fas ${isLevelDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </span>
-                        </button>
-                        {isLevelDropdownOpen && (
-                          <div
-                            className="material-selector-menu"
-                            role="listbox"
-                            aria-label="Level"
-                            style={levelDropdownMenuStyle || undefined}
-                          >
-                            {availableLevels.map(level => {
-                              const levelLessons = availableLessons.filter(lesson => getLevelNumber(lesson) === level);
-
-                              return (
-                                <button
-                                  key={level}
-                                  type="button"
-                                  className={`material-selector-option ${selectedLevel === level ? 'is-selected' : ''}`}
-                                  onClick={() => {
-                                    setSelectedLevel(level);
-                                    setSelectedChapter(null);
-                                    setSelectedLessonId('');
-                                    setIsLevelDropdownOpen(false);
-                                    setIsChapterDropdownOpen(false);
-                                    setIsLessonDropdownOpen(false);
-                                  }}
-                                  role="option"
-                                  aria-selected={selectedLevel === level}
-                                >
-                                  <span className="material-selector-option-icon material-selector-option-icon--level" aria-hidden="true">
-                                    <i className="fas fa-layer-group"></i>
-                                  </span>
-                                  <span className="material-selector-option-copy">
-                                    <span className="material-selector-option-title">Level {level}</span>
-                                    <span className="material-selector-option-description">
-                                      {levelLessons.length} lesson{levelLessons.length === 1 ? '' : 's'} available
-                                    </span>
-                                  </span>
-                                  {selectedLevel === level && (
-                                    <span className="material-selector-option-check" aria-hidden="true">
-                                      <i className="fas fa-check"></i>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="material-selector-field">
-                      <span className="material-selector-field-label">Chapter</span>
-                      <div
-                        className={`material-selector-combobox material-selector-combobox--filter ${isChapterDropdownOpen ? 'is-open' : ''}`}
-                        ref={chapterDropdownRef}
-                      >
-                        <button
-                          type="button"
-                          className="material-selector-trigger material-selector-trigger--filter"
-                          onClick={toggleChapterDropdown}
-                          aria-haspopup="listbox"
-                          aria-expanded={isChapterDropdownOpen}
-                          disabled={selectedLevel === null || availableChapters.length === 0}
-                        >
-                          <span className="material-selector-trigger-content">
-                            <span className="material-selector-trigger-icon material-selector-trigger-icon--chapter" aria-hidden="true">
-                              <i className="fas fa-list"></i>
-                            </span>
-                            <span className="material-selector-trigger-copy">
-                              <span className="material-selector-trigger-title">
-                                {selectedChapter !== null ? `Chapter ${selectedChapter}` : 'Select a chapter'}
-                              </span>
-                              <span className="material-selector-trigger-subtitle">{selectedChapterSummary}</span>
-                            </span>
-                          </span>
-                          <span className="material-selector-trigger-arrow" aria-hidden="true">
-                            <i className={`fas ${isChapterDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </span>
-                        </button>
-                        {isChapterDropdownOpen && (
-                          <div
-                            className="material-selector-menu"
-                            role="listbox"
-                            aria-label="Chapter"
-                            style={chapterDropdownMenuStyle || undefined}
-                          >
-                            {availableChapters.map(chapter => {
-                              const chapterLessons = availableLessons.filter(
-                                lesson => getLevelNumber(lesson) === selectedLevel && getChapterNumber(lesson) === chapter
-                              );
-
-                              return (
-                                <button
-                                  key={chapter}
-                                  type="button"
-                                  className={`material-selector-option ${selectedChapter === chapter ? 'is-selected' : ''}`}
-                                  onClick={() => {
-                                    setSelectedChapter(chapter);
-                                    setSelectedLessonId('');
-                                    setIsChapterDropdownOpen(false);
-                                    setIsLessonDropdownOpen(false);
-                                  }}
-                                  role="option"
-                                  aria-selected={selectedChapter === chapter}
-                                >
-                                  <span className="material-selector-option-icon material-selector-option-icon--chapter" aria-hidden="true">
-                                    <i className="fas fa-list"></i>
-                                  </span>
-                                  <span className="material-selector-option-copy">
-                                    <span className="material-selector-option-title">Chapter {chapter}</span>
-                                    <span className="material-selector-option-description">
-                                      {chapterLessons.length} lesson{chapterLessons.length === 1 ? '' : 's'} in this chapter
-                                    </span>
-                                  </span>
-                                  {selectedChapter === chapter && (
-                                    <span className="material-selector-option-check" aria-hidden="true">
-                                      <i className="fas fa-check"></i>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                )}
-                
-                {/* Lesson Selector - shows when chapter is selected (for other courses) */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedChapter !== null && filteredLessons.length > 0 && (
-                  <div className="material-selector-row">
-                    <div className="material-selector-field">
-                      <span className="material-selector-field-label">Lesson</span>
-                      <div
-                        className={`material-selector-combobox material-selector-combobox--filter ${isLessonDropdownOpen ? 'is-open' : ''}`}
-                        ref={lessonDropdownRef}
-                      >
-                        <button
-                          type="button"
-                          className="material-selector-trigger material-selector-trigger--filter"
-                          onClick={toggleLessonDropdown}
-                          aria-haspopup="listbox"
-                          aria-expanded={isLessonDropdownOpen}
-                        >
-                          <span className="material-selector-trigger-content">
-                            <span className="material-selector-trigger-icon material-selector-trigger-icon--lesson" aria-hidden="true">
-                              <i className="fas fa-book-open"></i>
-                            </span>
-                            <span className="material-selector-trigger-copy">
-                              <span className="material-selector-trigger-title">
-                                {selectedLesson ? selectedLesson.title : 'Select a lesson'}
-                              </span>
-                              <span className="material-selector-trigger-subtitle">{selectedLessonSummary}</span>
-                            </span>
-                          </span>
-                          <span className="material-selector-trigger-arrow" aria-hidden="true">
-                            <i className={`fas ${isLessonDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </span>
-                        </button>
-                        {isLessonDropdownOpen && (
-                          <div
-                            className="material-selector-menu"
-                            role="listbox"
-                            aria-label="Lesson"
-                            style={lessonDropdownMenuStyle || undefined}
-                          >
-                            {filteredLessons
-                              .slice()
-                              .sort((a, b) => getLessonNumber(a) - getLessonNumber(b))
-                              .map(lesson => (
-                                <button
-                                  key={lesson.id}
-                                  type="button"
-                                  className={`material-selector-option ${selectedLessonId === lesson.id ? 'is-selected' : ''}`}
-                                  onClick={() => {
-                                    setSelectedLessonId(lesson.id);
-                                    setIsLessonDropdownOpen(false);
-                                  }}
-                                  role="option"
-                                  aria-selected={selectedLessonId === lesson.id}
-                                >
-                                  <span className="material-selector-option-icon material-selector-option-icon--lesson" aria-hidden="true">
-                                    <i className="fas fa-book-open"></i>
-                                  </span>
-                                  <span className="material-selector-option-copy">
-                                    <span className="material-selector-option-title">{lesson.title}</span>
-                                    <span className="material-selector-option-description">
-                                      {lesson.lessonData?.header?.goalText || `Lesson ${getLessonNumber(lesson)}`}
-                                    </span>
-                                  </span>
-                                  {selectedLessonId === lesson.id && (
-                                    <span className="material-selector-option-check" aria-hidden="true">
-                                      <i className="fas fa-check"></i>
-                                    </span>
-                                  )}
-                                </button>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Loading indicator - for other courses with dropdowns */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && loadingMaterials && (
-                  <div className="material-loading-inline">
-                    <div className="spinner-small"></div>
-                    <span>Loading...</span>
-                  </div>
-                )}
-                
-                {/* Select Button - shows when a lesson is selected (for other courses) */}
-                {selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLessonId && (
-                  <div className="material-selector-row">
-                    <button 
-                      className="btn-search-material"
-                      onClick={handleApplyMaterial}
-                    >
-                      <i className="fi fi-sr-check"></i>
-                      Select Material
-                    </button>
-                  </div>
-                )}
-                </div>
                 </div>
               </div>
-            </div>
             </div>
           ) : chosenLesson && !showLessonRequest ? (
             <div className="lesson-material-view">
@@ -2655,7 +2170,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 </div>
               ) : lessonViewUrl ? (
                 <iframe 
-                  src={lessonViewUrl}
+                  src={materialFrameUrl(lessonViewUrl, isDarkMode ? 'dark' : 'light', window.location.origin)}
                   className="lesson-material-iframe"
                   title={chosenLesson.title}
                 />

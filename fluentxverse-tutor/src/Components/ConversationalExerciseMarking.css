@@ -82,3 +82,25 @@
 }
 .csp-fullpage.csp-dark .csp-exercise-marking-button.is-correct.is-selected { background: #16834a; border-color: #16834a; }
 .csp-fullpage.csp-dark .csp-exercise-marking-button.is-incorrect.is-selected { background: #c33135; border-color: #c33135; }
+
+.csp-exercise-marking--inline { width: 100%; min-width: 0; padding: 0; border-top: 0; }
+.csp-exercise-marking--inline .csp-exercise-marking-header { margin-bottom: 8px; }
+.csp-exercise-marking--inline .csp-exercise-marking-row { align-items: flex-start; gap: 12px; }
+.csp-exercise-marking--inline .csp-exercise-marking-number { line-height: 32px; }
+.csp-exercise-marking--inline .csp-exercise-marking-prompt { white-space: normal; overflow: visible; font-size: 14px; line-height: 1.7; padding-top: 4px; overflow-wrap: anywhere; }
+.csp-exercise-marking--inline .csp-exercise-marking-button { width: 32px; height: 32px; flex-shrink: 0; }
+.csp-exercise-marking--inline .csp-exercise-marking-response { margin-left: 31px; }
+.csp-exercise-marking--inline .csp-exercise-marking-response input { height: 36px; font-size: 13px; }
+.csp-marking-prompt-content { display: flex; align-items: flex-start; gap: 16px; min-width: 0; }
+.csp-marking-prompt-content--image-right { flex-direction: row-reverse; }
+.csp-marking-prompt-content > :last-child { min-width: 0; }
+.csp-marking-prompt-content .csp-exercise-speaker-image,
+.csp-marking-prompt-content .csp-speech-speaker-image { flex: 0 0 100px; width: 100px; }
+.csp-marking-prompt-content img { max-width: 100%; height: auto; }
+@media (max-width: 600px) {
+  .csp-exercise-marking--inline .csp-exercise-marking-row { display: grid; grid-template-columns: 19px minmax(0, 1fr); gap: 6px 12px; }
+  .csp-exercise-marking--inline .csp-exercise-marking-actions { grid-column: 2; justify-self: end; }
+  .csp-exercise-marking--inline .csp-exercise-marking-button { width: 40px; height: 40px; }
+  .csp-marking-prompt-content,
+  .csp-marking-prompt-content--image-right { flex-direction: column; }
+}

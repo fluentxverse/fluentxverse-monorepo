@@ -12,6 +12,10 @@
 }
 
 /* Toast Item */
+.toast-container > .toast.fxv-toast {
+  display: flex;
+}
+
 .toast {
   display: flex;
   align-items: flex-start;

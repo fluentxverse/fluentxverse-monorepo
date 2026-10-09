@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
-import { JSX } from 'preact';
+import type { JSX } from 'preact';
 import './SettingsModal.css';
 import './SettingsModal.extra.css';
 import './SettingsModal.align.css';
 import { useAuthContext } from '../../context/AuthContext';
-import { listRegions, type PSGCRegion, type PSGCProvince, type PSGCCity } from '../../data/ph_psgc';
 import { updatePersonalInfo, updateEmail, updatePassword } from '../../api/auth.api';
-
-// Helper type alias for municipalities (same as PSGCCity)
+import { getStudentProfile } from '../../api/student.api';
+import ProfileAvatar from '../Common/ProfileAvatar';
+import { mediaUrl } from '../../utils/mediaUrl';
+import { ENGLISH_LEVELS, JAPANESE_PREFECTURES } from '../../data/japanProfileOptions';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -61,27 +62,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
 
   // Personal info form state - initialize phone from user data
   const [phoneNumber, setPhoneNumber] = useState(user?.mobileNumber || '');
-  // Address fields
-  const [country, setCountry] = useState('Philippines');
-  const [region, setRegion] = useState(''); // stores region code
-  const [province, setProvince] = useState(''); // stores province code
-  const [city, setCity] = useState(''); // stores city code
-  const [regionsData, setRegionsData] = useState<PSGCRegion[]>([]);
-
-  // Lazy-load PSGC regions when modal opens
-  useEffect(() => {
-    if (!isOpen) return;
-    listRegions().then(setRegionsData);
-  }, [isOpen]);
-
-  const selectedRegion = regionsData.find(r => r.code === region);
-  const provincesForRegion: PSGCProvince[] = selectedRegion?.provinces || [];
-  const municipalitiesForRegion: PSGCCity[] = selectedRegion?.municipalities || [];
-  const selectedProvince = provincesForRegion.find(p => p.code === province);
-  const municipalitiesForProvince: PSGCCity[] = selectedProvince?.municipalities || [];
-  const [zipCode, setZipCode] = useState('');
-  const [addressLine, setAddressLine] = useState('');
-  const [sameAsPermanent, setSameAsPermanent] = useState(false);
+  const [prefecture, setPrefecture] = useState('');
   // Learning Preferences
   const [currentProficiency, setCurrentProficiency] = useState('');
   const [learningGoals, setLearningGoals] = useState<string[]>([]);
@@ -91,6 +72,34 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [infoError, setInfoError] = useState('');
   const [infoSuccess, setInfoSuccess] = useState('');
   const [infoLoading, setInfoLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  const loadPersonalInfo = async () => {
+    setProfileLoading(true);
+    setProfileLoaded(false);
+    setInfoError('');
+    try {
+      const result = await getStudentProfile();
+      if (!result.success || !result.data) throw new Error(result.error || 'Could not load your profile');
+      const profile = result.data;
+      setPhoneNumber(profile.mobileNumber || '');
+      setPrefecture(profile.country === 'Japan' && JAPANESE_PREFECTURES.some(item => item === profile.regionName) ? profile.regionName || '' : '');
+      setCurrentProficiency(ENGLISH_LEVELS.some(level => level.value === profile.currentProficiency) ? profile.currentProficiency || '' : '');
+      setLearningGoals(profile.learningGoals || []);
+      setPreferredLearningStyle(profile.preferredLearningStyle || '');
+      setAvailability(profile.availability || []);
+      setProfileLoaded(true);
+    } catch (error: any) {
+      setInfoError(error.message || 'Could not load your profile');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && currentView === 'update-info') void loadPersonalInfo();
+  }, [isOpen, currentView]);
 
   const handleLogout = async () => {
     // Important: do NOT close modal or navigate before logout completes.
@@ -207,36 +216,6 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
     }
   };
 
-  // Philippine regions data
-  const philippineRegions = [
-    'NCR - National Capital Region',
-    'CAR - Cordillera Administrative Region',
-    'Region 1 - Ilocos Region',
-    'Region 2 - Cagayan Valley',
-    'Region 3 - Central Luzon',
-    'Region 4A - CALABARZON',
-    'Region 4B - MIMAROPA',
-    'Region 5 - Bicol Region',
-    'Region 6 - Western Visayas',
-    'Region 7 - Central Visayas',
-    'Region 8 - Eastern Visayas',
-    'Region 9 - Zamboanga Peninsula',
-    'Region 10 - Northern Mindanao',
-    'Region 11 - Davao Region',
-    'Region 12 - SOCCSKSARGEN',
-    'Region 13 - Caraga',
-    'BARMM - Bangsamoro'
-  ];
-
-  const proficiencyLevels = [
-    'Beginner (A1)',
-    'Elementary (A2)',
-    'Intermediate (B1)',
-    'Upper Intermediate (B2)',
-    'Advanced (C1)',
-    'Proficient (C2)'
-  ];
-
   const learningGoalOptions = [
     'Conversational fluency',
     'Business communication',
@@ -286,7 +265,15 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
     setInfoError('');
     setInfoSuccess('');
 
-    // Basic validation
+    if (!profileLoaded) {
+      setInfoError('Load your profile before saving');
+      return;
+    }
+    if (!prefecture || !currentProficiency) {
+      setInfoError('Choose your prefecture and English level');
+      return;
+    }
+
     if (phoneNumber && !/^[\d\s\-+()]{7,20}$/.test(phoneNumber)) {
       setInfoError('Please enter a valid phone number');
       return;
@@ -294,25 +281,18 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
 
     setInfoLoading(true);
     try {
-      // Get region, province, and city names for storing readable values
-      const regionName = selectedRegion?.name || '';
-      const provinceName = selectedProvince?.name || '';
-      const cityName = selectedRegion?.municipalities
-        ? selectedRegion.municipalities.find(m => m.code === city)?.name || ''
-        : municipalitiesForProvince.find(m => m.code === city)?.name || '';
-
       await updatePersonalInfo({
         phoneNumber,
-        country,
-        region,
-        regionName,
-        province,
-        provinceName,
-        city,
-        cityName,
-        zipCode,
-        addressLine,
-        sameAsPermanent,
+        country: 'Japan',
+        region: prefecture,
+        regionName: prefecture,
+        province: '',
+        provinceName: '',
+        city: '',
+        cityName: '',
+        zipCode: '',
+        addressLine: '',
+        sameAsPermanent: false,
         currentProficiency,
         learningGoals,
         preferredLearningStyle,
@@ -399,7 +379,12 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
     if (!avatarPreview) return;
     const w = window.open('', '_blank');
     if (w) {
-      w.document.write(`<title>Avatar Preview</title><img style="max-width:100%;display:block;margin:0 auto" src="${avatarPreview}" />`);
+      const image = w.document.createElement('img');
+      image.src = mediaUrl(avatarPreview)!;
+      image.alt = 'Avatar Preview';
+      image.style.cssText = 'max-width:100%;display:block;margin:0 auto';
+      w.document.title = 'Avatar Preview';
+      w.document.body.appendChild(image);
     }
   };
 
@@ -425,12 +410,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
             {/* User Profile Section */}
             <div className="settings-profile">
               <div className="settings-avatar">
-                <img
-                  src={avatarPreview || '/assets/img/logo/icon_logo.webp'}
+                <ProfileAvatar
+                  src={avatarPreview}
                   alt="User Avatar"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/120/0245ae/ffffff?text=' + displayName.charAt(0).toUpperCase();
-                  }}
+                  fallback={displayName.charAt(0).toUpperCase()}
+                  style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', objectFit: 'cover', fontSize: '36px', fontWeight: 700, color: '#fff' }}
                 />
                 <div className="avatar-overlay">
                   <label className="avatar-btn" title="Upload new avatar">
@@ -803,10 +787,15 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                 </svg>
               </div>
               <h2 className="settings-subview-title">Update Personal Information</h2>
-              <p className="settings-subview-subtitle">Update your contact details, address, and learning preferences</p>
+              <p className="settings-subview-subtitle">Update your phone, prefecture, and learning preferences</p>
             </div>
 
-            <form className="settings-form" onSubmit={handleUpdateInfo}>
+            {profileLoading ? <div className="settings-profile-loading">Loading your information...</div> : !profileLoaded ? (
+              <div className="settings-profile-loading" role="alert">
+                <p>{infoError || 'Your information could not be loaded.'}</p>
+                <button type="button" className="settings-form-submit" onClick={loadPersonalInfo}>Retry</button>
+              </div>
+            ) : <form className="settings-form" onSubmit={handleUpdateInfo}>
               {/* Phone Number Section */}
               <div className="settings-form-section">
                 <h3 className="settings-form-section-title">Contact Information</h3>
@@ -818,113 +807,31 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber((e.target as HTMLInputElement).value)}
                       className="settings-form-input settings-form-input-no-toggle"
-                      placeholder="+63 XXX XXX XXXX"
+                      placeholder="+81 90 1234 5678"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Current Address Section */}
+              {/* Location Section */}
               <div className="settings-form-section">
-                <h3 className="settings-form-section-title">Current Address</h3>
-                
-                <div className="settings-form-group">
-                  <label className="settings-form-label">Country</label>
-                  <select
-                    value={country}
-                    onChange={(e) => setCountry((e.target as HTMLSelectElement).value)}
-                    className="settings-form-select"
-                  >
-                    <option value="Philippines">Philippines</option>
-                  </select>
-                </div>
+                <h3 className="settings-form-section-title">Location</h3>
 
                 <div className="settings-form-group">
-                  <label className="settings-form-label">Region</label>
+                  <label className="settings-form-label" htmlFor="student-prefecture">Prefecture in Japan</label>
                   <select
-                    value={region}
-                    onChange={(e) => {
-                      const val = (e.target as HTMLSelectElement).value;
-                      setRegion(val);
-                      // Reset downstream
-                      setProvince('');
-                      setCity('');
-                    }}
+                    id="student-prefecture"
+                    value={prefecture}
+                    onChange={(e) => setPrefecture((e.target as HTMLSelectElement).value)}
                     className="settings-form-select"
+                    required
                   >
-                    <option value="">Select Region</option>
-                    {regionsData.map(r => (
-                      <option key={r.code} value={r.code}>{r.name}</option>
+                    <option value="">Select your prefecture</option>
+                    {JAPANESE_PREFECTURES.map(item => (
+                      <option key={item} value={item}>{item}</option>
                     ))}
                   </select>
                 </div>
-
-                {/* Province selector (hidden for NCR which has direct municipalities) */}
-                {selectedRegion && !selectedRegion.municipalities && (
-                  <div className="settings-form-group">
-                    <label className="settings-form-label">Province</label>
-                    <select
-                      value={province}
-                      onChange={(e) => {
-                        const val = (e.target as HTMLSelectElement).value;
-                        setProvince(val);
-                        setCity('');
-                      }}
-                      className="settings-form-select"
-                    >
-                      <option value="">Select Province</option>
-                      {provincesForRegion.map(p => (
-                        <option key={p.code} value={p.code}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="settings-form-group">
-                  <label className="settings-form-label">City / Municipality</label>
-                  <select
-                    value={city}
-                    onChange={(e) => setCity((e.target as HTMLSelectElement).value)}
-                    className="settings-form-select"
-                    disabled={!selectedRegion || (!selectedRegion.municipalities && !selectedProvince)}
-                  >
-                    <option value="">Select City / Municipality</option>
-                    {(selectedRegion?.municipalities ? selectedRegion.municipalities : municipalitiesForProvince).map((m: PSGCCity) => (
-                      <option key={m.code} value={m.code}>{m.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="settings-form-group">
-                  <label className="settings-form-label">ZIP Code</label>
-                  <input
-                    type="text"
-                    value={zipCode}
-                    onChange={(e) => setZipCode((e.target as HTMLInputElement).value)}
-                    className="settings-form-input settings-form-input-no-toggle"
-                    placeholder="Enter ZIP code"
-                  />
-                </div>
-
-                <div className="settings-form-group">
-                  <label className="settings-form-label">Address Line</label>
-                  <textarea
-                    value={addressLine}
-                    onChange={(e) => setAddressLine((e.target as HTMLTextAreaElement).value)}
-                    className="settings-form-textarea"
-                    placeholder="House/Unit No., Street, Barangay"
-                    rows={3}
-                  />
-                </div>
-
-                <label className="settings-form-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={sameAsPermanent}
-                    onChange={(e) => setSameAsPermanent((e.target as HTMLInputElement).checked)}
-                  />
-                  <span>Check if permanent address is the same with your current address</span>
-                </label>
               </div>
 
               {/* Learning Preferences Section */}
@@ -932,18 +839,20 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                 <h3 className="settings-form-section-title">Learning Preferences</h3>
                 
                 <div className="settings-form-group">
-                  <label className="settings-form-label">Current English Proficiency</label>
+                  <label className="settings-form-label" htmlFor="student-english-level">English speaking level</label>
                   <select
+                    id="student-english-level"
                     value={currentProficiency}
                     onChange={(e) => setCurrentProficiency((e.target as HTMLSelectElement).value)}
                     className="settings-form-select"
+                    required
                   >
-                    <option value="">Select your level</option>
-                    {proficiencyLevels.map(level => (
-                      <option key={level} value={level}>{level}</option>
+                    <option value="">Choose your level</option>
+                    {ENGLISH_LEVELS.map(level => (
+                      <option key={level.value} value={level.value}>{level.value} - {level.label}</option>
                     ))}
                   </select>
-                  <span className="settings-form-hint">This helps us match you with the right tutors</span>
+                  {currentProficiency && <span className="settings-form-hint settings-level-description">{ENGLISH_LEVELS.find(level => level.value === currentProficiency)?.description}</span>}
                 </div>
 
                 <div className="settings-form-group">
@@ -1031,7 +940,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                   'Update'
                 )}
               </button>
-            </form>
+            </form>}
           </div>
         )}
       </div>

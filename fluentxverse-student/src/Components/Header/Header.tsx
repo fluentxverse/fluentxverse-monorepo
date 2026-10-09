@@ -3,6 +3,7 @@ import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../../context/AuthContext';
 import { useThemeStore } from '../../context/ThemeContext';
 import { SocialLoginModal } from '../Auth/SocialLoginModal';
+import LessonNotifications from './LessonNotifications';
 
 import "./Header.css";
 
@@ -184,6 +185,7 @@ const Header = () => {
                       <li><a href="/contact">Contact</a></li> */}
                     </ul>
                   </div>
+                  {isAuthenticated && <LessonNotifications />}
                   <div className={`header-action d-none d-md-block ${isLandingPage ? 'landing-header-actions' : ''}${isPublicBrowsePage ? ' public-browse-header-actions' : ''}`}>
                     <ul>
                       {!isThemeLockedPage && (

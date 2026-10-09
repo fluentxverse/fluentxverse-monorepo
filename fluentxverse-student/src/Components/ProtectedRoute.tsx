@@ -10,14 +10,14 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ Component }: ProtectedRouteProps): JSX.Element | null => {
-  const { user, initialLoading, loginLoading } = useAuthContext();
+  const { user, initialLoading, loginLoading, sessionExpired } = useAuthContext();
   const { route } = useLocation();
 
   useEffect(() => {
-    if (!initialLoading && !user && !loginLoading) {
+    if (!initialLoading && !user && !loginLoading && !sessionExpired) {
       route('/');
     }
-  }, [initialLoading, user, loginLoading, route]);
+  }, [initialLoading, user, loginLoading, sessionExpired, route]);
 
   if (initialLoading || loginLoading) return <LoadingSpinner />;
   if (!user) return null;

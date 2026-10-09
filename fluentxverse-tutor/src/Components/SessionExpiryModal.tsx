@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from 'preact/hooks';
-import { refreshSession } from '../api/auth.api';
+import { useAuthContext } from '../context/AuthContext';
+import { useClassroomSessionRefresh } from '../hooks/useClassroomSessionRefresh';
 import './SessionExpiryModal.css';
 
 interface Props {
   isAuthenticated: boolean;
+  autoRefresh?: boolean;
   onRefreshed?: () => void;
   // Optional override; defaults to 30 minutes
   sessionMinutes?: number;
@@ -13,16 +15,25 @@ interface Props {
 
 export default function SessionExpiryModal({
   isAuthenticated,
+  autoRefresh = false,
   onRefreshed,
   sessionMinutes = 30,
   warnMinutes = 3
 }: Props) {
   const [show, setShow] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [remaining, setRemaining] = useState(sessionMinutes * 60); // seconds
   const startTimeRef = useRef<number>(Date.now());
+  const { renewSession } = useAuthContext();
+  useClassroomSessionRefresh(isAuthenticated && autoRefresh, renewSession, () => {
+    startTimeRef.current = Date.now();
+    setRemaining(sessionMinutes * 60);
+    setShow(false);
+    onRefreshed?.();
+  });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || autoRefresh) {
       setShow(false);
       return;
     }
@@ -45,24 +56,25 @@ export default function SessionExpiryModal({
     return () => {
       window.clearInterval(interval);
     };
-  }, [isAuthenticated, sessionMinutes, warnMinutes]);
+  }, [isAuthenticated, autoRefresh, sessionMinutes, warnMinutes]);
 
   const onRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
     try {
-      const res = await refreshSession();
-      if (res?.success) {
-        // Reset timer by updating start time ref
-        startTimeRef.current = Date.now();
-        setShow(false);
-        setRemaining(sessionMinutes * 60);
-        if (onRefreshed) onRefreshed();
-      }
+      await renewSession();
+      startTimeRef.current = Date.now();
+      setShow(false);
+      setRemaining(sessionMinutes * 60);
+      onRefreshed?.();
     } catch (e) {
       // keep modal open to let user retry
+    } finally {
+      setRefreshing(false);
     }
   };
 
-  if (!show) return null;
+  if (autoRefresh || !show) return null;
   const minutes = Math.max(0, Math.floor(remaining / 60));
   const seconds = Math.max(0, remaining % 60);
 
@@ -74,8 +86,8 @@ export default function SessionExpiryModal({
           Your session will expire in <strong>{minutes}:{seconds.toString().padStart(2,'0')}</strong>.
         </div>
         <div className="session-actions">
-          <button className="session-refresh" onClick={onRefresh}>
-            Refresh Session
+          <button className="session-refresh" onClick={onRefresh} disabled={refreshing}>
+            {refreshing ? 'Refreshing...' : 'Refresh Session'}
           </button>
           <button className="session-dismiss" onClick={() => setShow(false)}>
             Dismiss

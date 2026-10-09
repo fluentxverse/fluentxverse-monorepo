@@ -2,9 +2,9 @@
   const allowedRole = 'student';
 import { createContext } from 'preact';
 import { useContext, useState, useEffect, useRef } from 'preact/hooks';
-import { loginUser, logoutUser, getMe, loginWithWallet, registerWithWallet, loginWithPrivy, registerWithPrivy, type PrivyProfile, type PrivyRegisterParams, type WalletRegisterParams } from '../api/auth.api';
+import { loginUser, logoutUser, getMe, ensureStudentSession, loginWithWallet, registerWithWallet, loginWithPrivy, registerWithPrivy, type PrivyProfile, type PrivyRegisterParams, type WalletRegisterParams } from '../api/auth.api';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
-import { registerUnauthorizedHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
+import { registerUnauthorizedHandler, registerSessionRecoveryHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
 import { appWallet } from '../config/wallet';
 import { scheduleApi } from '../api/schedule.api';
 import { usePrivyIntegration } from './PrivyContext';
@@ -52,6 +52,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   getUserId: () => string | undefined;
   clearSessionExpired: () => void;
+  ensureSession: () => Promise<AuthUser>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -67,6 +68,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
   const privyAttemptRef = useRef<string | null>(null);
   const loggingOutRef = useRef(false);
   const exchangeRef = useRef<Promise<void> | null>(null);
+  const authGenerationRef = useRef(0);
+  const recoveryRef = useRef<{ generation: number; promise: Promise<AuthUser> } | null>(null);
   const {
     ready: privyReady,
     authenticated: isPrivyAuthenticated,
@@ -74,6 +77,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
     getAccessToken,
     logout: logoutPrivy,
   } = usePrivyIntegration();
+  const sessionStateRef = useRef({ user, privyReady, isPrivyAuthenticated, getAccessToken });
+  sessionStateRef.current = { user, privyReady, isPrivyAuthenticated, getAccessToken };
 
   // Clear session expired state
   const clearSessionExpired = () => {
@@ -81,16 +86,65 @@ export const AuthProvider = ({ children }: { children: any }) => {
     setSessionExpiredMessage(null);
   };
 
+  const ensureSession = (): Promise<AuthUser> => {
+    const generation = authGenerationRef.current;
+    if (loggingOutRef.current || sessionStorage.getItem('fxv_pending_logout') === 'true') {
+      return Promise.reject(new Error('Sign-out is in progress.'));
+    }
+    if (recoveryRef.current?.generation === generation) return recoveryRef.current.promise;
+    const state = sessionStateRef.current;
+    const promise = (async () => {
+      await exchangeRef.current;
+      const restoredUser = await ensureStudentSession(
+        state.privyReady && state.isPrivyAuthenticated ? state.getAccessToken : undefined,
+        state.user?.userId,
+      ) as AuthUser;
+      if (generation !== authGenerationRef.current || loggingOutRef.current) {
+        throw new Error('The sign-in session changed. Please try again.');
+      }
+      setUser(restoredUser);
+      clearSessionExpired();
+      return restoredUser;
+    })().catch((error: any) => {
+      if (error?.response?.status === 401 && generation === authGenerationRef.current
+        && !loggingOutRef.current && sessionStateRef.current.user) {
+        forceAuthCleanup();
+        setUser(null);
+        setSessionExpired(true);
+        setSessionExpiredMessage('Your session has expired. Please log in again to continue.');
+      }
+      throw error;
+    });
+    const pending = { generation, promise };
+    recoveryRef.current = pending;
+    void promise.finally(() => {
+      if (recoveryRef.current === pending) recoveryRef.current = null;
+    }).catch(() => {});
+    return promise;
+  };
+
+  useEffect(() => registerSessionRecoveryHandler(async () => {
+    try {
+      await ensureSession();
+      return true;
+    } catch (error: any) {
+      if (error?.response?.status === 401) return false;
+      throw error;
+    }
+  }), []);
+
   useEffect(() => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
+      const generation = authGenerationRef.current;
       try {
         const me = await getMe();
 
-        if (me?.user && !loggingOutRef.current) {
+        if (me?.user && generation === authGenerationRef.current && !loggingOutRef.current) {
           // /me returns { userId, email }
           const restoredUser = me.user as AuthUser;
           setUser(restoredUser);
+          clearSessionExpired();
           try {
             if (restoredUser.userId) localStorage.setItem('fxv_user_id', restoredUser.userId);
           } catch {
@@ -98,8 +152,10 @@ export const AuthProvider = ({ children }: { children: any }) => {
           }
         }
       } catch (err) {
+        if (generation !== authGenerationRef.current || loggingOutRef.current) return;
         // Not authenticated or session expired
         setUser(null);
+        forceAuthCleanup();
       } finally {
         setInitialLoading(false);
       }
@@ -110,10 +166,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
   useEffect(() => {
     if (loggingOutRef.current || sessionStorage.getItem('fxv_pending_logout') === 'true') return;
     if (!isPrivyAuthenticated) privyAttemptRef.current = null;
-    if (initialLoading || !privyReady || !isPrivyAuthenticated || !privyUserId || user) return;
+    if (initialLoading || sessionExpired || !privyReady || !isPrivyAuthenticated || !privyUserId || user) return;
     if (privyAttemptRef.current === privyUserId) return;
 
     privyAttemptRef.current = privyUserId;
+    const generation = ++authGenerationRef.current;
     setSocialAuthError(null);
     setLoginLoading(true);
     setLoginInProgress(true);
@@ -124,10 +181,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
         if (!accessToken) throw new Error('Privy session is unavailable');
 
         const response = await loginWithPrivy(accessToken);
-        if (loggingOutRef.current) return;
+        if (generation !== authGenerationRef.current || loggingOutRef.current) return;
         if (response.status === 'authenticated' && response.user) {
-          const loggedInUser = response.user as AuthUser;
+          const loggedInUser = await ensureStudentSession(undefined, response.user.userId) as AuthUser;
+          if (generation !== authGenerationRef.current || loggingOutRef.current) return;
           setUser(loggedInUser);
+          clearSessionExpired();
           setPrivyProfile(null);
           sessionStorage.removeItem('fxv_privy_auth_error');
           sessionStorage.removeItem('fxv_pending_privy_profile');
@@ -160,6 +219,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
 
         throw new Error(response.error || 'Unable to sign in with Privy');
       } catch (error: any) {
+        if (generation !== authGenerationRef.current || loggingOutRef.current) return;
         console.error('Privy session exchange failed:', error);
         const message = error?.response?.status === 429
           ? error?.response?.data?.error || 'Too many sign-in attempts. Please try again later.'
@@ -169,13 +229,15 @@ export const AuthProvider = ({ children }: { children: any }) => {
         sessionStorage.removeItem('fxv_privy_login_pending');
         sessionStorage.removeItem('fxv_pending_auth_provider');
       } finally {
-        setLoginLoading(false);
-        setTimeout(() => setLoginInProgress(false), 500);
+        if (generation === authGenerationRef.current) {
+          setLoginLoading(false);
+          setLoginInProgress(false);
+        }
       }
     };
 
     exchangeRef.current = exchangePrivySession();
-  }, [initialLoading, privyReady, isPrivyAuthenticated, privyUserId, user]);
+  }, [initialLoading, privyReady, isPrivyAuthenticated, privyUserId, user, sessionExpired]);
 
   // Preload dashboard data when user is authenticated
   useEffect(() => {
@@ -191,26 +253,29 @@ export const AuthProvider = ({ children }: { children: any }) => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (initialLoading) return;
+    if (sessionExpired || !privyReady || (isPrivyAuthenticated && !socialAuthError)) return;
     if (user || loginLoading) return; // avoid redirect mid-login attempt
     const path = window.location.pathname;
     if (PROTECTED_PATHS.some(p => path.startsWith(p))) {
       window.location.href = '/';
     }
-  }, [initialLoading, user, loginLoading]);
+  }, [initialLoading, user, loginLoading, sessionExpired, privyReady, isPrivyAuthenticated, socialAuthError]);
 
   // Register 401 handler for axios interceptor
   useEffect(() => {
-    registerUnauthorizedHandler(() => {
+    return registerUnauthorizedHandler(() => {
       // Prevent clearing user during active login request
-      if (loginLoading) return;
+      if (loggingOutRef.current || !sessionStateRef.current.user) return;
+      forceAuthCleanup();
       setUser(null);
       // Show session expired modal instead of immediate redirect
       setSessionExpired(true);
       setSessionExpiredMessage('Your session has expired. Please log in again to continue.');
     });
-  }, [loginLoading]);
+  }, []);
 
   const login = async (email: string, password: string) => {
+    authGenerationRef.current += 1;
     // Set both local state and global flag to prevent 401 handler interference
     setLoginLoading(true);
     setLoginInProgress(true);
@@ -285,8 +350,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
       throw new Error(errorMessage);
     } finally {
       setLoginLoading(false);
-      // Delay clearing the global flag slightly to cover any in-flight requests
-      setTimeout(() => setLoginInProgress(false), 500);
+      setLoginInProgress(false);
     }
   };
 
@@ -300,6 +364,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
    * Returns status to indicate if user needs registration or has incomplete profile
    */
   const loginByWallet = async ({ walletAddress, signature, message }: WalletAuthParams): Promise<WalletLoginResult> => {
+    authGenerationRef.current += 1;
     setLoginLoading(true);
     setLoginInProgress(true);
     forceAuthCleanup();
@@ -355,7 +420,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
       throw new Error(err?.message || 'Wallet login failed');
     } finally {
       setLoginLoading(false);
-      setTimeout(() => setLoginInProgress(false), 500);
+      setLoginInProgress(false);
     }
   };
 
@@ -363,6 +428,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
    * Register a new user with wallet address
    */
   const registerByWallet = async (params: WalletRegisterParams): Promise<void> => {
+    authGenerationRef.current += 1;
     setLoginLoading(true);
     setLoginInProgress(true);
     forceAuthCleanup();
@@ -396,11 +462,12 @@ export const AuthProvider = ({ children }: { children: any }) => {
       throw new Error(err?.message || 'Wallet registration failed');
     } finally {
       setLoginLoading(false);
-      setTimeout(() => setLoginInProgress(false), 500);
+      setLoginInProgress(false);
     }
   };
 
   const registerByPrivy = async (params: PrivyRegisterParams): Promise<void> => {
+    authGenerationRef.current += 1;
     setLoginLoading(true);
     setLoginInProgress(true);
     try {
@@ -413,7 +480,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
       if (!response.success || !response.user) {
         throw new Error(response.error || 'Registration failed');
       }
-      setUser(response.user as AuthUser);
+      setUser(await ensureStudentSession(undefined, response.user.userId) as AuthUser);
+      clearSessionExpired();
       setPrivyProfile(null);
       sessionStorage.removeItem('fxv_pending_privy_profile');
       const authProvider = sessionStorage.getItem('fxv_pending_auth_provider');
@@ -425,13 +493,14 @@ export const AuthProvider = ({ children }: { children: any }) => {
       throw new Error(error?.response?.data?.error || error?.message || 'Registration failed');
     } finally {
       setLoginLoading(false);
-      setTimeout(() => setLoginInProgress(false), 500);
+      setLoginInProgress(false);
     }
   };
 
   const logout = async () => {
     if (loggingOutRef.current) return;
     loggingOutRef.current = true;
+    authGenerationRef.current += 1;
     setLoginLoading(true);
     // IMPORTANT: Clear local state FIRST to prevent race conditions
     // This ensures checkAuth won't find a session and auto-login won't trigger
@@ -445,6 +514,7 @@ export const AuthProvider = ({ children }: { children: any }) => {
     try {
       // Finish any request that can set the cookie before deleting that cookie.
       await exchangeRef.current;
+      await recoveryRef.current?.promise.catch(() => {});
       sessionStorage.removeItem('fxv_privy_login_pending');
       sessionStorage.removeItem('fxv_pending_auth_provider');
       sessionStorage.removeItem('fxv_pending_privy_profile');
@@ -498,7 +568,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
     <AuthContext.Provider value={{ 
       user, 
       isAuthenticated: !!user, 
-      initialLoading, 
+      initialLoading: initialLoading || (!loggingOutRef.current && sessionStorage.getItem('fxv_pending_logout') !== 'true'
+        && !user && !sessionExpired && !socialAuthError && !privyProfile && (!privyReady || isPrivyAuthenticated)),
       loginLoading, 
       sessionExpired,
       sessionExpiredMessage,
@@ -510,7 +581,8 @@ export const AuthProvider = ({ children }: { children: any }) => {
       isPrivyAuthenticated,
       logout, 
       getUserId,
-      clearSessionExpired
+      clearSessionExpired,
+      ensureSession,
     }}>
       {children}
       {socialAuthError && <div role="alert" style={{ position: 'fixed', bottom: '16px', left: '16px', right: '16px', zIndex: 100001, padding: '16px', background: '#fff', color: '#b42318', border: '1px solid #b42318', borderRadius: '8px' }}>{socialAuthError}</div>}

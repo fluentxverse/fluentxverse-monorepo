@@ -112,6 +112,31 @@ export const loginWithPrivy = async (accessToken: string) => {
   return data;
 };
 
+export const ensureStudentSession = async (
+  getAccessToken?: () => Promise<string | null>,
+  expectedUserId?: string,
+) => {
+  const validate = (data: any) => {
+    if (!data?.user?.userId || data.user.role !== 'student'
+      || (expectedUserId && data.user.userId !== expectedUserId)) {
+      throw Object.assign(new Error('Please sign in again to continue.'), { response: { status: 401 } });
+    }
+    return data.user;
+  };
+  try {
+    return validate(await getMe());
+  } catch (error: any) {
+    if (error?.response?.status !== 401 || !getAccessToken) throw error;
+    const token = await getAccessToken();
+    if (!token) throw error;
+    const result = await loginWithPrivy(token);
+    if (result.status !== 'authenticated' || !result.user) throw error;
+    if (expectedUserId && result.user.userId !== expectedUserId) throw error;
+    // The exchange response alone does not prove the browser accepted the cookie.
+    return validate(await getMe());
+  }
+};
+
 export const registerWithPrivy = async (
   accessToken: string,
   params: PrivyRegisterParams,

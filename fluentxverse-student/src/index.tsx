@@ -25,6 +25,7 @@ import InboxPage from './pages/InboxPage';
 import { withProtected } from './Components/ProtectedRoute';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
+import SessionExpiredModal from './Components/Common/SessionExpiredModal';
 import ContactPage from "./pages/ContactPage";
 
 import { appWallet, autoConnectWallet } from './config/wallet';
@@ -38,6 +39,7 @@ import SessionExpiryModal from './Components/SessionExpiryModal';
 import { useAuthContext } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { useThemeStore } from './context/ThemeContext';
+import { useEmbeddedTheme } from './hooks/useEmbeddedTheme';
 import { PrivyIntegrationProvider } from './context/PrivyContext';
 
 // Performance: Link prefetching on hover
@@ -68,7 +70,8 @@ function AppShell() {
 		path === '/' ||
 		path === '/register' ||
 		(path === '/browse-tutors' && !isAuthenticated && !initialLoading);
-	const effectiveTheme = isThemeLockedLight ? 'light' : (isDarkMode ? 'dark' : 'light');
+	const embeddedTheme = useEmbeddedTheme();
+	const effectiveTheme = embeddedTheme ?? (isThemeLockedLight ? 'light' : (isDarkMode ? 'dark' : 'light'));
 	
 	const [autoConnected, setAutoConnected] = useState(false);
 
@@ -158,7 +161,7 @@ function AppShell() {
 				<div className={`offcanvas-overly${menuActive ? " active" : ""}`} />
 						<main>
 							{/* Session expiry warning modal visible when authenticated */}
-							<SessionExpiryModal isAuthenticated={isAuthenticated} />
+							<SessionExpiryModal isAuthenticated={isAuthenticated} autoRefresh={path.startsWith('/classroom/')} />
 						<Router>
 						<Route path="/" component={Home} />
 					<Route path="/home" component={withProtected(HomeProtected)} />
@@ -213,6 +216,7 @@ export function App() {
 				<ToastProvider>
 					<ErrorBoundary>
 						<AppInner />
+						<SessionExpiredModal />
 					</ErrorBoundary>
 				</ToastProvider>
 			</AuthProvider>

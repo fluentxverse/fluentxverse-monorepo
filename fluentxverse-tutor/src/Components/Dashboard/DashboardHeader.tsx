@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useNotifications, getNotificationIcon, formatRelativeTime } from '../../hooks/useNotifications';
-import { Link } from 'wouter';
 import { inboxApi } from '../../api/inbox.api';
 import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import ThemeSwitch from '../Common/ThemeSwitch';
+import { notificationLink } from '../../utils/notificationLink';
 import './DashboardHeader.css';
 
 interface DashboardHeaderProps {
@@ -132,9 +132,9 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
       await markAsRead(notification.id);
     }
     
-    // Navigate if there's a link
-    if (notification.data?.link) {
-      window.location.href = notification.data.link;
+    const link = notificationLink(notification);
+    if (link) {
+      window.location.href = link;
     }
     
     setDropdownOpen(false);
@@ -165,14 +165,14 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
         <ThemeSwitch size="sm" />
 
         {/* Inbox Button */}
-        <Link href="/inbox" className="inbox-btn" aria-label="Inbox">
+        <a href="/inbox" className="inbox-btn" aria-label="Inbox">
           <i className="fas fa-envelope"></i>
           {inboxUnreadCount > 0 && (
             <span className="inbox-badge">
               {inboxUnreadCount > 9 ? '9+' : inboxUnreadCount}
             </span>
           )}
-        </Link>
+        </a>
 
         {/* Notifications */}
         <div className="dashboard-notification-container" ref={dropdownRef}>
@@ -258,9 +258,9 @@ const DashboardHeader = ({ user, title }: DashboardHeaderProps) => {
               
               {notifications.length > 0 && (
                 <div className="notifications-footer">
-                  <Link href="/notifications" className="view-all-notifications">
+                  <a href="/notifications" className="view-all-notifications">
                     View all notifications
-                  </Link>
+                  </a>
                 </div>
               )}
             </div>

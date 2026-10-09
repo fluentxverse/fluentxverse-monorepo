@@ -36,11 +36,11 @@ const unwrap = <T,>(result: ApiResult<T>): T => {
 
 export const adminTasksApi = {
   async list(): Promise<AdminTask[]> {
-    const response = await apiClient.get<ApiResult<AdminTask[]>>('/admin/tasks');
+    const response = await apiClient.get<ApiResult<AdminTask[]>>('/admin/tasks', { timeout: 12000 });
     return unwrap(response.data);
   },
   async assignees(): Promise<TaskAssignee[]> {
-    const response = await apiClient.get<ApiResult<TaskAssignee[]>>('/admin/tasks/assignees');
+    const response = await apiClient.get<ApiResult<TaskAssignee[]>>('/admin/tasks/assignees', { timeout: 12000 });
     return unwrap(response.data);
   },
   async create(input: { title: string; description: string; kind: AdminTaskKind; assigneeId: string }): Promise<AdminTask> {

@@ -1,11 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 
-const PRODUCTION_DOMAINS = [
-  'fluentxverse.xyz',
-  'student.fluentxverse.xyz',
-  'tutor.fluentxverse.xyz',
-  'dashboard.fluentxverse.xyz'
-];
+import { productionEndpoints } from '../config/productionDomains';
+import { API_BASE_URL } from '../config/api';
 
 type Listener = (...args: any[]) => void;
 
@@ -26,14 +22,14 @@ const toHttpUrl = (url: string) => {
 };
 
 const getSocketUrl = () => {
+  const production = typeof window !== 'undefined' ? productionEndpoints(window.location.hostname) : undefined;
+  if (production) return production.socketUrl;
   const envSocketUrl = (import.meta.env.VITE_SOCKET_URL || '').trim();
   if (envSocketUrl) return toHttpUrl(envSocketUrl);
 
   if (typeof window !== 'undefined') {
     const { protocol, hostname } = window.location;
     const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    const isProduction = PRODUCTION_DOMAINS.some(domain => hostname.endsWith(domain));
-    if (isProduction) return 'https://ws.fluentxverse.xyz';
     if (isLocalhost) return 'http://localhost:8767';
     return `${protocol}//${hostname}:8767`;
   }
@@ -41,19 +37,9 @@ const getSocketUrl = () => {
   return 'http://localhost:8767';
 };
 
-const getApiBaseUrl = () => {
-  const envApiUrl = (import.meta.env.VITE_API_URL || '').trim();
-  if (envApiUrl) return envApiUrl.replace(/\/+$/, '');
-  if (typeof window !== 'undefined') {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isLocalhost) return 'https://api.fluentxverse.xyz';
-  }
-  return 'http://localhost:8765';
-};
-
 const fetchAdminSocketToken = async () => {
   try {
-    const response = await fetch(`${getApiBaseUrl()}/admin/socket-token`, {
+    const response = await fetch(`${API_BASE_URL}/admin/socket-token`, {
       method: 'GET',
       credentials: 'include',
       headers: { Accept: 'application/json', 'Cache-Control': 'no-store' }

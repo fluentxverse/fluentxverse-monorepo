@@ -19,6 +19,7 @@ import InboxPage from './pages/InboxPage';
 import LoginPage from './pages/LoginPage';
 import TicketsPage from './pages/TicketsPage';
 import SessionsPage from './pages/SessionsPage';
+import RecordingsPage from './pages/RecordingsPage';
 import LessonMaterialMakerPage from './pages/LessonMaterialMakerPage';
 import LessonMaterialViewPage from './pages/LessonMaterialViewPage';
 import CeoOrientationPage from './pages/CeoOrientationPage';
@@ -39,6 +40,9 @@ import BusinessEnglishEditorPage from './pages/BusinessEnglishEditorPage';
 import BusinessEnglishPreview from './pages/BusinessEnglishPreview';
 import BusinessEnglishVisualEditor from './pages/BusinessEnglishVisualEditor';
 import AdminTasksPage from './pages/AdminTasksPage';
+import LessonOperationsPage from './pages/LessonOperationsPage';
+import OperationsLessonPage from './pages/OperationsLessonPage';
+import OperationsAccountPage from './pages/OperationsAccountPage';
 
 // Loading spinner component
 const LoadingScreen = () => (
@@ -231,9 +235,14 @@ const AppContent = () => {
         <Route path="/tutors" component={TutorsPage} />
         <Route path="/students" component={StudentsPage} />
         <Route path="/sessions" component={SessionsPage} />
+        <Route path="/recordings" component={RecordingsPage} />
         <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/inbox" component={InboxPage} />
         <Route path="/tasks" component={AdminTasksPage} />
+        <Route path="/lesson-operations" component={LessonOperationsPage} />
+        <Route path="/lesson-operations/:id" component={OperationsLessonPage} />
+        <Route path="/operations/people/:role/:id" component={OperationsAccountPage} />
+        <Route path="/payments" component={LessonOperationsPage} />
         <Route path="/tickets" component={TicketsPage} />
         <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
         <Route path="/conversational-skills-editor" component={ConversationalSkillsEditorPage} />

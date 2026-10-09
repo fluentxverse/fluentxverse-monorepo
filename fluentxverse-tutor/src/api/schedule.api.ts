@@ -9,6 +9,7 @@ export interface TimeSlot {
 export type AbsenceReason = 'Internet Outage' | 'Electric Outage' | 'Emergency' | 'Disaster' | 'Health' | 'Others';
 
 export interface WeekSchedule {
+  schedulingBlock?: { active: boolean; expiresAt: string | null };
   weekStart: string;
   weekEnd: string;
   slots: {

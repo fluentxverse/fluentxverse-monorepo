@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { getLessonById, getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
 import './BusinessEnglishVisualEditor.css';
@@ -447,6 +447,8 @@ const noteIcons: Record<NoteType, string> = {
 const html = (value?: string) => ({ __html: value || '' });
 
 const getStoredTheme = (): ThemeMode => {
+  const requestedTheme = new URLSearchParams(window.location.search).get('theme');
+  if (requestedTheme === 'dark' || requestedTheme === 'light') return requestedTheme;
   try {
     return (localStorage.getItem('beve-theme') as ThemeMode) || 'dark';
   } catch {
@@ -624,6 +626,10 @@ export default function BusinessEnglishPreview() {
   const [error, setError] = useState('');
   const [activePage, setActivePage] = useState<string>('page1');
   const [theme, setTheme] = useState<ThemeMode>(getStoredTheme);
+  useLayoutEffect(() => {
+    document.documentElement.dataset.materialTheme = theme;
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const page1IntroStudentRef = useRef<HTMLDivElement | null>(null);
@@ -640,7 +646,7 @@ export default function BusinessEnglishPreview() {
         setPreviewOverrides(parsed);
         setHasSessionData(true);
         hasStoredPreview = true;
-        if (parsed.theme) setTheme(parsed.theme);
+        if (!new URLSearchParams(window.location.search).has('theme') && parsed.theme) setTheme(parsed.theme);
       } catch (sessionError) {
         console.error('Failed to parse Business English preview session data:', sessionError);
       }

@@ -35,13 +35,6 @@
 		<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		
-		<!-- Preload critical assets for faster rendering -->
-		<link rel="preload" href="/assets/fonts/flaticon.woff2" as="font" type="font/woff2" crossorigin />
-		<link rel="preload" href="/assets/img/logo/icon_logo.png" as="image" />
-		<link rel="preload" href="/assets/img/banner/banner_man.webp" as="image" type="image/webp" />
-		<link rel="preload" href="/assets/css/bootstrap.min.css" as="style" />
-		<link rel="preload" href="/assets/css/style.css" as="style" />
-		
 		<script>
 			(function () {
 				var themeMode = 'system';
@@ -61,6 +54,15 @@
 				var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 				var resolvedTheme = themeMode === 'system' ? (prefersDark ? 'dark' : 'light') : themeMode;
 				var root = document.documentElement;
+				try {
+					if (window.self !== window.top) {
+						var parentTheme = window.parent.document.documentElement.dataset.theme;
+						if (parentTheme === 'dark' || parentTheme === 'light') resolvedTheme = parentTheme;
+					}
+				} catch (error) {}
+				if (/^\/materials\/(daily-dispatch|conversational-skills|business-english)\/[^/]+\/?$/.test(window.location.pathname) || window.location.pathname === '/lesson/view' || window.location.pathname.indexOf('/conversation-mat/') === 0) {
+					root.dataset.materialPage = 'true';
+				}
 				root.dataset.theme = resolvedTheme;
 				root.classList.toggle('dark-mode', resolvedTheme === 'dark');
 				root.style.colorScheme = resolvedTheme;
@@ -73,6 +75,7 @@
 			*{margin:0;padding:0;box-sizing:border-box}
 			body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;line-height:1.6;color:#333;background:#fff}
 			html[data-theme='dark'] body{color:#e6eefc;background:#08111d}
+			html[data-material-page='true'][data-theme='dark'],html[data-material-page='true'][data-theme='dark'] body{background:#1a1a1a!important;color:#f3f4f6;transition:none}
 			.scroll-top{position:fixed;right:30px;bottom:30px;width:45px;height:45px;background:#6DBE45;border:none;border-radius:50%;cursor:pointer;z-index:999;display:none}
 			.scroll-top.active{display:flex;align-items:center;justify-content:center}
 			.scroll-top i{color:#fff;font-size:18px}
@@ -120,7 +123,6 @@
 		<!-- UI Fixes -->
 		<link rel="stylesheet" href="/assets/css/theme-toggle.css" />
 		<link rel="stylesheet" href="/assets/css/buttons-dark-mode.css" />
-		<link rel="stylesheet" href="/assets/css/menu-wrap-fix.css" />
 		<link rel="stylesheet" href="/assets/css/sidebar-icon-consistency.css" />
 		<link rel="stylesheet" href="/assets/css/dark-mode-header-border-fix.css" />
 		<link rel="stylesheet" href="/assets/css/brand-text.css" />
@@ -130,25 +132,20 @@
 		<!-- Banner & Header Fixes -->
 		<link rel="stylesheet" href="/assets/css/banner-image-fix.css" />
 		<link rel="stylesheet" href="/assets/css/banner-dark-mode-fix.css" />
-		<link rel="stylesheet" href="/assets/css/banner-dark-mode-emergency.css" />
 		<link rel="stylesheet" href="/assets/css/banner-visibility-fix.css" />
 		<link rel="stylesheet" href="/assets/css/banner-emergency-visibility.css" />
 
 		<!-- Mobile Fixes -->
-		<link rel="stylesheet" href="/assets/css/mobile-bottom-fix.css" />
 		<link rel="stylesheet" href="/assets/css/mobile-hamburger-fix.css" />
 
 		<!-- Components -->
 		<link rel="stylesheet" href="/assets/css/coming-soon-card-fix.css" />
 		<link rel="stylesheet" href="/assets/css/login-modal-dark-mode.css" />
 		<link rel="stylesheet" href="/assets/css/login-page-enhanced.css" />
-		<link rel="stylesheet" href="/assets/css/loader-dark-mode.css" />
 
 		<!-- Dark Mode Comprehensive Fixes -->
 		<link rel="stylesheet" href="/assets/css/dark-mode-comprehensive-fixes.css" />
 
-		<!-- Scrollbar -->
-		<link rel="stylesheet" href="/assets/css/scrollbar.css" />
 	</head>
 	<body>
 		<!-- Optional preloader here -->

@@ -1,0 +1,41 @@
+.student-issue-report-control { margin-top: 18px; font-size: 12px; color: var(--lesson-muted); }
+.classroom-report-control { --lesson-muted: #64748b; --lesson-text: #202020; --lesson-surface: #fff; --lesson-border-strong: #dbe3ee; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; padding: 6px 12px; flex-shrink: 0; border-bottom: 1px solid var(--lesson-border-strong); background: var(--lesson-surface); }
+.classroom-report-control > span { font-size: 11px; }
+[data-theme='dark'] .classroom-report-control { --lesson-muted: #b1b1b1; --lesson-text: #f1f1f1; --lesson-surface: #242424; --lesson-border-strong: #484848; }
+.student-issue-report-control p { margin: 8px 0 0; line-height: 1.6; color: inherit; }
+.student-issue-report-control button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 7px 12px; border: 1px solid var(--lesson-border-strong); border-radius: 4px; background: var(--lesson-surface); color: var(--lesson-text); font: inherit; font-weight: 600; cursor: pointer; }
+.student-issue-report-control button:disabled { opacity: .5; cursor: default; }
+.student-issue-report-dialog { position: fixed; inset: 0; margin: auto; width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #dbe3ee; border-radius: 8px; background: #fff; color: #202020; overflow: hidden; color-scheme: light; }
+.student-issue-report-dialog::backdrop { background: rgba(0,0,0,.6); }
+.student-issue-report-dialog form { display: flex; flex-direction: column; max-height: calc(100dvh - 34px); margin: 0; }
+.student-issue-report-dialog :is(header, footer) { flex-shrink: 0; }
+.student-issue-report-dialog label { color: inherit; }
+.student-issue-report-dialog header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #dbe3ee; }
+.student-issue-report-dialog h2 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 4px 0 0; color: inherit; }
+.student-issue-report-dialog header span { font-size: 12px; color: #64748b; }
+.student-issue-report-dialog button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px; min-height: 36px; border: 1px solid #dbe3ee; border-radius: 4px; background: #fff; color: #202020; font: inherit; font-size: 13px; cursor: pointer; }
+.student-issue-report-dialog button:disabled { opacity: .5; cursor: default; }
+.student-issue-report-dialog button svg { flex-shrink: 0; }
+.student-issue-report-body { min-height: 0; overflow-y: auto; padding: 20px; font-size: 13px; line-height: 1.7; }
+.student-issue-report-body h3, .student-issue-report-body legend { color: inherit; font-size: 15px; font-weight: 600; margin: 0 0 14px; }
+.student-issue-report-body fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.student-issue-duration-options, .student-issue-reasons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.student-issue-reasons label { display: flex; align-items: flex-start; gap: 8px; padding: 10px; border: 1px solid #dbe3ee; border-radius: 4px; cursor: pointer; margin: 0; }
+.student-issue-reasons input { flex-shrink: 0; margin-top: 4px; accent-color: #0245ae; }
+.student-tutor-issues { grid-template-columns: minmax(0, 1fr); }
+.student-issue-details { display: block; margin: 20px 0 0; }
+.student-issue-details textarea { display: block; box-sizing: border-box; width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #dbe3ee; border-radius: 4px; background: #fff; color: #202020; font: inherit; resize: vertical; }
+.student-issue-report-dialog footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #dbe3ee; }
+.student-issue-report-dialog .student-issue-submit { background: #0245ae; border-color: #0245ae; color: #fff; }
+.student-issue-report-dialog .student-issue-error { color: #be123c; margin: 16px 0 0; }
+.student-issue-report-dialog footer .student-issue-error { width: 100%; margin: 0; font-size: 13px; line-height: 1.6; }
+.student-issue-report-dialog :is(button, textarea, input):focus-visible, .student-issue-report-control button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 3px; }
+[data-theme='dark'] .student-issue-report-dialog { background: #242424; border-color: #484848; color: #f1f1f1; color-scheme: dark; }
+[data-theme='dark'] .student-issue-report-dialog :is(header, footer, button, label, textarea) { border-color: #484848; }
+[data-theme='dark'] .student-issue-report-dialog :is(button:not(.student-issue-submit), textarea) { background: #303030; color: #f1f1f1; }
+[data-theme='dark'] .student-issue-report-dialog header span { color: #a1a1aa; }
+[data-theme='dark'] .student-issue-report-dialog .student-issue-error { color: #fda4af; }
+@media (max-width: 480px) {
+  .student-issue-duration-options, .student-issue-reasons { grid-template-columns: minmax(0, 1fr); }
+  .student-issue-report-dialog .student-issue-submit { width: 100%; order: 1; }
+}

@@ -1,19 +1,18 @@
+import { productionEndpoints } from './productionDomains';
+
 // API Configuration
 // IMPORTANT: Never default to an http:// API when the page is served over https://
 // (browsers will block it as Mixed Content).
 const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
 
-// Known production domains - if we detect these, use the production API
-const PRODUCTION_DOMAINS = ['fluentxverse.xyz', 'student.fluentxverse.xyz'];
-const PRODUCTION_API_URL = 'https://api.fluentxverse.xyz';
-
-export const isProductionHost = (hostname: string) => PRODUCTION_DOMAINS.includes(hostname);
+// Each production domain uses its own API host to keep session cookies same-site.
+export const isProductionHost = (hostname: string) => Boolean(productionEndpoints(hostname));
 
 const getApiBaseUrl = () => {
   // A local build can be served through the production tunnel; its baked-in
   // localhost URL must never become the public site's API destination.
   if (typeof window !== 'undefined' && isProductionHost(window.location.hostname)) {
-    return PRODUCTION_API_URL;
+    return productionEndpoints(window.location.hostname)!.apiUrl;
   }
 
   const envUrl = (import.meta.env.VITE_API_URL || '').trim();

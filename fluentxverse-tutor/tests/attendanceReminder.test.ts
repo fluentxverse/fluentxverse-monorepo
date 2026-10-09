@@ -1,10 +1,17 @@
 import { expect, test } from 'bun:test';
-import { getAttendanceReminderSlots, getRoomEntryReminderSlots } from '../src/utils/attendanceReminder';
+import { activeClassroomBookingId, getAttendanceReminderSlots, getRoomEntryReminderSlots } from '../src/utils/attendanceReminder';
 import type { WeekSchedule } from '../src/api/schedule.api';
 
 type Slot = WeekSchedule['slots'][number];
 const startMs = Date.parse('2026-10-03T18:00:00+08:00');
 const open: Slot = { date: '2026-10-03', time: '6:00 PM', status: 'open', slotId: 'open-1' };
+
+test('only recognizes top-level classroom routes and safely decodes booking IDs', () => {
+  expect(activeClassroomBookingId('/classroom/booking-1')).toBe('booking-1');
+  expect(activeClassroomBookingId('/classroom/booking%201/?tab=material')).toBe('booking 1');
+  expect(activeClassroomBookingId('/materials/daily-dispatch/article-1')).toBeUndefined();
+  expect(activeClassroomBookingId('/classroom/%broken')).toBeUndefined();
+});
 
 test('reminds only during the 35-to-11-minute attendance window', () => {
   expect(getAttendanceReminderSlots([open], startMs - 36 * 60_000)).toHaveLength(0);
@@ -46,4 +53,21 @@ test('warns about a Present booking from five minutes before start until room-en
   expect(getRoomEntryReminderSlots([{ ...booked, roomEntryCheckCompletedAt: new Date(startMs).toISOString() }], startMs))
     .toHaveLength(0);
   expect(getRoomEntryReminderSlots([{ ...booked, attendanceTutor: 'absent' }], startMs)).toHaveLength(0);
+});
+
+test('does not ask tutors to reenter the classroom already open, even with stale schedule data', () => {
+  const booked: Slot = { ...open, status: 'booked', bookingId: 'booking-1', attendanceTutor: 'present', roomEntryPolicyActivatedAt: new Date(startMs - 35 * 60_000).toISOString() };
+  const other: Slot = { ...booked, bookingId: 'booking-2' };
+  expect(getRoomEntryReminderSlots([booked, other], startMs, 'booking-1').map(item => item.slot.bookingId)).toEqual(['booking-2']);
+  expect(getRoomEntryReminderSlots([booked], startMs, 'unrelated-room')).toHaveLength(1);
+  expect(getRoomEntryReminderSlots([booked], startMs)).toHaveLength(1);
+});
+
+test('respects recorded on-time room entry without treating early or invalid entries as confirmation', () => {
+  const booked: Slot = { ...open, status: 'booked', bookingId: 'booking-1', attendanceTutor: 'present', roomEntryPolicyActivatedAt: new Date(startMs - 35 * 60_000).toISOString() };
+  for (const enteredAt of [startMs - 5 * 60_000, startMs, startMs + 4 * 60_000]) {
+    expect(getRoomEntryReminderSlots([{ ...booked, tutorRoomEnteredAt: new Date(enteredAt).toISOString() }], startMs + 4 * 60_000)).toHaveLength(0);
+  }
+  expect(getRoomEntryReminderSlots([{ ...booked, tutorRoomEnteredAt: new Date(startMs - 6 * 60_000).toISOString() }], startMs)).toHaveLength(1);
+  expect(getRoomEntryReminderSlots([{ ...booked, tutorRoomEnteredAt: 'invalid' }], startMs)).toHaveLength(1);
 });

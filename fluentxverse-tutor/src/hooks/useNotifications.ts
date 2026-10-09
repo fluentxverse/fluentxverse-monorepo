@@ -44,6 +44,7 @@ export const useNotifications = () => {
     error,
     isDropdownOpen,
     fetchNotifications,
+    setNotificationUser,
     addNotification,
     markAsRead,
     markAllAsRead,
@@ -55,6 +56,8 @@ export const useNotifications = () => {
   const { user } = useAuthContext();
 
   useEffect(() => {
+    setNotificationUser(user?.userId || null);
+    if (!user?.userId) return;
     let isActive = true;
     let refreshInterval: ReturnType<typeof setInterval> | undefined;
 
@@ -64,7 +67,7 @@ export const useNotifications = () => {
       }
 
       refreshInterval = setInterval(() => {
-        if (isActive) {
+        if (isActive && !document.hidden && navigator.onLine) {
           void fetchNotifications();
         }
       }, NOTIFICATION_REFRESH_INTERVAL_MS);
@@ -76,6 +79,8 @@ export const useNotifications = () => {
         refreshInterval = undefined;
       }
     };
+    const handleOnline = () => { if (isActive) void fetchNotifications(true); };
+    window.addEventListener('online', handleOnline);
 
     void fetchNotifications();
 
@@ -83,6 +88,7 @@ export const useNotifications = () => {
       startStandardRefresh();
       return () => {
         isActive = false;
+        window.removeEventListener('online', handleOnline);
         if (refreshInterval) {
           clearInterval(refreshInterval);
         }
@@ -177,6 +183,7 @@ export const useNotifications = () => {
 
       return () => {
         isActive = false;
+        window.removeEventListener('online', handleOnline);
         stopStandardRefresh();
         socket.off('connect', subscribeToNotifications);
         socket.off('disconnect', handleDisconnect);
@@ -195,6 +202,7 @@ export const useNotifications = () => {
 
     return () => {
       isActive = false;
+      window.removeEventListener('online', handleOnline);
       stopStandardRefresh();
     };
   }, [user?.userId, user?.email]);
@@ -225,7 +233,7 @@ export const useNotifications = () => {
     deleteNotification,
     setDropdownOpen,
     toggleDropdown,
-    refreshNotifications: fetchNotifications
+    refreshNotifications: () => fetchNotifications(true)
   };
 };
 

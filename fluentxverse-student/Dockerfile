@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Build-time Vite env vars (baked into the bundle)
 ARG VITE_API_URL
-ARG VITE_SOCKET_URL=https://ws.fluentxverse.xyz
+ARG VITE_SOCKET_URL=https://ws.fluentxverse.com
 ARG VITE_PRIVY_APP_ID
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_SOCKET_URL=$VITE_SOCKET_URL
@@ -34,6 +34,7 @@ RUN echo 'server { \
     listen 80; \
     root /usr/share/nginx/html; \
     index index.html; \
+    location = /index.html { add_header Cache-Control "no-store, no-cache, must-revalidate" always; } \
     location / { \
         try_files $uri $uri/ /index.html; \
     } \

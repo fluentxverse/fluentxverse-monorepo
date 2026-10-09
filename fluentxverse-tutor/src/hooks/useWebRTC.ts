@@ -6,6 +6,7 @@ interface UseWebRTCProps {
   remoteUserId?: string;
   socket?: Socket | null;
   initiator?: boolean;
+  enabled?: boolean;
 }
 
 interface MediaDeviceSelection {
@@ -21,10 +22,20 @@ const buildAudioConstraints = (devices: MediaDeviceSelection): MediaTrackConstra
   channelCount: { ideal: 1 },
 });
 
-export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTCProps = {}) => {
+const findMediaTransceiver = (pc: RTCPeerConnection, kind: string) => {
+  const matching = pc.getTransceivers().filter(transceiver =>
+    transceiver.receiver.track.kind === kind || transceiver.sender.track?.kind === kind
+  );
+  return matching.find(transceiver => transceiver.mid !== null) || matching[0];
+};
+
+export const useWebRTC = ({ remoteUserId, socket, initiator = false, enabled = true }: UseWebRTCProps = {}) => {
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const peerConnection = useRef<RTCPeerConnection | null>(null);
@@ -65,9 +76,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
 
   const ensureMediaTransceivers = useCallback((pc: RTCPeerConnection) => {
     const ensureKind = (kind: 'audio' | 'video') => {
-      const existing = pc.getTransceivers().find(transceiver =>
-        transceiver.receiver.track.kind === kind || transceiver.sender.track?.kind === kind
-      );
+      const existing = findMediaTransceiver(pc, kind);
 
       if (existing) {
         if (existing.direction === 'inactive' || existing.direction === 'recvonly') {
@@ -89,9 +98,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     if (!localStreamRef.current) return;
 
     for (const track of localStreamRef.current.getTracks()) {
-      const transceiver = pc.getTransceivers().find(item =>
-        item.receiver.track.kind === track.kind || item.sender.track?.kind === track.kind
-      );
+      const transceiver = findMediaTransceiver(pc, track.kind);
 
       if (transceiver) {
         if (transceiver.direction === 'inactive' || transceiver.direction === 'recvonly') {
@@ -128,6 +135,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     remoteStreamRef.current = null;
     setRemoteStream(null);
     setIsConnected(false);
+    setIsConnecting(false);
   }, []);
 
   useEffect(() => {
@@ -139,19 +147,16 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
   }, [remoteUserId, resetPeerConnection]);
 
   const getIceConfiguration = useCallback(async (): Promise<RTCConfiguration> => {
-    const fallback: RTCConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-    try {
-      const activeSocket = getActiveSocket();
-      return await new Promise(resolve => {
-        const timeout = setTimeout(() => resolve(fallback), 3000);
-        activeSocket.emit('webrtc:ice-config', (config: RTCConfiguration) => {
-          clearTimeout(timeout);
-          resolve(config?.iceServers?.length ? config : fallback);
-        });
+    const fallback: RTCConfiguration = { iceServers: [{ urls: 'stun:stun.cloudflare.com:3478' }] };
+    const activeSocket = getActiveSocket();
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Timed out loading call relay settings')), 10000);
+      activeSocket.emit('webrtc:ice-config', (config: RTCConfiguration & { error?: string }) => {
+        clearTimeout(timeout);
+        if (config?.error) { reject(new Error(config.error)); return; }
+        resolve(config?.iceServers?.length ? config : fallback);
       });
-    } catch {
-      return fallback;
-    }
+    });
   }, [getActiveSocket]);
 
   // Initialize peer connection
@@ -162,12 +167,14 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     if (creatingConnectionRef.current) return creatingConnectionRef.current;
 
     creatingConnectionRef.current = (async () => {
+    setIsConnecting(true);
     const generation = connectionGenerationRef.current;
     const iceServers = await getIceConfiguration();
     if (generation !== connectionGenerationRef.current) throw new Error('Call setup was cancelled');
 
     const pc = new RTCPeerConnection(iceServers);
-    ensureMediaTransceivers(pc);
+    // Answerers use the channels from the received offer, not pre-created unmatched channels.
+    if (initiator) ensureMediaTransceivers(pc);
 
     // Handle ICE candidates - use ref to always have latest remoteUserId
     pc.onicecandidate = (event) => {
@@ -202,7 +209,9 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
 
     // Handle connection state changes
     pc.onconnectionstatechange = () => {
+      if (peerConnection.current !== pc) return;
       setIsConnected(pc.connectionState === 'connected');
+      setIsConnecting(pc.connectionState === 'new' || pc.connectionState === 'connecting');
       
       if (pc.connectionState === 'connected') {
         if (disconnectTimerRef.current) clearTimeout(disconnectTimerRef.current);
@@ -234,6 +243,10 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     };
 
     pc.oniceconnectionstatechange = () => {
+      if (peerConnection.current !== pc || pc.connectionState !== 'connected') return;
+      setIsConnected(true);
+      setIsConnecting(false);
+      setError(null);
     };
 
     peerConnection.current = pc;
@@ -304,6 +317,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
 
   // Create and send offer
   const createOffer = useCallback(async () => {
+    if (!enabledRef.current) return;
     const targetUserId = remoteUserIdRef.current;
     if (!targetUserId) {
       console.error('❌ No remote user ID provided for offer');
@@ -349,7 +363,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
 
   // Handle received offer
   const handleOffer = useCallback(async (offer: RTCSessionDescriptionInit, fromUserId: string) => {
-    if (answeringRef.current) return;
+    if (!enabledRef.current || answeringRef.current) return;
     answeringRef.current = true;
     try {
       
@@ -450,6 +464,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
       localStreamRef.current = stream;
       setLocalStream(stream);
 
+      if (!enabledRef.current) { previousStream?.getTracks().forEach(track => track.stop()); return; }
       const pc = await createPeerConnection();
       await addLocalTracksToPeerConnection(pc);
 
@@ -457,9 +472,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
         const hasTrack = stream.getTracks().some(track => track.kind === kind);
         if (hasTrack) continue;
 
-        const transceiver = pc.getTransceivers().find(item =>
-          item.receiver.track.kind === kind || item.sender.track?.kind === kind
-        );
+        const transceiver = findMediaTransceiver(pc, kind);
         await transceiver?.sender.replaceTrack(null);
       }
 
@@ -490,9 +503,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     if (!stream) return;
 
     const pc = peerConnection.current;
-    const videoTransceiver = pc?.getTransceivers().find(transceiver =>
-      transceiver.receiver.track.kind === 'video' || transceiver.sender.track?.kind === 'video'
-    );
+    const videoTransceiver = pc ? findMediaTransceiver(pc, 'video') : undefined;
 
     if (!enabled) {
       stream.getVideoTracks().forEach(track => {
@@ -555,6 +566,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
 
   // Setup Socket.IO listeners
   useEffect(() => {
+    if (!enabled) { resetPeerConnection(); return; }
     try {
       const activeSocket = getActiveSocket();
 
@@ -599,7 +611,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     } catch (err) {
       // Socket will be initialized by the parent component
     }
-  }, [socket, getActiveSocket, handleOffer, handleAnswer, handleIceCandidate, resetPeerConnection, initiator]);
+  }, [socket, getActiveSocket, handleOffer, handleAnswer, handleIceCandidate, resetPeerConnection, initiator, enabled]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -612,6 +624,7 @@ export const useWebRTC = ({ remoteUserId, socket, initiator = false }: UseWebRTC
     localStream,
     remoteStream,
     isConnected,
+    isConnecting,
     error,
     startLocalStream,
     createOffer,

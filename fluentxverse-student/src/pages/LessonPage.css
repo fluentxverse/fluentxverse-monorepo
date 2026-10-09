@@ -251,7 +251,7 @@
 /* Main Grid Layout */
 .lesson-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -261,6 +261,13 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
+}
+
+@media (min-width: 1025px) {
+  .lesson-grid > :is(.lesson-left-column, .lesson-right-column) > .lesson-card {
+    flex-grow: 1;
+  }
 }
 
 /* Lesson Cards */
@@ -1011,6 +1018,11 @@
 @media (max-width: 768px) {
   .lesson-page {
     padding-top: 100px;
+  }
+
+  .lesson-page .container {
+    padding: 16px 0 32px;
+    width: 100%;
   }
 
   .lesson-page-header {

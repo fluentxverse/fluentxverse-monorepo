@@ -690,7 +690,7 @@ const normalizeSessionDetails = (value: any): SessionDetails => {
       date: session.slotDate,
       time: session.slotTime,
       durationMinutes: session.durationMinutes,
-      timezone: 'KST',
+      timezone: 'JST',
     },
     status: session.status,
     attendance: {

@@ -3,13 +3,13 @@ import { useAuthContext } from '@/context/AuthContext';
 import HomePage from './HomePage';
 
 const HomeProtected = () => {
-  const { isAuthenticated, initialLoading: loading } = useAuthContext();
+  const { isAuthenticated, initialLoading: loading, sessionExpired } = useAuthContext();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    if (!loading && !isAuthenticated && !sessionExpired) {
       window.location.href = '/';
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, sessionExpired]);
 
   if (loading) return null;
   if (!isAuthenticated) return null;

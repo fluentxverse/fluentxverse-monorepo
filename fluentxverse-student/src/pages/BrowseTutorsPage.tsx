@@ -5,6 +5,7 @@ import type { Tutor, TutorSearchParams } from '../types/tutor.types.ts';
 import Header from '../Components/Header/Header';
 import SideBar from '../Components/IndexOne/SideBar';
 import { BookingModal } from '../Components/Booking/BookingModal';
+import ProfileAvatar from '../Components/Common/ProfileAvatar';
 import { useAuthContext } from '../context/AuthContext';
 import LoadingSpinner from '../Components/LoadingSpinner';
 import { API_BASE_URL } from '../config/api';
@@ -91,17 +92,7 @@ const TutorCard = ({ tutor, onBookClick }: { tutor: Tutor; onBookClick: (tutor: 
     onBookClick(tutor);
   };
 
-  const avatarContent = tutor.profilePicture ? (
-    <img 
-      src={tutor.profilePicture} 
-      alt={displayName}
-      className="tutor-card-new__avatar"
-    />
-  ) : (
-    <div className="tutor-card-new__avatar tutor-card-new__avatar--placeholder">
-      {initials}
-    </div>
-  );
+  const avatarContent = <ProfileAvatar src={tutor.profilePicture} alt={displayName} className="tutor-card-new__avatar" fallbackClassName="tutor-card-new__avatar--placeholder" fallback={initials} />;
 
   const verifiedBadge = tutor.isVerified ? (
     <div className="tutor-card-new__verified">
@@ -276,7 +267,7 @@ export const BrowseTutorsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecs, setSelectedSpecs] = useState<string[]>([]);
   // Default to today's date in PHT timezone
-  // "Today" should only change to the next day at 1AM KST (which is midnight PHT)
+  // "Today" should only change to the next day at 1AM JST (which is midnight PHT)
   // This ensures students see PHT-based dates that match tutor availability
   const getTodayDate = () => {
     const now = new Date();

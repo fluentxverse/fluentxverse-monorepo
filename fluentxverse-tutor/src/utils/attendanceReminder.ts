@@ -10,6 +10,12 @@ export interface AttendanceReminderSlot {
 
 export interface RoomEntryReminderSlot extends AttendanceReminderSlot {}
 
+export function activeClassroomBookingId(path: string): string | undefined {
+  const match = /^\/classroom\/([^/?#]+)\/?(?:[?#].*)?$/.exec(path);
+  if (!match) return undefined;
+  try { return decodeURIComponent(match[1]!); } catch { return undefined; }
+}
+
 function slotStartMs(slot: ScheduleSlot): number {
   const match = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i.exec(slot.time.trim());
   if (!/^\d{4}-\d{2}-\d{2}$/.test(slot.date) || !match) return NaN;
@@ -33,13 +39,16 @@ export function getAttendanceReminderSlots(slots: ScheduleSlot[], nowMs: number)
   }).sort((a, b) => a.deadlineMs - b.deadlineMs);
 }
 
-export function getRoomEntryReminderSlots(slots: ScheduleSlot[], nowMs: number): RoomEntryReminderSlot[] {
+export function getRoomEntryReminderSlots(slots: ScheduleSlot[], nowMs: number, activeBookingId?: string): RoomEntryReminderSlot[] {
   return slots.flatMap(slot => {
     if (slot.status !== 'booked' || slot.attendanceTutor !== 'present' ||
-        !slot.bookingId || !slot.roomEntryPolicyActivatedAt || slot.roomEntryCheckCompletedAt) return [];
+        !slot.bookingId || slot.bookingId === activeBookingId ||
+        !slot.roomEntryPolicyActivatedAt || slot.roomEntryCheckCompletedAt) return [];
     const startMs = slotStartMs(slot);
     const deadlineMs = startMs + 5 * 60_000;
     if (!Number.isFinite(startMs) || nowMs < startMs - 5 * 60_000 || nowMs >= deadlineMs) return [];
+    const enteredAtMs = slot.tutorRoomEnteredAt ? Date.parse(slot.tutorRoomEnteredAt) : NaN;
+    if (enteredAtMs >= startMs - 5 * 60_000 && enteredAtMs <= deadlineMs) return [];
     return [{ slot, startMs, deadlineMs }];
   }).sort((a, b) => a.deadlineMs - b.deadlineMs);
 }

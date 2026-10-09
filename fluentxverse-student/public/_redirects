@@ -1,1 +1,1 @@
-/* /index.html 200
+# SPA fallback is configured in wrangler.jsonc; do not rewrite asset requests.

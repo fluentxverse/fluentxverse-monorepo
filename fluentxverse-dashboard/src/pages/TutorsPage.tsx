@@ -3,7 +3,7 @@ import { adminApi, TutorListItem, SuspensionHistoryItem } from '../api/admin.api
 import './TutorsPage.css';
 
 type TabType = 'certified' | 'all' | 'suspended';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+import { API_BASE_URL } from '../config/api';
 
 const TutorsPage = () => {
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
@@ -423,6 +423,7 @@ const TutorsPage = () => {
                   </td>
                   <td>
                     <div className="action-buttons">
+                      <a className="action-btn" title="Operations detail" aria-label="Operations detail" href={`/operations/people/tutor/${encodeURIComponent(tutor.id)}`}><i className="ri-dashboard-line" /></a>
                       <button 
                         className="action-btn view" 
                         title="View Profile"

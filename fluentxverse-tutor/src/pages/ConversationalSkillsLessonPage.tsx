@@ -1795,6 +1795,38 @@ function ApplySection({ data }: ApplySectionProps) {
 function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionData; sessionId?: string | null; lessonId?: string }) {
   const stepAType = data.stepAType || 'rephrase';
   const markingItems = getMarkableExerciseItems(data);
+  const canMark = Boolean(sessionId && lessonId);
+  const renderMarking = (step: 'A' | 'B') => (
+    <ConversationalExerciseMarking
+      sessionId={sessionId!}
+      lessonId={lessonId!}
+      step={step}
+      items={markingItems[step]}
+      renderPrompt={item => {
+        if (step === 'B' && item.itemType === 'multiple-choice') {
+          const choice = data.multipleChoiceItems?.[item.itemIndex];
+          return <div>
+            <strong>{choice?.boldSentence}</strong>
+            <div className="csp-mc-options">
+              <p className="csp-mc-option"><span className="csp-mc-label">a.</span> <span dangerouslySetInnerHTML={{ __html: choice?.optionA || '' }} /></p>
+              <p className="csp-mc-option"><span className="csp-mc-label">b.</span> <span dangerouslySetInnerHTML={{ __html: choice?.optionB || '' }} /></p>
+            </div>
+          </div>;
+        }
+        const image = step === 'A' && item.itemType === 'rephrase'
+          ? data.exerciseItems[item.itemIndex]?.image
+          : step === 'B' && item.itemType === 'conversation'
+            ? data.conversations?.[item.itemIndex]?.speakerImage
+            : step === 'B' && item.itemType === 'speech' ? data.speechSpeakerImage : null;
+        const imageOnRight = step === 'B' && item.itemType === 'conversation'
+          && data.conversations?.[item.itemIndex]?.position === 'right';
+        return <div className={`csp-marking-prompt-content${imageOnRight ? ' csp-marking-prompt-content--image-right' : ''}`}>
+          {image && <div className="csp-exercise-item-image"><img src={image} alt={`Exercise ${item.itemIndex + 1}`} /></div>}
+          <span className="csp-item-sentence" dangerouslySetInnerHTML={{ __html: item.prompt }} />
+        </div>;
+      }}
+    />
+  );
 
   return (
     <section className="csp-section csp-exercise-section">
@@ -1881,7 +1913,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
 
           {/* Exercise Items */}
           <div className="csp-exercise-items">
-            {data.exerciseItems.map((item, idx) => (
+            {canMark ? renderMarking('A') : data.exerciseItems.map((item, idx) => (
               <div key={idx} className="csp-exercise-item">
                 <div className="csp-exercise-item-image">
                   {item.image ? (
@@ -1907,7 +1939,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
             <>
               {/* Choose Items List */}
               <div className="csp-choose-items">
-                {(data.chooseItems || []).map((item, idx) => (
+                {canMark ? renderMarking('A') : (data.chooseItems || []).map((item, idx) => (
                   <div key={idx} className="csp-choose-item">
                     <span className="csp-item-number">{idx + 1}.</span>
                     <span className="csp-item-sentence" dangerouslySetInnerHTML={{ __html: item.sentence }} />
@@ -1965,7 +1997,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
 
               {/* Change Items List */}
               <div className="csp-change-items">
-                {(data.changeItems || []).map((item, idx) => (
+                {canMark ? renderMarking('A') : (data.changeItems || []).map((item, idx) => (
                   <div key={idx} className="csp-change-item">
                     <span className="csp-item-number">{idx + 1}.</span>
                     <span className="csp-change-text" dangerouslySetInnerHTML={{ __html: item.sentence }} />
@@ -2039,9 +2071,6 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
                 </div>
               ))}
             </div>
-            {sessionId && lessonId && (
-              <ConversationalExerciseMarking sessionId={sessionId} lessonId={lessonId} step="A" items={markingItems.A} />
-            )}
           </div>
         </div>
       </div>
@@ -2063,7 +2092,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
               {/* Conversation Type */}
               {(!data.stepBType || data.stepBType === 'conversation') && (
                 <div className="csp-exercise-conversations">
-                  {(data.conversations || []).map((conv, convIdx) => (
+                  {canMark ? renderMarking('B') : (data.conversations || []).map((conv, convIdx) => (
                     <div
                       key={convIdx}
                       className={`csp-exercise-conv-row csp-exercise-conv-${conv.position}`}
@@ -2103,7 +2132,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
               {/* Multiple Choice Type */}
               {data.stepBType === 'multiple-choice' && (
                 <div className="csp-stepb-multiple-choice">
-                  {(data.multipleChoiceItems || []).map((item, mcIdx) => (
+                  {canMark ? renderMarking('B') : (data.multipleChoiceItems || []).map((item, mcIdx) => (
                     <div key={mcIdx} className="csp-mc-item">
                       <p className="csp-mc-sentence">
                         <span className="csp-mc-number">{mcIdx + 1}.</span>
@@ -2128,7 +2157,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
               {/* Speech Type - Single speaker with speech bubble */}
               {data.stepBType === 'speech' && (
                 <div className="csp-stepb-speech">
-                  <div className="csp-speech-layout">
+                  {canMark ? renderMarking('B') : <div className="csp-speech-layout">
                     <div className="csp-speech-speaker-image">
                       {data.speechSpeakerImage ? (
                         <img src={data.speechSpeakerImage} alt="Speaker" />
@@ -2141,7 +2170,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
                     <div className="csp-speech-bubble">
                       <p dangerouslySetInnerHTML={{ __html: data.speechContent || '' }} />
                     </div>
-                  </div>
+                  </div>}
                 </div>
               )}
 
@@ -2183,7 +2212,7 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
 
                   {(data.compareItems || []).length > 0 && (
                     <div className="csp-compare-items">
-                      {(data.compareItems || []).map((item, compareIdx) => (
+                      {canMark ? renderMarking('B') : (data.compareItems || []).map((item, compareIdx) => (
                         <div key={compareIdx} className="csp-compare-item">
                           <span className="csp-item-number">{compareIdx + 1}.</span>
                           <span className="csp-item-sentence" dangerouslySetInnerHTML={{ __html: item.sentence }} />
@@ -2252,9 +2281,6 @@ function ExerciseSection({ data, sessionId, lessonId }: { data: ExerciseSectionD
                     </div>
                   ))}
                 </div>
-                {sessionId && lessonId && (
-                  <ConversationalExerciseMarking sessionId={sessionId} lessonId={lessonId} step="B" items={markingItems.B} />
-                )}
               </div>
             )}
           </div>
@@ -2639,7 +2665,7 @@ function FeedbackSection({ data }: FeedbackSectionProps) {
 
           {/* Performance Levels */}
           <div className="csp-fb-rubric-card">
-            <div className="csp-fb-rubric-title-row">{data.rubricTitle}</div>
+            <div className="csp-fb-rubric-title-row">{data.rubricTitle === 'LESSON GOAL ACHIEVEMENT' ? 'LESSON OBJECTIVE ACHIEVEMENT' : data.rubricTitle}</div>
             <div className="csp-fb-rubric-scale">
               {data.rubricLevels.map((level, idx) => (
                 <div key={idx} className={`csp-fb-rubric-item csp-fb-rubric-${level.score}`}>

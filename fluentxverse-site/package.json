@@ -1,26 +1,26 @@
 {
   "name": "fluentxverse-site",
   "version": "1.0.0",
-  "description": "FluentXVerse - Static project/team site",
+  "description": "FluentXVerse - Corporate ecosystem website built with SolidJS",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run dev.ts --watch",
-    "build": "bun run build.ts",
-    "preview": "bun run build && cd dist && bunx serve",
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host 0.0.0.0",
     "deploy": "bun run build && bunx wrangler deploy"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0"
-  },
-  "peerDependencies": {
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1",
+    "vite-plugin-solid": "^2.11.14"
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.5.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "@solidjs/router": "^1.0.0",
+    "lucide-solid": "^1.54.0",
+    "solid-js": "^1.9.17"
   }
 }

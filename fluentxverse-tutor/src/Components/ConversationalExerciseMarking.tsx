@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import type { ComponentChildren } from 'preact';
 import { tutorApi, type ClassroomExerciseMark } from '../api/tutor.api';
 import type { MarkableExerciseItem } from '../utils/conversationalExerciseMarks';
 import './ConversationalExerciseMarking.css';
@@ -8,6 +9,7 @@ interface Props {
   lessonId: string;
   step: 'A' | 'B';
   items: MarkableExerciseItem[];
+  renderPrompt?: (item: MarkableExerciseItem) => ComponentChildren;
 }
 
 const plainText = (value: string) => {
@@ -16,7 +18,7 @@ const plainText = (value: string) => {
   return (node.textContent || '').replace(/\s+/g, ' ').trim();
 };
 
-export function ConversationalExerciseMarking({ sessionId, lessonId, step, items }: Props) {
+export function ConversationalExerciseMarking({ sessionId, lessonId, step, items, renderPrompt }: Props) {
   const [marks, setMarks] = useState<Record<number, ClassroomExerciseMark>>({});
   const [responses, setResponses] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export function ConversationalExerciseMarking({ sessionId, lessonId, step, items
   const missedCount = items.filter(item => marks[item.itemIndex]?.isCorrect === false).length;
 
   return (
-    <div className="csp-exercise-marking" aria-label={`Step ${step} answer marking`}>
+    <div className="csp-exercise-marking csp-exercise-marking--inline" aria-label={`Step ${step} answer marking`}>
       <div className="csp-exercise-marking-header">
         <strong>MARK ANSWERS</strong>
         <span>{loading ? 'Loading...' : `${markedCount}/${items.length} marked · ${missedCount} missed`}</span>
@@ -89,14 +91,14 @@ export function ConversationalExerciseMarking({ sessionId, lessonId, step, items
       <div className="csp-exercise-marking-list">
         {items.map(item => {
           const mark = marks[item.itemIndex];
-          const pending = loading || savingIndex === item.itemIndex;
+          const pending = loading || savingIndex !== null;
           const response = responses[item.itemIndex] || '';
           const responseChanged = mark?.isCorrect === false && response !== mark.studentResponse;
           return (
             <div className="csp-exercise-marking-item" key={`${step}-${item.itemIndex}`}>
               <div className="csp-exercise-marking-row">
                 <span className="csp-exercise-marking-number">{item.itemIndex + 1}.</span>
-                <span className="csp-exercise-marking-prompt" title={plainText(item.prompt)}>{plainText(item.prompt)}</span>
+                <div className="csp-exercise-marking-prompt">{renderPrompt ? renderPrompt(item) : plainText(item.prompt)}</div>
                 <div className="csp-exercise-marking-actions" role="group" aria-label={`Item ${item.itemIndex + 1}`}>
                   <button
                     type="button"

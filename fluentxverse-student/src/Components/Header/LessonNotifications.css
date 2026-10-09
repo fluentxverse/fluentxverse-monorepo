@@ -1,0 +1,7 @@
+.student-notification-bell { position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; flex:none; background:transparent; color:inherit; border:1px solid var(--border-color,#dce4ef); border-radius:6px; }
+.student-notification-bell span { position:absolute; right:-5px; top:-6px; background:#bc2449; color:#fff; border-radius:50%; font-size:10px; min-width:16px; height:16px; display:grid; place-items:center; }
+.student-notification-dialog { position:fixed; inset:0; margin:auto; width:min(420px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:20px; border:1px solid #dce4ef; border-radius:8px; background:#fff; color:#222; overflow:auto; }
+.student-notification-dialog::backdrop { background:rgba(0,0,0,.5); }
+.student-notification-dialog header { display:flex; align-items:center; justify-content:space-between; }.student-notification-dialog h2 { font-size:18px; }.student-notification-dialog button { background:transparent; color:inherit; border:0; }
+.student-notification-dialog a { display:grid; gap:6px; padding:14px 0; border-bottom:1px solid #dce4ef; color:inherit; }.student-notification-dialog a.is-read { opacity:.7; }.student-notification-dialog span { font-size:13px; }.student-notification-dialog time { color:#68758a; font-size:11px; }
+.dark-mode .student-notification-dialog,[data-theme="dark"] .student-notification-dialog { background:#242424; color:#eee; border-color:#454545; }.dark-mode .student-notification-dialog a,[data-theme="dark"] .student-notification-dialog a { border-color:#454545; }

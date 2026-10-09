@@ -1,5 +1,6 @@
 import { h } from 'preact';
 import type { Tutor } from '../../types/tutor.types';
+import ProfileAvatar from '../Common/ProfileAvatar';
 import './TutorCard.css';
 
 interface TutorCardProps {
@@ -18,17 +19,7 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
     <div className="tutor-card">
       <div className="tutor-card__header">
         <a href={`/tutor/${tutor.userId}`} className="tutor-card__avatar-link">
-          {tutor.profilePicture ? (
-            <img 
-              src={tutor.profilePicture} 
-              alt={displayName}
-              className="tutor-card__avatar"
-            />
-          ) : (
-            <div className="tutor-card__avatar tutor-card__avatar--placeholder">
-              {initials}
-            </div>
-          )}
+          <ProfileAvatar src={tutor.profilePicture} alt={displayName} className="tutor-card__avatar" fallbackClassName="tutor-card__avatar--placeholder" fallback={initials} />
         </a>
         
         {tutor.isVerified && (

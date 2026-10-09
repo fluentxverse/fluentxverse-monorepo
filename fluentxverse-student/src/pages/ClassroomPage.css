@@ -1,4 +1,7 @@
 /* Classroom Layout */
+.classroom-start-wait { flex-shrink: 0; padding: 10px 12px; border-bottom: 1px solid #cbd5e1; background: #edf4ff; color: #0245ae; font-size: 12px; line-height: 1.5; font-weight: 600; }
+[data-theme='dark'] .classroom-start-wait { background: #263443; border-color: #484848; color: #93c5fd; }
+.classroom-container .control-btn:disabled { opacity: .45; cursor: default; }
 .classroom-container {
   display: flex;
   height: 100vh;
@@ -115,6 +118,10 @@
 
 /* Connection status overlay inside video */
 .connection-status.overlay-top {
+  z-index: 5;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
   position: absolute;
   top: 6px;
   left: 8px;
@@ -128,8 +135,12 @@
 .connection-status.overlay-top p {
   margin: 0;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #fff;
+  overflow-wrap: anywhere;
 }
+
+.connection-status.call-error { background: #8b2020; }
+.connection-status.call-connected { background: #176b48; }
 
 .local-video-full {
   position: relative;
@@ -2738,6 +2749,11 @@
   padding: 0;
 }
 
+[data-theme='dark'] :is(.dispatch-article-iframe, .lesson-material-iframe) {
+  background: #1a1a1a;
+  color-scheme: dark;
+}
+
 .lesson-renderer-wrapper {
   position: absolute;
   top: 0;
@@ -3082,7 +3098,7 @@
   background: #1e293b;
 }
 
-.dark-mode .dispatch-view-header {
+.dark-mode .dispatch-view-header:not(.daily-dispatch-theme):not(.conversational-theme):not(.business-english-theme) {
   background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
   border-bottom-color: rgba(74, 158, 255, 0.2);
 }
@@ -3431,6 +3447,9 @@
   .classroom-left {
     width: 100%;
     height: 60vh;
+  }
+  .video-section {
+    height: clamp(100px, calc(60vh - 280px), 240px);
   }
   .classroom-right {
     height: 40vh;
@@ -5682,3 +5701,122 @@
   border-color: rgba(124, 184, 255, 0.28);
   color: #7cb8ff;
 }
+.dispatch-view-header.conversational-theme .dispatch-view-category {
+  background: #fff;
+  color: #12458f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+.dispatch-view-header.conversational-theme .dispatch-view-date {
+  color: #fff;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.dispatch-view-header.business-english-theme {
+  transition: background 0.35s ease, box-shadow 0.35s ease, color 0.35s ease;
+}
+
+.dispatch-view-header.business-english-theme--light {
+  background: linear-gradient(135deg, #f7f5ff 0%, #ede9fe 100%);
+  box-shadow: inset 0 -3px 0 rgba(124, 58, 237, 0.18);
+  color: #4c1d95;
+}
+
+.dispatch-view-header.business-english-theme--light .btn-back-to-request,
+.dispatch-view-header.business-english-theme--light .btn-material-theme-toggle {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.16);
+  color: #5b21b6;
+}
+
+.dispatch-view-header.business-english-theme--light .btn-back-to-request:hover,
+.dispatch-view-header.business-english-theme--light .btn-material-theme-toggle:hover {
+  background: rgba(124, 58, 237, 0.14);
+  border-color: rgba(124, 58, 237, 0.24);
+}
+
+.dispatch-view-header.business-english-theme--light .dispatch-view-category {
+  background: rgba(124, 58, 237, 0.12);
+  color: #6d28d9;
+}
+
+.dispatch-view-header.business-english-theme--light .dispatch-view-date {
+  color: rgba(76, 29, 149, 0.85);
+  opacity: 1;
+}
+
+.dispatch-view-header.business-english-theme--dark {
+  background: linear-gradient(135deg, #130d24 0%, #25134a 100%);
+  box-shadow: inset 0 -3px 0 rgba(167, 139, 250, 0.3);
+  color: #f5f3ff;
+}
+
+.dispatch-view-header.business-english-theme--dark .btn-back-to-request,
+.dispatch-view-header.business-english-theme--dark .btn-material-theme-toggle {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.22);
+  color: #e9ddff;
+}
+
+.dispatch-view-header.business-english-theme--dark .btn-back-to-request:hover,
+.dispatch-view-header.business-english-theme--dark .btn-material-theme-toggle:hover {
+  background: rgba(167, 139, 250, 0.2);
+  border-color: rgba(167, 139, 250, 0.32);
+}
+
+.dispatch-view-header.business-english-theme--dark .dispatch-view-category {
+  background: rgba(167, 139, 250, 0.18);
+  color: #f5f3ff;
+}
+
+.dispatch-view-header.business-english-theme--dark .dispatch-view-date {
+  color: rgba(237, 233, 254, 0.92);
+  opacity: 1;
+}
+
+
+.lesson-request-container--dispatch .lesson-request-content { grid-template-columns: minmax(0, 1fr); }
+.lesson-request-container--dispatch .lesson-request-section,
+.lesson-request-container--dispatch .material-selector-section {
+  border-radius: 8px;
+  border-bottom-width: 1px;
+}
+.lesson-request-container--dispatch .lesson-request-header,
+.lesson-request-container--dispatch .material-selector-header {
+  min-height: 42px;
+  box-sizing: border-box;
+}
+.lesson-request-container--dispatch .request-material-summary {
+  padding-top: 0;
+  border-top: 0;
+}
+.lesson-request-container--dispatch .request-stat-card { min-height: 0; }
+.lesson-request-container--dispatch .material-selector-primary {
+  padding: 0;
+  border: 0;
+}
+@media (min-width: 701px) {
+  .lesson-request-container--dispatch .request-summary-grid { grid-auto-rows: 72px; }
+  .lesson-request-container--dispatch .material-selector-section {
+    height: 466px;
+    flex: 0 0 466px;
+    box-sizing: border-box;
+  }
+}
+.material-selector-trigger { color: var(--fxv-text, #182235); }
+@media (max-width: 1100px) {
+  .material-tabs { justify-content: flex-start; }
+}
+.chat-material-share { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; max-width: 100%; }
+.chat-material-share strong { font-size: 12px; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; color: inherit; }
+.chat-material-share > span { font-size: 11px; opacity: .85; color: inherit; }
+.chat-material-share button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 12px; border: 1px solid #2563eb; border-radius: 4px; background: #2563eb; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+.chat-material-share button:hover { background: #1d4ed8; }
+.chat-material-share button:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+[data-theme='dark'] .chat-material-share button { background: #2563eb; color: #fff; border-color: #3b82f6; }
+[data-theme='dark'] .chat-material-share button:hover { background: #1d4ed8; }

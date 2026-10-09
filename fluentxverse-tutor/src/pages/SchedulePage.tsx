@@ -27,7 +27,7 @@ const PENALTY_LABELS: Record<PenaltyCode, { label: string; color: string; bgColo
   '601': { label: 'BLK-601', color: '#991b1b', bgColor: '#fef2f2' }, // Penalty Block
 };
 
-const BOOKING_NOTICE = 'Confirm attendance 35 to 11 minutes before class. Unconfirmed booked slots receive TA-301; unbooked open slots receive TA-302. Enter the classroom by 5 minutes after a booked lesson starts. Only Present slots can be booked until 5 minutes before class.';
+const BOOKING_NOTICE = 'Confirm availability 35 to 11 minutes before class. Unconfirmed open slots receive TA-302. Booked lessons receive TA-301 only for a declared absence or no classroom entry during the scheduled lesson. Only Present slots can be booked until 5 minutes before class.';
 const ABSENCE_REASONS: AbsenceReason[] = ['Internet Outage', 'Electric Outage', 'Emergency', 'Disaster', 'Health', 'Others'];
 
 const SchedulePage = () => {
@@ -45,6 +45,7 @@ const SchedulePage = () => {
   const [slotPenalties, setSlotPenalties] = useState<Map<string, SlotPenalty>>(new Map()); // Track penalty codes per slot
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [schedulingBlock, setSchedulingBlock] = useState<{ active: boolean; expiresAt: string | null }>({ active: false, expiresAt: null });
   
   // Booked slot info type
   interface BookedSlotInfo {
@@ -72,6 +73,7 @@ const SchedulePage = () => {
   const [isConfirming, setIsConfirming] = useState(false); // Loading state for confirm button
   const [showSuccess, setShowSuccess] = useState(false); // Success animation state
   const [nowMs, setNowMs] = useState(Date.now());
+  const schedulingBlocked = schedulingBlock.active && (!schedulingBlock.expiresAt || nowMs < Date.parse(schedulingBlock.expiresAt));
   const currentPeriod = getSchedulePeriod(nowMs);
   const previousPeriodRef = useRef(currentPeriod);
   const lastLoadedWeekRef = useRef<string | null>(null);
@@ -334,6 +336,7 @@ const SchedulePage = () => {
       
       try {
         const scheduleData = await scheduleApi.getWeekSchedule(currentWeekOffset);
+        setSchedulingBlock(scheduleData.schedulingBlock || { active: false, expiresAt: null });
         
         
         // Convert schedule data to local state format
@@ -538,7 +541,7 @@ const SchedulePage = () => {
 
   // Check if slot can be opened at least 11 minutes ahead.
   const canOpenSlot = (date: Date, timeStr: string): boolean => {
-    return attendanceStartMs(date, timeStr) - nowMs >= 11 * 60_000;
+    return !schedulingBlocked && attendanceStartMs(date, timeStr) - nowMs >= 11 * 60_000;
   };
 
   const reopenRestriction = (key: string): string | null => {
@@ -1127,6 +1130,11 @@ const SchedulePage = () => {
               </div>
             </div>
 
+            {schedulingBlocked && <div role="alert" style={{ padding: '16px', marginBottom: '16px', border: '1px solid #dc2626', borderRadius: '8px' }}>
+              <strong>New lesson bookings are temporarily blocked.</strong>{' '}
+              {schedulingBlock.expiresAt && <span>Until {new Date(schedulingBlock.expiresAt).toLocaleString('en-US', { timeZone: 'Asia/Manila' })} PHT. </span>}
+              Existing booked lessons remain accessible.
+            </div>}
             {/* Error Message */}
             {error && (
               <div style={{
@@ -1764,7 +1772,7 @@ const SchedulePage = () => {
                     code: '301',
                     label: 'TA-301',
                     title: 'Tutor Absence (Booked)',
-                    description: 'Booked lesson marked absent, not confirmed by the 11-minute deadline, or not entered in the classroom by 5 minutes after start. Later consecutive Present slots return to standby for reconfirmation.',
+                    description: 'Booked lesson explicitly marked absent, or no tutor classroom entry during the scheduled lesson. Automatic no-show penalties are assigned only after the lesson ends; entering at any point during the lesson counts as attendance.',
                     severity: 'critical',
                     color: '#dc2626'
                   },

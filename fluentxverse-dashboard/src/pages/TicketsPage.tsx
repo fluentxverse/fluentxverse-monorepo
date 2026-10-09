@@ -15,7 +15,7 @@ import {
 } from '../api/ticket.api';
 
 // Get ticket image URL from local server
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+import { API_BASE_URL } from '../config/api';
 const getTicketImageUrl = (tier: TicketTier): string => {
   return `${API_BASE_URL}/tickets/image/${tier}`;
 };

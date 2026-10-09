@@ -4,20 +4,37 @@ import { useLocation } from 'preact-iso';
 import { useAuthContext } from '../context/AuthContext';
 import { initSocket, connectSocket, getSocket, destroySocket } from '../client/socket/socket.client';
 import { useThemeStore } from '../context/ThemeContext';
-import { useWebRTC } from '../hooks/useWebRTC';
+import { materialFrameUrl } from '../utils/materialFrameUrl';
+import { lessonNotesLabels } from '../data/lessonNotesLabels';
+import { lessonMaterialNotesIcon } from '../data/lessonNotesIcons';
+import { getLessonVocabularyMeaning } from '../utils/lessonVocabulary';
+import { useClassroomMedia } from '../hooks/useClassroomMedia';
+import { ClassroomRecordingNotice } from '../Components/ClassroomRecordingNotice';
+import { useClassroomStart } from '../hooks/useClassroomStart';
+import { useClassroomLessonNotes } from '../hooks/useClassroomLessonNotes';
+import { classroomCallStatus } from '../utils/classroomCallStatus';
 import PdfViewer from '../Components/PdfViewer/PdfViewer';
+import TutorClassroomIssueReport from '../Components/TutorClassroomIssueReport';
+import DispatchMaterialPicker from '../Components/DispatchMaterialPicker';
+import CurriculumMaterialPicker from '../Components/CurriculumMaterialPicker';
+import LearningNotesFields from '../Components/LearningNotesFields';
+import LessonFeedbackFields from '../Components/LessonFeedbackFields';
+import MaterialProgressEditor from '../Components/MaterialProgressEditor';
+import { dispatchPostDate, type DispatchArticle } from '../utils/dispatchLibrary';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import {
   tutorApi,
   type ClassroomGrammarNote,
+  type ClassroomMaterialProgress,
   type ClassroomNotesRecord,
   type ClassroomPronunciationNote,
   type SaveClassroomNotesInput,
   type ClassroomVocabularyNote,
 } from '../api/tutor.api';
-import type { ChatMessageData, ClassroomActivityLogData } from '../types/socket.types';
+import type { ChatMessageData, ClassroomActivityLogData, SharedClassroomMaterial } from '../types/socket.types';
 import type { Socket } from 'socket.io-client';
+import type { Notification } from '../types/notification.types';
 import { API_BASE_URL } from '../config/api';
 import BusinessEnglishPreviewPage from './BusinessEnglishPreviewPage';
 import {
@@ -27,15 +44,6 @@ import {
   readCachedBusinessEnglishLessonList,
 } from '../utils/businessEnglishCache';
 import './ClassroomPage.css';
-
-// Daily Dispatch article interface
-interface DispatchArticle {
-  id: string;
-  title: string;
-  topic: string;
-  category: string;
-  createdAt: string;
-}
 
 // Conversational Skills lesson interface for viewing
 interface ConversationalLesson {
@@ -67,6 +75,7 @@ interface StudentLessonRequest {
 }
 
 interface ChatMessage {
+  material?: SharedClassroomMaterial;
   id: string;
   sender: 'tutor' | 'student';
   text: string;
@@ -123,17 +132,24 @@ interface ClassroomPersistedState {
 interface ActiveNotesTarget {
   materialType: 'business-english' | 'daily-dispatch' | 'conversational-skills';
   materialId: string;
+  materialTitle?: string;
   courseId?: string | null;
   lessonId?: string | null;
   articleId?: string | null;
 }
 
-interface ClassroomNotesSnapshot {
+interface MaterialProgressFields {
+  isUsed: boolean;
+  completionStatus: 'in_progress' | 'completed' | null;
+  stoppedAt: string | null;
+  stoppedAtLabel: string | null;
+  progressDetails: string;
+}
+
+interface ClassroomNotesSnapshot extends MaterialProgressFields {
   vocabularyItems: ClassroomVocabularyNote[];
   grammarItems: ClassroomGrammarNote[];
   pronunciationItems: ClassroomPronunciationNote[];
-  studentComment: string;
-  tutorMemo: string;
 }
 
 interface ClassroomNotesDraft extends ClassroomNotesSnapshot {
@@ -227,8 +243,11 @@ const normalizeClassroomNotesSnapshot = (
   vocabularyItems: normalizeVocabularyItems(snapshot?.vocabularyItems),
   grammarItems: normalizeGrammarItems(snapshot?.grammarItems),
   pronunciationItems: normalizePronunciationItems(snapshot?.pronunciationItems),
-  studentComment: snapshot?.studentComment || '',
-  tutorMemo: snapshot?.tutorMemo || '',
+  isUsed: Boolean(snapshot?.isUsed),
+  completionStatus: snapshot?.completionStatus || null,
+  stoppedAt: snapshot?.stoppedAt || null,
+  stoppedAtLabel: snapshot?.stoppedAtLabel || null,
+  progressDetails: snapshot?.progressDetails || '',
 });
 
 const createClassroomNotesDraft = (
@@ -260,9 +279,10 @@ const buildClassroomNotesPayload = (
   return {
     materialType: target.materialType,
     materialId: target.materialId,
-    courseId: target.courseId || null,
-    lessonId: target.lessonId || null,
-    articleId: target.articleId || null,
+    materialTitle: target.materialTitle,
+    courseId: target.courseId || undefined,
+    lessonId: target.lessonId || undefined,
+    articleId: target.articleId || undefined,
     ...normalizedSnapshot,
   };
 };
@@ -321,7 +341,10 @@ const persistClassroomNotesDraft = (bindingKey: string, draft: ClassroomNotesDra
   }
 
   try {
-    window.localStorage.setItem(buildClassroomNotesDraftKey(bindingKey), JSON.stringify(draft));
+    const key = buildClassroomNotesDraftKey(bindingKey);
+    let previous = {};
+    try { previous = JSON.parse(window.localStorage.getItem(key) || '{}'); } catch { /* Replace malformed drafts. */ }
+    window.localStorage.setItem(key, JSON.stringify({ ...previous, ...draft }));
   } catch (error) {
     console.error('Failed to persist classroom notes draft:', error);
   }
@@ -401,6 +424,7 @@ const formatFileSize = (bytes?: number): string => {
 };
 
 const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
+  const [mediaProvider, setMediaProvider] = useState<'webrtc' | 'realtimekit'>();
   useEffect(() => {
     document.title = 'Classroom | FluentXVerse';
   }, []);
@@ -414,13 +438,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const localPipRef = useRef<HTMLVideoElement>(null);
   const remotePipRef = useRef<HTMLVideoElement>(null);
   const courseDropdownRef = useRef<HTMLDivElement>(null);
-  const levelDropdownRef = useRef<HTMLDivElement>(null);
-  const chapterDropdownRef = useRef<HTMLDivElement>(null);
-  const lessonDropdownRef = useRef<HTMLDivElement>(null);
   const materialCourseCacheRef = useRef<Record<string, Lesson[]>>({});
   const businessEnglishPrefetchRef = useRef<Record<string, Promise<void>>>({});
   const restoredClassroomStateRef = useRef<ClassroomPersistedState | null>(null);
   const hydratedClassroomSessionRef = useRef<string | null>(null);
+  const receivedReportIds = useRef(new Set<string>());
   
   // Track stream IDs for forcing re-renders
   const [localStreamId, setLocalStreamId] = useState<string>('');
@@ -428,6 +450,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   
   // Socket state for passing to child components
   const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+  const [signalingConnected, setSignalingConnected] = useState(false);
+  const [signalingError, setSignalingError] = useState<string | null>(null);
   
   // Extract sessionId from router params or query string, fallback to pathname
   const routeSessionId = (route as any)?.params?.sessionId as string | undefined;
@@ -440,6 +464,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     }
   })();
   const currentSessionId = sessionId || routeSessionId || querySessionId || window.location.pathname.split('/classroom/')[1]?.split('?')[0];
+  const lessonStart = useClassroomStart(socketInstance, currentSessionId);
 
   useEffect(() => {
     if (!currentSessionId || hydratedClassroomSessionRef.current === currentSessionId) {
@@ -504,8 +529,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     
     // Wait for connection before joining
     const onConnect = () => {
+      setSignalingConnected(true);
+      setSignalingError(null);
       socket.emit('session:join', { sessionId: currentSessionId });
     };
+    const onDisconnect = () => {
+      setSignalingConnected(false);
+      setIsConnecting(true);
+    };
+    const onConnectError = () => setSignalingError('Unable to connect to the lesson. Check your connection and try again.');
     
     // Handle incoming chat messages
     const onChatMessage = (data: ChatMessageData) => {
@@ -527,7 +559,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         fileUrl: data.fileUrl,
         fileName: data.fileName,
         fileType: data.fileType,
-        fileSize: data.fileSize
+        fileSize: data.fileSize,
+        material: data.material
       };
       setChatMessages(prev => {
         // Avoid duplicates
@@ -585,7 +618,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         fileUrl: msg.fileUrl,
         fileName: msg.fileName,
         fileType: msg.fileType,
-        fileSize: msg.fileSize
+        fileSize: msg.fileSize,
+        material: msg.material
       }));
       setChatMessages(formattedMessages);
     };
@@ -644,10 +678,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     // Handle session state
     const onSessionState = (data: any) => {
       if (data.sessionId !== currentSessionId) return;
+      setMediaProvider(previous => data.mediaProvider || previous || 'webrtc');
       socket.emit('chat:request-history', { sessionId: currentSessionId });
-      if (data.status === 'active') {
-        setIsConnecting(false);
-      }
+      setIsConnecting(!data.participants?.studentId);
       // Always update student info with latest from session state
       if (data.participants?.studentId) {
         setStudentInfo({
@@ -665,7 +698,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       }
     };
 
-    const onSessionError = (data: { message: string }) => toast.error(data.message);
+    const onSessionError = (data: { message: string }) => {
+      setSignalingError(data.message);
+      toast.error(data.message);
+    };
     
     // Handle user joined
     const onUserJoined = (data: { userId: string; userType: string }) => {
@@ -689,6 +725,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     const onUserLeft = (data: { userId: string; userType: string }) => {
       if (data.userType === 'student') {
         setStudentInfo(null);
+        setIsConnecting(true);
       }
     };
 
@@ -706,8 +743,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       setActivityLogs(prev => prev.some(item => item.id === log.id) ? prev : [...prev, log]);
     };
     
+    const onLessonReportReceived = (notification: Notification) => {
+      if (notification.title !== 'Lesson report received' || notification.data?.bookingId !== currentSessionId || receivedReportIds.current.has(notification.id)) return;
+      receivedReportIds.current.add(notification.id);
+      toast.warning('The student reported an issue with this lesson.', 'Report Received');
+    };
     // Set up listeners
+    socket.on('notification:new', onLessonReportReceived);
     socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
     socket.on('chat:message', onChatMessage);
     socket.on('chat:message-updated', onChatMessageUpdated);
     socket.on('chat:message-deleted', onChatMessageDeleted);
@@ -728,7 +773,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     }
     
     return () => {
+      socket.off('notification:new', onLessonReportReceived);
       socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
       socket.off('chat:message', onChatMessage);
       socket.off('chat:message-updated', onChatMessageUpdated);
       socket.off('chat:message-deleted', onChatMessageDeleted);
@@ -742,12 +790,14 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       socket.off('classroom:video-state', onVideoState);
       socket.off('classroom:activity-history', onActivityHistory);
       socket.off('classroom:activity-log', onActivityLog);
+      if (socket.connected) socket.emit('session:leave');
+      socket.disconnect();
     };
   }, [currentSessionId]);
   
   // State
   const [message, setMessage] = useState('');
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const elapsedTime = lessonStart.elapsed;
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSwapped, setIsSwapped] = useState(true);
@@ -773,8 +823,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const [vocabularyItems, setVocabularyItems] = useState<ClassroomVocabularyNote[]>([createEmptyVocabularyItem()]);
   const [grammarItems, setGrammarItems] = useState<ClassroomGrammarNote[]>([createEmptyGrammarItem()]);
   const [pronunciationItems, setPronunciationItems] = useState<ClassroomPronunciationNote[]>([createEmptyPronunciationItem()]);
-  const [studentComment, setStudentComment] = useState('');
-  const [tutorMemo, setTutorMemo] = useState('');
+  const [materialProgress, setMaterialProgress] = useState<MaterialProgressFields>({ isUsed: false, completionStatus: null, stoppedAt: null, stoppedAtLabel: null, progressDetails: '' });
+  const [progressContext, setProgressContext] = useState<{ bindingKey: string; data: ClassroomMaterialProgress | null }>({ bindingKey: '', data: null });
+  const [progressRevision, setProgressRevision] = useState(0);
+  const progressContextsRef = useRef<Record<string, ClassroomMaterialProgress>>({});
+  const { studentComment, tutorMemo, setStudentComment, setTutorMemo, materials: usedNotesMaterials,
+    rememberMaterial, saveState: summarySaveState, ready: summaryReady, retry: retrySummarySave } = useClassroomLessonNotes(currentSessionId);
+  const [notesSelection, setNotesSelection] = useState<{ sessionId: string; target: ActiveNotesTarget } | null>(null);
+  const selectedNotesTarget = notesSelection?.sessionId === currentSessionId ? notesSelection.target : null;
+  const [previewedNotes, setPreviewedNotes] = useState<{ sessionId: string; targets: ActiveNotesTarget[] }>({ sessionId: currentSessionId, targets: [] });
+  const previewedNotesTargets = previewedNotes.sessionId === currentSessionId ? previewedNotes.targets : [];
   const [notesPersistenceState, setNotesPersistenceState] = useState<'idle' | 'loading' | 'saving' | 'saved' | 'draft' | 'error'>('idle');
   const notesHydratedKeyRef = useRef<string | null>(null);
   const notesSkipAutosaveRef = useRef(false);
@@ -783,6 +841,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const notesDraftUpdatedAtRef = useRef(0);
   const latestNotesDraftRef = useRef<ClassroomNotesDraft | null>(null);
   const notesLastExitFlushAtRef = useRef(0);
+  const notesSaveQueuesRef = useRef<Record<string, Promise<ClassroomNotesRecord>>>({});
+  const activeNotesKeyRef = useRef<string | null>(null);
   
   // Vocabulary item handlers
   const addVocabularyItem = () => {
@@ -847,6 +907,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // Get vocabulary definition from AI
   const getVocabularyDefinition = async (index: number) => {
     const item = vocabularyItems[index];
+    const bindingKey = activeNotesKeyRef.current;
     if (!item.word.trim()) return;
 
     // Set loading state
@@ -867,9 +928,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       if (!response.ok) throw new Error('Failed to get definition');
 
       const data = await response.json();
-      
-      
+      if (bindingKey !== activeNotesKeyRef.current) return;
       setVocabularyItems(prev => {
+        if (prev[index]?.word !== item.word) return prev;
         const updated = [...prev];
         updated[index] = {
           ...updated[index],
@@ -881,9 +942,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         return updated;
       });
     } catch (error) {
+      if (bindingKey !== activeNotesKeyRef.current) return;
       console.error('Vocabulary definition failed:', error);
       toast.error('Failed to get vocabulary definition');
       setVocabularyItems(prev => {
+        if (prev[index]?.word !== item.word) return prev;
         const updated = [...prev];
         updated[index] = { ...updated[index], isLoading: false };
         return updated;
@@ -989,6 +1052,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // Get grammar correction from OpenAI
   const getGrammarCorrection = async (index: number) => {
     const item = grammarItems[index];
+    const bindingKey = activeNotesKeyRef.current;
     if (!item.youSaid.trim()) return;
 
     // Set loading state
@@ -1009,9 +1073,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       if (!response.ok) throw new Error('Failed to get correction');
 
       const data = await response.json();
-      
-      
+      if (bindingKey !== activeNotesKeyRef.current) return;
       setGrammarItems(prev => {
+        if (prev[index]?.youSaid !== item.youSaid) return prev;
         const updated = [...prev];
         updated[index] = {
           ...updated[index],
@@ -1023,9 +1087,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         return updated;
       });
     } catch (error) {
+      if (bindingKey !== activeNotesKeyRef.current) return;
       console.error('Grammar check failed:', error);
       toast.error('Failed to get grammar correction');
       setGrammarItems(prev => {
+        if (prev[index]?.youSaid !== item.youSaid) return prev;
         const updated = [...prev];
         updated[index] = { ...updated[index], isLoading: false };
         return updated;
@@ -1072,6 +1138,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   // Get pronunciation from AI
   const getPronunciationFromAI = async (index: number) => {
     const item = pronunciationItems[index];
+    const bindingKey = activeNotesKeyRef.current;
     if (!item.word.trim()) return;
 
     // Set loading state
@@ -1092,9 +1159,9 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       if (!response.ok) throw new Error('Failed to get pronunciation');
 
       const data = await response.json();
-      
-      
+      if (bindingKey !== activeNotesKeyRef.current) return;
       setPronunciationItems(prev => {
+        if (prev[index]?.word !== item.word) return prev;
         const updated = [...prev];
         updated[index] = {
           ...updated[index],
@@ -1105,9 +1172,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         return updated;
       });
     } catch (error) {
+      if (bindingKey !== activeNotesKeyRef.current) return;
       console.error('Pronunciation failed:', error);
       toast.error('Failed to get pronunciation');
       setPronunciationItems(prev => {
+        if (prev[index]?.word !== item.word) return prev;
         const updated = [...prev];
         updated[index] = { ...updated[index], isLoading: false };
         return updated;
@@ -1152,19 +1221,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   
   // Material selector state - hierarchical
   const [availableLessons, setAvailableLessons] = useState<Lesson[]>([]);
+  const materialLoadIdRef = useRef(0);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
   const [courseDropdownMenuStyle, setCourseDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
-  const [levelDropdownMenuStyle, setLevelDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [isChapterDropdownOpen, setIsChapterDropdownOpen] = useState(false);
-  const [chapterDropdownMenuStyle, setChapterDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [isLessonDropdownOpen, setIsLessonDropdownOpen] = useState(false);
-  const [lessonDropdownMenuStyle, setLessonDropdownMenuStyle] = useState<JSX.CSSProperties | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-  const [selectedLessonId, setSelectedLessonId] = useState<string>('');
   const [showLessonRequest, setShowLessonRequest] = useState(true);
   const [lessonViewUrl, setLessonViewUrl] = useState<string | null>(null);
   const [loadingViewUrl, setLoadingViewUrl] = useState(false);
@@ -1309,8 +1370,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const businessEnglishHeaderTitle = studentLessonRequest?.title || 'Business English lesson';
   
   // Daily Dispatch state
-  const [dispatchArticles, setDispatchArticles] = useState<DispatchArticle[]>([]);
-  const [loadingDispatch, setLoadingDispatch] = useState(false);
   const [viewingDispatchArticle, setViewingDispatchArticle] = useState<DispatchArticle | null>(null);
   
   // Conversational Skills viewing state
@@ -1345,61 +1404,28 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         : studentLessonRequest?.courseId === 'young-learners'
           ? 'fas fa-seedling'
           : 'fas fa-book-open';
-  const activeNotesMaterial = !showLessonRequest
-    ? viewingDispatchArticle
-      ? 'daily-dispatch'
-      : viewingConversationalLesson
-        ? 'conversational-skills'
-      : isViewingBusinessEnglishMaterial
-        ? 'business-english'
-        : null
-    : null;
-  const showNotesWidgetTrigger = Boolean(activeNotesMaterial);
-  const notesWidgetTitle = activeNotesMaterial === 'business-english'
-    ? 'Business English Notes'
-    : activeNotesMaterial === 'conversational-skills'
-      ? 'Conversational Skills Notes'
-    : 'Daily Dispatch Notes';
-  const notesWidgetFabTitle = activeNotesMaterial === 'business-english'
-    ? 'Business English Notes'
-    : activeNotesMaterial === 'conversational-skills'
-      ? 'Conversational Skills Notes'
-    : 'Daily Dispatch Notes';
-  const notesWidgetIconClass = activeNotesMaterial === 'business-english'
-    ? 'fas fa-briefcase'
-    : activeNotesMaterial === 'conversational-skills'
-      ? 'fas fa-comments'
-    : 'fas fa-newspaper';
+  const displayedNotesTarget: ActiveNotesTarget | null = !showLessonRequest
+    ? viewingDispatchArticle ? { materialType: 'daily-dispatch', materialId: viewingDispatchArticle.id, materialTitle: viewingDispatchArticle.title, courseId: 'daily-dispatch', articleId: viewingDispatchArticle.id }
+      : viewingConversationalLesson ? { materialType: 'conversational-skills', materialId: viewingConversationalLesson.id, materialTitle: viewingConversationalLesson.title, courseId: 'conversational-skills', lessonId: viewingConversationalLesson.id }
+      : isViewingBusinessEnglishMaterial && studentLessonRequest?.lessonId ? { materialType: 'business-english', materialId: studentLessonRequest.lessonId, materialTitle: studentLessonRequest.title, courseId: 'business-english', lessonId: studentLessonRequest.lessonId }
+      : null : null;
+  const notesTargets = [...new Map<string, ActiveNotesTarget>([
+    ...usedNotesMaterials.filter(note => note.sessionId === currentSessionId).map(note => [`${note.materialType}:${note.materialId}`, { ...note, materialType: note.materialType as ActiveNotesTarget['materialType'], materialTitle: note.materialTitle || undefined }] as [string, ActiveNotesTarget]),
+    ...previewedNotesTargets.map(target => [`${target.materialType}:${target.materialId}`, target] as [string, ActiveNotesTarget]),
+    ...(displayedNotesTarget ? [[`${displayedNotesTarget.materialType}:${displayedNotesTarget.materialId}`, displayedNotesTarget] as [string, ActiveNotesTarget]] : []),
+  ]).values()];
+  const activeNotesTarget = selectedNotesTarget || displayedNotesTarget || notesTargets[0] || null;
+  const activeNotesMaterial = activeNotesTarget?.materialType || null;
+  const showNotesWidgetTrigger = Boolean(activeNotesTarget) || summaryReady;
+  const notesWidgetTitle = 'Lesson notes';
+  const notesWidgetFabTitle = 'Lesson notes';
+  const notesWidgetIconClass = lessonMaterialNotesIcon(activeNotesMaterial);
   const notesWidgetClassName = activeNotesMaterial === 'business-english'
     ? `dispatch-notes-widget dispatch-notes-widget--business-english dispatch-notes-widget--business-english-${businessEnglishTheme}`
     : 'dispatch-notes-widget dispatch-notes-widget--daily-dispatch';
   const notesWidgetFabClassName = activeNotesMaterial === 'business-english'
     ? `dispatch-notes-fab dispatch-notes-fab--business-english dispatch-notes-fab--business-english-${businessEnglishTheme}`
     : 'dispatch-notes-fab dispatch-notes-fab--daily-dispatch';
-  const activeNotesTarget: ActiveNotesTarget | null = !showLessonRequest
-    ? viewingDispatchArticle
-      ? {
-          materialType: 'daily-dispatch',
-          materialId: viewingDispatchArticle.id,
-          courseId: 'daily-dispatch',
-          articleId: viewingDispatchArticle.id,
-        }
-      : viewingConversationalLesson
-        ? {
-            materialType: 'conversational-skills',
-            materialId: viewingConversationalLesson.id,
-            courseId: 'conversational-skills',
-            lessonId: viewingConversationalLesson.id,
-          }
-      : isViewingBusinessEnglishMaterial && studentLessonRequest?.lessonId
-        ? {
-            materialType: 'business-english',
-            materialId: studentLessonRequest.lessonId,
-            courseId: studentLessonRequest.courseId || 'business-english',
-            lessonId: studentLessonRequest.lessonId,
-          }
-        : null
-    : null;
   const activeNotesBindingKey = currentSessionId && activeNotesTarget
     ? buildClassroomNotesBindingKey(currentSessionId, activeNotesTarget)
     : null;
@@ -1408,20 +1434,38 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   const activeNotesCourseId = activeNotesTarget?.courseId || null;
   const activeNotesLessonId = activeNotesTarget?.lessonId || null;
   const activeNotesArticleId = activeNotesTarget?.articleId || null;
+  activeNotesKeyRef.current = activeNotesBindingKey;
+  const activeMaterialUsed = usedNotesMaterials.some(note => note.sessionId === currentSessionId && note.materialType === activeNotesMaterialType && note.materialId === activeNotesMaterialId);
+  const activeProgressContext = progressContext.bindingKey === activeNotesBindingKey ? progressContext.data : null;
 
-  const applyNotesSnapshot = (snapshot: Partial<ClassroomNotesSnapshot> | null | undefined) => {
+  const applyNotesSnapshot = (snapshot: Partial<ClassroomNotesSnapshot> | null | undefined, context?: ClassroomMaterialProgress | null) => {
     const normalizedSnapshot = normalizeClassroomNotesSnapshot(snapshot);
     setVocabularyItems(normalizedSnapshot.vocabularyItems);
     setGrammarItems(normalizedSnapshot.grammarItems);
     setPronunciationItems(normalizedSnapshot.pronunciationItems);
-    setStudentComment(normalizedSnapshot.studentComment);
-    setTutorMemo(normalizedSnapshot.tutorMemo);
+    const previous = context?.previous?.completionStatus === 'in_progress' ? context.previous : null;
+    const hasProgress = Boolean(snapshot?.completionStatus);
+    const completed = activeNotesMaterialType === 'daily-dispatch' || snapshot?.completionStatus === 'completed';
+    const stoppedAt = hasProgress ? normalizedSnapshot.stoppedAt : previous?.stoppedAt || null;
+    const stoppedAtLabel = hasProgress ? normalizedSnapshot.stoppedAtLabel : previous?.stoppedAtLabel || null;
+    const excluded = (activeNotesMaterialType === 'conversational-skills' &&
+      (/^(missionData\d*|feedbackData)(\.|$)/.test(stoppedAt || '') || /^Part [56]\b/.test(stoppedAtLabel || ''))) ||
+      (activeNotesMaterialType === 'business-english' && /^(discussion|feedback)(\.|$)/.test(stoppedAt || ''));
+    const progress: MaterialProgressFields = { isUsed: normalizedSnapshot.isUsed,
+      completionStatus: completed ? 'completed' : 'in_progress',
+      stoppedAt: completed || excluded ? null : stoppedAt,
+      stoppedAtLabel: completed || excluded ? null : stoppedAtLabel,
+      progressDetails: completed || excluded ? '' : hasProgress ? normalizedSnapshot.progressDetails : previous?.progressDetails || '',
+    };
+    setMaterialProgress(progress);
+    return { ...normalizedSnapshot, ...progress };
   };
 
   const syncDraftFromServerRecord = (
     bindingKey: string,
     target: ActiveNotesTarget,
     record: ClassroomNotesRecord,
+    saveStartedAt = Infinity,
   ) => {
     if (!currentSessionId) {
       return;
@@ -1433,8 +1477,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       record,
       parseNotesUpdatedAt(record.updatedAt),
     );
-    notesDraftUpdatedAtRef.current = syncedDraft.updatedAt;
-    latestNotesDraftRef.current = syncedDraft;
+    if ((readClassroomNotesDraft(bindingKey)?.updatedAt || 0) > saveStartedAt) return;
+    if (activeNotesKeyRef.current === bindingKey) {
+      notesDraftUpdatedAtRef.current = syncedDraft.updatedAt;
+      latestNotesDraftRef.current = syncedDraft;
+    }
     persistClassroomNotesDraft(bindingKey, syncedDraft);
   };
 
@@ -1442,19 +1489,44 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     bindingKey: string,
     target: ActiveNotesTarget,
     snapshot: Partial<ClassroomNotesSnapshot> | null | undefined,
+    isUsed = false,
   ) => {
     if (!currentSessionId) {
       throw new Error('Missing classroom session id');
     }
 
-    const savedRecord = await tutorApi.saveClassroomNotes(
-      currentSessionId,
-      buildClassroomNotesPayload(target, snapshot),
-    );
+    const saveStartedAt = Date.now();
+    const pending = (notesSaveQueuesRef.current[bindingKey] || Promise.resolve()).catch(() => {}).then(() =>
+      tutorApi.saveClassroomNotes(currentSessionId, { ...buildClassroomNotesPayload(target, snapshot), clientUpdatedAt: saveStartedAt, ...(isUsed ? { isUsed: true } : {}) }));
+    notesSaveQueuesRef.current[bindingKey] = pending;
+    const savedRecord = await pending;
 
-    syncDraftFromServerRecord(bindingKey, target, savedRecord);
+    syncDraftFromServerRecord(bindingKey, target, savedRecord, saveStartedAt);
+    rememberMaterial(savedRecord);
     return savedRecord;
   };
+
+  const selectNotesMaterial = (target: ActiveNotesTarget) => {
+    if (notesAutosaveTimeoutRef.current !== null) window.clearTimeout(notesAutosaveTimeoutRef.current);
+    const draft = latestNotesDraftRef.current;
+    if (draft && activeNotesTarget && activeNotesBindingKey && notesHydratedKeyRef.current === activeNotesBindingKey &&
+        draft.materialId === activeNotesTarget.materialId && draft.materialType === activeNotesTarget.materialType) {
+      const latestDraft = createClassroomNotesDraft(currentSessionId, activeNotesTarget, { vocabularyItems, grammarItems, pronunciationItems, ...materialProgress }, Date.now());
+      persistClassroomNotesDraft(activeNotesBindingKey, latestDraft);
+      void saveNotesSnapshotToBackend(activeNotesBindingKey, activeNotesTarget, latestDraft).catch(() => {});
+    }
+    setNotesSelection({ sessionId: currentSessionId, target });
+  };
+
+  useEffect(() => {
+    if (!displayedNotesTarget) return;
+    setPreviewedNotes(previous => {
+      const targets = previous.sessionId === currentSessionId ? previous.targets : [];
+      return { sessionId: currentSessionId, targets: targets.some(item => item.materialType === displayedNotesTarget.materialType && item.materialId === displayedNotesTarget.materialId)
+        ? targets : [...targets, displayedNotesTarget] };
+    });
+    if (!selectedNotesTarget || activeNotesMaterialType !== displayedNotesTarget.materialType || activeNotesMaterialId !== displayedNotesTarget.materialId) selectNotesMaterial(displayedNotesTarget);
+  }, [currentSessionId, displayedNotesTarget?.materialType, displayedNotesTarget?.materialId]);
 
   useEffect(() => {
     if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
@@ -1470,8 +1542,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         vocabularyItems,
         grammarItems,
         pronunciationItems,
-        studentComment,
-        tutorMemo,
+        ...materialProgress,
       },
       updatedAt,
     );
@@ -1485,8 +1556,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     activeNotesMaterialId,
     activeNotesMaterialType,
     pronunciationItems,
-    studentComment,
-    tutorMemo,
+    materialProgress,
     vocabularyItems,
   ]);
 
@@ -1584,15 +1654,22 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
     void (async () => {
       try {
+        // A quick return to a material must wait for its outgoing save before hydrating.
+        await notesSaveQueuesRef.current[activeNotesBindingKey]?.catch(() => {});
+        if (cancelled) return;
         const savedNotes = await tutorApi.getClassroomNotes(
           currentSessionId,
           activeNotesTarget.materialType,
           activeNotesTarget.materialId,
         );
 
+        const context = progressContextsRef.current[activeNotesBindingKey] || await tutorApi.getClassroomMaterialProgress(currentSessionId, activeNotesMaterialType!, activeNotesMaterialId!).catch(() => null);
+        if (context) progressContextsRef.current[activeNotesBindingKey] = context;
+
         if (cancelled) {
           return;
         }
+        setProgressContext({ bindingKey: activeNotesBindingKey, data: context });
 
         const remoteUpdatedAt = savedNotes ? parseNotesUpdatedAt(savedNotes.updatedAt) : 0;
         const shouldPreferLocalDraft = Boolean(
@@ -1605,13 +1682,13 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           notesSkipDraftPersistRef.current = true;
           notesDraftUpdatedAtRef.current = localDraft.updatedAt;
           latestNotesDraftRef.current = localDraft;
-          applyNotesSnapshot(localDraft);
+          const restoredSnapshot = applyNotesSnapshot(localDraft, context);
 
           if (!savedNotes || localDraft.updatedAt > remoteUpdatedAt) {
             setNotesPersistenceState('saving');
 
             try {
-              await saveNotesSnapshotToBackend(activeNotesBindingKey, activeNotesTarget, localDraft);
+              await saveNotesSnapshotToBackend(activeNotesBindingKey, activeNotesTarget, restoredSnapshot);
 
               if (!cancelled && notesHydratedKeyRef.current === activeNotesBindingKey) {
                 setNotesPersistenceState('saved');
@@ -1634,7 +1711,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         notesSkipDraftPersistRef.current = true;
 
         if (savedNotes) {
-          applyNotesSnapshot(savedNotes);
+          applyNotesSnapshot(savedNotes, context);
           syncDraftFromServerRecord(activeNotesBindingKey, activeNotesTarget, savedNotes);
           setNotesPersistenceState('saved');
           return;
@@ -1642,7 +1719,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
         notesDraftUpdatedAtRef.current = 0;
         latestNotesDraftRef.current = null;
-        applyNotesSnapshot(null);
+        applyNotesSnapshot(null, context);
         setNotesPersistenceState('idle');
       } catch (error) {
         if (cancelled) {
@@ -1673,7 +1750,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     return () => {
       cancelled = true;
     };
-  }, [activeNotesBindingKey, activeNotesMaterialId, activeNotesMaterialType, currentSessionId]);
+  }, [activeNotesBindingKey, activeNotesMaterialId, activeNotesMaterialType, currentSessionId, progressRevision]);
 
   useEffect(() => {
     if (!currentSessionId || !activeNotesTarget || !activeNotesBindingKey) {
@@ -1701,8 +1778,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             vocabularyItems,
             grammarItems,
             pronunciationItems,
-            studentComment,
-            tutorMemo,
+            ...materialProgress,
           });
 
           if (notesHydratedKeyRef.current === activeNotesBindingKey) {
@@ -1733,8 +1809,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     activeNotesMaterialId,
     activeNotesMaterialType,
     pronunciationItems,
-    studentComment,
-    tutorMemo,
+    materialProgress,
     vocabularyItems,
   ]);
 
@@ -1760,8 +1835,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         vocabularyItems,
         grammarItems,
         pronunciationItems,
-        studentComment,
-        tutorMemo,
+        ...materialProgress,
       },
       updatedAt,
     );
@@ -1779,8 +1853,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     activeNotesMaterialId,
     activeNotesMaterialType,
     pronunciationItems,
-    studentComment,
-    tutorMemo,
+    materialProgress,
     vocabularyItems,
   ]);
 
@@ -1791,16 +1864,18 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
     const flushNotesDraft = (requestKeepaliveSave: boolean) => {
       const now = Date.now();
-      if (now - notesLastExitFlushAtRef.current < 250) {
+      if (requestKeepaliveSave && now - notesLastExitFlushAtRef.current < 250) {
         return;
       }
 
       const currentDraft = latestNotesDraftRef.current;
-      if (!currentDraft) {
+      if (!currentDraft || currentDraft.sessionId !== currentSessionId ||
+          currentDraft.materialType !== activeNotesMaterialType || currentDraft.materialId !== activeNotesMaterialId ||
+          notesHydratedKeyRef.current !== activeNotesBindingKey) {
         return;
       }
 
-      notesLastExitFlushAtRef.current = now;
+      if (requestKeepaliveSave) notesLastExitFlushAtRef.current = now;
 
       const flushedDraft = createClassroomNotesDraft(
         currentSessionId,
@@ -1825,7 +1900,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(buildClassroomNotesPayload(activeNotesTarget, flushedDraft)),
+          body: JSON.stringify({ ...buildClassroomNotesPayload(activeNotesTarget, flushedDraft), clientUpdatedAt: now }),
         }).catch((error) => {
           console.error('Failed to flush classroom notes during page exit:', error);
         });
@@ -1850,6 +1925,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     return () => {
       window.removeEventListener('pagehide', handlePageHide);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      flushNotesDraft(true);
     };
   }, [
     activeNotesArticleId,
@@ -1882,40 +1958,16 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Handle course selection - load lessons for that course
   const handleCourseChange = async (courseId: string) => {
+    const loadId = ++materialLoadIdRef.current;
     setSelectedCourse(courseId);
-    setSelectedLevel(null);
-    setSelectedChapter(null);
-    setSelectedLessonId('');
-    setDispatchArticles([]);
+    setAvailableLessons([]);
+    setLoadingMaterials(false);
     setIsCourseDropdownOpen(false);
-    setIsLevelDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
     
     if (!courseId) return;
     
     // Handle Daily Dispatch separately
     if (courseId === 'daily-dispatch') {
-      setLoadingDispatch(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/dispatch`, {
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Handle both array response and wrapped response
-          const articles: DispatchArticle[] = Array.isArray(data) ? data : (data.articles || data.data || []);
-          // Sort articles by date (most recent first)
-          const sortedArticles = articles.sort((a, b) => 
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          setDispatchArticles(sortedArticles);
-        }
-      } catch (err) {
-        console.error('Failed to load dispatch articles:', err);
-      } finally {
-        setLoadingDispatch(false);
-      }
       return;
     }
 
@@ -1939,9 +1991,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       // Use lesson-materials endpoint for builder-backed courses
       if (courseId === 'business-english') {
         const nextLessons = await warmBusinessEnglishCourseCache();
+        if (loadId !== materialLoadIdRef.current) return;
         setAvailableLessons(nextLessons);
       } else if (isLessonMaterialCourse(courseId)) {
         const result = await lessonApi.getPublishedLessonMaterials(courseId);
+        if (loadId !== materialLoadIdRef.current) return;
         if (result.success && result.lessons) {
           const nextLessons = result.lessons.map(transformLessonMaterialToLesson);
           materialCourseCacheRef.current[courseId] = nextLessons;
@@ -1950,6 +2004,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       } else {
         // Use regular lesson endpoint for other courses
         const result = await lessonApi.getPublishedLessons(courseId);
+        if (loadId !== materialLoadIdRef.current) return;
         if (result.success && result.lessons) {
           setAvailableLessons(result.lessons);
         }
@@ -1957,7 +2012,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     } catch (err) {
       console.error('Failed to load lessons:', err);
     } finally {
-      setLoadingMaterials(false);
+      if (loadId === materialLoadIdRef.current) setLoadingMaterials(false);
     }
   };
 
@@ -1968,7 +2023,11 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     const gap = 8;
     const viewportPadding = 16;
     const preferredMaxHeight = 240;
-    const spaceBelow = window.innerHeight - triggerRect.bottom - viewportPadding;
+    const spaceBelow = Math.max(0, window.innerHeight - triggerRect.bottom - viewportPadding - gap);
+    const spaceAbove = Math.max(0, triggerRect.top - viewportPadding - gap);
+    const openAbove = spaceBelow < preferredMaxHeight && spaceAbove > spaceBelow;
+    const maxHeight = Math.min(preferredMaxHeight, openAbove ? spaceAbove : spaceBelow);
+    const top = openAbove ? triggerRect.top - gap - maxHeight : triggerRect.bottom + gap;
     const width = Math.min(triggerRect.width, window.innerWidth - viewportPadding * 2);
     const left = Math.min(
       Math.max(triggerRect.left, viewportPadding),
@@ -1976,10 +2035,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     );
 
     return {
-      top: `${triggerRect.bottom + gap}px`,
+      top: `${Math.max(viewportPadding, Math.min(top, window.innerHeight - viewportPadding - maxHeight))}px`,
       left: `${left}px`,
       width: `${width}px`,
-      maxHeight: `${Math.min(preferredMaxHeight, Math.max(140, spaceBelow))}px`,
+      maxHeight: `${maxHeight}px`,
     };
   };
 
@@ -1987,102 +2046,20 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     setCourseDropdownMenuStyle(buildDropdownMenuStyle(courseDropdownRef.current));
   };
 
-  const updateLevelDropdownMenuPosition = () => {
-    setLevelDropdownMenuStyle(buildDropdownMenuStyle(levelDropdownRef.current));
-  };
-
-  const updateChapterDropdownMenuPosition = () => {
-    setChapterDropdownMenuStyle(buildDropdownMenuStyle(chapterDropdownRef.current));
-  };
-
-  const updateLessonDropdownMenuPosition = () => {
-    setLessonDropdownMenuStyle(buildDropdownMenuStyle(lessonDropdownRef.current));
-  };
-
   const toggleCourseDropdown = () => {
-    if (isCourseDropdownOpen) {
-      setIsCourseDropdownOpen(false);
-      return;
-    }
-
-    setIsLevelDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
-    updateCourseDropdownMenuPosition();
-    setIsCourseDropdownOpen(true);
-  };
-
-  const toggleLevelDropdown = () => {
-    if (!availableLevels.length) return;
-    if (isLevelDropdownOpen) {
-      setIsLevelDropdownOpen(false);
-      return;
-    }
-
-    setIsCourseDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
-    updateLevelDropdownMenuPosition();
-    setIsLevelDropdownOpen(true);
-  };
-
-  const toggleChapterDropdown = () => {
-    if (selectedLevel === null || !availableChapters.length) return;
-    if (isChapterDropdownOpen) {
-      setIsChapterDropdownOpen(false);
-      return;
-    }
-
-    setIsCourseDropdownOpen(false);
-    setIsLevelDropdownOpen(false);
-    setIsLessonDropdownOpen(false);
-    updateChapterDropdownMenuPosition();
-    setIsChapterDropdownOpen(true);
-  };
-
-  const toggleLessonDropdown = () => {
-    if (!filteredLessons.length) return;
-    if (isLessonDropdownOpen) {
-      setIsLessonDropdownOpen(false);
-      return;
-    }
-
-    setIsCourseDropdownOpen(false);
-    setIsLevelDropdownOpen(false);
-    setIsChapterDropdownOpen(false);
-    updateLessonDropdownMenuPosition();
-    setIsLessonDropdownOpen(true);
+    if (!isCourseDropdownOpen) updateCourseDropdownMenuPosition();
+    setIsCourseDropdownOpen(value => !value);
   };
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      const clickedInsideSelector =
-        courseDropdownRef.current?.contains(target) ||
-        levelDropdownRef.current?.contains(target) ||
-        chapterDropdownRef.current?.contains(target) ||
-        lessonDropdownRef.current?.contains(target);
-
-      if (!clickedInsideSelector) {
-        setIsCourseDropdownOpen(false);
-        setIsLevelDropdownOpen(false);
-        setIsChapterDropdownOpen(false);
-        setIsLessonDropdownOpen(false);
-      }
+      if (!courseDropdownRef.current?.contains(event.target as Node)) setIsCourseDropdownOpen(false);
     };
-
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsCourseDropdownOpen(false);
-        setIsLevelDropdownOpen(false);
-        setIsChapterDropdownOpen(false);
-        setIsLessonDropdownOpen(false);
-      }
+      if (event.key === 'Escape') setIsCourseDropdownOpen(false);
     };
-
     document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleEscape);
-
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
@@ -2090,71 +2067,24 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   }, []);
 
   useEffect(() => {
-    if (!isCourseDropdownOpen && !isLevelDropdownOpen && !isChapterDropdownOpen && !isLessonDropdownOpen) {
+    if (!isCourseDropdownOpen) {
       setCourseDropdownMenuStyle(null);
-      setLevelDropdownMenuStyle(null);
-      setChapterDropdownMenuStyle(null);
-      setLessonDropdownMenuStyle(null);
       return;
     }
-
-    const syncDropdownPositions = () => {
-      if (isCourseDropdownOpen) updateCourseDropdownMenuPosition();
-      if (isLevelDropdownOpen) updateLevelDropdownMenuPosition();
-      if (isChapterDropdownOpen) updateChapterDropdownMenuPosition();
-      if (isLessonDropdownOpen) updateLessonDropdownMenuPosition();
-    };
-
+    const syncDropdownPositions = () => updateCourseDropdownMenuPosition();
     syncDropdownPositions();
     window.addEventListener('resize', syncDropdownPositions);
     window.addEventListener('scroll', syncDropdownPositions, true);
-
     return () => {
       window.removeEventListener('resize', syncDropdownPositions);
       window.removeEventListener('scroll', syncDropdownPositions, true);
     };
-  }, [isCourseDropdownOpen, isLevelDropdownOpen, isChapterDropdownOpen, isLessonDropdownOpen]);
-
-  // Get unique levels from available lessons
-  const availableLevels = [...new Set(availableLessons.map(l => getLevelNumber(l)))].sort((a, b) => a - b);
-  
-  // Get chapters for selected level
-  const availableChapters = selectedLevel !== null 
-    ? [...new Set(availableLessons.filter(l => getLevelNumber(l) === selectedLevel).map(l => getChapterNumber(l)))].sort((a, b) => a - b)
-    : [];
-  
-  // Get lessons for selected level and chapter
-  const filteredLessons = selectedLevel !== null && selectedChapter !== null
-    ? availableLessons.filter(l => getLevelNumber(l) === selectedLevel && getChapterNumber(l) === selectedChapter)
-    : [];
-  const selectedBusinessLevelLessons = selectedLevel !== null
-    ? availableLessons.filter(lesson => getLevelNumber(lesson) === selectedLevel)
-    : [];
-  const selectedLevelSummary = selectedLevel !== null
-    ? `${selectedBusinessLevelLessons.length} lesson${selectedBusinessLevelLessons.length === 1 ? '' : 's'} available`
-    : availableLevels.length > 0
-      ? `${availableLevels.length} level${availableLevels.length === 1 ? '' : 's'} available`
-      : 'Levels will appear here';
-  const selectedChapterSummary = selectedLevel === null
-    ? 'Choose a level first'
-    : availableChapters.length > 0
-      ? `${availableChapters.length} chapter${availableChapters.length === 1 ? '' : 's'} in this level`
-      : 'No chapters available yet';
-  const selectedBusinessLesson = selectedLessonId
-    ? filteredLessons.find(lesson => lesson.id === selectedLessonId) || null
-    : null;
+  }, [isCourseDropdownOpen]);
   const currentMaterialTitle = studentLessonRequest?.title || 'No material selected yet';
   const currentMaterialMeta = studentLessonRequest
     ? `Lesson ${studentLessonRequest.lessonNumber}`
     : 'Awaiting student selection';
   const hasCurrentMaterial = Boolean(studentLessonRequest?.lessonId);
-  const selectedLessonSummary = selectedBusinessLesson
-    ? selectedBusinessLesson.lessonData?.header?.goalText || selectedBusinessLesson.title
-    : filteredLessons.length > 0
-      ? `${filteredLessons.length} lesson${filteredLessons.length === 1 ? '' : 's'} in this chapter`
-      : selectedChapter === null
-        ? 'Choose a chapter first'
-        : 'No lessons available yet';
   const showSelectedCourseDetails = Boolean(selectedCourse) && !isCourseDropdownOpen;
 
   const handleOpenCurrentMaterial = async () => {
@@ -2188,11 +2118,39 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     }
   };
 
+  const openSharedMaterial = (material: SharedClassroomMaterial) => {
+    setViewingDispatchArticle(null);
+    setViewingConversationalLesson(null);
+    setConversationalViewUrl(null);
+    setLessonViewUrl(null);
+    setLoadingViewUrl(false);
+    if (material.courseId === 'daily-dispatch') {
+      setViewingDispatchArticle({
+        id: material.id, title: material.title, topic: '', category: material.category || 'General',
+        postedDate: material.postedDate, createdAt: material.createdAt || '',
+      });
+    } else if (material.courseId === 'conversational-skills') {
+      setViewingConversationalLesson({
+        id: material.id, title: material.title, level: material.level || 1,
+        chapter: material.chapter || 1, lessonNumber: material.lessonNumber || 1, goalTextEn: '',
+      });
+      setConversationalViewUrl(`/materials/conversational-skills/${encodeURIComponent(material.id)}`);
+    } else if (material.courseId === 'business-english') {
+      setStudentLessonRequest(previous => ({
+        ...previous, lessonId: material.id, courseId: material.courseId,
+        title: material.title, lessonNumber: material.lessonNumber || 1, goal: '',
+      }));
+      setLessonViewUrl(`/materials/business-english/${encodeURIComponent(material.id)}`);
+      void prefetchBusinessEnglishLesson(material.id);
+    } else return;
+    setShowLessonRequest(false);
+  };
+
   // Handle selecting a new material (for tutor to override)
-  const handleApplyMaterial = async () => {
-    if (!selectedLessonId) return;
+  const handleApplyMaterial = async (lessonId: string) => {
+    if (!lessonId) return;
     
-    const selectedLesson = availableLessons.find(l => l.id === selectedLessonId);
+    const selectedLesson = availableLessons.find(l => l.id === lessonId);
     if (selectedLesson) {
       const newLesson = {
         lessonId: selectedLesson.id,
@@ -2253,17 +2211,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       return;
     }
 
-    const firstLessonInChapter = filteredLessons[0];
-    if (firstLessonInChapter) {
-      void prefetchBusinessEnglishLesson(firstLessonInChapter.id);
-    }
-  }, [filteredLessons, selectedCourse]);
-
-  useEffect(() => {
-    if (selectedCourse === 'business-english' && selectedLessonId) {
-      void prefetchBusinessEnglishLesson(selectedLessonId);
-    }
-  }, [selectedCourse, selectedLessonId]);
+    availableLessons.slice(0, 3).forEach(lesson => void prefetchBusinessEnglishLesson(lesson.id));
+  }, [availableLessons, selectedCourse]);
 
   // Try to enable audio - will succeed if user has engagement history with the site
   useEffect(() => {
@@ -2315,14 +2264,39 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     localStream,
     remoteStream,
     isConnected,
+    isConnecting: isMediaConnecting,
     error: webrtcError,
     startLocalStream,
-    createOffer,
     toggleAudio,
     toggleVideo,
     switchMediaDevices,
     cleanup
-  } = useWebRTC({ remoteUserId: studentInfo?.id, socket: socketInstance, initiator: true });
+  } = useClassroomMedia({ provider: mediaProvider, sessionId: currentSessionId, remoteUserId: studentInfo?.id, socket: socketInstance, initiator: true, enabled: lessonStart.live });
+  useEffect(() => { if (lessonStart.closed) cleanup(); }, [lessonStart.closed, cleanup]);
+  const callConnected = isConnected && signalingConnected && !signalingError && !webrtcError;
+  useEffect(() => {
+    const update = () => socketInstance?.emit('classroom:call-state', { connected: Boolean(callConnected) });
+    update(); socketInstance?.on('connect', update);
+    return () => { socketInstance?.off('connect', update); };
+  }, [socketInstance, callConnected]);
+  const callStatus = classroomCallStatus({
+    signalingConnected,
+    localMediaReady: Boolean(localStream?.getTracks().some(track => track.readyState === 'live')),
+    peerPresent: !isConnecting,
+    peerConnecting: isMediaConnecting,
+    peerConnected: isConnected,
+    remoteRole: 'student',
+    error: signalingError || webrtcError,
+  });
+  const [connectedBannerDismissed, setConnectedBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    setConnectedBannerDismissed(false);
+    if (!callConnected) return;
+    const timer = window.setTimeout(() => setConnectedBannerDismissed(true), 3000);
+    return () => window.clearTimeout(timer);
+  }, [callConnected, currentSessionId]);
+
   const localHasVideo = Boolean(localStream?.getVideoTracks().some(track => track.readyState === 'live'));
   const remoteHasVideo = remoteVideoEnabled && Boolean(remoteStream?.getVideoTracks().some(track => track.readyState === 'live'));
 
@@ -2405,14 +2379,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
       ? new Date(createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
       : new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-  // Timer effect
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Start local media when component mounts (only once)
   useEffect(() => {
     const initWebRTC = async () => {
@@ -2427,7 +2393,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
     };
 
     initWebRTC();
-  }, []); // Empty deps - only run once on mount
+  }, [startLocalStream]);
 
   // Attach all streams to all video refs - robust effect with interval checking
   useEffect(() => {
@@ -2497,7 +2463,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Detect local speaking using a calibrated noise floor so room noise does not flicker the mic indicator.
   useEffect(() => {
-    if (!localStream) return;
+    if (!localStream?.getAudioTracks().some(track => track.readyState === 'live')) return;
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(localStream);
     const analyser = audioCtx.createAnalyser();
@@ -2598,6 +2564,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Handle file selection
   const handleFileSelect = (e: Event) => {
+    if (!lessonStart.live) return;
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -2646,6 +2613,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
   };
 
   const handleSendMessage = async () => {
+    if (!lessonStart.live) return;
     if ((!message.trim() && !selectedFile) || !currentSessionId) return;
     
     try {
@@ -2784,6 +2752,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   // Handle typing indicator
   const handleTyping = (typing: boolean) => {
+    if (!lessonStart.live) return;
     try {
       const socket = getSocket();
       socket.emit('chat:typing', { isTyping: typing });
@@ -2798,17 +2767,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
   const handleLeaveClassroom = async () => {
     if (await toastConfirm('Are you sure you want to leave the classroom?', 'Leave Classroom')) {
-      cleanup();
-      getSocket().emit('session:leave');
       route('/schedule');
     }
   };
 
   const [lessonEndedSent, setLessonEndedSent] = useState(false);
 
-  const handleEndLesson = () => {
+  const handleEndLesson = async () => {
     if (lessonEndedSent) {
-      // Already sent, do nothing - button just shows status
+      await handleLeaveClassroom();
       return;
     }
     // Send end lesson signal to student (tutor stays in classroom)
@@ -2830,10 +2797,6 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           </div>
           <div className="classroom-header-actions">
             <div className="classroom-session-info">
-              <div className="session-student">
-                <div className="student-avatar-small">{studentData.initials}</div>
-                <span>{studentData.name}</span>
-              </div>
               <div className="session-time-display">
                 <span className="timer">{formatTime(elapsedTime)}</span>
                 <span className="session-date">{studentData.date}</span>
@@ -2842,16 +2805,23 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
           </div>
         </div>
 
+        {currentSessionId && <TutorClassroomIssueReport key={currentSessionId} bookingId={currentSessionId} />}
+        {!lessonStart.live && <div className="classroom-start-wait" role={signalingError ? 'alert' : 'status'}>{lessonStart.closed ? lessonStart.message : signalingError || lessonStart.message}</div>}
+        {lessonStart.wrapUp && <div className="classroom-start-wait" role="status">{lessonStart.wrapUpMessage}</div>}
+
         {/* Video Area */}
+        <ClassroomRecordingNotice key={currentSessionId} socket={socketInstance} provider={mediaProvider} />
         <div className="video-section">
           {/* Main Video */}
           <div className="video-main">
             {/* Connection Status overlay inside video */}
-            {isConnecting && (
-              <div className="connection-status overlay-top">
-                <div className="spinner"></div>
-                <p>Waiting for student to join...</p>
-              </div>
+            {lessonStart.live && (!callConnected || !connectedBannerDismissed) && (
+            <div className={`connection-status overlay-top${callStatus.state === 'error' ? ' call-error' : callConnected ? ' call-connected' : ''}`}
+              role={callStatus.state === 'error' ? 'alert' : 'status'}
+              data-call-state={callStatus.state}>
+              {callStatus.spinning && <div className="spinner"></div>}
+              <p>{callStatus.message}</p>
+            </div>
             )}
             {/* All video elements always rendered, visibility controlled by isSwapped */}
             {/* Remote video in main (visible when swapped) */}
@@ -2958,6 +2928,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <button
               className={`control-btn ${isMuted ? 'active' : ''}`}
               onClick={() => setIsMuted(prev => !prev)}
+              disabled={!lessonStart.live}
               title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
@@ -2980,6 +2951,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <button
               className={`control-btn ${isVideoOff ? 'active' : ''}`}
               onClick={() => setIsVideoOff(prev => !prev)}
+              disabled={!lessonStart.live}
               title={isVideoOff ? 'Turn on camera' : 'Turn off camera'}
             >
               {isVideoOff ? (
@@ -3180,7 +3152,15 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                             </a>
                           )}
                           {/* Text content with formatting */}
-                          {shouldShowMessageText(msg) && (
+                          {msg.material && msg.sender === 'student' && (
+                            <div className="chat-material-share">
+                              <strong>{msg.material.title}</strong>
+                              <button type="button" onClick={() => openSharedMaterial(msg.material!)}>
+                                <i className="fas fa-book-open" aria-hidden="true" />Open Material
+                              </button>
+                            </div>
+                          )}
+                          {!msg.material && shouldShowMessageText(msg) && (
                             <span className="message-text">{formatMessageText(msg.text)}</span>
                           )}
                           {msg.isEdited && <span className="message-edited-label">edited</span>}
@@ -3265,13 +3245,14 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               className="attach-btn" 
               onClick={() => fileInputRef.current?.click()}
               title="Attach file"
+              disabled={!lessonStart.live || isUploading}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
               </svg>
             </button>
             <textarea
-              placeholder="Type a message..."
+              placeholder={lessonStart.live ? 'Type a message...' : 'Chat opens at lesson start'}
               aria-label="Chat message. Press Shift and Enter for a new line."
               value={message}
               onChange={(e) => {
@@ -3284,9 +3265,10 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 handleChatInputKeyDown(e as KeyboardEvent);
               }}
               onBlur={() => handleTyping(false)}
+              disabled={!lessonStart.live || isUploading}
               rows={1}
             />
-            <button className="send-btn" onClick={handleSendMessage} disabled={isUploading}>
+            <button className="send-btn" onClick={handleSendMessage} disabled={!lessonStart.live || isUploading}>
               {isUploading ? (
                 <span className="upload-spinner"></span>
               ) : (
@@ -3338,7 +3320,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
 
         {/* Material Header - conditionally show dispatch/conversational header */}
         {!showLessonRequest && viewingDispatchArticle ? (
-          <div className={`dispatch-view-header ${selectedCourse === 'daily-dispatch' ? 'daily-dispatch-theme' : ''}`}>
+          <div className="dispatch-view-header daily-dispatch-theme">
             <button 
               className="btn-back-to-request"
               onClick={() => setShowLessonRequest(true)}
@@ -3349,7 +3331,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
             <div className="dispatch-view-meta">
               <span className="dispatch-view-category">{viewingDispatchArticle.category}</span>
               <span className="dispatch-view-date">
-                {new Date(viewingDispatchArticle.createdAt).toLocaleDateString('en-US', {
+                {new Date(`${dispatchPostDate(viewingDispatchArticle)}T00:00:00Z`).toLocaleDateString('en-US', {
+                  timeZone: 'UTC',
                   month: 'long',
                   day: 'numeric',
                   year: 'numeric'
@@ -3394,7 +3377,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
         {/* Chosen Material Display or PDF Viewer */}
         <div className={`material-content ${showLessonRequest ? 'material-content--request' : ''}`}>
           {showLessonRequest ? (
-            <div className="lesson-request-container">
+            <div className="lesson-request-container lesson-request-container--dispatch">
               {/* Lesson Request Section - always show, even if no material selected */}
               <div className="lesson-request-section">
                 <div className="lesson-request-header">
@@ -3536,7 +3519,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   )}
                 </div>
                 <div className="material-selector-body">
-                  <div className="material-selector-layout">
+                  <div className="material-selector-layout material-selector-layout--dispatch">
                     <div className="material-selector-primary">
                   {/* Course Selector */}
                   <div className="material-selector-row material-selector-row--course">
@@ -3632,511 +3615,40 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 
                 {/* Daily Dispatch Card - shows when Daily Dispatch is selected */}
                 {showSelectedCourseDetails && selectedCourse === 'daily-dispatch' && (
-                  <>
-                    {/* Latest Article Card */}
-                    <div className="dispatch-article-card">
-                      <div className="dispatch-card-label">Latest Article</div>
-                      {loadingDispatch ? (
-                        <div className="dispatch-loading">
-                          <div className="spinner-small"></div>
-                          <span>Loading...</span>
-                        </div>
-                      ) : dispatchArticles.length > 0 ? (
-                        <>
-                          <div className="dispatch-table-header">
-                            <span className="dispatch-col-date">Post Date</span>
-                            <span className="dispatch-col-title">Title</span>
-                            <span className="dispatch-col-category">Category</span>
-                            <span className="dispatch-col-action">Action</span>
-                          </div>
-                          <div className="dispatch-table-row">
-                            <span className="dispatch-col-date">
-                              {new Date(dispatchArticles[0].createdAt).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <span className="dispatch-col-title">{dispatchArticles[0].title}</span>
-                            <span className="dispatch-col-category">{dispatchArticles[0].category}</span>
-                            <button 
-                              className="dispatch-col-action dispatch-open-link"
-                              onClick={() => {
-                                setViewingDispatchArticle(dispatchArticles[0]);
-                                setViewingConversationalLesson(null);
-                                setConversationalViewUrl(null);
-                                setLessonViewUrl(null);
-                                setShowLessonRequest(false);
-                              }}
-                            >
-                              Open Article
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="dispatch-empty">
-                          <p>No articles available</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Previous Articles Card */}
-                    {dispatchArticles.length > 1 && (
-                      <div className="dispatch-article-card dispatch-previous-card">
-                        <div className="dispatch-card-label">Previous Articles</div>
-                        <div className="dispatch-table-header">
-                          <span className="dispatch-col-date">Post Date</span>
-                          <span className="dispatch-col-title">Title</span>
-                          <span className="dispatch-col-category">Category</span>
-                          <span className="dispatch-col-action">Action</span>
-                        </div>
-                        {dispatchArticles.slice(1).map((article) => (
-                          <div className="dispatch-table-row" key={article.id}>
-                            <span className="dispatch-col-date">
-                              {new Date(article.createdAt).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <span className="dispatch-col-title">{article.title}</span>
-                            <span className="dispatch-col-category">{article.category}</span>
-                            <button 
-                              className="dispatch-col-action dispatch-open-link"
-                              onClick={() => {
-                                setViewingDispatchArticle(article);
-                                setViewingConversationalLesson(null);
-                                setConversationalViewUrl(null);
-                                setLessonViewUrl(null);
-                                setShowLessonRequest(false);
-                              }}
-                            >
-                              Open Article
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
+                  <DispatchMaterialPicker onOpen={article => {
+                    setViewingDispatchArticle(article);
+                    setViewingConversationalLesson(null);
+                    setConversationalViewUrl(null);
+                    setLessonViewUrl(null);
+                    setShowLessonRequest(false);
+                  }} />
                 )}
                 
-                {/* Conversational Skills Card - shows when Conversational Skills is selected */}
-                {showSelectedCourseDetails && selectedCourse === 'conversational-skills' && (
-                  <>
-                    {loadingMaterials ? (
-                      <div className="dispatch-article-card">
-                        <div className="dispatch-loading">
-                          <div className="spinner-small"></div>
-                          <span>Loading lessons...</span>
-                        </div>
-                      </div>
-                    ) : availableLessons.length > 0 ? (
-                      <>
-                        {/* Group lessons by Level, then Chapter */}
-                        {availableLevels.map(level => {
-                          const levelLessons = availableLessons.filter(l => getLevelNumber(l) === level);
-                          const chaptersInLevel = [...new Set(levelLessons.map(l => getChapterNumber(l)))].sort((a, b) => a - b);
-                          
-                          return (
-                            <div key={level} className="lesson-card conversational-skills-card">
-                              <div className="lesson-card-label">Level {level}</div>
-                              {chaptersInLevel.map(chapter => {
-                                const chapterLessons = levelLessons
-                                  .filter(l => getChapterNumber(l) === chapter)
-                                  .sort((a, b) => getLessonNumber(a) - getLessonNumber(b));
-                                
-                                return (
-                                  <div key={chapter} className="lesson-chapter-group">
-                                    <div className="lesson-chapter-header">Chapter {chapter}</div>
-                                    <div className="lesson-table-header conversational-header">
-                                      <span className="lesson-col-number">Lesson</span>
-                                      <span className="lesson-col-title">Title</span>
-                                      <span className="lesson-col-goal">Goal</span>
-                                      <span className="lesson-col-action">Action</span>
-                                    </div>
-                                    {chapterLessons.map(lesson => {
-                                      const goalText = lesson.lessonData?.header?.goalText || '';
-                                      return (
-                                        <div className="lesson-table-row conversational-row" key={lesson.id}>
-                                          <span className="lesson-col-number">Lesson {getLessonNumber(lesson)}</span>
-                                          <span className="lesson-col-title">{lesson.title}</span>
-                                          <span className="lesson-col-goal" title={goalText}>
-                                            {goalText || '—'}
-                                          </span>
-                                          <button 
-                                            className="dispatch-open-link"
-                                            onClick={async () => {
-                                              // Set the viewing lesson to show in material area
-                                              const viewLesson: ConversationalLesson = {
-                                                id: lesson.id,
-                                                title: lesson.title,
-                                                level: level,
-                                                chapter: chapter,
-                                                lessonNumber: getLessonNumber(lesson),
-                                                goalTextEn: goalText
-                                              };
-                                              setViewingDispatchArticle(null);
-                                              setViewingConversationalLesson(viewLesson);
-                                              // Use local route directly instead of API call
-                                              setConversationalViewUrl(`/materials/conversational-skills/${lesson.id}`);
-                                              setLessonViewUrl(null);
-                                              setShowLessonRequest(false);
-                                            }}
-                                          >
-                                            Open Material
-                                          </button>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </>
-                    ) : (
-                      <div className="dispatch-article-card">
-                        <div className="dispatch-empty">
-                          <p>No lessons available</p>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                {/* Business English filters */}
-                {showSelectedCourseDetails && selectedCourse === 'business-english' && availableLevels.length > 0 && (
-                  <div className="material-selector-filter-grid">
-                    <div className="material-selector-field">
-                      <span className="material-selector-field-label">Level</span>
-                      <div
-                        className={`material-selector-combobox material-selector-combobox--filter ${isLevelDropdownOpen ? 'is-open' : ''}`}
-                        ref={levelDropdownRef}
-                      >
-                        <button
-                          type="button"
-                          className="material-selector-trigger material-selector-trigger--filter"
-                          onClick={toggleLevelDropdown}
-                          aria-haspopup="listbox"
-                          aria-expanded={isLevelDropdownOpen}
-                        >
-                          <span className="material-selector-trigger-content">
-                            {selectedLevel !== null ? (
-                              <>
-                                <span className="material-selector-trigger-icon material-selector-trigger-icon--level" aria-hidden="true">
-                                  <i className="fas fa-layer-group"></i>
-                                </span>
-                                <span className="material-selector-trigger-copy">
-                                  <span className="material-selector-trigger-title">Level {selectedLevel}</span>
-                                  <span className="material-selector-trigger-subtitle">{selectedLevelSummary}</span>
-                                </span>
-                              </>
-                            ) : (
-                              <span className="material-selector-trigger-placeholder">
-                                Select a Business English level
-                              </span>
-                            )}
-                          </span>
-                          <span className="material-selector-trigger-arrow" aria-hidden="true">
-                            <i className={`fas ${isLevelDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </span>
-                        </button>
-
-                        {isLevelDropdownOpen && (
-                          <div
-                            className="material-selector-menu"
-                            role="listbox"
-                            aria-label="Business English level"
-                            style={levelDropdownMenuStyle || undefined}
-                          >
-                            {availableLevels.map(level => {
-                              const levelLessons = availableLessons.filter(lesson => getLevelNumber(lesson) === level);
-
-                              return (
-                                <button
-                                  key={level}
-                                  type="button"
-                                  className={`material-selector-option ${selectedLevel === level ? 'is-selected' : ''}`}
-                                  onClick={() => {
-                                    setSelectedLevel(level);
-                                    setSelectedChapter(null);
-                                    setSelectedLessonId('');
-                                    setIsLevelDropdownOpen(false);
-                                    setIsLessonDropdownOpen(false);
-                                  }}
-                                  role="option"
-                                  aria-selected={selectedLevel === level}
-                                >
-                                  <span className="material-selector-option-icon material-selector-option-icon--level" aria-hidden="true">
-                                    <i className="fas fa-layer-group"></i>
-                                  </span>
-                                  <span className="material-selector-option-copy">
-                                    <span className="material-selector-option-title">Level {level}</span>
-                                    <span className="material-selector-option-description">
-                                      {levelLessons.length} lesson{levelLessons.length === 1 ? '' : 's'} available
-                                    </span>
-                                  </span>
-                                  {selectedLevel === level && (
-                                    <span className="material-selector-option-check" aria-hidden="true">
-                                      <i className="fas fa-check"></i>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="material-selector-field">
-                      <span className="material-selector-field-label">Chapter</span>
-                      <div
-                        className={`material-selector-combobox material-selector-combobox--filter ${isChapterDropdownOpen ? 'is-open' : ''}`}
-                        ref={chapterDropdownRef}
-                      >
-                        <button
-                          type="button"
-                          className="material-selector-trigger material-selector-trigger--filter"
-                          onClick={toggleChapterDropdown}
-                          aria-haspopup="listbox"
-                          aria-expanded={isChapterDropdownOpen}
-                          disabled={selectedLevel === null || availableChapters.length === 0}
-                        >
-                          <span className="material-selector-trigger-content">
-                            {selectedChapter !== null ? (
-                              <>
-                                <span className="material-selector-trigger-icon material-selector-trigger-icon--chapter" aria-hidden="true">
-                                  <i className="fas fa-list-ul"></i>
-                                </span>
-                                <span className="material-selector-trigger-copy">
-                                  <span className="material-selector-trigger-title">Chapter {selectedChapter}</span>
-                                  <span className="material-selector-trigger-subtitle">{selectedChapterSummary}</span>
-                                </span>
-                              </>
-                            ) : (
-                              <span className="material-selector-trigger-placeholder">
-                                {selectedLevel === null ? 'Choose a level first' : 'Select a chapter'}
-                              </span>
-                            )}
-                          </span>
-                          <span className="material-selector-trigger-arrow" aria-hidden="true">
-                            <i className={`fas ${isChapterDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </span>
-                        </button>
-
-                        {isChapterDropdownOpen && (
-                          <div
-                            className="material-selector-menu"
-                            role="listbox"
-                            aria-label="Business English chapter"
-                            style={chapterDropdownMenuStyle || undefined}
-                          >
-                            {availableChapters.map(chapter => {
-                              const chapterLessons = availableLessons.filter(
-                                lesson => getLevelNumber(lesson) === selectedLevel && getChapterNumber(lesson) === chapter
-                              );
-
-                              return (
-                                <button
-                                  key={chapter}
-                                  type="button"
-                                  className={`material-selector-option ${selectedChapter === chapter ? 'is-selected' : ''}`}
-                                  onClick={() => {
-                                    setSelectedChapter(chapter);
-                                    setSelectedLessonId('');
-                                    setIsChapterDropdownOpen(false);
-                                    setIsLessonDropdownOpen(false);
-                                  }}
-                                  role="option"
-                                  aria-selected={selectedChapter === chapter}
-                                >
-                                  <span className="material-selector-option-icon material-selector-option-icon--chapter" aria-hidden="true">
-                                    <i className="fas fa-list-ul"></i>
-                                  </span>
-                                  <span className="material-selector-option-copy">
-                                    <span className="material-selector-option-title">Chapter {chapter}</span>
-                                    <span className="material-selector-option-description">
-                                      {chapterLessons.length} lesson{chapterLessons.length === 1 ? '' : 's'} in this chapter
-                                    </span>
-                                  </span>
-                                  {selectedChapter === chapter && (
-                                    <span className="material-selector-option-check" aria-hidden="true">
-                                      <i className="fas fa-check"></i>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Business English lesson selector */}
-                {showSelectedCourseDetails && selectedCourse === 'business-english' && selectedChapter !== null && filteredLessons.length > 0 && (
-                  <div className="material-selector-row">
-                    <div className="material-selector-field">
-                      <span className="material-selector-field-label">Lesson</span>
-                      <div
-                        className={`material-selector-combobox material-selector-combobox--filter ${isLessonDropdownOpen ? 'is-open' : ''}`}
-                        ref={lessonDropdownRef}
-                      >
-                        <button
-                          type="button"
-                          className="material-selector-trigger material-selector-trigger--filter"
-                          onClick={toggleLessonDropdown}
-                          aria-haspopup="listbox"
-                          aria-expanded={isLessonDropdownOpen}
-                        >
-                          <span className="material-selector-trigger-content">
-                            {selectedBusinessLesson ? (
-                              <>
-                                <span className="material-selector-trigger-icon material-selector-trigger-icon--lesson" aria-hidden="true">
-                                  <i className="fas fa-book-open"></i>
-                                </span>
-                                <span className="material-selector-trigger-copy">
-                                  <span className="material-selector-trigger-title">{selectedBusinessLesson.title}</span>
-                                  <span className="material-selector-trigger-subtitle">{selectedLessonSummary}</span>
-                                </span>
-                              </>
-                            ) : (
-                              <span className="material-selector-trigger-placeholder">
-                                Select a lesson
-                              </span>
-                            )}
-                          </span>
-                          <span className="material-selector-trigger-arrow" aria-hidden="true">
-                            <i className={`fas ${isLessonDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-                          </span>
-                        </button>
-
-                        {isLessonDropdownOpen && (
-                          <div
-                            className="material-selector-menu"
-                            role="listbox"
-                            aria-label="Business English lesson"
-                            style={lessonDropdownMenuStyle || undefined}
-                          >
-                            {filteredLessons
-                              .slice()
-                              .sort((a, b) => getLessonNumber(a) - getLessonNumber(b))
-                              .map(lesson => (
-                                <button
-                                  key={lesson.id}
-                                  type="button"
-                                  className={`material-selector-option ${selectedLessonId === lesson.id ? 'is-selected' : ''}`}
-                                  onClick={() => {
-                                    setSelectedLessonId(lesson.id);
-                                    setIsLessonDropdownOpen(false);
-                                  }}
-                                  role="option"
-                                  aria-selected={selectedLessonId === lesson.id}
-                                >
-                                  <span className="material-selector-option-icon material-selector-option-icon--lesson" aria-hidden="true">
-                                    <i className="fas fa-book-open"></i>
-                                  </span>
-                                  <span className="material-selector-option-copy">
-                                    <span className="material-selector-option-title">{lesson.title}</span>
-                                    <span className="material-selector-option-description">
-                                      {lesson.lessonData?.header?.goalText || 'Open this lesson in the classroom viewer'}
-                                    </span>
-                                  </span>
-                                  {selectedLessonId === lesson.id && (
-                                    <span className="material-selector-option-check" aria-hidden="true">
-                                      <i className="fas fa-check"></i>
-                                    </span>
-                                  )}
-                                </button>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Level Selector - shows for other courses */}
-                {showSelectedCourseDetails && selectedCourse && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedCourse !== 'business-english' && availableLevels.length > 0 && (
-                  <div className="material-selector-row">
-                    <select 
-                      className="material-selector-dropdown"
-                      value={selectedLevel ?? ''}
-                      onChange={(e) => {
-                        const val = (e.target as HTMLSelectElement).value;
-                        setSelectedLevel(val ? parseInt(val) : null);
-                        setSelectedChapter(null);
-                        setSelectedLessonId('');
-                      }}
-                    >
-                      <option value="">-- Select Level --</option>
-                      {availableLevels.map(level => (
-                        <option key={level} value={level}>Level {level}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                
-                {/* Chapter Selector - shows when level is selected (for other courses) */}
-                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedCourse !== 'business-english' && selectedLevel !== null && availableChapters.length > 0 && (
-                  <div className="material-selector-row">
-                    <select 
-                      className="material-selector-dropdown"
-                      value={selectedChapter ?? ''}
-                      onChange={(e) => {
-                        const val = (e.target as HTMLSelectElement).value;
-                        setSelectedChapter(val ? parseInt(val) : null);
-                        setSelectedLessonId('');
-                      }}
-                    >
-                      <option value="">-- Select Chapter --</option>
-                      {availableChapters.map(chapter => (
-                        <option key={chapter} value={chapter}>Chapter {chapter}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                
-                {/* Lesson Selector - shows when chapter is selected (for other courses) */}
-                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedCourse !== 'business-english' && selectedChapter !== null && filteredLessons.length > 0 && (
-                  <div className="material-selector-row">
-                    <select 
-                      className="material-selector-dropdown"
-                      value={selectedLessonId}
-                      onChange={(e) => setSelectedLessonId((e.target as HTMLSelectElement).value)}
-                    >
-                      <option value="">-- Select Lesson --</option>
-                      {filteredLessons.map(lesson => (
-                        <option key={lesson.id} value={lesson.id}>
-                          Lesson {getLessonNumber(lesson)}: {lesson.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                
-                {/* Loading indicator - for other courses with dropdowns */}
-                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && loadingMaterials && (
-                  <div className="material-loading-inline">
-                    <div className="spinner-small"></div>
-                    <span>Loading...</span>
-                  </div>
-                )}
-                
-                {/* Select Button - shows when a lesson is selected (for other courses) */}
-                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && selectedCourse !== 'conversational-skills' && selectedLessonId && (
-                  <div className="material-selector-row">
-                    <button 
-                      className="btn-search-material"
-                      onClick={handleApplyMaterial}
-                    >
-                      <i className="fi fi-sr-check"></i>
-                      Select Material
-                    </button>
-                  </div>
+                {showSelectedCourseDetails && selectedCourse !== 'daily-dispatch' && (
+                  <CurriculumMaterialPicker
+                    key={selectedCourse}
+                    loading={loadingMaterials}
+                    currentId={studentLessonRequest?.courseId === selectedCourse ? studentLessonRequest.lessonId : undefined}
+                    materials={availableLessons.map(item => ({
+                      id: item.id, title: item.title, level: getLevelNumber(item),
+                      chapter: getChapterNumber(item), lesson: getLessonNumber(item),
+                      goal: item.lessonData?.header?.goalText || '',
+                    }))}
+                    onOpen={item => {
+                      if (selectedCourse === 'conversational-skills') {
+                        setViewingDispatchArticle(null);
+                        setViewingConversationalLesson({
+                          id: item.id, title: item.title, level: item.level,
+                          chapter: item.chapter, lessonNumber: item.lesson, goalTextEn: item.goal,
+                        });
+                        setConversationalViewUrl(`/materials/conversational-skills/${item.id}`);
+                        setLessonViewUrl(null);
+                        setShowLessonRequest(false);
+                      } else {
+                        void handleApplyMaterial(item.id);
+                      }
+                    }}
+                  />
                 )}
                     </div>
                   </div>
@@ -4183,7 +3695,7 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 </div>
               ) : lessonViewUrl ? (
                 <iframe 
-                  src={lessonViewUrl}
+                  src={materialFrameUrl(lessonViewUrl, resolvedTheme, window.location.origin)}
                   className="lesson-material-iframe"
                   title={studentLessonRequest?.title || 'Lesson Material'}
                 />
@@ -4227,373 +3739,51 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
               <i className="fi fi-sr-cross" />
             </button>
           </div>
-          
+
+          <div className="lesson-notes-material-picker">
+            <label htmlFor="notes-material">Material notes</label>
+            <select id="notes-material" value={activeNotesTarget ? `${activeNotesMaterialType}:${activeNotesMaterialId}` : ''}
+              disabled={!notesTargets.length}
+              onChange={event => {
+                const target = notesTargets.find(item => `${item.materialType}:${item.materialId}` === (event.target as HTMLSelectElement).value);
+                if (target) selectNotesMaterial(target);
+              }}>
+              {!notesTargets.length && <option value="">No material selected</option>}
+              {notesTargets.map(target => <option key={`${target.materialType}:${target.materialId}`} value={`${target.materialType}:${target.materialId}`}>
+                {target.materialType === 'daily-dispatch' ? 'Daily Dispatch' : target.materialType === 'business-english' ? 'Business English' : 'Conversational Skills'} - {target.materialTitle || 'Untitled material'}
+              </option>)}
+            </select>
+            <button type="button" disabled={!activeNotesTarget || activeMaterialUsed || notesPersistenceState === 'loading' || notesHydratedKeyRef.current !== activeNotesBindingKey}
+              onClick={async () => {
+                if (!activeNotesTarget || !activeNotesBindingKey) return;
+                const key = activeNotesBindingKey;
+                setNotesPersistenceState('saving');
+                try {
+                  await saveNotesSnapshotToBackend(key, activeNotesTarget, { vocabularyItems, grammarItems, pronunciationItems, ...materialProgress }, true);
+                  if (activeNotesKeyRef.current === key) setNotesPersistenceState('saved');
+                } catch {
+                  if (activeNotesKeyRef.current === key) setNotesPersistenceState('draft');
+                  toast.error('Could not mark this material as used');
+                }
+              }}>
+              <i className={activeMaterialUsed ? 'fi fi-sr-check' : 'fi fi-sr-book-alt'} aria-hidden="true" />
+              {activeMaterialUsed ? 'Used in this lesson' : 'Use in lesson'}
+            </button>
+          </div>
           <div className="dispatch-notes-content">
-            <div className="dispatch-notes-section">
-              <label className="dispatch-notes-label">
-                <i className="fi fi-sr-book-alt" />
-                VOCABULARY
-              </label>
-              <div className="vocabulary-items">
-                {vocabularyItems.map((item, index) => (
-                  <div className="vocabulary-row" key={index}>
-                    {vocabularyItems.length > 1 && (
-                      <button 
-                        className="vocabulary-remove-btn"
-                        onClick={() => removeVocabularyItem(index)}
-                        title="Remove"
-                      >
-                        <i className="fi fi-sr-cross-small" />
-                      </button>
-                    )}
-                    <div className="vocabulary-inputs">
-                      <div className="vocabulary-field">
-                        <span className="vocabulary-field-label">Word/Phrase:</span>
-                        <div className="vocabulary-input-row">
-                          <input
-                            type="text"
-                            className="vocabulary-word-input"
-                            placeholder="Enter word or phrase..."
-                            value={item.word}
-                            onChange={(e) => updateVocabularyWord(index, (e.target as HTMLInputElement).value)}
-                            onBlur={() => item.word.trim() && !item.definitions.length && getVocabularyDefinition(index)}
-                          />
-                          <button
-                            className={`vocabulary-check-btn ${item.isLoading ? 'loading' : ''}`}
-                            onClick={() => item.word.trim() && getVocabularyDefinition(index)}
-                            disabled={item.isLoading || !item.word.trim()}
-                            title="Get definition"
-                          >
-                            <i className={item.isLoading ? "fi fi-sr-spinner" : "fi fi-sr-refresh"} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="vocabulary-field">
-                        <span className="vocabulary-field-label">Definition:</span>
-                        <div className="vocabulary-definition-row">
-                          {item.isLoading ? (
-                            <div className="vocabulary-loading">
-                              <i className="fi fi-sr-spinner" />
-                              Getting definition...
-                            </div>
-                          ) : item.definitions.length > 0 ? (
-                            <>
-                              {item.showDefinition ? (
-                                <div className="vocabulary-definition-content">
-                                  {item.definitions.length > 1 && (
-                                    <div className="vocabulary-definition-tabs">
-                                      {item.definitions.map((def, defIdx) => (
-                                        <button
-                                          key={defIdx}
-                                          className={`vocabulary-def-tab ${item.selectedDefinitionIndex === defIdx ? 'active' : ''}`}
-                                          onClick={() => selectDefinition(index, defIdx)}
-                                          title={def.meaning}
-                                        >
-                                          {defIdx + 1}. {def.partOfSpeech || 'def'}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-                                  <div className="vocabulary-definition-display">
-                                    {item.definitions[item.selectedDefinitionIndex]?.partOfSpeech && (
-                                      <span className="vocabulary-part-of-speech">
-                                        ({item.definitions[item.selectedDefinitionIndex].partOfSpeech})
-                                      </span>
-                                    )}
-                                    <span className="vocabulary-meaning">
-                                      {item.definitions[item.selectedDefinitionIndex]?.meaning}
-                                    </span>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="vocabulary-definition-hidden">
-                                  <span>Definition hidden</span>
-                                </div>
-                              )}
-                              <button 
-                                className={`vocabulary-toggle-btn ${item.showDefinition ? 'active' : ''}`}
-                                onClick={() => toggleVocabularyDefinition(index)}
-                                title={item.showDefinition ? "Hide definition" : "Show definition"}
-                              >
-                                <i className={item.showDefinition ? "fi fi-sr-eye" : "fi fi-sr-eye-crossed"} />
-                              </button>
-                              {item.showDefinition && item.definitions[item.selectedDefinitionIndex]?.koreanNative && (
-                                <button 
-                                  className={`vocabulary-info-btn ${item.showTranslation ? 'active' : ''}`}
-                                  onClick={() => toggleVocabularyTranslation(index)}
-                                  title="Show translations"
-                                >
-                                  <i className="fi fi-sr-info" />
-                                </button>
-                              )}
-                              {item.word.trim() && item.definitions[item.selectedDefinitionIndex]?.meaning && (
-                                <button
-                                  className="vocabulary-send-btn"
-                                  onClick={() => sendVocabularyToChat(index)}
-                                  title="Send to chat"
-                                >
-                                  <i className="fi fi-sr-paper-plane" />
-                                </button>
-                              )}
-                            </>
-                          ) : (
-                            <div className="vocabulary-definition-placeholder">
-                              Enter a word and click refresh to get definition
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {item.showTranslation && item.definitions[item.selectedDefinitionIndex] && (
-                        <div className="vocabulary-translations">
-                          {item.definitions[item.selectedDefinitionIndex].koreanNative && (
-                            <div className="vocabulary-translation-item korean">
-                              <span className="translation-flag">🇰🇷</span>
-                              <div className="translation-content">
-                                <span className="translation-native">{item.definitions[item.selectedDefinitionIndex].koreanNative}</span>
-                                <span className="translation-romanized">{item.definitions[item.selectedDefinitionIndex].koreanRomanized}</span>
-                              </div>
-                            </div>
-                          )}
-                          {item.definitions[item.selectedDefinitionIndex].vietnameseNative && (
-                            <div className="vocabulary-translation-item vietnamese">
-                              <span className="translation-flag">🇻🇳</span>
-                              <div className="translation-content">
-                                <span className="translation-native">{item.definitions[item.selectedDefinitionIndex].vietnameseNative}</span>
-                                <span className="translation-romanized">{item.definitions[item.selectedDefinitionIndex].vietnameseRomanized}</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="vocabulary-add-btn" onClick={addVocabularyItem}>
-                <i className="fi fi-sr-plus" />
-                Add Word
-              </button>
-            </div>
-            
-            <div className="dispatch-notes-section">
-              <label className="dispatch-notes-label">
-                <i className="fi fi-sr-text" />
-                GRAMMAR
-              </label>
-              <div className="grammar-items">
-                {grammarItems.map((item, index) => (
-                  <div className="grammar-row" key={index}>
-                    {grammarItems.length > 1 && (
-                      <button 
-                        className="grammar-remove-btn"
-                        onClick={() => removeGrammarItem(index)}
-                        title="Remove"
-                      >
-                        <i className="fi fi-sr-cross-small" />
-                      </button>
-                    )}
-                    <div className="grammar-inputs">
-                      <div className="grammar-field">
-                        <span className="grammar-field-label">You said:</span>
-                        <div className="grammar-input-row">
-                          <textarea
-                            className="grammar-input"
-                            placeholder="Enter incorrect sentence..."
-                            value={item.youSaid}
-                            onChange={(e) => updateYouSaid(index, (e.target as HTMLTextAreaElement).value)}
-                            onBlur={() => item.youSaid.trim() && !item.correct && getGrammarCorrection(index)}
-                            rows={1}
-                          />
-                          <button
-                            className={`grammar-check-btn ${item.isLoading ? 'loading' : ''}`}
-                            onClick={() => item.youSaid.trim() && getGrammarCorrection(index)}
-                            disabled={item.isLoading || !item.youSaid.trim()}
-                            title="Check grammar"
-                          >
-                            <i className={item.isLoading ? "fi fi-sr-spinner" : "fi fi-sr-refresh"} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="grammar-field">
-                        <span className="grammar-field-label">Correct:</span>
-                        <div className="grammar-correct-row">
-                          {item.isLoading ? (
-                            <div className="grammar-loading">
-                              <i className="fi fi-sr-spinner" />
-                              Checking...
-                            </div>
-                          ) : (
-                            <>
-                              <textarea
-                                className="grammar-input grammar-input-correct"
-                                placeholder="Corrected sentence..."
-                                value={item.correct}
-                                onChange={(e) => updateGrammarItem(index, 'correct', (e.target as HTMLTextAreaElement).value)}
-                                rows={1}
-                              />
-                              {(item.simpleExplanation || item.technicalExplanation) && (
-                                <button 
-                                  className={`grammar-info-btn ${item.showExplanation ? 'active' : ''}`}
-                                  onClick={() => toggleGrammarExplanation(index)}
-                                  title="Show explanation"
-                                >
-                                  <i className="fi fi-sr-info" />
-                                </button>
-                              )}
-                              {item.youSaid.trim() && item.correct.trim() && (
-                                <button
-                                  className="grammar-send-btn"
-                                  onClick={() => sendGrammarToChat(index)}
-                                  title="Send to chat"
-                                >
-                                  <i className="fi fi-sr-paper-plane" />
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      {item.showExplanation && (item.simpleExplanation || item.technicalExplanation) && (
-                        <div className="grammar-explanation">
-                          <div className="grammar-explanation-simple">
-                            <i className="fi fi-sr-lightbulb-on" />
-                            {item.simpleExplanation}
-                          </div>
-                          <div className="grammar-explanation-technical">
-                            <i className="fi fi-sr-book-alt" />
-                            {item.technicalExplanation}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="grammar-add-btn" onClick={addGrammarItem}>
-                <i className="fi fi-sr-plus" />
-                Add Grammar Note
-              </button>
-            </div>
-            
-            <div className="dispatch-notes-section">
-              <label className="dispatch-notes-label">
-                <i className="fi fi-sr-microphone" />
-                PRONUNCIATION
-              </label>
-              <div className="pronunciation-items">
-                {pronunciationItems.map((item, index) => (
-                  <div className="pronunciation-row" key={index}>
-                    {pronunciationItems.length > 1 && (
-                      <button 
-                        className="pronunciation-remove-btn"
-                        onClick={() => removePronunciationItem(index)}
-                        title="Remove"
-                      >
-                        <i className="fi fi-sr-cross-small" />
-                      </button>
-                    )}
-                    <div className="pronunciation-inputs">
-                      <div className="pronunciation-field">
-                        <span className="pronunciation-field-label">Word:</span>
-                        <div className="pronunciation-input-row">
-                          <input
-                            type="text"
-                            className="pronunciation-word-input"
-                            placeholder="Enter word..."
-                            value={item.word}
-                            onChange={(e) => updatePronunciationWord(index, (e.target as HTMLInputElement).value)}
-                            onBlur={() => item.word.trim() && !item.phonetic && getPronunciationFromAI(index)}
-                          />
-                          <button
-                            className={`pronunciation-check-btn ${item.isLoading ? 'loading' : ''}`}
-                            onClick={() => item.word.trim() && getPronunciationFromAI(index)}
-                            disabled={item.isLoading || !item.word.trim()}
-                            title="Get pronunciation"
-                          >
-                            <i className={item.isLoading ? "fi fi-sr-spinner" : "fi fi-sr-refresh"} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="pronunciation-field">
-                        <span className="pronunciation-field-label">Phonetic:</span>
-                        <div className="pronunciation-phonetic-row">
-                          {item.isLoading ? (
-                            <div className="pronunciation-loading">
-                              <i className="fi fi-sr-spinner" />
-                              Getting pronunciation...
-                            </div>
-                          ) : item.phonetic ? (
-                            <>
-                              {item.showPhonetic ? (
-                                <div className="pronunciation-phonetic-content">
-                                  <div className="pronunciation-display">
-                                    <span className="pronunciation-phonetic-display">{item.phonetic}</span>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="pronunciation-phonetic-hidden">
-                                  <span>Pronunciation hidden</span>
-                                </div>
-                              )}
-                              <button 
-                                className={`pronunciation-toggle-btn ${item.showPhonetic ? 'active' : ''}`}
-                                onClick={() => togglePronunciationPhonetic(index)}
-                                title={item.showPhonetic ? "Hide pronunciation" : "Show pronunciation"}
-                              >
-                                <i className={item.showPhonetic ? "fi fi-sr-eye" : "fi fi-sr-eye-crossed"} />
-                              </button>
-                              {item.word.trim() && item.phonetic && (
-                                <button
-                                  className="pronunciation-send-btn"
-                                  onClick={() => sendPronunciationToChat(index)}
-                                  title="Send to chat"
-                                >
-                                  <i className="fi fi-sr-paper-plane" />
-                                </button>
-                              )}
-                            </>
-                          ) : (
-                            <div className="pronunciation-phonetic-placeholder">
-                              Enter a word and click refresh to get pronunciation
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="pronunciation-add-btn" onClick={addPronunciationItem}>
-                <i className="fi fi-sr-plus" />
-                Add Pronunciation Note
-              </button>
-            </div>
+            {activeNotesTarget && <fieldset className="lesson-material-note-fields" disabled={notesPersistenceState === 'loading' || notesHydratedKeyRef.current !== activeNotesBindingKey}>
+            <MaterialProgressEditor materialType={activeNotesMaterialType} progress={materialProgress} context={activeProgressContext}
+              loading={notesPersistenceState === 'loading'} onChange={patch => setMaterialProgress(previous => ({ ...previous, ...patch, isUsed: true }))}
+              onRetry={() => { if (activeNotesBindingKey) delete progressContextsRef.current[activeNotesBindingKey]; setProgressRevision(value => value + 1); }} />
+            <LearningNotesFields vocabularyItems={vocabularyItems} grammarItems={grammarItems} pronunciationItems={pronunciationItems}
+              addVocabularyItem={addVocabularyItem} updateVocabularyWord={updateVocabularyWord} getVocabularyDefinition={getVocabularyDefinition} removeVocabularyItem={removeVocabularyItem} selectDefinition={selectDefinition} toggleVocabularyDefinition={toggleVocabularyDefinition} toggleVocabularyTranslation={toggleVocabularyTranslation} sendVocabularyToChat={sendVocabularyToChat} addGrammarItem={addGrammarItem} updateYouSaid={updateYouSaid} getGrammarCorrection={getGrammarCorrection} removeGrammarItem={removeGrammarItem} updateGrammarItem={updateGrammarItem} toggleGrammarExplanation={toggleGrammarExplanation} sendGrammarToChat={sendGrammarToChat} addPronunciationItem={addPronunciationItem} updatePronunciationWord={updatePronunciationWord} getPronunciationFromAI={getPronunciationFromAI} removePronunciationItem={removePronunciationItem} togglePronunciationPhonetic={togglePronunciationPhonetic} sendPronunciationToChat={sendPronunciationToChat} />
+            </fieldset>}
 
-            <div className="dispatch-notes-section">
-              <label className="dispatch-notes-label">
-                <i className="fas fa-comment-dots" />
-                COMMENT TO STUDENT
-              </label>
-              <textarea
-                className="dispatch-notes-textarea dispatch-notes-textarea--tall"
-                placeholder="Write a comment the student can review after the lesson..."
-                value={studentComment}
-                onChange={(e) => setStudentComment((e.target as HTMLTextAreaElement).value)}
-              />
-            </div>
-
-            <div className="dispatch-notes-section">
-              <label className="dispatch-notes-label">
-                <i className="fas fa-sticky-note" />
-                TUTOR MEMO
-              </label>
-              <textarea
-                className="dispatch-notes-textarea dispatch-notes-textarea--tall"
-                placeholder="Private tutor memo for this assigned lesson..."
-                value={tutorMemo}
-                onChange={(e) => setTutorMemo((e.target as HTMLTextAreaElement).value)}
-              />
-            </div>
+            <LessonFeedbackFields studentComment={studentComment} tutorMemo={tutorMemo}
+              required
+              feedbackError={studentComment.trim().length > 0 && studentComment.trim().length < 100 ? 'Student feedback must contain at least 100 characters.' : ''}
+              handoffError={tutorMemo.length > 150 ? 'Tutor handoff must not exceed 150 characters.' : ''}
+              setStudentComment={setStudentComment} setTutorMemo={setTutorMemo} disabled={!summaryReady} />
           </div>
           
           <div className="dispatch-notes-footer">
@@ -4603,35 +3793,41 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                 : notesPersistenceState === 'saving'
                   ? 'Saving...'
                   : notesPersistenceState === 'saved'
-                    ? 'Saved to this lesson'
+                    ? 'Draft saved to this lesson'
                     : notesPersistenceState === 'draft'
                       ? 'Draft kept on this device'
                     : notesPersistenceState === 'error'
                       ? 'Save unavailable'
                       : 'Notes stay with this lesson'}
             </div>
+            <div className={`dispatch-notes-save-state dispatch-notes-save-state--${summarySaveState}`}>
+              Lesson feedback: {summarySaveState === 'saved' ? 'saved' : summarySaveState === 'saving' ? 'saving...' : summarySaveState === 'loading' ? 'loading...' : summarySaveState === 'error' ? 'unavailable' : summarySaveState === 'draft' ? 'draft on this device' : 'ready'}
+              {(summarySaveState === 'error' || summarySaveState === 'draft') && <button type="button" className="lesson-summary-retry" onClick={retrySummarySave} title="Retry saving lesson feedback" aria-label="Retry saving lesson feedback"><i className="fi fi-sr-refresh" aria-hidden="true" /></button>}
+            </div>
+            <a href={`/lesson/${encodeURIComponent(sessionId || '')}`} target="_blank" rel="noopener noreferrer" className="lesson-notes-review-link"><i className="fi fi-sr-check" aria-hidden="true" />Review & submit lesson notes</a>
             <button 
               className="dispatch-notes-clear"
+              title="Clear learning notes for this material; keep progress and lesson feedback"
+              disabled={!activeNotesTarget || notesPersistenceState === 'loading'}
               onClick={() => {
                 setVocabularyItems([createEmptyVocabularyItem()]);
                 setGrammarItems([createEmptyGrammarItem()]);
                 setPronunciationItems([createEmptyPronunciationItem()]);
-                setStudentComment('');
-                setTutorMemo('');
               }}
             >
               <i className="fi fi-sr-trash" />
-              Clear All
+              Clear notes
             </button>
             <button 
               className="dispatch-notes-copy"
               onClick={() => {
+                const wordsText = vocabularyItems
+                  .filter(item => item.word.trim())
+                  .map(item => `• ${item.word}`)
+                  .join('\n');
                 const vocabText = vocabularyItems
-                  .filter(item => item.word.trim() || item.definitions.length > 0)
-                  .map(item => {
-                    const def = item.definitions[item.selectedDefinitionIndex];
-                    return `• ${item.word}: ${def?.meaning || '(no definition)'}`;
-                  })
+                  .filter(item => item.word.trim())
+                  .map(item => `• ${item.word} - ${getLessonVocabularyMeaning(item)}`)
                   .join('\n');
                 const grammarText = grammarItems
                   .filter(item => item.youSaid.trim() || item.correct.trim())
@@ -4641,7 +3837,8 @@ const ClassroomPage = ({ sessionId }: ClassroomPageProps) => {
                   .filter(item => item.word.trim() || item.phonetic)
                   .map(item => `• ${item.word} - [${item.phonetic}]`)
                   .join('\n');
-                const notes = `VOCABULARY:\n${vocabText || '(none)'}\n\nGRAMMAR:\n${grammarText || '(none)'}\n\nPRONUNCIATION:\n${pronunciationText || '(none)'}\n\nCOMMENT TO STUDENT:\n${studentComment.trim() || '(none)'}\n\nTUTOR MEMO:\n${tutorMemo.trim() || '(none)'}`;
+                const progressText = materialProgress.completionStatus === 'completed' ? 'Completed' : `In progress\nStopped at: ${materialProgress.stoppedAtLabel || '(not recorded)'}${materialProgress.progressDetails.trim() ? `\n${materialProgress.progressDetails.trim()}` : ''}`;
+                const notes = `Material used: ${activeNotesTarget?.materialTitle || '(not set)'}\n${progressText}\n\n${lessonNotesLabels.words}:\n${wordsText || '(none)'}\n\n${lessonNotesLabels.vocabulary}:\n${vocabText || '(none)'}\n\n${lessonNotesLabels.grammar}:\n${grammarText || '(none)'}\n\n${lessonNotesLabels.pronunciation}:\n${pronunciationText || '(none)'}\n\n${lessonNotesLabels.studentFeedback}:\n${studentComment.trim() || '(none)'}\n\n${lessonNotesLabels.tutorHandoff}:\n${tutorMemo.trim() || '(none)'}`;
                 navigator.clipboard.writeText(notes);
                 toast.success('Notes copied to clipboard!');
               }}

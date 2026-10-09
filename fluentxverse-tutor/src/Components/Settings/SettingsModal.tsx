@@ -7,6 +7,8 @@ import { useAuthContext } from '../../context/AuthContext';
 import { listRegions, type PSGCRegion, type PSGCProvince, type PSGCCity } from '../../data/ph_psgc';
 import { updatePersonalInfo, updateEmail, updatePassword, getPersonalInfo } from '../../api/auth.api';
 import { tutorApi } from '../../api/tutor.api';
+import ProfileAvatar from '../Common/ProfileAvatar';
+import { mediaUrl } from '../../utils/mediaUrl';
 
 // Helper type alias for municipalities (same as PSGCCity)
 
@@ -18,7 +20,7 @@ interface SettingsModalProps {
 type SettingsView = 'main' | 'update-password' | 'update-email' | 'update-info';
 
 const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | null => {
-  const { logout, user, getUserId } = useAuthContext();
+  const { logout, logoutLoading, logoutError, user, getUserId } = useAuthContext();
   const [currentView, setCurrentView] = useState<SettingsView>('main');
 
   // Reset to main view when modal closes
@@ -130,10 +132,8 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
   const [profileError, setProfileError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLogout = () => {
-    logout();
-    onClose();
-    window.location.href = '/';
+  const handleLogout = async () => {
+    await logout();
   };
 
   const handleBack = () => {
@@ -457,7 +457,12 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
     if (!avatarPreview) return;
     const w = window.open('', '_blank');
     if (w) {
-      w.document.write(`<title>Avatar Preview</title><img style="max-width:100%;display:block;margin:0 auto" src="${avatarPreview}" />`);
+      const image = w.document.createElement('img');
+      image.src = mediaUrl(avatarPreview)!;
+      image.alt = 'Avatar Preview';
+      image.style.cssText = 'max-width:100%;display:block;margin:0 auto';
+      w.document.title = 'Avatar Preview';
+      w.document.body.appendChild(image);
     }
   };
 
@@ -483,12 +488,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
             {/* User Profile Section */}
             <div className="settings-profile">
               <div className="settings-avatar">
-                <img
-                  src={avatarPreview || '/assets/img/logo/icon_logo.png'}
+                <ProfileAvatar
+                  src={avatarPreview}
                   alt="User Avatar"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/120/0245ae/ffffff?text=' + displayName.charAt(0).toUpperCase();
-                  }}
+                  fallback={displayName.charAt(0).toUpperCase()}
+                  style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', objectFit: 'cover', fontSize: '36px', fontWeight: 700, color: '#fff' }}
                 />
                 <div className="avatar-overlay">
                   <label className="avatar-btn" title="Upload new avatar">
@@ -573,7 +577,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                 <span>Update My Personal Information</span>
               </button>
 
-              <button className="settings-action-btn logout-btn" onClick={handleLogout}>
+              <button className="settings-action-btn logout-btn" onClick={handleLogout} disabled={logoutLoading}>
                 <div className="settings-action-icon logout-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H9" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -581,8 +585,9 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps): JSX.Element | n
                     <path d="M21 12H9" stroke="white" stroke-width="2" stroke-linecap="round"/>
                   </svg>
                 </div>
-                <span>Logout</span>
+                <span>{logoutLoading ? 'Signing out...' : 'Logout'}</span>
               </button>
+              {logoutError && <p className="settings-form-error" role="alert">{logoutError}</p>}
             </div>
           </>
         )}

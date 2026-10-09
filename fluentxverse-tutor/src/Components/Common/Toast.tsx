@@ -61,7 +61,7 @@ const ToastItem = ({ toast, onRemove }: { toast: ToastMessage; onRemove: (id: st
   };
 
   return (
-    <div className={`toast toast-${toast.type} ${isExiting ? 'toast-exit' : ''}`}>
+    <div className={`toast fxv-toast toast-${toast.type} ${isExiting ? 'toast-exit' : ''}`} role="status">
       <div className="toast-icon-wrapper">
         <i className={`toast-icon ${getIcon()}`}></i>
       </div>

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import preact from '@preact/preset-vite';
 import path from 'path';
 
@@ -77,34 +77,47 @@ const manualChunks = (id: string) => {
 };
 
 // https://vitejs.dev/config/
-export default defineConfig({
-	plugins: [
-		preact()
-	],
-	server: {
-		port: 5174,
-		strictPort: true,
-		hmr: {
-			port: Number(process.env.VITE_HMR_PORT || 5174),
+export default defineConfig(({ mode, command }) => {
+	const studentEnv = loadEnv(mode, __dirname, 'VITE_PRIVY_APP_ID');
+	// Local builds share the app ID used by the API; Docker supplies it as a build argument.
+	const serverEnv = loadEnv(mode, path.resolve(__dirname, '../fluentxverse-server'), 'PRIVY_APP_ID');
+	const appId = [process.env.VITE_PRIVY_APP_ID, studentEnv.VITE_PRIVY_APP_ID, serverEnv.PRIVY_APP_ID]
+		.find(value => value?.trim())?.trim() || '';
+	if (command === 'build' && !appId) {
+		throw new Error('Student build requires VITE_PRIVY_APP_ID or PRIVY_APP_ID in fluentxverse-server/.env.');
+	}
+	return {
+		define: {
+			'import.meta.env.VITE_PRIVY_APP_ID': JSON.stringify(appId),
 		},
-	},
-	resolve: {
-		alias: {
-			'@': path.resolve(__dirname, 'src'),
-			'@client': path.resolve(__dirname, 'src/client'),
-			'@components': path.resolve(__dirname, 'src/Components'),
-			'@context': path.resolve(__dirname, 'src/context'),
-			'react': 'preact/compat',
-			'react-dom': 'preact/compat',
-			'react/jsx-runtime': 'preact/jsx-runtime',
-		},
-	},
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks,
+		plugins: [
+			preact()
+		],
+		server: {
+			port: 5174,
+			strictPort: true,
+			hmr: {
+				port: Number(process.env.VITE_HMR_PORT || 5174),
 			},
 		},
-		chunkSizeWarningLimit: 600, // Increase limit slightly while we optimize
-	},
+		resolve: {
+			alias: {
+				'@': path.resolve(__dirname, 'src'),
+				'@client': path.resolve(__dirname, 'src/client'),
+				'@components': path.resolve(__dirname, 'src/Components'),
+				'@context': path.resolve(__dirname, 'src/context'),
+				'react': 'preact/compat',
+				'react-dom': 'preact/compat',
+				'react/jsx-runtime': 'preact/jsx-runtime',
+			},
+		},
+		build: {
+			rollupOptions: {
+				output: {
+					manualChunks,
+				},
+			},
+			chunkSizeWarningLimit: 600, // Increase limit slightly while we optimize
+		},
+	};
 });

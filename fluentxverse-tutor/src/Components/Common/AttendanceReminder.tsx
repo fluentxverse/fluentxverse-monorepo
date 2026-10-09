@@ -2,19 +2,21 @@ import { useEffect, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { scheduleApi, type WeekSchedule } from '../../api/schedule.api';
 import { useAuthContext } from '../../context/AuthContext';
-import { getAttendanceReminderSlots, getRoomEntryReminderSlots } from '../../utils/attendanceReminder';
+import { activeClassroomBookingId, getAttendanceReminderSlots, getRoomEntryReminderSlots } from '../../utils/attendanceReminder';
 import './AttendanceReminder.css';
 
 export default function AttendanceReminder() {
   const { isAuthenticated, user } = useAuthContext();
-  const { route } = useLocation();
+  const { path, route } = useLocation();
+  const isEmbedded = window.self !== window.top;
+  const activeBookingId = activeClassroomBookingId(path);
   const [slots, setSlots] = useState<WeekSchedule['slots']>([]);
   const [nowMs, setNowMs] = useState(Date.now());
   const [snoozedUntilMs, setSnoozedUntilMs] = useState(0);
   const [roomSnoozedUntilMs, setRoomSnoozedUntilMs] = useState(0);
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.userId) {
+    if (isEmbedded || !isAuthenticated || !user?.userId) {
       setSlots([]);
       return;
     }
@@ -51,22 +53,23 @@ export default function AttendanceReminder() {
       window.removeEventListener('fxv:tutor-schedule-updated', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
     };
-  }, [isAuthenticated, user?.userId]);
+  }, [isEmbedded, isAuthenticated, user?.userId]);
 
   useEffect(() => {
+    if (isEmbedded) return;
     const clock = window.setInterval(() => setNowMs(Date.now()), 15_000);
     return () => window.clearInterval(clock);
-  }, []);
+  }, [isEmbedded]);
 
   const due = getAttendanceReminderSlots(slots, nowMs);
-  const roomDue = getRoomEntryReminderSlots(slots, nowMs);
+  const roomDue = getRoomEntryReminderSlots(slots, nowMs, activeBookingId);
   const next = due[0];
   const room = roomDue[0];
   const standbyCount = due.filter(item => item.slot.attendanceSource === 'room_entry_reset').length;
   const timeFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit', hour12: true
   });
-  if (!isAuthenticated || (!next && !room)) return null;
+  if (isEmbedded || !isAuthenticated || (!next && !room)) return null;
 
   return (
     <div className="tutor-reminder-stack">
@@ -77,13 +80,13 @@ export default function AttendanceReminder() {
           <div className="attendance-reminder__title">Enter your lesson room</div>
           <p>
             Your {timeFormatter.format(room.startMs)} PHT lesson is marked Present, but you have not entered the room.
-            {' '}Join by {timeFormatter.format(room.deadlineMs)} PHT. Missing that deadline marks this booking absent (TA-301)
-            and resets later consecutive Present slots to standby for reconfirmation.
+            {' '}You can enter five minutes before start. Chat and audio/video sharing begin at the scheduled time.
+            If you never enter during the lesson, TA-301 applies after it ends.
           </p>
-          <button type="button" className="attendance-reminder__action"
-            onClick={() => route(`/classroom/${room.slot.bookingId}`)}>
+          <a className="attendance-reminder__action" target="_top"
+            href={`/classroom/${encodeURIComponent(room.slot.bookingId!)}`}>
             Enter classroom <i className="fas fa-arrow-right" aria-hidden="true" />
-          </button>
+          </a>
         </div>
         <button type="button" className="attendance-reminder__snooze"
           onClick={() => setRoomSnoozedUntilMs(Math.min(Date.now() + 60_000, room.deadlineMs - 15_000))}

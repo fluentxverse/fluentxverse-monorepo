@@ -2,6 +2,7 @@ import { useLocation } from 'preact-iso';
 import { useState, useEffect } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { adminApi } from '../api/admin.api';
+import { operations } from '../api/operations.api';
 import './Sidebar.css';
 
 interface NavItem {
@@ -23,6 +24,8 @@ const navItems: NavItem[] = [
   { path: '/tickets', icon: 'ri-ticket-2-line', label: 'Ticket NFTs' },
   { path: '/lesson-material-maker', icon: 'ri-draft-line', label: 'Lesson Maker' },
   { path: '/sessions', icon: 'ri-video-chat-line', label: 'Sessions' },
+  { path: '/recordings', icon: 'ri-record-circle-line', label: 'QA Recordings' },
+  { path: '/lesson-operations', icon: 'ri-history-line', label: 'Lesson Operations' },
   { path: '/analytics', icon: 'ri-bar-chart-box-line', label: 'Analytics' },
   { path: '/ceo-orientation', icon: 'ri-user-voice-line', label: 'CEO Orientation' },
   { path: '/platform-overview', icon: 'ri-layout-grid-line', label: 'Platform Overview' },
@@ -35,6 +38,8 @@ export function Sidebar() {
   const { path } = useLocation();
   const { user, logout } = useAuthContext();
   const [badges, setBadges] = useState<Record<string, number>>({});
+  const [permissions, setPermissions] = useState<string[]>([]);
+  useEffect(() => { operations('/access').then(a => setPermissions(a.permissions)).catch(() => setPermissions([])); }, []);
 
   const isSuperAdmin = user?.role === 'superadmin';
 
@@ -60,7 +65,9 @@ export function Sidebar() {
   // Filter nav items based on role
   const mainNavItems = navItems.slice(0, 7);
   const managementNavItems = navItems.slice(7).filter(
-    (item) => !item.superadminOnly || isSuperAdmin
+    (item) => (!item.superadminOnly || isSuperAdmin) &&
+      (!['/payments', '/tickets'].includes(item.path) || permissions.includes('finance')) &&
+      (item.path !== '/recordings' || permissions.includes('qa'))
   );
 
   const getInitials = () => {

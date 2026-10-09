@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { lessonApi } from '../api/lesson.api';
 import { useThemeStore } from '../context/ThemeContext';
+import { getEmbeddedTheme } from '../hooks/useEmbeddedTheme';
 import { cacheBusinessEnglishLesson, readCachedBusinessEnglishLesson } from '../utils/businessEnglishCache';
 import './BusinessEnglishVisualEditor.css';
 import './BusinessEnglishPreview.css';
@@ -457,20 +458,6 @@ const noteIcons: Record<NoteType, string> = {
 
 const html = (value?: string) => ({ __html: value || '' });
 
-const getStoredTheme = (): ThemeMode => {
-  try {
-    const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
-    if (isEmbedded) {
-      return 'light';
-    }
-
-    const storedTheme = localStorage.getItem('beve-theme');
-    return storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light';
-  } catch {
-    return 'light';
-  }
-};
-
 const normalizeActivityBlocks = (blocks: any[] = []): ActivityBlock[] =>
   blocks.map((block: any) => {
     switch (block?.type) {
@@ -647,7 +634,7 @@ export default function BusinessEnglishPreview({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activePage, setActivePage] = useState<string>('page1');
-  const [theme, setTheme] = useState<ThemeMode>(() => forcedTheme || getStoredTheme());
+  const [theme, setTheme] = useState<ThemeMode>(() => forcedTheme || getEmbeddedTheme() || appResolvedTheme);
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const page1IntroStudentRef = useRef<HTMLDivElement | null>(null);

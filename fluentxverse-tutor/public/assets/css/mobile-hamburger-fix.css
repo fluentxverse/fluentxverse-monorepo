@@ -1,5 +1,9 @@
 /* Mobile Menu Polish & Improvements */
 
+.offcanvas-wrapper::before {
+  background-image: none;
+}
+
 /* Improved hamburger button */
 .mobile-nav-toggler {
   display: flex;

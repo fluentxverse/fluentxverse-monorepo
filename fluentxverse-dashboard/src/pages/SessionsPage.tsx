@@ -108,8 +108,8 @@ const SessionsPage = () => {
     });
   };
 
-  // Convert KST time to Manila time (Manila is 1 hour behind KST)
-  const convertKSTToManila = (timeStr: string): string => {
+  // Convert JST time to Manila time (Manila is 1 hour behind JST)
+  const convertJSTToManila = (timeStr: string): string => {
     // Parse time like "11:30 PM" or "10:00 AM"
     const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
     if (!match) return timeStr;
@@ -397,7 +397,7 @@ const SessionsPage = () => {
                   <tr key={session.id}>
                     <td className="datetime-cell">
                       <div className="date">{formatDate(session.slotDate)}</div>
-                      <div className="time">{session.slotTime} KST</div>
+                      <div className="time">{session.slotTime} JST</div>
                     </td>
                     <td className="user-cell">
                       <div className="user-avatar">
@@ -453,6 +453,7 @@ const SessionsPage = () => {
                       >
                         <i className="ri-eye-line"></i>
                       </button>
+                      <a className="btn-view" title="Lesson operations" aria-label="Lesson operations" href={`/lesson-operations/${encodeURIComponent(session.id)}`}><i className="ri-arrow-right-line" /></a>
                     </td>
                   </tr>
                 ))}
@@ -588,7 +589,7 @@ const SessionsPage = () => {
                       <div className="schedule-row">
                         <span className="label"><i className="ri-time-line"></i> Time</span>
                         <span className="value">
-                          {convertKSTToManila(selectedSession.schedule.time)} PHT / {selectedSession.schedule.time} KST
+                          {selectedSession.schedule.time} PHT
                         </span>
                       </div>
                       <div className="schedule-row">

@@ -14,6 +14,15 @@
   z-index: 9999;
 }
 
+[data-theme='dark'] :is(.lesson-fullpage, .lesson-fullpage-iframe) {
+  background: #1a1a1a;
+  color-scheme: dark;
+}
+
+[data-theme='dark'] :is(.lesson-fullpage-loading p, .lesson-fullpage-error p) {
+  color: #b8b8b8;
+}
+
 /* Back Button */
 .lesson-back-btn {
   position: fixed;
@@ -218,4 +227,3 @@
     padding-top: 50px;
   }
 }
-

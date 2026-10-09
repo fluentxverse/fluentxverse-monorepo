@@ -7,6 +7,8 @@ import { useState, useEffect } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { API_BASE_URL } from '../config/api';
 import DailyDispatchLogo from '../assets/icons/daily-dispatch-logo.svg';
+import { useThemeStore } from '../context/ThemeContext';
+import { useEmbeddedTheme } from '../hooks/useEmbeddedTheme';
 import './DailyDispatchArticlePage.css';
 
 interface VocabularyWord {
@@ -67,6 +69,9 @@ export default function DailyDispatchArticlePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [archives, setArchives] = useState<ArchiveItem[]>([]);
   const [isInClassroom, setIsInClassroom] = useState(false);
+  const resolvedTheme = useThemeStore(state => state.resolvedTheme);
+  const classroomTheme = useEmbeddedTheme();
+  const articleTheme = classroomTheme || resolvedTheme;
   
   // Check if mode=student is in URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -79,15 +84,30 @@ export default function DailyDispatchArticlePage() {
   useEffect(() => {
     const inIframe = window.self !== window.top;
     setIsInClassroom(inIframe);
+    document.documentElement.classList.toggle('classroom-mode', inIframe);
     if (inIframe) {
       document.body.classList.add('classroom-mode');
     } else {
       document.body.classList.remove('classroom-mode');
     }
     return () => {
+      document.documentElement.classList.remove('classroom-mode');
       document.body.classList.remove('classroom-mode');
     };
   }, []);
+
+  useEffect(() => {
+    if (!isInClassroom) return;
+    const elements = [document.documentElement, document.body];
+    const root = document.documentElement;
+    const previousScheme = root.style.colorScheme;
+    root.style.colorScheme = articleTheme;
+    elements.forEach(element => { element.dataset.dispatchTheme = articleTheme; });
+    return () => {
+      elements.forEach(element => { delete element.dataset.dispatchTheme; });
+      if (root.style.colorScheme === articleTheme) root.style.colorScheme = previousScheme;
+    };
+  }, [isInClassroom, articleTheme]);
 
   useEffect(() => {
     loadArchives();
@@ -146,7 +166,7 @@ export default function DailyDispatchArticlePage() {
 
   if (loading) {
     return (
-      <div className="ddp-loading">
+      <div className="ddp-loading" data-theme={articleTheme}>
         <div className="ddp-loading-spinner" />
         <p>Loading article...</p>
       </div>
@@ -155,7 +175,7 @@ export default function DailyDispatchArticlePage() {
 
   if (error || !data) {
     return (
-      <div className="ddp-error">
+      <div className="ddp-error" data-theme={articleTheme}>
         <i className="ri-error-warning-line" />
         <h2>Error</h2>
         <p>{error || 'Article not found'}</p>
@@ -179,7 +199,7 @@ export default function DailyDispatchArticlePage() {
   // Student View (no instructions, no answers)
   if (isStudentView) {
     return (
-      <div className={`ddp-container dds-container ddp-font-${fontSize.toLowerCase()}`}>
+      <div className={`ddp-container dds-container ddp-font-${fontSize.toLowerCase()}`} data-theme={articleTheme}>
         {/* Header Bar */}
         <nav className="ddp-header-bar no-print">
           <div className="ddp-header-bar-inner">
@@ -416,7 +436,7 @@ export default function DailyDispatchArticlePage() {
 
   // Tutor View (with instructions and answers)
   return (
-    <div className={`ddp-container ddp-font-${fontSize.toLowerCase()}`}>
+    <div className={`ddp-container ddp-font-${fontSize.toLowerCase()}`} data-theme={articleTheme}>
       {/* Header Bar */}
       <nav className="ddp-header-bar no-print">
         <div className="ddp-header-bar-inner">

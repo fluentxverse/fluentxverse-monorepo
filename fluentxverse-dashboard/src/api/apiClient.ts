@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8765';
+import { API_BASE_URL } from '../config/api';
 
 // Create a shared axios instance
 export const apiClient = axios.create({

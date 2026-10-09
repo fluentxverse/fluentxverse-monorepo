@@ -1,8 +1,12 @@
 import { create } from 'zustand';
 import type { Notification } from '../types/notification.types';
 import { notificationApi } from '../api/notification.api';
+import { createNotificationRefresh } from '../utils/notificationRefresh';
+
+let refresh: ((force?: boolean) => Promise<void>) | undefined;
 
 interface NotificationState {
+  userId: string | null;
   notifications: Notification[];
   unreadCount: number;
   isLoading: boolean;
@@ -10,7 +14,8 @@ interface NotificationState {
   isDropdownOpen: boolean;
   
   // Actions
-  fetchNotifications: () => Promise<void>;
+  fetchNotifications: (force?: boolean) => Promise<void>;
+  setNotificationUser: (userId: string | null) => void;
   addNotification: (notification: Notification) => void;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
@@ -22,27 +27,32 @@ interface NotificationState {
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
+  userId: null,
   notifications: [],
   unreadCount: 0,
   isLoading: false,
   error: null,
   isDropdownOpen: false,
 
-  fetchNotifications: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const data = await notificationApi.getNotifications();
-      set({ 
-        notifications: data.notifications, 
-        unreadCount: data.unreadCount,
-        isLoading: false 
-      });
-    } catch (error: any) {
-      set({ 
-        error: error.message || 'Failed to fetch notifications',
-        isLoading: false 
-      });
-    }
+  setNotificationUser: (userId) => {
+    if (get().userId === userId) return;
+    set({ userId, notifications: [], unreadCount: 0, isLoading: false, error: null });
+    refresh = userId ? createNotificationRefresh(async () => {
+      if (get().userId !== userId) return;
+      set({ isLoading: true, error: null });
+      try {
+        const data = await notificationApi.getNotifications();
+        if (get().userId === userId) set({ notifications: data.notifications, unreadCount: data.unreadCount, isLoading: false });
+      } catch (error: any) {
+        if (get().userId === userId) set({ error: error.message || 'Failed to fetch notifications', isLoading: false });
+        throw error;
+      }
+    }) : undefined;
+  },
+
+  fetchNotifications: async (force = false) => {
+    // The refresh gate tracks failures; the store exposes errors without rejecting event handlers.
+    await refresh?.(force).catch(() => {});
   },
 
   addNotification: (notification: Notification) => {

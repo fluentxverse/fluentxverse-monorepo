@@ -2,8 +2,13 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
+import LessonNotesCard from '../Components/LessonNotesCard';
+import LessonMaterialRequest from '../Components/LessonMaterialRequest';
+import { TutorLessonIssueReportDialog, type TroubleDuration, type TroubleReason, type TutorStudentIssue } from '../Components/TutorLessonIssueReportDialog';
 import { useAuthContext } from '../context/AuthContext';
+import { useNotificationStore } from '../context/NotificationContext';
 import { API_BASE_URL } from '../config/api';
+import { canJoinClassroom } from '../utils/classroomWindow';
 import './StudentProfilePage.css';
 
 interface StudentProfilePageProps {
@@ -11,21 +16,95 @@ interface StudentProfilePageProps {
   bookingId?: string;
 }
 
-interface LessonNote {
-  date: string;
-  time: string;
-  note: string;
-  rating: number;
+interface LevelAssessment {
+  studentLevel?: string;
+  curriculum?: string;
+  dateAssessed?: string;
+  assessedBy?: string;
+  remarks?: string[];
+  scores?: { comprehension?: number | null; pronunciation?: number | null; grammar?: number | null; maxScore?: number | null };
 }
 
-interface Session {
-  id: string;
-  date: string;
-  time: string;
-  status: 'completed' | 'upcoming' | 'cancelled';
-  topic: string;
-  rating?: number;
+interface LessonPreferences {
+  preferCameraOn: boolean;
+  errorCorrection: 'during_feedback' | 'proactively' | 'tutor_choice';
+  otherRequests: string;
 }
+
+interface ChatLogMessage {
+  id: string;
+  senderType: 'tutor' | 'student';
+  text: string;
+  correction?: string | null;
+  timestamp: string;
+  isEdited: boolean;
+}
+
+interface TroubleReportStatus {
+  startsAt: string;
+  endsAt: string;
+  serverNow: string;
+  report: { id: string; createdAt: string; studentIssueLabel?: string | null; status?: string; resolution?: string; attendanceCorrection?: string | null; ticketTransactionId?: string | null } | null;
+  studentReport?: { id: string; duration: TroubleDuration; reason: string; details: string; tutorIssueLabel?: string | null; createdAt: string; status: string; resolution: string } | null;
+}
+
+const LessonReportOutcome = ({ id, title, report, received = false }: {
+  id?: string;
+  title: string;
+  report: {
+    status?: string; studentIssueLabel?: string | null; tutorIssueLabel?: string | null;
+    reason?: string; duration?: TroubleDuration; details?: string; resolution?: string;
+    attendanceCorrection?: string | null; ticketTransactionId?: string | null;
+  };
+  received?: boolean;
+}) => {
+  const status = report.status === 'resolved' ? 'resolved' : report.status === 'under_review' ? 'under_review' : 'submitted';
+  const issue = report.studentIssueLabel || report.tutorIssueLabel || report.reason;
+  return (
+    <section id={id} className={`lesson-report-outcome${received ? ' student-report-received' : ''}`} aria-label={title}>
+      <header className="lesson-report-header">
+        <h2><span className="lesson-section-icon"><i className="fi fi-sr-exclamation" aria-hidden="true" /></span>{title}</h2>
+        <span className={`lesson-report-status lesson-report-status--${status}`}>
+          <i className={`fi ${status === 'resolved' ? 'fi-sr-check' : 'fi-sr-clock'}`} aria-hidden="true" />
+          {status === 'resolved' ? 'Resolved' : status === 'under_review' ? 'Under review' : 'Submitted'}
+        </span>
+      </header>
+      {issue && <p className="lesson-report-issue">{issue}</p>}
+      <dl className="lesson-report-fields">
+        {report.reason && report.reason !== issue && <div><dt>Category</dt><dd>{report.reason}</dd></div>}
+        {report.duration && <div><dt>Duration</dt><dd>{report.duration === 'up_to_ten' ? 'Up to 10 minutes' : 'Over 10 minutes'}</dd></div>}
+        {report.details && <div><dt>Details</dt><dd>{report.details}</dd></div>}
+        {report.resolution && <div><dt>Resolution</dt><dd>{report.resolution}</dd></div>}
+        {report.attendanceCorrection && <div><dt>Student attendance corrected</dt><dd>{report.attendanceCorrection}</dd></div>}
+        {report.ticketTransactionId && <div><dt>Ticket refund reference</dt><dd>{report.ticketTransactionId}</dd></div>}
+      </dl>
+    </section>
+  );
+};
+
+const correctionLabels: Record<LessonPreferences['errorCorrection'], string> = {
+  during_feedback: 'During feedback',
+  proactively: 'Proactively',
+  tutor_choice: "Tutor's choice"
+};
+
+const correctionDescriptions: Record<LessonPreferences['errorCorrection'], string> = {
+  during_feedback: 'Corrections are saved for the end-of-lesson review.',
+  proactively: 'Corrections happen as you move through the lesson.',
+  tutor_choice: 'Your tutor chooses the best timing for corrections.'
+};
+
+const englishLevelLabels = [
+  'Just starting', 'Simple introductions', 'Everyday basics', 'Short conversations',
+  'Getting comfortable', 'Sharing experiences', 'Confident conversations',
+  'Clear and independent', 'Fluent for work or study', 'Near-native ease'
+];
+
+const formatEnglishLevel = (value?: string) => {
+  if (!value) return 'Not provided';
+  const match = /^Level (10|[1-9])$/.exec(value);
+  return match ? `${value} - ${englishLevelLabels[Number(match[1]) - 1]}` : `${value} (previous scale)`;
+};
 
 const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp }: StudentProfilePageProps) => {
   const { user } = useAuthContext();
@@ -40,8 +119,25 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
     document.title = 'Student Profile | FluentXVerse';
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'notes' | 'materials'>('overview');
   const [showHeadsetModal, setShowHeadsetModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportDuration, setReportDuration] = useState<TroubleDuration | null>(null);
+  const [reportReason, setReportReason] = useState<TroubleReason | null>(null);
+  const [reportStudentIssue, setReportStudentIssue] = useState<TutorStudentIssue | null>(null);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitError, setReportSubmitError] = useState<string | null>(null);
+  const [reportStatus, setReportStatus] = useState<TroubleReportStatus | null>(null);
+  const [reportStatusError, setReportStatusError] = useState<string | null>(null);
+  const [reportStatusLoading, setReportStatusLoading] = useState(false);
+  const [reportRevision, setReportRevision] = useState(0);
+  const receivedNotification = useNotificationStore(state => state.notifications.find(notification => notification.title === 'Lesson report received' && notification.data?.bookingId === bookingId)?.id);
+  const [reportClockOffset, setReportClockOffset] = useState(0);
+  const [reportNow, setReportNow] = useState(Date.now());
+  const [showChatLog, setShowChatLog] = useState(false);
+  const [chatLog, setChatLog] = useState<ChatLogMessage[]>([]);
+  const [chatLogLoading, setChatLogLoading] = useState(false);
+  const [chatLogError, setChatLogError] = useState<string | null>(null);
+  const [showAssessmentResults, setShowAssessmentResults] = useState(false);
   const [micPermission, setMicPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
   const [micLevel, setMicLevel] = useState(0);
   const [isPlayingLeft, setIsPlayingLeft] = useState(false);
@@ -60,9 +156,127 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setReportNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!lessonData?.bookingId) return;
+    const controller = new AbortController();
+    setReportStatusLoading(true);
+    setReportStatusError(null);
+    fetch(`${API_BASE_URL}/schedule/tutor-lesson/${encodeURIComponent(lessonData.bookingId)}/trouble-report`, {
+      credentials: 'include',
+      cache: 'no-store',
+      signal: controller.signal
+    })
+      .then(async response => {
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Unable to check reporting window');
+        setReportClockOffset(Date.parse(result.data.serverNow) - Date.now());
+        setReportStatus(result.data);
+      })
+      .catch(err => {
+        if (!controller.signal.aborted) setReportStatusError(err.message || 'Unable to check reporting window');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setReportStatusLoading(false);
+      });
+    return () => controller.abort();
+  }, [lessonData?.bookingId, reportRevision, receivedNotification]);
+
+  useEffect(() => {
+    setReportStatus(null);
+    if (!lessonData?.bookingId) return;
+    const refresh = () => { if (!document.hidden) setReportRevision(value => value + 1); };
+    const timer = window.setInterval(refresh, 10000);
+    window.addEventListener('focus', refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, [lessonData?.bookingId]);
+
+  const reportWindowOpen = Boolean(
+    reportStatus && !reportStatus.report && lessonData?.status !== 'cancelled' &&
+    reportNow + reportClockOffset >= Date.parse(reportStatus.startsAt) &&
+    reportNow + reportClockOffset < Date.parse(reportStatus.endsAt)
+  );
+  const canEnterClassroom = Boolean(reportStatus && canJoinClassroom(lessonData?.status || '',
+    Date.parse(reportStatus.startsAt), Date.parse(reportStatus.endsAt), reportNow + reportClockOffset));
+
+  const closeReportModal = () => {
+    if (!reportSubmitting) setShowReportModal(false);
+  };
+
+  const submitTroubleReport = async () => {
+    if (!bookingId || !reportDuration || !reportReason || (reportReason === 'student' && !reportStudentIssue) || !reportWindowOpen || reportSubmitting) return;
+    setReportSubmitting(true);
+    setReportSubmitError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/schedule/tutor-lesson/${encodeURIComponent(bookingId)}/trouble-report`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration: reportDuration, reason: reportReason, studentIssue: reportReason === 'student' ? reportStudentIssue : undefined })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw new Error(result.error || 'Could not submit the report');
+      setReportStatus(current => current ? { ...current, report: result.data } : current);
+      setShowReportModal(false);
+    } catch (err: any) {
+      setReportSubmitError(err.message || 'Could not submit the report');
+      setReportRevision(value => value + 1);
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!showReportModal) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeReportModal();
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [showReportModal, reportSubmitting]);
+
+  useEffect(() => {
+    if (!showChatLog || !bookingId) return;
+    const controller = new AbortController();
+    setChatLogLoading(true);
+    setChatLogError(null);
+
+    fetch(`${API_BASE_URL}/schedule/tutor-lesson/${encodeURIComponent(bookingId)}/chat-log`, {
+      credentials: 'include',
+      signal: controller.signal
+    })
+      .then(async response => {
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || 'Failed to load chat log');
+        setChatLog(result.data);
+      })
+      .catch(err => {
+        if (!controller.signal.aborted) setChatLogError(err.message || 'Failed to load chat log');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setChatLogLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [showChatLog, bookingId]);
+
+  useEffect(() => {
+    if (!showChatLog) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowChatLog(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [showChatLog]);
+
   // Fetch student data (either from bookingId or studentId)
   useEffect(() => {
     const fetchData = async () => {
+      setShowAssessmentResults(false);
       // If we have a bookingId, first fetch lesson details to get student info
       if (bookingId) {
         
@@ -377,52 +591,22 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
   const displayData = {
     id: studentData.id || 'N/A',
     name: studentData.fullName || `${studentData.givenName || ''} ${studentData.familyName || ''}`.trim() || 'Unknown Student',
-    email: studentData.email || 'Not provided',
     initials: studentData.initials || (studentData.givenName?.[0] || 'S') + (studentData.familyName?.[0] || 'T'),
-    level: studentData.currentProficiency || 'Intermediate',
     nationality: studentData.country || 'Not specified',
     joinDate: formatJoinDate(studentData.joinDate),
     totalLessons: studentData.totalLessons || 0,
     attendance: studentData.attendance || 0,
-    averageRating: 4.8, // TODO: Add rating system
-    goals: Array.isArray(studentData.learningGoals) ? studentData.learningGoals.join(', ') : (studentData.learningGoals || 'Improve English communication skills'),
-    interests: 'Technology, Travel, Business', // TODO: Add interests field
-    timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
-    preferredTopics: ['Business English', 'Conversation', 'Pronunciation'] // TODO: Add from profile
   };
-
-  const upcomingSessions: Session[] = [
-    { id: '1', date: 'Nov 26, 2025', time: '7:00 PM', status: 'upcoming', topic: 'Business Presentations' },
-    { id: '2', date: 'Nov 27, 2025', time: '8:00 PM', status: 'upcoming', topic: 'Email Writing' },
-    { id: '3', date: 'Nov 28, 2025', time: '7:30 PM', status: 'upcoming', topic: 'Conversation Practice' }
-  ];
-
-  const pastSessions: Session[] = [
-    { id: '4', date: 'Nov 24, 2025', time: '7:00 PM', status: 'completed', topic: 'Job Interviews', rating: 5 },
-    { id: '5', date: 'Nov 23, 2025', time: '8:00 PM', status: 'completed', topic: 'Business Vocabulary', rating: 5 },
-    { id: '6', date: 'Nov 22, 2025', time: '7:30 PM', status: 'completed', topic: 'Presentation Skills', rating: 4 }
-  ];
-
-  const lessonNotes: LessonNote[] = [
-    {
-      date: 'Nov 24, 2025',
-      time: '7:00 PM',
-      note: 'Excellent progress with interview vocabulary. Student showed confidence in role-play exercises. Focus on reducing filler words ("um", "like") in next session.',
-      rating: 5
-    },
-    {
-      date: 'Nov 23, 2025',
-      time: '8:00 PM',
-      note: 'Good understanding of business terminology. Practiced negotiation phrases. Recommend more practice with formal email writing.',
-      rating: 5
-    },
-    {
-      date: 'Nov 22, 2025',
-      time: '7:30 PM',
-      note: 'Strong presentation delivery. Voice projection improved. Continue working on transition phrases between slides.',
-      rating: 4
-    }
-  ];
+  const assessment = studentData.levelAssessment as LevelAssessment | null | undefined;
+  const assessmentScores = assessment?.scores;
+  const assessmentRemarks = (assessment?.remarks || []).map(remark => remark.trim()).filter(Boolean);
+  const hasAssessmentDetails = Boolean(assessmentRemarks.length || assessmentScores?.comprehension != null || assessmentScores?.pronunciation != null || assessmentScores?.grammar != null);
+  const hobbies = Array.isArray(studentData.hobbies) ? studentData.hobbies.filter((hobby: unknown): hobby is string => typeof hobby === 'string' && Boolean(hobby.trim())) : [];
+  const preferences = (studentData.lessonPreferences || {
+    preferCameraOn: true,
+    errorCorrection: 'tutor_choice',
+    otherRequests: ''
+  }) as LessonPreferences;
 
   return (
     <div className="student-profile-page">
@@ -474,6 +658,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
 
               {/* Profile Info */}
               <div className="profile-info">
+                <span className="profile-eyebrow">Student</span>
                 <div className="profile-name-row">
                   <h1 className="profile-name">{displayData.name}</h1>
                   <span className="profile-id-badge">{displayData.id}</span>
@@ -486,11 +671,7 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
                   </div>
                   <div className="contact-info-item">
                     <i className="fi fi-sr-calendar"></i>
-                    <span>Joined {displayData.joinDate}</span>
-                  </div>
-                  <div className="contact-info-item">
-                    <i className="fi fi-sr-clock"></i>
-                    <span>{displayData.timezone}</span>
+                    <span>Registered {displayData.joinDate}</span>
                   </div>
                 </div>
 
@@ -507,14 +688,16 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
               <div className="profile-action-buttons">
                 {lessonData ? (
                   <button 
+                    type="button"
                     className="enter-classroom-btn" 
+                    disabled={!canEnterClassroom}
                     onClick={() => {
-                      // Navigate to classroom using bookingId as sessionId
-                      window.location.href = `/classroom/${lessonData.sessionId || bookingId}`;
+                      if (!canEnterClassroom) return;
+                      window.open(`/classroom/${lessonData.sessionId || bookingId}`, '_blank', 'noopener,noreferrer');
                     }}
-                    title="Enter the classroom for this lesson"
+                    title={canEnterClassroom ? 'Enter the classroom in a new tab' : 'The classroom opens five minutes before the lesson and closes three minutes after it ends.'}
                   >
-                    <i className="fas fa-video"></i>
+                    <i className="fi fi-sr-video-camera" aria-hidden="true"></i>
                     <span>Enter Classroom</span>
                   </button>
                 ) : (
@@ -534,132 +717,174 @@ const StudentProfilePage = ({ studentId: studentIdProp, bookingId: bookingIdProp
                   <i className="fi fi-sr-headset"></i>
                   <span>Test Headset</span>
                 </button>
+                {lessonData && (
+                  <button type="button" className="open-chatlog-btn" onClick={() => setShowChatLog(true)}>
+                    <i className="fi fi-sr-comments" aria-hidden="true"></i>
+                    <span>Open Chatlog</span>
+                  </button>
+                )}
+                {lessonData && (
+                  <button
+                    type="button"
+                    className={`lesson-issue-report-btn${reportStatus?.studentReport ? ' report-received' : ''}`}
+                    disabled={!reportStatus?.studentReport && (!reportWindowOpen || reportStatusLoading)}
+                    title={reportStatus?.studentReport ? 'View the issue reported by the student' : reportStatusError || (reportStatus?.report ? 'An issue has already been reported for this lesson' : 'Available only during the scheduled lesson')}
+                    onClick={() => {
+                      if (reportStatus?.studentReport) { document.getElementById('student-lesson-report')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+                      setReportDuration(null);
+                      setReportReason(null);
+                      setReportStudentIssue(null);
+                      setReportSubmitError(null);
+                      setShowReportModal(true);
+                    }}
+                  >
+                    <i className="fi fi-sr-exclamation" aria-hidden="true"></i>
+                    <span>{reportStatus?.studentReport ? 'Report Received' : reportStatus?.report ? 'Issue Reported' : 'Report Issue'}</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="tabs-container">
-            {(['overview', 'history', 'notes', 'materials'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`tab-button ${activeTab === tab ? 'active' : ''}`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === 'overview' && (
-            <div className="overview-grid">
-              {/* Learning Goals */}
-              <div className="content-card">
-                <h3 className="card-title">
-                  <i className="fi fi-sr-target"></i>
-                  Learning Goals
-                </h3>
-                <p className="card-text">{studentData.goals}</p>
-
-                <h4 className="section-subtitle">Interests</h4>
-                <p className="card-text">{studentData.interests}</p>
+          {reportStatus?.report && <LessonReportOutcome title="Lesson issue report" report={reportStatus.report} />}
+          {reportStatus?.studentReport && <LessonReportOutcome id="student-lesson-report" title="Student report received" report={reportStatus.studentReport} received />}
+          <section className="learner-profile-card" aria-labelledby="learner-profile-title">
+            <h2 id="learner-profile-title" className="learner-profile-title"><span className="lesson-section-icon"><i className="fi fi-sr-graduation-cap" aria-hidden="true"></i></span>Learning profile</h2>
+            <div className="learner-profile-grid">
+              <div className="learner-profile-field">
+                <span className="learner-profile-label"><i className="fi fi-sr-signal-alt" aria-hidden="true"></i>Self-assessed English level</span>
+                <strong>{formatEnglishLevel(studentData.currentProficiency)}</strong>
+                <span className="learner-profile-note">Chosen by the student</span>
               </div>
-
-              {/* Upcoming Sessions */}
-              <div className="content-card">
-                <h3 className="card-title">
-                  <i className="fi fi-sr-calendar"></i>
-                  Upcoming
-                </h3>
-                <div className="sessions-list">
-                  {upcomingSessions.map((session) => (
-                    <div key={session.id} className="session-card">
-                      <div className="session-topic">{session.topic}</div>
-                      <div className="session-meta">
-                        <i className="fi fi-sr-calendar"></i>
-                        {session.date}
-                      </div>
-                      <div className="session-meta" style={{ marginTop: '4px' }}>
-                        <i className="fi fi-sr-clock"></i>
-                        {session.time}
-                      </div>
+              <div className="learner-profile-field learner-profile-assessment">
+                <span className="learner-profile-label"><i className="fi fi-sr-chart-histogram" aria-hidden="true"></i>Level assessment</span>
+                {assessment ? (
+                  <>
+                    <strong>{assessment.studentLevel ? formatEnglishLevel(assessment.studentLevel) : 'Level not recorded'}</strong>
+                    <span className="learner-profile-note">{[assessment.curriculum, assessment.dateAssessed && `Assessed ${formatJoinDate(assessment.dateAssessed)}`, assessment.assessedBy && `By ${assessment.assessedBy}`].filter(Boolean).join(' · ') || 'Recorded by an assessor'}</span>
+                  </>
+                ) : <strong>None yet</strong>}
+              </div>
+            </div>
+            {assessment && hasAssessmentDetails && (
+              <>
+                <div id="assessment-results" className="assessment-results" hidden={!showAssessmentResults}>
+                  {assessmentScores && (['comprehension', 'pronunciation', 'grammar'] as const).some(skill => assessmentScores[skill] != null) && (
+                    <div className="assessment-results-scores">
+                      {(['comprehension', 'pronunciation', 'grammar'] as const).map(skill => assessmentScores[skill] != null && (
+                        <div key={skill} className="assessment-results-score">
+                          <span>{skill}</span>
+                          <strong>{assessmentScores[skill]}{assessmentScores.maxScore ? ` / ${assessmentScores.maxScore}` : ''}</strong>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
+                  {assessmentRemarks.length > 0 && (
+                    <div className="assessment-results-remarks">
+                      <h3>Assessment remarks</h3>
+                      <ul>{assessmentRemarks.map((remark, index) => <li key={index}>{remark}</li>)}</ul>
+                    </div>
+                  )}
+                  {assessment.assessedBy && <p className="assessment-results-assessor">Assessment conducted by <strong>{assessment.assessedBy}</strong></p>}
+                </div>
+                <div className="assessment-results-action">
+                  <button
+                    type="button"
+                    className="assessment-results-toggle"
+                    aria-expanded={showAssessmentResults}
+                    aria-controls="assessment-results"
+                    onClick={() => setShowAssessmentResults(value => !value)}
+                  >
+                    {showAssessmentResults ? 'Hide assessment results' : 'View assessment results'}
+                    <i className={`fi fi-sr-angle-small-${showAssessmentResults ? 'up' : 'down'}`} aria-hidden="true"></i>
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
+
+          {lessonData && (
+            <aside className="lesson-recording-notice" aria-label="Lesson recording notice">
+              <i className="fi fi-sr-info" aria-hidden="true"></i>
+              <p><strong>Recording notice:</strong> Lessons may be recorded to review teaching quality and maintain service standards. Recordings are handled confidentially and used only for quality assurance and compliance reviews.</p>
+            </aside>
+          )}
+
+          <section className="lesson-context" aria-labelledby="lesson-context-title">
+            <div className="lesson-context-heading">
+              <h2 id="lesson-context-title"><span className="lesson-section-icon"><i className="fi fi-sr-user" aria-hidden="true"></i></span>Student context</h2>
+              <a href="/materials" className="lesson-materials-link">
+                <i className="fi fi-sr-book" aria-hidden="true"></i>
+                Browse materials
+                <i className="fi fi-sr-arrow-right" aria-hidden="true"></i>
+              </a>
+            </div>
+            <div className="lesson-context-columns">
+              <div className="lesson-context-column">
+                <h3><i className="fi fi-sr-user" aria-hidden="true"></i>About me</h3>
+                {studentData.bio && <p className="lesson-context-bio">{studentData.bio}</p>}
+                <div className="lesson-context-field"><span><i className="fi fi-sr-target" aria-hidden="true"></i>Purpose</span><strong>{studentData.purpose || 'Not set'}</strong></div>
+                <div className="lesson-context-field"><span><i className="fi fi-sr-briefcase" aria-hidden="true"></i>Occupation</span><strong>{studentData.occupation || 'Not set'}</strong></div>
+                <div className="lesson-context-field">
+                  <span><i className="fi fi-sr-heart" aria-hidden="true"></i>Hobbies</span>
+                  {hobbies.length ? <div className="lesson-context-hobbies">{hobbies.map((hobby: string) => <strong key={hobby}>{hobby}</strong>)}</div> : <strong>Not set</strong>}
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <div className="content-card simple">
-              <h3 className="card-title blue">
-                <i className="fi fi-sr-time-past"></i>
-                Lesson History
-              </h3>
-              <div className="sessions-list">
-                {pastSessions.map((session) => (
-                  <div key={session.id} className="session-card completed">
-                    <div>
-                      <div className="session-topic">{session.topic}</div>
-                      <div className="session-meta-row">
-                        <span className="session-meta-item">
-                          <i className="fi fi-sr-calendar"></i>
-                          {session.date}
-                        </span>
-                        <span className="session-meta-item">
-                          <i className="fi fi-sr-clock"></i>
-                          {session.time}
-                        </span>
-                      </div>
-                    </div>
-                    {session.rating && (
-                      <div className="rating-badge">
-                        <i className="fi fi-sr-star"></i>
-                        {session.rating}
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="lesson-context-column">
+                <h3><i className="fi fi-sr-settings-sliders" aria-hidden="true"></i>Lesson preferences</h3>
+                <div className="lesson-context-field"><span><i className="fi fi-sr-video-camera" aria-hidden="true"></i>Session setup</span><strong>{preferences.preferCameraOn ? 'Prefer camera on' : 'Start audio-first'}</strong></div>
+                <div className="lesson-context-field">
+                  <span><i className="fi fi-sr-comment-alt" aria-hidden="true"></i>Correction style</span>
+                  <strong>{correctionLabels[preferences.errorCorrection] || correctionLabels.tutor_choice}</strong>
+                  <small>{correctionDescriptions[preferences.errorCorrection] || correctionDescriptions.tutor_choice}</small>
+                </div>
+                <div className="lesson-context-field"><span><i className="fi fi-sr-bookmark" aria-hidden="true"></i>Other requests</span><strong>{preferences.otherRequests || 'None added'}</strong></div>
               </div>
             </div>
-          )}
-
-          {activeTab === 'notes' && (
-            <div className="content-card simple">
-              <h3 className="card-title blue">
-                <i className="fi fi-sr-edit"></i>
-                Lesson Notes
-              </h3>
-              <div className="notes-list">
-                {lessonNotes.map((note, idx) => (
-                  <div key={idx} className="note-card">
-                    <div className="note-header">
-                      <div className="note-date-time">
-                        <span className="note-date">{note.date}</span>
-                        <span className="note-time">{note.time}</span>
-                      </div>
-                      <div className="rating-badge small">
-                        <i className="fi fi-sr-star"></i>
-                        {note.rating}
-                      </div>
-                    </div>
-                    <p className="note-content">{note.note}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'materials' && (
-            <div className="empty-state">
-              <i className="fi fi-sr-book"></i>
-              <h3>No Materials Yet</h3>
-              <p>Shared lesson materials will appear here</p>
-            </div>
-          )}
+          </section>
+          {lessonData && <LessonMaterialRequest key={`request-${bookingId}`} studentId={studentData.id || lessonData.studentId} sessionId={lessonData.sessionId || bookingId!} />}
+          {lessonData && <LessonNotesCard key={lessonData.sessionId || bookingId} sessionId={lessonData.sessionId || bookingId!} />}
         </div>
       </div>
+
+      {showChatLog && (
+        <div className="chatlog-modal-overlay" onClick={() => setShowChatLog(false)}>
+          <section className="chatlog-modal" role="dialog" aria-modal="true" aria-labelledby="chatlog-title" onClick={event => event.stopPropagation()}>
+            <header className="chatlog-modal-header">
+              <h2 id="chatlog-title"><i className="fi fi-sr-comments" aria-hidden="true"></i>Lesson Chatlog</h2>
+              <button type="button" className="chatlog-close-btn" aria-label="Close chatlog" onClick={() => setShowChatLog(false)}>
+                <i className="fi fi-sr-cross" aria-hidden="true"></i>
+              </button>
+            </header>
+            <div className="chatlog-modal-body" aria-live="polite">
+              {chatLogLoading ? <p className="chatlog-state">Loading messages...</p> :
+                chatLogError ? <p className="chatlog-state chatlog-error">{chatLogError}</p> :
+                chatLog.length === 0 ? <p className="chatlog-state">No messages for this lesson yet.</p> :
+                <ol className="chatlog-messages">
+                  {chatLog.map(message => (
+                    <li key={message.id} className={`chatlog-message ${message.senderType}`}>
+                      <div className="chatlog-message-meta">
+                        <strong>{message.senderType === 'tutor' ? 'Tutor' : 'Student'}</strong>
+                        <time dateTime={message.timestamp}>{new Date(message.timestamp).toLocaleString()}</time>
+                        {message.isEdited && <span>Edited</span>}
+                      </div>
+                      <p>{message.text}</p>
+                      {message.correction && <p className="chatlog-correction"><strong>Correction:</strong> {message.correction}</p>}
+                    </li>
+                  ))}
+                </ol>}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {showReportModal && <TutorLessonIssueReportDialog
+        reportStudentIssue={reportStudentIssue} setReportStudentIssue={setReportStudentIssue}
+        reportDuration={reportDuration} reportReason={reportReason} reportSubmitting={reportSubmitting}
+        reportWindowOpen={reportWindowOpen} reportSubmitError={reportSubmitError}
+        setReportDuration={setReportDuration} setReportReason={setReportReason} setReportSubmitError={setReportSubmitError}
+        closeReportModal={closeReportModal} submitTroubleReport={submitTroubleReport}
+      />}
 
       {/* Headset Test Modal */}
       {showHeadsetModal && (

@@ -51,6 +51,7 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   // Chat events
   'chat:send': (data: SendMessageData) => void;
+  'chat:share-material': (data: ShareMaterialData, callback?: (result: ShareMaterialResult) => void) => void;
   'chat:edit': (data: EditMessageData) => void;
   'chat:delete': (data: DeleteMessageData, callback?: (result: DeleteMessageResult) => void) => void;
   'chat:typing': (data: { isTyping: boolean }) => void;
@@ -87,6 +88,29 @@ export interface ClientToServerEvents {
 }
 
 // Data structures
+export interface SharedClassroomMaterial {
+  id: string;
+  courseId: 'daily-dispatch' | 'conversational-skills' | 'business-english';
+  title: string;
+  level?: number;
+  chapter?: number;
+  lessonNumber?: number;
+  category?: string;
+  postedDate?: string;
+  createdAt?: string;
+}
+
+export interface ShareMaterialData {
+  sessionId: string;
+  courseId: SharedClassroomMaterial['courseId'];
+  materialId: string;
+}
+
+export interface ShareMaterialResult {
+  success: boolean;
+  message?: string;
+}
+
 export interface ChatMessageData {
   id: string;
   sessionId: string;
@@ -94,6 +118,7 @@ export interface ChatMessageData {
   senderType: 'tutor' | 'student';
   text: string;
   timestamp: string;
+  material?: SharedClassroomMaterial;
   correction?: string;
   isSystemMessage?: boolean;
   isEdited?: boolean;
@@ -135,6 +160,7 @@ export interface DeleteMessageResult {
 
 export interface SessionState {
   sessionId: string;
+  mediaProvider?: 'webrtc' | 'realtimekit';
   participants: {
     tutorId?: string;
     studentId?: string;

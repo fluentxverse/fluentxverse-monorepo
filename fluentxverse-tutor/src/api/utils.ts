@@ -4,6 +4,8 @@ import { getErrorMessage } from '../utils/errorUtils';
 
 let unauthorizedHandler: (() => void) | null = null;
 let isLoginInProgress = false;
+let authGeneration = 0;
+const requestGenerations = new WeakMap<object, number>();
 
 /**
  * Extract a user-friendly error message from an error object
@@ -22,9 +24,13 @@ export const createFriendlyError = (error: unknown): Error => {
 
 export const registerUnauthorizedHandler = (fn: () => void) => {
   unauthorizedHandler = fn;
+  return () => {
+    if (unauthorizedHandler === fn) unauthorizedHandler = null;
+  };
 };
 
 export const setLoginInProgress = (inProgress: boolean) => {
+  if (inProgress) authGeneration += 1;
   isLoginInProgress = inProgress;
 };
 
@@ -51,6 +57,7 @@ export const client = axios.create({
 // Request interceptor to add cache-busting for auth requests
 client.interceptors.request.use(
   (config) => {
+    requestGenerations.set(config, authGeneration);
     // Add timestamp to prevent caching of auth-related requests
     if (config.url === '/tutor/me' || config.url === '/tutor/login' || config.url === '/tutor/logout' || config.url === '/tutor/refresh') {
       config.params = { ...config.params, _t: Date.now() };
@@ -72,13 +79,13 @@ client.interceptors.response.use(
       // Don't trigger unauthorized handler during login process
       // or for login/logout endpoints themselves
       const url = error?.config?.url || '';
-      const isAuthEndpoint = url.includes('/login') || url.includes('/logout') || url.includes('/register');
+      const isAuthEndpoint = url.includes('/login') || url.includes('/logout') || url.includes('/register')
+        || url === '/tutor/me';
       const now = Date.now();
       // Debounce 401 handling to avoid race conditions
-      if (!isLoginInProgress && !isAuthEndpoint && unauthorizedHandler && (now - last401 > 500)) {
+      if (!isLoginInProgress && !isAuthEndpoint && unauthorizedHandler
+        && requestGenerations.get(error.config) === authGeneration && (now - last401 > 500)) {
         last401 = now;
-        // Clear client-side state
-        forceAuthCleanup();
         unauthorizedHandler();
       }
     }

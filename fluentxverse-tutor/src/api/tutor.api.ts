@@ -11,10 +11,12 @@ export interface ClassroomVocabularyNote {
   definitions: {
     meaning: string;
     partOfSpeech: string;
-    koreanNative: string;
-    koreanRomanized: string;
-    vietnameseNative: string;
-    vietnameseRomanized: string;
+    japaneseNative?: string;
+    japaneseRomanized?: string;
+    koreanNative?: string;
+    koreanRomanized?: string;
+    vietnameseNative?: string;
+    vietnameseRomanized?: string;
   }[];
   selectedDefinitionIndex: number;
   isLoading: boolean;
@@ -45,6 +47,14 @@ export interface ClassroomNotesRecord {
   studentId: string | null;
   materialType: string;
   materialId: string;
+  materialTitle: string | null;
+  materialLevel?: number | null;
+  materialChapter?: number | null;
+  isUsed?: boolean;
+  completionStatus?: 'in_progress' | 'completed' | null;
+  stoppedAt?: string | null;
+  stoppedAtLabel?: string | null;
+  progressDetails?: string;
   courseId: string | null;
   lessonId: string | null;
   articleId: string | null;
@@ -60,6 +70,12 @@ export interface ClassroomNotesRecord {
 export interface SaveClassroomNotesInput {
   materialType: string;
   materialId: string;
+  materialTitle?: string;
+  isUsed?: boolean;
+  clientUpdatedAt?: number;
+  completionStatus?: 'in_progress' | 'completed' | null;
+  stoppedAt?: string | null;
+  progressDetails?: string;
   courseId?: string | null;
   lessonId?: string | null;
   articleId?: string | null;
@@ -68,6 +84,47 @@ export interface SaveClassroomNotesInput {
   pronunciationItems: ClassroomPronunciationNote[];
   studentComment?: string;
   tutorMemo?: string;
+}
+
+export type LessonNotesTab = 'current' | 'recent' | 'mine' | 'first';
+
+export interface LessonNotesEntry {
+  workflow?: { attendanceVerified: boolean; notesStatus: string; closed: boolean; outcome: string };
+  englishLevelAssessment?: number | null;
+  sessionId: string;
+  startsAt: string;
+  tutorName: string;
+  durationMinutes?: number;
+  studentAttendance?: string | null;
+  notes: ClassroomNotesRecord[];
+  studentComment?: string;
+  tutorMemo?: string;
+  summaryUpdatedAt?: string | null;
+}
+
+export interface ClassroomLessonNotes {
+  studentAttendance?: string | null;
+  englishLevelAssessment?: number | null;
+  materials: ClassroomNotesRecord[];
+  studentComment: string;
+  tutorMemo: string;
+  updatedAt: string | null;
+}
+
+export interface ClassroomMaterialProgress {
+  sections: { id: string; label: string }[];
+  previous: { sessionId: string; startsAt: string; completionStatus: 'in_progress' | 'completed';
+    stoppedAt: string | null; stoppedAtLabel: string | null; progressDetails: string } | null;
+}
+
+export interface LessonNotesEditWindow {
+  studentAttendance?: string | null;
+  startsAt: string;
+  endsAt: string;
+  editableUntil: string;
+  serverNow: string;
+  canEdit: boolean;
+  reason: 'not_started' | 'expired' | 'cancelled' | null;
 }
 
 export interface ClassroomExerciseMark {
@@ -98,6 +155,36 @@ export interface SaveClassroomExerciseMarkInput {
 }
 
 export const tutorApi = {
+  setLessonStudentAttendance: async (sessionId: string, status: 'present' | 'absent', reason?: string) => {
+    const response = await api.put<{ success: boolean }>(`/tutor/lesson-student-attendance/${encodeURIComponent(sessionId)}`, { status, reason });
+    if (!response.data.success) throw new Error('Unable to update student attendance');
+  },
+  getLessonNotesEditWindow: async (sessionId: string, signal?: AbortSignal): Promise<LessonNotesEditWindow> => {
+    const response = await api.get<{ success: boolean; data: LessonNotesEditWindow }>(`/tutor/lesson-notes-edit-window/${encodeURIComponent(sessionId)}`, { signal });
+    if (!response.data.success) throw new Error('Unable to check the editing window');
+    return response.data.data;
+  },
+  getClassroomMaterialProgress: async (sessionId: string, materialType: string, materialId: string): Promise<ClassroomMaterialProgress> => {
+    const response = await api.get<{ success: boolean; data: ClassroomMaterialProgress }>(`/tutor/classroom-material-progress/${encodeURIComponent(sessionId)}`, { params: { materialType, materialId } });
+    if (!response.data.success) throw new Error('Unable to load material progress');
+    return response.data.data;
+  },
+  getClassroomLessonNotes: async (sessionId: string, signal?: AbortSignal): Promise<ClassroomLessonNotes> => {
+    const response = await api.get<{ success: boolean; data: ClassroomLessonNotes }>(`/tutor/classroom-lesson-notes/${encodeURIComponent(sessionId)}`, { signal });
+    if (!response.data.success) throw new Error('Unable to load lesson notes');
+    return response.data.data;
+  },
+  saveClassroomLessonNotes: async (sessionId: string, summary: Pick<ClassroomLessonNotes, 'studentComment' | 'tutorMemo' | 'englishLevelAssessment'> & { clientUpdatedAt?: number }) => {
+    const response = await api.put<{ success: boolean }>(`/tutor/classroom-lesson-notes/${encodeURIComponent(sessionId)}`, summary);
+    if (!response.data.success) throw new Error('Unable to save lesson notes');
+  },
+  getLessonNotes: async (sessionId: string, tab: LessonNotesTab, signal?: AbortSignal): Promise<LessonNotesEntry[]> => {
+    const response = await api.get<{ success: boolean; data: LessonNotesEntry[] }>(
+      `/tutor/lesson-notes/${encodeURIComponent(sessionId)}`, { params: { tab }, signal, timeout: 15000 },
+    );
+    if (!response.data.success) throw new Error('Unable to load lesson notes');
+    return response.data.data;
+  },
   /**
    * Search tutors with filters
    */
@@ -210,6 +297,8 @@ export const tutorApi = {
     title: string;
     lessonNumber: number;
     goal: string;
+    level?: number | null;
+    chapter?: number | null;
     studentPreferences?: {
       cameraOn?: boolean;
       proficiency?: string;
@@ -222,7 +311,7 @@ export const tutorApi = {
     });
 
     if (!response.data.success) {
-      return null;
+      throw new Error('Could not load the material request');
     }
 
     return response.data.data;

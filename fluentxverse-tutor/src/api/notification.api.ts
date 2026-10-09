@@ -10,9 +10,9 @@ export const notificationApi = {
   /**
    * Get all notifications
    */
-  getNotifications: async (limit = 50, offset = 0): Promise<NotificationResponse> => {
+  getNotifications: async (limit = 50, offset = 0, isRead?: boolean): Promise<NotificationResponse> => {
     const response = await api.get<{ success: boolean; data: NotificationResponse }>('/notifications', {
-      params: { limit, offset }
+      params: { limit, offset, isRead }
     });
 
     if (!response.data.success) {

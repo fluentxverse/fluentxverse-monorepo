@@ -1,5 +1,11 @@
 {
   "name": "fluentxverse-tutor",
+  "account_id": "8355506b306aa26ed64113cdc82cf338",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "tutor.fluentxverse.com", "custom_domain": true },
+    { "pattern": "tutor.fluentxverse.xyz/*", "zone_name": "fluentxverse.xyz" }
+  ],
   "compatibility_date": "2026-07-17",
   "assets": {
     "directory": "./dist",
