@@ -248,7 +248,7 @@ export class NotificationService {
         studentName,
         date: slotDate || date,
         time,
-        link: '/schedule'
+        link: `/lesson/${encodeURIComponent(bookingId)}`
       }
     });
   }

@@ -1,11 +1,13 @@
 import type { Server, Socket } from 'socket.io';
-import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/socket.types';
+import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, SharedClassroomMaterial } from '../types/socket.types';
 import { ChatService } from '../../services/chat.services/chat.service';
+import { resolveSharedClassroomMaterial } from '../../services/sharedClassroomMaterial';
+import { canCommunicateInClassroom } from '../classroomTiming';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
-const chatService = new ChatService();
+const defaultChatService = new ChatService();
 
 // In-memory fallback for chat messages when DB is unavailable
 interface InMemoryMessage {
@@ -14,6 +16,7 @@ interface InMemoryMessage {
   senderId: string;
   senderType: 'tutor' | 'student';
   text: string;
+  material?: SharedClassroomMaterial;
   timestamp: string;
   correction?: string;
   fileUrl?: string;
@@ -32,6 +35,7 @@ const toClientMessage = (message: Awaited<ReturnType<ChatService['saveMessage']>
   senderId: message.sender_id,
   senderType: message.sender_type,
   text: message.display_text || message.edited_message_text || message.message_text,
+  material: message.material || undefined,
   timestamp: message.created_at.toISOString(),
   correction: message.correction_text || undefined,
   editedAt: message.edited_at?.toISOString(),
@@ -39,8 +43,13 @@ const toClientMessage = (message: Awaited<ReturnType<ChatService['saveMessage']>
   isDeleted: Boolean(message.is_deleted)
 });
 
-export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
+export const chatHandler = (io: TypedServer, socket: TypedSocket, dependencies: {
+  service?: ChatService;
+  resolveMaterial?: typeof resolveSharedClassroomMaterial;
+} = {}) => {
   if (socket.data.userType === 'admin') return;
+  const chatService = dependencies.service || defaultChatService;
+  const resolveMaterial = dependencies.resolveMaterial || resolveSharedClassroomMaterial;
   const loadSessionHistory = async (sessionId: string): Promise<InMemoryMessage[]> => {
     try {
       const messages = await chatService.getSessionMessages(sessionId);
@@ -62,8 +71,50 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
     });
   };
 
+  socket.on('chat:share-material', async (data, callback) => {
+    const fail = (message: string) => {
+      callback?.({ success: false, message });
+      if (!callback) socket.emit('chat:error', { message });
+    };
+    if (!canCommunicateInClassroom(socket.data.lessonStartsAt, socket.data.lessonEndsAt)) { fail('Chat opens when the scheduled lesson starts.'); return; }
+    if (socket.data.userType !== 'student' || !data || typeof data.sessionId !== 'string'
+      || socket.data.sessionId !== data.sessionId) {
+      fail('Only the student in this classroom can share a material.');
+      return;
+    }
+    if (typeof data.materialId !== 'string' || !data.materialId.trim() || data.materialId.length > 256
+      || !['daily-dispatch', 'conversational-skills', 'business-english'].includes(data.courseId)) {
+      fail('Invalid lesson material.');
+      return;
+    }
+    const { sessionId, materialId, courseId } = data;
+    const senderId = socket.data.userId;
+    try {
+      const material = await resolveMaterial(courseId, materialId);
+      if (!material) { fail('This material is not available to share.'); return; }
+      if (socket.data.sessionId !== sessionId) { fail('The classroom session changed.'); return; }
+      const text = `Shared material: ${material.title}`;
+      let messageData: InMemoryMessage;
+      try {
+        messageData = toClientMessage(await chatService.saveMessage({
+          sessionId, senderId, senderType: 'student', text, material,
+        }));
+      } catch {
+        messageData = { id: `mem-${crypto.randomUUID()}`, sessionId, senderId,
+          senderType: 'student', text, material, timestamp: new Date().toISOString() };
+        (memChatMessages[sessionId] ||= []).push(messageData);
+      }
+      io.to(sessionId).emit('chat:message', messageData);
+      callback?.({ success: true });
+    } catch (error) {
+      console.error('Failed to share classroom material:', error);
+      fail('Could not share this material. Please open it again to retry.');
+    }
+  });
+
   // Send chat message
   socket.on('chat:send', async (data) => {
+    if (!canCommunicateInClassroom(socket.data.lessonStartsAt, socket.data.lessonEndsAt)) { socket.emit('chat:error', { message: 'Chat opens when the scheduled lesson starts.' }); return; }
     try {
       const { sessionId, text, correction, fileUrl, fileName, fileType, fileSize } = data;
       if (!sessionId || socket.data.sessionId !== sessionId) return;
@@ -131,6 +182,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   });
 
   socket.on('chat:edit', async (data) => {
+    if (!canCommunicateInClassroom(socket.data.lessonStartsAt, socket.data.lessonEndsAt)) { socket.emit('chat:error', { message: 'Chat opens when the scheduled lesson starts.' }); return; }
     try {
       const { sessionId, messageId, text } = data;
       if (!sessionId || socket.data.sessionId !== sessionId) return;
@@ -157,6 +209,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
           item.id === messageId &&
           item.senderId === userId &&
           item.senderType === userType &&
+          !item.material &&
           !item.isDeleted
         );
 
@@ -182,6 +235,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
   });
 
   socket.on('chat:delete', async (data, callback) => {
+    if (!canCommunicateInClassroom(socket.data.lessonStartsAt, socket.data.lessonEndsAt)) { callback?.({ success: false, message: 'Chat opens when the scheduled lesson starts.' }); return; }
     try {
       const { sessionId, messageId } = data;
       const userId = socket.data.userId;
@@ -260,6 +314,7 @@ export const chatHandler = (io: TypedServer, socket: TypedSocket) => {
 
   // Typing indicator
   socket.on('chat:typing', async (data) => {
+    if (!canCommunicateInClassroom(socket.data.lessonStartsAt, socket.data.lessonEndsAt)) return;
     try {
       const { isTyping } = data;
       const userId = socket.data.userId;

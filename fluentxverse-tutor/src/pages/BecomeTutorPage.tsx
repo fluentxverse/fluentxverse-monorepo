@@ -10,7 +10,7 @@ const BecomeTutorPage = () => {
 
   return (
     <>
-      <Header />
+      <Header showThemeSwitch={false} />
       <div className="become-tutor-page">
         {/* Hero Section */}
         <section className="tutor-hero-section">

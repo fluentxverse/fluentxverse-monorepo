@@ -1155,25 +1155,6 @@ const SchedulePage = () => {
               </div>
             )}
 
-            {/* Loading Indicator */}
-            {loading && (
-              <div style={{
-                background: isDarkMode ? 'rgba(59, 130, 246, 0.08)' : 'rgba(2, 69, 174, 0.05)',
-                padding: '16px 20px',
-                borderRadius: '12px',
-                marginBottom: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                justifyContent: 'center'
-              }}>
-                <i className="fas fa-spinner fa-spin" style={{ color: '#0245ae', fontSize: '20px' }}></i>
-                <p style={{ margin: 0, fontSize: '14px', color: '#0245ae', fontWeight: 600 }}>
-                  Loading schedule...
-                </p>
-              </div>
-            )}
-
             {/* Main Schedule Card */}
             <div className="schedule-card" style={{
               background: cardBackground,

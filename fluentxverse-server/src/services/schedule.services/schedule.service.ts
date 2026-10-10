@@ -21,14 +21,18 @@ import type {
 import { determinePenaltyCode, PENALTY_RULES, PENALTY_CODE_DETAILS } from '../../config/penaltyCodes';
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
+import { revokeLessonRoom } from '../../socket/revokeLessonRoom';
 import { emitSlotBooked, emitSlotCancelled } from '../../socket/handlers/schedule.handler';
 import { ticketService } from '../ticket.services/ticket.service';
 import { REFUND_POLICY } from '../../config/constant';
 import { invalidateCache } from '../../db/redis';
 import { ClassroomActivityService } from '../classroomActivity.services/classroomActivity.service';
 import { attendanceDeadlineMs, attendanceStartMs, validateAttendanceWindow, validateAttendanceWithPresentNeighbors, NORMAL_DEADLINE_MINUTES, type AttendanceSlotTime } from './attendanceWindow';
-import { ABSENCE_REASONS, isShortNoticeCancellation, validateAbsenceTime, validateReopenPolicy, type AbsenceReason } from './cancellationPolicy';
+import { ClassroomNotesService } from '../classroomNotes.services/classroomNotes.service';
+import { ABSENCE_REASONS, isShortNoticeCancellation, validateAbsenceTime, validateReopenPolicy, canStudentCancelLesson, STUDENT_CANCELLATION_CUTOFF_MS, type AbsenceReason } from './cancellationPolicy';
 import type { ManagedTransaction } from 'neo4j-driver';
+import { assertStudentScheduleAvailable, assertTutorCanSchedule } from './schedulingGuards';
+import { reconcileTutorPenaltyBlock } from './tutorPenaltyBlock';
 import { BOOKING_CUTOFF_MESSAGE, BOOKING_CUTOFF_MINUTES, SLOT_OPEN_LEAD_MINUTES, bookingCutoffMs, canOpenSlot, canReserveForBooking, CHECKOUT_HOLD_MINUTES } from './bookingPolicy';
 
 const notificationService = new NotificationService();
@@ -88,6 +92,7 @@ export class ScheduleService {
         }
         
         const opened = await session.executeWrite(async tx => {
+          await assertTutorCanSchedule(tx, input.tutorId);
           const result = await tx.run(
             `MATCH (t:User {id: $tutorId})
              WHERE datetime() <= datetime($openUntil)
@@ -331,6 +336,7 @@ export class ScheduleService {
         MATCH (t:User {id: $tutorId})-[:OPENS_SLOT]->(s:TimeSlot)
         WHERE s.slotDate >= $startDate AND s.slotDate <= $endDate
         OPTIONAL MATCH (s)<-[:BOOKS]-(b:Booking)
+        WHERE b.status IN ['confirmed', 'completed']
         OPTIONAL MATCH (b)-[:BOOKED_BY]->(student:Student)
         RETURN s, b, student
         ORDER BY s.slotDate, s.slotTime
@@ -399,7 +405,8 @@ export class ScheduleService {
       return {
         weekStart: monday,
         weekEnd: sunday,
-        slots
+        slots,
+        schedulingBlock: await this.getSchedulingBlock(params.tutorId)
       };
     } finally {
       await session.close();
@@ -409,6 +416,15 @@ export class ScheduleService {
   /**
    * Get available slots for student booking
    */
+  async getSchedulingBlock(tutorId: string) {
+    const session = getDriver().session();
+    try {
+      const row = (await session.run('MATCH (t:User {id: $tutorId}) RETURN t.isBlocked AS blocked, t.blockExpiresAt AS expires', { tutorId })).records[0];
+      const expiresAt = row?.get('expires')?.toStandardDate?.().toISOString() || null;
+      return { active: Boolean(row?.get('blocked') && (!expiresAt || Date.parse(expiresAt) > Date.now())), expiresAt };
+    } finally { await session.close(); }
+  }
+
   async getAvailableSlots(tutorId: string, startDate: string, endDate: string): Promise<AvailableSlot[]> {
     const driver = getDriver();
     const session = driver.session();
@@ -422,6 +438,7 @@ export class ScheduleService {
         WHERE s.slotDate >= $startDate 
           AND s.slotDate <= $endDate
           AND s.status IN ['open', 'pending']
+          AND (coalesce(t.isBlocked, false) = false OR t.blockExpiresAt <= datetime())
         RETURN s
         ORDER BY s.slotDate, s.slotTime
         `,
@@ -469,6 +486,8 @@ export class ScheduleService {
         );
         const slot = result.records[0]?.get('s')?.properties;
         if (!slot) throw new Error('Slot not found');
+        await assertStudentScheduleAvailable(tx, studentId, slot);
+        await assertTutorCanSchedule(tx, slot.tutorId);
         const startMs = attendanceStartMs({ date: slot.slotDate, time: slot.slotTime });
         const existingExpiry = slot.pendingUntil?.toStandardDate?.().getTime() ??
           (slot.pendingAt?.toStandardDate?.().getTime() ?? 0) + CHECKOUT_HOLD_MINUTES * 60_000;
@@ -723,7 +742,15 @@ export class ScheduleService {
       // === END SERVER-SIDE TICKET VERIFICATION ===
       
       // Create booking and update slot
-      const bookingResult = await session.run(
+      const bookingResult = await session.executeWrite(async tx => {
+        await tx.run(`MATCH (student:Student {id: $studentId})
+          SET student.bookingWriteVersion = coalesce(student.bookingWriteVersion, 0) + 1`, { studentId: input.studentId });
+        const existing = await tx.run(`MATCH (b:Booking {reservationId: $reservationId, studentId: $studentId}) RETURN b, null AS s`,
+          { reservationId: input.reservationId, studentId: input.studentId });
+        if (existing.records.length) return existing;
+        await assertStudentScheduleAvailable(tx, input.studentId, slot);
+        await assertTutorCanSchedule(tx, slot.tutorId);
+        return tx.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
                             reservationId: $reservationId})
@@ -769,8 +796,15 @@ export class ScheduleService {
           unconfirmedCutoffAt: new Date(startMs - SLOT_OPEN_LEAD_MINUTES * 60_000).toISOString(),
           durationMinutes: slot.durationMinutes
         }
-      );
+        );
+      });
       if (!bookingResult.records.length) throw new Error('Checkout reservation expired before booking could finish');
+      const savedBooking = bookingResult.records[0]!.get('b').properties;
+      if (savedBooking.bookingId !== bookingId) return {
+        ...savedBooking,
+        slotDateTime: savedBooking.slotDateTime?.toStandardDate?.() ?? savedBooking.slotDateTime,
+        bookedAt: savedBooking.bookedAt?.toStandardDate?.() ?? savedBooking.bookedAt,
+      } as Booking;
 
       try {
         await ticketService.recordTicketDeduction({
@@ -913,6 +947,17 @@ export class ScheduleService {
       if (booking.studentId !== input.cancelledBy) {
         throw new Error('You can only cancel your own bookings');
       }
+
+      const scheduledTime = booking.slotDateTime?.toStandardDate?.() ?? new Date(booking.slotDateTime);
+      if (!Number.isFinite(scheduledTime.getTime())) {
+        throw new Error('Booking does not have a valid scheduled time');
+      }
+      if (!canStudentCancelLesson(booking.status, scheduledTime.getTime())) {
+        throw new Error('Cannot cancel a lesson within five minutes of its scheduled start or after it has started');
+      }
+      if (booking.status !== 'confirmed') {
+        throw new Error('Only confirmed bookings can be cancelled');
+      }
       
       // Get the student's wallet address for refund
       const studentResult = await session.run(
@@ -923,22 +968,27 @@ export class ScheduleService {
       
       const studentWallet = studentResult.records[0]?.get('walletAddress') || studentResult.records[0]?.get('smartWallet');
       
-      // Parse the scheduled time from booking
-      let scheduledTime: Date;
-      if (booking.slotDateTime) {
-        // Handle Neo4j datetime object
-        if (typeof booking.slotDateTime === 'object' && booking.slotDateTime.toStandardDate) {
-          scheduledTime = booking.slotDateTime.toStandardDate();
-        } else {
-          scheduledTime = new Date(booking.slotDateTime);
-        }
-      } else {
-        throw new Error('Booking does not have scheduled time');
-      }
-      
-      
       // Get the original ticket transaction for this booking
       const ticketTransaction = await ticketService.getBookingTransaction(input.bookingId);
+
+      // Claim cancellation atomically before any refund, rechecking the clock and status.
+      const cancelled = await session.run(`
+        MATCH (b:Booking {bookingId: $bookingId, studentId: $cancelledBy, status: 'confirmed'})-[:BOOKS]->(s:TimeSlot)
+        WHERE b.slotDateTime = datetime($scheduledAt) AND datetime() < datetime($cancelUntil)
+        SET b.status = 'cancelled', b.cancelledAt = datetime(), b.cancelledBy = $cancelledBy,
+            b.cancellationReason = $reason, b.refunded = false, b.updatedAt = datetime(),
+            b.refundStatus = 'pending', b.cancellationRefundVersion = 1,
+            s.status = 'open', s.studentId = null, s.updatedAt = datetime()
+        RETURN b`, {
+        bookingId: input.bookingId, cancelledBy: input.cancelledBy,
+        cancelUntil: new Date(scheduledTime.getTime() - STUDENT_CANCELLATION_CUTOFF_MS).toISOString(),
+        scheduledAt: scheduledTime.toISOString(),
+        reason: input.reason || 'Student cancelled',
+      });
+      if (!cancelled.records.length) {
+        throw new Error('This lesson can no longer be cancelled. The five-minute cancellation deadline has passed or its booking status has changed.');
+      }
+      revokeLessonRoom(getIO(), input.bookingId);
       
       let refunded = false;
       let refundMessage = '';
@@ -955,49 +1005,26 @@ export class ScheduleService {
             reason: input.reason || 'Student cancelled booking',
           });
           
-          if (refundResult) {
+          if (refundResult?.status === 'completed') {
             refunded = true;
             refundMessage = 'Your ticket has been refunded.';
+          } else if (refundResult?.refundPhase === 'review') {
+            refundMessage = 'Your refund needs verification. Support has been notified; you do not need to cancel again.';
+          } else if (refundResult) {
+            refundMessage = 'Your refund is being processed. You will be notified when your ticket is returned.';
           } else {
             refundMessage = `No refund - cancellation was less than ${REFUND_POLICY.NO_REFUND_HOURS} hour before scheduled lesson.`;
           }
         } catch (refundError: any) {
           console.error('Failed to process refund:', refundError.message);
-          refundMessage = 'Refund processing failed. Please contact support.';
+          refundMessage = 'Your refund is saved for processing. You do not need to cancel again.';
         }
       } else if (!ticketTransaction) {
         refundMessage = 'No ticket transaction found for this booking.';
+        await session.run("MATCH (b:Booking {bookingId: $bookingId}) SET b.refundStatus = 'not_required'", { bookingId: input.bookingId });
+      } else {
+        refundMessage = 'Your refund is saved for processing. You will be notified when your ticket is returned.';
       }
-      
-      // Update booking status to cancelled
-      await session.run(
-        `
-        MATCH (b:Booking {bookingId: $bookingId})
-        SET b.status = 'cancelled',
-            b.cancelledAt = datetime(),
-            b.cancelledBy = $cancelledBy,
-            b.cancellationReason = $reason,
-            b.refunded = $refunded,
-            b.updatedAt = datetime()
-        `,
-        {
-          bookingId: input.bookingId,
-          cancelledBy: input.cancelledBy,
-          reason: input.reason || 'Student cancelled',
-          refunded,
-        }
-      );
-      
-      // Update slot status back to 'open'
-      await session.run(
-        `
-        MATCH (b:Booking {bookingId: $bookingId})-[:BOOKS]->(s:TimeSlot)
-        SET s.status = 'open',
-            s.studentId = null,
-            s.updatedAt = datetime()
-        `,
-        { bookingId: input.bookingId }
-      );
       
       // Send notification to tutor about cancellation
       try {
@@ -1090,6 +1117,8 @@ export class ScheduleService {
   async enableRoomEntryPolicyForUpcomingBookings(now = new Date()): Promise<void> {
     const session = getDriver().session();
     try {
+      await session.run(`MATCH (a:LessonAttendanceAudit {actorRole: 'admin', subject: 'tutor'})
+        MATCH (b:Booking) WHERE b.bookingId = a.bookingId SET b.attendanceSource = 'admin'`);
       await session.run(
         `MATCH (b:Booking {status: 'confirmed', attendanceTutor: 'present'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
          WHERE b.roomEntryPolicyActivatedAt IS NULL
@@ -1105,45 +1134,65 @@ export class ScheduleService {
     }
   }
 
-  async markTutorRoomEntry(bookingId: string, tutorId: string): Promise<boolean> {
+  async markTutorRoomEntry(bookingId: string, tutorId: string, now = new Date()): Promise<boolean> {
     const session = getDriver().session();
     try {
-      return await session.executeWrite(async tx => {
+      const entered = await session.executeWrite(async tx => {
         const match = await tx.run(
-          `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId, status: 'confirmed'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
-           RETURN b.slotDateTime AS startsAt, b.tutorRoomEnteredAt AS enteredAt`,
+          `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})-[:BOOKS]->(:TimeSlot {status: 'booked'})
+           WHERE b.status IN ['confirmed', 'completed']
+           RETURN b.slotDateTime AS startsAt, b.durationMinutes AS duration, b.tutorRoomEnteredAt AS enteredAt, b.attendanceSource AS source`,
           { bookingId, tutorId }
         );
         const record = match.records[0];
         if (!record) return false;
         const startsAt = record.get('startsAt')?.toStandardDate?.().getTime();
         if (!Number.isFinite(startsAt)) return false;
-        const joinedAt = Date.now();
+        const joinedAt = now.getTime();
         const enteredAt = record.get('enteredAt')?.toStandardDate?.().getTime() ?? joinedAt;
         await tx.run(
           `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
            SET b.tutorRoomEnteredAt = coalesce(b.tutorRoomEnteredAt, datetime($enteredAt)),
-               b.roomEntryCheckCompletedAt = CASE WHEN $onTime
-                 THEN coalesce(b.roomEntryCheckCompletedAt, datetime())
-                 ELSE b.roomEntryCheckCompletedAt END`,
+               b.tutorRoomAttendedAt = CASE WHEN $onTime THEN coalesce(b.tutorRoomAttendedAt, datetime($joinedAt)) ELSE b.tutorRoomAttendedAt END`,
           {
             bookingId, tutorId, enteredAt: new Date(enteredAt).toISOString(),
-            onTime: joinedAt >= startsAt - 5 * 60_000 && joinedAt <= startsAt + 5 * 60_000
+            joinedAt: now.toISOString(),
+            onTime: joinedAt >= startsAt && joinedAt < startsAt + (Number(record.get('duration')) || 25) * 60_000
           }
         );
+        if (joinedAt >= startsAt && joinedAt < startsAt + (Number(record.get('duration')) || 25) * 60_000 && record.get('source') !== 'admin') {
+          await this.confirmTutorRoomPresence(tx, bookingId, tutorId, now);
+        }
         return true;
       });
+      if (entered) await this.checkAndApplyAutoBlock(tutorId, true);
+      return entered;
     } finally {
       await session.close();
     }
+  }
+
+  private async confirmTutorRoomPresence(tx: ManagedTransaction, bookingId: string, tutorId: string, now: Date) {
+    await tx.run(`MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
+      WHERE b.status <> 'cancelled' AND coalesce(b.attendanceSource, '') <> 'admin'
+      WITH b, b.penaltyCode AS previousPenalty
+      SET b.attendanceTutor = 'present', b.attendanceSource = 'classroom', b.tutorAttendancePolicyVersion = 2,
+        b.roomEntryCheckCompletedAt = datetime($now), b.lessonOutcome = 'attended', b.attendanceStatus = 'present', b.updatedAt = datetime($now),
+        b.penaltyCode = CASE WHEN previousPenalty = '301' THEN null ELSE b.penaltyCode END,
+        b.penaltyReason = CASE WHEN previousPenalty = '301' THEN null ELSE b.penaltyReason END,
+        b.penaltyTimestamp = CASE WHEN previousPenalty = '301' THEN null ELSE b.penaltyTimestamp END
+      WITH b OPTIONAL MATCH (p:Penalty {tutorId: $tutorId, bookingId: $bookingId, penaltyCode: '301'})
+      SET p.status = 'voided', p.revokedAt = $now, p.revocationReason = 'Verified classroom presence during scheduled lesson'`,
+      { bookingId, tutorId, now: now.toISOString() });
   }
 
   async canStudentJoinRoom(bookingId: string, studentId: string): Promise<boolean> {
     const session = getDriver().session();
     try {
       const result = await session.run(
-        `MATCH (b:Booking {bookingId: $bookingId, studentId: $studentId, status: 'confirmed'})
+        `MATCH (b:Booking {bookingId: $bookingId, studentId: $studentId})
          -[:BOOKS]->(:TimeSlot {status: 'booked'})
+         WHERE b.status IN ['confirmed', 'completed']
          RETURN b.bookingId AS bookingId LIMIT 1`,
         { bookingId, studentId }
       );
@@ -1153,47 +1202,75 @@ export class ScheduleService {
     }
   }
 
+  async getClassroomSchedule(bookingId: string, userId: string, role: 'student' | 'tutor') {
+    const session = getDriver().session();
+    try {
+      const result = await session.run(`MATCH (b:Booking {bookingId: $bookingId})
+        -[:BOOKS]->(:TimeSlot {status: 'booked'})
+        WHERE b.status IN ['confirmed', 'completed'] AND
+          (($role = 'tutor' AND b.tutorId = $userId) OR ($role = 'student' AND b.studentId = $userId))
+        RETURN b.slotDateTime AS startsAt, b.durationMinutes AS duration`, { bookingId, userId, role });
+      const record = result.records[0];
+      if (!record) return null;
+      const startsAt = record.get('startsAt')?.toStandardDate?.().getTime();
+      if (!Number.isFinite(startsAt)) return null;
+      return { startsAt, endsAt: startsAt + (Number(record.get('duration')) || 25) * 60_000 };
+    } finally { await session.close(); }
+  }
+
   async reconcileMissedTutorRoomEntry(
     now = new Date(),
     hasEnteredForLesson = (bookingId: string, tutorId: string, start: Date, deadline: Date) =>
-      classroomActivityService.hasTutorEnteredForLesson(bookingId, tutorId, start, deadline)
+      classroomActivityService.hasTutorEnteredForLesson(bookingId, tutorId, start, deadline),
+    tutorScope?: string
   ): Promise<number> {
+    // A simulated future clock must never sweep unrelated real bookings.
+    if (now.getTime() > Date.now() + 1000 && !tutorScope) {
+      throw new Error('Future attendance reconciliation requires an explicit tutor scope');
+    }
     const session = getDriver().session();
     let missed = 0;
     try {
       const candidates = await session.run(
-        `MATCH (b:Booking {status: 'confirmed', attendanceTutor: 'present'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
-         WHERE b.roomEntryPolicyActivatedAt IS NOT NULL
-           AND b.roomEntryCheckCompletedAt IS NULL
+        `MATCH (b:Booking)-[:BOOKS]->(:TimeSlot {status: 'booked'})
+         WHERE b.status IN ['confirmed', 'completed']
+           AND ($tutorScope IS NULL OR b.tutorId = $tutorScope)
+           AND coalesce(b.attendanceSource, '') <> 'admin'
+           AND coalesce(b.tutorAttendancePolicyVersion, 0) <> 2
+           AND (b.roomEntryPolicyActivatedAt IS NOT NULL OR b.attendanceAutoEnforce = true
+             OR b.tutorRoomEnteredAt IS NOT NULL OR b.tutorRoomAttendedAt IS NOT NULL)
            AND b.slotDateTime <= datetime($through)
-         RETURN b.bookingId AS bookingId, b.tutorId AS tutorId, b.slotDateTime AS startsAt
+         RETURN b.bookingId AS bookingId, b.tutorId AS tutorId, b.slotDateTime AS startsAt,
+           b.durationMinutes AS duration, b.tutorRoomAttendedAt AS attendedAt, b.tutorRoomEnteredAt AS enteredAt
          ORDER BY b.slotDateTime ASC`,
-        { through: new Date(now.getTime() - 5 * 60_000).toISOString() }
+        { through: now.toISOString(), tutorScope: tutorScope || null }
       );
       for (const record of candidates.records) {
         const bookingId = record.get('bookingId') as string;
         const tutorId = record.get('tutorId') as string;
         const startMs = record.get('startsAt')?.toStandardDate?.().getTime();
         if (!Number.isFinite(startMs)) continue;
-        const deadline = new Date(startMs + 5 * 60_000);
-        if (await hasEnteredForLesson(bookingId, tutorId, new Date(startMs), deadline)) {
-          await session.run(
-            `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
-             WHERE b.roomEntryCheckCompletedAt IS NULL
-             SET b.roomEntryCheckCompletedAt = datetime($now)`,
-            { bookingId, tutorId, now: now.toISOString() }
-          );
+        const endMs = startMs + (Number(record.get('duration')) || 25) * 60_000;
+        const proofMs = record.get('attendedAt')?.toStandardDate?.().getTime() ?? record.get('enteredAt')?.toStandardDate?.().getTime();
+        const deadline = new Date(Math.min(endMs - 1, now.getTime()));
+        if ((proofMs >= startMs && proofMs < endMs) || await hasEnteredForLesson(bookingId, tutorId, new Date(startMs), deadline)) {
+          await session.executeWrite(tx => this.confirmTutorRoomPresence(tx, bookingId, tutorId, now));
+          await this.checkAndApplyAutoBlock(tutorId, true);
           continue;
         }
+        if (now.getTime() < endMs) continue;
 
         const applied = await session.executeWrite(async tx => {
           const first = await tx.run(
             `MATCH (t:User {id: $tutorId})
-             MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId,
-                               status: 'confirmed', attendanceTutor: 'present'})-[:BOOKS]->(:TimeSlot {status: 'booked'})
-             WHERE b.roomEntryPolicyActivatedAt IS NOT NULL
-               AND b.roomEntryCheckCompletedAt IS NULL
+             MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})-[:BOOKS]->(:TimeSlot {status: 'booked'})
+             WHERE b.status IN ['confirmed', 'completed'] AND coalesce(b.attendanceSource, '') <> 'admin'
+               AND b.slotDateTime = datetime($startsAt)
+               AND coalesce(b.durationMinutes, 25) = $duration
+               AND coalesce(b.tutorAttendancePolicyVersion, 0) <> 2
+               AND b.tutorRoomAttendedAt IS NULL
              SET b.attendanceTutor = 'absent', b.attendanceSource = 'automatic_room_no_show',
+                 b.tutorAttendancePolicyVersion = 2, b.lessonOutcome = 'tutor_absent', b.attendanceStatus = 'absent',
                  b.penaltyCode = '301', b.penaltyReason = $reason,
                  b.penaltyTimestamp = datetime($now), b.roomEntryCheckCompletedAt = datetime($now),
                  b.updatedAt = datetime($now)
@@ -1204,54 +1281,14 @@ export class ScheduleService {
              MERGE (t)-[:HAS_PENALTY]->(p)
              RETURN b.bookingId AS bookingId`,
             {
-              bookingId, tutorId, now: now.toISOString(),
+              bookingId, tutorId, now: now.toISOString(), startsAt: new Date(startMs).toISOString(),
+              duration: Number(record.get('duration')) || 25,
               penaltyId: nanoid(16),
-              reason: 'Tutor did not enter the classroom within five minutes of the booked lesson start'
+              reason: 'Tutor did not enter the classroom during the scheduled lesson'
             }
           );
           if (!first.records.length) return false;
 
-          const day = new Date(startMs + 8 * 60 * 60_000).toISOString().slice(0, 10);
-          const nextDay = new Date(startMs + 32 * 60 * 60_000).toISOString().slice(0, 10);
-          const future = await tx.run(
-            `MATCH (s:TimeSlot {tutorId: $tutorId})
-             WHERE s.slotDate IN [$day, $nextDay]
-             OPTIONAL MATCH (b:Booking)-[:BOOKS]->(s)
-             RETURN s.slotId AS slotId, s.slotDate AS date, s.slotTime AS time,
-                    s.status AS status, s.attendanceMarked AS slotAttendance,
-                    b.bookingId AS bookingId, b.status AS bookingStatus,
-                    b.attendanceTutor AS bookingAttendance,
-                    b.roomEntryCheckCompletedAt AS roomEntryCompleted`,
-            { tutorId, day, nextDay }
-          );
-          const following = future.records.flatMap(item => {
-            try {
-              return [{ item, startsAt: attendanceStartMs({ date: item.get('date'), time: item.get('time') }) }];
-            } catch { return []; }
-          }).filter(item => item.startsAt > startMs).sort((a, b) => a.startsAt - b.startsAt);
-          let previousStart = startMs;
-          for (const { item, startsAt } of following) {
-            if (startsAt !== previousStart + 30 * 60_000) break;
-            if (startsAt - now.getTime() < NORMAL_DEADLINE_MINUTES * 60_000) break;
-            const slotId = item.get('slotId') as string;
-            if (item.get('status') === 'booked' && item.get('bookingStatus') === 'confirmed' &&
-                item.get('bookingAttendance') === 'present' && !item.get('roomEntryCompleted')) {
-              await tx.run(
-                `MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId, attendanceTutor: 'present'})
-                 SET b.attendanceTutor = null, b.attendanceSource = 'room_entry_reset',
-                     b.updatedAt = datetime($now)`,
-                { bookingId: item.get('bookingId'), tutorId, now: now.toISOString() }
-              );
-            } else if (['open', 'pending'].includes(item.get('status')) && item.get('slotAttendance') === 'present') {
-              await tx.run(
-                `MATCH (s:TimeSlot {slotId: $slotId, tutorId: $tutorId})
-                 SET s.attendanceMarked = null, s.attendanceSource = 'room_entry_reset',
-                     s.updatedAt = datetime($now)`,
-                { slotId, tutorId, now: now.toISOString() }
-              );
-            } else break;
-            previousStart = startsAt;
-          }
           return true;
         });
         if (applied) {
@@ -1265,57 +1302,52 @@ export class ScheduleService {
     }
   }
 
-  async reconcileMissedTutorAttendance(now = new Date()): Promise<number> {
+  async repairPrematureTutorRoomAbsence(tutorScope?: string): Promise<number> {
+    const now = new Date().toISOString();
     const session = getDriver().session();
-    let marked = 0;
+    let repaired = 0;
     try {
-      const candidates = await session.run(
-        `MATCH (b:Booking {status: 'confirmed', attendanceAutoEnforce: true})-[:BOOKS]->(s:TimeSlot {status: 'booked'})
-         WHERE b.attendanceTutor IS NULL AND b.slotDateTime <= datetime($candidateThrough)
-         RETURN b.bookingId AS bookingId, b.tutorId AS tutorId,
-                b.slotDateTime AS startsAt, b.bookedAt AS bookedAt,
-                b.attendancePolicyActivatedAt AS activatedAt
-         ORDER BY b.slotDateTime ASC`,
-        { candidateThrough: new Date(now.getTime() + NORMAL_DEADLINE_MINUTES * 60_000).toISOString() }
-      );
-
+      const candidates = await session.run(`MATCH (b:Booking)-[:BOOKS]->(:TimeSlot {status: 'booked'})
+        WHERE b.status = 'confirmed' AND b.slotDateTime > datetime($now)
+          AND b.attendanceSource = 'automatic_room_no_show' AND b.penaltyCode = '301'
+          AND ($tutorScope IS NULL OR b.tutorId = $tutorScope)
+        RETURN b.bookingId AS bookingId, b.tutorId AS tutorId`, { now, tutorScope: tutorScope || null });
       for (const record of candidates.records) {
-        const startMs = record.get('startsAt')?.toStandardDate?.().getTime();
-        if (!Number.isFinite(startMs)) continue;
-        if (now.getTime() <= attendanceDeadlineMs(startMs)) continue;
-
         const bookingId = record.get('bookingId') as string;
         const tutorId = record.get('tutorId') as string;
-        const applied = await session.executeWrite(async tx => {
-          const result = await tx.run(
-            `MATCH (t:User {id: $tutorId})
-             MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId, status: 'confirmed', attendanceAutoEnforce: true})-[:BOOKS]->(s:TimeSlot {status: 'booked'})
-             WHERE b.attendanceTutor IS NULL
-             SET b.attendanceTutor = 'absent', b.attendanceSource = 'automatic',
-                 b.penaltyCode = '301', b.penaltyReason = $reason,
-                 b.penaltyTimestamp = datetime(), b.updatedAt = datetime()
-             MERGE (p:Penalty {tutorId: $tutorId, bookingId: $bookingId, penaltyCode: '301'})
-             ON CREATE SET p.penaltyId = $penaltyId, p.penaltyReason = $reason,
-                           p.severity = 'critical', p.affectsCompensation = true,
-                           p.createdAt = datetime()
-             MERGE (t)-[:HAS_PENALTY]->(p)
-             RETURN b.bookingId AS bookingId`,
-            {
-              bookingId, tutorId, penaltyId: nanoid(16),
-              reason: 'Tutor did not confirm attendance before the lesson deadline'
-            }
-          );
-          return result.records.length > 0;
+        const changed = await session.executeWrite(async tx => {
+          const audits = await tx.run(`MATCH (a:LessonAttendanceAudit {bookingId: $bookingId, subject: 'tutor'})
+            WHERE a.actorRole IN ['tutor', 'admin'] AND a.createdAt <= $now
+            RETURN a.actorRole AS role, a.status AS status ORDER BY a.createdAt DESC LIMIT 1`, { bookingId, now });
+          const audit = audits.records[0];
+          if (audit?.get('role') === 'admin' || audit?.get('status') === 'absent') return false;
+          const previous = audit?.get('status') === 'present' ? 'present' : null;
+          const result = await tx.run(`MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
+            WHERE b.status = 'confirmed' AND b.slotDateTime > datetime($now)
+              AND b.attendanceSource = 'automatic_room_no_show' AND b.penaltyCode = '301'
+            SET b.attendanceTutor = $previous, b.attendanceSource = $source, b.updatedAt = datetime($now)
+            REMOVE b.tutorAttendancePolicyVersion, b.roomEntryCheckCompletedAt,
+              b.lessonOutcome, b.attendanceStatus, b.penaltyCode, b.penaltyReason, b.penaltyTimestamp
+            WITH b
+            OPTIONAL MATCH (p:Penalty {bookingId: $bookingId, tutorId: $tutorId, penaltyCode: '301'})
+            SET p.status = 'voided', p.revokedAt = $now,
+              p.revocationReason = 'Automatic no-show assigned before the scheduled lesson'
+            RETURN b.bookingId AS bookingId`, { bookingId, tutorId, now, previous, source: previous ? 'manual' : null });
+          if (!result.records.length) return false;
+          await tx.run(`CREATE (:LessonAttendanceAudit {id: $id, bookingId: $bookingId,
+            actorRole: 'system', subject: 'tutor', previousStatus: 'absent', status: $status,
+            reason: 'Reversed premature automatic no-show; scheduled lesson has not started', createdAt: $now})`,
+            { id: nanoid(16), bookingId, status: previous || 'unset', now });
+          return true;
         });
-        if (applied) {
-          marked++;
-          await this.checkAndApplyAutoBlock(tutorId);
-        }
+        if (changed) { repaired++; await this.checkAndApplyAutoBlock(tutorId, true); }
       }
-      return marked;
-    } finally {
-      await session.close();
-    }
+      return repaired;
+    } finally { await session.close(); }
+  }
+
+  async reconcileMissedTutorAttendance(now = new Date(), tutorScope?: string): Promise<number> {
+    return this.reconcileMissedTutorRoomEntry(now, undefined, tutorScope);
   }
 
   async enableAutoAttendanceForUpcomingOpenSlots(now = new Date()): Promise<void> {
@@ -1522,6 +1554,10 @@ export class ScheduleService {
                 additionalInfo: status === 'absent' ? additionalInfo?.trim() || null : null
               }
             );
+            if (status !== update.previous) await tx.run(`CREATE (:LessonAttendanceAudit {id: $id, bookingId: $bookingId,
+              actorId: $tutorId, actorRole: 'tutor', subject: 'tutor', previousStatus: $previous, status: $status,
+              reason: $reason, createdAt: $now})`, { id: nanoid(16), bookingId: update.id, tutorId, previous: update.previous || 'unset',
+                status, reason: status === 'absent' ? `${reason}${additionalInfo ? `: ${additionalInfo}` : ''}` : 'Tutor schedule attendance confirmation', now: new Date().toISOString() });
             if (status === 'absent' && update.previous !== 'absent') {
               const result = await tx.run(
                 `MATCH (t:User {id: $tutorId})
@@ -1585,15 +1621,22 @@ export class ScheduleService {
     
     try {
       if (input.bookingId) {
+        if (input.role === 'student') {
+          await new ClassroomNotesService().setStudentAttendance(input.bookingId, input.tutorId, input.status, 'Tutor schedule attendance correction');
+        }
         // Mark attendance for booked session
         const attendanceResult = await session.run(
-          `
+          input.role === 'student' ? 'MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId}) RETURN b' : `
           MATCH (b:Booking {bookingId: $bookingId, tutorId: $tutorId})
+          WITH b, b.${input.role === 'tutor' ? 'attendanceTutor' : 'attendanceStudent'} AS previous
           SET b.${input.role === 'tutor' ? 'attendanceTutor' : 'attendanceStudent'} = $status,
               b.updatedAt = datetime()
+          FOREACH (ignored IN CASE WHEN $role = 'tutor' AND coalesce(previous, '') <> $status THEN [1] ELSE [] END |
+            CREATE (:LessonAttendanceAudit {id: $auditId, bookingId: $bookingId, actorId: $tutorId, actorRole: 'tutor',
+              subject: 'tutor', previousStatus: coalesce(previous, 'unset'), status: $status, reason: 'Tutor schedule attendance confirmation', createdAt: $now}))
           RETURN b
           `,
-          { bookingId: input.bookingId, tutorId: input.tutorId, status: input.status }
+          { bookingId: input.bookingId, tutorId: input.tutorId, status: input.status, role: input.role, auditId: nanoid(16), now: new Date().toISOString() }
         );
         if (!attendanceResult.records.length) throw new Error('Booking not found for tutor');
         
@@ -1729,66 +1772,9 @@ export class ScheduleService {
    * Check if tutor should be auto-blocked based on penalty count
    */
   private async checkAndApplyAutoBlock(tutorId: string, clearInvalidBlock = false): Promise<void> {
-    const driver = getDriver();
-    const session = driver.session();
-    
+    const session = getDriver().session();
     try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - PENALTY_RULES.PENALTY_WINDOW_DAYS);
-      
-      // Count TA-301 penalties in last 30 days
-      const result = await session.run(
-        `
-        MATCH (t:User {id: $tutorId})-[:HAS_PENALTY]->(p:Penalty)
-        WHERE p.penaltyCode = '301'
-          AND p.createdAt >= datetime($since)
-        RETURN count(p) as count
-        `,
-        { tutorId, since: thirtyDaysAgo.toISOString() }
-      );
-      
-      const count = result.records[0]?.get('count')?.toNumber() || 0;
-      
-      if (count >= PENALTY_RULES.TA_BOOKED_THRESHOLD) {
-        // Assign BLK-601 penalty block
-        const blockUntil = new Date();
-        blockUntil.setDate(blockUntil.getDate() + PENALTY_RULES.BLOCK_DURATION_DAYS);
-        
-        await session.run(
-          `
-          MATCH (t:User {id: $tutorId})
-          WHERE coalesce(t.isBlocked, false) = false OR t.blockExpiresAt <= datetime()
-          CREATE (p:Penalty {
-            penaltyId: $penaltyId,
-            tutorId: $tutorId,
-            penaltyCode: '601',
-            penaltyReason: $reason,
-            severity: 'critical',
-            affectsCompensation: true,
-            blockUntil: datetime($blockUntil),
-            createdAt: datetime()
-          })
-          CREATE (t)-[:HAS_PENALTY]->(p)
-          SET t.isBlocked = true, t.blockExpiresAt = datetime($blockUntil)
-          `,
-          {
-            tutorId,
-            penaltyId: nanoid(16),
-            reason: `Automatic block: ${count} TA-301 penalties in ${PENALTY_RULES.PENALTY_WINDOW_DAYS} days`,
-            blockUntil: blockUntil.toISOString()
-          }
-        );
-      } else if (clearInvalidBlock) {
-        await session.run(
-          `MATCH (t:User {id: $tutorId})-[:HAS_PENALTY]->(p:Penalty {penaltyCode: '601'})
-           WHERE p.blockUntil > datetime()
-           DETACH DELETE p
-           WITH t
-           SET t.isBlocked = false
-           REMOVE t.blockExpiresAt`,
-          { tutorId }
-        );
-      }
+      await session.executeWrite(tx => reconcileTutorPenaltyBlock(tx, tutorId, clearInvalidBlock));
     } finally {
       await session.close();
     }
@@ -1812,6 +1798,7 @@ export class ScheduleService {
         `
         MATCH (t:User {id: $tutorId})-[:HAS_PENALTY]->(p:Penalty)
         WHERE p.createdAt >= datetime($since)
+          AND p.revokedAt IS NULL AND coalesce(p.status, '') <> 'voided'
         RETURN p.penaltyCode as code, count(*) as count
         `,
         { tutorId, since: firstOfMonth.toISOString() }
@@ -1833,6 +1820,7 @@ export class ScheduleService {
         `
         MATCH (t:User {id: $tutorId})-[:HAS_PENALTY]->(p:Penalty)
         WHERE p.createdAt >= datetime($since)
+          AND p.revokedAt IS NULL AND coalesce(p.status, '') <> 'voided'
         RETURN p.penaltyCode as code, count(*) as count
         `,
         { tutorId, since: thirtyDaysAgo.toISOString() }
@@ -1849,18 +1837,7 @@ export class ScheduleService {
         if (code === '303') last30Days.ta303 = count;
       }
       
-      // Check block status
-      const blockResult = await session.run(
-        `
-        MATCH (t:User {id: $tutorId})
-        RETURN t.isBlocked as isBlocked, t.blockExpiresAt as blockExpiresAt
-        `,
-        { tutorId }
-      );
-      
-      const tutorData = blockResult.records[0];
-      const isBlocked = tutorData?.get('isBlocked') || false;
-      const blockExpiresAt = tutorData?.get('blockExpiresAt');
+      const schedulingBlock = await this.getSchedulingBlock(tutorId);
       
       // Get recent penalties
       const recentResult = await session.run(
@@ -1879,8 +1856,8 @@ export class ScheduleService {
         tutorId,
         thisMonth,
         last30Days,
-        activeBlock: isBlocked,
-        blockExpiresAt: blockExpiresAt ? new Date(blockExpiresAt) : undefined,
+        activeBlock: schedulingBlock.active,
+        blockExpiresAt: schedulingBlock.expiresAt ? new Date(schedulingBlock.expiresAt) : undefined,
         recentPenalties
       };
     } finally {
@@ -2067,7 +2044,8 @@ export class ScheduleService {
       const completedResult = await session.run(
         `
         MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
-        WHERE b.status = 'completed'
+        WHERE b.status = 'completed' AND COALESCE(b.lessonOutcome, 'attended') = 'attended'
+          AND coalesce(b.attendanceStudent, '') <> 'absent'
         RETURN count(b) as completedCount
         `,
         { studentId }
@@ -2098,7 +2076,8 @@ export class ScheduleService {
         `
         MATCH (b:Booking)-[:BOOKED_BY]->(s:Student {id: $studentId})
         MATCH (b)-[:BOOKS]->(slot:TimeSlot)
-        WHERE b.status = 'completed'
+        WHERE b.status = 'completed' AND COALESCE(b.lessonOutcome, 'attended') = 'attended'
+          AND coalesce(b.attendanceStudent, '') <> 'absent'
         RETURN sum(slot.durationMinutes) as totalMinutes
         `,
         { studentId }
@@ -2462,6 +2441,7 @@ export class ScheduleService {
           booking.bookedAt AS bookedAt,
           booking.slotDateTime AS slotDateTime,
           booking.durationMinutes AS durationMinutes,
+          booking.surveyReadyAt AS surveyReadyAt,
           tutor.userId AS tutorUserId,
           tutor.id AS tutorId,
           COALESCE(tutor.firstName, tutor.givenName, '') AS tFirst,
@@ -2485,6 +2465,7 @@ export class ScheduleService {
             booking.bookedAt AS bookedAt,
             booking.slotDateTime AS slotDateTime,
             booking.durationMinutes AS durationMinutes,
+            booking.surveyReadyAt AS surveyReadyAt,
             tutor.userId AS tutorId,
             COALESCE(tutor.firstName, tutor.givenName, 'Tutor') + ' ' + 
             COALESCE(tutor.lastName, tutor.familyName, '') AS tutorName,
@@ -2520,6 +2501,7 @@ export class ScheduleService {
             durationMinutes: fr?.get('durationMinutes')?.toNumber?.() || fr?.get('durationMinutes'),
             status: fr?.get('status'),
             bookedAt: fr?.get('bookedAt'),
+            surveyReadyAt: fr?.get('surveyReadyAt')?.toStandardDate?.().toISOString() || null,
             sessionId: bookingId
           };
           return lessonDetails;
@@ -2539,6 +2521,7 @@ export class ScheduleService {
           durationMinutes: undefined,
           status: undefined,
           bookedAt: undefined,
+          surveyReadyAt: null,
           sessionId: bookingId
         };
         return bookingOnly;
@@ -2593,6 +2576,7 @@ export class ScheduleService {
         bookingId: record.get('bookingId'),
         tutorId: record.get('tutorUserId') || record.get('tutorId') || null,
         tutorName: derivedTutorName,
+        startsAt: slotDateTime.toStandardDate().toISOString(),
         tutorAvatar: record.get('tutorAvatar'),
         tutorBio: record.get('tutorBio'),
         hourlyRate: record.get('hourlyRate')?.toNumber?.() || record.get('hourlyRate'),
@@ -2601,6 +2585,7 @@ export class ScheduleService {
         durationMinutes: record.get('durationMinutes')?.toNumber?.() || record.get('durationMinutes'),
         status: record.get('status'),
         bookedAt: bookedAtISO,
+        surveyReadyAt: record.get('surveyReadyAt')?.toStandardDate?.().toISOString() || null,
         sessionId: bookingId // Use bookingId as sessionId for classroom
       };
 

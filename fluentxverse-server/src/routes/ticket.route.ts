@@ -1,4 +1,5 @@
 import Elysia, { t } from 'elysia';
+import { createAdminGuard } from '../middleware/auth.middleware';
 import { isMockTicketMode, ticketService, type TicketTier } from '@/services/ticket.services/ticket.service';
 import { cacheGetOrSet, invalidateCache } from '@/db/redis';
 import { getIO } from '@/socket/socket.server';
@@ -10,6 +11,10 @@ import * as path from 'path';
 const isProduction = process.env.NODE_ENV === 'production';
 
 const Ticket = new Elysia({ prefix: '/tickets' })
+  .onBeforeHandle(async ({ request, path, cookie, set }) => {
+    const restricted = (request.method === 'POST' && (path === '/tickets/' || path === '/tickets' || path.endsWith('/mint'))) || path === '/tickets/purchases' || path === '/tickets/purchases/stats';
+    if (restricted && !await createAdminGuard(cookie, set, 'finance')) return { success: false, error: 'Finance permission required' };
+  })
   /**
    * Get all tickets from contract (source of truth)
    * GET /tickets

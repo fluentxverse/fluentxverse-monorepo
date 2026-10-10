@@ -97,6 +97,22 @@ export interface CreateDispatchInput {
 // ============================================================================
 
 class DispatchService {
+  async classroomLibrary(): Promise<DispatchArticleListItem[]> {
+    const session = getDriver().session();
+    try {
+      // Legacy Dispatch articles were live before publication status was introduced.
+      const result = await session.run(`MATCH (a:DispatchArticle)
+        WHERE a.status = 'published' OR a.status IS NULL
+        RETURN a.id AS id, a.title AS title, a.topic AS topic, a.category AS category,
+               a.postedDate AS postedDate, a.createdAt AS createdAt, a.updatedAt AS updatedAt`);
+      return result.records.map(record => ({
+        id: record.get('id'), title: record.get('title'), topic: record.get('topic'),
+        category: record.get('category'), postedDate: record.get('postedDate'),
+        createdAt: record.get('createdAt'), updatedAt: record.get('updatedAt'), status: 'published',
+      }));
+    } finally { await session.close(); }
+  }
+
   /**
    * List all dispatch articles
    */

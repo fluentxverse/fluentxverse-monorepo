@@ -94,6 +94,7 @@ export interface WeekScheduleParams {
 }
 
 export interface WeekSchedule {
+  schedulingBlock?: { active: boolean; expiresAt: string | null };
   weekStart: Date;
   weekEnd: Date;
   slots: Array<{

@@ -1,4 +1,6 @@
 import { getDriver } from '../../db/memgraph';
+import { metricOutcome } from '../../utils/tutorPerformance';
+import { plainNode } from '../../utils/adminOperations';
 import { invalidateUserTokens } from '../../db/redis';
 import neo4j from 'neo4j-driver';
 import { hash, compare } from 'bcrypt-ts';
@@ -136,7 +138,7 @@ export class AdminService {
 
       // Get session count
       const sessionResult = await session.run(`
-        MATCH (s:Session)
+        MATCH (s:Booking)
         RETURN count(s) as totalSessions
       `);
       const totalSessions = sessionResult.records[0]?.get('totalSessions')?.toNumber?.() ?? 
@@ -1785,7 +1787,7 @@ export class AdminService {
         `
         MATCH (b:Booking)-[:BOOKED_BY]->(student:Student)
         MATCH (b)-[:BOOKS]->(slot:TimeSlot)
-        MATCH (slot)-[:OPENS_SLOT]-(tutor:User)
+        MATCH (tutor:User {id: b.tutorId})
         ${whereClause}
         RETURN b, slot, tutor, student
         ORDER BY slot.slotDate DESC, slot.slotTime DESC
@@ -1857,99 +1859,23 @@ export class AdminService {
     const session = driver.session();
 
     try {
-      const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
-      const weekAgoStr = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const monthAgoStr = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-      // Get total bookings count
-      const totalResult = await session.run(`
-        MATCH (b:Booking)
-        RETURN count(b) as total
-      `);
-      const totalBookings = toNumber(totalResult.records[0]?.get('total')) || 0;
-
-      // Get completed sessions
-      const completedResult = await session.run(`
-        MATCH (b:Booking)
-        WHERE b.status = 'completed'
-        RETURN count(b) as completed
-      `);
-      const completedSessions = toNumber(completedResult.records[0]?.get('completed')) || 0;
-
-      // Get cancelled sessions
-      const cancelledResult = await session.run(`
-        MATCH (b:Booking)
-        WHERE b.status = 'cancelled'
-        RETURN count(b) as cancelled
-      `);
-      const cancelledSessions = toNumber(cancelledResult.records[0]?.get('cancelled')) || 0;
-
-      // Get upcoming (confirmed) sessions
-      const upcomingResult = await session.run(`
-        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
-        WHERE b.status = 'confirmed' AND slot.slotDate >= $today
-        RETURN count(b) as upcoming
-      `, { today: todayStr });
-      const upcomingSessions = toNumber(upcomingResult.records[0]?.get('upcoming')) || 0;
-
-      // Get today's sessions
-      const todayResult = await session.run(`
-        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
-        WHERE slot.slotDate = $today
-        RETURN count(b) as todayCount
-      `, { today: todayStr });
-      const todaySessions = toNumber(todayResult.records[0]?.get('todayCount')) || 0;
-
-      // Get this week's sessions
-      const weekResult = await session.run(`
-        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
-        WHERE slot.slotDate >= $weekAgo AND slot.slotDate <= $today
-        RETURN count(b) as weekCount
-      `, { weekAgo: weekAgoStr, today: todayStr });
-      const thisWeekSessions = toNumber(weekResult.records[0]?.get('weekCount')) || 0;
-
-      // Get this month's sessions
-      const monthResult = await session.run(`
-        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
-        WHERE slot.slotDate >= $monthAgo AND slot.slotDate <= $today
-        RETURN count(b) as monthCount
-      `, { monthAgo: monthAgoStr, today: todayStr });
-      const thisMonthSessions = toNumber(monthResult.records[0]?.get('monthCount')) || 0;
-
-      // Get no-show count (tutor or student absent)
-      const noShowResult = await session.run(`
-        MATCH (b:Booking)
-        WHERE b.attendanceTutor = 'absent' OR b.attendanceStudent = 'absent'
-        RETURN count(b) as noShowCount
-      `);
-      const noShowSessions = toNumber(noShowResult.records[0]?.get('noShowCount')) || 0;
-
-      // Calculate completion rate
-      const completionRate = totalBookings > 0 
-        ? Math.round((completedSessions / totalBookings) * 100) 
-        : 0;
-
-      // Calculate total teaching hours (completed sessions * avg duration)
-      const hoursResult = await session.run(`
-        MATCH (b:Booking)-[:BOOKS]->(slot:TimeSlot)
-        WHERE b.status = 'completed'
-        RETURN sum(toInteger(coalesce(slot.durationMinutes, 25))) as totalMinutes
-      `);
-      const totalMinutes = toNumber(hoursResult.records[0]?.get('totalMinutes')) || 0;
-      const totalHours = Math.round(totalMinutes / 60);
-
+      const now = Date.now(), pht = new Date(now + 8 * 3600000);
+      const today = pht.toISOString().slice(0, 10), month = today.slice(0, 7);
+      const weekStart = new Date(now + 8 * 3600000 - (pht.getUTCDay() + 6) % 7 * 86400000).toISOString().slice(0, 10);
+      const rows = (await session.run('MATCH (b:Booking) RETURN b')).records.map(r => plainNode(r.get('b').properties));
+      const attended = rows.filter(b => metricOutcome(b, now) === 'attended');
+      const ended = rows.filter(b => b.status !== 'cancelled' && Date.parse(b.slotDateTime) + (Number(b.durationMinutes) || 25) * 60000 <= now);
+      const date = (b: any) => Number.isFinite(Date.parse(b.slotDateTime)) ? new Date(Date.parse(b.slotDateTime) + 8 * 3600000).toISOString().slice(0, 10) : '';
       return {
-        totalBookings,
-        completedSessions,
-        cancelledSessions,
-        upcomingSessions,
-        todaySessions,
-        thisWeekSessions,
-        thisMonthSessions,
-        noShowSessions,
-        completionRate,
-        totalHours
+        totalBookings: rows.length, completedSessions: attended.length,
+        cancelledSessions: rows.filter(b => b.status === 'cancelled').length,
+        upcomingSessions: rows.filter(b => b.status === 'confirmed' && Date.parse(b.slotDateTime) > now).length,
+        todaySessions: rows.filter(b => date(b) === today).length,
+        thisWeekSessions: rows.filter(b => date(b) >= weekStart && date(b) <= today).length,
+        thisMonthSessions: rows.filter(b => date(b).startsWith(month)).length,
+        noShowSessions: ended.filter(b => b.attendanceTutor === 'absent').length,
+        completionRate: ended.length ? Math.round(attended.length / ended.length * 100) : 0,
+        totalHours: Math.round(attended.reduce((sum, b) => sum + (Number(b.durationMinutes) || 25), 0) / 60 * 100) / 100,
       };
     } finally {
       await session.close();
@@ -2002,7 +1928,7 @@ export class AdminService {
           date: slot.slotDate,
           time: slot.slotTime,
           durationMinutes: parseInt(slot.durationMinutes) || 25,
-          timezone: 'KST'
+          timezone: 'PHT'
         },
         status: booking.status,
         attendance: {

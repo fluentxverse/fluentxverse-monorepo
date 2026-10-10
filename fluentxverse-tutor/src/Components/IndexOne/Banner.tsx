@@ -1,3 +1,4 @@
+import HomeIllustration from './HomeIllustration';
 import './Banner.css'
 
 const Banner = () => {
@@ -40,15 +41,15 @@ const Banner = () => {
               </div>
               <div className="hero-features" role="list" aria-label="Key benefits">
                 <div className="feature-badge" role="listitem">
-                  <i className="fas fa-money-bill-wave" aria-hidden="true"></i>
+                  <div className="feature-illustration"><HomeIllustration name="pay" loading="eager" /></div>
                   <span><strong>Earn</strong> at your pace</span>
                 </div>
                 <div className="feature-badge" role="listitem">
-                  <i className="fas fa-clock" aria-hidden="true"></i>
+                  <div className="feature-illustration"><HomeIllustration name="schedule" loading="eager" /></div>
                   <span><strong>Flexible</strong> Schedule</span>
                 </div>
                 <div className="feature-badge" role="listitem">
-                  <i className="fas fa-globe-americas" aria-hidden="true"></i>
+                  <div className="feature-illustration"><HomeIllustration name="home" loading="eager" /></div>
                   <span><strong>Work</strong> Remotely</span>
                 </div>
               </div>

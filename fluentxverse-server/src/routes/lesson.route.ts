@@ -3,6 +3,7 @@ import { lessonService, type LessonMaterial } from '../services/lesson.services/
 import { verifyAuthToken, type JwtAuthPayload } from '../utils/jwt';
 import { generateStudentMaterial, getMaterialSizeReduction } from '../utils/studentMaterial';
 import { getAuthFromCookie } from '../utils/refreshCookie';
+import { publicFilePath } from '../utils/publicFilePath';
 
 // Internal URL for server-to-server communication inside Docker
 const FILER_BASE = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
@@ -2500,18 +2501,19 @@ export default new Elysia({ prefix: '/lesson' })
   })
   
   /**
-   * Proxy endpoint to serve lesson files from SeaweedFS
+   * Proxy endpoint to serve lesson files and public profile media from SeaweedFS
    * This keeps SeaweedFS internal and secure
    * Path: /lesson/files/lessons/{lessonId}/{filename}
    */
   .get('/files/*', async ({ params, set, request }) => {
+    // Do not let the CDN cache missing files or transient storage failures.
+    set.headers['cache-control'] = 'no-store';
     try {
-      // Get the file path from wildcard parameter
-      const filePath = '/' + (params['*'] || '');
-      
-      if (!filePath || filePath === '/') {
-        set.status = 400;
-        return { error: 'File path required' };
+      let filePath: string | null;
+      try { filePath = publicFilePath(params['*'] || ''); } catch { set.status = 400; return { error: 'Invalid file path' }; }
+      if (!filePath) {
+        set.status = 404;
+        return { error: 'File not found' };
       }
 
       // Pixel-perfect view: serve index.html by redirecting into the dashboard renderer.

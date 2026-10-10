@@ -2,13 +2,26 @@ import Elysia, { t } from 'elysia';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
 import { ticketService } from '../services/ticket.services/ticket.service';
 import { ClassroomNotesService } from '../services/classroomNotes.services/classroomNotes.service';
+import { StudentLessonService, StudentLessonAccessError, StudentMaterialRequestError } from '../services/studentLesson.service';
+import { StudentLessonIssueReportService } from '../services/studentLessonIssueReport.service';
+import { lessonSurveyService } from '../services/lessonSurvey.service';
+import { LessonSurveyError } from '../utils/lessonSurvey';
+import { StudentIssueReportValidationError } from '../utils/studentTutorIssues';
+import { TutorIssueReportValidationError } from '../utils/tutorStudentIssues';
+import { ChatService } from '../services/chat.services/chat.service';
+import { LessonTroubleReportService, getLessonTroubleWindow, isLessonTroubleWindowOpen } from '../services/lessonTroubleReport.service';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
+import { resolveStudentSession } from '../utils/studentSession';
 import { rateLimitMiddleware } from '../utils/rateLimiter';
 import { cacheGetOrSet, invalidateCache, getRedis } from '../db/redis';
 import { DateString, TimeString, ID, SafeString } from '../utils/validation';
 
 const scheduleService = new ScheduleService();
 const classroomNotesService = new ClassroomNotesService();
+const studentLessonService = new StudentLessonService();
+const studentLessonIssueReportService = new StudentLessonIssueReportService();
+const chatService = new ChatService();
+const lessonTroubleReportService = new LessonTroubleReportService();
 
 // Cache TTLs in seconds
 const STUDENT_STATS_CACHE_TTL = 60; // 1 minute - stats change on booking/completion
@@ -406,6 +419,102 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    * Get the student-visible classroom comment for a saved material note
    * GET /schedule/classroom-notes/:bookingId?materialType=...&materialId=...
    */
+  .get('/lesson-recap/:bookingId', async ({ request, params, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      set.headers['Cache-Control'] = 'no-store';
+      return { success: true, data: await studentLessonService.getRecap(params.bookingId, payload.userId) };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError ? error.message : 'Unable to load lesson recap' };
+    }
+  })
+  .get('/lesson-material-request/:bookingId', async ({ request, params, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      set.headers['Cache-Control'] = 'no-store';
+      return { success: true, data: await studentLessonService.getMaterialRequest(params.bookingId, payload.userId) };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError ? error.message : 'Unable to load material request' };
+    }
+  })
+  .get('/lesson/:bookingId/survey', async ({ request, params, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      set.headers['Cache-Control'] = 'no-store';
+      return { success: true, data: await lessonSurveyService.get(params.bookingId, payload.userId) };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError ? error.message : 'Unable to load lesson survey' };
+    }
+  })
+  .post('/lesson/:bookingId/survey', async ({ request, params, body, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      return { success: true, data: await lessonSurveyService.submit(params.bookingId, payload.userId, body) };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : error instanceof LessonSurveyError ? error.status : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError || error instanceof LessonSurveyError ? error.message : 'Unable to submit your survey. Please try again.' };
+    }
+  }, { body: t.Object({ rating: t.Integer({ minimum: 1, maximum: 5 }),
+    positive: t.Array(t.String({ maxLength: 40 }), { maxItems: 11 }), improvement: t.Array(t.String({ maxLength: 40 }), { maxItems: 11 }),
+    comment: t.Optional(t.String({ maxLength: 500 })) }) })
+  .get('/lesson/:bookingId/issue-report', async ({ request, params, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      const lesson = await studentLessonService.getOwnedLesson(params.bookingId, payload.userId);
+      const window = await studentLessonIssueReportService.getReportingWindow(params.bookingId, lesson);
+      const report = await studentLessonIssueReportService.get(params.bookingId, payload.userId);
+      set.headers['Cache-Control'] = 'no-store';
+      return { success: true, data: { ...window, eligible: window.eligible && !report, report } };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError ? error.message : 'Unable to load issue reporting availability' };
+    }
+  })
+  .post('/lesson/:bookingId/issue-report', async ({ request, params, body, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      const lesson = await studentLessonService.getOwnedLesson(params.bookingId, payload.userId);
+      const window = await studentLessonIssueReportService.getReportingWindow(params.bookingId, lesson);
+      if (!window.eligible) {
+        set.status = 403;
+        return { success: false, error: window.reason === 'waiting_for_tutor'
+          ? 'Please wait until three minutes after the scheduled start if the tutor has not joined.'
+          : window.reason === 'tutor_disconnected_wait'
+            ? 'Please wait until the tutor has been disconnected for 60 seconds. Reporting closes if the tutor returns.'
+          : window.reason === 'tutor_joined'
+            ? 'The tutor has joined this lesson. You can report any lesson issue after its scheduled end, for up to 48 hours.'
+            : 'Reporting is available if the tutor has not joined after three minutes or has been disconnected for 60 seconds, and for 48 hours after the lesson ends. Cancelled lessons cannot be reported.' };
+      }
+      const report = await studentLessonIssueReportService.create(params.bookingId, payload.userId, body.duration, body.reason, body.details || '', body.tutorIssue,
+        Date.parse(window.serverNow) < Date.parse(window.lessonEndsAt), window.duringLessonTutorIssue || 'no_show');
+      if (!report) { set.status = 409; return { success: false, error: 'An issue has already been reported for this lesson' }; }
+      return { success: true, data: report };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : error instanceof StudentIssueReportValidationError ? 400 : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError || error instanceof StudentIssueReportValidationError ? error.message : 'Unable to submit issue report. Please try again.' };
+    }
+  }, { body: t.Object({ duration: t.Union([t.Literal('up_to_ten'), t.Literal('over_ten')]),
+    reason: t.Union([t.Literal('connection'), t.Literal('audio'), t.Literal('hardware'), t.Literal('emergency'), t.Literal('power'), t.Literal('tutor'), t.Literal('material'), t.Literal('other')]),
+    details: t.Optional(t.String({ maxLength: 2000 })), tutorIssue: t.Optional(t.String({ maxLength: 80 })) }) })
+  .put('/lesson-material-request/:bookingId', async ({ request, params, body, set }) => {
+    try {
+      const payload = await resolveStudentSession(request);
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      return { success: true, data: await studentLessonService.setMaterialRequest(params.bookingId, payload.userId, body.courseId, body.materialId) };
+    } catch (error) {
+      set.status = error instanceof StudentLessonAccessError ? 403 : error instanceof StudentMaterialRequestError ? 400 : 500;
+      return { success: false, error: error instanceof StudentLessonAccessError || error instanceof StudentMaterialRequestError ? error.message : 'Unable to save material request' };
+    }
+  }, { body: t.Object({ courseId: t.Union([t.Literal('daily-dispatch'), t.Literal('conversational-skills'), t.Literal('business-english'), t.Null()]), materialId: t.Optional(t.String({ minLength: 1, maxLength: 200 })) }) })
   .get('/classroom-notes/:bookingId', async ({ cookie, params, query, set }) => {
     try {
       const raw = cookie.studentAuth?.value;
@@ -500,10 +609,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   })
 
-  .post('/reserve', async ({ body, cookie, set }) => {
+  .post('/reserve', async ({ body, cookie, request, set }) => {
     try {
-      const raw = cookie.studentAuth?.value;
-      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      const payload = await resolveStudentSession(request);
       if (!payload) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -518,10 +626,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, { body: t.Object({ slotId: ID() }) })
 
-  .post('/release-reservation', async ({ body, cookie, set }) => {
+  .post('/release-reservation', async ({ body, request, set }) => {
     try {
-      const raw = cookie.studentAuth?.value;
-      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      const payload = await resolveStudentSession(request);
       if (!payload) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -535,10 +642,9 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     }
   }, { body: t.Object({ slotId: ID(), reservationId: ID() }) })
 
-  .post('/recover-transfer', async ({ body, cookie, set }) => {
+  .post('/recover-transfer', async ({ body, request, set }) => {
     try {
-      const raw = cookie.studentAuth?.value;
-      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      const payload = await resolveStudentSession(request);
       if (!payload) {
         set.status = 401;
         return { success: false, error: 'Not authenticated' };
@@ -561,17 +667,10 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    * POST /schedule/book
    * Rate limited: 5 bookings per minute per user
    */
-  .post('/book', async ({ body, cookie, set }) => {
+  .post('/book', async ({ body, cookie, request, set }) => {
     try {
       
-      const raw = cookie.studentAuth?.value;
-      
-      if (!raw) {
-        set.status = 401;
-        return { success: false, error: 'Not authenticated' };
-      }
-
-      const payload = await verifyAuthToken(String(raw));
+      const payload = await resolveStudentSession(request);
       if (!payload) {
         set.status = 401;
         return { success: false, error: 'Invalid or expired token' };
@@ -719,6 +818,122 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         error: error.message || 'Failed to get lesson details'
       };
     }
+  })
+
+  .get('/tutor-lesson/:bookingId/chat-log', async ({ cookie, params, set }) => {
+    const raw = cookie.tutorAuth?.value;
+    const payload = raw ? await verifyAuthToken(String(raw)) : null;
+    if (!payload) {
+      set.status = 401;
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    try {
+      await scheduleService.getTutorLessonDetails(params.bookingId, payload.userId);
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      const messages = await chatService.getSessionMessages(params.bookingId, 2000);
+      return {
+        success: true,
+        data: messages.map(message => ({
+          id: message.id,
+          senderType: message.sender_type,
+          text: message.display_text,
+          correction: message.correction_text,
+          timestamp: message.created_at,
+          isEdited: Boolean(message.edited_at)
+        }))
+      };
+    } catch (error: any) {
+      if (error.message?.includes('Booking not found or you do not have access')) {
+        set.status = 404;
+        return { success: false, error: 'Lesson not found' };
+      }
+      console.error('Error in /schedule/tutor-lesson/:bookingId/chat-log:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to load chat log' };
+    }
+  })
+
+  .get('/tutor-lesson/:bookingId/trouble-report', async ({ cookie, params, set }) => {
+    const raw = cookie.tutorAuth?.value;
+    const payload = raw ? await verifyAuthToken(String(raw)) : null;
+    if (!payload) {
+      set.status = 401;
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    try {
+      const lesson = await scheduleService.getTutorLessonDetails(params.bookingId, payload.userId);
+      const window = getLessonTroubleWindow(lesson.slotDate, lesson.slotTime, Number(lesson.durationMinutes));
+      const report = await lessonTroubleReportService.getByBooking(params.bookingId);
+      const studentReport = await studentLessonIssueReportService.getForTutor(params.bookingId, payload.userId);
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      return {
+        success: true,
+        data: {
+          ...window,
+          serverNow: new Date().toISOString(),
+          eligible: lesson.status !== 'cancelled' && !report && isLessonTroubleWindowOpen(window),
+          report, studentReport
+        }
+      };
+    } catch (error: any) {
+      if (error.message?.includes('Booking not found or you do not have access')) {
+        set.status = 404;
+        return { success: false, error: 'Lesson not found' };
+      }
+      console.error('Error loading lesson trouble report:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to load report status' };
+    }
+  })
+
+  .post('/tutor-lesson/:bookingId/trouble-report', async ({ cookie, params, body, set }) => {
+    const raw = cookie.tutorAuth?.value;
+    const payload = raw ? await verifyAuthToken(String(raw)) : null;
+    if (!payload) {
+      set.status = 401;
+      return { success: false, error: 'Not authenticated' };
+    }
+
+    try {
+      const lesson = await scheduleService.getTutorLessonDetails(params.bookingId, payload.userId);
+      const window = getLessonTroubleWindow(lesson.slotDate, lesson.slotTime, Number(lesson.durationMinutes));
+      if (lesson.status === 'cancelled' || !isLessonTroubleWindowOpen(window)) {
+        set.status = 403;
+        return { success: false, error: 'Issue reports can only be submitted during the scheduled lesson' };
+      }
+
+      const report = await lessonTroubleReportService.create(params.bookingId, payload.userId, body.duration, body.reason, body.studentIssue);
+      if (!report) {
+        set.status = 409;
+        return { success: false, error: 'An issue has already been reported for this lesson' };
+      }
+
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      return { success: true, data: report };
+    } catch (error: any) {
+      if (error.message?.includes('Booking not found or you do not have access')) {
+        set.status = 404;
+        return { success: false, error: 'Lesson not found' };
+      }
+      if (error instanceof TutorIssueReportValidationError) {
+        set.status = 400;
+        return { success: false, error: error.message };
+      }
+      console.error('Error submitting lesson trouble report:', error);
+      set.status = 500;
+      return { success: false, error: 'Failed to submit issue report' };
+    }
+  }, {
+    body: t.Object({
+      duration: t.Union([t.Literal('up_to_ten'), t.Literal('over_ten')]),
+      reason: t.Union([
+        t.Literal('connection'), t.Literal('audio'), t.Literal('hardware'),
+        t.Literal('emergency'), t.Literal('power'), t.Literal('student')
+      ]),
+      studentIssue: t.Optional(t.Union([t.Literal('asked_to_cancel'), t.Literal('late')]))
+    })
   })
 
   /**

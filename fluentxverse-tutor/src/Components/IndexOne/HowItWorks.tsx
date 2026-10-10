@@ -1,3 +1,4 @@
+import HomeIllustration from './HomeIllustration';
 import './HowItWorks.css';
 
 const HowItWorks = () => {
@@ -6,31 +7,31 @@ const HowItWorks = () => {
       number: '01',
       title: 'Apply Online',
       description: 'Fill out a simple application form. Share your background, availability, and passion for teaching.',
-      icon: 'fas fa-paper-plane',
+      illustration: 'home',
       gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
     },
     {
       number: '02',
       title: 'Get Assessed',
       description: 'Complete a brief English proficiency check and a short demo lesson with our team.',
-      icon: 'fas fa-award',
+      illustration: 'community',
       gradient: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)'
     },
     {
       number: '03',
       title: 'Get Certified',
       description: 'Access our exclusive training modules and earn your FluentXVerse teaching certification.',
-      icon: 'fas fa-certificate',
+      illustration: 'training',
       gradient: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)'
     },
     {
       number: '04',
       title: 'Start Earning',
       description: 'Set your own hours, connect with students worldwide, and grow your teaching career.',
-      icon: 'fas fa-rocket',
+      illustration: 'growth',
       gradient: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)'
     }
-  ];
+  ] as const;
 
   return (
     <section className="how-it-works-section">
@@ -58,8 +59,8 @@ const HowItWorks = () => {
                 <div className="step-number" style={{ background: step.gradient }}>
                   {step.number}
                 </div>
-                <div className="step-icon-box" style={{ background: step.gradient }}>
-                  <i className={step.icon}></i>
+                <div className="step-icon-box">
+                  <HomeIllustration name={step.illustration} />
                 </div>
                 <div className="step-content">
                   <h3 className="step-title">{step.title}</h3>

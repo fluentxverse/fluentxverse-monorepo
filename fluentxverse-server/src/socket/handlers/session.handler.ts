@@ -1,8 +1,13 @@
 import type { Server, Socket } from 'socket.io';
+import { canEnterClassroom } from '../classroomTiming';
+import { scheduleClassroomExpiry } from '../classroomExpiry';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/socket.types';
+import { recordMediaObservation } from '../../services/classroomMediaObservation.service';
 import { SessionService } from '../../services/session.services/session.service';
 import { ClassroomActivityService } from '../../services/classroomActivity.services/classroomActivity.service';
 import { ScheduleService } from '../../services/schedule.services/schedule.service';
+import { lessonSurveyService } from '../../services/lessonSurvey.service';
+import { classroomMediaService } from '../../services/classroomMedia.service';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
@@ -18,6 +23,15 @@ const memParticipants: Record<string, {
 
 export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
   if (socket.data.userType === 'admin') return;
+  let cancelExpiry: (() => void) | undefined;
+  const notifySurveyReady = async (sessionId: string, tutorId: string, reason: 'ended' | 'left') => {
+    try {
+      if (await lessonSurveyService.markReady(sessionId, tutorId, reason))
+        socket.to(sessionId).emit('session:survey-ready', { sessionId, reason });
+    } catch (error) {
+      console.warn('Failed to enable lesson survey:', (error as Error)?.message);
+    }
+  };
   const logActivity = async (
     sessionId: string,
     userId: string,
@@ -53,6 +67,16 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         return;
       }
 
+      const schedule = await new ScheduleService().getClassroomSchedule(sessionId, userId, userType);
+      if (!schedule) {
+        socket.emit('session:error', { message: 'You do not have access to this lesson' });
+        return;
+      }
+      if (!canEnterClassroom(schedule.startsAt, schedule.endsAt)) {
+        socket.emit('session:error', { message: Date.now() < schedule.startsAt ? 'The classroom opens five minutes before the scheduled lesson.' : 'This lesson has ended.' });
+        return;
+      }
+
       if (userType === 'tutor') {
         const ownsBooking = await new ScheduleService().markTutorRoomEntry(sessionId, userId);
         if (!ownsBooking) {
@@ -67,7 +91,11 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       if (socket.data.sessionId && socket.data.sessionId !== sessionId) {
         await socket.leave(socket.data.sessionId);
         await sessionService.removeParticipant(socket.data.sessionId, userId, userType, socket.id);
+        delete socket.data.callState;
+        delete socket.data.callUpdatedAt;
       }
+
+      const mediaProvider = await classroomMediaService.provider(sessionId, userId, userType, schedule.endsAt);
 
       const existingSockets = await io.in(sessionId).fetchSockets();
       for (const existing of existingSockets) {
@@ -79,7 +107,19 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
 
       // Join the socket.io room
       await socket.join(sessionId);
+      // Recheck after joining: cancellation can race the first authorization query.
+      if (!socket.connected || !await new ScheduleService().getClassroomSchedule(sessionId, userId, userType)) {
+        await socket.leave(sessionId);
+        socket.emit('session:error', { message: 'This lesson is no longer available.' });
+        return;
+      }
       socket.data.sessionId = sessionId;
+      socket.data.mediaProvider = mediaProvider;
+      socket.data.lessonStartsAt = schedule.startsAt;
+      socket.data.lessonEndsAt = schedule.endsAt;
+      if (userType === 'tutor') await lessonSurveyService.clearDepartureReadiness(sessionId, userId);
+      cancelExpiry?.();
+      cancelExpiry = scheduleClassroomExpiry(socket, sessionId, schedule.endsAt);
 
       let participants: Array<{ user_id: string; socket_id: string; user_type: 'tutor' | 'student' }> = [];
       try {
@@ -116,6 +156,10 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       // Prepare session state
       const sessionState = {
         sessionId,
+        mediaProvider,
+        startsAt: new Date(schedule.startsAt).toISOString(),
+        endsAt: new Date(schedule.endsAt).toISOString(),
+        serverNow: new Date().toISOString(),
         participants: {
           tutorId: participants.find(p => p.user_type === 'tutor')?.user_id,
           studentId: participants.find(p => p.user_type === 'student')?.user_id,
@@ -141,6 +185,15 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
     }
   });
 
+  socket.on('classroom:call-state', (data) => {
+    if (!socket.data.sessionId || !socket.rooms.has(socket.data.sessionId) || typeof data?.connected !== 'boolean') return;
+    if (socket.data.userType === 'admin') return;
+    const next = data.connected ? 'connected' : 'disconnected';
+    if (next === socket.data.callState) return;
+    socket.data.callState = data.connected ? 'connected' : 'disconnected';
+    socket.data.callUpdatedAt = new Date().toISOString();
+    void recordMediaObservation(socket.data.sessionId, socket.data.userId, socket.data.userType, data.connected).catch(e => console.error('Media observation could not be saved:', e));
+  });
   socket.on('classroom:video-state', (data) => {
     try {
       const sessionId = socket.data.sessionId;
@@ -190,9 +243,13 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       // Leave the socket.io room
       await socket.leave(sessionId);
       socket.data.sessionId = undefined;
+      cancelExpiry?.();
+      socket.data.lessonStartsAt = undefined;
+      socket.data.lessonEndsAt = undefined;
 
       // Notify others in the session
       if (!removed) return;
+      if (userType === 'tutor') await notifySurveyReady(sessionId, userId, 'left');
       socket.to(sessionId).emit('webrtc:peer-left');
       socket.to(sessionId).emit('session:user-left', {
         userId,
@@ -216,6 +273,7 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
       // Send updated session state
       const sessionState = {
         sessionId,
+        mediaProvider: socket.data.mediaProvider,
         participants: {
           tutorId: participants.find(p => p.user_type === 'tutor')?.user_id,
           studentId: participants.find(p => p.user_type === 'student')?.user_id,
@@ -250,7 +308,13 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         return;
       }
 
+      if (socket.data.mediaProvider === 'realtimekit') {
+        try { await classroomMediaService.close(sessionId); }
+        catch { console.warn('Lesson media closure will be retried by reconciliation'); }
+      }
+
       // Notify the student that the lesson has ended
+      await notifySurveyReady(sessionId, userId, 'ended');
       socket.to(sessionId).emit('session:lesson-ended', {
         tutorId: userId,
         message: data?.message || 'The tutor has ended the lesson. Thank you for learning with us!'
@@ -276,12 +340,16 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
 
   // Handle disconnect (automatic leave)
   socket.on('disconnect', async () => {
+    cancelExpiry?.();
     try {
       const sessionId = socket.data.sessionId;
       const userId = socket.data.userId;
       const userType = socket.data.userType as 'tutor' | 'student';
 
       if (sessionId) {
+        if (socket.data.callState === 'connected') {
+          await recordMediaObservation(sessionId, userId, userType, false).catch(e => console.error('Media disconnect observation could not be saved:', e));
+        }
         let removed = false;
         try {
           removed = await sessionService.removeParticipant(sessionId, userId, userType, socket.id);
@@ -294,6 +362,8 @@ export const sessionHandler = (io: TypedServer, socket: TypedSocket) => {
         }
 
         if (!removed) return;
+        if (userType === 'tutor' && socket.data.lessonEndsAt && Date.now() >= socket.data.lessonEndsAt)
+          await notifySurveyReady(sessionId, userId, 'left');
         socket.to(sessionId).emit('webrtc:peer-left');
         socket.to(sessionId).emit('session:user-left', {
           userId,

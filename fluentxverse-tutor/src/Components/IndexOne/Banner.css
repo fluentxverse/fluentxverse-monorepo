@@ -167,13 +167,10 @@
   padding: 12px 0;
 }
 
-.feature-badge i {
-  font-size: 20px;
-  color: #0245ae;
-}
-
-.dark-mode .feature-badge i {
-  color: #4a9eff;
+.feature-illustration {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
 }
 
 .feature-badge span {

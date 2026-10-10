@@ -1,0 +1,18 @@
+.home-illustration {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .benefits-section .benefit-icon,
+  .how-it-works-section .step-icon-box {
+    transition: none;
+  }
+
+  .benefits-section .benefit-card:hover .benefit-icon,
+  .how-it-works-section .step-card-inner:hover .step-icon-box {
+    transform: none;
+  }
+}

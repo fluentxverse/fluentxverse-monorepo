@@ -5,81 +5,7 @@ import type { RegisterParams, LoginParams, RegisteredParams, Suspended, Register
 import { invalidateUserTokens } from '../../db/redis';
 import WalletService from "../wallet.services/wallet.service";
 import type { VerifiedPrivyIdentity } from "./privy.service";
-
-function parseJsonValue(value: any) {
-  if (!value || typeof value !== 'string') return value;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return value;
-  }
-}
-
-function toPlainNumber(value: any): number | null {
-  if (value === null || value === undefined || value === '') return null;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-  if (typeof value === 'object' && typeof value.toNumber === 'function') return value.toNumber();
-  if (typeof value === 'object' && typeof value.toInt === 'function') return value.toInt();
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function toStringArray(value: any): string[] {
-  const parsed = parseJsonValue(value);
-  if (Array.isArray(parsed)) {
-    return parsed.map(item => String(item).trim()).filter(Boolean);
-  }
-  if (typeof parsed === 'string') {
-    return parsed
-      .split(/\r?\n|;/)
-      .map(item => item.replace(/^[-•]\s*/, '').trim())
-      .filter(Boolean);
-  }
-  return [];
-}
-
-function buildLevelAssessment(rawAssessment: any, studentData: any) {
-  const assessment = parseJsonValue(rawAssessment || studentData.studentLevelAssessment || studentData.assessmentResult);
-  const source = assessment && typeof assessment === 'object' ? assessment : {};
-
-  const studentLevel = source.studentLevel || source.student_level || source.level || source.levelName || studentData.assessedLevel;
-  const curriculum = source.curriculum || source.curriculumName || source.course || source.courseName;
-  const dateAssessed = source.dateAssessed || source.assessmentDate || source.assessedAt || source.createdAt || source.updatedAt;
-  const assessedBy = source.assessedBy || source.assessor || source.assessorName || source.conductedBy || source.tutorName;
-  const maxScore = toPlainNumber(source.maxScore || source.scoreMax || source.score_max) || 3;
-
-  const comprehension = toPlainNumber(source.comprehension ?? source.comprehensionScore ?? source.comprehension_score);
-  const pronunciation = toPlainNumber(source.pronunciation ?? source.pronunciationScore ?? source.pronunciation_score);
-  const grammar = toPlainNumber(source.grammar ?? source.grammarScore ?? source.grammar_score);
-  const remarks = toStringArray(source.remarks || source.assessmentRemarks || source.assessment_remarks);
-
-  const hasAssessmentData = [
-    studentLevel,
-    curriculum,
-    dateAssessed,
-    assessedBy,
-    comprehension,
-    pronunciation,
-    grammar,
-    ...remarks
-  ].some(value => value !== null && value !== undefined && value !== '');
-
-  if (!hasAssessmentData) return null;
-
-  return {
-    studentLevel: studentLevel || '',
-    curriculum: curriculum || '',
-    dateAssessed: dateAssessed || '',
-    scores: {
-      comprehension,
-      pronunciation,
-      grammar,
-      maxScore
-    },
-    remarks,
-    assessedBy: assessedBy || ''
-  };
-}
+import { buildLevelAssessment } from '../assessmentProfile';
 
 class StudentService {
   public async loginByPrivy(identity: VerifiedPrivyIdentity): Promise<any | null> {
@@ -849,6 +775,7 @@ class StudentService {
         preferredLearningStyle: studentData.preferredLearningStyle,
         availability: studentData.availability ? (typeof studentData.availability === 'string' ? JSON.parse(studentData.availability) : studentData.availability) : [],
         country: studentData.country,
+        regionName: studentData.regionName || studentData.region || '',
         timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
         interests: studentData.interests,
         preferredTopics: studentData.preferredTopics ? (typeof studentData.preferredTopics === 'string' ? JSON.parse(studentData.preferredTopics) : studentData.preferredTopics) : [],
@@ -977,7 +904,8 @@ class StudentService {
       if (lesson.sessionId) {
         const result = await session.run(
           `
-          MATCH (s:Student {id: $studentId})
+          MATCH (:Booking {bookingId: $sessionId})-[:BOOKED_BY]->(s:Student {id: $studentId})
+          OPTIONAL MATCH (material:LessonMaterial {id: $lessonId, course: $courseId})
           MERGE (selection:ClassroomLessonSelection {
             studentId: $studentId,
             sessionId: $sessionId
@@ -987,6 +915,8 @@ class StudentService {
               selection.lessonNumber = $lessonNumber,
               selection.title = $title,
               selection.goal = $goal,
+              selection.level = material.level,
+              selection.chapter = material.chapter,
               selection.viewedAt = $viewedAt,
               selection.updatedAt = datetime()
           MERGE (s)-[:SELECTED_MATERIAL_FOR]->(selection)
@@ -1065,6 +995,7 @@ class StudentService {
                  selection.lessonNumber AS lessonNumber,
                  selection.title AS title,
                  selection.goal AS goal,
+                 selection.level AS level, selection.chapter AS chapter,
                  selection.viewedAt AS viewedAt
           `,
           { studentId, sessionId }
@@ -1072,6 +1003,7 @@ class StudentService {
 
         if (scopedResult.records.length > 0) {
           const record = scopedResult.records[0]!;
+          if (!record.get('courseId') || !record.get('lessonId')) return { success: true, data: null };
           return {
             success: true,
             data: {
@@ -1080,6 +1012,8 @@ class StudentService {
               lessonNumber: record.get('lessonNumber'),
               title: record.get('title'),
               goal: record.get('goal'),
+              level: record.get('level') == null ? null : Number(record.get('level')),
+              chapter: record.get('chapter') == null ? null : Number(record.get('chapter')),
               viewedAt: record.get('viewedAt'),
             }
           };

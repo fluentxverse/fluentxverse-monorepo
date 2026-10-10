@@ -30,7 +30,8 @@ services:
       - SEAWEED_MASTER_URL=http://fluentxverse-seaweed-master:9333
       - SEAWEED_FILER_URL=http://fluentxverse-seaweed-filer:8888
       # API Public URL (for generating proxy URLs to lesson files)
-      - API_PUBLIC_URL=${API_PUBLIC_URL:-http://localhost:8765}
+      - API_PUBLIC_URL=${API_PUBLIC_URL:-https://api.fluentxverse.com}
+      - ADMIN_DASHBOARD_PUBLIC_URL=${ADMIN_DASHBOARD_PUBLIC_URL:-https://dashboard.fluentxverse.com}
       # Auth
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-change-me-refresh-secret}
@@ -39,11 +40,25 @@ services:
       - PRIVY_APP_ID=${PRIVY_APP_ID}
       - PRIVY_APP_SECRET=${PRIVY_APP_SECRET}
       # CORS
-      - FRONTEND_URLS=${FRONTEND_URLS:-http://localhost:5173,http://localhost:5174,http://localhost:5175,https://student.fluentxverse.xyz,https://tutor.fluentxverse.xyz,https://dashboard.fluentxverse.xyz}
+      - FRONTEND_URLS=${FRONTEND_URLS:-http://localhost:5173,http://localhost:5174,http://localhost:5175,https://student.fluentxverse.com,https://tutor.fluentxverse.com,https://dashboard.fluentxverse.com,https://student.fluentxverse.xyz,https://tutor.fluentxverse.xyz,https://dashboard.fluentxverse.xyz}
       # Notifications
       - NOTIFICATION_RETENTION_DAYS=${NOTIFICATION_RETENTION_DAYS:-30}
       - TURN_URLS=${TURN_URLS:-}
       - TURN_SHARED_SECRET=${TURN_SHARED_SECRET:-}
+      - TURN_PROVIDER=${TURN_PROVIDER:-}
+      - CLOUDFLARE_TURN_KEY_ID=${CLOUDFLARE_TURN_KEY_ID:-}
+      - CLOUDFLARE_TURN_API_TOKEN=${CLOUDFLARE_TURN_API_TOKEN:-}
+      - CLOUDFLARE_TURN_TTL_SECONDS=${CLOUDFLARE_TURN_TTL_SECONDS:-7200}
+      # RealtimeKit: opt-in pilots; all credentials stay in the server container.
+      - CLASSROOM_MEDIA_PROVIDER=${CLASSROOM_MEDIA_PROVIDER:-realtimekit}
+      - QA_RECORDING_ENABLED=${QA_RECORDING_ENABLED:-false}
+      - QA_RECORDING_ENCRYPTION_KEY=${QA_RECORDING_ENCRYPTION_KEY:-}
+      - CLOUDFLARE_RTK_PILOT_BOOKING_IDS=${CLOUDFLARE_RTK_PILOT_BOOKING_IDS:-}
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-}
+      - CLOUDFLARE_RTK_APP_ID=${CLOUDFLARE_RTK_APP_ID:-}
+      - CLOUDFLARE_RTK_API_TOKEN=${CLOUDFLARE_RTK_API_TOKEN:-}
+      - CLOUDFLARE_RTK_STUDENT_PRESET=${CLOUDFLARE_RTK_STUDENT_PRESET:-group_call_participant}
+      - CLOUDFLARE_RTK_TUTOR_PRESET=${CLOUDFLARE_RTK_TUTOR_PRESET:-group_call_participant}
       # GMR Engine / Web3
       - GMR_ENGINE_API_BASE=${GMR_ENGINE_API_BASE}
       - GMR_ENGINE_API_KEY=${GMR_ENGINE_API_KEY}
@@ -61,9 +76,8 @@ services:
       # LanguageTool
       - LANGUAGETOOL_URL=http://fluentxverse-languagetool:8010
       # Ticket Contract (optional)
-      - TICKET_CONTRACT_ADDRESS=${TICKET_CONTRACT_ADDRESS:-0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db}
-      - TICKET_CHAIN_ID=${TICKET_CHAIN_ID:-421614}
-      - TICKET_RPC_URL=${TICKET_RPC_URL:-https://sepolia-rollup.arbitrum.io/rpc}
+      - TICKET_CONTRACT_ADDRESS=${TICKET_CONTRACT_ADDRESS:-}
+      - TICKET_CHAIN_ID=${TICKET_CHAIN_ID:-84532}
       - TICKET_BASIC_TOKEN_ID=${TICKET_BASIC_TOKEN_ID}
       - TICKET_PREMIUM_TOKEN_ID=${TICKET_PREMIUM_TOKEN_ID}
       - TICKET_TRIAL_TOKEN_ID=${TICKET_TRIAL_TOKEN_ID}
@@ -71,6 +85,8 @@ services:
     volumes:
       - student-lesson-artifacts:/app/zk-artifacts/student-lesson
       - student-lesson-setup:/app/circuits/student-lesson/build
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       fluentxverse-postgres:
         condition: service_healthy
@@ -159,7 +175,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     ports:
-      - "${SEAWEED_MASTER_PORT:-9333}:${SEAWEED_MASTER_PORT:-9333}"
+      - "127.0.0.1:${SEAWEED_MASTER_PORT:-9333}:${SEAWEED_MASTER_PORT:-9333}"
     volumes:
       - seaweed-master-data:/data
     networks:
@@ -178,8 +194,8 @@ services:
     restart: unless-stopped
     logging: *default-logging
     ports:
-      - "${SEAWEED_VOLUME_ADMIN_PORT:-8080}:8080"
-      - "${SEAWEED_VOLUME_PUBLIC_PORT:-8081}:8081"
+      - "127.0.0.1:${SEAWEED_VOLUME_ADMIN_PORT:-8080}:8080"
+      - "127.0.0.1:${SEAWEED_VOLUME_PUBLIC_PORT:-8081}:8081"
     volumes:
       - seaweed-volume-data:/data
     depends_on:
@@ -202,8 +218,8 @@ services:
     restart: unless-stopped
     logging: *default-logging
     ports:
-      - "${SEAWEED_FILER_PORT:-8888}:${SEAWEED_FILER_PORT:-8888}"
-      - "${SEAWEED_S3_PORT:-8333}:${SEAWEED_S3_PORT:-8333}"
+      - "127.0.0.1:${SEAWEED_FILER_PORT:-8888}:${SEAWEED_FILER_PORT:-8888}"
+      - "127.0.0.1:${SEAWEED_S3_PORT:-8333}:${SEAWEED_S3_PORT:-8333}"
     volumes:
       - seaweed-filer-data:/data
     depends_on:
@@ -254,8 +270,8 @@ services:
       context: ../fluentxverse-student
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.xyz}
-        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.xyz}
+        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
+        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
         VITE_PRIVY_APP_ID: ${PRIVY_APP_ID}
     container_name: fluentxverse-student
     restart: unless-stopped
@@ -273,8 +289,8 @@ services:
       dockerfile: Dockerfile
       args:
         # Use separate build URLs so local Vite settings cannot enter the public bundle.
-        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.xyz}
-        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.xyz}
+        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
+        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
         VITE_ENABLE_NOTIFICATION_SOCKET: "true"
     container_name: fluentxverse-tutor
     restart: unless-stopped
@@ -291,8 +307,8 @@ services:
       context: ../fluentxverse-dashboard
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-https://api.fluentxverse.xyz}
-        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-https://ws.fluentxverse.xyz}
+        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
+        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
     container_name: fluentxverse-dashboard
     restart: unless-stopped
     logging: *default-logging

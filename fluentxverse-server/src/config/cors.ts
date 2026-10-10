@@ -10,6 +10,11 @@ const DEFAULT_ALLOWED_ORIGINS = [
   'http://192.168.0.102:5173',
   'http://192.168.0.102:5174',
   'http://192.168.0.102:5175',
+  'https://fluentxverse.com',
+  'https://www.fluentxverse.com',
+  'https://student.fluentxverse.com',
+  'https://tutor.fluentxverse.com',
+  'https://dashboard.fluentxverse.com',
   'https://fluentxverse.xyz',
   'https://student.fluentxverse.xyz',
   'https://tutor.fluentxverse.xyz',
@@ -18,20 +23,11 @@ const DEFAULT_ALLOWED_ORIGINS = [
 
 const normalizeOrigin = (origin: string) => origin.trim().replace(/\/+$/, '');
 
-const parseHostname = (value: string): string | null => {
-  const normalized = normalizeOrigin(value);
-  if (!normalized) return null;
-
-  try {
-    return new URL(normalized).hostname;
-  } catch {
-    try {
-      return new URL(`https://${normalized}`).hostname;
-    } catch {
-      return null;
-    }
-  }
-};
+const PRODUCTION_STUDENT_ORIGINS = ['https://student.fluentxverse.com', 'https://student.fluentxverse.xyz'];
+const LOCAL_STUDENT_ORIGINS = [
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+];
 
 export const getAllowedOrigins = (
   envValue = process.env.FRONTEND_URLS || process.env.FRONTEND_URL || ''
@@ -51,21 +47,21 @@ export const isAllowedOrigin = (
   if (!origin) return true;
 
   const normalizedOrigin = normalizeOrigin(origin);
-  const protocolVariants = new Set([
-    normalizedOrigin,
-    normalizedOrigin.replace(/^https:/i, 'http:'),
-    normalizedOrigin.replace(/^http:/i, 'https:'),
-  ]);
-
-  if (allowedOrigins.some(allowedOrigin => protocolVariants.has(normalizeOrigin(allowedOrigin)))) {
-    return true;
-  }
-
-  const originHostname = parseHostname(normalizedOrigin);
-  if (!originHostname) {
-    return false;
-  }
-
-  return allowedOrigins.some(allowedOrigin => parseHostname(allowedOrigin) === originHostname);
+  return allowedOrigins.some(allowedOrigin => normalizeOrigin(allowedOrigin) === normalizedOrigin);
 };
 
+export const isAllowedStudentOrigin = (origin: string | null | undefined) =>
+  !origin || PRODUCTION_STUDENT_ORIGINS.includes(normalizeOrigin(origin))
+  || (process.env.NODE_ENV !== 'production' && LOCAL_STUDENT_ORIGINS.includes(normalizeOrigin(origin)));
+
+export const isAllowedStudentRequest = (origin: string | null, method: string) =>
+  isAllowedStudentOrigin(origin)
+  && (['GET', 'HEAD', 'OPTIONS'].includes(method) || Boolean(origin));
+
+export const isAllowedAdminMutationOrigin = (origin: string | null) =>
+  Boolean(origin && [
+    'https://dashboard.fluentxverse.com',
+    'https://dashboard.fluentxverse.xyz',
+    'http://localhost:5175',
+    'http://127.0.0.1:5175',
+  ].includes(origin));

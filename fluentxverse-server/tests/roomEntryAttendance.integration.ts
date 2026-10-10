@@ -8,6 +8,7 @@ if (!uri) throw new Error('TEST_MEMGRAPH_URI is required (use an isolated test d
 await initDriver(uri, '', '', 12, 1000);
 const db = getDriver().session();
 const service = new ScheduleService();
+const reconcileFixtureRoomEntry: ScheduleService['reconcileMissedTutorRoomEntry'] = (now, proof) => service.reconcileMissedTutorRoomEntry(now, proof, 'room-tutor');
 const startMs = Math.ceil((Date.now() + 2 * 60 * 60_000) / (30 * 60_000)) * 30 * 60_000;
 const pht = (ms: number) => new Date(ms + 8 * 60 * 60_000).toISOString();
 
@@ -54,21 +55,21 @@ try {
     "MATCH (b:Booking {bookingId: 'joined'}) SET b.tutorRoomEnteredAt = datetime($early)",
     { early: new Date(startMs + soonOffset * 60_000 - 60 * 60_000).toISOString() }
   );
-  assert.equal(await service.markTutorRoomEntry('joined', 'room-tutor'), true);
-  assert.equal(await service.reconcileMissedTutorRoomEntry(
+  assert.equal(await service.markTutorRoomEntry('joined', 'room-tutor', new Date(startMs + soonOffset * 60_000)), true);
+  assert.equal(await reconcileFixtureRoomEntry(
     new Date(startMs + 4 * 60_000), async () => false
-  ), 0, 'the booking remains Present before the five-minute deadline');
-  const missed = await service.reconcileMissedTutorRoomEntry(
-    new Date(startMs + 6 * 60_000), async () => false
+  ), 0, 'no-show penalties wait until the scheduled lesson ends');
+  const missed = await reconcileFixtureRoomEntry(
+    new Date(startMs + 25 * 60_000), async () => false
   );
   assert.equal(missed, 1);
   const fakeNow = new Date(startMs + 26 * 60 * 60_000);
   const checked: string[] = [];
-  const laterMissed = await service.reconcileMissedTutorRoomEntry(fakeNow, async bookingId => {
+  const laterMissed = await reconcileFixtureRoomEntry(fakeNow, async bookingId => {
     checked.push(bookingId);
     return bookingId === 'activity-proof';
   });
-  assert.equal(laterMissed, 0);
+  assert.equal(laterMissed, 1);
   assert.equal(checked.includes('activity-proof'), true);
   assert.equal(checked.includes('joined'), false, 'a verified room entry is not reconsidered');
   const state = await db.run(
@@ -81,17 +82,17 @@ try {
   const byId = new Map(state.records.map(record => [record.get('id'), record]));
   assert.equal(byId.get('missed')?.get('bookingAttendance'), 'absent');
   assert.equal(byId.get('missed')?.get('penaltyCode'), '301');
-  assert.equal(byId.get('next-open')?.get('slotAttendance'), null);
-  assert.equal(byId.get('next-booked')?.get('bookingAttendance'), null);
+  assert.equal(byId.get('next-open')?.get('slotAttendance'), 'present');
+  assert.equal(byId.get('next-booked')?.get('bookingAttendance'), 'absent');
   assert.equal(byId.get('after-gap')?.get('slotAttendance'), 'present');
   assert.equal(byId.get('joined')?.get('bookingAttendance'), 'present');
   assert.equal(byId.get('activity-proof')?.get('bookingAttendance'), 'present');
-  assert.equal(await service.reconcileMissedTutorRoomEntry(fakeNow, async () => false), 0);
+  assert.equal(await reconcileFixtureRoomEntry(fakeNow, async () => false), 0);
 
   await createSlot('late-missed', 48 * 60, 'booked', true);
   await createSlot('late-next', 48 * 60 + 30, 'booked', true);
-  assert.equal(await service.reconcileMissedTutorRoomEntry(
-    new Date(startMs + (48 * 60 + 20) * 60_000), async () => false
+  assert.equal(await reconcileFixtureRoomEntry(
+    new Date(startMs + (48 * 60 + 25) * 60_000), async () => false
   ), 1);
   const lateNext = await db.run(
     "MATCH (b:Booking {bookingId: 'late-next'}) RETURN b.attendanceTutor AS attendance"

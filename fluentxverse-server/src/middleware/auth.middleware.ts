@@ -1,10 +1,12 @@
 import { verifyAuthToken, type JwtAuthPayload } from '@/utils/jwt';
+import { getDriver } from '../db/memgraph';
+import { adminCapabilities, type AdminCapability } from '../utils/adminOperations';
 
 /**
  * Shared admin guard for reusable across routes
  * Returns JWT payload if valid, null otherwise
  */
-export const createAdminGuard = async (cookie: any, set: any): Promise<JwtAuthPayload | null> => {
+export const createAdminGuard = async (cookie: any, set: any, capability?: AdminCapability): Promise<JwtAuthPayload | null> => {
   const raw = cookie.adminAuth?.value;
   if (!raw) {
     set.status = 401;
@@ -15,11 +17,18 @@ export const createAdminGuard = async (cookie: any, set: any): Promise<JwtAuthPa
     set.status = 401;
     return null;
   }
-  if (payload.role && payload.role !== 'admin' && payload.role !== 'superadmin') {
+  if (payload.role !== 'admin' && payload.role !== 'superadmin') {
     set.status = 403;
     return null;
   }
-  return payload;
+  const db = getDriver().session();
+  try {
+    const admin = (await db.run('MATCH (a:Admin {id: $id}) RETURN a', { id: payload.userId })).records[0]?.get('a').properties;
+    if (!admin || !['admin', 'superadmin'].includes(admin.role) || !adminCapabilities(admin).length || (capability && !adminCapabilities(admin).includes(capability))) {
+      set.status = 403; return null;
+    }
+    return { ...payload, role: admin.role };
+  } finally { await db.close(); }
 };
 
 /**

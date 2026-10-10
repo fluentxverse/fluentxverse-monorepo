@@ -81,7 +81,7 @@ export const aiRoute = new Elysia({ prefix: '/ai' })
       detail: {
         tags: ['AI'],
         summary: 'Get vocabulary definition and translations',
-        description: 'Uses OpenAI to provide word definitions and Korean/Vietnamese translations.',
+        description: 'Uses OpenAI to provide English definitions and Japanese translations with romaji.',
       },
     }
   )

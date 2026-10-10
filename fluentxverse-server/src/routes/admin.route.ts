@@ -21,7 +21,7 @@ const publicRoutes = ['/admin/login'];
 
 const Admin = new Elysia({ prefix: '/admin' })
   // Global authentication guard for all admin routes
-  .onBeforeHandle(async ({ path, cookie, set }) => {
+  .onBeforeHandle(async ({ path, cookie, set, request }) => {
     // Skip auth for public routes
     if (publicRoutes.some(route => path === route)) {
       return;
@@ -34,6 +34,10 @@ const Admin = new Elysia({ prefix: '/admin' })
         success: false,
         error: 'Unauthorized - Admin authentication required'
       };
+    }
+    if (!['GET', 'HEAD'].includes(request.method) && !['/admin/login', '/admin/logout', '/admin/me', '/admin/change-password', '/admin/profile'].includes(path)) {
+      const capability = path.includes('/tutors') || path.includes('/students') ? 'support' : 'operations';
+      if (!await createAdminGuard(cookie, set, capability)) return { success: false, error: `${capability} permission required` };
     }
     
     // Store admin info in request context for use in handlers

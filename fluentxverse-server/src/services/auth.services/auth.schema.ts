@@ -76,7 +76,9 @@ export const MeSchema = {
                 tier: t.Number(),
                 profilePicture: t.Optional(t.String())
             })
-        })
+        }),
+        401: t.Object({ user: t.Null(), error: t.String() }),
+        500: t.Object({ user: t.Null(), error: t.String() })
     }
 }
 

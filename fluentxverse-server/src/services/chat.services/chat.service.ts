@@ -1,4 +1,5 @@
 import { query } from '../../db/postgres';
+import type { SharedClassroomMaterial } from '../../socket/types/socket.types';
 
 export interface ChatMessage {
   id: string;
@@ -14,6 +15,7 @@ export interface ChatMessage {
   deleted_at: Date | null;
   created_at: Date;
   updated_at: Date;
+  material: SharedClassroomMaterial | null;
 }
 
 export interface SaveMessageData {
@@ -22,6 +24,7 @@ export interface SaveMessageData {
   senderType: 'tutor' | 'student';
   text: string;
   correction?: string;
+  material?: SharedClassroomMaterial;
 }
 
 // Generate a unique message ID (cryptographically secure)
@@ -40,6 +43,7 @@ export class ChatService {
         await query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP`);
         await query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false`);
         await query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP`);
+        await query(`ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS material JSONB`);
       })();
     }
 
@@ -49,14 +53,14 @@ export class ChatService {
   async saveMessage(data: SaveMessageData): Promise<ChatMessage> {
     await this.ensureSchema();
 
-    const { sessionId, senderId, senderType, text, correction } = data;
+    const { sessionId, senderId, senderType, text, correction, material } = data;
     const id = generateMessageId();
 
     const result = await query(
-      `INSERT INTO chat_messages (id, session_id, sender_id, sender_type, message_text, correction_text)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO chat_messages (id, session_id, sender_id, sender_type, message_text, correction_text, material)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
        RETURNING *, COALESCE(edited_message_text, message_text) AS display_text`,
-      [id, sessionId, senderId, senderType, text, correction || null]
+      [id, sessionId, senderId, senderType, text, correction || null, material || null]
     );
 
     return result.rows[0];
@@ -147,6 +151,7 @@ export class ChatService {
          AND sender_id = $4
          AND sender_type = $5
          AND COALESCE(is_deleted, false) = false
+         AND material IS NULL
        RETURNING *, COALESCE(edited_message_text, message_text) AS display_text`,
       [text, messageId, sessionId, senderId, senderType]
     );

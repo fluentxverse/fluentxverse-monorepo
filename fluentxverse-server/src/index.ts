@@ -5,6 +5,8 @@ import { swagger } from "@elysiajs/swagger";
 import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
+import LessonWorkflow from './routes/lessonWorkflow.route';
+import { adminOperationsRoute } from './routes/adminOperations.route';
 import Examination from "./routes/exam.route";
 import Admin from './routes/admin.route';
 import Interview from './routes/interview.route';
@@ -19,10 +21,14 @@ import { analyticsRoute } from './routes/analytics.route';
 import { initDriver, getDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
+import { startCancellationRefundJob } from './services/ticket.services/cancellationRefund.job';
 import { startReminderService } from './services/notification.services/reminder.service';
 import { NotificationService } from './services/notification.services/notification.service';
 import { startSuspensionJob } from './services/admin.services/suspension.job';
 import { startAttendanceJob } from './services/schedule.services/attendance.job';
+import { startClassroomMediaReconciliation } from './services/classroomMedia.service';
+import { startQaRecordingJobs } from './services/qaRecording.service';
+import { qaRecordingRoute } from './routes/qaRecording.route';
 import { initRedis, logRetentionCleanup, isRedisConnected } from './db/redis';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
@@ -33,7 +39,7 @@ import { dispatchRoutes } from './routes/dispatch.route';
 import { youngLearnersRoute } from './routes/youngLearners.route';
 import { aiRoute } from './routes/ai.route';
 import { logger, generateRequestId } from './utils/logger';
-import { getAllowedOrigins, isAllowedOrigin } from './config/cors';
+import { getAllowedOrigins, isAllowedOrigin, isAllowedStudentOrigin, isAllowedStudentRequest } from './config/cors';
 
 // Initialize databases (async)
 const isProduction = process.env.NODE_ENV === 'production';
@@ -96,7 +102,7 @@ const app = new Elysia({
         description: 'API documentation for FluentXVerse - Language learning platform connecting tutors and students',
         contact: {
           name: 'FluentXVerse Team',
-          url: 'https://fluentxverse.xyz'
+          url: 'https://fluentxverse.com'
         }
       },
       tags: [
@@ -132,7 +138,9 @@ const app = new Elysia({
   .use(cors({
     origin: (request) => {
       const origin = request.headers.get('origin');
-      const isAllowed = isAllowedOrigin(origin, allowedOrigins);
+      const isStudentRoute = new URL(request.url).pathname.startsWith('/student/');
+      const isAllowed = isAllowedOrigin(origin, allowedOrigins)
+        && (!isStudentRoute || isAllowedStudentOrigin(origin));
       if (!isAllowed && origin) {
         console.warn(`⚠️ CORS blocked origin: ${origin}`);
       }
@@ -149,6 +157,16 @@ const app = new Elysia({
     (request as any).requestId = requestId;
     (request as any).startTime = Date.now();
     set.headers['X-Request-ID'] = requestId;
+
+    // CORS only controls response visibility; reject disallowed browser
+    // origins before a same-site form request can mutate student state.
+    if (new URL(request.url).pathname.startsWith('/student/')
+      && !isAllowedStudentRequest(request.headers.get('origin'), request.method)) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid student origin' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   })
   .onAfterHandle(({ request, set }) => {
     const duration = Date.now() - ((request as any).startTime || Date.now());
@@ -277,10 +295,13 @@ const app = new Elysia({
   .use(Auth)
   .use(Tutor)
   .use(Schedule)
+  .use(LessonWorkflow)
+  .use(adminOperationsRoute)
   .use(Student)
   .use(Debug)
   .use(Examination)
   .use(Admin)
+  .use(qaRecordingRoute)
   .use(Interview)
   .use(Notification)
   .use(Inbox)
@@ -365,6 +386,9 @@ httpServer.listen(8767, '0.0.0.0', async () => {
   // Start the auto-unsuspend background job (now Memgraph is ready)
   startSuspensionJob();
   startAttendanceJob();
+  startClassroomMediaReconciliation();
+  startQaRecordingJobs();
+  startCancellationRefundJob();
 
   // Start daily notification retention cleanup (delete read > N days)
   const notificationService = new NotificationService();

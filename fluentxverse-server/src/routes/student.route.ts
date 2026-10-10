@@ -1,6 +1,6 @@
 import Elysia, { t } from "elysia";
 import StudentService from "../services/auth.services/student.service";
-import { verifyAuthToken, signAuthToken, refreshJwtCookie, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
+import { verifyAuthToken, signAuthToken, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
 import { nanoid } from "nanoid";
 import { verifyMessage } from "viem";
 import { ticketService } from "../services/ticket.services/ticket.service";
@@ -9,6 +9,7 @@ import { rateLimitMiddleware } from "../utils/rateLimiter";
 import type { StudentUserData, NormalizedStudentUser } from "../services/auth.services/auth.interface";
 import { verifyPrivySession } from "../services/auth.services/privy.service";
 import { getDriver } from "../db/memgraph";
+import { resolveStudentSession, setStudentSessionCookie, clearStudentSessionCookies } from '../utils/studentSession';
 
 function normalizeStudentUser(userData: StudentUserData | any): NormalizedStudentUser {
   return {
@@ -26,7 +27,7 @@ function normalizeStudentUser(userData: StudentUserData | any): NormalizedStuden
   };
 }
 
-async function setStudentSession(cookie: any, user: NormalizedStudentUser) {
+async function setStudentSession(set: any, user: NormalizedStudentUser) {
   const token = await signAuthToken({
     userId: user.userId,
     email: user.email || '',
@@ -37,10 +38,7 @@ async function setStudentSession(cookie: any, user: NormalizedStudentUser) {
     role: user.role,
     walletAddress: user.walletAddress || undefined,
   });
-  cookie.studentAuth?.set({
-    value: token,
-    ...getCookieConfig(process.env.NODE_ENV === 'production'),
-  });
+  setStudentSessionCookie(set, token);
 }
 
 function getBearerToken(request: Request): string | null {
@@ -240,7 +238,7 @@ const Student = new Elysia({ name: "student" })
       }
 
       const user = normalizeStudentUser(userData);
-      await setStudentSession(cookie, user);
+      await setStudentSession(set, user);
       return { success: true, status: 'authenticated', user };
     } catch (error: any) {
       console.error('Privy student authentication failed:', error);
@@ -269,7 +267,7 @@ const Student = new Elysia({ name: "student" })
         mobileNumber: body.mobileNumber,
       });
       const user = normalizeStudentUser(userData);
-      await setStudentSession(cookie, user);
+      await setStudentSession(set, user);
       return { success: true, user };
     } catch (error: any) {
       if (error?.code === 'EMAIL_EXISTS' || error?.message === 'EMAIL_EXISTS') {
@@ -290,34 +288,8 @@ const Student = new Elysia({ name: "student" })
     }),
   })
 
-  .post('/student/logout', async ({ cookie, set }) => {
-    // Aggressively clear the student cookie with all possible methods
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cookieConfig = getCookieConfig(isProduction);
-    
-    // Method 1: Set empty value with expired date
-    cookie.studentAuth?.set({
-      value: '',
-      ...cookieConfig,
-      maxAge: 0,
-      expires: new Date(0)
-    });
-    
-    // Method 2: Use remove()
-    cookie.studentAuth?.remove();
-    
-    // Method 3: Explicit Set-Cookie header to clear the *domain cookie*.
-    // Important: some runtimes/frameworks will only emit ONE Set-Cookie header
-    // when multiple cookie operations occur; ensure the last one targets the
-    // cross-subdomain cookie your frontends actually use.
-    const domainAttr = cookieConfig.domain ? `; Domain=${cookieConfig.domain}` : '';
-    set.headers['Set-Cookie'] = `studentAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=${isProduction ? 'None; Secure' : 'Lax'}`;
-    
-    // Set headers to prevent caching
-    set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
-    set.headers['Pragma'] = 'no-cache';
-    
-    
+  .post('/student/logout', async ({ set }) => {
+    clearStudentSessionCookies(set);
     return { success: true, message: 'Logged out successfully' };
   }, {
     response: {
@@ -329,17 +301,15 @@ const Student = new Elysia({ name: "student" })
   })
 
   // Renew student session cookie (extends maxAge) without re-authenticating
-  .post('/student/refresh', async ({ cookie, set }) => {
+  .post('/student/refresh', async ({ request, set }) => {
     try {
-      const raw = cookie.studentAuth?.value;
-      if (!raw) throw new Error('Not authenticated');
-      const payload = await verifyAuthToken(raw as string);
+      const payload = await resolveStudentSession(request);
       if (!payload) {
         set.status = 401;
         return { success: false, error: 'Invalid or expired token' };
       }
 
-      await refreshJwtCookie(cookie, payload, 'studentAuth');
+      setStudentSessionCookie(set, await signAuthToken(payload));
 
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
@@ -347,7 +317,8 @@ const Student = new Elysia({ name: "student" })
       return { success: true };
     } catch (error: any) {
       console.error('Error refreshing student session:', error);
-      throw new Error('Invalid session');
+      set.status = 401;
+      return { success: false, error: 'Invalid session' };
     }
   }, {
     response: {
@@ -393,14 +364,9 @@ const Student = new Elysia({ name: "student" })
     }
   })
 
-  .get('/student/me', async ({ cookie, set }) => {
+  .get('/student/me', async ({ request, set }) => {
     try {
-      const raw = cookie.studentAuth?.value;
-      if (!raw) {
-        set.status = 401;
-        return { user: null, error: 'Not authenticated' };
-      }
-      const payload = await verifyAuthToken(raw as string);
+      const payload = await resolveStudentSession(request);
       if (!payload) {
         set.status = 401;
         return { user: null, error: 'Invalid or expired token' };
@@ -426,7 +392,7 @@ const Student = new Elysia({ name: "student" })
         || undefined;
 
       // Refresh the session with current database-backed profile fields.
-      await setStudentSession(cookie, {
+      await setStudentSession(set, {
         id: payload.userId,
         userId: payload.userId,
         email: storedUser?.email || payload.email,
@@ -459,13 +425,14 @@ const Student = new Elysia({ name: "student" })
       return { user: normalized };
     } catch (error: any) {
       console.error('Error parsing student auth cookie:', error);
-      set.status = 401;
-      return { user: null, error: 'Invalid session' };
+      set.status = 503;
+      return { user: null, error: 'Unable to verify session. Please try again.' };
     }
   }, {
     response: {
       200: t.Object({ user: t.Any() }),
-      401: t.Object({ user: t.Null(), error: t.String() })
+      401: t.Object({ user: t.Null(), error: t.String() }),
+      503: t.Object({ user: t.Null(), error: t.String() })
     }
   })
 

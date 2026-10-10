@@ -48,3 +48,8 @@ export function validateReopenPolicy(params: {
     throw new Error('Wait 30 minutes after the same-day TA-303 before reopening');
   }
 }
+export const STUDENT_CANCELLATION_CUTOFF_MS = 5 * 60_000;
+
+export function canStudentCancelLesson(status: string, startsAt: number, now = Date.now()) {
+  return status === 'confirmed' && Number.isFinite(startsAt) && now < startsAt - STUDENT_CANCELLATION_CUTOFF_MS;
+}

@@ -1,11 +1,10 @@
 import { createPublicClient, createWalletClient, custom, http, type Address } from 'viem';
-import { arbitrumSepolia } from 'viem/chains';
+import { ticketChain, ticketRPC } from '../config/ticketChain';
 import { API_BASE_URL } from '../config/api';
 import type { WalletAccount } from '../config/wallet';
 
-const TICKET_CONTRACT_ADDRESS = (import.meta.env.VITE_TICKET_CONTRACT_ADDRESS || '0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db') as Address;
+const TICKET_CONTRACT_ADDRESS = (import.meta.env.VITE_TICKET_CONTRACT_ADDRESS || '') as Address;
 const VAULT_WALLET_ADDRESS = (import.meta.env.VITE_VAULT_WALLET_ADDRESS || '') as Address;
-const TICKET_RPC_URL = import.meta.env.VITE_TICKET_RPC_URL || 'https://sepolia-rollup.arbitrum.io/rpc';
 
 const erc1155Abi = [
   {
@@ -96,14 +95,15 @@ export const transferTicketForBooking = async (
       return { success: false, error: 'This ticket requires an EVM wallet. Please connect the wallet that holds your ticket.' };
     }
 
+    if (!TICKET_CONTRACT_ADDRESS) return { success: false, error: 'Lesson-ticket contract has not been configured on this network.' };
     const walletClient = createWalletClient({
       account: account.address,
-      chain: arbitrumSepolia,
+      chain: ticketChain,
       transport: custom(window.ethereum),
     });
     const publicClient = createPublicClient({
-      chain: arbitrumSepolia,
-      transport: http(TICKET_RPC_URL),
+      chain: ticketChain,
+      transport: http(ticketRPC),
     });
 
     const hash = await walletClient.writeContract({

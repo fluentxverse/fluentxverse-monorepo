@@ -14,6 +14,8 @@ export interface ServerToClientEvents {
   'session:user-left': (data: { userId: string; userType: string }) => void;
   'session:state': (data: SessionState) => void;
   'session:lesson-ended': (data: { tutorId: string; message?: string }) => void;
+  'session:survey-ready': (data: { sessionId: string; reason: 'ended' | 'left' }) => void;
+  'session:classroom-closed': (data: { sessionId: string; message: string }) => void;
   'session:error': (data: { message: string }) => void;
   'classroom:video-state': (data: { sessionId: string; userId: string; userType: 'tutor' | 'student'; enabled: boolean }) => void;
   'classroom:activity-history': (data: ClassroomActivityLogData[]) => void;
@@ -54,8 +56,13 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
+  'classroom:call-state': (data: { connected: boolean }) => void;
+  'classroom:media-token': (callback: (result: { provider?: 'realtimekit'; token?: string; closesAt?: string; serverNow?: string; error?: string }) => void) => void;
+  'classroom:recording-state': (callback: (result: any) => void) => void;
+  'classroom:recording-consent': (decision: {accepted: boolean; authority: boolean; version: string}, callback: (result: any) => void) => void;
   // Chat events
   'chat:send': (data: SendMessageData) => void;
+  'chat:share-material': (data: ShareMaterialData, callback?: (result: ShareMaterialResult) => void) => void;
   'chat:edit': (data: EditMessageData) => void;
   'chat:delete': (data: DeleteMessageData, callback?: (result: DeleteMessageResult) => void) => void;
   'chat:typing': (data: { isTyping: boolean }) => void;
@@ -73,7 +80,7 @@ export interface ClientToServerEvents {
   'webrtc:answer': (data: { answer: any; to: string }) => void;
   'webrtc:ice-candidate': (data: { candidate: any; to: string }) => void;
   'webrtc:ready': () => void;
-  'webrtc:ice-config': (callback: (config: { iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }> }) => void) => void;
+  'webrtc:ice-config': (callback: (config: { iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }>; error?: string }) => void) => void;
   
   // Interview events
   'interview:join': (data: { roomId: string; odIuser?: string; role: 'tutor' | 'admin' }) => void;
@@ -102,15 +109,43 @@ export interface InterServerEvents {
 }
 
 export interface SocketData {
+  callState?: 'connected' | 'disconnected';
+  callUpdatedAt?: string;
+  mediaProvider?: 'webrtc' | 'realtimekit';
   userId: string;
   userType: 'tutor' | 'student' | 'admin';
   sessionId?: string;
+  lessonStartsAt?: number;
+  lessonEndsAt?: number;
   interviewRoomId?: string;
   interviewRole?: 'tutor' | 'admin';
   scheduleSubscribedTo?: string; // Tutor ID for schedule subscription
 }
 
 // Data structures
+export interface SharedClassroomMaterial {
+  id: string;
+  courseId: 'daily-dispatch' | 'conversational-skills' | 'business-english';
+  title: string;
+  level?: number;
+  chapter?: number;
+  lessonNumber?: number;
+  category?: string;
+  postedDate?: string;
+  createdAt?: string;
+}
+
+export interface ShareMaterialData {
+  sessionId: string;
+  courseId: SharedClassroomMaterial['courseId'];
+  materialId: string;
+}
+
+export interface ShareMaterialResult {
+  success: boolean;
+  message?: string;
+}
+
 export interface ChatMessageData {
   id: string;
   sessionId: string;
@@ -118,6 +153,7 @@ export interface ChatMessageData {
   senderType: 'tutor' | 'student';
   text: string;
   timestamp: string;
+  material?: SharedClassroomMaterial;
   correction?: string;
   isSystemMessage?: boolean;
   isEdited?: boolean;
@@ -159,6 +195,10 @@ export interface DeleteMessageResult {
 
 export interface SessionState {
   sessionId: string;
+  mediaProvider?: 'webrtc' | 'realtimekit';
+  startsAt?: string;
+  endsAt?: string;
+  serverNow?: string;
   participants: {
     tutorId?: string;
     studentId?: string;

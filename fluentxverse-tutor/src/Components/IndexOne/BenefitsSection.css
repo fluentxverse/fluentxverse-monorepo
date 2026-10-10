@@ -114,24 +114,17 @@
 }
 
 .benefit-icon {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-radius: 20px;
+  width: 124px;
+  height: 124px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 24px;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
 .benefit-card:hover .benefit-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.benefit-icon i {
-  font-size: 32px;
-  color: white;
+  transform: translateY(-3px) scale(1.04);
 }
 
 .benefit-title {
@@ -146,31 +139,6 @@
   color: #64748b;
   line-height: 1.7;
   margin: 0;
-}
-
-/* Icon color variations - all blue theme */
-.benefit-card:nth-child(1) .benefit-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-}
-
-.benefit-card:nth-child(2) .benefit-icon {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-}
-
-.benefit-card:nth-child(3) .benefit-icon {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-}
-
-.benefit-card:nth-child(4) .benefit-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-}
-
-.benefit-card:nth-child(5) .benefit-icon {
-  background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
-}
-
-.benefit-card:nth-child(6) .benefit-icon {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
 }
 
 /* Responsive */
@@ -211,12 +179,8 @@
   }
   
   .benefit-icon {
-    width: 70px;
-    height: 70px;
-  }
-  
-  .benefit-icon i {
-    font-size: 28px;
+    width: 108px;
+    height: 108px;
   }
   
   .benefit-title {

@@ -91,8 +91,8 @@ jobs:
       - name: Build
         run: bun run build
         env:
-          VITE_API_URL: https://api.fluentxverse.xyz
-          VITE_SOCKET_URL: https://socket.fluentxverse.xyz
+          VITE_API_URL: https://api.fluentxverse.com
+          VITE_SOCKET_URL: https://ws.fluentxverse.com
 
   # ============================================
   # Tutor App Build & Lint
@@ -134,8 +134,8 @@ jobs:
       - name: Build
         run: bun run build
         env:
-          VITE_API_URL: https://api.fluentxverse.xyz
-          VITE_SOCKET_URL: https://socket.fluentxverse.xyz
+          VITE_API_URL: https://api.fluentxverse.com
+          VITE_SOCKET_URL: https://ws.fluentxverse.com
 
   # ============================================
   # Security Audit

@@ -8,6 +8,7 @@ if (!uri) throw new Error('TEST_MEMGRAPH_URI is required (use an isolated test d
 await initDriver(uri, '', '', 12, 1000);
 const db = getDriver().session();
 const service = new ScheduleService();
+const reconcileFixtureAttendance: ScheduleService['reconcileMissedTutorAttendance'] = (now) => service.reconcileMissedTutorAttendance(now, 'attendance-tutor');
 const startMs = Date.now() + 2 * 60 * 60_000;
 const startsAt = new Date(startMs).toISOString();
 
@@ -131,10 +132,11 @@ try {
   );
 
   await service.enableAutoAttendanceForUpcomingBookings();
+  await db.run("MATCH (b:Booking {bookingId: 'already-present'}) SET b.tutorRoomAttendedAt = b.slotDateTime");
   const seeded = await db.run('MATCH (b:Booking {bookingId: $id}) RETURN b.attendanceAutoEnforce AS enabled', { id: 'future-seed' });
   assert.equal(seeded.records[0]?.get('enabled'), true);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(nearStartMs - 4 * 60_000)), 0);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(nearStartMs - 2 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(nearStartMs - 4 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(nearStartMs - 2 * 60_000)), 0);
 
   const manualStartMs = Date.now() + 20 * 60_000;
   if (new Date(manualStartMs + 8 * 60 * 60_000).toISOString().slice(11, 16) <= '23:00') {
@@ -186,6 +188,7 @@ try {
     assert.equal(record.get('code'), null);
     assert.equal(record.get('penalties').toNumber(), 0);
   });
+  await db.run("MATCH (b:Booking) WHERE b.bookingId IN ['manual-first', 'manual-next', 'manual-third'] SET b.tutorRoomAttendedAt = b.slotDateTime");
   }
 
   const lateStartMs = Date.now() + 8 * 60_000;
@@ -246,13 +249,15 @@ try {
   assert.equal(correctedOpen.records[0]?.get('reason'), 'Emergency');
   }
 
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs - 11 * 60_000)), 0);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs - 11 * 60_000 + 1)), 3);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs - 10 * 60_000)), 0);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs - 3 * 60_000)), 0);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs - 2 * 60_000)), 0);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs - 2 * 60_000 + 1)), 0);
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(startMs)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs - 11 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs - 11 * 60_000 + 1)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs - 10 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs - 3 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs - 2 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs - 2 * 60_000 + 1)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs + 25 * 60_000)), 3);
+  assert.equal(await reconcileFixtureAttendance(new Date(startMs + 26 * 60_000)), 0);
 
   const result = await db.run(
     `MATCH (b:Booking) WHERE b.bookingId IN ['normal-missed', 'late-missed', 'already-present', 'cancelled', 'future-seed', 'near-seed']

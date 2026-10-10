@@ -5,6 +5,10 @@ export interface EngineTransaction {
   error?: string;
 }
 
+export class GmrEngineRequestError extends Error {
+  constructor(public readonly status: number, message: string) { super(message); }
+}
+
 export interface ContractWriteInput {
   abi: unknown;
   args: string[];
@@ -32,7 +36,7 @@ export interface ManagedUserWallet {
   metadata?: string;
 }
 
-class GmrEngineClient {
+export class GmrEngineClient {
   private readonly baseUrl = (process.env.GMR_ENGINE_API_BASE || process.env.GMR_ENGINE_BASE_URL || '').replace(/\/$/, '');
   private readonly apiKey = process.env.GMR_ENGINE_API_KEY || '';
 
@@ -46,6 +50,7 @@ class GmrEngineClient {
     }
 
     const response = await fetch(`${this.baseUrl}${path}`, {
+      signal: AbortSignal.timeout(20_000),
       ...init,
       headers: {
         'Content-Type': 'application/json',
@@ -57,7 +62,7 @@ class GmrEngineClient {
     const text = await response.text();
     const data = text ? JSON.parse(text) : {};
     if (!response.ok) {
-      throw new Error(`GMR Engine request failed (${response.status}): ${text}`);
+      throw new GmrEngineRequestError(response.status, `GMR Engine request failed (${response.status}): ${text}`);
     }
     return data as T;
   }
@@ -76,6 +81,13 @@ class GmrEngineClient {
       }),
     });
     return result.transaction;
+  }
+
+  async rpc(chainId: number, method: string, params: unknown[] = []): Promise<unknown> {
+    const result = await this.request<{ result: unknown }>('/v1/rpc/read', {
+      method: 'POST', body: JSON.stringify({ chainId, method, params }),
+    });
+    return result.result;
   }
 
   async transaction(transactionId: string): Promise<EngineTransaction> {

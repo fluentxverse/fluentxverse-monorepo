@@ -4,6 +4,7 @@ import type { Tutor, TutorProfile, TutorSearchParams, TutorSearchResponse } from
 import { NotificationService } from '../notification.services/notification.service';
 import { getIO } from '../../socket/socket.server';
 import { canReserveForBooking } from '../schedule.services/bookingPolicy';
+import { buildLevelAssessment } from '../assessmentProfile';
 
 // Helper to convert Neo4j DateTime to ISO string
 function neo4jDateTimeToISO(dt: any): string | undefined {
@@ -22,6 +23,16 @@ function neo4jDateTimeToISO(dt: any): string | undefined {
     return new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
   }
   return undefined;
+}
+
+function parseProfileField(value: any, fallback: any) {
+  if (value == null || value === '') return fallback;
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
 }
 
 // Helper to convert 12h time format to 24h format
@@ -328,7 +339,7 @@ export class TutorService {
 
   /**
    * Get weekly availability for a tutor
-   * Returns slots converted to KST (Asia/Seoul) timezone for student display
+   * Returns slots converted to JST (Asia/Tokyo) timezone for student display
    */
   public async getAvailability(tutorId: string): Promise<Array<{ date: string; time: string; status: 'AVAIL' | 'TAKEN' | 'BOOKED'; studentId?: string }>> {
     const driver = getDriver();
@@ -339,7 +350,7 @@ export class TutorService {
       const now = new Date();
       const phtNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
       
-      // Start from yesterday (PHT) to catch any late-night slots that convert to today in KST
+      // Start from yesterday (PHT) to catch any late-night slots that convert to today in JST
       const startDateObj = new Date(phtNow);
       startDateObj.setDate(startDateObj.getDate() - 1);
       const startDate = `${startDateObj.getFullYear()}-${String(startDateObj.getMonth() + 1).padStart(2, '0')}-${String(startDateObj.getDate()).padStart(2, '0')}`;
@@ -391,27 +402,27 @@ export class TutorService {
         return slotDate < now;
       };
       
-      // Convert Philippine time to KST (KST = PHT + 1 hour)
+      // Convert Philippine time to JST (JST = PHT + 1 hour)
       // When PHT time + 1 hour >= 24, the date also advances to next day
-      const convertPHTtoKST = (dateStr: string, time12: string): { date: string; time: string } => {
+      const convertPHTtoJST = (dateStr: string, time12: string): { date: string; time: string } => {
         const { hour, minute } = parse12hTime(time12);
         
-        // Add 1 hour for KST
-        let kstHour = hour + 1;
-        let kstDate = dateStr;
+        // Add 1 hour for JST
+        let jstHour = hour + 1;
+        let jstDate = dateStr;
         
         // Handle hour overflow - date advances to next day
-        if (kstHour >= 24) {
-          kstHour -= 24;
+        if (jstHour >= 24) {
+          jstHour -= 24;
           // Advance date by 1 day
           const nextDay = new Date(dateStr);
           nextDay.setDate(nextDay.getDate() + 1);
-          kstDate = nextDay.toISOString().split('T')[0]!;
+          jstDate = nextDay.toISOString().split('T')[0]!;
         }
         
-        const kstTime = `${String(kstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const jstTime = `${String(jstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
         
-        return { date: kstDate, time: kstTime };
+        return { date: jstDate, time: jstTime };
       };
       
       
@@ -420,7 +431,7 @@ export class TutorService {
         const bookingStudentId = record.get('bookingStudentId');
         
         
-        const { date, time } = convertPHTtoKST(slot.slotDate, slot.slotTime);
+        const { date, time } = convertPHTtoJST(slot.slotDate, slot.slotTime);
         
         
         // Check if slot is in the past
@@ -821,6 +832,8 @@ export class TutorService {
       const result = await session.run(
         `
         MATCH (s:Student {id: $studentId})
+        MATCH (s)<-[:BOOKED_BY]-(authorizedBooking:Booking {tutorId: $tutorId})
+        WITH DISTINCT s
         OPTIONAL MATCH (s)<-[:BOOKED_BY]-(b:Booking)
         OPTIONAL MATCH (b)-[:BOOKS]->(slot:TimeSlot)<-[:OPENS_SLOT]-(tutor:User {id: $tutorId})
         WITH s, 
@@ -828,16 +841,24 @@ export class TutorService {
              COUNT(DISTINCT CASE WHEN tutor IS NOT NULL THEN b END) as lessonsWithThisTutor,
              COUNT(DISTINCT CASE WHEN b.status = 'completed' AND b.attendanceStatus = 'present' THEN b END) as attendedLessons,
              COUNT(DISTINCT CASE WHEN b.status = 'confirmed' AND slot.slotDate IS NOT NULL THEN b END) as upcomingLessons
+        OPTIONAL MATCH (s)-[]-(assessmentNode)
+        WHERE any(label IN labels(assessmentNode) WHERE label IN $assessmentLabels OR toLower(label) CONTAINS 'assessment')
+        WITH s, totalLessons, lessonsWithThisTutor, attendedLessons, upcomingLessons, assessmentNode,
+             coalesce(assessmentNode.dateAssessed, assessmentNode.assessmentDate, assessmentNode.assessedAt, assessmentNode.createdAt, assessmentNode.updatedAt, '') as assessmentSortKey
+        ORDER BY assessmentSortKey DESC
+        WITH s, totalLessons, lessonsWithThisTutor, attendedLessons, upcomingLessons, collect(assessmentNode)[0] as latestAssessment
         RETURN s {
           .*,
           totalLessons: totalLessons,
           lessonsWithThisTutor: lessonsWithThisTutor,
           attendedLessons: attendedLessons,
           upcomingLessons: upcomingLessons,
-          attendanceRate: CASE WHEN totalLessons > 0 THEN (attendedLessons * 100.0 / totalLessons) ELSE 0 END
+          attendanceRate: CASE WHEN totalLessons > 0 THEN (attendedLessons * 100.0 / totalLessons) ELSE 0 END,
+          studentLevelAssessment: s.levelAssessment,
+          levelAssessment: CASE WHEN latestAssessment IS NULL THEN null ELSE properties(latestAssessment) END
         } as student
         `,
-        { studentId, tutorId }
+        { studentId, tutorId, assessmentLabels: ['LevelAssessment', 'StudentAssessment', 'AssessmentResult', 'StudentLevelAssessment'] }
       );
 
 
@@ -865,12 +886,18 @@ export class TutorService {
         smartWalletAddress: studentData.smartWalletAddress,
         // Additional fields that might be in personal info
         currentProficiency: studentData.currentProficiency,
-        learningGoals: studentData.learningGoals ? JSON.parse(studentData.learningGoals) : [],
+        purpose: studentData.purpose || '',
+        occupation: studentData.occupation || '',
+        hobbies: parseProfileField(studentData.hobbies, []),
+        bio: studentData.bio || '',
+        interests: studentData.interests || '',
+        levelAssessment: buildLevelAssessment(studentData.levelAssessment, studentData),
+        learningGoals: parseProfileField(studentData.learningGoals, []),
         preferredLearningStyle: studentData.preferredLearningStyle,
-        availability: studentData.availability ? JSON.parse(studentData.availability) : [],
+        availability: parseProfileField(studentData.availability, []),
         country: studentData.country,
         timezone: studentData.timezone || 'GMT+8 (Philippine Time)',
-        lessonPreferences: studentData.lessonPreferences ? JSON.parse(studentData.lessonPreferences) : null
+        lessonPreferences: parseProfileField(studentData.lessonPreferences, null)
       };
       
       return profileData;

@@ -7,6 +7,20 @@ import { dispatchService, type CreateDispatchInput } from '../services/dispatch.
 import { createAdminGuard, createAnyAuthGuard } from '../middleware/auth.middleware';
 
 export const dispatchRoutes = new Elysia({ prefix: '/dispatch' })
+  .get('/classroom-library', async ({ cookie, set }) => {
+    const authPayload = await createAnyAuthGuard(cookie, set);
+    if (!authPayload) {
+      set.status = 401;
+      return { success: false, error: 'Unauthorized' };
+    }
+    try {
+      return { success: true, articles: await dispatchService.classroomLibrary() };
+    } catch (error) {
+      console.error('Error loading classroom article library:', error);
+      set.status = 500;
+      return { success: false, error: 'Could not load articles' };
+    }
+  })
   
   // ============================================================================
   // LIST ARTICLES

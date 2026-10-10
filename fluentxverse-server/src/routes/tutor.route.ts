@@ -2,12 +2,15 @@ import Elysia, { t } from 'elysia';
 import { TutorService } from '../services/tutor.services/tutor.service';
 import StudentService from '../services/auth.services/student.service';
 import { ScheduleService } from '../services/schedule.services/schedule.service';
-import { ClassroomNotesService } from '../services/classroomNotes.services/classroomNotes.service';
+import { ClassroomNotesService, InvalidMaterialProgress } from '../services/classroomNotes.services/classroomNotes.service';
+import { LessonNotesReadOnly } from '../utils/lessonNotesEditWindow';
+import { LessonFeedbackInvalid } from '../utils/lessonFeedbackValidation';
 import { ClassroomExerciseMarksService } from '../services/classroomExerciseMarks.services/classroomExerciseMarks.service';
 import type { AuthData } from '@/services/auth.services/auth.interface';
 import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { cacheGetOrSet, invalidateCache } from '../db/redis';
+import { tutorPerformanceService } from '../services/tutorPerformance.service';
 
 const tutorService = new TutorService();
 const scheduleService = new ScheduleService();
@@ -15,6 +18,22 @@ const classroomNotesService = new ClassroomNotesService();
 const classroomExerciseMarksService = new ClassroomExerciseMarksService();
 
 const Tutor = new Elysia({ prefix: '/tutor' })
+  .get('/performance', async ({ cookie, query, set }) => {
+    const raw = cookie.tutorAuth?.value;
+    const auth = raw ? await verifyAuthToken(String(raw)) : null;
+    if (!auth || auth.role !== 'tutor') { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+    set.headers['Cache-Control'] = 'no-store';
+    await refreshJwtCookie(cookie, auth, 'tutorAuth');
+    try {
+      return { success: true, data: await tutorPerformanceService.get(auth.userId, query.period, query.month, query.page ? Number(query.page) : 1) };
+    } catch (error) {
+      if (error instanceof Error && /^(Invalid metrics|Choose a valid)/.test(error.message)) {
+        set.status = 400; return { success: false, error: error.message };
+      }
+      console.error('Failed to load tutor performance:', error);
+      set.status = 500; return { success: false, error: 'Could not load performance metrics' };
+    }
+  }, { query: t.Object({ period: t.Optional(t.String()), month: t.Optional(t.String()), page: t.Optional(t.String()) }) })
   /**
    * Search and filter tutors
    * GET /tutor/search
@@ -518,6 +537,10 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       // Get student's last viewed lesson and profile
       const studentService = new StudentService();
       const sessionId = typeof query.sessionId === 'string' ? query.sessionId : undefined;
+      if (sessionId) {
+        const booking = await scheduleService.getTutorLessonDetails(sessionId, payload.userId);
+        if (booking.studentId !== studentId) { set.status = 403; return { success: false, error: 'This student does not belong to this lesson' }; }
+      }
       const [lessonResult, profileResult] = await Promise.all([
         studentService.getLastViewedLesson(studentId, sessionId),
         tutorService.getStudentProfile(studentId, payload.userId)
@@ -533,6 +556,8 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         courseId: lessonResult.data.courseId,
         title: lessonResult.data.title,
         lessonNumber: lessonResult.data.lessonNumber,
+        level: lessonResult.data.level ?? null,
+        chapter: lessonResult.data.chapter ?? null,
         goal: lessonResult.data.goal,
         studentPreferences: profileResult ? {
           cameraOn: profileResult.lessonPreferences?.preferCameraOn !== false,
@@ -549,6 +574,90 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       return { success: false, error: error.message || 'Failed to get student lesson request' };
     }
   })
+
+  .get('/lesson-notes/:sessionId', async ({ params, query, cookie, set }) => {
+    try {
+      const raw = cookie.tutorAuth?.value;
+      const payload = raw ? await verifyAuthToken(String(raw)) : null;
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Not authenticated' };
+      }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      await scheduleService.getTutorLessonDetails(params.sessionId, payload.userId);
+      const data = await classroomNotesService.listLessonNotes(params.sessionId, payload.userId, query.tab);
+      return { success: true, data };
+    } catch (error: any) {
+      console.error('[TutorRoute] Failed to load lesson notes:', error);
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: 'Unable to load lesson notes' };
+    }
+  }, {
+    query: t.Object({ tab: t.Union([t.Literal('current'), t.Literal('recent'), t.Literal('mine'), t.Literal('first')]) })
+  })
+
+  .get('/lesson-notes-edit-window/:sessionId', async ({ params, cookie, set }) => {
+    try {
+      const payload = cookie.tutorAuth?.value ? await verifyAuthToken(String(cookie.tutorAuth.value)) : null;
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      return { success: true, data: await classroomNotesService.getEditWindow(params.sessionId, payload.userId) };
+    } catch (error: any) {
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: 'Unable to check the editing window' };
+    }
+  })
+  .get('/classroom-lesson-notes/:sessionId', async ({ params, cookie, set }) => {
+    try {
+      const payload = cookie.tutorAuth?.value ? await verifyAuthToken(String(cookie.tutorAuth.value)) : null;
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      await scheduleService.getTutorLessonDetails(params.sessionId, payload.userId);
+      return { success: true, data: await classroomNotesService.getLessonNotes(params.sessionId, payload.userId) };
+    } catch (error: any) {
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: 'Unable to load lesson notes' };
+    }
+  })
+  .put('/classroom-lesson-notes/:sessionId', async ({ params, body, cookie, set }) => {
+    try {
+      const payload = cookie.tutorAuth?.value ? await verifyAuthToken(String(cookie.tutorAuth.value)) : null;
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      await scheduleService.getTutorLessonDetails(params.sessionId, payload.userId);
+      await classroomNotesService.assertCanEdit(params.sessionId, payload.userId);
+      await classroomNotesService.saveLessonNotes(params.sessionId, payload.userId, body.studentComment, body.tutorMemo, body.clientUpdatedAt, body.englishLevelAssessment);
+      return { success: true };
+    } catch (error: any) {
+      set.status = error instanceof LessonFeedbackInvalid ? 400 : error instanceof LessonNotesReadOnly || error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: error instanceof LessonNotesReadOnly || error instanceof LessonFeedbackInvalid ? error.message : 'Unable to save lesson notes' };
+    }
+  }, { body: t.Object({ studentComment: t.String({ maxLength: 20000 }), tutorMemo: t.String({ maxLength: 20000 }), englishLevelAssessment: t.Optional(t.Nullable(t.Integer({ minimum: 1, maximum: 10 }))), clientUpdatedAt: t.Optional(t.Number({ minimum: 0 })) }) })
+
+  .put('/lesson-student-attendance/:sessionId', async ({ params, body, cookie, set }) => {
+    try {
+      const payload = cookie.tutorAuth?.value ? await verifyAuthToken(String(cookie.tutorAuth.value)) : null;
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      await classroomNotesService.setStudentAttendance(params.sessionId, payload.userId, body.status, body.reason);
+      return { success: true };
+    } catch (error: any) {
+      set.status = error instanceof LessonNotesReadOnly || error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: set.status === 403 ? error.message : 'Unable to update student attendance. No changes were saved.' };
+    }
+  }, { body: t.Object({ status: t.Union([t.Literal('present'), t.Literal('absent')]), reason: t.Optional(t.String({ maxLength: 1000 })) }) })
+
+  .get('/classroom-material-progress/:sessionId', async ({ params, query, cookie, set }) => {
+    try {
+      const payload = cookie.tutorAuth?.value ? await verifyAuthToken(String(cookie.tutorAuth.value)) : null;
+      if (!payload) { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+      await refreshJwtCookie(cookie, payload, 'tutorAuth');
+      return { success: true, data: await classroomNotesService.getMaterialProgress(params.sessionId, payload.userId, query.materialType, query.materialId) };
+    } catch (error: any) {
+      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      return { success: false, error: 'Unable to load material progress' };
+    }
+  }, { query: t.Object({ materialType: t.Union([t.Literal('daily-dispatch'), t.Literal('conversational-skills'), t.Literal('business-english')]), materialId: t.String({ minLength: 1 }) }) })
 
   /**
    * Get persisted classroom notes for a session + active material
@@ -624,9 +733,15 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       const notesBody = body as {
         materialType: string;
         materialId: string;
-        courseId?: string;
-        lessonId?: string;
-        articleId?: string;
+        materialTitle?: string | null;
+        isUsed?: boolean;
+        clientUpdatedAt?: number;
+        completionStatus?: 'in_progress' | 'completed' | null;
+        stoppedAt?: string | null;
+        progressDetails?: string;
+        courseId?: string | null;
+        lessonId?: string | null;
+        articleId?: string | null;
         vocabularyItems?: any[];
         grammarItems?: any[];
         pronunciationItems?: any[];
@@ -634,35 +749,48 @@ const Tutor = new Elysia({ prefix: '/tutor' })
         tutorMemo?: string;
       };
 
+      await classroomNotesService.assertCanEdit(sessionId, payload.userId);
       const notes = await classroomNotesService.saveNotes({
         sessionId,
         tutorId: payload.userId,
         studentId: lessonDetails.studentId || null,
         materialType: notesBody.materialType,
         materialId: notesBody.materialId,
+        materialTitle: notesBody.materialTitle || null,
+        isUsed: notesBody.isUsed,
+        clientUpdatedAt: notesBody.clientUpdatedAt,
+        completionStatus: notesBody.completionStatus,
+        stoppedAt: notesBody.stoppedAt,
+        progressDetails: notesBody.progressDetails,
         courseId: notesBody.courseId || null,
         lessonId: notesBody.lessonId || null,
         articleId: notesBody.articleId || null,
         vocabularyItems: notesBody.vocabularyItems || [],
         grammarItems: notesBody.grammarItems || [],
         pronunciationItems: notesBody.pronunciationItems || [],
-        studentComment: notesBody.studentComment || '',
-        tutorMemo: notesBody.tutorMemo || '',
+        studentComment: notesBody.studentComment,
+        tutorMemo: notesBody.tutorMemo,
       });
 
       return { success: true, data: notes };
     } catch (error: any) {
       console.error('[TutorRoute] Error in PUT /tutor/classroom-notes/:sessionId:', error);
-      set.status = error.message?.includes('do not have access') ? 403 : 500;
+      set.status = error instanceof InvalidMaterialProgress ? 400 : error instanceof LessonNotesReadOnly || error.message?.includes('do not have access') ? 403 : 500;
       return { success: false, error: error.message || 'Failed to save classroom notes' };
     }
   }, {
     body: t.Object({
       materialType: t.String(),
       materialId: t.String(),
-      courseId: t.Optional(t.String()),
-      lessonId: t.Optional(t.String()),
-      articleId: t.Optional(t.String()),
+      materialTitle: t.Optional(t.Nullable(t.String({ maxLength: 500 }))),
+      isUsed: t.Optional(t.Boolean()),
+      clientUpdatedAt: t.Optional(t.Number({ minimum: 0 })),
+      completionStatus: t.Optional(t.Nullable(t.Union([t.Literal('in_progress'), t.Literal('completed')]))),
+      stoppedAt: t.Optional(t.Nullable(t.String({ maxLength: 200 }))),
+      progressDetails: t.Optional(t.String({ maxLength: 2000 })),
+      courseId: t.Optional(t.Nullable(t.String())),
+      lessonId: t.Optional(t.Nullable(t.String())),
+      articleId: t.Optional(t.Nullable(t.String())),
       vocabularyItems: t.Array(t.Any()),
       grammarItems: t.Array(t.Any()),
       pronunciationItems: t.Array(t.Any()),

@@ -166,7 +166,7 @@ h2 { font-size: 42px; line-height: 1.28; }
 .portrait-placeholder { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 30px; color: #8299b7; }
 .portrait-placeholder > span { font-size: 9px; color: #5f7898; font-weight: 600; }
 .team-member:nth-child(2) .team-portrait { background: #edf3ef; }
-.team-member:nth-child(2) .team-portrait > img { object-position: center top; }
+.team-member:nth-child(3) .team-portrait > img { object-position: center top; }
 .team-member:nth-child(2) .portrait-placeholder { color: #8ea69d; }
 .team-member:nth-child(2) .portrait-placeholder > span { color: #5d786c; }
 .team-member:nth-child(3) .team-portrait { background: #f1f2f4; }

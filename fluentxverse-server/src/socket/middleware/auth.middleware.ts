@@ -1,5 +1,6 @@
 import type { Socket } from 'socket.io';
 import { verifyAuthToken, type JwtAuthPayload } from '../../utils/jwt';
+import { parseCookie } from 'elysia/cookies';
 
 type AdminCookieAuth = {
   userId: string;
@@ -26,45 +27,24 @@ export const authMiddleware = async (
       }
     }
 
-    // Try cookies if no valid token from handshake
+    // Cookie names are not proof of role; always match the signed claim.
     if (!authPayload && cookieString) {
-
-      // Admin dashboard cookie
-      const adminAuthCookie = cookieString
-        .split('; ')
-        .find(row => row.startsWith('adminAuth='))
-        ?.split('=')[1];
-
-      if (adminAuthCookie) {
-        const decodedCookie = decodeURIComponent(adminAuthCookie);
-        const adminPayload = await verifyAuthToken(decodedCookie);
-        if (adminPayload?.userId) {
-          socket.data.userId = adminPayload.userId;
-          socket.data.userType = 'admin';
-          socket.data.email = adminPayload.email;
-          return next();
+      const roles: Record<string, string[]> = {
+        adminAuth: ['admin', 'superadmin'], tutorAuth: ['tutor'], studentAuth: ['student'],
+      };
+      for (const name of Object.keys(roles)) {
+        for (const candidate of cookieString.split(';')) {
+          if (!candidate.trimStart().startsWith(`${name}=`)) continue;
+          const jar = await parseCookie({ headers: {}, status: 200 }, candidate.trim());
+          const raw = jar[name]?.value;
+          if (typeof raw !== 'string') continue;
+          const payload = await verifyAuthToken(raw);
+          if (payload?.role && roles[name]?.includes(payload.role)) {
+            authPayload = payload;
+            break;
+          }
         }
-      }
-      
-      // Check for tutorAuth cookie first (tutor app), then fallback to studentAuth cookie
-      let authCookie = cookieString
-        .split('; ')
-        .find(row => row.startsWith('tutorAuth='))
-        ?.split('=')[1];
-      
-      
-      if (!authCookie) {
-        authCookie = cookieString
-          .split('; ')
-          .find(row => row.startsWith('studentAuth='))
-          ?.split('=')[1];
-      }
-
-      if (authCookie) {
-        const decodedCookie = decodeURIComponent(authCookie);
-        authPayload = await verifyAuthToken(decodedCookie);
-        if (authPayload) {
-        }
+        if (authPayload) break;
       }
     }
 
@@ -75,7 +55,8 @@ export const authMiddleware = async (
       return next(new Error('Authentication required: No valid JWT token or cookie'));
     }
 
-    if (!authPayload.userId || !authPayload.email) {
+    if (!authPayload.userId || !authPayload.email
+      || !['student', 'tutor', 'admin', 'superadmin'].includes(authPayload.role || '')) {
       return next(new Error('Invalid authentication data'));
     }
 

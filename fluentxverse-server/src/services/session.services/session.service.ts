@@ -1,4 +1,5 @@
-import { query } from '../../db/postgres';
+import { db, query } from '../../db/postgres';
+import { ClassroomActivityService } from '../classroomActivity.services/classroomActivity.service';
 
 export interface Session {
   id: string;
@@ -21,6 +22,7 @@ export interface SessionParticipant {
   is_active: boolean;
   joined_at: Date;
   left_at: Date | null;
+  last_seen_at: Date | null;
 }
 
 export interface AddParticipantData {
@@ -31,6 +33,42 @@ export interface AddParticipantData {
 }
 
 export class SessionService {
+  private static presenceSchema: Promise<void> | null = null;
+
+  async ensurePresenceSchema(): Promise<void> {
+    if (!SessionService.presenceSchema) {
+      SessionService.presenceSchema = (async () => {
+        await query('ALTER TABLE session_participants ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ');
+        await query('ALTER TABLE session_participants ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true');
+        await query(`ALTER TABLE session_participants
+          DROP CONSTRAINT IF EXISTS session_participants_session_id_user_id_is_active_key,
+          DROP CONSTRAINT IF EXISTS session_participants_session_id_user_id_key`);
+        await query(`CREATE UNIQUE INDEX IF NOT EXISTS session_participants_one_active_user_idx
+          ON session_participants (session_id, user_id) WHERE is_active = true`);
+      })().catch(error => { SessionService.presenceSchema = null; throw error; });
+    }
+    await SessionService.presenceSchema;
+  }
+
+  async reconcilePresence(liveSocketIds: string[], sessionId?: string, checkedAt = new Date()) {
+    await this.ensurePresenceSchema();
+    await new ClassroomActivityService().ensureTable();
+    await query(`UPDATE session_participants SET last_seen_at = NOW()
+      WHERE is_active = true AND socket_id = ANY($1::text[])
+        AND ($2::text IS NULL OR session_id = $2)`, [db.array(liveSocketIds, 'TEXT'), sessionId || null]);
+    // Persist the last verified presence, not the restart time, as the departure.
+    const result = await query(`WITH departed AS (
+      UPDATE session_participants SET is_active = false, left_at = COALESCE(last_seen_at, joined_at)
+      WHERE is_active = true AND (socket_id IS NULL OR NOT (socket_id = ANY($1::text[])))
+        AND ($2::text IS NULL OR session_id = $2)
+        AND joined_at <= $3::timestamptz
+      RETURNING id, session_id, user_id, user_type, left_at
+    ) INSERT INTO classroom_activity_logs (id, session_id, user_id, user_type, event_type, message, created_at)
+      SELECT 'clog-disconnect-' || id::text || '-' || EXTRACT(EPOCH FROM left_at)::text,
+        session_id, user_id, user_type, 'left', 'Connection to the lesson room was lost.', left_at
+      FROM departed RETURNING *`, [db.array(liveSocketIds, 'TEXT'), sessionId || null, checkedAt]);
+    return result.rows;
+  }
   async createSession(tutorId: string, studentId: string): Promise<Session> {
     const result = await query(
       `INSERT INTO sessions (tutor_id, student_id, status, start_time)
@@ -67,23 +105,10 @@ export class SessionService {
   }
 
   async addParticipant(data: AddParticipantData): Promise<SessionParticipant> {
+    await this.ensurePresenceSchema();
     const { sessionId, userId, socketId, userType } = data;
 
-    // The legacy unique constraint includes is_active, so multiple inactive rows
-    // for the same user/session can make a later reconnect fail while marking the
-    // current active row inactive. Clear stale inactive rows first.
-    await query(
-      `DELETE FROM session_participants
-       WHERE session_id = $1
-         AND user_id = $2
-         AND is_active = false
-       RETURNING id`,
-      [sessionId, userId]
-    );
-
-    // Also clear an active row for this same authenticated user even if an old
-    // record has the wrong role. The legacy uniqueness constraint does not
-    // include user_type, so a stale row can block a valid reconnect.
+    // Replace the active connection without deleting historical presence evidence.
     await query(
       `UPDATE session_participants
        SET is_active = false, left_at = NOW()
@@ -106,8 +131,8 @@ export class SessionService {
 
     // Add new participant record
     const result = await query(
-      `INSERT INTO session_participants (session_id, user_id, user_type, socket_id, is_active)
-       VALUES ($1, $2, $3, $4, true)
+      `INSERT INTO session_participants (session_id, user_id, user_type, socket_id, is_active, last_seen_at)
+       VALUES ($1, $2, $3, $4, true, NOW())
        RETURNING *`,
       [sessionId, userId, userType, socketId]
     );

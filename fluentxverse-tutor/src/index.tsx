@@ -72,7 +72,8 @@ function AppShell() {
 	const hydrateTheme = useThemeStore((state) => state.hydrateTheme);
 	const syncSystemTheme = useThemeStore((state) => state.syncSystemTheme);
 	const embeddedTheme = useEmbeddedTheme();
-	const effectiveTheme = embeddedTheme ?? (path === '/' ? 'light' : resolvedTheme);
+	const isLightOnlyPage = path === '/' || /^\/become-tutor\/?$/.test(path);
+	const effectiveTheme = isLightOnlyPage ? 'light' : (embeddedTheme ?? resolvedTheme);
 	// Auth state for session modal
 	// We'll read isAuthenticated via context inside the tree
 

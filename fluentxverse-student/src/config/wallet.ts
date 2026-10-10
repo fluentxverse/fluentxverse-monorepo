@@ -1,5 +1,5 @@
 import { createWalletClient, custom, getAddress, type Address } from 'viem';
-import { arbitrumSepolia } from 'viem/chains';
+import { ticketChain, ticketRPC } from './ticketChain';
 
 type SignMessageArgs = { message: string };
 
@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-const TICKET_CHAIN_ID = Number(import.meta.env.VITE_TICKET_CHAIN_ID || 421614);
+const TICKET_CHAIN_ID = ticketChain.id;
 const TICKET_CHAIN_HEX = `0x${TICKET_CHAIN_ID.toString(16)}`;
 
 function getProvider(): Eip1193Provider {
@@ -39,20 +39,17 @@ async function switchToTicketChain(provider: Eip1193Provider) {
       throw error;
     }
 
-    if (TICKET_CHAIN_ID !== arbitrumSepolia.id) {
-      throw new Error(`Please add chain ${TICKET_CHAIN_ID} to your wallet before continuing.`);
-    }
-
     await provider.request({
       method: 'wallet_addEthereumChain',
       params: [{
         chainId: TICKET_CHAIN_HEX,
-        chainName: 'Arbitrum Sepolia',
-        nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
-        rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
-        blockExplorerUrls: ['https://sepolia.arbiscan.io'],
+        chainName: ticketChain.name,
+        nativeCurrency: ticketChain.nativeCurrency,
+        rpcUrls: [ticketRPC],
+        blockExplorerUrls: [ticketChain.blockExplorers.default.url],
       }],
     });
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: TICKET_CHAIN_HEX }] });
   }
 }
 
@@ -66,7 +63,7 @@ class BrowserWallet {
     const address = getAddress(accounts?.[0] || '');
     const walletClient = createWalletClient({
       account: address,
-      chain: arbitrumSepolia,
+      chain: ticketChain,
       transport: custom(provider),
     });
 
@@ -90,7 +87,7 @@ class BrowserWallet {
     const address = getAddress(accounts[0]);
     const walletClient = createWalletClient({
       account: address,
-      chain: arbitrumSepolia,
+      chain: ticketChain,
       transport: custom(provider),
     });
 

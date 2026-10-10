@@ -40,7 +40,7 @@ const buildMessage = (userType: ClassroomActivityUserType, eventType: ClassroomA
 export class ClassroomActivityService {
   private static initPromise: Promise<void> | null = null;
 
-  private async ensureTable(): Promise<void> {
+  async ensureTable(): Promise<void> {
     if (!ClassroomActivityService.initPromise) {
       ClassroomActivityService.initPromise = (async () => {
         await db`
@@ -59,7 +59,8 @@ export class ClassroomActivityService {
           CREATE INDEX IF NOT EXISTS classroom_activity_logs_session_created_idx
           ON classroom_activity_logs (session_id, created_at DESC)
         `;
-      })();
+        await query('ALTER TABLE session_participants ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ');
+      })().catch(error => { ClassroomActivityService.initPromise = null; throw error; });
     }
 
     await ClassroomActivityService.initPromise;
@@ -114,19 +115,52 @@ export class ClassroomActivityService {
       `SELECT 1 FROM classroom_activity_logs entered
        WHERE entered.session_id = $1 AND entered.user_id = $2 AND entered.user_type = 'tutor'
          AND entered.event_type = 'entered' AND entered.created_at <= $4
-         AND (entered.created_at >= $3 OR NOT EXISTS (
+         AND entered.created_at >= $3::timestamptz - INTERVAL '5 minutes'
+         AND (entered.created_at >= $3 OR (
+           EXISTS (SELECT 1 FROM classroom_activity_logs left_event
+             WHERE left_event.session_id = $1 AND left_event.user_id = $2
+               AND left_event.user_type = 'tutor' AND left_event.event_type = 'left'
+               AND left_event.created_at >= $3 AND left_event.created_at <= $4)
+           AND NOT EXISTS (
            SELECT 1 FROM classroom_activity_logs left_event
            WHERE left_event.session_id = $1 AND left_event.user_id = $2
              AND left_event.user_type = 'tutor' AND left_event.event_type = 'left'
              AND left_event.created_at > entered.created_at AND left_event.created_at < $3
-         ))
+         )))
        UNION ALL
        SELECT 1 FROM session_participants
        WHERE session_id = $1 AND user_id = $2 AND user_type = 'tutor'
-         AND is_active = true AND joined_at <= $4
+         AND joined_at <= $4 AND COALESCE(last_seen_at, joined_at) >= $3
        LIMIT 1`,
       [sessionId, tutorId, start, deadline]
     );
     return result.rows.length > 0;
+  }
+
+  async getTutorPresenceForLesson(sessionId: string, tutorId: string, start: Date, now: Date) {
+    await this.ensureTable();
+    // Active participants take precedence; stale socket departures must not hide a reconnect.
+    const result = await query(`
+      SELECT event_type, created_at, active FROM (
+        SELECT event_type, created_at, false AS active FROM classroom_activity_logs
+        WHERE session_id = $1 AND user_id = $2 AND user_type = 'tutor'
+          AND event_type IN ('entered', 'left') AND created_at BETWEEN $3 AND $4
+        UNION ALL
+        SELECT 'entered', joined_at, true FROM session_participants
+        WHERE session_id = $1 AND user_id = $2 AND user_type = 'tutor' AND is_active = true AND joined_at <= $4
+          AND COALESCE(last_seen_at, joined_at) >= $4::timestamptz - INTERVAL '20 seconds'
+        UNION ALL
+        SELECT 'left', COALESCE(last_seen_at, joined_at), false FROM session_participants
+        WHERE session_id = $1 AND user_id = $2 AND user_type = 'tutor' AND is_active = true
+          AND COALESCE(last_seen_at, joined_at) < $4::timestamptz - INTERVAL '20 seconds'
+        UNION ALL
+        SELECT 'left', left_at, false FROM session_participants
+        WHERE session_id = $1 AND user_id = $2 AND user_type = 'tutor' AND is_active = false AND left_at BETWEEN $3 AND $4
+      ) events ORDER BY active DESC, created_at DESC, event_type ASC LIMIT 1`,
+      [sessionId, tutorId, new Date(start.getTime() - 5 * 60000), now]);
+    const event = result.rows[0];
+    const leftAt = event && !event.active ? new Date(event.created_at).getTime() : null;
+    return { hasJoined: Boolean(event && (event.active || (leftAt !== null && leftAt >= start.getTime()))),
+      leftAt: leftAt !== null && leftAt >= start.getTime() ? leftAt : null };
   }
 }

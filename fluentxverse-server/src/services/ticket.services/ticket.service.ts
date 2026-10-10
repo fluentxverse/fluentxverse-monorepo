@@ -1,28 +1,26 @@
 import * as path from "path";
 import {
-  createPublicClient,
   getAddress,
-  http,
   parseAbiItem,
   parseEventLogs,
   type Address,
   type Hash,
 } from "viem";
-import { arbitrumSepolia } from "viem/chains";
+import { ticketChain, ticketPublicClient as publicClient } from '../../config/ticketChain';
 import { getIO } from "../../socket/socket.server";
 import { NotificationService } from "../notification.services/notification.service";
 import { getDriver } from "../../db/memgraph";
 import { v4 as uuidv4 } from "uuid";
 import { TICKETS_PER_LESSON, REFUND_POLICY } from "../../config/constant";
 import { gmrEngine } from "../web3.services/gmrEngine.service";
+import { cancellationRefundService } from './cancellationRefund.service';
 import { attendanceStartMs } from "../schedule.services/attendanceWindow";
 import { canReserveForBooking } from "../schedule.services/bookingPolicy";
 
 // Contract configuration
-const TICKET_CONTRACT_ADDRESS = process.env.TICKET_CONTRACT_ADDRESS || "0x6fB1BbF7929AF18Dbd6f4F15b03307d067E838db";
-const CHAIN_ID = Number(process.env.TICKET_CHAIN_ID) || 421614; // Arbitrum Sepolia testnet
+const TICKET_CONTRACT_ADDRESS = process.env.TICKET_CONTRACT_ADDRESS || "";
+const CHAIN_ID = ticketChain.id;
 const VAULT_WALLET_ADDRESS = process.env.VAULT_WALLET_ADDRESS || "";
-const TICKET_RPC_URL = process.env.TICKET_RPC_URL || process.env.ARBITRUM_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc";
 const TICKET_BASIC_TOKEN_ID = process.env.TICKET_BASIC_TOKEN_ID || "";
 const TICKET_PREMIUM_TOKEN_ID = process.env.TICKET_PREMIUM_TOKEN_ID || "";
 const TICKET_TRIAL_TOKEN_ID = process.env.TICKET_TRIAL_TOKEN_ID || "";
@@ -30,11 +28,6 @@ const TICKET_TRIAL_TOKEN_ID = process.env.TICKET_TRIAL_TOKEN_ID || "";
 export const isMockTicketMode = process.env.ALLOW_MOCK_TICKET_PURCHASES === "true";
 
 const mockTokenId = (tier: TicketTier) => `mock-${tier}`;
-
-const publicClient = createPublicClient({
-  chain: arbitrumSepolia,
-  transport: http(TICKET_RPC_URL),
-});
 
 const erc1155Abi = [
   {
@@ -174,6 +167,7 @@ export interface TicketTransaction {
   reason?: string;
   createdAt: string;
   completedAt?: string;
+  refundPhase?: string;
 }
 
 // Input for deducting ticket when booking
@@ -229,6 +223,7 @@ export class TicketService {
   }
 
   private getContractAddress(): Address {
+    if (!TICKET_CONTRACT_ADDRESS) throw new Error('Configure a lesson-ticket contract on the selected network before using on-chain tickets.');
     return getAddress(TICKET_CONTRACT_ADDRESS);
   }
 
@@ -1322,128 +1317,7 @@ export class TicketService {
    * Only refunds if cancellation is more than 1 hour before scheduled time
    */
   async refundTicketForCancellation(input: RefundTicketInput & { scheduledTime: Date }): Promise<TicketTransaction | null> {
-    const { studentId, studentWallet, bookingId, transactionId: originalTxId, reason, scheduledTime } = input;
-    const refundTxId = uuidv4();
-    const now = new Date();
-    const createdAt = now.toISOString();
-
-
-    // Check if refund is allowed (more than 1 hour before scheduled time)
-    const hoursUntilLesson = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    if (hoursUntilLesson < REFUND_POLICY.NO_REFUND_HOURS) {
-      return null; // No refund allowed
-    }
-
-
-    const driver = getDriver();
-    const session = driver.session();
-
-    try {
-      // Get original transaction details
-      const originalTxResult = await session.run(`
-        MATCH (t:TicketTransaction {id: $originalTxId, type: 'booking', status: 'completed'})
-        RETURN t
-      `, { originalTxId });
-
-      if (originalTxResult.records.length === 0) {
-        throw new Error(`Original booking transaction not found: ${originalTxId}`);
-      }
-
-      const originalTx = originalTxResult.records[0]?.get('t').properties;
-      const quantity = typeof originalTx.quantity === 'object' ? originalTx.quantity.toNumber() : originalTx.quantity;
-
-      // Create refund transaction record
-      await session.run(`
-        CREATE (t:TicketTransaction {
-          id: $id,
-          studentId: $studentId,
-          studentWallet: $studentWallet,
-          bookingId: $bookingId,
-          tokenId: $tokenId,
-          tier: $tier,
-          quantity: $quantity,
-          type: 'cancellation',
-          status: 'pending',
-          reason: $reason,
-          originalTransactionId: $originalTxId,
-          createdAt: $createdAt
-        })
-      `, {
-        id: refundTxId,
-        studentId,
-        studentWallet,
-        bookingId,
-        tokenId: originalTx.tokenId,
-        tier: originalTx.tier,
-        quantity,
-        reason: reason || 'Booking cancellation - refund',
-        originalTxId,
-        createdAt,
-      });
-
-      // Link refund transaction to original and student
-      await session.run(`
-        MATCH (refund:TicketTransaction {id: $refundTxId})
-        MATCH (original:TicketTransaction {id: $originalTxId})
-        MATCH (s:Student {id: $studentId})
-        MERGE (refund)-[:REFUNDS]->(original)
-        MERGE (s)-[:MADE_TRANSACTION]->(refund)
-      `, { refundTxId, originalTxId, studentId });
-
-      const vaultWallet = this.getVaultWalletAddress();
-      const transferTxId = await this.enqueueTicketTransfer({
-        from: vaultWallet,
-        to: studentWallet,
-        tokenId: originalTx.tokenId,
-        quantity,
-        walletAddress: vaultWallet,
-      });
-
-      // Mark refund as completed with real tx ID
-      await session.run(`
-        MATCH (t:TicketTransaction {id: $refundTxId})
-        SET t.status = 'completed',
-            t.transferTxId = $transferTxId,
-            t.completedAt = $completedAt
-      `, {
-        refundTxId,
-        transferTxId,
-        completedAt: new Date().toISOString(),
-      });
-
-
-      return {
-        id: refundTxId,
-        studentId,
-        studentWallet,
-        bookingId,
-        tokenId: originalTx.tokenId,
-        tier: originalTx.tier as TicketTier,
-        quantity,
-        type: 'cancellation',
-        status: 'completed',
-        transferTxId,
-        reason: reason || 'Booking cancellation - refund',
-        createdAt,
-        completedAt: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error('[TicketService] Error refunding ticket:', error);
-      
-      // Mark transaction as failed if it was created
-      await session.run(`
-        MATCH (t:TicketTransaction {id: $refundTxId})
-        SET t.status = 'failed', t.reason = $reason
-      `, {
-        refundTxId,
-        reason: error instanceof Error ? error.message : 'Unknown error',
-      }).catch(() => {});
-
-      throw error;
-    } finally {
-      await session.close();
-    }
+    return cancellationRefundService.process(input.bookingId);
   }
 
   /**

@@ -55,7 +55,9 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       socket.join(roomId);
       socket.data.interviewRoomId = roomId;
       socket.data.interviewRole = role;
-      socket.emit('webrtc:ice-configuration', getIceConfiguration(socket.data.userId));
+      const configuration = await getIceConfiguration(socket.data.userId);
+      if (socket.data.interviewRoomId !== roomId || !socket.rooms.has(roomId)) return;
+      socket.emit('webrtc:ice-configuration', configuration);
       
       // Update room participants
       if (!interviewRooms.has(roomId)) {

@@ -208,36 +208,18 @@
 
 /* Icon Box */
 .step-icon-box {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
+  width: 112px;
+  height: 112px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 24px;
   position: relative;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  transition: all 0.4s ease;
+  transition: transform 0.3s ease;
 }
 
 .step-card-inner:hover .step-icon-box {
-  transform: scale(1.08) rotate(3deg);
-}
-
-.step-icon-box::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 23px;
-  background: inherit;
-  filter: blur(15px);
-  opacity: 0.4;
-  z-index: -1;
-}
-
-.step-icon-box i {
-  font-size: 32px;
-  color: white;
+  transform: translateY(-3px) scale(1.04);
 }
 
 /* Step Content */
@@ -363,12 +345,8 @@
   }
   
   .step-icon-box {
-    width: 70px;
-    height: 70px;
-  }
-  
-  .step-icon-box i {
-    font-size: 28px;
+    width: 104px;
+    height: 104px;
   }
   
   .shape-1 { width: 250px; height: 250px; }

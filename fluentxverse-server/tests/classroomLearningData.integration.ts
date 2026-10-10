@@ -18,7 +18,7 @@ const markKey = JSON.stringify([sessionId, lessonId, 'A', 0]);
 try {
   await graph.run(
     `CREATE (student:Student {id: $studentId}),
-            (booking:Booking {bookingId: $sessionId})-[:BOOKED_BY]->(student),
+            (booking:Booking {bookingId: $sessionId, tutorId: 'test-tutor'})-[:BOOKED_BY]->(student),
             (lesson:LessonMaterial {id: $lessonId})`,
     { studentId, sessionId, lessonId },
   );

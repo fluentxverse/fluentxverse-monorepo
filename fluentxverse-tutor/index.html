@@ -60,6 +60,9 @@
 						if (parentTheme === 'dark' || parentTheme === 'light') resolvedTheme = parentTheme;
 					}
 				} catch (error) {}
+				if (window.location.pathname === '/' || /^\/become-tutor\/?$/.test(window.location.pathname)) {
+					resolvedTheme = 'light';
+				}
 				if (/^\/materials\/(daily-dispatch|conversational-skills|business-english)\/[^/]+\/?$/.test(window.location.pathname) || window.location.pathname === '/lesson/view' || window.location.pathname.indexOf('/conversation-mat/') === 0) {
 					root.dataset.materialPage = 'true';
 				}

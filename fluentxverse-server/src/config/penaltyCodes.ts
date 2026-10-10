@@ -31,7 +31,7 @@ export const PENALTY_CODE_DETAILS: Record<PenaltyCode, PenaltyCodeInfo> = {
   [PenaltyCode.TA_BOOKED]: {
     code: PenaltyCode.TA_BOOKED,
     label: 'TA-301',
-    description: 'Tutor reports absence for a booked lesson or fails to confirm attendance. The student reserved this time, so the booking remains protected and TA-301 applies.',
+    description: 'Tutor explicitly reports absence for a booked lesson, or never enters the classroom during its scheduled time. Automatic no-show penalties apply only after the lesson ends.',
     affectsCompensation: true,
     severity: 'critical',
     color: '#dc2626' // red-600

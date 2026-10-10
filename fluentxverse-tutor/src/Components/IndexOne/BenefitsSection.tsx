@@ -1,38 +1,39 @@
+import HomeIllustration from './HomeIllustration';
 import './BenefitsSection.css';
 
 const BenefitsSection = () => {
   const benefits = [
     {
-      icon: 'fas fa-clock',
+      illustration: 'schedule',
       title: 'Flexible Schedule',
       description: 'Set your own hours and work when it suits you. Early bird or night owl, you decide your teaching schedule.'
     },
     {
-      icon: 'fas fa-home',
+      illustration: 'home',
       title: 'Work From Home',
       description: 'No commute, no office politics. Teach from the comfort of your home or anywhere with a stable internet connection.'
     },
     {
-      icon: 'fas fa-wallet',
+      illustration: 'pay',
       title: 'Competitive Pay',
       description: 'Earn competitive rates for your expertise. The more you teach, the more you earn, with transparent payouts.'
     },
     {
-      icon: 'fas fa-graduation-cap',
+      illustration: 'training',
       title: 'Free Training',
       description: 'Access our comprehensive training materials and certification program at no cost. We invest in your growth.'
     },
     {
-      icon: 'fas fa-users',
+      illustration: 'community',
       title: 'Supportive Community',
       description: 'Join a network of Filipino tutors. Share tips, get support, and grow together with fellow educators.'
     },
     {
-      icon: 'fas fa-chart-line',
+      illustration: 'growth',
       title: 'Career Growth',
       description: 'Advance from tutor to senior tutor, mentor, or trainer. Build a real career in online ESL education.'
     }
-  ];
+  ] as const;
 
   return (
     <section className="benefits-section">
@@ -52,7 +53,7 @@ const BenefitsSection = () => {
           {benefits.map((benefit, index) => (
             <div className="benefit-card" key={index}>
               <div className="benefit-icon">
-                <i className={benefit.icon}></i>
+                <HomeIllustration name={benefit.illustration} />
               </div>
               <h3 className="benefit-title">{benefit.title}</h3>
               <p className="benefit-description">{benefit.description}</p>

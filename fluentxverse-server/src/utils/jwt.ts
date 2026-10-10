@@ -34,26 +34,26 @@ export interface JwtAuthPayload {
  */
 const isLocalhost = (): boolean => {
   const apiUrl = process.env.API_PUBLIC_URL || '';
-  return apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1');
+  try {
+    const hostname = new URL(apiUrl).hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
 };
 
-// Get cookie domain for production (allows sharing across subdomains)
+// API-host-only cookies are available to the student app's credentialed API
+// requests without exposing them to other app subdomains on either production domain.
 const getCookieDomain = (): string | undefined => {
-  // Never set domain for localhost — browser rejects cookies with mismatched domain
   if (isLocalhost()) return undefined;
-  
-  const isProduction = process.env.NODE_ENV === 'production';
-  if (!isProduction) return undefined;
-  
-  // Use environment variable if set, otherwise default to .fluentxverse.xyz
-  return process.env.COOKIE_DOMAIN || '.fluentxverse.xyz';
+  return process.env.COOKIE_DOMAIN || undefined;
 };
 
 /**
  * Cookie configuration helper.
- * Uses API_PUBLIC_URL to decide whether to enable Secure/SameSite=None,
+ * Uses API_PUBLIC_URL to decide whether to enable Secure,
  * so it works correctly for both local Docker (http://localhost) and
- * deployed production (https://api.fluentxverse.xyz).
+ * deployed production (https://api.fluentxverse.com).
  */
 export const getCookieConfig = (isProduction: boolean) => {
   // On localhost, always use development-safe cookie settings
@@ -63,7 +63,7 @@ export const getCookieConfig = (isProduction: boolean) => {
   return {
     httpOnly: true,
     secure: useSecureCookies,
-    sameSite: useSecureCookies ? 'none' as const : 'lax' as const,
+    sameSite: 'lax' as const,
     maxAge: 60 * 60, // 1 hour
     path: '/',
     domain: getCookieDomain()

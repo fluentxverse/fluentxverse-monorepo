@@ -2,12 +2,14 @@ import { strict as assert } from 'node:assert';
 import { closeDriver, getDriver, initDriver } from '../src/db/memgraph';
 import { ScheduleService } from '../src/services/schedule.services/schedule.service';
 import { ticketService } from '../src/services/ticket.services/ticket.service';
+import { attendanceStartMs } from '../src/services/schedule.services/attendanceWindow';
 
 const uri = process.env.TEST_MEMGRAPH_URI;
 if (!uri) throw new Error('TEST_MEMGRAPH_URI is required (use an isolated test database)');
 await initDriver(uri, '', '', 12, 1000);
 const db = getDriver().session();
 const service = new ScheduleService();
+const reconcileFixtureAttendance: ScheduleService['reconcileMissedTutorAttendance'] = (now) => service.reconcileMissedTutorAttendance(now, 'booking-tutor');
 const originalVerify = ticketService.verifyTicketTransfer;
 const originalRecord = ticketService.recordTicketDeduction;
 
@@ -21,13 +23,14 @@ try {
   assert.equal(count.records[0]!.get('total').toNumber(), 0, 'Use an empty isolated database');
   await db.run("CREATE (:User {id: 'booking-tutor', email: 'paulanthonyarriola@gmail.com'})");
   await db.run("CREATE (:Student {id: 'booking-student', externalWalletAddress: '0x1111111111111111111111111111111111111111'})");
+  await db.run("CREATE (:Student {id: 'other-student', externalWalletAddress: '0x2222222222222222222222222222222222222222'})");
 
-  const normal = phtSlot(30);
+  const normal = phtSlot(60);
   const late = phtSlot(8);
   await assert.rejects(service.openSlots({ tutorId: 'booking-tutor', slots: [phtSlot(6)] }), /11 minutes/);
   for (const [id, time, present] of [
     ['normal-slot', normal, false], ['unconfirmed-late', late, false],
-    ['confirmed-late', late, true], ['confirmed-normal', normal, true]
+    ['confirmed-late', late, true], ['confirmed-normal', phtSlot(100), true]
   ] as const) {
     await db.run(
       `MATCH (t:User {id: 'booking-tutor'})
@@ -81,6 +84,7 @@ try {
   const secondHold = await service.reserveSlotForCheckout('booking-student', 'normal-slot');
   await assert.rejects(service.bookSlot({ slotId: 'normal-slot', studentId: 'booking-student',
     reservationId: secondHold.reservationId, ticketTransferTxHash: 'test-transfer-confirmed' }), /already been used/);
+  await service.releaseSlotReservation('booking-student', 'normal-slot', secondHold.reservationId);
   await db.run(
     `MATCH (t:User {id: 'booking-tutor'})
      CREATE (t)-[:OPENS_SLOT]->(:TimeSlot {slotId: 'race-slot', tutorId: 'booking-tutor',
@@ -93,6 +97,9 @@ try {
   ]);
   assert.equal(contenders.filter(result => result.status === 'fulfilled').length, 1);
   assert.equal(contenders.filter(result => result.status === 'rejected').length, 1);
+  for (const [index, contender] of contenders.entries()) if (contender.status === 'fulfilled') {
+    await service.releaseSlotReservation(index === 0 ? 'booking-student' : 'other-student', 'race-slot', contender.value.reservationId);
+  }
   await db.run(
     `MATCH (t:User {id: 'booking-tutor'})
      CREATE (t)-[:OPENS_SLOT]->(:TimeSlot {slotId: 'legacy-pending', tutorId: 'booking-tutor',
@@ -101,7 +108,9 @@ try {
   );
   assert.equal((await service.getAvailableSlots('booking-tutor', normal.date, normal.date))
     .some(slot => slot.slotId === 'legacy-pending'), true);
-  assert.equal(typeof (await service.reserveSlotForCheckout('booking-student', 'legacy-pending')).reservationId, 'string');
+  const legacyHold = await service.reserveSlotForCheckout('booking-student', 'legacy-pending');
+  assert.equal(typeof legacyHold.reservationId, 'string');
+  await service.releaseSlotReservation('booking-student', 'legacy-pending', legacyHold.reservationId);
   await db.run(
     `MATCH (t:User {id: 'booking-tutor'})
      CREATE (t)-[:OPENS_SLOT]->(:TimeSlot {slotId: 'transition-slot', tutorId: 'booking-tutor',
@@ -120,6 +129,7 @@ try {
     reservationId: transitionHold.reservationId, ticketTransferTxHash: 'test-transfer-transition' });
   assert.equal((await db.run('MATCH (b:Booking {bookingId: $id}) RETURN b.attendanceTutor AS attendance',
     { id: transitioned.bookingId })).records[0]!.get('attendance'), 'present');
+  await service.markTutorRoomEntry(transitioned.bookingId, 'booking-tutor', new Date(attendanceStartMs(late)));
   await db.run(
     `MATCH (t:User {id: 'booking-tutor'})
      CREATE (t)-[:OPENS_SLOT]->(:TimeSlot {slotId: 'recover-cutoff-slot', tutorId: 'booking-tutor',
@@ -146,7 +156,7 @@ try {
     attendance: 'present', source: 'open_slot_confirmation',
     slotStatus: 'booked', transfer: 'test-transfer-confirmed'
   });
-  assert.equal(await service.reconcileMissedTutorAttendance(new Date(Date.now() + 50 * 60_000)), 0);
+  assert.equal(await reconcileFixtureAttendance(new Date(Date.now() + 50 * 60_000)), 0);
   assert.equal((await ticketService.recoverUnbookedTransfer('booking-student',
     'test-transfer-confirmed', 'confirmed-normal', held.reservationId)).status, 'booked');
 

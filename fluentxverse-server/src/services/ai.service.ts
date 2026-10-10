@@ -602,10 +602,8 @@ export interface VocabularyDefinitionResult {
   definitions: {
     meaning: string;
     partOfSpeech: string;
-    koreanNative: string;
-    koreanRomanized: string;
-    vietnameseNative: string;
-    vietnameseRomanized: string;
+    japaneseNative: string;
+    japaneseRomanized: string;
   }[];
 }
 
@@ -728,66 +726,11 @@ const vocabularyAgent = createAgent({
   instructions: `You are a concise vocabulary assistant for English language tutors. When given a word or phrase:
 1. Provide up to 3 different meanings/definitions (if the word has multiple meanings)
 2. Include the part of speech for each meaning
-3. Provide translations to Korean and Vietnamese with both native script and romanization
+3. Translate EACH meaning into Japanese only. Do not generate Korean or Vietnamese translations.
+4. For Japanese, use natural kanji/kana in japaneseNative and the pronunciation of that exact translation in japaneseRomanized. Use plain Hepburn romaji with ASCII letters (write long vowels as ou/uu/oo), not English definitions, kana, or IPA. Include both Japanese fields for every meaning.
 
-Respond ONLY in this JSON format:
-{
-  "definitions": [
-    {
-      "meaning": "concise English definition (max 12 words)",
-      "partOfSpeech": "noun/verb/adjective/etc",
-      "koreanNative": "한국어 번역",
-      "koreanRomanized": "hangugeo beonyeok",
-      "vietnameseNative": "bản dịch tiếng Việt",
-      "vietnameseRomanized": "ban dich tieng Viet"
-    }
-  ]
-}
-
-Examples:
-Input: "run"
-{
-  "definitions": [
-    {
-      "meaning": "To move quickly on foot",
-      "partOfSpeech": "verb",
-      "koreanNative": "달리다",
-      "koreanRomanized": "dallida",
-      "vietnameseNative": "chạy",
-      "vietnameseRomanized": "chay"
-    },
-    {
-      "meaning": "To operate or manage something",
-      "partOfSpeech": "verb",
-      "koreanNative": "운영하다",
-      "koreanRomanized": "unyeonghada",
-      "vietnameseNative": "điều hành",
-      "vietnameseRomanized": "dieu hanh"
-    },
-    {
-      "meaning": "A continuous period of something",
-      "partOfSpeech": "noun",
-      "koreanNative": "연속",
-      "koreanRomanized": "yeonsok",
-      "vietnameseNative": "chuỗi",
-      "vietnameseRomanized": "chuoi"
-    }
-  ]
-}
-
-Input: "delicious"
-{
-  "definitions": [
-    {
-      "meaning": "Having a very pleasant taste or smell",
-      "partOfSpeech": "adjective",
-      "koreanNative": "맛있는",
-      "koreanRomanized": "masinneun",
-      "vietnameseNative": "ngon",
-      "vietnameseRomanized": "ngon"
-    }
-  ]
-}`,
+Use concise English definitions (max 12 words). Respond ONLY with JSON using these four fields per meaning:
+{"definitions":[{"meaning":"To move quickly on foot","partOfSpeech":"verb","japaneseNative":"走る","japaneseRomanized":"hashiru"}]}`,
   model: "openai/gpt-5.2",
 });
 
@@ -806,10 +749,8 @@ export const getVocabularyDefinition = async (word: string): Promise<VocabularyD
       definitions: [{
         meaning: 'No word provided.',
         partOfSpeech: '',
-        koreanNative: '',
-        koreanRomanized: '',
-        vietnameseNative: '',
-        vietnameseRomanized: '',
+        japaneseNative: '',
+        japaneseRomanized: '',
       }],
     };
   }
@@ -839,17 +780,13 @@ export const getVocabularyDefinition = async (word: string): Promise<VocabularyD
         definitions: definitions.length > 0 ? definitions.map((def: any) => ({
           meaning: def.meaning || 'Definition not available.',
           partOfSpeech: def.partOfSpeech || '',
-          koreanNative: def.koreanNative || '',
-          koreanRomanized: def.koreanRomanized || '',
-          vietnameseNative: def.vietnameseNative || '',
-          vietnameseRomanized: def.vietnameseRomanized || '',
+          japaneseNative: def.japaneseNative || '',
+          japaneseRomanized: def.japaneseRomanized || '',
         })) : [{
           meaning: 'Definition not available.',
           partOfSpeech: '',
-          koreanNative: '',
-          koreanRomanized: '',
-          vietnameseNative: '',
-          vietnameseRomanized: '',
+          japaneseNative: '',
+          japaneseRomanized: '',
         }],
       };
     } catch (parseError) {
@@ -858,10 +795,8 @@ export const getVocabularyDefinition = async (word: string): Promise<VocabularyD
         definitions: [{
           meaning: 'Unable to process. Please check manually.',
           partOfSpeech: '',
-          koreanNative: '',
-          koreanRomanized: '',
-          vietnameseNative: '',
-          vietnameseRomanized: '',
+          japaneseNative: '',
+          japaneseRomanized: '',
         }],
       };
     }

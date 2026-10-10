@@ -3,6 +3,7 @@ dist/
 tests/
 scripts/*
 !scripts/migrate-classroom-learning-data-to-memgraph.ts
+!scripts/check-web3.ts
 *.md
 docker-compose.yml
 Dockerfile*

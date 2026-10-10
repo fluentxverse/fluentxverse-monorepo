@@ -36,7 +36,6 @@ export const founder = {
   linkedin: 'https://www.linkedin.com/in/paul-anthony-arriola-a0436321b/',
 };
 
-// Replace the remaining placeholders with approved details and local portraits.
 export const teamMembers: {
   name: string;
   role: string;
@@ -46,13 +45,19 @@ export const teamMembers: {
 }[] = [
   { ...founder, bio: "Leading FluentXVerse's onchain education ecosystem." },
   {
+    name: 'Yehna Lee',
+    role: 'Head of Growth',
+    bio: "Leading growth for FluentXVerse's education ecosystem.",
+    image: '/assets/img/team/yehna-v2.webp',
+    linkedin: 'https://www.linkedin.com/in/yehna-lee-0b539b26a/',
+  },
+  {
     name: 'Agnes Atwel-Velasco',
     role: 'Head of Instructional Design',
     bio: 'Agnes leads instructional design at FluentXVerse, shaping the curriculum, lesson materials, and learning experiences behind our education apps. Her work focuses on clear learning goals, practical activities, and resources that support tutors and help learners build skills with confidence.',
     image: '/assets/img/team/agnes-headshot-v2.webp',
     linkedin: 'https://www.linkedin.com/in/agnes-atwel-161a60340/',
   },
-  { name: 'Team member 03', role: 'Role to be announced', bio: 'Biography coming soon.' },
 ];
 
 export const contactEmail = 'hello@fluentxverse.com';

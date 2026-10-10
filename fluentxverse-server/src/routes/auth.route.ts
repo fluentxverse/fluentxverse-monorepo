@@ -5,12 +5,13 @@ import Elysia, { t } from "elysia";
 import AuthService from "../services/auth.services/tutor.service";
 import { TutorService } from "../services/tutor.services/tutor.service";
 import { LoginSchema, RegisterSchema, LogoutSchema, MeSchema, UpdatePersonalInfoSchema, UpdateEmailSchema, UpdatePasswordSchema } from "../services/auth.services/auth.schema";
-import type { LoginReturnParams, MeResponse } from "@/services/auth.services/auth.interface";
+import type { LoginReturnParams } from "@/services/auth.services/auth.interface";
 import { signAuthToken, verifyAuthToken, getCookieConfig, type JwtAuthPayload } from "../utils/jwt";
+import { clearTutorSessionCookies, resolveTutorSession, setTutorSessionCookie } from '../utils/tutorSession';
 
 // Define routes as an Elysia plugin instance to preserve route types
 const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
-    .post('/register', async ({ body, cookie, set }) => {
+    .post('/register', async ({ body, set }) => {
       try 
       {
         const authService = new AuthService();
@@ -20,7 +21,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         const userData: LoginReturnParams = await authService.login({ email: body.email, password: body.password });
 
         // Create signed JWT token
-        const isProduction = process.env.NODE_ENV === 'production';
         const token = await signAuthToken({
           userId: userData.id,
           email: userData.email,
@@ -33,10 +33,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         });
 
         // Set httpOnly cookie with signed JWT
-        cookie.tutorAuth?.set({
-          value: token,
-          ...getCookieConfig(isProduction)
-        });
+        setTutorSessionCookie(set, token);
 
         const responsePayload = {
           success: true,
@@ -67,7 +64,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       }, RegisterSchema)
 
 
-    .post('/login', async ({ body, cookie, set }) => {
+    .post('/login', async ({ body, set }) => {
       try {
         const authService = new AuthService();
         const userData = await authService.login(body);
@@ -86,7 +83,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         };
 
         // Create signed JWT token
-        const isProduction = process.env.NODE_ENV === 'production';
         const token = await signAuthToken({
           userId: normalizedUser.userId,
           email: normalizedUser.email,
@@ -99,10 +95,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         });
 
         // Set httpOnly cookie with signed JWT
-        cookie.tutorAuth?.set({
-          value: token,
-          ...getCookieConfig(isProduction)
-        });
+        setTutorSessionCookie(set, token);
         
         return { success: true, user: normalizedUser };
       } catch (error: any) {
@@ -132,46 +125,20 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       }
     }, LoginSchema)
     
-    .post('/logout', async ({ cookie, set }) => {
-      // Must match the same attributes used when setting the cookie
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieConfig = getCookieConfig(isProduction);
-      
-      // Method 1: Set empty value with expired date
-      cookie.tutorAuth?.set({
-        value: '',
-        ...cookieConfig,
-        maxAge: 0,
-        expires: new Date(0)
-      });
-      
-      // Method 2: Use remove()
-      cookie.tutorAuth?.remove();
-      
-      // Method 3: Explicit Set-Cookie header to clear the cookie.
-      // Use a single header string (known reliable across proxies/runtimes).
-      const domainAttr = cookieConfig.domain ? `; Domain=${cookieConfig.domain}` : '';
-      set.headers['Set-Cookie'] = `tutorAuth=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0${domainAttr}; HttpOnly; SameSite=${isProduction ? 'None; Secure' : 'Lax'}`;
-      
-      // Set headers to prevent caching
-      set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
-      set.headers['Pragma'] = 'no-cache';
-      
-      
+    .post('/logout', async ({ set }) => {
+      clearTutorSessionCookies(set);
       return { success: true, message: 'Logged out successfully' };
     }, LogoutSchema)
     
     // Renew session cookie (extends maxAge) without re-authenticating
-    .post('/refresh', async ({ cookie, set }) => {
-      const raw = cookie.tutorAuth?.value;
-      if (!raw) throw new Error('Not authenticated');
-      
-      // Verify the JWT token
-      const payload = await verifyAuthToken(String(raw));
-      if (!payload) throw new Error('Invalid or expired token');
+    .post('/refresh', async ({ request, set }) => {
+      const payload = await resolveTutorSession(request);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired session' };
+      }
 
       // Issue a fresh JWT with extended expiry
-      const isProduction = process.env.NODE_ENV === 'production';
       const newToken = await signAuthToken({
         userId: payload.userId,
         email: payload.email,
@@ -183,28 +150,22 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         role: payload.role
       });
 
-      cookie.tutorAuth?.set({
-        value: newToken,
-        ...getCookieConfig(isProduction)
-      });
-
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
       set.headers['Vary'] = 'Cookie';
+      setTutorSessionCookie(set, newToken);
       return { success: true };
     })
 
     // Alias for /refresh at /tutor/refresh path
-    .post('/tutor/refresh', async ({ cookie, set }) => {
-      const raw = cookie.tutorAuth?.value;
-      if (!raw) throw new Error('Not authenticated');
-      
-      // Verify the JWT token
-      const payload = await verifyAuthToken(String(raw));
-      if (!payload) throw new Error('Invalid or expired token');
+    .post('/tutor/refresh', async ({ request, set }) => {
+      const payload = await resolveTutorSession(request);
+      if (!payload) {
+        set.status = 401;
+        return { success: false, error: 'Invalid or expired session' };
+      }
 
       // Issue a fresh JWT with extended expiry
-      const isProduction = process.env.NODE_ENV === 'production';
       const newToken = await signAuthToken({
         userId: payload.userId,
         email: payload.email,
@@ -216,25 +177,15 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         role: payload.role
       });
 
-      cookie.tutorAuth?.set({
-        value: newToken,
-        ...getCookieConfig(isProduction)
-      });
-
       set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       set.headers['Pragma'] = 'no-cache';
       set.headers['Vary'] = 'Cookie';
+      setTutorSessionCookie(set, newToken);
       return { success: true };
     })
 
-    .get('/socket-token', async ({ cookie, set }) => {
-      const raw = cookie.tutorAuth?.value;
-      if (!raw) {
-        set.status = 401;
-        return { success: false, error: 'Not authenticated' };
-      }
-
-      const payload = await verifyAuthToken(String(raw));
+    .get('/socket-token', async ({ request, set }) => {
+      const payload = await resolveTutorSession(request);
       if (!payload) {
         set.status = 401;
         return { success: false, error: 'Invalid or expired token' };
@@ -257,19 +208,15 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
       return { success: true, token };
     })
     
-    .get('/me', async ({ cookie, set }): Promise<MeResponse> => {
-      try {
-        const raw = cookie.tutorAuth?.value;
-        if (!raw) {
-          throw new Error('Not authenticated');
-        }
-        
-        // Verify the JWT token
-        const payload = await verifyAuthToken(String(raw));
-        if (!payload) throw new Error('Invalid or expired token');
+    .get('/me', async ({ request, set }) => {
+      const payload = await resolveTutorSession(request);
+      if (!payload) {
+        set.status = 401;
+        return { user: null, error: 'Invalid or expired session' };
+      }
 
+      try {
         // Refresh cookie on every /me call - issue new JWT
-        const isProduction = process.env.NODE_ENV === 'production';
         const newToken = await signAuthToken({
           userId: payload.userId,
           email: payload.email,
@@ -281,11 +228,6 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           role: payload.role
         });
 
-        cookie.tutorAuth?.set({
-          value: newToken,
-          ...getCookieConfig(isProduction)
-        });
-
         // Fetch profile picture from database
         const tutorService = new TutorService();
         const profilePicture = await tutorService.getCurrentProfilePicture(payload.userId);
@@ -293,6 +235,7 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
         set.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
         set.headers['Pragma'] = 'no-cache';
         set.headers['Vary'] = 'Cookie';
+        setTutorSessionCookie(set, newToken);
         return { user: {
           userId: payload.userId,
           email: payload.email,
@@ -304,7 +247,9 @@ const Auth = new Elysia({ name: 'auth', prefix: '/tutor' })
           profilePicture: profilePicture ?? undefined
         } };
       } catch (error: any) {
-        throw new Error('Invalid session');
+        console.error('Error restoring tutor session:', error);
+        set.status = 500;
+        return { user: null, error: 'Unable to restore session' };
       }
     }, MeSchema)
 

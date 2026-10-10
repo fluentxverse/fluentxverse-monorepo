@@ -34,10 +34,14 @@ CREATE TABLE IF NOT EXISTS session_participants (
   user_id VARCHAR(255) NOT NULL,
   socket_id VARCHAR(255),
   user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('tutor', 'student')),
+  is_active BOOLEAN NOT NULL DEFAULT true,
   joined_at TIMESTAMP DEFAULT NOW(),
-  left_at TIMESTAMP,
-  UNIQUE(session_id, user_id)
+  last_seen_at TIMESTAMPTZ,
+  left_at TIMESTAMP
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS session_participants_one_active_user_idx
+  ON session_participants (session_id, user_id) WHERE is_active = true;
 
 -- Chat messages table (uses string session IDs for dynamic sessions)
 CREATE TABLE IF NOT EXISTS chat_messages (
@@ -62,6 +66,7 @@ ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS edited_message_text TEXT;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
 ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS material JSONB;
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id ON chat_messages(session_id);
