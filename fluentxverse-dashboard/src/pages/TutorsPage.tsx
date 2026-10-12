@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'preact/hooks';
 import { adminApi, TutorListItem, SuspensionHistoryItem } from '../api/admin.api';
 import './TutorsPage.css';
+import { AdminArt } from '../components/AdminArt';
+import { operations, operationError } from '../api/operations.api';
+import { compensationApi, usdRateLabel } from '../api/compensation.api';
+import type { TutorCompensation } from '../../../fluentxverse-server/src/shared/tutorCompensation';
+import { OperationsAccountModal } from '../components/OperationsAccountModal';
 
 type TabType = 'certified' | 'all' | 'suspended';
 import { API_BASE_URL } from '../config/api';
 
-const TutorsPage = () => {
+const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id: string; tab: string }; onAccountClose?: () => void }) => {
+  const [account, setAccount] = useState(initialAccount || null);
+  const closeAccount = () => { setAccount(null); setRatesRefresh(value => value + 1); onAccountClose?.(); };
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,6 +21,10 @@ const TutorsPage = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [activeTab, setActiveTab] = useState<TabType>('certified');
+  const [hasFinance, setHasFinance] = useState(false);
+  const [rates, setRates] = useState<Record<string, TutorCompensation>>({});
+  const [ratesError, setRatesError] = useState('');
+  const [ratesRefresh, setRatesRefresh] = useState(0);
   
   // Suspend modal state
   const [showSuspendModal, setShowSuspendModal] = useState(false);
@@ -34,6 +45,21 @@ const TutorsPage = () => {
   const [retryingProofTutorId, setRetryingProofTutorId] = useState<string | null>(null);
   
   const limit = 15;
+
+  useEffect(() => {
+    let active = true;
+    operations('/access').then(access => { if (active) setHasFinance(access.permissions.includes('finance')); }).catch(() => { if (active) setHasFinance(false); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setRates({}); setRatesError('');
+    if (hasFinance && tutors.length) compensationApi.summaries(tutors.map(tutor => tutor.id))
+      .then(items => { if (active) setRates(Object.fromEntries(items.map(item => [item.tutorId, item]))); })
+      .catch(failure => { if (active) setRatesError(operationError(failure)); });
+    return () => { active = false; };
+  }, [hasFinance, tutors, ratesRefresh]);
 
   useEffect(() => {
     loadTutors();
@@ -170,6 +196,9 @@ const TutorsPage = () => {
   };
 
   const getStatusBadge = (tutor: TutorListItem) => {
+    if (tutor.status === 'test_qualified') {
+      return <span className="status-badge processing" title="Manual qualification for salary testing; screening results are unchanged"><i className="ri-flask-line"></i> Test Qualified</span>;
+    }
     if (tutor.status === 'certified') {
       return <span className="status-badge certified"><i className="ri-shield-check-line"></i> Certified</span>;
     } else if (tutor.status === 'pending_profile') {
@@ -244,6 +273,7 @@ const TutorsPage = () => {
     <div className="tutors-page">
       <div className="page-header">
         <div className="header-content">
+          <AdminArt name="community" className="page-art" />
           <h1>Tutors Management</h1>
           <p>View and manage platform tutors</p>
         </div>
@@ -278,7 +308,7 @@ const TutorsPage = () => {
       <div className="quick-stats">
         <div className="quick-stat">
           <div className="stat-icon blue">
-            <i className="ri-user-star-line"></i>
+            <AdminArt name="community" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{total}</span>
@@ -289,20 +319,20 @@ const TutorsPage = () => {
         </div>
         <div className="quick-stat">
           <div className="stat-icon green">
-            <i className="ri-star-line"></i>
+            <AdminArt name="growth" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{avgRating}</span>
-            <span className="stat-label">Avg Rating</span>
+            <span className="stat-label">Avg rating · this page</span>
           </div>
         </div>
         <div className="quick-stat">
           <div className="stat-icon purple">
-            <i className="ri-video-chat-line"></i>
+            <AdminArt name="schedule" />
           </div>
           <div className="stat-info">
             <span className="stat-number">{totalSessions}</span>
-            <span className="stat-label">Total Sessions</span>
+            <span className="stat-label">Sessions · this page</span>
           </div>
         </div>
       </div>
@@ -336,31 +366,46 @@ const TutorsPage = () => {
       </div>
 
       {/* Tutors Table */}
-      <div className="tutors-table-card">
+      {hasFinance && ratesError && <p className="error-message" role="alert">{ratesError} <button type="button" title="Reload base rates" aria-label="Reload base rates" onClick={() => setRatesRefresh(value => value + 1)}><i aria-hidden="true" className="ri-refresh-line" /></button></p>}
+      <div className="tutors-table-card" role="region" aria-label="Tutor list" tabIndex={0}>
         {loading ? (
           <div className="loading-state">
             <i className="ri-loader-4-line spinning"></i>
             <span>Loading tutors...</span>
           </div>
         ) : (
-          <table className="tutors-table">
+          <table key={hasFinance ? 'finance' : 'standard'} className="tutors-table">
+            <caption className="sr-only">Tutors, exam results, certification, sessions, and account actions</caption>
+            <colgroup>
+              <col className="tutor-column" />
+              {hasFinance && <col key="rate" className="rate-column" />}
+              <col key="languages" className="languages-column" />
+              <col key="written" className="exam-column" />
+              <col key="speaking" className="exam-column" />
+              <col key="status" className="status-column" />
+              <col key="proof" className="proof-column" />
+              <col key="sessions" className="sessions-column" />
+              <col key="rating" className="rating-column" />
+              <col key="actions" className="actions-column" />
+            </colgroup>
             <thead>
               <tr>
-                <th>Tutor</th>
-                <th>Languages</th>
-                <th>Written Exam</th>
-                <th>Speaking Exam</th>
-                <th>Status</th>
-                <th>ZK Proof</th>
-                <th>Sessions</th>
-                <th>Rating</th>
-                <th>Actions</th>
+                <th key="tutor" scope="col">Tutor</th>
+                {hasFinance && <th key="rate" scope="col">Base rate (USD)</th>}
+                <th key="languages" scope="col">Languages</th>
+                <th key="written" scope="col">Written Exam</th>
+                <th key="speaking" scope="col">Speaking Exam</th>
+                <th key="status" scope="col">Status</th>
+                <th key="proof" scope="col">ZK Proof</th>
+                <th key="sessions" scope="col">Sessions</th>
+                <th key="rating" scope="col">Rating</th>
+                <th key="actions" scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
               {tutors.map(tutor => (
                 <tr key={tutor.id} className={tutor.isSuspended ? 'suspended-row' : ''}>
-                  <td className="tutor-cell">
+                  <td key="tutor" className="tutor-cell">
                     <div className="tutor-info">
                       <div className={`tutor-avatar ${tutor.isSuspended ? 'suspended' : ''}`}>
                         <span>{tutor.name?.charAt(0) || 'T'}</span>
@@ -374,11 +419,14 @@ const TutorsPage = () => {
                             </span>
                           )}
                         </span>
-                        <span className="tutor-email">{tutor.email}</span>
+                        <span className="tutor-email" title={tutor.email}>{tutor.email}</span>
                       </div>
                     </div>
                   </td>
-                  <td>
+                  {hasFinance && <td key="rate" className="tutor-base-rate"><button type="button" className="tutor-rate-link" title="Edit tutor compensation" onClick={() => setAccount({ id: tutor.id, tab: 'compensation' })}>
+                    {rates[tutor.id] ? usdRateLabel(rates[tutor.id].baseRateCents) : ratesError ? 'Unavailable' : 'Loading...'}<i aria-hidden="true" className="ri-pencil-line" />
+                  </button></td>}
+                  <td key="languages">
                     <div className="language-tags">
                       {(tutor.languages || []).slice(0, 2).map((lang, i) => (
                         <span key={i} className="language-tag">{lang}</span>
@@ -386,10 +434,11 @@ const TutorsPage = () => {
                       {(tutor.languages || []).length > 2 && (
                         <span className="language-tag more">+{tutor.languages.length - 2}</span>
                       )}
+                      {!tutor.languages?.length && <span className="not-taken">Not set</span>}
                     </div>
                   </td>
-                  <td>
-                    {tutor.writtenExamScore !== undefined ? (
+                  <td key="written">
+                    {typeof tutor.writtenExamScore === 'number' && Number.isFinite(tutor.writtenExamScore) ? (
                       <span className={`exam-score ${tutor.writtenExamPassed ? 'passed' : 'failed'}`}>
                         {tutor.writtenExamScore}%
                       </span>
@@ -397,8 +446,8 @@ const TutorsPage = () => {
                       <span className="not-taken">Not taken</span>
                     )}
                   </td>
-                  <td>
-                    {tutor.speakingExamScore !== undefined ? (
+                  <td key="speaking">
+                    {typeof tutor.speakingExamScore === 'number' && Number.isFinite(tutor.speakingExamScore) ? (
                       <span className={`exam-score ${tutor.speakingExamPassed ? 'passed' : 'failed'}`}>
                         {tutor.speakingExamScore}%
                       </span>
@@ -408,10 +457,10 @@ const TutorsPage = () => {
                       <span className="not-taken">Not taken</span>
                     )}
                   </td>
-                  <td>{getStatusBadge(tutor)}</td>
-                  <td>{getProofStatusBadge(tutor)}</td>
-                  <td className="sessions-cell">{tutor.totalSessions}</td>
-                  <td>
+                  <td key="status">{getStatusBadge(tutor)}</td>
+                  <td key="proof">{getProofStatusBadge(tutor)}</td>
+                  <td key="sessions" className="sessions-cell">{tutor.totalSessions ?? 0}</td>
+                  <td key="rating">
                     {tutor.rating > 0 ? (
                       <div className="rating">
                         <i className="ri-star-fill"></i>
@@ -421,9 +470,9 @@ const TutorsPage = () => {
                       <span className="no-rating">—</span>
                     )}
                   </td>
-                  <td>
+                  <td key="actions">
                     <div className="action-buttons">
-                      <a className="action-btn" title="Operations detail" aria-label="Operations detail" href={`/operations/people/tutor/${encodeURIComponent(tutor.id)}`}><i className="ri-dashboard-line" /></a>
+                      <button type="button" className="action-btn" title="Operations detail" aria-label="Operations detail" onClick={() => setAccount({ id: tutor.id, tab: 'profile' })}><i className="ri-dashboard-line" /></button>
                       <button 
                         className="action-btn view" 
                         title="View Profile"
@@ -438,7 +487,7 @@ const TutorsPage = () => {
                       >
                         <i className="ri-history-line"></i>
                       </button>
-                      <button className="action-btn edit" title="Edit">
+                      <button className="action-btn edit" title="Edit" onClick={() => setAccount({ id: tutor.id, tab: 'profile' })}>
                         <i className="ri-edit-line"></i>
                       </button>
                       {canRetryProof(tutor) && (
@@ -620,14 +669,14 @@ const TutorsPage = () => {
                   <div className="profile-item">
                     <span className="label">Written Exam</span>
                     <span className={`value ${viewingTutor.writtenExamPassed ? 'passed' : 'failed'}`}>
-                      {viewingTutor.writtenExamScore !== undefined ? `${viewingTutor.writtenExamScore}%` : 'Not taken'}
+                      {typeof viewingTutor.writtenExamScore === 'number' && Number.isFinite(viewingTutor.writtenExamScore) ? `${viewingTutor.writtenExamScore}%` : 'Not taken'}
                       {viewingTutor.writtenExamPassed && <i className="ri-check-line"></i>}
                     </span>
                   </div>
                   <div className="profile-item">
                     <span className="label">Speaking Exam</span>
                     <span className={`value ${viewingTutor.speakingExamPassed ? 'passed' : 'failed'}`}>
-                      {viewingTutor.speakingExamScore !== undefined ? `${viewingTutor.speakingExamScore}%` : 'Not taken'}
+                      {typeof viewingTutor.speakingExamScore === 'number' && Number.isFinite(viewingTutor.speakingExamScore) ? `${viewingTutor.speakingExamScore}%` : 'Not taken'}
                       {viewingTutor.speakingExamPassed && <i className="ri-check-line"></i>}
                     </span>
                   </div>
@@ -823,6 +872,7 @@ const TutorsPage = () => {
           </div>
         </div>
       )}
+      {account && <OperationsAccountModal key={account.id} tutorId={account.id} initialTab={account.tab} onClose={closeAccount} />}
     </div>
   );
 };

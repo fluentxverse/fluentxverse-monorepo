@@ -84,7 +84,7 @@ export interface TutorListItem {
   interviewPassed: boolean;
   writtenExamScore?: number;
   speakingExamScore?: number;
-  status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
+  status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile' | 'test_qualified';
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
   zkCertificationStatus?: 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
   zkCredentialCommitment?: string;

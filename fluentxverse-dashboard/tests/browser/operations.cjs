@@ -80,7 +80,7 @@ detail.penalties = [];
       await page.getByRole('navigation', { name: 'Lesson detail views' }).getByRole('button', { name: 'notes', exact: true }).click();
       await page.getByText('Saved version', { exact: true }).count(); await page.screenshot({ path: `../output/screenshots/admin-ops-notes-${width}.png`, fullPage: true });
       await page.goto(`${base}/operations/people/tutor/tutor`, { waitUntil: 'domcontentloaded' });
-      await page.getByRole('button', { name: 'Remove booking restriction' }).waitFor(); await page.getByRole('button', { name: 'penalties', exact: true }).click();
+      await page.getByRole('button', { name: 'Remove booking restriction' }).waitFor(); await page.getByRole('tab', { name: 'penalties', exact: true }).click();
       await page.getByRole('button', { name: 'Revoke penalty' }).click(); await dialog.getByText(/Reliability: 80% to 100%/).waitFor();
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
       caps = ['support']; await page.goto(`${base}/lesson-operations`, { waitUntil: 'domcontentloaded' }); await page.getByText('Starting soon', { exact: true }).waitFor();

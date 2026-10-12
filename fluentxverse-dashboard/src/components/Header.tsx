@@ -3,8 +3,18 @@ import { useAuthContext } from '../context/AuthContext';
 import { adminApi, RecentActivity } from '../api/admin.api';
 import { createRealtimeSocket, type RealtimeSocket } from '../client/realtimeSocket';
 import './Header.css';
+import { useLocation } from 'preact-iso';
 
-export function Header() {
+const pageNames: Record<string, string> = {
+  '/':'Overview', '/tutors':'Tutors', '/students':'Students', '/applications':'Applications',
+  '/interviews':'Interviews', '/sessions':'Sessions', '/recordings':'QA Recordings',
+  '/lesson-operations':'Lesson Operations', '/tickets':'Tickets', '/payments':'Payments',
+  '/analytics':'Analytics', '/tasks':'Tasks & Suggestions', '/inbox':'Inbox',
+  '/admins':'Administrators', '/settings':'Settings', '/lesson-material-maker':'Lesson Maker',
+  '/ceo-orientation':'CEO Orientation', '/platform-overview':'Platform Overview',
+};
+export function Header({ navigationOpen = false, onToggleNavigation }: { navigationOpen?: boolean; onToggleNavigation?: () => void }) {
+  const { path } = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState<RecentActivity[]>([]);
@@ -149,25 +159,20 @@ export function Header() {
   return (
     <header className="dashboard-header">
       <div className="header-left">
-        <div className="search-box">
-          <i className="ri-search-line"></i>
-          <input 
-            type="text" 
-            placeholder="Search tutors, students, sessions..." 
-            className="search-input"
-          />
-          <span className="search-shortcut">⌘K</span>
-        </div>
+        <button type="button" id="admin-navigation-toggle" className="header-btn admin-navigation-toggle" aria-label={navigationOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={navigationOpen} aria-controls="admin-navigation" onClick={onToggleNavigation}><i className={navigationOpen ? 'ri-close-line' : 'ri-menu-line'} aria-hidden="true" /></button>
+        <nav className="admin-breadcrumb" aria-label="Breadcrumb"><a href="/">Workspace</a><i className="ri-arrow-right-s-line" aria-hidden="true" /><span aria-current="page">{pageNames[path] || 'Management'}</span></nav>
       </div>
 
       <div className="header-right">
-        <button className="header-btn" title="Help">
+        <a href="/platform-overview" className="header-btn" title="Platform overview" aria-label="Platform overview">
           <i className="ri-question-line"></i>
-        </button>
+        </a>
         
         <div className="notification-wrapper" ref={notificationRef}>
           <button 
             className="header-btn notification-btn"
+            aria-label="Activity feed"
+            aria-expanded={showNotifications}
             onClick={() => setShowNotifications(!showNotifications)}
           >
             <i className="ri-notification-3-line"></i>
@@ -220,8 +225,10 @@ export function Header() {
         <div className="header-divider"></div>
 
         <div className="header-user-wrapper" ref={userMenuRef}>
-          <div 
+          <button type="button"
             className="header-user"
+            aria-label="Account menu"
+            aria-expanded={showUserMenu}
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
             <div className="avatar">
@@ -232,7 +239,7 @@ export function Header() {
               <span className="user-role">{user?.role || 'admin'}</span>
             </div>
             <i className={`ri-arrow-${showUserMenu ? 'up' : 'down'}-s-line`}></i>
-          </div>
+          </button>
 
           {showUserMenu && (
             <div className="user-dropdown">
@@ -246,10 +253,10 @@ export function Header() {
                 </div>
               </div>
               <div className="user-dropdown-divider"></div>
-              <button className="user-dropdown-item">
+              <a href="/settings" className="user-dropdown-item">
                 <i className="ri-settings-3-line"></i>
                 Settings
-              </button>
+              </a>
               <button className="user-dropdown-item" onClick={handleLogout}>
                 <i className="ri-logout-box-r-line"></i>
                 Sign Out

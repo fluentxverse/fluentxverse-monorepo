@@ -1,4 +1,5 @@
 import { LocationProvider, Router, Route, useLocation } from 'preact-iso';
+import { useCallback, useState } from 'preact/hooks';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
@@ -55,6 +56,11 @@ const LoadingScreen = () => (
 // Protected layout wrapper
 const ProtectedLayout = ({ children }: { children: any }) => {
   const { isAuthenticated, loading } = useAuthContext();
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const closeNavigation = useCallback(() => {
+    setNavigationOpen(false);
+    document.getElementById('admin-navigation-toggle')?.focus();
+  }, []);
 
   if (loading) {
     return <LoadingScreen />;
@@ -66,9 +72,9 @@ const ProtectedLayout = ({ children }: { children: any }) => {
 
   return (
     <div className="dashboard-layout">
-      <Sidebar />
+      <Sidebar open={navigationOpen} onClose={closeNavigation} />
       <div className="dashboard-main">
-        <Header />
+        <Header navigationOpen={navigationOpen} onToggleNavigation={() => setNavigationOpen(value => !value)} />
         <main className="dashboard-content">
           {children}
         </main>

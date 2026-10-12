@@ -4,6 +4,13 @@ import { useAuthContext } from '../context/AuthContext';
 import { adminApi, type DashboardStats, type ExamStats, type PendingTutor, type RecentActivity } from '../api/admin.api';
 import { interviewApi } from '../api/interview.api';
 import './DashboardPage.css';
+import { AdminArt, type AdminArtName } from '../components/AdminArt';
+
+const metricArt: Record<string, AdminArtName> = {
+  'fa-chalkboard-teacher':'community', 'fa-certificate':'training', 'fa-user-graduate':'training',
+  'fa-clock':'schedule', 'fa-file-alt':'training', 'fa-calendar-check':'schedule',
+  'fa-chart-line':'growth', 'fa-book-open':'training',
+};
 
 interface StatCard {
   title: string;
@@ -163,7 +170,7 @@ const DashboardPage = () => {
       value: stats.pendingTutors,
       icon: 'fa-clock',
       color: '#f59e0b',
-      link: '/tutors?tab=pending'
+      link: '/applications'
     }
   ] : [];
 
@@ -312,13 +319,13 @@ const DashboardPage = () => {
       <div className="page-header">
         <div className="page-header-content">
           <h1>
-            {getGreeting()}, {user?.username || 'Admin'}!</h1>
-          <p>Here's an overview of your platform today.</p>
+            <AdminArt name="home" className="page-art" /> Platform overview</h1>
+          <p>{getGreeting()}, {user?.username || 'Admin'} · {new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' })}</p>
         </div>
         <div className="page-header-actions">
           <div className="system-status">
             <span className="status-indicator online"></span>
-            <span className="status-text">All Systems Online</span>
+            <span className="status-text">{lastUpdated ? 'Data refreshed' : 'Awaiting data'}</span>
           </div>
           <button 
             className="refresh-btn" 
@@ -346,7 +353,7 @@ const DashboardPage = () => {
             style={{ '--accent-color': stat.color } as any}
           >
             <div className="stat-icon">
-              <i className={`fas ${stat.icon}`}></i>
+              <AdminArt name={metricArt[stat.icon] || 'growth'} />
             </div>
             <div className="stat-content">
               <h3>{stat.title}</h3>
@@ -359,7 +366,7 @@ const DashboardPage = () => {
               )}
             </div>
             <div className="stat-arrow">
-              <i className="fas fa-chevron-right"></i>
+              <i className="ri-arrow-right-up-line" aria-hidden="true"></i>
             </div>
           </a>
         ))}
@@ -368,7 +375,7 @@ const DashboardPage = () => {
       {/* Quick Actions */}
       <div className="quick-actions-section">
         <div className="section-header">
-          <h2><i className="fas fa-bolt"></i> Quick Actions</h2>
+          <h2>Quick actions</h2>
         </div>
         <div className="quick-actions-grid">
           {quickActions.map((action, index) => (
@@ -379,10 +386,10 @@ const DashboardPage = () => {
               style={{ '--action-color': action.color } as any}
             >
               <div className="action-icon">
-                <i className={`fas ${action.icon}`}></i>
+                {metricArt[action.icon] ? <AdminArt name={metricArt[action.icon]} /> : <i className="ri-settings-3-line" aria-hidden="true"></i>}
               </div>
               <span className="action-title">{action.title}</span>
-              {action.badge && action.badge > 0 && (
+              {typeof action.badge === 'number' && action.badge > 0 && (
                 <span className="action-badge">{action.badge}</span>
               )}
             </a>
@@ -396,7 +403,7 @@ const DashboardPage = () => {
         {examStats && (
           <div className="dashboard-card exam-stats-card">
             <div className="card-header">
-              <h2><i className="fas fa-chart-pie"></i> Exam Statistics</h2>
+              <h2><AdminArt name="training" /> Exam Statistics</h2>
             </div>
             <div className="card-body">
               <div className="exam-stats-grid">
@@ -463,7 +470,7 @@ const DashboardPage = () => {
         {interviewStats && (
           <div className="dashboard-card interview-analytics-card">
             <div className="card-header">
-              <h2><i className="fas fa-video"></i> Interview Analytics</h2>
+              <h2><AdminArt name="growth" /> Interview Analytics</h2>
               <a href="/interviews" className="view-all-link">View Schedule</a>
             </div>
             <div className="card-body">
@@ -573,7 +580,7 @@ const DashboardPage = () => {
         {/* Today's Interview Queue */}
         <div className="dashboard-card today-queue-card">
           <div className="card-header">
-            <h2><i className="fas fa-calendar-day"></i> Today's Interviews</h2>
+            <h2><AdminArt name="schedule" /> Today's Interviews</h2>
             <span className="queue-count">{todayQueue.length} scheduled</span>
           </div>
           <div className="card-body">
@@ -638,7 +645,7 @@ const DashboardPage = () => {
               </div>
             ) : (
               <div className="empty-state">
-                <i className="fas fa-calendar-check" style={{ fontSize: '32px', marginBottom: '12px', opacity: 0.5 }}></i>
+                <AdminArt name="schedule" />
                 <p>No interviews scheduled for today</p>
               </div>
             )}
@@ -648,8 +655,7 @@ const DashboardPage = () => {
         {/* Recent Activity */}
         <div className="dashboard-card activity-card">
           <div className="card-header">
-            <h2><i className="fas fa-history"></i> Recent Activity</h2>
-            <a href="/reports" className="view-all-link">View All</a>
+            <h2><AdminArt name="growth" /> Recent Activity</h2>
           </div>
           <div className="card-body">
             {recentActivities.length > 0 ? (
@@ -677,8 +683,8 @@ const DashboardPage = () => {
         {/* Pending Tutors */}
         <div className="dashboard-card pending-tutors-card">
           <div className="card-header">
-            <h2><i className="fas fa-user-clock"></i> Pending Tutors</h2>
-            <a href="/tutors?status=pending" className="view-all-link">View All</a>
+            <h2><AdminArt name="community" /> Pending Tutors</h2>
+            <a href="/applications" className="view-all-link">View All</a>
           </div>
           <div className="card-body">
             {pendingTutors.length > 0 ? (

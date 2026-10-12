@@ -1,9 +1,10 @@
 import { useLocation } from 'preact-iso';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { useAuthContext } from '../context/AuthContext';
 import { adminApi } from '../api/admin.api';
 import { operations } from '../api/operations.api';
 import './Sidebar.css';
+import { AdminArt, type AdminArtName } from './AdminArt';
 
 interface NavItem {
   path: string;
@@ -34,12 +35,43 @@ const navItems: NavItem[] = [
   { path: '/settings', icon: 'ri-settings-3-line', label: 'Settings' },
 ];
 
-export function Sidebar() {
+const navigationArt: Record<string, AdminArtName> = {
+  '/':'home', '/interviews':'schedule', '/applications':'training', '/tutors':'community',
+  '/students':'training', '/tickets':'pay', '/lesson-material-maker':'training',
+  '/sessions':'schedule', '/analytics':'growth', '/payments':'pay',
+};
+
+export function Sidebar({ open = false, onClose }: { open?: boolean; onClose?: () => void }) {
   const { path } = useLocation();
   const { user, logout } = useAuthContext();
   const [badges, setBadges] = useState<Record<string, number>>({});
   const [permissions, setPermissions] = useState<string[]>([]);
-  useEffect(() => { operations('/access').then(a => setPermissions(a.permissions)).catch(() => setPermissions([])); }, []);
+  const navigationRef = useRef<HTMLElement>(null);
+  useEffect(() => { if (open) onClose?.(); }, [path]);
+  useLayoutEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusable = () => Array.from(navigationRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') || []);
+    focusable()[0]?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose?.();
+      if (event.key !== 'Tab') return;
+      const controls = focusable(), first = controls[0], last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    const compact = window.matchMedia('(max-width:1024px)');
+    const closeOnDesktop = () => { if (!compact.matches) onClose?.(); };
+    compact.addEventListener('change', closeOnDesktop);
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+      compact.removeEventListener('change', closeOnDesktop);
+    };
+  }, [open, onClose]);
+  useEffect(() => { operations('/access').then(a => setPermissions(Array.isArray(a?.permissions) ? a.permissions : [])).catch(() => setPermissions([])); }, []);
 
   const isSuperAdmin = user?.role === 'superadmin';
 
@@ -86,7 +118,9 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="sidebar">
+    <>
+    {open && <button type="button" className="admin-navigation-backdrop" aria-label="Close navigation" onClick={onClose} />}
+    <aside ref={navigationRef} className={`sidebar ${open ? 'open' : ''}`} id="admin-navigation">
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <img
@@ -96,12 +130,12 @@ export function Sidebar() {
           />
           <div className="logo-text">
             <span className="logo-title">FluentXVerse</span>
-            <span className="logo-subtitle">Admin Dashboard</span>
+            <span className="logo-subtitle">Administration</span>
           </div>
         </div>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav" aria-label="Administration">
         <div className="nav-section">
           <span className="nav-section-title">Main Menu</span>
           <ul className="nav-list">
@@ -112,8 +146,9 @@ export function Sidebar() {
                   <a
                     href={item.path}
                     className={`nav-item ${path === item.path ? 'active' : ''}`}
+                    aria-current={path === item.path ? 'page' : undefined}
                   >
-                    <i className={item.icon}></i>
+                    {navigationArt[item.path] ? <AdminArt name={navigationArt[item.path]} /> : <i className={item.icon} aria-hidden="true"></i>}
                     <span>{item.label}</span>
                     {badgeCount !== undefined && badgeCount > 0 && (
                       <span className="nav-badge">{badgeCount}</span>
@@ -135,8 +170,9 @@ export function Sidebar() {
                   <a
                     href={item.path}
                     className={`nav-item ${path === item.path ? 'active' : ''}`}
+                    aria-current={path === item.path ? 'page' : undefined}
                   >
-                    <i className={item.icon}></i>
+                    {navigationArt[item.path] ? <AdminArt name={navigationArt[item.path]} /> : <i className={item.icon} aria-hidden="true"></i>}
                     <span>{item.label}</span>
                     {badgeCount !== undefined && badgeCount > 0 && (
                       <span className="nav-badge">{badgeCount}</span>
@@ -167,5 +203,6 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }
