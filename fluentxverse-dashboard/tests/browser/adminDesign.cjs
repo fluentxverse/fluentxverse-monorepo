@@ -23,6 +23,8 @@ async function fixture(browser, width, finance, accessDelay=0) {
       if(accessDelay) await new Promise(r=>setTimeout(r,accessDelay));
       result.data = {permissions:finance?['finance','qa','support']:['support']};
     } else if(path === '/admin/tutors') result.data = {total:3,tutors};
+    else if(path === '/admin/students') result.data = {total:0,students:[]};
+    else if(path.startsWith('/admin/operations/people/tutor/')) result.data = {person:{name:'ZK Local Tutor',email:'tutor@example.test'},lessons:[],penalties:[],reports:[],transactions:[],performance:null,progress:[],role:'tutor'};
     else if(path === '/admin/operations/compensation') result.data = tutors.map(t=>({tutorId:t.id,currency:'USD',baseRateCents:t.id==='pending'?1250:null,version:0}));
     else if(path === '/admin/stats') result.data = {totalTutors:128,certifiedTutors:96,totalStudents:842,pendingTutors:14,totalSessions:1256,totalRevenue:4215};
     else if(path === '/admin/exam-stats') result.data = {writtenExams:{total:100,passed:86,failed:14},speakingExams:{total:80,passed:64,failed:10,processing:6}};
@@ -63,8 +65,19 @@ async function fixture(browser, width, finance, accessDelay=0) {
       assert(bounds.x>=0&&bounds.x+bounds.width<=width+1,'Actions must remain reachable');
       await page.locator('.tutors-table-card').evaluate(e=>{e.scrollLeft=0});
       await page.screenshot({path:resolve(output,'tutors-'+width+'-'+finance+'.png')});
-      await page.goto(base+'/');
+      await page.locator('.tutor-tab').filter({hasText:'All Tutors'}).click();
+      await page.locator('.tutors-table tbody tr').first().waitFor();
+      if(width<1025) {
+        await page.getByRole('button',{name:'Open navigation menu',exact:true}).click();
+        await page.waitForFunction(()=>Math.abs(document.querySelector('.sidebar').getBoundingClientRect().x)<1);
+      }
+      await page.locator('.sidebar a[href="/"]').click();
+      await page.waitForURL(base+'/');
       await page.locator('.stat-card').first().waitFor();
+      await page.screenshot({path:resolve(output,'route-transition-'+width+'.png')});
+      assert.equal(await page.locator('.tutors-page').count(),0,'Tutors Management must unmount after navigating away');
+      assert.equal(await page.locator('.dashboard-content > div').count(),1,'Only the selected route should remain mounted');
+      assert.equal(await page.locator('.dashboard-route').getAttribute('data-route'),'/');
       const art=await page.locator('.admin-art').evaluateAll(images=>images.every(image=>image.complete&&image.naturalWidth>0));
       assert(art,'All custom artwork must load');
       const ratio=await page.locator('.exam-stat-section').first().evaluate(element=>{
@@ -92,6 +105,40 @@ async function fixture(browser, width, finance, accessDelay=0) {
       }
       assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
       await page.screenshot({path:resolve(output,'overview-'+width+'.png')});
+      await page.evaluate(()=>{window.__navigationDocument='same-document'});
+      const navigate = async href => {
+        if(width<1025 && !await page.locator('.sidebar').isVisible()){
+          await page.getByRole('button',{name:'Open navigation menu',exact:true}).click();
+          await page.waitForFunction(()=>Math.abs(document.querySelector('.sidebar').getBoundingClientRect().x)<1);
+        }
+        await page.locator('.sidebar a[href="'+href+'"]').click();
+        await page.waitForURL(base+href);
+        assert.equal(await page.evaluate(()=>window.__navigationDocument),'same-document','Use in-app navigation, not page reloads');
+        await page.waitForFunction(path=>document.querySelector('.dashboard-route')?.dataset.route===path,href);
+        assert.equal(await page.locator('.dashboard-route').count(),1);
+      };
+      await navigate('/tutors');
+      await page.getByRole('heading',{name:'Tutors Management',exact:true}).waitFor();
+      await page.getByRole('button',{name:'All Tutors',exact:true}).click();
+      await navigate('/students');
+      await page.getByRole('heading',{name:'Students Management',exact:true}).waitFor();
+      assert.equal(await page.locator('.tutors-page,.dashboard-page').count(),0);
+      await page.goBack();
+      await page.getByRole('heading',{name:'Tutors Management',exact:true}).waitFor();
+      assert.equal(await page.locator('.students-page').count(),0);
+      await page.goForward();
+      await page.getByRole('heading',{name:'Students Management',exact:true}).waitFor();
+      assert.equal(await page.locator('.tutors-page').count(),0);
+      await navigate('/tutors');
+      await page.locator('.tutors-table tbody tr').first().waitFor();
+      await page.locator('.tutors-table-card').evaluate(e=>{e.scrollLeft=e.scrollWidth});
+      await page.getByRole('button',{name:'Operations detail',exact:true}).first().click();
+      await page.getByRole('button',{name:'Close tutor details',exact:true}).waitFor();
+      await page.getByRole('button',{name:'Close tutor details',exact:true}).click();
+      await navigate('/');
+      await page.locator('.stat-card').first().waitFor();
+      assert.equal(await page.locator('.tutors-page,.account-dialog').count(),0);
+      assert.equal(await page.evaluate(()=>document.body.style.overflow),'');
       assert.deepEqual(errors,[]);
       assert(requests.every(r=>r.method==='GET'||r.method==='OPTIONS'),'Visual test must not mutate accounts');
       await context.close();

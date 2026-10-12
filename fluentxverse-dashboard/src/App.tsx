@@ -56,6 +56,7 @@ const LoadingScreen = () => (
 // Protected layout wrapper
 const ProtectedLayout = ({ children }: { children: any }) => {
   const { isAuthenticated, loading } = useAuthContext();
+  const { path } = useLocation();
   const [navigationOpen, setNavigationOpen] = useState(false);
   const closeNavigation = useCallback(() => {
     setNavigationOpen(false);
@@ -76,7 +77,10 @@ const ProtectedLayout = ({ children }: { children: any }) => {
       <div className="dashboard-main">
         <Header navigationOpen={navigationOpen} onToggleNavigation={() => setNavigationOpen(value => !value)} />
         <main className="dashboard-content">
-          {children}
+          {/* Replace the DOM boundary as well as the router's cached route tree. */}
+          <div key={path} className="dashboard-route" data-route={path}>
+            {children}
+          </div>
         </main>
       </div>
     </div>

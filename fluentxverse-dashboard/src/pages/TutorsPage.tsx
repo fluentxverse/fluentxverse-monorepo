@@ -285,21 +285,21 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
           className={`tutor-tab ${activeTab === 'certified' ? 'active' : ''}`}
           onClick={() => handleTabChange('certified')}
         >
-          <i className="ri-shield-check-line"></i>
+          <i className="ri-shield-check-line" aria-hidden="true"></i>
           Certified Tutors
         </button>
         <button
           className={`tutor-tab ${activeTab === 'all' ? 'active' : ''}`}
           onClick={() => handleTabChange('all')}
         >
-          <i className="ri-group-line"></i>
+          <i className="ri-group-line" aria-hidden="true"></i>
           All Tutors
         </button>
         <button
           className={`tutor-tab ${activeTab === 'suspended' ? 'active' : ''}`}
           onClick={() => handleTabChange('suspended')}
         >
-          <i className="ri-forbid-line"></i>
+          <i className="ri-forbid-line" aria-hidden="true"></i>
           Suspended
         </button>
       </div>
