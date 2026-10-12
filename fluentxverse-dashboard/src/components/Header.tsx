@@ -4,6 +4,8 @@ import { adminApi, RecentActivity } from '../api/admin.api';
 import { createRealtimeSocket, type RealtimeSocket } from '../client/realtimeSocket';
 import './Header.css';
 import { useLocation } from 'preact-iso';
+import { ActivityTimestamp } from './ActivityTimestamp';
+import { useActivityClock } from '../hooks/useActivityClock';
 
 const pageNames: Record<string, string> = {
   '/':'Overview', '/tutors':'Tutors', '/students':'Students', '/applications':'Applications',
@@ -15,6 +17,7 @@ const pageNames: Record<string, string> = {
 };
 export function Header({ navigationOpen = false, onToggleNavigation }: { navigationOpen?: boolean; onToggleNavigation?: () => void }) {
   const { path } = useLocation();
+  const now = useActivityClock();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState<RecentActivity[]>([]);
@@ -125,18 +128,6 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
     }
   };
 
-  const formatTimeAgo = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`;
-    return date.toLocaleDateString();
-  };
-
   const getInitials = () => {
     if (!user) return 'AD';
     // Use first 2 chars of username
@@ -208,7 +199,7 @@ export function Header({ navigationOpen = false, onToggleNavigation }: { navigat
                         </div>
                         <div className="notification-content">
                           <p>{notification.message}</p>
-                          <span>{formatTimeAgo(notification.timestamp)}</span>
+                          <ActivityTimestamp timestamp={notification.timestamp} now={now} />
                         </div>
                       </div>
                     );

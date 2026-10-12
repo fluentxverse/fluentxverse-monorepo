@@ -3,6 +3,7 @@ import { metricOutcome } from '../../utils/tutorPerformance';
 import { plainNode } from '../../utils/adminOperations';
 import { invalidateUserTokens } from '../../db/redis';
 import neo4j from 'neo4j-driver';
+import { adminActivityTimestamp, newestActivityFirst } from '../../utils/adminActivityTimestamp';
 import { hash, compare } from 'bcrypt-ts';
 import type { 
   DashboardStats, 
@@ -907,23 +908,24 @@ export class AdminService {
 
     try {
       // Get recent tutor registrations - User nodes are tutors
-      // Use registeredAt field which is stored as timestamp()
+      // Memgraph timestamp() stores microseconds; Date.now() fields use milliseconds.
       const tutorResult = await session.run(`
         MATCH (u:User)
         WHERE u.registeredAt IS NOT NULL
         RETURN u.id as id, u.firstName as firstName, u.lastName as lastName, u.registeredAt as timestamp, 'tutor_registered' as type
         ORDER BY u.registeredAt DESC
         LIMIT $limit
-      `, { limit: neo4j.int(Math.ceil(limit / 2)) });
+      `, { limit: neo4j.int(limit) });
 
       // Get recent student registrations - Students have their own label
-      // Use signUpdate as a fallback since students don't have createdAt
+      // signUpdate is a credential-change timestamp, not a registration date.
       const studentResult = await session.run(`
         MATCH (s:Student)
-        RETURN s.id as id, s.givenName as firstName, s.familyName as lastName, s.signUpdate as timestamp, 'student_joined' as type
-        ORDER BY s.signUpdate DESC
+        RETURN s.id as id, s.givenName as firstName, s.familyName as lastName,
+          coalesce(s.registeredAt, s.createdAt) as timestamp, 'student_joined' as type
+        ORDER BY CASE WHEN timestamp IS NULL THEN 1 ELSE 0 END ASC, timestamp DESC
         LIMIT $limit
-      `, { limit: neo4j.int(Math.ceil(limit / 2)) });
+      `, { limit: neo4j.int(limit) });
 
       const activities: RecentActivity[] = [];
 
@@ -933,17 +935,7 @@ export class AdminService {
         const lastName = record.get('lastName') || '';
         const rawTimestamp = record.get('timestamp');
         
-        // Handle Neo4j Integer timestamp (milliseconds since epoch)
-        let timestamp: string;
-        if (rawTimestamp && typeof rawTimestamp === 'object' && 'toNumber' in rawTimestamp) {
-          timestamp = new Date(rawTimestamp.toNumber()).toISOString();
-        } else if (rawTimestamp && typeof rawTimestamp === 'number') {
-          timestamp = new Date(rawTimestamp).toISOString();
-        } else if (rawTimestamp && typeof rawTimestamp === 'string') {
-          timestamp = rawTimestamp;
-        } else {
-          timestamp = new Date().toISOString();
-        }
+        const timestamp = adminActivityTimestamp(rawTimestamp);
         
         activities.push({
           id: record.get('id'),
@@ -960,17 +952,7 @@ export class AdminService {
         const lastName = record.get('lastName') || '';
         const rawTimestamp = record.get('timestamp');
         
-        // Handle signUpdate (stored as Date.now() milliseconds)
-        let timestamp: string;
-        if (rawTimestamp && typeof rawTimestamp === 'object' && 'toNumber' in rawTimestamp) {
-          timestamp = new Date(rawTimestamp.toNumber()).toISOString();
-        } else if (rawTimestamp && typeof rawTimestamp === 'number') {
-          timestamp = new Date(rawTimestamp).toISOString();
-        } else if (rawTimestamp && typeof rawTimestamp === 'string') {
-          timestamp = rawTimestamp;
-        } else {
-          timestamp = new Date().toISOString();
-        }
+        const timestamp = adminActivityTimestamp(rawTimestamp);
         
         activities.push({
           id: record.get('id'),
@@ -996,24 +978,7 @@ export class AdminService {
         const lastName = record.get('lastName') || '';
         const rawTimestamp = record.get('timestamp');
         
-        // Handle Neo4j DateTime
-        let timestamp: string;
-        if (rawTimestamp && typeof rawTimestamp === 'string') {
-          timestamp = rawTimestamp;
-        } else if (rawTimestamp && rawTimestamp.toStandardDate) {
-          timestamp = rawTimestamp.toStandardDate().toISOString();
-        } else if (rawTimestamp && rawTimestamp.year) {
-          const dt = rawTimestamp;
-          const year = dt.year.low ?? dt.year;
-          const month = (dt.month.low ?? dt.month) - 1;
-          const day = dt.day.low ?? dt.day;
-          const hour = dt.hour?.low ?? dt.hour ?? 0;
-          const minute = dt.minute?.low ?? dt.minute ?? 0;
-          const second = dt.second?.low ?? dt.second ?? 0;
-          timestamp = new Date(Date.UTC(year, month, day, hour, minute, second)).toISOString();
-        } else {
-          timestamp = new Date().toISOString();
-        }
+        const timestamp = adminActivityTimestamp(rawTimestamp);
         
         activities.push({
           id: `profile_${record.get('id')}`,
@@ -1046,13 +1011,13 @@ export class AdminService {
           id: n.id,
           type: n.type,
           message: n.message,
-          timestamp: n.timestamp,
+          timestamp: adminActivityTimestamp(n.timestamp),
           userId: data.tutorId || data.userId || n.userId
         });
       });
 
       // Sort by timestamp and limit
-      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      activities.sort(newestActivityFirst);
       return activities.slice(0, limit);
     } finally {
       await session.close();

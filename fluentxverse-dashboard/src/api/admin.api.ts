@@ -70,7 +70,7 @@ export interface RecentActivity {
   id: string;
   type: 'tutor_registered' | 'exam_passed' | 'exam_failed' | 'student_joined' | 'booking' | 'profile_submitted' | 'profile_change_submitted' | 'minting_started' | 'minting_success' | 'minting_failed';
   message: string;
-  timestamp: string;
+  timestamp: string | null;
   userId?: string;
 }
 

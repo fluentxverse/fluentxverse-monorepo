@@ -5,6 +5,9 @@ import { adminApi, type DashboardStats, type ExamStats, type PendingTutor, type 
 import { interviewApi } from '../api/interview.api';
 import './DashboardPage.css';
 import { AdminArt, type AdminArtName } from '../components/AdminArt';
+import { ActivityTimestamp } from '../components/ActivityTimestamp';
+import { useActivityClock } from '../hooks/useActivityClock';
+import { activityTime } from '../utils/activityTime';
 
 const metricArt: Record<string, AdminArtName> = {
   'fa-chalkboard-teacher':'community', 'fa-certificate':'training', 'fa-user-graduate':'training',
@@ -60,6 +63,7 @@ const REQUEST_TIMEOUT_MS = 12000;
 
 const DashboardPage = () => {
   const { user } = useAuthContext();
+  const now = useActivityClock();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [examStats, setExamStats] = useState<ExamStats | null>(null);
   const [interviewStats, setInterviewStats] = useState<InterviewStats | null>(null);
@@ -256,20 +260,6 @@ const DashboardPage = () => {
     }
   };
 
-  const formatTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const then = new Date(timestamp);
-    const diffMs = now.getTime() - then.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  };
-
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -336,7 +326,7 @@ const DashboardPage = () => {
             <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
             {lastUpdated && (
               <span className="last-updated">
-                Updated {formatTimeAgo(lastUpdated.toISOString())}
+                Updated {activityTime(lastUpdated.toISOString(), now).relative}
               </span>
             )}
           </button>
@@ -667,7 +657,7 @@ const DashboardPage = () => {
                     </div>
                     <div className="activity-content">
                       <p>{activity.message}</p>
-                      <span className="activity-time">{formatTimeAgo(activity.timestamp)}</span>
+                      <ActivityTimestamp timestamp={activity.timestamp} now={now} />
                     </div>
                   </div>
                 ))}

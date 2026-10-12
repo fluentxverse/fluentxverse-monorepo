@@ -25,7 +25,7 @@ export interface RecentActivity {
   id: string;
   type: 'tutor_registered' | 'exam_passed' | 'exam_failed' | 'student_joined' | 'booking' | 'profile_submitted';
   message: string;
-  timestamp: string;
+  timestamp: string | null;
   userId?: string;
 }
 
