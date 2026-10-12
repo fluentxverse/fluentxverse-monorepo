@@ -326,20 +326,9 @@ const InterviewSchedulePage = () => {
         </div>
         <div className="interview-actions">
           <button className="btn btn-secondary" onClick={() => setCurrentWeekOffset(0)}>
-            <i className="ri-calendar-check-line"></i> Today
+            <i className="ri-calendar-check-line" aria-hidden="true"></i> Today
           </button>
         </div>
-      </div>
-
-      {/* Info Banner */}
-      <div className="info-banner">
-        <div className="info-banner-icon">
-          <i className="ri-information-line"></i>
-        </div>
-        <p>
-          Click on empty slots to select them, then use the action bar to open interview slots. 
-          Pending tutors can book available slots for their speaking exam interview.
-        </p>
       </div>
 
       {/* Schedule Card */}
@@ -348,7 +337,7 @@ const InterviewSchedulePage = () => {
         <div className="calendar-nav">
           <div className="week-navigation">
             <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
-              <i className="ri-arrow-left-s-line"></i>
+              <i className="ri-arrow-left-s-line" aria-hidden="true"></i>
               <span>Previous</span>
             </button>
             <span className="week-range">
@@ -356,34 +345,36 @@ const InterviewSchedulePage = () => {
             </span>
             <button className="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
               <span>Next</span>
-              <i className="ri-arrow-right-s-line"></i>
+              <i className="ri-arrow-right-s-line" aria-hidden="true"></i>
             </button>
           </div>
-        </div>
-
         {/* Period Tabs */}
-        <div className="period-tabs">
+        <div className="period-tabs" role="group" aria-label="Time of day">
           <button 
             className={`period-tab ${selectedPeriod === 'morning' ? 'active' : ''}`}
+            aria-pressed={selectedPeriod === 'morning'}
             onClick={() => setSelectedPeriod('morning')}
           >
-            <i className="ri-sun-line"></i>
+            <i className="ri-sun-line" aria-hidden="true"></i>
             Morning (5AM-12PM)
           </button>
           <button 
             className={`period-tab ${selectedPeriod === 'afternoon' ? 'active' : ''}`}
+            aria-pressed={selectedPeriod === 'afternoon'}
             onClick={() => setSelectedPeriod('afternoon')}
           >
-            <i className="ri-sun-cloudy-line"></i>
+            <i className="ri-sun-cloudy-line" aria-hidden="true"></i>
             Afternoon (12PM-6PM)
           </button>
           <button 
             className={`period-tab ${selectedPeriod === 'evening' ? 'active' : ''}`}
+            aria-pressed={selectedPeriod === 'evening'}
             onClick={() => setSelectedPeriod('evening')}
           >
-            <i className="ri-moon-line"></i>
+            <i className="ri-moon-line" aria-hidden="true"></i>
             Evening (6PM-12AM)
           </button>
+        </div>
         </div>
 
         {/* Calendar Grid */}
@@ -401,7 +392,7 @@ const InterviewSchedulePage = () => {
           </button>
         </div>
       ) : (
-        <div className="calendar-container">
+        <div className="calendar-container" role="region" aria-label="Interview calendar" tabIndex={0}>
           <div className="calendar-grid">
             {/* Header Row */}
             <div className="calendar-header">
@@ -425,21 +416,25 @@ const InterviewSchedulePage = () => {
                   const isSelected = selectedSlots.has(key);
                   
                   return (
-                    <div 
+                    <button
                       key={key}
+                      type="button"
                       className={`slot-cell ${isPast ? 'past' : ''} ${isSelected ? 'selected' : ''}`}
+                      disabled={slot?.status === 'booked' || (isPast && !(slot?.status === 'completed' && slot.tutorId))}
+                      aria-pressed={isSelected}
+                      aria-label={`${days[dayIdx]}, ${formatDate(date)}, ${time}${slot ? `, ${slot.status}${slot.tutorName ? `, ${slot.tutorName}` : ''}` : ', available'}`}
                       onClick={() => handleSlotClick(dayIdx, time)}
                     >
                       {slot && (
-                        <div className={`slot-badge ${slot.status}`}>
+                        <span className={`slot-badge ${slot.status}`} title={slot.tutorName || slot.status}>
                           {slot.status === 'open' && <><i className="ri-door-open-line"></i> Open</>}
                           {slot.status === 'booked' && (
-                            <><i className="ri-user-line"></i> {slot.tutorName?.split(' ')[0] || 'Booked'}</>
+                            <><i className="ri-user-line"></i><span className="slot-name">{slot.tutorName?.split(' ')[0] || 'Booked'}</span></>
                           )}
                           {slot.status === 'completed' && <><i className="ri-check-line"></i> Done</>}
-                        </div>
+                        </span>
                       )}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -463,7 +458,7 @@ const InterviewSchedulePage = () => {
                 setShowConfirmModal(true);
               }}
             >
-              <i className="ri-door-open-line"></i> Open {newSlotsCount} New Slot{newSlotsCount !== 1 ? 's' : ''}
+              <i className="ri-door-open-line" aria-hidden="true"></i> Open {newSlotsCount} New Slot{newSlotsCount !== 1 ? 's' : ''}
             </button>
           )}
           {existingSlotsCount > 0 && (

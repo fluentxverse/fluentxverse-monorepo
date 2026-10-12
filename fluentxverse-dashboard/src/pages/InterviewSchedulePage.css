@@ -4,12 +4,16 @@
   min-height: 100%;
 }
 
+.interview-page * {
+  letter-spacing: 0;
+}
+
 /* Page Header */
-.interview-header {
+.interview-page .interview-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
   gap: 16px;
 }
@@ -18,12 +22,14 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
 }
 
-.interview-header-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+.interview-page .interview-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   display: flex;
   align-items: center;
@@ -36,15 +42,15 @@
   font-size: 22px;
 }
 
-.interview-header h1 {
+.interview-page .interview-header h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
 }
 
 .interview-actions {
@@ -156,12 +162,14 @@
 }
 
 /* Main Schedule Card */
-.schedule-card {
+.interview-page .schedule-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 8px 32px rgba(2, 69, 174, 0.12);
+  border-radius: 8px;
+  padding: 12px;
+  max-width: 1280px;
+  box-sizing: border-box;
+  box-shadow: none;
   border: 1px solid rgba(2, 69, 174, 0.08);
 }
 
@@ -170,24 +178,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(2, 69, 174, 0.1);
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(2, 69, 174, 0.1);
 }
 
 .week-navigation {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .nav-btn {
   background: rgba(2, 69, 174, 0.1);
   border: none;
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 8px 14px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   color: #0245ae;
   display: flex;
@@ -201,28 +211,29 @@
 }
 
 .week-range {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 800;
   color: #0245ae;
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 /* Period Tabs */
 .period-tabs {
   display: flex;
-  gap: 12px;
+  gap: 4px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+  margin-bottom: 0;
 }
 
 .period-tab {
   background: rgba(15, 23, 42, 0.05);
   color: #64748b;
   border: none;
-  padding: 10px 24px;
-  border-radius: 12px;
-  font-size: 14px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -244,13 +255,17 @@
 /* Calendar Container */
 .calendar-container {
   background: transparent;
-  border-radius: 16px;
-  overflow: hidden;
+  border-radius: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: 100px repeat(7, 1fr);
+  min-width: 660px;
+  grid-template-columns: 72px repeat(7, minmax(84px, 1fr));
+  grid-template-rows: 48px;
+  grid-auto-rows: 32px;
 }
 
 .calendar-header {
@@ -258,23 +273,23 @@
 }
 
 .day-header {
-  padding: 16px 8px;
+  padding: 5px 8px;
   text-align: center;
   background: rgba(2, 69, 174, 0.05);
-  border-bottom: 2px solid rgba(2, 69, 174, 0.1);
+  border-bottom: 1px solid rgba(2, 69, 174, 0.1);
 }
 
 .day-header .day-name {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  margin-bottom: 4px;
-  letter-spacing: 1px;
+  margin-bottom: 1px;
+  letter-spacing: 0;
 }
 
 .day-header .day-date {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
   color: #0f172a;
 }
@@ -299,8 +314,8 @@
 }
 
 .time-label {
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
   text-align: right;
@@ -313,10 +328,15 @@
 }
 
 .slot-cell {
-  min-height: 48px;
+  min-width: 0;
+  min-height: 0;
+  height: 32px;
+  box-sizing: border-box;
+  border-top: 0;
+  border-left: 0;
   border-right: 1px solid rgba(2, 69, 174, 0.06);
   border-bottom: 1px solid rgba(2, 69, 174, 0.06);
-  padding: 4px;
+  padding: 2px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -329,6 +349,16 @@
 
 .slot-cell:hover {
   background: rgba(2, 69, 174, 0.05);
+}
+
+.slot-cell:focus-visible,
+.calendar-container:focus-visible {
+  outline: 2px solid #0245ae;
+  outline-offset: -2px;
+}
+
+.slot-cell:disabled:not(.past) {
+  cursor: default;
 }
 
 .slot-cell.selected {
@@ -349,13 +379,22 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 8px;
-  border-radius: 8px;
+  padding: 2px 4px;
+  border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
   width: 100%;
   height: 100%;
-  letter-spacing: 0.3px;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.slot-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .slot-badge.open {
@@ -610,24 +649,14 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .calendar-grid {
-    grid-template-columns: 80px repeat(7, 1fr);
-  }
-  
-  .schedule-card {
-    padding: 20px;
-  }
-  
   .calendar-nav {
-    flex-direction: column;
-    gap: 16px;
+    justify-content: center;
   }
 }
 
 @media (max-width: 768px) {
-  .interview-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .interview-page .interview-header h1 {
+    font-size: 22px;
   }
   
   .period-tabs {
@@ -637,6 +666,16 @@
   .period-tab {
     flex: 1;
     justify-content: center;
+    padding: 7px 8px;
+  }
+
+  .period-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .period-tab i {
+    display: none;
   }
   
   .selection-bar {
