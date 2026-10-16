@@ -1,0 +1,38 @@
+.metrics-issues-toolbar { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:20px; }
+.metrics-issue-directions { display:flex; gap:4px; padding:4px; border:1px solid var(--metric-line); border-radius:6px; }
+.metrics-issue-directions button { display:flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:8px 12px; border:0; border-radius:4px; background:transparent; color:var(--metric-muted); font-size:13px; font-weight:600; letter-spacing:0; cursor:pointer; }
+.metrics-issue-directions button[aria-pressed="true"] { background:var(--metric-blue); color:var(--metric-panel); }
+.metrics-issue-directions button > span { min-width:20px; text-align:center; font-variant-numeric:tabular-nums; }
+.metrics-issue-filter { display:grid; gap:5px; margin:0; color:var(--metric-muted); font-size:12px; }
+.metrics-issue-filter select { min-height:38px; padding:7px 10px; border:1px solid var(--metric-line); border-radius:6px; background:var(--metric-panel); color:var(--fxv-text,#17212f); font-size:13px; }
+.metrics-issue-counts { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; margin:0 0 24px; }
+.metrics-issue-counts dt { color:var(--metric-muted); font-size:12px; font-weight:400; }
+.metrics-issue-counts dd { margin:6px 0 0; font-size:22px; font-weight:700; }
+.metrics-issue-list { list-style:none; padding:0; margin:0; }
+.metrics-issue-list > li { display:grid; grid-template-columns:minmax(0,1fr) 36px; gap:16px; padding:18px 0; border-top:1px solid var(--metric-line); }
+.metrics-issue-content { min-width:0; }
+.metrics-issue-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; margin-bottom:14px; }
+.metrics-issue-heading h3 { flex:1; min-width:0; margin:0; font-size:14px; font-weight:600; line-height:1.5; overflow-wrap:anywhere; }
+.metrics-issue-heading .metrics-status { font-size:12px; font-weight:600; }
+.metrics-issue-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 18px; margin:0; }
+.metrics-issue-meta > div { min-width:0; }
+.metrics-issue-meta dt { color:var(--metric-muted); font-size:11px; font-weight:400; }
+.metrics-issue-meta dd { margin:4px 0 0; font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+.metrics-issue-details { margin-top:14px; font-size:13px; line-height:1.7; }
+.metrics-issue-details summary { color:var(--metric-blue); cursor:pointer; }
+.metrics-issue-details p { margin:10px 0; overflow-wrap:anywhere; white-space:pre-wrap; }
+.metrics-issue-details h4 { font-size:13px; margin:12px 0 0; }
+.metrics-issue-details small { color:var(--metric-muted); }
+.metrics-issues .metrics-error button { display:flex; align-items:center; gap:6px; }
+.metrics-issues :focus-visible { outline:2px solid var(--metric-blue); outline-offset:3px; }
+[data-theme="dark"] .metrics-issue-filter select { color:#f2f2f2; color-scheme:dark; }
+@media(max-width:800px) { .metrics-issue-meta { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) {
+  .metrics-issue-directions { width:100%; }
+  .metrics-issue-directions button { flex:1; min-width:0; min-height:44px; padding:8px; }
+  .metrics-issue-filter { width:100%; }
+  .metrics-issue-counts { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+  .metrics-issue-list > li { gap:10px; }
+  .metrics-issue-heading { align-items:flex-start; }
+  .metrics-issue-heading h3 { flex-basis:100%; }
+}

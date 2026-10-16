@@ -1,0 +1,4 @@
+ARG SERVER_RUNTIME_IMAGE
+FROM ${SERVER_RUNTIME_IMAGE}
+COPY --chown=appuser:appgroup src/routes/tutor.route.ts /app/src/routes/tutor.route.ts
+COPY --chown=appuser:appgroup src/services/tutorLessonIssues.service.ts /app/src/services/tutorLessonIssues.service.ts

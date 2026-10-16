@@ -1,0 +1,613 @@
+{
+  "applyData": {
+    "sectionNumber": 3,
+    "sectionTitle": "APPLY",
+    "activityType": "reading",
+    "activityTitle": "READING",
+    "activityDuration": "4 minutes",
+    "situationText": "Read the text silently. Find the main idea, then find the details.<br><small lang=\"ja\">まず黙読し、大まかな内容をつかみましょう。その後、詳しい情報を探しましょう。</small><br><br>1. What are these texts: recipes or profiles?<br>2. Who works at a hospital?<br>3. When is Leo free?<br>4. Who can walk in the park in the afternoon?",
+    "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/roles.webp",
+    "dialogueLines": [],
+    "readingText": "<p>Sara is from Perth. She is a nurse at a hospital. She works in the morning. In the evening, she reads at home.</p><p>Leo is from Bristol. He is a cook at a cafe. He works in the afternoon and evening. He is free in the morning.</p><p>Yuki is from Osaka. She is a student. She studies English in the morning. In the afternoon, she is free. She likes walking in the park.</p>",
+    "readingImage": "",
+    "readingImageLabel": "",
+    "tutorSteps": [
+      {
+        "instruction": "Read the text silently. Find the main idea, then find the details.",
+        "tips": [
+          {
+            "text": "Let the learner read silently before asking questions."
+          }
+        ]
+      },
+      {
+        "instruction": "Check understanding and ask for evidence.",
+        "questions": [
+          {
+            "question": "What are these texts: recipes or profiles?",
+            "answer": "Profiles."
+          },
+          {
+            "question": "Who works at a hospital?",
+            "answer": "Sara."
+          },
+          {
+            "question": "When is Leo free?",
+            "answer": "In the morning."
+          },
+          {
+            "question": "Who can walk in the park in the afternoon?",
+            "answer": "Yuki."
+          }
+        ]
+      },
+      {
+        "instruction": "Return to the line that supports each answer.",
+        "tips": [
+          {
+            "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+          }
+        ]
+      }
+    ],
+    "triviaEnabled": false
+  },
+  "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+  "authoringSource": "conversational-skills-ja-l3-c1-v1",
+  "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/roles.webp",
+  "beData": "",
+  "chapter": 1,
+  "chapterName": "Nice to Meet You",
+  "course": "conversational-skills",
+  "createdAt": "2026-09-23T06:32:26.413Z",
+  "createdBy": "codex",
+  "createdByName": "Lesson Authoring",
+  "discussionQuestionsData": "",
+  "exerciseData": {
+    "sectionNumber": 4,
+    "sectionTitle": "EXERCISE",
+    "duration": "4 minutes",
+    "stepAType": "choose",
+    "stepAName": "STEP A",
+    "instructions": "Choose the correct word. Read the complete sentence.",
+    "instructionsTranslation": "正しい語を選び、文全体を読みましょう。",
+    "showExpressions": false,
+    "expressions": [],
+    "showExample": false,
+    "exampleSentence": "",
+    "exampleAnswer": "",
+    "showInfoBox": false,
+    "exerciseItems": [],
+    "chooseItems": [
+      {
+        "sentence": "Sara (work / works) at a hospital."
+      },
+      {
+        "sentence": "Yuki is (a / an) student."
+      },
+      {
+        "sentence": "Leo is free (in / on) the morning."
+      }
+    ],
+    "changeItems": [],
+    "answers": [
+      {
+        "text": "works"
+      },
+      {
+        "text": "a"
+      },
+      {
+        "text": "in"
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Let the learner try independently. Check complete sentences.",
+        "answerKey": [
+          {
+            "text": "1. works"
+          },
+          {
+            "text": "2. a"
+          },
+          {
+            "text": "3. in"
+          }
+        ],
+        "tips": [
+          {
+            "text": "For personal answers, the examples are models, not the only correct responses."
+          }
+        ]
+      }
+    ],
+    "hasStepB": true,
+    "stepBType": "multiple-choice",
+    "stepBName": "STEP B",
+    "stepBInstruction": "Choose the best answer. Explain what detail helped you.",
+    "stepBInstructionTranslation": "最も適切な答えを選び、手がかりとなった情報を伝えましょう。",
+    "conversations": [],
+    "multipleChoiceItems": [
+      {
+        "boldSentence": "Ken studies from nine to twelve. At 10 a.m., he is ...",
+        "optionA": "at college.",
+        "optionB": "free for a walk."
+      },
+      {
+        "boldSentence": "Aisha works in the afternoon. She is free ...",
+        "optionA": "in the morning.",
+        "optionB": "at work."
+      },
+      {
+        "boldSentence": "Sara is a nurse. Her workplace is ...",
+        "optionA": "a college.",
+        "optionB": "a hospital."
+      }
+    ],
+    "compareWordBox": [],
+    "compareImages": [],
+    "compareItems": [],
+    "stepBTutorSteps": [
+      {
+        "instruction": "Check the answer and its supporting detail.",
+        "answerKey": [
+          {
+            "text": "1. A: at college."
+          },
+          {
+            "text": "2. A: in the morning."
+          },
+          {
+            "text": "3. B: a hospital."
+          }
+        ],
+        "tips": [
+          {
+            "text": "Do not demand the model wording if the meaning is clear."
+          }
+        ]
+      }
+    ]
+  },
+  "feedbackData": {
+    "sectionNumber": 6,
+    "sectionTitle": "FEEDBACK",
+    "duration": "2 minutes",
+    "goal": "I can find jobs and daily routines in short personal profiles.",
+    "goalJp": "短いプロフィールを読んで、仕事と日常の習慣を読み取ることができる。",
+    "rubricTitle": "HOW DID YOU DO?",
+    "rubricLevels": [
+      {
+        "score": 3,
+        "label": "Independent",
+        "description": "Finds the main idea and most details with little help."
+      },
+      {
+        "score": 2,
+        "label": "With some help",
+        "description": "Finds the main idea and some details after a second attempt or a prompt."
+      },
+      {
+        "score": 1,
+        "label": "Keep practicing",
+        "description": "Needs guided support to identify the main idea and key details."
+      }
+    ],
+    "personalizedFeedbackTitle": "YOUR NEXT STEP",
+    "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+    "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+    "tutorSteps": [
+      {
+        "instruction": "Return to the goal. Ask the learner how the task felt.",
+        "scripts": [
+          {
+            "text": "What was easy today? What would you like to practice again?"
+          }
+        ]
+      },
+      {
+        "instruction": "Give one evidence-based success and one actionable next step.",
+        "tips": [
+          {
+            "text": "Assess understanding first. Do not lower comprehension feedback just because a correct answer is a short phrase."
+          }
+        ]
+      },
+      {
+        "instruction": "Have the learner retry one item and finish with the goal.",
+        "scripts": [
+          {
+            "text": "Let's try that part once more."
+          }
+        ]
+      }
+    ],
+    "categories": [
+      {
+        "id": "range",
+        "title": "MAIN IDEA",
+        "titleJp": "大まかな内容",
+        "focusOn": "Identifies the situation and purpose.",
+        "exampleFeedbackItems": [
+          "I can find jobs and daily routines in short personal profiles."
+        ],
+        "vocabularyExample": "nurse",
+        "examples": []
+      },
+      {
+        "id": "accuracy",
+        "title": "KEY DETAILS",
+        "titleJp": "詳しい情報",
+        "focusOn": "Finds the details needed to complete the task and supports answers with evidence.",
+        "exampleFeedbackItems": [
+          "What does Ken do?",
+          "When does Aisha work?"
+        ],
+        "examples": []
+      },
+      {
+        "id": "fluency",
+        "title": "STRATEGY",
+        "titleJp": "理解の工夫",
+        "focusOn": "Rereads relevant lines and notices changed information.",
+        "exampleFeedbackItems": [
+          "Check one uncertain detail again."
+        ],
+        "examples": []
+      }
+    ]
+  },
+  "goalTextEn": "I can find jobs and daily routines in short personal profiles.",
+  "goalTextJp": "短いプロフィールを読んで、仕事と日常の習慣を読み取ることができる。",
+  "id": "conversational-skills-L3-C1-4-reading-ja-v1",
+  "introductionData": {
+    "introTexts": [
+      {
+        "language": "en",
+        "text": "Maple House has a page where residents introduce themselves. Read three profiles and find out who works, who studies, and when they are free."
+      },
+      {
+        "language": "ja",
+        "text": "メープルハウスには住人の自己紹介ページがあります。三つのプロフィールを読み、誰が働き、誰が勉強し、いつ時間があるか確かめましょう。"
+      }
+    ],
+    "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/roles.webp",
+    "lessonIssue": null,
+    "lessonGoalDuration": "1 minute",
+    "lessonGoalSteps": [
+      {
+        "instruction": "Introduce the setting and connect it to the learner.",
+        "script": "Maple House has a page where residents introduce themselves. Read three profiles and find out who works, who studies, and when they are free.",
+        "question": "When are you usually busy?"
+      },
+      {
+        "instruction": "Read the goal and explain what success will look like.",
+        "script": "I can find jobs and daily routines in short personal profiles."
+      }
+    ]
+  },
+  "learnData": {
+    "sectionTitle": "LEARN",
+    "steps": [
+      {
+        "stepType": "vocabulary",
+        "stepName": "STEP A: VOCABULARY",
+        "duration": "4 minutes",
+        "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+        "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+        "vocabularyItems": [
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/roles.webp",
+            "englishText": "Sara is a nurse.",
+            "highlightedWord": "nurse",
+            "translation": "看護師"
+          },
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/roles.webp",
+            "englishText": "Yuki is a student.",
+            "highlightedWord": "student",
+            "translation": "学生"
+          },
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/roles.webp",
+            "englishText": "Yuki studies in the morning.",
+            "highlightedWord": "in the morning",
+            "translation": "午前中に"
+          }
+        ],
+        "tutorSteps": [
+          {
+            "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+            "script": "Listen first. Then say it with me."
+          },
+          {
+            "instruction": "Check the meaning of each example before moving to Apply.",
+            "question": "Can you give a different example?",
+            "tip": "The picture supports the setting; do not treat it as an answer key."
+          },
+          {
+            "instruction": "Personalize two examples.",
+            "script": "Now use your own information, or invent an example.",
+            "tip": "Allow invented details if the learner prefers not to share personal information."
+          }
+        ]
+      }
+    ]
+  },
+  "lessonName": "Reading Resident Profiles",
+  "lessonNumber": 4,
+  "level": 3,
+  "missionData": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "reading",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "6 minutes",
+    "situation": "Read two new profiles. Help Maya find a partner for a morning walk.",
+    "situationTranslation": "二つの新しいプロフィールを読みましょう。マヤが朝の散歩に一緒に行ける人を探すのを手伝いましょう。",
+    "instruction": "Find each person's job and work time. Choose a partner for a walk at 10 a.m. Give a reason using information from the profiles.<br><br>1. What does Ken do?<br>2. When does Aisha work?<br>3. Who can walk at 10 a.m.?<br>4. Which information supports your choice?",
+    "instructionTranslation": "それぞれの仕事と勤務時間を読み取りましょう。午前10時に散歩できる相手を選び、プロフィールの情報を使って理由を説明しましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "Useful language",
+    "grammarTipItems": [],
+    "image": "",
+    "questions": [
+      {
+        "question": "What does Ken do?",
+        "hints": []
+      },
+      {
+        "question": "When does Aisha work?",
+        "hints": []
+      },
+      {
+        "question": "Who can walk at 10 a.m.?",
+        "hints": []
+      },
+      {
+        "question": "Which information supports your choice?",
+        "hints": []
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Set the task and check understanding without giving the answers.",
+        "scripts": [
+          {
+            "text": "Find each person's job and work time. Choose a partner for a walk at 10 a.m. Give a reason using information from the profiles."
+          }
+        ],
+        "tips": [
+          {
+            "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+          }
+        ]
+      },
+      {
+        "instruction": "Allow silent reading. Ask the learner to point to evidence in the text.",
+        "tips": [
+          {
+            "text": "Do not read the passage aloud before the learner has tried. Give a word meaning only when it blocks understanding."
+          }
+        ]
+      },
+      {
+        "instruction": "Ask the questions and check the evidence.",
+        "scripts": [
+          {
+            "text": "1. What does Ken do?"
+          },
+          {
+            "text": "2. When does Aisha work?"
+          },
+          {
+            "text": "3. Who can walk at 10 a.m.?"
+          },
+          {
+            "text": "4. Which information supports your choice?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "1. He is a student and works at a bookstore."
+          },
+          {
+            "text": "2. In the afternoon."
+          },
+          {
+            "text": "3. Aisha."
+          },
+          {
+            "text": "4. Aisha is free in the morning; Ken studies from nine to twelve."
+          }
+        ]
+      },
+      {
+        "instruction": "Give feedback, then retry one difficult part with less support.",
+        "tips": [
+          {
+            "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+          }
+        ]
+      }
+    ],
+    "readingPassage": {
+      "title": "Meet Ken and Aisha",
+      "showAuthor": false,
+      "headerAlignment": "left",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Ken is a student from Kyoto. He studies at college from nine to twelve in the morning. He works at a bookstore in the afternoon. He is free in the evening."
+        },
+        {
+          "type": "paragraph",
+          "content": "Aisha is a designer from Leeds. She works at home in the afternoon. She is free in the morning. She likes walking and taking photos. She is happy to meet new friends."
+        }
+      ],
+      "closingQuestion": "Who can join the morning walk? Why?"
+    }
+  },
+  "missionData2": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "reading",
+    "challengeNumber": 2,
+    "challengeName": "Challenge 2",
+    "duration": "2 minutes",
+    "isOptional": true,
+    "situation": "Use a new message or profile to find the information you need.",
+    "situationTranslation": "新しいメッセージやプロフィールから必要な情報を探しましょう。",
+    "instruction": "Read Maya's profile. Which morning is better for a walk: Saturday or Sunday? Give a reason.",
+    "instructionTranslation": "マヤのプロフィールを読みましょう。散歩に向いているのは土曜日の朝と日曜日の朝のどちらですか。理由も答えましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "image": "",
+    "questions": [
+      {
+        "question": "What does Maya do?",
+        "hints": []
+      },
+      {
+        "question": "Which morning is better for a walk?",
+        "hints": []
+      }
+    ],
+    "readingPassage": {
+      "title": "One More Detail",
+      "showAuthor": false,
+      "headerAlignment": "left",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Maya is a teacher. She works at a school from Monday to Friday. On Saturday, she is free in the morning. On Sunday morning, she cooks with her friends at Maple House."
+        }
+      ]
+    },
+    "tutorSteps": [
+      {
+        "instruction": "Use this optional task only if time remains before feedback.",
+        "tips": [
+          {
+            "text": "Keep it to two minutes."
+          }
+        ]
+      },
+      {
+        "instruction": "Allow silent reading before checking the answer."
+      },
+      {
+        "instruction": "Check the answer and ask which detail helped.",
+        "scripts": [
+          {
+            "text": "1. What does Maya do?"
+          },
+          {
+            "text": "2. Which morning is better for a walk?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "1. She is a teacher."
+          },
+          {
+            "text": "2. Saturday. She is free then; on Sunday morning she cooks with friends."
+          }
+        ]
+      }
+    ]
+  },
+  "overlayColor": "#17252bcc",
+  "skill": "reading",
+  "status": "draft",
+  "stepBData": {
+    "stepType": "grammar-tip",
+    "grammarTip": {
+      "stepName": "STEP B: GRAMMAR TIP",
+      "duration": "2 minutes",
+      "tutorSteps": [
+        {
+          "instruction": "Model the focus with the examples. Keep the explanation brief.",
+          "script": "Use a before a job or role. With he or she, add -s to many present-tense verbs: works, studies, lives."
+        },
+        {
+          "instruction": "Ask the learner to try it, then give one focused correction.",
+          "tip": "Use the Japanese support only if needed. Return to English for practice."
+        }
+      ],
+      "explanations": [
+        {
+          "ruleText": "Use a before a job or role. With he or she, add -s to many present-tense verbs: works, studies, lives.",
+          "ruleTranslation": "仕事や立場の前には a を使います。主語が he や she の現在形では、多くの動詞に -s を付けます。例：works、studies、lives。",
+          "examplesTitle": "EXAMPLES",
+          "examples": [
+            {
+              "sentence": "She is a nurse. She works at a hospital.",
+              "translation": "彼女は看護師です。病院で働いています。"
+            },
+            {
+              "sentence": "He is a cook. He works in the evening.",
+              "translation": "彼は料理人です。夕方に働いています。"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "storyData": {
+    "enabled": true,
+    "storyTitle": "New Friends at Maple House",
+    "setting": "A fictional international shared house in London. All characters are adults.",
+    "characters": [
+      {
+        "id": "yuki",
+        "name": "Yuki",
+        "role": "main",
+        "description": "An adult English student from Osaka. Likes walking and photography."
+      },
+      {
+        "id": "maya",
+        "name": "Maya",
+        "role": "supporting",
+        "description": "A teacher from a small town near Bristol. Likes cooking."
+      },
+      {
+        "id": "leo",
+        "name": "Leo",
+        "role": "supporting",
+        "description": "A cook from Bristol. Likes music, gardening, and cooking."
+      },
+      {
+        "id": "sara",
+        "name": "Sara",
+        "role": "supporting",
+        "description": "A nurse from Perth. Likes reading, walking, and photography."
+      },
+      {
+        "id": "aisha",
+        "name": "Aisha",
+        "role": "supporting",
+        "description": "A designer from Leeds. Likes photography and walking."
+      },
+      {
+        "id": "ken",
+        "name": "Ken",
+        "role": "supporting",
+        "description": "An adult student from Kyoto. Likes walking and photography."
+      }
+    ],
+    "previousSummary": "Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown.",
+    "currentPlotPoints": [
+      "Maple House has a page where residents introduce themselves. Read three profiles and find out who works, who studies, and when they are free.",
+      "Read two new profiles. Help Maya find a partner for a morning walk."
+    ],
+    "currentEpisodeSummary": "Maple House has a page where residents introduce themselves. Read three profiles and find out who works, who studies, and when they are free.",
+    "nextEpisodeHook": "The residents plan a free afternoon. Yuki likes taking photos, and Leo likes music. Ask about interests and find something you can enjoy together.",
+    "storyNotes": "Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys."
+  },
+  "supportLanguage": "ja",
+  "updatedAt": "2026-09-23T10:51:10.454Z"
+}

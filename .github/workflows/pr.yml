@@ -44,9 +44,9 @@ jobs:
             server:
               - 'fluentxverse-server/**'
             student:
-              - 'fluentxverse-student/**'
+              - 'fluentxverse-student-solid-prototype/**'
             tutor:
-              - 'fluentxverse-tutor/**'
+              - 'fluentxverse-tutor-solid-prototype/**'
 
   server-check:
     name: Server PR Check
@@ -70,13 +70,16 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./fluentxverse-student
+        working-directory: ./fluentxverse-student-solid-prototype
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run tsc --noEmit
-      - run: bun run build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.10.0'
+      - run: npm ci --workspaces=false
+      - run: npm test
+      - run: npm run build
 
   tutor-check:
     name: Tutor App PR Check
@@ -85,10 +88,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./fluentxverse-tutor
+        working-directory: ./fluentxverse-tutor-solid-prototype
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run tsc --noEmit
-      - run: bun run build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.10.0'
+      - run: npm ci --workspaces=false
+      - run: npm test
+      - run: npm run build

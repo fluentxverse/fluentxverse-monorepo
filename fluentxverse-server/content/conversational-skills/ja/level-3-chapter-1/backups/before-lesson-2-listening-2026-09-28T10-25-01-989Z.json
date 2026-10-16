@@ -1,0 +1,676 @@
+{
+  "applyData": {
+    "sectionNumber": 3,
+    "sectionTitle": "APPLY",
+    "activityType": "listening",
+    "activityTitle": "LISTENING",
+    "activityDuration": "4 minutes",
+    "situationText": "Emma receives a voice message from Leo, another resident of Kamo House. Listen once for the main idea, then again for Leo's past work, reason for moving, and current routine.",
+    "situationTranslation": "エマは同じシェアハウスの住人レオから音声メッセージを受け取ります。まず大まかな内容を聞き、次に以前の仕事、引っ越した理由、今の日課を聞き取りましょう。",
+    "situationImage": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-apply-message.webp",
+    "dialogueLines": [],
+    "tutorSteps": [
+      {
+        "instruction": "Set up the listening. Tell the learner you will speak as Leo, then read the monologue once naturally.",
+        "scripts": [
+          {
+            "text": "Leo has sent Emma a message. I will be Leo. Listen for the main idea first. Is it clear?"
+          }
+        ],
+        "listeningScript": "<p>Hi Emma, it's Leo from Kamo House. Claire said you moved in this week, so I wanted to say hello. I grew up in Bristol, but I moved to Kyoto last spring because I got a job at a small bakery. I used to work in a hotel kitchen. Now I make bread early in the morning, and I help Claire at the cafe downstairs on Sundays. I heard you enjoy photography. Maybe you can show me some of your pictures when we meet.</p>",
+        "tips": [
+          {
+            "text": "Keep the transcript in the tutor guide. Do not show or read it together with the learner."
+          }
+        ]
+      },
+      {
+        "instruction": "Ask for the main idea, then read the same message once more for details.",
+        "questions": [
+          {
+            "question": "Why does Leo send Emma a message?",
+            "answer": "To welcome her and introduce himself before they meet."
+          }
+        ]
+      },
+      {
+        "instruction": "Check the key details and one natural follow-up.",
+        "questions": [
+          {
+            "question": "Where did Leo grow up?",
+            "answer": "Bristol."
+          },
+          {
+            "question": "Why did he move to Kyoto?",
+            "answer": "He got a job at a small bakery."
+          },
+          {
+            "question": "What did he use to do, and what does he do now?",
+            "answer": "He worked in a hotel kitchen; now he makes bread."
+          },
+          {
+            "question": "When does he help Claire?",
+            "answer": "On Sundays."
+          },
+          {
+            "question": "What would you ask Leo about his life in Kyoto?",
+            "answer": "Student's own answer."
+          }
+        ],
+        "tips": [
+          {
+            "text": "If a detail is missed, replay only the relevant sentence orally, then ask again."
+          }
+        ]
+      }
+    ],
+    "triviaEnabled": true,
+    "triviaDuration": "1 minute",
+    "triviaText": "In Kyoto, some traditional machiya townhouses were both homes and workplaces. Some have been renovated as cafes. Kamo House is fictional, but its cafe downstairs and rooms upstairs echo that local pattern.",
+    "triviaTranslation": "京都の伝統的な京町家には、住まいと仕事場を兼ねた建物があります。カフェに改装された町家もあります。Kamo Houseは架空の場所ですが、階下にカフェ、階上に住まいがある設定はその地域の特徴を思わせます。",
+    "triviaImage": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-machiya-cafe.webp",
+    "triviaTutorSteps": [
+      {
+        "instruction": "Introduce the trivia.",
+        "scripts": [
+          {
+            "text": "Let's look at the trivia."
+          }
+        ]
+      },
+      {
+        "instruction": "Ask the learner to read the trivia aloud or silently.",
+        "scripts": [
+          {
+            "text": "Please read the trivia."
+          }
+        ]
+      },
+      {
+        "instruction": "Check understanding, then ask one question.",
+        "questions": [
+          {
+            "question": "What part of Kamo House reminds you of a machiya?",
+            "answer": "The cafe downstairs and the living rooms upstairs."
+          }
+        ]
+      },
+      {
+        "instruction": "Transition to the next section.",
+        "scripts": [
+          {
+            "text": "Great. Let's continue."
+          }
+        ]
+      }
+    ]
+  },
+  "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+  "authoringSource": "conversational-skills-ja-l3-c1-v1",
+  "backgroundImage": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-apply-message.webp",
+  "beData": "",
+  "chapter": 1,
+  "chapterName": "Nice to Meet You",
+  "course": "conversational-skills",
+  "createdAt": "2026-09-23T06:32:26.413Z",
+  "createdBy": "codex",
+  "createdByName": "Lesson Authoring",
+  "discussionQuestionsData": "",
+  "exerciseData": {
+    "sectionNumber": 4,
+    "sectionTitle": "EXERCISE",
+    "duration": "4 minutes",
+    "stepAType": "choose",
+    "stepAName": "STEP A",
+    "instructions": "Choose the correct phrase in parentheses. Then say whether it tells us about the past, the present, or a reason.",
+    "instructionsTranslation": "カッコの中から正しい表現を選び、過去・現在・理由のどれを表すか言いましょう。",
+    "showExpressions": false,
+    "expressions": [],
+    "showExample": false,
+    "exampleSentence": "",
+    "exampleAnswer": "",
+    "exampleImage": "",
+    "exerciseItems": [],
+    "chooseItems": [
+      {
+        "sentence": "I (used to live / live) in Bristol, but now I live in Kyoto."
+      },
+      {
+        "sentence": "Leo moved to Kyoto (because / but) he got a bakery job."
+      },
+      {
+        "sentence": "I used to work in a hotel kitchen, (because / but) now I make bread."
+      },
+      {
+        "sentence": "She (works / used to work) at a gallery on Saturdays now."
+      }
+    ],
+    "chooseImage": "",
+    "changeItems": [],
+    "showInfoBox": false,
+    "infoBox": {
+      "title": "Comparison Table",
+      "rowLabels": [
+        "$",
+        "❤️",
+        "🙂"
+      ],
+      "columns": [
+        {
+          "header": "Option A",
+          "rows": [
+            "$",
+            "❤️❤️",
+            "🙂🙂🙂"
+          ]
+        },
+        {
+          "header": "Option B",
+          "rows": [
+            "$$",
+            "❤️❤️❤️",
+            "🙂🙂"
+          ]
+        },
+        {
+          "header": "Option C",
+          "rows": [
+            "$$$",
+            "❤️",
+            "🙂"
+          ]
+        }
+      ]
+    },
+    "answers": [
+      {
+        "text": "used to live - past"
+      },
+      {
+        "text": "because - reason"
+      },
+      {
+        "text": "but - change"
+      },
+      {
+        "text": "works - present"
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Have the learner choose each phrase and name its time or function.",
+        "scripts": [
+          {
+            "text": "First, choose the phrase. Then tell me: past, present, or reason?"
+          }
+        ],
+        "answerKey": [
+          {
+            "text": "used to live - past"
+          },
+          {
+            "text": "because - reason"
+          },
+          {
+            "text": "but - change"
+          },
+          {
+            "text": "works - present"
+          }
+        ]
+      },
+      {
+        "instruction": "Ask the learner to read two complete sentences aloud.",
+        "tip": "Do not spend the listening-practice time on extended grammar correction."
+      }
+    ],
+    "hasStepB": true,
+    "stepBType": "multiple-choice",
+    "stepBName": "STEP B",
+    "stepBInstruction": "Listen to three short messages. Choose the best answer. What word or phrase helped you?",
+    "stepBInstructionTranslation": "三つの短いメッセージを聞き、最も適切な答えを選びましょう。手がかりになった語句も答えましょう。",
+    "conversations": [],
+    "multipleChoiceItems": [
+      {
+        "boldSentence": "Why did the speaker move to Kyoto?",
+        "optionA": "For a job",
+        "optionB": "For university"
+      },
+      {
+        "boldSentence": "When does the speaker work at the gallery?",
+        "optionA": "On weekdays",
+        "optionB": "On Saturdays"
+      },
+      {
+        "boldSentence": "Where does the speaker live now?",
+        "optionA": "Nagoya",
+        "optionB": "Kyoto"
+      }
+    ],
+    "multipleChoiceImage": "",
+    "speechSpeakerImage": "",
+    "speechContent": "I (often / sometimes / rarely) go to karaoke. I think that it's _____ to sing your heart out. I usually go (alone / with _____) because I feel like going wild in front of other people is _____. My favorite song to sing at karaoke is _____. I think I sound great when I sing it! I'm a little off-key when I sing _____, though, so I rarely choose to do that song.",
+    "compareWordBox": [],
+    "compareImages": [],
+    "compareItems": [],
+    "stepBTutorSteps": [
+      {
+        "instruction": "Read each short message once. Pause for the learner to choose an answer.",
+        "scripts": [
+          {
+            "text": "1. I used to live in Osaka, but I moved to Kyoto because I got a job at a bakery."
+          },
+          {
+            "text": "2. I study ceramics from Monday to Friday. On Saturdays, I work at a gallery."
+          },
+          {
+            "text": "3. I grew up in Nagoya, but now I live in Kyoto."
+          }
+        ],
+        "tips": [
+          {
+            "text": "The messages are for the tutor only. Do not let the learner read them before answering."
+          }
+        ]
+      },
+      {
+        "instruction": "Check the answer and ask which words supported it.",
+        "answerKey": [
+          {
+            "text": "A - because I got a job"
+          },
+          {
+            "text": "B - on Saturdays"
+          },
+          {
+            "text": "B - but now I live in Kyoto"
+          }
+        ]
+      }
+    ]
+  },
+  "feedbackData": {
+    "sectionNumber": 6,
+    "sectionTitle": "FEEDBACK",
+    "duration": "2 minutes",
+    "goal": "I can understand a housemate's background, reason for moving, and current routine in a voice message.",
+    "goalJp": "ハウスメイトの音声メッセージを聞き、出身地、引っ越した理由、今の日課を理解できる。",
+    "rubricTitle": "HOW DID YOU DO?",
+    "rubricLevels": [
+      {
+        "score": 3,
+        "label": "Independent",
+        "description": "Finds the main idea and most details with little help."
+      },
+      {
+        "score": 2,
+        "label": "With some help",
+        "description": "Finds the main idea and some details after a second attempt or a prompt."
+      },
+      {
+        "score": 1,
+        "label": "Keep practicing",
+        "description": "Needs guided support to identify the main idea and key details."
+      }
+    ],
+    "personalizedFeedbackTitle": "YOUR NEXT STEP",
+    "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+    "rememberNote": "Give evidence-based feedback about the details heard in Challenge 1. Name one success and one useful next listening strategy.",
+    "tutorSteps": [
+      {
+        "instruction": "Ask the learner to read the goal and decide how well they achieved it.",
+        "scripts": [
+          {
+            "text": "Did you understand Nao's background, reason for moving, and current routine?"
+          }
+        ]
+      },
+      {
+        "instruction": "Score Challenge 1 from the learner's actual listening performance.",
+        "tips": [
+          {
+            "text": "Mention a correctly heard detail, then one missed detail or inference to practice. Short but accurate answers still count as understanding."
+          }
+        ]
+      },
+      {
+        "instruction": "Replay or reread one short part and let the learner try again.",
+        "scripts": [
+          {
+            "text": "Let's listen to that part once more. What changed?"
+          }
+        ]
+      }
+    ],
+    "categories": [
+      {
+        "id": "range",
+        "title": "MAIN IDEA",
+        "titleJp": "大まかな内容",
+        "focusOn": "Understands that Nao is introducing herself and suggesting a Sunday activity.",
+        "exampleFeedbackItems": [
+          "You understood that Nao wanted to meet the housemates and take photos on Sunday."
+        ],
+        "vocabularyExample": "voice message",
+        "examples": []
+      },
+      {
+        "id": "accuracy",
+        "title": "KEY DETAILS",
+        "titleJp": "詳しい情報",
+        "focusOn": "Separates Nao's hometown, reason for moving, past work, and current routine.",
+        "exampleFeedbackItems": [
+          "You caught that she moved for ceramics study, not for the gallery job."
+        ],
+        "examples": []
+      },
+      {
+        "id": "fluency",
+        "title": "LISTENING STRATEGY",
+        "titleJp": "聞き取り方",
+        "focusOn": "Uses used to, but now, and because to check the timeline and reason.",
+        "exampleFeedbackItems": [
+          "Next time, listen for but now before deciding which job is current."
+        ],
+        "examples": []
+      }
+    ]
+  },
+  "goalTextEn": "I can understand a housemate's background, reason for moving, and current routine in a voice message.",
+  "goalTextJp": "ハウスメイトの音声メッセージを聞き、出身地、引っ越した理由、今の日課を理解できる。",
+  "id": "conversational-skills-L3-C1-2-listening-ja-v1",
+  "introductionData": {
+    "introTexts": [
+      {
+        "language": "en",
+        "text": "Emma has just moved into Kamo House in Kyoto. Another resident sends her a voice message before they meet. Listen for what was true before, why things changed, and what is true now."
+      },
+      {
+        "language": "ja",
+        "text": "エマは京都のシェアハウス「Kamo House」に引っ越したばかりです。会う前に別の住人から音声メッセージが届きます。以前のこと、変化の理由、今のことを聞き取りましょう。"
+      }
+    ],
+    "introImage": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-apply-message.webp",
+    "lessonIssue": null,
+    "lessonGoalDuration": "1 minute",
+    "lessonGoalSteps": [
+      {
+        "instruction": "Introduce the goal first and check understanding.",
+        "script": "Our goal for today is: I can understand a housemate's background, reason for moving, and current routine in a voice message. Is it clear?"
+      },
+      {
+        "instruction": "Introduce the situation, then ask the learner a warm-up question.",
+        "script": "Here is our situation. Emma has just moved into Kamo House. Another resident has sent her a voice message.",
+        "question": "What would you like to know about a new housemate?"
+      }
+    ]
+  },
+  "learnData": {
+    "sectionTitle": "LEARN",
+    "steps": [
+      {
+        "stepType": "vocabulary",
+        "stepName": "STEP A: VOCABULARY",
+        "duration": "4 minutes",
+        "partLabel": "Listen and repeat. Notice how each phrase helps tell a person's story.",
+        "partTranslation": "聞いて繰り返しましょう。それぞれの表現がどのように人物の話を伝えるかに注目しましょう。",
+        "vocabularyItems": [
+          {
+            "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-grew-up.webp",
+            "englishText": "I grew up in Bristol.",
+            "highlightedWord": "grew up in",
+            "translation": "私はブリストルで育ちました。"
+          },
+          {
+            "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-moved-for-work.webp",
+            "englishText": "I moved here for work.",
+            "highlightedWord": "moved here for work",
+            "translation": "仕事のためにここへ引っ越しました。"
+          },
+          {
+            "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-work-part-time.webp",
+            "englishText": "I work part-time at a gallery.",
+            "highlightedWord": "work part-time",
+            "translation": "ギャラリーでアルバイトをしています。"
+          },
+          {
+            "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-on-weekends.webp",
+            "englishText": "I take photos on weekends.",
+            "highlightedWord": "on weekends",
+            "translation": "週末に写真を撮ります。"
+          },
+          {
+            "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-looking-forward.webp",
+            "englishText": "I'm looking forward to meeting you.",
+            "highlightedWord": "looking forward to",
+            "translation": "あなたに会えるのを楽しみにしています。"
+          },
+          {
+            "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-getting-to-know.webp",
+            "englishText": "I'm getting to know the neighborhood.",
+            "highlightedWord": "getting to know",
+            "translation": "近所のことを少しずつ知っているところです。"
+          }
+        ],
+        "tutorSteps": [
+          {
+            "instruction": "Model each phrase. Ask the learner to repeat and connect the picture to its meaning.",
+            "script": "Listen first, then say it with me."
+          },
+          {
+            "instruction": "Check before versus now with two examples.",
+            "script": "Which phrase tells us about the past? Which phrase tells us about a regular activity now?",
+            "tip": "Accept grew up in or moved here for the past; work part-time or on weekends for a current routine."
+          },
+          {
+            "instruction": "Ask for one personal or invented example.",
+            "script": "Choose one phrase and make your own sentence.",
+            "tip": "An invented person is fine. Do not require private information."
+          }
+        ]
+      }
+    ]
+  },
+  "lessonName": "A Housemate's Voice Message",
+  "lessonNumber": 2,
+  "level": 3,
+  "missionData": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "listening",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "6 minutes",
+    "situation": "A new resident, Nao, has sent a voice message to Kamo House. Emma listens to it. Claire is busy downstairs and asks Emma what Nao said.",
+    "situationTranslation": "新しい住人ナオからKamo Houseに音声メッセージが届きました。エマがそれを聞きます。階下で忙しいクレアに、ナオの話を伝えましょう。",
+    "instruction": "Listen to Nao's message. Then tell Claire where Nao grew up, why she moved to Kyoto, what changed in her work, and what she hopes to do on Sunday.",
+    "instructionTranslation": "ナオのメッセージを聞きましょう。その後、出身地、京都に引っ越した理由、仕事の変化、日曜日にしたいことをクレアに伝えましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "image": "https://api.fluentxverse.xyz/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/lesson2-challenge-message.webp",
+    "questions": [
+      {
+        "question": "Where did Nao grow up?",
+        "hints": []
+      },
+      {
+        "question": "Why did she move to Kyoto?",
+        "hints": []
+      },
+      {
+        "question": "What did she do before, and what does she do now?",
+        "hints": []
+      },
+      {
+        "question": "What would she like to do on Sunday?",
+        "hints": []
+      }
+    ],
+    "listeningScript": "<p>Hi everyone, I'm Nao. I grew up in Fukuoka, and I moved to Kyoto three months ago to study ceramics. I used to work full-time in a bookshop. Now I study during the week and work part-time at a small gallery on Saturdays. I'm still getting to know the city. This Sunday, I'd like to walk around the old streets and take photos. Claire told me Emma likes photography too. If you're free, would you like to come with me? I'm looking forward to meeting you all.</p>",
+    "tutorSteps": [
+      {
+        "instruction": "Set the situation. Tell the learner you will read Nao's message and that Claire will ask about it afterward.",
+        "scripts": [
+          {
+            "text": "First, listen for why Nao moved to Kyoto. On the second listen, notice her work and Sunday plan. Is it clear?"
+          }
+        ]
+      },
+      {
+        "instruction": "Read Nao's complete monologue once for gist, then a second time for details. Keep the script hidden from the learner.",
+        "listeningScript": "<p>Hi everyone, I'm Nao. I grew up in Fukuoka, and I moved to Kyoto three months ago to study ceramics. I used to work full-time in a bookshop. Now I study during the week and work part-time at a small gallery on Saturdays. I'm still getting to know the city. This Sunday, I'd like to walk around the old streets and take photos. Claire told me Emma likes photography too. If you're free, would you like to come with me? I'm looking forward to meeting you all.</p>",
+        "tips": [
+          {
+            "text": "Use one natural speaking voice. Pause between the past, present, and Sunday-plan ideas, but do not exaggerate the clue words."
+          }
+        ]
+      },
+      {
+        "instruction": "Start the roleplay as Claire. The tutor speaks first; use follow-ups only when the learner needs support.",
+        "scripts": [
+          {
+            "text": "Hi Emma, I was busy downstairs. Did you hear Nao's message? What did she say?"
+          }
+        ],
+        "prompts": [
+          {
+            "text": "Where did she grow up, and why did she move here?"
+          },
+          {
+            "text": "What did she used to do? What does she do now?"
+          },
+          {
+            "text": "Does she work on Sundays?"
+          },
+          {
+            "text": "You both like photography. What could you say to her?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "Accept a natural summary rather than demanding every word. Nao grew up in Fukuoka, moved to study ceramics, used to work full-time in a bookshop, now studies and works part-time at a gallery on Saturdays, and wants to take photos on Sunday."
+          }
+        ]
+      },
+      {
+        "instruction": "Give specific feedback, then ask the learner to retry one missed detail.",
+        "tips": [
+          {
+            "text": "Score listening comprehension from the information the learner recovered, not from minor grammar errors in the retelling."
+          }
+        ]
+      }
+    ]
+  },
+  "missionData2": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "discussion",
+    "challengeNumber": 2,
+    "challengeName": "Challenge 2",
+    "duration": "2 minutes",
+    "isOptional": true,
+    "situation": "You have heard Nao's message. Talk about welcoming a new housemate and getting to know Kyoto.",
+    "situationTranslation": "ナオのメッセージを聞きました。新しいハウスメイトを迎えることや、京都での暮らしについて話しましょう。",
+    "instruction": "Choose one category. Discuss the questions with your tutor.",
+    "instructionTranslation": "カテゴリーを一つ選び、講師と質問について話しましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "questions": [],
+    "topics": [
+      {
+        "title": "MEETING A NEW HOUSEMATE",
+        "questions": [
+          "What would you ask Nao when you first meet her?",
+          "Nao mentioned photography. What would you say if you share an interest with her?",
+          "How could you help a new housemate feel welcome?"
+        ]
+      },
+      {
+        "title": "GETTING TO KNOW KYOTO",
+        "questions": [
+          "Would you join Nao's Sunday photo walk? Why or why not?",
+          "What place in Kyoto would you show someone who has just moved there?",
+          "What helps you get to know a new neighborhood?"
+        ]
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "If time remains, ask the learner to choose one category. Start with its first question.",
+        "scripts": [
+          {
+            "text": "Which topic would you like to discuss: meeting a new housemate or getting to know Kyoto?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "Skip this optional discussion if the learner needs more time for Challenge 1 or feedback."
+          }
+        ]
+      },
+      {
+        "instruction": "Ask the selected questions naturally. Add a follow-up based on the learner's answer.",
+        "tips": [
+          {
+            "text": "Do not turn this into another listening test. Invite the learner to connect Nao's message with their own ideas and experiences."
+          }
+        ]
+      }
+    ]
+  },
+  "overlayColor": "#17252bcc",
+  "skill": "listening",
+  "status": "draft",
+  "stepBData": {
+    "stepType": "grammar-tip",
+    "grammarTip": {
+      "stepName": "STEP B: GRAMMAR TIP",
+      "duration": "2 minutes",
+      "explanations": [
+        {
+          "ruleText": "Used to + verb tells us about a past situation that is no longer true. But now signals a change to the present.",
+          "ruleTranslation": "used to + 動詞の原形は、今は当てはまらない過去のことを表します。but now は現在への変化を示します。",
+          "examplesTitle": "LISTEN FOR THE CHANGE",
+          "examples": [
+            {
+              "sentence": "I used to work in a hotel kitchen, but now I make bread.",
+              "translation": "以前はホテルの厨房で働いていましたが、今はパンを作っています。"
+            },
+            {
+              "sentence": "I used to live in Fukuoka, but now I live in Kyoto.",
+              "translation": "以前は福岡に住んでいましたが、今は京都に住んでいます。"
+            }
+          ]
+        },
+        {
+          "ruleText": "Because introduces the reason for a change.",
+          "ruleTranslation": "because は変化の理由を示します。",
+          "examplesTitle": "LISTEN FOR THE REASON",
+          "examples": [
+            {
+              "sentence": "I moved to Kyoto because I got a new job.",
+              "translation": "新しい仕事が決まったので京都に引っ越しました。"
+            }
+          ]
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Read the two listening clues. Ask the learner to read the examples.",
+          "script": "Listen for used to, but now, and because. They help us organize a person's story."
+        },
+        {
+          "instruction": "Check the meaning of one contrast and one reason.",
+          "script": "What did the person do before? What do they do now? Why did they move?",
+          "tip": "Keep the focus on understanding spoken information, not memorizing a rule."
+        }
+      ]
+    }
+  },
+  "storyData": "{\"enabled\":true,\"storyTitle\":\"New Friends at Maple House\",\"characters\":[{\"id\":\"yuki\",\"name\":\"Yuki\",\"role\":\"main\",\"description\":\"An adult English student from Osaka. Likes walking and photography.\"},{\"id\":\"maya\",\"name\":\"Maya\",\"role\":\"supporting\",\"description\":\"A teacher from a small town near Bristol. Likes cooking.\"},{\"id\":\"leo\",\"name\":\"Leo\",\"role\":\"supporting\",\"description\":\"A cook from Bristol. Likes music, gardening, and cooking.\"},{\"id\":\"sara\",\"name\":\"Sara\",\"role\":\"supporting\",\"description\":\"A nurse from Perth. Likes reading, walking, and photography.\"},{\"id\":\"aisha\",\"name\":\"Aisha\",\"role\":\"supporting\",\"description\":\"A designer from Leeds. Likes photography and walking.\"},{\"id\":\"ken\",\"name\":\"Ken\",\"role\":\"supporting\",\"description\":\"An adult student from Kyoto. Likes walking and photography.\"}],\"setting\":\"A fictional international shared house in London. All characters are adults.\",\"previousSummary\":\"Yuki arrives at Maple House, an international shared house. Maya opens the door. Today, you will practice their first conversation and introduce yourself to a new housemate.\",\"currentPlotPoints\":[\"Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word.\",\"Two new residents introduce themselves. Listen and make a simple profile for each person.\"],\"currentEpisodeSummary\":\"Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word.\",\"nextEpisodeHook\":\"Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown.\",\"storyNotes\":\"Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys.\"}",
+  "supportLanguage": "ja",
+  "updatedAt": "2026-09-28T10:22:26.538Z"
+}

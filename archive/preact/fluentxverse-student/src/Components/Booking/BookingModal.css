@@ -1,0 +1,29 @@
+.booking-dialog { width:640px; padding:0; }
+.booking-dialog .booking-modal { width:auto; max-width:none; max-height:none; border:0; padding:0; background:none; box-shadow:none; border-radius:0; overflow:visible; }
+.booking-dialog .booking-modal-header { position:sticky; top:0; background:var(--sd-surface); border-bottom:1px solid var(--sd-border); padding:24px 60px 24px 24px; z-index:1; }
+.booking-dialog .booking-modal-tutor { display:flex; gap:14px; align-items:center; }
+.booking-dialog :is(.booking-modal-avatar,.booking-modal-avatar-placeholder) { width:48px; height:48px; flex-shrink:0; border-radius:50%; object-fit:cover; }
+.booking-dialog .booking-modal-avatar-placeholder { display:grid; place-items:center; background:var(--sd-tint); color:var(--sd-accent); font-size:20px; }
+.booking-dialog .booking-modal-title { font-size:20px; color:var(--sd-text); margin:0 0 4px; }
+.booking-dialog .booking-modal-tutor-name { color:var(--sd-muted); margin:0; font-size:14px; }
+.booking-dialog .student-dialog-close { z-index:2; }
+.booking-dialog .booking-modal-content { padding:24px; }
+.booking-dialog .booking-modal-date-group + .booking-modal-date-group { margin-top:24px; }
+.booking-dialog .booking-modal-date-header { margin:0 0 12px; font-size:14px; color:var(--sd-text); }
+.booking-dialog .booking-modal-time-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.booking-dialog .booking-modal-time-slot { background:var(--sd-surface); border:1px solid var(--sd-border); color:var(--sd-text); min-height:44px; padding:8px; font-size:13px; box-shadow:none; }
+.booking-dialog .booking-modal-time-slot:is(:hover,.selected) { color:var(--sd-accent); background:var(--sd-tint); border-color:var(--sd-accent); }
+.booking-dialog .booking-modal-footer { position:sticky; bottom:0; display:flex; flex-wrap:wrap; align-items:center; gap:16px; justify-content:space-between; background:var(--sd-surface); border-top:1px solid var(--sd-border); padding:20px 24px; }
+.booking-dialog .booking-modal-selected-info { display:flex; gap:10px; flex:1 1 240px; align-items:center; font-size:13px; color:var(--sd-text); }
+.booking-dialog .booking-modal-duration { color:var(--sd-muted); }
+.booking-dialog .booking-modal-confirm { display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 16px; background:#0245ae; color:#fff; border:0; font-size:13px; font-weight:600; }
+.booking-dialog :is(.booking-modal-success,.booking-modal-loading,.booking-modal-empty) { display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:40px 24px; gap:12px; }
+.booking-dialog .booking-modal-success h3 { font-size:20px; color:var(--sd-text); margin:0; }
+.booking-dialog .booking-modal-success-icon { color:#168560; }
+.booking-dialog .booking-modal-empty small { color:var(--sd-muted); }
+.booking-dialog .booking-modal-error { display:grid; grid-template-columns:20px minmax(0,1fr) auto; gap:10px; align-items:center; background:#fff1f2; color:#b42337; border:1px solid #edb5bc; margin:24px; padding:14px; border-radius:6px; font-size:13px; }
+.booking-dialog .booking-modal-retry { background:transparent; color:inherit; border:1px solid currentColor; padding:6px 10px; }
+.booking-dialog :is(.booking-modal-spinner,.booking-modal-spinner-small) { width:24px; height:24px; border:2px solid var(--sd-border); border-top-color:var(--sd-accent); border-radius:50%; animation:booking-spin .8s linear infinite; }
+.booking-dialog .booking-modal-spinner-small { width:16px; height:16px; }
+@keyframes booking-spin { to { transform:rotate(360deg); } }
+@media(max-width:600px) { .booking-dialog .booking-modal-time-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .booking-dialog .booking-modal-header { padding:20px 56px 20px 20px; } .booking-dialog .booking-modal-content { padding:20px; } .booking-dialog .booking-modal-footer { padding:16px 20px; } .booking-dialog .booking-modal-confirm { width:100%; } .booking-dialog .booking-modal-error { margin:20px; grid-template-columns:20px minmax(0,1fr); } .booking-dialog .booking-modal-retry { grid-column:2; justify-self:start; } }

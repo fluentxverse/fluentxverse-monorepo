@@ -1,0 +1,89 @@
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import { cssStyle, Fragment } from "../utils/cssStyle";
+import axios from 'axios';
+import type { Tutor, TutorProfile, TutorSearchParams, TutorSearchResponse } from '../types/tutor.types';
+import { API_BASE_URL } from '../config/api';
+import { api as sharedApi } from '../client/api';
+// Use the shared client with timing interceptors
+const api = sharedApi;
+export const tutorApi = {
+    /**
+     * Search tutors with filters
+     */
+    searchTutors: async (params: TutorSearchParams): Promise<TutorSearchResponse> => {
+        const response = await api.get<{
+            success: boolean;
+            data: TutorSearchResponse;
+        }>('/tutor/search', {
+            params: {
+                q: params.query,
+                specializations: params.specializations,
+                dateFilter: params.dateFilter,
+                startTime: params.startTime,
+                endTime: params.endTime,
+                sortBy: params.sortBy,
+                page: params.page,
+                limit: params.limit
+            }
+        });
+        if (!response.data.success) {
+            throw new Error('Failed to search tutors');
+        }
+        return response.data.data;
+    },
+    /**
+     * Get featured tutors
+     */
+    getFeaturedTutors: async (limit = 6): Promise<Tutor[]> => {
+        const response = await api.get<{
+            success: boolean;
+            data: Tutor[];
+        }>('/tutor/featured', {
+            params: { limit }
+        });
+        if (!response.data.success) {
+            throw new Error('Failed to get featured tutors');
+        }
+        return response.data.data;
+    },
+    /**
+     * Get tutor profile by ID
+     */
+    getTutorProfile: async (tutorId: string): Promise<TutorProfile> => {
+        const response = await api.get<{
+            success: boolean;
+            data: TutorProfile;
+        }>(`/tutor/${tutorId}`);
+        if (!response.data.success) {
+            throw new Error('Tutor not found');
+        }
+        return response.data.data;
+    },
+    /**
+     * Get available filter options
+     */
+    /**
+     * Get tutor weekly availability grid
+     */
+    getAvailability: async (tutorId: string): Promise<Array<{
+        date: string;
+        time: string;
+        status: 'AVAIL' | 'TAKEN' | 'BOOKED';
+        studentId?: string;
+    }>> => {
+        const response = await api.get<{
+            success: boolean;
+            data: Array<{
+                date: string;
+                time: string;
+                status: 'AVAIL' | 'TAKEN' | 'BOOKED';
+                studentId?: string;
+            }>;
+        }>(`/tutor/${tutorId}/availability`);
+        if (!response.data.success) {
+            throw new Error('Failed to get availability');
+        }
+        return response.data.data;
+    }
+};

@@ -261,7 +261,8 @@ export class AdminOperationsService {
           const cancelled = await tx.run(`MATCH (b:Booking {bookingId: $bookingId})-[:BOOKS]->(s:TimeSlot)
             WHERE b.status = 'confirmed' AND b.slotDateTime > datetime()
             SET b.status = 'cancelled', b.cancelledAt = datetime(),
-            b.cancelledBy = $actorId, b.cancellationReason = $reason, b.refundStatus = 'pending', b.cancellationRefundVersion = 1,
+            b.cancelledBy = $actorId, b.cancellationReason = $reason,
+            b.refundStatus = CASE WHEN b.paymentMethod = 'trial' THEN 'not_required' ELSE 'pending' END, b.cancellationRefundVersion = 1,
             s.status = 'open', s.studentId = null RETURN b`, { bookingId, actorId, reason: requiredReason(reason) });
           if (!cancelled.records.length) throw new Error('The lesson has started and cannot be cancelled.');
           after = { status: 'cancelled' };
@@ -287,8 +288,13 @@ export class AdminOperationsService {
         const row = (await tx.run('MATCH (b:Booking {bookingId: $bookingId}) SET b.refundWriteVersion = coalesce(b.refundWriteVersion, 0) + 1 RETURN b', { bookingId })).records[0];
         if (!row) throw new Error('Lesson not found');
         const b = row.get('b').properties;
+        if (b.paymentMethod === 'trial') throw new Error('Free trial lessons have no paid credit to refund');
         if (Date.now() < Date.parse(notesState(b).endsAt) && b.status !== 'cancelled') throw new Error('Refunds require an ended or cancelled lesson.');
         if (b.refunded) return;
+        if (b.privatePassReservationId) {
+          const pass = (await tx.run('MATCH (r:LessonPassReservation {id:$id}) RETURN r.status AS status', { id: b.privatePassReservationId })).records[0];
+          if (pass?.get('status') !== 'booked') throw new Error('This pass is already finalizing or finalized; reconcile its existing operation.');
+        }
         // Never erase an uncertain dispatch or create a new identifier for the same refund.
         if (b.refundStatus === 'review') throw new Error('This refund has an uncertain transfer outcome. Verify the existing transaction before retrying.');
         if (b.status === 'cancelled' && Number(b.cancellationRefundVersion) !== 1) throw new Error('Historical cancellation requires transfer-history verification.');

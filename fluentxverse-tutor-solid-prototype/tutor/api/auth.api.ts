@@ -1,0 +1,103 @@
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import { cssStyle, Fragment } from "../utils/cssStyle";
+// Axios client
+import axios from "axios";
+import { client } from "./utils";
+export interface RegisterParams {
+    email: string;
+    password: string;
+    firstName: string;
+    middleName?: string;
+    lastName: string;
+    suffix?: string;
+    birthDate: string;
+    mobileNumber: string;
+}
+export const register = async (params: RegisterParams) => {
+    try {
+        const response = await client.post('/tutor/register', params);
+        return response.data;
+    }
+    catch (error: any) {
+        console.error('[auth.api] register() error:', {
+            status: error?.response?.status,
+            statusText: error?.response?.statusText,
+            data: error?.response?.data,
+            message: error?.message
+        });
+        throw error;
+    }
+};
+export const loginUser = async (email: string, password: string) => {
+    const { data } = await client.post('/tutor/login', { email, password });
+    return data;
+};
+export const logoutUser = async () => {
+    const { data } = await client.post('/tutor/logout');
+    if (data?.success !== true)
+        throw new Error('Logout was not confirmed by the server');
+    return data;
+};
+export const getMe = async () => {
+    const { data } = await client.get('/tutor/me');
+    return data;
+};
+export const refreshSession = async () => {
+    const { data } = await client.post('/tutor/refresh');
+    return data;
+};
+export interface UpdatePersonalInfoParams {
+    phoneNumber?: string;
+    // Address
+    country?: string;
+    region?: string;
+    regionName?: string;
+    province?: string;
+    provinceName?: string;
+    city?: string;
+    cityName?: string;
+    zipCode?: string;
+    addressLine?: string;
+    sameAsPermanent?: boolean;
+    // Qualifications
+    schoolAttended?: string;
+    educationalAttainment?: string;
+    major?: string;
+    teachingExperience?: string;
+    teachingQualifications?: string[];
+}
+export const updatePersonalInfo = async (params: UpdatePersonalInfoParams) => {
+    const { data } = await client.put('/tutor/user/personal-info', params);
+    return data;
+};
+export interface PersonalInfoData {
+    phoneNumber: string;
+    country: string;
+    region: string;
+    regionName: string;
+    province: string;
+    provinceName: string;
+    city: string;
+    cityName: string;
+    zipCode: string;
+    addressLine: string;
+    sameAsPermanent: boolean;
+    schoolAttended: string;
+    educationalAttainment: string;
+    major: string;
+    teachingExperience: string;
+    teachingQualifications: string[];
+}
+export const getPersonalInfo = async (): Promise<PersonalInfoData | null> => {
+    const { data } = await client.get('/tutor/user/personal-info');
+    return data.data;
+};
+export const updateEmail = async (newEmail: string, currentPassword: string) => {
+    const { data } = await client.put('/tutor/user/email', { newEmail, currentPassword });
+    return data;
+};
+export const updatePassword = async (currentPassword: string, newPassword: string) => {
+    const { data } = await client.put('/tutor/user/password', { currentPassword, newPassword });
+    return data;
+};

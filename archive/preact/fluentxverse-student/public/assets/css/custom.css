@@ -1,0 +1,49 @@
+/* Custom styles to hide the sidebar logo in mobile mode */
+@media (max-width: 767.98px) {
+  .sidebar-logo {
+    display: none;
+  }
+  
+  /* Adjust spacing for the sidebar icons since the logo is hidden */
+  .sidebar-icon {
+    margin-top: 20px;
+  }
+  
+  /* Ensure the sidebar has proper spacing */
+  .sidebar {
+    padding-top: 0px;
+  }
+  
+  /* Improve dark mode sidebar icons in mobile view - keep consistent with light mode */
+  .dark-mode .sidebar-icon ul li a {
+    background: var(--sidebar-icon-background);
+    border: 1px solid var(--icon-border-color);
+  }
+  
+  .dark-mode .sidebar-icon ul li.active a {
+    background: var(--nft-gradient-color);
+  }
+}
+
+/* Ensure the loader is properly styled for both themes */
+.preloader {
+  background-color: var(--background-color);
+}
+
+.dark-mode .preloader {
+  background-color: #121212;
+}
+
+/* Ensure scrollbar is themed */
+.dark-mode::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+.dark-mode::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 10px;
+}
+
+.dark-mode::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

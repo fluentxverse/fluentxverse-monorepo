@@ -1,0 +1,2393 @@
+[
+  {
+    "applyData": {
+      "sectionNumber": 3,
+      "sectionTitle": "APPLY",
+      "activityType": "listening",
+      "activityTitle": "LISTENING",
+      "activityDuration": "4 minutes",
+      "situationText": "Listen to your tutor. First listen for the main idea, then listen again for details.<br><small lang=\"ja\">講師の話を聞きましょう。一度目は大まかな内容、二度目は詳しい情報を聞き取りましょう。</small><br><br>1. What do both people like?<br>2. What will they make?<br>3. On which day and at what time?<br>4. Will they meet in the courtyard?",
+      "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+      "dialogueLines": [],
+      "tutorSteps": [
+        {
+          "instruction": "Read once for the main idea. Read again for details.",
+          "listeningScript": "<p>Yuki: These herbs smell nice. Do you like gardening, Leo?</p><p>Leo: Yes, I do. I like cooking, too. How about you?</p><p>Yuki: I like cooking, but I don't know much about herbs.</p><p>Leo: Really? Let's make lunch together on Sunday.</p><p>Yuki: That sounds nice. In the courtyard?</p><p>Leo: No, in the kitchen. Let's meet at ten.</p><p>Yuki: Sunday at ten, in the kitchen. Great.</p><p>Leo: See you then.</p>",
+          "tips": [
+            {
+              "text": "Keep the script hidden from the learner. Pause only between speakers. Repeat once more if needed."
+            }
+          ]
+        },
+        {
+          "instruction": "Check understanding and ask for evidence.",
+          "questions": [
+            {
+              "question": "What do both people like?",
+              "answer": "Cooking."
+            },
+            {
+              "question": "What will they make?",
+              "answer": "Lunch."
+            },
+            {
+              "question": "On which day and at what time?",
+              "answer": "Sunday at ten."
+            },
+            {
+              "question": "Will they meet in the courtyard?",
+              "answer": "No. In the kitchen."
+            }
+          ]
+        },
+        {
+          "instruction": "Return to the line that supports each answer.",
+          "tips": [
+            {
+              "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+            }
+          ]
+        }
+      ],
+      "triviaEnabled": false
+    },
+    "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+    "authoringSource": "conversational-skills-ja-l3-c1-v1",
+    "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+    "beData": "",
+    "chapter": 1,
+    "chapterName": "Nice to Meet You",
+    "course": "conversational-skills",
+    "createdAt": "2026-09-23T06:32:26.413Z",
+    "createdBy": "codex",
+    "createdByName": "Lesson Authoring",
+    "discussionQuestionsData": "",
+    "exerciseData": {
+      "sectionNumber": 4,
+      "sectionTitle": "EXERCISE",
+      "duration": "4 minutes",
+      "stepAType": "choose",
+      "stepAName": "STEP A",
+      "instructions": "Choose the correct word. Read the complete sentence.",
+      "instructionsTranslation": "正しい語を選び、文全体を読みましょう。",
+      "showExpressions": false,
+      "expressions": [],
+      "showExample": false,
+      "exampleSentence": "",
+      "exampleAnswer": "",
+      "showInfoBox": false,
+      "exerciseItems": [],
+      "chooseItems": [
+        {
+          "sentence": "How about (you / your)?"
+        },
+        {
+          "sentence": "That (sound / sounds) nice."
+        },
+        {
+          "sentence": "Meet me (at / on) two."
+        }
+      ],
+      "changeItems": [],
+      "answers": [
+        {
+          "text": "you"
+        },
+        {
+          "text": "sounds"
+        },
+        {
+          "text": "at"
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Let the learner try independently. Check complete sentences.",
+          "answerKey": [
+            {
+              "text": "1. you"
+            },
+            {
+              "text": "2. sounds"
+            },
+            {
+              "text": "3. at"
+            }
+          ],
+          "tips": [
+            {
+              "text": "For personal answers, the examples are models, not the only correct responses."
+            }
+          ]
+        }
+      ],
+      "hasStepB": true,
+      "stepBType": "multiple-choice",
+      "stepBName": "STEP B",
+      "stepBInstruction": "Choose the best answer. Explain what detail helped you.",
+      "stepBInstructionTranslation": "最も適切な答えを選び、手がかりとなった情報を伝えましょう。",
+      "conversations": [],
+      "multipleChoiceItems": [
+        {
+          "boldSentence": "You hear: Saturday? Sorry, I work. Sunday is good. The final day is ...",
+          "optionA": "Saturday.",
+          "optionB": "Sunday."
+        },
+        {
+          "boldSentence": "You hear: At the park? No, at the front door. They meet ...",
+          "optionA": "at the front door.",
+          "optionB": "at the park."
+        },
+        {
+          "boldSentence": "You hear: I like cooking. Me too. The speakers ...",
+          "optionA": "both like cooking.",
+          "optionB": "do not like cooking."
+        }
+      ],
+      "compareWordBox": [],
+      "compareImages": [],
+      "compareItems": [],
+      "stepBTutorSteps": [
+        {
+          "instruction": "Check the answer and its supporting detail.",
+          "answerKey": [
+            {
+              "text": "1. B: Sunday."
+            },
+            {
+              "text": "2. A: at the front door."
+            },
+            {
+              "text": "3. A: both like cooking."
+            }
+          ],
+          "tips": [
+            {
+              "text": "Do not demand the model wording if the meaning is clear."
+            }
+          ]
+        }
+      ]
+    },
+    "feedbackData": {
+      "sectionNumber": 6,
+      "sectionTitle": "FEEDBACK",
+      "duration": "2 minutes",
+      "goal": "I can follow a short conversation and identify a shared interest and a plan.",
+      "goalJp": "短い会話を聞いて、共通の興味と予定を聞き取ることができる。",
+      "rubricTitle": "HOW DID YOU DO?",
+      "rubricLevels": [
+        {
+          "score": 3,
+          "label": "Independent",
+          "description": "Finds the main idea and most details with little help."
+        },
+        {
+          "score": 2,
+          "label": "With some help",
+          "description": "Finds the main idea and some details after a second attempt or a prompt."
+        },
+        {
+          "score": 1,
+          "label": "Keep practicing",
+          "description": "Needs guided support to identify the main idea and key details."
+        }
+      ],
+      "personalizedFeedbackTitle": "YOUR NEXT STEP",
+      "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+      "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+      "tutorSteps": [
+        {
+          "instruction": "Return to the goal. Ask the learner how the task felt.",
+          "scripts": [
+            {
+              "text": "What was easy today? What would you like to practice again?"
+            }
+          ]
+        },
+        {
+          "instruction": "Give one evidence-based success and one actionable next step.",
+          "tips": [
+            {
+              "text": "Assess understanding first. Do not lower comprehension feedback just because a correct answer is a short phrase."
+            }
+          ]
+        },
+        {
+          "instruction": "Have the learner retry one item and finish with the goal.",
+          "scripts": [
+            {
+              "text": "Let's try that part once more."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "range",
+          "title": "MAIN IDEA",
+          "titleJp": "大まかな内容",
+          "focusOn": "Identifies the situation and purpose.",
+          "exampleFeedbackItems": [
+            "I can follow a short conversation and identify a shared interest and a plan."
+          ],
+          "vocabularyExample": "Really?",
+          "examples": []
+        },
+        {
+          "id": "accuracy",
+          "title": "KEY DETAILS",
+          "titleJp": "詳しい情報",
+          "focusOn": "Finds the details needed to complete the task and supports answers with evidence.",
+          "exampleFeedbackItems": [
+            "What activity do they plan?",
+            "What is the final day?"
+          ],
+          "examples": []
+        },
+        {
+          "id": "fluency",
+          "title": "STRATEGY",
+          "titleJp": "理解の工夫",
+          "focusOn": "Uses a second listen or asks for repetition to check uncertain details.",
+          "exampleFeedbackItems": [
+            "Check one uncertain detail again."
+          ],
+          "examples": []
+        }
+      ]
+    },
+    "goalTextEn": "I can follow a short conversation and identify a shared interest and a plan.",
+    "goalTextJp": "短い会話を聞いて、共通の興味と予定を聞き取ることができる。",
+    "id": "conversational-skills-L3-C1-6-listening-ja-v1",
+    "introductionData": {
+      "introTexts": [
+        {
+          "language": "en",
+          "text": "Yuki and Leo talk in the courtyard. Small replies show interest, but some details tell you the actual plan. Listen for what, when, and where."
+        },
+        {
+          "language": "ja",
+          "text": "ユキとレオが中庭で話しています。短い相づちは関心を示し、具体的な情報は予定を伝えます。「何を・いつ・どこで」に注目して聞きましょう。"
+        }
+      ],
+      "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+      "lessonIssue": null,
+      "lessonGoalDuration": "1 minute",
+      "lessonGoalSteps": [
+        {
+          "instruction": "Introduce the setting and connect it to the learner.",
+          "script": "Yuki and Leo talk in the courtyard. Small replies show interest, but some details tell you the actual plan. Listen for what, when, and where.",
+          "question": "Which final detail did you hear clearly?"
+        },
+        {
+          "instruction": "Read the goal and explain what success will look like.",
+          "script": "I can follow a short conversation and identify a shared interest and a plan."
+        }
+      ]
+    },
+    "learnData": {
+      "sectionTitle": "LEARN",
+      "steps": [
+        {
+          "stepType": "expressions",
+          "stepName": "STEP A: EXPRESSIONS",
+          "duration": "4 minutes",
+          "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+          "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+          "expressionItems": [
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+              "definitionLine": "<strong>Really?</strong>",
+              "exampleSentence": "I grow herbs. Really?",
+              "translation": "そうなんですか。",
+              "extraText": ""
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+              "definitionLine": "<strong>How about you?</strong>",
+              "exampleSentence": "I like cooking. How about you?",
+              "translation": "あなたはどうですか。",
+              "extraText": ""
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+              "definitionLine": "<strong>That sounds nice.</strong>",
+              "exampleSentence": "Let's cook together. That sounds nice.",
+              "translation": "それはいいですね。",
+              "extraText": ""
+            }
+          ],
+          "tutorSteps": [
+            {
+              "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+              "script": "Listen first. Then say it with me."
+            },
+            {
+              "instruction": "Check the meaning of each example before moving to Apply.",
+              "question": "Can you give a different example?",
+              "tip": "The picture supports the setting; do not treat it as an answer key."
+            },
+            {
+              "instruction": "Personalize two examples.",
+              "script": "Now use your own information, or invent an example.",
+              "tip": "Allow invented details if the learner prefers not to share personal information."
+            }
+          ]
+        }
+      ]
+    },
+    "lessonName": "Following a Friendly Conversation",
+    "lessonNumber": 6,
+    "level": 3,
+    "missionData": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "listening",
+      "challengeNumber": 1,
+      "challengeName": "Challenge 1",
+      "duration": "6 minutes",
+      "situation": "Listen to Yuki and Sara plan an activity. One suggestion changes during the conversation.",
+      "situationTranslation": "ユキとサラが活動の計画を立てる会話を聞きましょう。途中で提案が一つ変更されます。",
+      "instruction": "First, identify the activity. Then listen for the final day, time, and meeting place. Which earlier suggestion changes?<br><br>1. What activity do they plan?<br>2. What is the final day?<br>3. What time and where will they meet?<br>4. Why does the day change?",
+      "instructionTranslation": "最初に活動を聞き取りましょう。次に、最終的な曜日、時間、待ち合わせ場所を確認しましょう。最初の提案から何が変わりましたか。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "Useful language",
+      "grammarTipItems": [],
+      "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+      "questions": [
+        {
+          "question": "What activity do they plan?",
+          "hints": []
+        },
+        {
+          "question": "What is the final day?",
+          "hints": []
+        },
+        {
+          "question": "What time and where will they meet?",
+          "hints": []
+        },
+        {
+          "question": "Why does the day change?",
+          "hints": []
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Set the task and check understanding without giving the answers.",
+          "scripts": [
+            {
+              "text": "First, identify the activity. Then listen for the final day, time, and meeting place. Which earlier suggestion changes?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+            }
+          ]
+        },
+        {
+          "instruction": "Read the complete script once for gist, then again for details.",
+          "listeningScript": "<p>Yuki: Do you like walking, Sara?</p><p>Sara: Yes, I do. I like taking photos, too.</p><p>Yuki: Me too! Let's go to the park on Saturday.</p><p>Sara: Sorry, I work on Saturday. How about Sunday?</p><p>Yuki: Sunday is good. At two?</p><p>Sara: Yes, two in the afternoon. Let's meet at the front door of Maple House.</p><p>Yuki: Great. Sunday at two, at the front door.</p><p>Sara: See you then.</p>",
+          "tips": [
+            {
+              "text": "Use a natural but unhurried pace and distinct voices. Do not display the transcript. Repeat a requested part after the second listen."
+            }
+          ]
+        },
+        {
+          "instruction": "Ask the questions and check the evidence.",
+          "scripts": [
+            {
+              "text": "1. What activity do they plan?"
+            },
+            {
+              "text": "2. What is the final day?"
+            },
+            {
+              "text": "3. What time and where will they meet?"
+            },
+            {
+              "text": "4. Why does the day change?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. Walking in the park; taking photos is also a shared interest."
+            },
+            {
+              "text": "2. Sunday."
+            },
+            {
+              "text": "3. Two in the afternoon, at the front door of Maple House."
+            },
+            {
+              "text": "4. Sara works on Saturday."
+            }
+          ]
+        },
+        {
+          "instruction": "Give feedback, then retry one difficult part with less support.",
+          "tips": [
+            {
+              "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+            }
+          ]
+        }
+      ],
+      "listeningScript": "<p>Yuki: Do you like walking, Sara?</p><p>Sara: Yes, I do. I like taking photos, too.</p><p>Yuki: Me too! Let's go to the park on Saturday.</p><p>Sara: Sorry, I work on Saturday. How about Sunday?</p><p>Yuki: Sunday is good. At two?</p><p>Sara: Yes, two in the afternoon. Let's meet at the front door of Maple House.</p><p>Yuki: Great. Sunday at two, at the front door.</p><p>Sara: See you then.</p>"
+    },
+    "missionData2": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "listening",
+      "challengeNumber": 2,
+      "challengeName": "Challenge 2",
+      "duration": "2 minutes",
+      "isOptional": true,
+      "situation": "Check one more short conversation or introduction.",
+      "situationTranslation": "もう一つの短い会話や自己紹介を聞いて、内容を確認しましょう。",
+      "instruction": "Listen and correct this plan: Friday morning, at six, in the kitchen. Which detail is wrong?",
+      "instructionTranslation": "聞いて、次の予定を訂正しましょう。「金曜日の朝6時、キッチン」。どの情報が間違っていますか。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "",
+      "grammarTipItems": [],
+      "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/listening.webp",
+      "questions": [
+        {
+          "question": "Which detail is wrong?",
+          "hints": []
+        },
+        {
+          "question": "What is the correct plan?",
+          "hints": []
+        }
+      ],
+      "listeningScript": "<p>Leo: Let's meet in the kitchen at six.</p><p>Yuki: Six in the morning?</p><p>Leo: No, six in the evening, on Friday.</p><p>Yuki: Friday evening at six, in the kitchen. Got it.</p>",
+      "tutorSteps": [
+        {
+          "instruction": "Use this optional task only if time remains before feedback.",
+          "tips": [
+            {
+              "text": "Keep it to two minutes."
+            }
+          ]
+        },
+        {
+          "instruction": "Read once, then repeat if requested.",
+          "listeningScript": "<p>Leo: Let's meet in the kitchen at six.</p><p>Yuki: Six in the morning?</p><p>Leo: No, six in the evening, on Friday.</p><p>Yuki: Friday evening at six, in the kitchen. Got it.</p>"
+        },
+        {
+          "instruction": "Check the answer and ask which detail helped.",
+          "scripts": [
+            {
+              "text": "1. Which detail is wrong?"
+            },
+            {
+              "text": "2. What is the correct plan?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. Morning. It should be evening."
+            },
+            {
+              "text": "2. Friday evening at six in the kitchen."
+            }
+          ]
+        }
+      ]
+    },
+    "overlayColor": "#17252bcc",
+    "skill": "listening",
+    "status": "draft",
+    "stepBData": {
+      "stepType": "pronunciation",
+      "pronunciation": {
+        "stepName": "STEP B: PRONUNCIATION",
+        "duration": "2 minutes",
+        "tutorSteps": [
+          {
+            "instruction": "Model the focus with the examples. Keep the explanation brief.",
+            "script": "Notice the voice going up in a short question such as Really? Listen for clear stress on the time and place."
+          },
+          {
+            "instruction": "Ask the learner to try it, then give one focused correction.",
+            "tip": "Use the Japanese support only if needed. Return to English for practice."
+          }
+        ],
+        "tip": "Notice the voice going up in a short question such as Really? Listen for clear stress on the time and place.<br><small lang=\"ja\">Really? のような短い質問では声が上がることに注目しましょう。時間や場所を表す語の強調も聞き取りましょう。</small>",
+        "phrases": [
+          {
+            "phrase": "Really? On Sunday?",
+            "pronunciationGuide": "",
+            "exampleSentence": "Really? On Sunday?"
+          },
+          {
+            "phrase": "Let's meet at TEN in the KITCHEN.",
+            "pronunciationGuide": "",
+            "exampleSentence": "Let's meet at TEN in the KITCHEN."
+          }
+        ]
+      }
+    },
+    "storyData": {
+      "enabled": true,
+      "storyTitle": "New Friends at Maple House",
+      "setting": "A fictional international shared house in London. All characters are adults.",
+      "characters": [
+        {
+          "id": "yuki",
+          "name": "Yuki",
+          "role": "main",
+          "description": "An adult English student from Osaka. Likes walking and photography."
+        },
+        {
+          "id": "maya",
+          "name": "Maya",
+          "role": "supporting",
+          "description": "A teacher from a small town near Bristol. Likes cooking."
+        },
+        {
+          "id": "leo",
+          "name": "Leo",
+          "role": "supporting",
+          "description": "A cook from Bristol. Likes music, gardening, and cooking."
+        },
+        {
+          "id": "sara",
+          "name": "Sara",
+          "role": "supporting",
+          "description": "A nurse from Perth. Likes reading, walking, and photography."
+        },
+        {
+          "id": "aisha",
+          "name": "Aisha",
+          "role": "supporting",
+          "description": "A designer from Leeds. Likes photography and walking."
+        },
+        {
+          "id": "ken",
+          "name": "Ken",
+          "role": "supporting",
+          "description": "An adult student from Kyoto. Likes walking and photography."
+        }
+      ],
+      "previousSummary": "The residents plan a free afternoon. Yuki likes taking photos, and Leo likes music. Ask about interests and find something you can enjoy together.",
+      "currentPlotPoints": [
+        "Yuki and Leo talk in the courtyard. Small replies show interest, but some details tell you the actual plan. Listen for what, when, and where.",
+        "Listen to Yuki and Sara plan an activity. One suggestion changes during the conversation."
+      ],
+      "currentEpisodeSummary": "Yuki and Leo talk in the courtyard. Small replies show interest, but some details tell you the actual plan. Listen for what, when, and where.",
+      "nextEpisodeHook": "Yuki knows Maya and Leo, but they have not met each other yet. Help two people start a conversation by introducing them.",
+      "storyNotes": "Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys."
+    },
+    "supportLanguage": "ja",
+    "updatedAt": "2026-09-23T10:51:10.454Z"
+  },
+  {
+    "applyData": {
+      "sectionNumber": 3,
+      "sectionTitle": "APPLY",
+      "activityType": "speaking",
+      "activityTitle": "SPEAKING",
+      "activityDuration": "4 minutes",
+      "situationText": "Read the conversation with your tutor. Switch roles, then change the details.<br><small lang=\"ja\">講師と会話を読みましょう。役割を交代し、情報を変えて練習しましょう。</small><br><br>1. Who introduces Maya and Leo?<br>2. What is Leo's job?<br>3. What do Maya and Leo both like?",
+      "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+      "dialogueLines": [
+        {
+          "speaker": "Yuki",
+          "text": "Maya, this is my friend Leo.",
+          "isAction": false
+        },
+        {
+          "speaker": "Maya",
+          "text": "Hi, Leo. Nice to meet you.",
+          "isAction": false
+        },
+        {
+          "speaker": "Leo",
+          "text": "Nice to meet you, too.",
+          "isAction": false
+        },
+        {
+          "speaker": "Yuki",
+          "text": "Leo is from Bristol. He's a cook.",
+          "isAction": false
+        },
+        {
+          "speaker": "Maya",
+          "text": "Really? I like cooking.",
+          "isAction": false
+        },
+        {
+          "speaker": "Yuki",
+          "text": "Leo, Maya is a teacher. You both like cooking.",
+          "isAction": false
+        },
+        {
+          "speaker": "Leo",
+          "text": "Great! What do you like cooking, Maya?",
+          "isAction": false
+        },
+        {
+          "speaker": "Maya",
+          "text": "I like making soup.",
+          "isAction": false
+        },
+        {
+          "speaker": "Yuki",
+          "text": "I'll leave you two to talk.",
+          "isAction": false
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Read the conversation with your tutor. Switch roles, then change the details.",
+          "tips": [
+            {
+              "text": "Model once, then share the roles. Do not make this a tutor-only reading."
+            }
+          ]
+        },
+        {
+          "instruction": "Check understanding and ask for evidence.",
+          "questions": [
+            {
+              "question": "Who introduces Maya and Leo?",
+              "answer": "Yuki."
+            },
+            {
+              "question": "What is Leo's job?",
+              "answer": "Cook."
+            },
+            {
+              "question": "What do Maya and Leo both like?",
+              "answer": "Cooking."
+            }
+          ]
+        },
+        {
+          "instruction": "Switch roles and change two details.",
+          "tips": [
+            {
+              "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+            }
+          ]
+        }
+      ],
+      "triviaEnabled": false
+    },
+    "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+    "authoringSource": "conversational-skills-ja-l3-c1-v1",
+    "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+    "beData": "",
+    "chapter": 1,
+    "chapterName": "Nice to Meet You",
+    "course": "conversational-skills",
+    "createdAt": "2026-09-23T06:32:26.413Z",
+    "createdBy": "codex",
+    "createdByName": "Lesson Authoring",
+    "discussionQuestionsData": "",
+    "exerciseData": {
+      "sectionNumber": 4,
+      "sectionTitle": "EXERCISE",
+      "duration": "4 minutes",
+      "stepAType": "change",
+      "stepAName": "STEP A",
+      "instructions": "Change the underlined words as directed.",
+      "instructionsTranslation": "指示に従って下線部を書き換えましょう。",
+      "showExpressions": false,
+      "expressions": [],
+      "showExample": false,
+      "exampleSentence": "",
+      "exampleAnswer": "",
+      "showInfoBox": false,
+      "exerciseItems": [],
+      "chooseItems": [],
+      "changeItems": [
+        {
+          "sentence": "<u>I am</u> a cook. (Talk about Leo.)"
+        },
+        {
+          "sentence": "<u>I like</u> music. (Talk about Maya.)"
+        },
+        {
+          "sentence": "<u>My name is Ken.</u> (Introduce Ken.)"
+        }
+      ],
+      "answers": [
+        {
+          "text": "He is a cook."
+        },
+        {
+          "text": "She likes music."
+        },
+        {
+          "text": "This is Ken."
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Let the learner try independently. Check complete sentences.",
+          "answerKey": [
+            {
+              "text": "1. He is a cook."
+            },
+            {
+              "text": "2. She likes music."
+            },
+            {
+              "text": "3. This is Ken."
+            }
+          ],
+          "tips": [
+            {
+              "text": "For personal answers, the examples are models, not the only correct responses."
+            }
+          ]
+        }
+      ],
+      "hasStepB": true,
+      "stepBType": "speech",
+      "stepBName": "STEP B",
+      "stepBInstruction": "Complete the introduction with your own information or an invented person.",
+      "stepBInstructionTranslation": "自分の情報や架空の人物の情報を使って紹介を完成させましょう。",
+      "conversations": [],
+      "multipleChoiceItems": [],
+      "speechSpeakerImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+      "speechContent": "This is my friend _____. He/She is from _____. He/She is a _____. He/She likes _____. You both like _____.",
+      "compareWordBox": [],
+      "compareImages": [],
+      "compareItems": [],
+      "stepBTutorSteps": [
+        {
+          "instruction": "Listen first. Give feedback, then let the learner try again.",
+          "answerKey": [
+            {
+              "text": "Answers vary. Check that each blank makes sense and that the learner responds to the partner."
+            }
+          ],
+          "tips": [
+            {
+              "text": "Do not demand the model wording if the meaning is clear."
+            }
+          ]
+        }
+      ]
+    },
+    "feedbackData": {
+      "sectionNumber": 6,
+      "sectionTitle": "FEEDBACK",
+      "duration": "2 minutes",
+      "goal": "I can introduce a friend and share two details about them.",
+      "goalJp": "友達を紹介し、その人について二つの情報を伝えることができる。",
+      "rubricTitle": "HOW DID YOU DO?",
+      "rubricLevels": [
+        {
+          "score": 3,
+          "label": "Independent",
+          "description": "Completes the task and responds with little help."
+        },
+        {
+          "score": 2,
+          "label": "With some help",
+          "description": "Completes most of the task with prompts or a second attempt."
+        },
+        {
+          "score": 1,
+          "label": "Keep practicing",
+          "description": "Needs a model and guided support to complete the task."
+        }
+      ],
+      "personalizedFeedbackTitle": "YOUR NEXT STEP",
+      "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+      "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+      "tutorSteps": [
+        {
+          "instruction": "Return to the goal. Ask the learner how the task felt.",
+          "scripts": [
+            {
+              "text": "What was easy today? What would you like to practice again?"
+            }
+          ]
+        },
+        {
+          "instruction": "Give one evidence-based success and one actionable next step.",
+          "tips": [
+            {
+              "text": "Notice successful communication before correcting language."
+            }
+          ]
+        },
+        {
+          "instruction": "Have the learner retry one item and finish with the goal.",
+          "scripts": [
+            {
+              "text": "Let's try that part once more."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "range",
+          "title": "RANGE",
+          "titleJp": "表現の幅",
+          "focusOn": "Uses the target expressions appropriately.",
+          "exampleFeedbackItems": [
+            "I can introduce a friend and share two details about them."
+          ],
+          "vocabularyExample": "This is ...",
+          "examples": []
+        },
+        {
+          "id": "accuracy",
+          "title": "ACCURACY",
+          "titleJp": "正確さ",
+          "focusOn": "Uses clear sentence patterns for the task.",
+          "exampleFeedbackItems": [
+            "Who is your friend?",
+            "Where is your friend from, or what do they do?"
+          ],
+          "examples": []
+        },
+        {
+          "id": "fluency",
+          "title": "INTERACTION",
+          "titleJp": "やり取り",
+          "focusOn": "Responds to the partner and keeps the exchange moving.",
+          "exampleFeedbackItems": [
+            "Ask one relevant follow-up question."
+          ],
+          "examples": []
+        }
+      ]
+    },
+    "goalTextEn": "I can introduce a friend and share two details about them.",
+    "goalTextJp": "友達を紹介し、その人について二つの情報を伝えることができる。",
+    "id": "conversational-skills-L3-C1-7-speaking-ja-v1",
+    "introductionData": {
+      "introTexts": [
+        {
+          "language": "en",
+          "text": "Yuki knows Maya and Leo, but they have not met each other yet. Help two people start a conversation by introducing them."
+        },
+        {
+          "language": "ja",
+          "text": "ユキはマヤとレオを知っていますが、二人はまだ会ったことがありません。お互いを紹介して、会話を始める手助けをしましょう。"
+        }
+      ],
+      "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+      "lessonIssue": null,
+      "lessonGoalDuration": "1 minute",
+      "lessonGoalSteps": [
+        {
+          "instruction": "Introduce the setting and connect it to the learner.",
+          "script": "Yuki knows Maya and Leo, but they have not met each other yet. Help two people start a conversation by introducing them.",
+          "question": "How did you meet a good friend?"
+        },
+        {
+          "instruction": "Read the goal and explain what success will look like.",
+          "script": "I can introduce a friend and share two details about them."
+        }
+      ]
+    },
+    "learnData": {
+      "sectionTitle": "LEARN",
+      "steps": [
+        {
+          "stepType": "expressions",
+          "stepName": "STEP A: EXPRESSIONS",
+          "duration": "4 minutes",
+          "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+          "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+          "expressionItems": [
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+              "definitionLine": "<strong>This is ...</strong>",
+              "exampleSentence": "This is my friend Maya.",
+              "translation": "こちらは〜です。",
+              "extraText": ""
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+              "definitionLine": "<strong>She is ... / He is ...</strong>",
+              "exampleSentence": "She is a teacher.",
+              "translation": "彼女は〜です。／彼は〜です。",
+              "extraText": ""
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+              "definitionLine": "<strong>You both like ...</strong>",
+              "exampleSentence": "You both like cooking.",
+              "translation": "お二人とも〜が好きです。",
+              "extraText": ""
+            }
+          ],
+          "tutorSteps": [
+            {
+              "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+              "script": "Listen first. Then say it with me."
+            },
+            {
+              "instruction": "Check the meaning of each example before moving to Apply.",
+              "question": "Can you give a different example?",
+              "tip": "The picture supports the setting; do not treat it as an answer key."
+            },
+            {
+              "instruction": "Personalize two examples.",
+              "script": "Now use your own information, or invent an example.",
+              "tip": "Allow invented details if the learner prefers not to share personal information."
+            }
+          ]
+        }
+      ]
+    },
+    "lessonName": "Introducing Someone Else",
+    "lessonNumber": 7,
+    "level": 3,
+    "missionData": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "speaking",
+      "challengeNumber": 1,
+      "challengeName": "Challenge 1",
+      "duration": "6 minutes",
+      "situation": "Introduce a friend to a new housemate. Use a real friend or invent a person. Your tutor plays the new housemate.",
+      "situationTranslation": "新しいハウスメイトに友達を紹介しましょう。実在の友達でも架空の人物でも構いません。講師が新しいハウスメイト役です。",
+      "instruction": "Say your friend's name and two details. Invite your housemate to respond. Help them find an interest in common. Repeat with another person.",
+      "instructionTranslation": "友達の名前と二つの情報を伝えましょう。ハウスメイトに話しかけてもらい、共通の興味を探す手助けをしましょう。別の人でも練習しましょう。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "Useful language",
+      "grammarTipItems": [],
+      "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/introductions.webp",
+      "questions": [
+        {
+          "question": "Who is your friend?",
+          "hints": []
+        },
+        {
+          "question": "Where is your friend from, or what do they do?",
+          "hints": []
+        },
+        {
+          "question": "What does your friend like?",
+          "hints": []
+        },
+        {
+          "question": "I like that, too. What can you say?",
+          "hints": []
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Set the task and check understanding without giving the answers.",
+          "scripts": [
+            {
+              "text": "Say your friend's name and two details. Invite your housemate to respond. Help them find an interest in common. Repeat with another person."
+            }
+          ],
+          "tips": [
+            {
+              "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+            }
+          ]
+        },
+        {
+          "instruction": "Run the roleplay. Use these prompts only when the learner needs support.",
+          "scripts": [
+            {
+              "text": "1. Who is your friend?"
+            },
+            {
+              "text": "2. Where is your friend from, or what do they do?"
+            },
+            {
+              "text": "3. What does your friend like?"
+            },
+            {
+              "text": "4. I like that, too. What can you say?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. This is [name]."
+            },
+            {
+              "text": "2. Two relevant details across the introduction."
+            },
+            {
+              "text": "3. He/She likes ..."
+            },
+            {
+              "text": "4. You both like ... or an appropriate introduction bridge."
+            }
+          ]
+        },
+        {
+          "instruction": "Give feedback, then retry one difficult part with less support.",
+          "tips": [
+            {
+              "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+            }
+          ]
+        }
+      ]
+    },
+    "missionData2": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "discussion",
+      "challengeNumber": 2,
+      "challengeName": "Challenge 2",
+      "duration": "2 minutes",
+      "isOptional": true,
+      "situation": "Connect the lesson to your own life.",
+      "situationTranslation": "レッスンの内容を自分の生活と結び付けましょう。",
+      "instruction": "Choose one topic. Answer your tutor and ask one question in return.",
+      "instructionTranslation": "トピックを一つ選びましょう。講師の質問に答え、自分からも一つ質問しましょう。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "",
+      "grammarTipItems": [],
+      "questions": [],
+      "topics": [
+        {
+          "title": "FRIENDS",
+          "questions": [
+            "How did you meet a good friend?",
+            "What do you enjoy together?"
+          ]
+        },
+        {
+          "title": "INTRODUCTIONS",
+          "questions": [
+            "Who would you like your friends to meet?",
+            "What can you say about that person?"
+          ]
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Use one topic if time remains. Ask a natural follow-up and invite the learner to ask you something.",
+          "tips": [
+            {
+              "text": "Skip this optional task if it would reduce feedback time."
+            }
+          ]
+        }
+      ]
+    },
+    "overlayColor": "#17252bcc",
+    "skill": "speaking",
+    "status": "draft",
+    "stepBData": {
+      "stepType": "grammar-tip",
+      "grammarTip": {
+        "stepName": "STEP B: GRAMMAR TIP",
+        "duration": "2 minutes",
+        "tutorSteps": [
+          {
+            "instruction": "Model the focus with the examples. Keep the explanation brief.",
+            "script": "Use This is to introduce a person. Use he or she for that person, and add -s to like: He likes cooking."
+          },
+          {
+            "instruction": "Ask the learner to try it, then give one focused correction.",
+            "tip": "Use the Japanese support only if needed. Return to English for practice."
+          }
+        ],
+        "explanations": [
+          {
+            "ruleText": "Use This is to introduce a person. Use he or she for that person, and add -s to like: He likes cooking.",
+            "ruleTranslation": "人を紹介するときは This is を使います。その人を指す he や she の後では、like に -s を付けます。例：He likes cooking。",
+            "examplesTitle": "EXAMPLES",
+            "examples": [
+              {
+                "sentence": "This is Leo. He is a cook.",
+                "translation": "こちらはレオです。料理人です。"
+              },
+              {
+                "sentence": "Maya likes cooking. You both like cooking.",
+                "translation": "マヤは料理が好きです。お二人とも料理が好きですね。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "storyData": {
+      "enabled": true,
+      "storyTitle": "New Friends at Maple House",
+      "setting": "A fictional international shared house in London. All characters are adults.",
+      "characters": [
+        {
+          "id": "yuki",
+          "name": "Yuki",
+          "role": "main",
+          "description": "An adult English student from Osaka. Likes walking and photography."
+        },
+        {
+          "id": "maya",
+          "name": "Maya",
+          "role": "supporting",
+          "description": "A teacher from a small town near Bristol. Likes cooking."
+        },
+        {
+          "id": "leo",
+          "name": "Leo",
+          "role": "supporting",
+          "description": "A cook from Bristol. Likes music, gardening, and cooking."
+        },
+        {
+          "id": "sara",
+          "name": "Sara",
+          "role": "supporting",
+          "description": "A nurse from Perth. Likes reading, walking, and photography."
+        },
+        {
+          "id": "aisha",
+          "name": "Aisha",
+          "role": "supporting",
+          "description": "A designer from Leeds. Likes photography and walking."
+        },
+        {
+          "id": "ken",
+          "name": "Ken",
+          "role": "supporting",
+          "description": "An adult student from Kyoto. Likes walking and photography."
+        }
+      ],
+      "previousSummary": "Yuki and Leo talk in the courtyard. Small replies show interest, but some details tell you the actual plan. Listen for what, when, and where.",
+      "currentPlotPoints": [
+        "Yuki knows Maya and Leo, but they have not met each other yet. Help two people start a conversation by introducing them.",
+        "Introduce a friend to a new housemate. Use a real friend or invent a person. Your tutor plays the new housemate."
+      ],
+      "currentEpisodeSummary": "Yuki knows Maya and Leo, but they have not met each other yet. Help two people start a conversation by introducing them.",
+      "nextEpisodeHook": "Maya sends the residents a message about a welcome gathering. Read the details carefully so you know where to go and what to bring.",
+      "storyNotes": "Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys."
+    },
+    "supportLanguage": "ja",
+    "updatedAt": "2026-09-23T10:51:10.454Z"
+  },
+  {
+    "applyData": {
+      "sectionNumber": 3,
+      "sectionTitle": "APPLY",
+      "activityType": "reading",
+      "activityTitle": "READING",
+      "activityDuration": "4 minutes",
+      "situationText": "Read the text silently. Find the main idea, then find the details.<br><small lang=\"ja\">まず黙読し、大まかな内容をつかみましょう。その後、詳しい情報を探しましょう。</small><br><br>1. What is the message for?<br>2. When does the gathering start?<br>3. Where is it?<br>4. What should residents bring?",
+      "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/messages.webp",
+      "dialogueLines": [],
+      "readingText": "<p>Hi everyone,</p><p>Welcome to Maple House! Please join us for tea on Friday at six in the evening. We will meet in the living room, not the kitchen. Please bring your own cup. Leo will bring fruit. You do not need to bring food. New residents are welcome. See you there!</p><p>Maya</p>",
+      "readingImage": "",
+      "readingImageLabel": "",
+      "tutorSteps": [
+        {
+          "instruction": "Read the text silently. Find the main idea, then find the details.",
+          "tips": [
+            {
+              "text": "Let the learner read silently before asking questions."
+            }
+          ]
+        },
+        {
+          "instruction": "Check understanding and ask for evidence.",
+          "questions": [
+            {
+              "question": "What is the message for?",
+              "answer": "An invitation to tea / a welcome gathering."
+            },
+            {
+              "question": "When does the gathering start?",
+              "answer": "Friday at six in the evening."
+            },
+            {
+              "question": "Where is it?",
+              "answer": "In the living room."
+            },
+            {
+              "question": "What should residents bring?",
+              "answer": "Their own cup. No food is needed."
+            }
+          ]
+        },
+        {
+          "instruction": "Return to the line that supports each answer.",
+          "tips": [
+            {
+              "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+            }
+          ]
+        }
+      ],
+      "triviaEnabled": false
+    },
+    "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+    "authoringSource": "conversational-skills-ja-l3-c1-v1",
+    "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/messages.webp",
+    "beData": "",
+    "chapter": 1,
+    "chapterName": "Nice to Meet You",
+    "course": "conversational-skills",
+    "createdAt": "2026-09-23T06:32:26.413Z",
+    "createdBy": "codex",
+    "createdByName": "Lesson Authoring",
+    "discussionQuestionsData": "",
+    "exerciseData": {
+      "sectionNumber": 4,
+      "sectionTitle": "EXERCISE",
+      "duration": "4 minutes",
+      "stepAType": "choose",
+      "stepAName": "STEP A",
+      "instructions": "Choose the correct word. Read the complete sentence.",
+      "instructionsTranslation": "正しい語を選び、文全体を読みましょう。",
+      "showExpressions": false,
+      "expressions": [],
+      "showExample": false,
+      "exampleSentence": "",
+      "exampleAnswer": "",
+      "showInfoBox": false,
+      "exerciseItems": [],
+      "chooseItems": [
+        {
+          "sentence": "Meet us (on / at) Sunday."
+        },
+        {
+          "sentence": "Breakfast starts (on / at) ten."
+        },
+        {
+          "sentence": "Please (bring / brings) some fruit."
+        }
+      ],
+      "changeItems": [],
+      "answers": [
+        {
+          "text": "on"
+        },
+        {
+          "text": "at"
+        },
+        {
+          "text": "bring"
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Let the learner try independently. Check complete sentences.",
+          "answerKey": [
+            {
+              "text": "1. on"
+            },
+            {
+              "text": "2. at"
+            },
+            {
+              "text": "3. bring"
+            }
+          ],
+          "tips": [
+            {
+              "text": "For personal answers, the examples are models, not the only correct responses."
+            }
+          ]
+        }
+      ],
+      "hasStepB": true,
+      "stepBType": "multiple-choice",
+      "stepBName": "STEP B",
+      "stepBInstruction": "Choose the best answer. Explain what detail helped you.",
+      "stepBInstructionTranslation": "最も適切な答えを選び、手がかりとなった情報を伝えましょう。",
+      "conversations": [],
+      "multipleChoiceItems": [
+        {
+          "boldSentence": "The update says: ten, not nine. Breakfast starts at ...",
+          "optionA": "nine.",
+          "optionB": "ten."
+        },
+        {
+          "boldSentence": "The message says: in the kitchen instead. The final place is ...",
+          "optionA": "the kitchen.",
+          "optionB": "the courtyard."
+        },
+        {
+          "boldSentence": "Please still bring fruit means ...",
+          "optionA": "fruit is no longer needed.",
+          "optionB": "fruit is still needed."
+        }
+      ],
+      "compareWordBox": [],
+      "compareImages": [],
+      "compareItems": [],
+      "stepBTutorSteps": [
+        {
+          "instruction": "Check the answer and its supporting detail.",
+          "answerKey": [
+            {
+              "text": "1. B: ten."
+            },
+            {
+              "text": "2. A: the kitchen."
+            },
+            {
+              "text": "3. B: fruit is still needed."
+            }
+          ],
+          "tips": [
+            {
+              "text": "Do not demand the model wording if the meaning is clear."
+            }
+          ]
+        }
+      ]
+    },
+    "feedbackData": {
+      "sectionNumber": 6,
+      "sectionTitle": "FEEDBACK",
+      "duration": "2 minutes",
+      "goal": "I can find the time, place, and request in a short invitation.",
+      "goalJp": "短い招待メッセージから、時間、場所、お願いを読み取ることができる。",
+      "rubricTitle": "HOW DID YOU DO?",
+      "rubricLevels": [
+        {
+          "score": 3,
+          "label": "Independent",
+          "description": "Finds the main idea and most details with little help."
+        },
+        {
+          "score": 2,
+          "label": "With some help",
+          "description": "Finds the main idea and some details after a second attempt or a prompt."
+        },
+        {
+          "score": 1,
+          "label": "Keep practicing",
+          "description": "Needs guided support to identify the main idea and key details."
+        }
+      ],
+      "personalizedFeedbackTitle": "YOUR NEXT STEP",
+      "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+      "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+      "tutorSteps": [
+        {
+          "instruction": "Return to the goal. Ask the learner how the task felt.",
+          "scripts": [
+            {
+              "text": "What was easy today? What would you like to practice again?"
+            }
+          ]
+        },
+        {
+          "instruction": "Give one evidence-based success and one actionable next step.",
+          "tips": [
+            {
+              "text": "Assess understanding first. Do not lower comprehension feedback just because a correct answer is a short phrase."
+            }
+          ]
+        },
+        {
+          "instruction": "Have the learner retry one item and finish with the goal.",
+          "scripts": [
+            {
+              "text": "Let's try that part once more."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "range",
+          "title": "MAIN IDEA",
+          "titleJp": "大まかな内容",
+          "focusOn": "Identifies the situation and purpose.",
+          "exampleFeedbackItems": [
+            "I can find the time, place, and request in a short invitation."
+          ],
+          "vocabularyExample": "bring",
+          "examples": []
+        },
+        {
+          "id": "accuracy",
+          "title": "KEY DETAILS",
+          "titleJp": "詳しい情報",
+          "focusOn": "Finds the details needed to complete the task and supports answers with evidence.",
+          "exampleFeedbackItems": [
+            "Which day is breakfast?",
+            "What is the final time?"
+          ],
+          "examples": []
+        },
+        {
+          "id": "fluency",
+          "title": "STRATEGY",
+          "titleJp": "理解の工夫",
+          "focusOn": "Rereads relevant lines and notices changed information.",
+          "exampleFeedbackItems": [
+            "Check one uncertain detail again."
+          ],
+          "examples": []
+        }
+      ]
+    },
+    "goalTextEn": "I can find the time, place, and request in a short invitation.",
+    "goalTextJp": "短い招待メッセージから、時間、場所、お願いを読み取ることができる。",
+    "id": "conversational-skills-L3-C1-8-reading-ja-v1",
+    "introductionData": {
+      "introTexts": [
+        {
+          "language": "en",
+          "text": "Maya sends the residents a message about a welcome gathering. Read the details carefully so you know where to go and what to bring."
+        },
+        {
+          "language": "ja",
+          "text": "マヤが住人たちに歓迎会のメッセージを送ります。どこへ行き、何を持っていけばよいか分かるよう、詳しい情報を読みましょう。"
+        }
+      ],
+      "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/messages.webp",
+      "lessonIssue": null,
+      "lessonGoalDuration": "1 minute",
+      "lessonGoalSteps": [
+        {
+          "instruction": "Introduce the setting and connect it to the learner.",
+          "script": "Maya sends the residents a message about a welcome gathering. Read the details carefully so you know where to go and what to bring.",
+          "question": "Do you read invitations twice?"
+        },
+        {
+          "instruction": "Read the goal and explain what success will look like.",
+          "script": "I can find the time, place, and request in a short invitation."
+        }
+      ]
+    },
+    "learnData": {
+      "sectionTitle": "LEARN",
+      "steps": [
+        {
+          "stepType": "vocabulary",
+          "stepName": "STEP A: VOCABULARY",
+          "duration": "4 minutes",
+          "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+          "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+          "vocabularyItems": [
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/messages.webp",
+              "englishText": "Please bring a cup.",
+              "highlightedWord": "bring",
+              "translation": "持ってくる"
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/messages.webp",
+              "englishText": "We meet at six.",
+              "highlightedWord": "at",
+              "translation": "〜時に"
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/messages.webp",
+              "englishText": "The gathering is on Friday.",
+              "highlightedWord": "on",
+              "translation": "〜曜日に"
+            }
+          ],
+          "tutorSteps": [
+            {
+              "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+              "script": "Listen first. Then say it with me."
+            },
+            {
+              "instruction": "Check the meaning of each example before moving to Apply.",
+              "question": "Can you give a different example?",
+              "tip": "The picture supports the setting; do not treat it as an answer key."
+            },
+            {
+              "instruction": "Personalize two examples.",
+              "script": "Now use your own information, or invent an example.",
+              "tip": "Allow invented details if the learner prefers not to share personal information."
+            }
+          ]
+        }
+      ]
+    },
+    "lessonName": "Reading Friendly Messages",
+    "lessonNumber": 8,
+    "level": 3,
+    "missionData": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "reading",
+      "challengeNumber": 1,
+      "challengeName": "Challenge 1",
+      "duration": "6 minutes",
+      "situation": "Read the original invitation and the update. Help a new resident arrive at the correct place and time.",
+      "situationTranslation": "最初の招待と変更のお知らせを読みましょう。新しい住人が正しい場所と時間に来られるよう手伝いましょう。",
+      "instruction": "Find the final day, time, and place. Say what to bring and what has changed. Use details from both messages.<br><br>1. Which day is breakfast?<br>2. What is the final time?<br>3. Where should residents go?<br>4. What should they bring?<br>5. Which two details change?",
+      "instructionTranslation": "最終的な曜日、時刻、場所を読み取りましょう。持ち物と変更点も答えましょう。両方のメッセージを使ってください。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "Useful language",
+      "grammarTipItems": [],
+      "image": "",
+      "questions": [
+        {
+          "question": "Which day is breakfast?",
+          "hints": []
+        },
+        {
+          "question": "What is the final time?",
+          "hints": []
+        },
+        {
+          "question": "Where should residents go?",
+          "hints": []
+        },
+        {
+          "question": "What should they bring?",
+          "hints": []
+        },
+        {
+          "question": "Which two details change?",
+          "hints": []
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Set the task and check understanding without giving the answers.",
+          "scripts": [
+            {
+              "text": "Find the final day, time, and place. Say what to bring and what has changed. Use details from both messages."
+            }
+          ],
+          "tips": [
+            {
+              "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+            }
+          ]
+        },
+        {
+          "instruction": "Allow silent reading. Ask the learner to point to evidence in the text.",
+          "tips": [
+            {
+              "text": "Do not read the passage aloud before the learner has tried. Give a word meaning only when it blocks understanding."
+            }
+          ]
+        },
+        {
+          "instruction": "Ask the questions and check the evidence.",
+          "scripts": [
+            {
+              "text": "1. Which day is breakfast?"
+            },
+            {
+              "text": "2. What is the final time?"
+            },
+            {
+              "text": "3. Where should residents go?"
+            },
+            {
+              "text": "4. What should they bring?"
+            },
+            {
+              "text": "5. Which two details change?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. Sunday."
+            },
+            {
+              "text": "2. Ten in the morning."
+            },
+            {
+              "text": "3. The kitchen."
+            },
+            {
+              "text": "4. Some fruit."
+            },
+            {
+              "text": "5. The place changes from courtyard to kitchen; the time changes from nine to ten."
+            }
+          ]
+        },
+        {
+          "instruction": "Give feedback, then retry one difficult part with less support.",
+          "tips": [
+            {
+              "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+            }
+          ]
+        }
+      ],
+      "readingPassage": {
+        "title": "Breakfast at Maple House",
+        "showAuthor": false,
+        "headerAlignment": "left",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "content": "<strong>Message 1 - Maya</strong><br>Let's have breakfast in the courtyard on Sunday at nine in the morning. Please bring some fruit. I will make tea.<br><br><strong>Message 2 - Maya</strong><br>Small change: it will rain on Sunday. Let's meet in the kitchen instead. Breakfast will start at ten, not nine. Please still bring some fruit. See you on Sunday!"
+          }
+        ],
+        "closingQuestion": "What are the final plans?"
+      }
+    },
+    "missionData2": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "reading",
+      "challengeNumber": 2,
+      "challengeName": "Challenge 2",
+      "duration": "2 minutes",
+      "isOptional": true,
+      "situation": "Use a new message or profile to find the information you need.",
+      "situationTranslation": "新しいメッセージやプロフィールから必要な情報を探しましょう。",
+      "instruction": "Read the message. Which item do you need: a camera or some food? When and where do you meet?",
+      "instructionTranslation": "メッセージを読みましょう。必要なのはカメラと食べ物のどちらですか。いつ、どこで会いますか。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "",
+      "grammarTipItems": [],
+      "image": "",
+      "questions": [
+        {
+          "question": "What do you need to bring?",
+          "hints": []
+        },
+        {
+          "question": "When and where do you meet?",
+          "hints": []
+        }
+      ],
+      "readingPassage": {
+        "title": "One More Detail",
+        "showAuthor": false,
+        "headerAlignment": "left",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "content": "Hi Yuki, let's meet at the front door on Saturday at two. Please bring your camera. We can take photos in the park. You do not need to bring food. - Aisha"
+          }
+        ]
+      },
+      "tutorSteps": [
+        {
+          "instruction": "Use this optional task only if time remains before feedback.",
+          "tips": [
+            {
+              "text": "Keep it to two minutes."
+            }
+          ]
+        },
+        {
+          "instruction": "Allow silent reading before checking the answer."
+        },
+        {
+          "instruction": "Check the answer and ask which detail helped.",
+          "scripts": [
+            {
+              "text": "1. What do you need to bring?"
+            },
+            {
+              "text": "2. When and where do you meet?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. A camera."
+            },
+            {
+              "text": "2. Saturday at two, at the front door."
+            }
+          ]
+        }
+      ]
+    },
+    "overlayColor": "#17252bcc",
+    "skill": "reading",
+    "status": "draft",
+    "stepBData": {
+      "stepType": "grammar-tip",
+      "grammarTip": {
+        "stepName": "STEP B: GRAMMAR TIP",
+        "duration": "2 minutes",
+        "tutorSteps": [
+          {
+            "instruction": "Model the focus with the examples. Keep the explanation brief.",
+            "script": "Use on with a day and at with a time. Please makes a simple request polite."
+          },
+          {
+            "instruction": "Ask the learner to try it, then give one focused correction.",
+            "tip": "Use the Japanese support only if needed. Return to English for practice."
+          }
+        ],
+        "explanations": [
+          {
+            "ruleText": "Use on with a day and at with a time. Please makes a simple request polite.",
+            "ruleTranslation": "曜日には on、時刻には at を使います。簡単なお願いに Please を付けると丁寧になります。",
+            "examplesTitle": "EXAMPLES",
+            "examples": [
+              {
+                "sentence": "Meet us on Friday at six.",
+                "translation": "金曜日の6時に会いましょう。"
+              },
+              {
+                "sentence": "Please bring your own cup.",
+                "translation": "自分のカップを持ってきてください。"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "storyData": {
+      "enabled": true,
+      "storyTitle": "New Friends at Maple House",
+      "setting": "A fictional international shared house in London. All characters are adults.",
+      "characters": [
+        {
+          "id": "yuki",
+          "name": "Yuki",
+          "role": "main",
+          "description": "An adult English student from Osaka. Likes walking and photography."
+        },
+        {
+          "id": "maya",
+          "name": "Maya",
+          "role": "supporting",
+          "description": "A teacher from a small town near Bristol. Likes cooking."
+        },
+        {
+          "id": "leo",
+          "name": "Leo",
+          "role": "supporting",
+          "description": "A cook from Bristol. Likes music, gardening, and cooking."
+        },
+        {
+          "id": "sara",
+          "name": "Sara",
+          "role": "supporting",
+          "description": "A nurse from Perth. Likes reading, walking, and photography."
+        },
+        {
+          "id": "aisha",
+          "name": "Aisha",
+          "role": "supporting",
+          "description": "A designer from Leeds. Likes photography and walking."
+        },
+        {
+          "id": "ken",
+          "name": "Ken",
+          "role": "supporting",
+          "description": "An adult student from Kyoto. Likes walking and photography."
+        }
+      ],
+      "previousSummary": "Yuki knows Maya and Leo, but they have not met each other yet. Help two people start a conversation by introducing them.",
+      "currentPlotPoints": [
+        "Maya sends the residents a message about a welcome gathering. Read the details carefully so you know where to go and what to bring.",
+        "Read the original invitation and the update. Help a new resident arrive at the correct place and time."
+      ],
+      "currentEpisodeSummary": "Maya sends the residents a message about a welcome gathering. Read the details carefully so you know where to go and what to bring.",
+      "nextEpisodeHook": "At the welcome gathering, several residents talk at once in small groups. Listen to one group and keep track of who likes what.",
+      "storyNotes": "Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys."
+    },
+    "supportLanguage": "ja",
+    "updatedAt": "2026-09-23T10:51:10.454Z"
+  },
+  {
+    "applyData": {
+      "sectionNumber": 3,
+      "sectionTitle": "APPLY",
+      "activityType": "listening",
+      "activityTitle": "LISTENING",
+      "activityDuration": "4 minutes",
+      "situationText": "Listen to your tutor. First listen for the main idea, then listen again for details.<br><small lang=\"ja\">講師の話を聞きましょう。一度目は大まかな内容、二度目は詳しい情報を聞き取りましょう。</small><br><br>1. Who is the new person in this conversation?<br>2. What is her job?<br>3. What do Yuki and Aisha have in common?<br>4. Who likes cooking?",
+      "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+      "dialogueLines": [],
+      "tutorSteps": [
+        {
+          "instruction": "Read once for the main idea. Read again for details.",
+          "listeningScript": "<p>Maya: Yuki, this is Aisha. She's a designer.</p><p>Yuki: Hi! Sorry, could you say your name again?</p><p>Aisha: Aisha. Nice to meet you.</p><p>Yuki: Nice to meet you, too. Do you like music?</p><p>Aisha: Yes, but photography is my favorite hobby.</p><p>Yuki: Did you say photography? I like taking photos, too.</p><p>Maya: Great! I like cooking, but I don't take many photos.</p><p>Aisha: Let's take photos in the park sometime, Yuki.</p><p>Yuki: I'd like that.</p>",
+          "tips": [
+            {
+              "text": "Keep the script hidden from the learner. Pause only between speakers. Repeat once more if needed."
+            }
+          ]
+        },
+        {
+          "instruction": "Check understanding and ask for evidence.",
+          "questions": [
+            {
+              "question": "Who is the new person in this conversation?",
+              "answer": "Aisha."
+            },
+            {
+              "question": "What is her job?",
+              "answer": "Designer."
+            },
+            {
+              "question": "What do Yuki and Aisha have in common?",
+              "answer": "Photography / taking photos."
+            },
+            {
+              "question": "Who likes cooking?",
+              "answer": "Maya."
+            }
+          ]
+        },
+        {
+          "instruction": "Return to the line that supports each answer.",
+          "tips": [
+            {
+              "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+            }
+          ]
+        }
+      ],
+      "triviaEnabled": false
+    },
+    "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+    "authoringSource": "conversational-skills-ja-l3-c1-v1",
+    "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+    "beData": "",
+    "chapter": 1,
+    "chapterName": "Nice to Meet You",
+    "course": "conversational-skills",
+    "createdAt": "2026-09-23T06:32:26.413Z",
+    "createdBy": "codex",
+    "createdByName": "Lesson Authoring",
+    "discussionQuestionsData": "",
+    "exerciseData": {
+      "sectionNumber": 4,
+      "sectionTitle": "EXERCISE",
+      "duration": "4 minutes",
+      "stepAType": "rephrase",
+      "stepAName": "STEP A",
+      "instructions": "Say each idea using a useful expression from this lesson.",
+      "instructionsTranslation": "このレッスンの表現を使って、それぞれの内容を言いましょう。",
+      "showExpressions": true,
+      "expressions": [
+        "Sorry, could you say that again?",
+        "Did you say ...?",
+        "I see."
+      ],
+      "showExample": false,
+      "exampleSentence": "",
+      "exampleAnswer": "",
+      "showInfoBox": false,
+      "exerciseItems": [
+        {
+          "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+          "sentence": "Ask someone to repeat a name politely."
+        },
+        {
+          "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+          "sentence": "Check whether you heard the name Leo."
+        },
+        {
+          "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+          "sentence": "Give a short response showing you understand."
+        }
+      ],
+      "chooseItems": [],
+      "changeItems": [],
+      "answers": [
+        {
+          "text": "Sorry, could you say your name again?"
+        },
+        {
+          "text": "Did you say Leo?"
+        },
+        {
+          "text": "I see."
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Let the learner try independently. Check complete sentences.",
+          "answerKey": [
+            {
+              "text": "1. Sorry, could you say your name again?"
+            },
+            {
+              "text": "2. Did you say Leo?"
+            },
+            {
+              "text": "3. I see."
+            }
+          ],
+          "tips": [
+            {
+              "text": "For personal answers, the examples are models, not the only correct responses."
+            }
+          ]
+        }
+      ],
+      "hasStepB": true,
+      "stepBType": "multiple-choice",
+      "stepBName": "STEP B",
+      "stepBInstruction": "Choose the best answer. Explain what detail helped you.",
+      "stepBInstructionTranslation": "最も適切な答えを選び、手がかりとなった情報を伝えましょう。",
+      "conversations": [],
+      "multipleChoiceItems": [
+        {
+          "boldSentence": "You hear: I practice the guitar every evening. Choose the interest.",
+          "optionA": "Music",
+          "optionB": "Photography"
+        },
+        {
+          "boldSentence": "You hear: I work on Sunday morning. Is the speaker free then?",
+          "optionA": "Yes",
+          "optionB": "No"
+        },
+        {
+          "boldSentence": "You missed a name. Choose the helpful response.",
+          "optionA": "Sorry, could you say your name again?",
+          "optionB": "See you tomorrow."
+        }
+      ],
+      "compareWordBox": [],
+      "compareImages": [],
+      "compareItems": [],
+      "stepBTutorSteps": [
+        {
+          "instruction": "Check the answer and its supporting detail.",
+          "answerKey": [
+            {
+              "text": "1. A: Music"
+            },
+            {
+              "text": "2. B: No"
+            },
+            {
+              "text": "3. A: Sorry, could you say your name again?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "Do not demand the model wording if the meaning is clear."
+            }
+          ]
+        }
+      ]
+    },
+    "feedbackData": {
+      "sectionNumber": 6,
+      "sectionTitle": "FEEDBACK",
+      "duration": "2 minutes",
+      "goal": "I can identify people and their interests in a short group conversation.",
+      "goalJp": "短いグループの会話を聞いて、人とその興味を結び付けることができる。",
+      "rubricTitle": "HOW DID YOU DO?",
+      "rubricLevels": [
+        {
+          "score": 3,
+          "label": "Independent",
+          "description": "Finds the main idea and most details with little help."
+        },
+        {
+          "score": 2,
+          "label": "With some help",
+          "description": "Finds the main idea and some details after a second attempt or a prompt."
+        },
+        {
+          "score": 1,
+          "label": "Keep practicing",
+          "description": "Needs guided support to identify the main idea and key details."
+        }
+      ],
+      "personalizedFeedbackTitle": "YOUR NEXT STEP",
+      "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+      "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+      "tutorSteps": [
+        {
+          "instruction": "Return to the goal. Ask the learner how the task felt.",
+          "scripts": [
+            {
+              "text": "What was easy today? What would you like to practice again?"
+            }
+          ]
+        },
+        {
+          "instruction": "Give one evidence-based success and one actionable next step.",
+          "tips": [
+            {
+              "text": "Assess understanding first. Do not lower comprehension feedback just because a correct answer is a short phrase."
+            }
+          ]
+        },
+        {
+          "instruction": "Have the learner retry one item and finish with the goal.",
+          "scripts": [
+            {
+              "text": "Let's try that part once more."
+            }
+          ]
+        }
+      ],
+      "categories": [
+        {
+          "id": "range",
+          "title": "MAIN IDEA",
+          "titleJp": "大まかな内容",
+          "focusOn": "Identifies the situation and purpose.",
+          "exampleFeedbackItems": [
+            "I can identify people and their interests in a short group conversation."
+          ],
+          "vocabularyExample": "Sorry, could you say that again?",
+          "examples": []
+        },
+        {
+          "id": "accuracy",
+          "title": "KEY DETAILS",
+          "titleJp": "詳しい情報",
+          "focusOn": "Finds the details needed to complete the task and supports answers with evidence.",
+          "exampleFeedbackItems": [
+            "Who likes music and plays an instrument?",
+            "Who enjoys reading?"
+          ],
+          "examples": []
+        },
+        {
+          "id": "fluency",
+          "title": "STRATEGY",
+          "titleJp": "理解の工夫",
+          "focusOn": "Uses a second listen or asks for repetition to check uncertain details.",
+          "exampleFeedbackItems": [
+            "Check one uncertain detail again."
+          ],
+          "examples": []
+        }
+      ]
+    },
+    "goalTextEn": "I can identify people and their interests in a short group conversation.",
+    "goalTextJp": "短いグループの会話を聞いて、人とその興味を結び付けることができる。",
+    "id": "conversational-skills-L3-C1-9-listening-ja-v1",
+    "introductionData": {
+      "introTexts": [
+        {
+          "language": "en",
+          "text": "At the welcome gathering, several residents talk at once in small groups. Listen to one group and keep track of who likes what."
+        },
+        {
+          "language": "ja",
+          "text": "歓迎会で、住人たちが小さなグループに分かれて話しています。一つのグループの会話を聞き、誰が何を好きか整理しましょう。"
+        }
+      ],
+      "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+      "lessonIssue": null,
+      "lessonGoalDuration": "1 minute",
+      "lessonGoalSteps": [
+        {
+          "instruction": "Introduce the setting and connect it to the learner.",
+          "script": "At the welcome gathering, several residents talk at once in small groups. Listen to one group and keep track of who likes what.",
+          "question": "What do you say when you miss a word?"
+        },
+        {
+          "instruction": "Read the goal and explain what success will look like.",
+          "script": "I can identify people and their interests in a short group conversation."
+        }
+      ]
+    },
+    "learnData": {
+      "sectionTitle": "LEARN",
+      "steps": [
+        {
+          "stepType": "expressions",
+          "stepName": "STEP A: EXPRESSIONS",
+          "duration": "4 minutes",
+          "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+          "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+          "expressionItems": [
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+              "definitionLine": "<strong>Sorry, could you say that again?</strong>",
+              "exampleSentence": "Sorry, could you say your name again?",
+              "translation": "すみません、もう一度言ってもらえますか。",
+              "extraText": ""
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+              "definitionLine": "<strong>Did you say ...?</strong>",
+              "exampleSentence": "Did you say photography?",
+              "translation": "〜と言いましたか。",
+              "extraText": ""
+            },
+            {
+              "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+              "definitionLine": "<strong>I see.</strong>",
+              "exampleSentence": "I work at a cafe. I see.",
+              "translation": "なるほど。",
+              "extraText": ""
+            }
+          ],
+          "tutorSteps": [
+            {
+              "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+              "script": "Listen first. Then say it with me."
+            },
+            {
+              "instruction": "Check the meaning of each example before moving to Apply.",
+              "question": "Can you give a different example?",
+              "tip": "The picture supports the setting; do not treat it as an answer key."
+            },
+            {
+              "instruction": "Personalize two examples.",
+              "script": "Now use your own information, or invent an example.",
+              "tip": "Allow invented details if the learner prefers not to share personal information."
+            }
+          ]
+        }
+      ]
+    },
+    "lessonName": "Meeting People at a Gathering",
+    "lessonNumber": 9,
+    "level": 3,
+    "missionData": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "listening",
+      "challengeNumber": 1,
+      "challengeName": "Challenge 1",
+      "duration": "6 minutes",
+      "situation": "Listen to three residents discussing free time. Choose the best person to invite to a music activity and the best person for a photo walk.",
+      "situationTranslation": "三人の住人が自由時間について話すのを聞きましょう。音楽の活動に誘う人と、写真を撮りながらの散歩に誘う人を選んでください。",
+      "instruction": "Listen for each name and interest. Match the people to the two activities. Ask to hear one detail again if you need to.<br><br>1. Who likes music and plays an instrument?<br>2. Who enjoys reading?<br>3. Who is the best match for a photo walk?<br>4. Can Sara join on Sunday morning?",
+      "instructionTranslation": "名前と興味を聞き取り、二つの活動に合う人を選びましょう。必要なら、一つの情報をもう一度聞かせてもらいましょう。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "Useful language",
+      "grammarTipItems": [],
+      "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+      "questions": [
+        {
+          "question": "Who likes music and plays an instrument?",
+          "hints": []
+        },
+        {
+          "question": "Who enjoys reading?",
+          "hints": []
+        },
+        {
+          "question": "Who is the best match for a photo walk?",
+          "hints": []
+        },
+        {
+          "question": "Can Sara join on Sunday morning?",
+          "hints": []
+        },
+        {
+          "question": "Which detail would you like to hear again?",
+          "hints": []
+        }
+      ],
+      "tutorSteps": [
+        {
+          "instruction": "Set the task and check understanding without giving the answers.",
+          "scripts": [
+            {
+              "text": "Listen for each name and interest. Match the people to the two activities. Ask to hear one detail again if you need to."
+            }
+          ],
+          "tips": [
+            {
+              "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+            }
+          ]
+        },
+        {
+          "instruction": "Read the complete script once for gist, then again for details.",
+          "listeningScript": "<p>Sara: Leo, do you still play the guitar?</p><p>Leo: Yes. I practice every evening. I love music. How about you, Sara?</p><p>Sara: I don't play an instrument. I enjoy reading at home. Aisha, what do you do on weekends?</p><p>Aisha: I take photos in the park. I like walking, too.</p><p>Leo: That sounds nice. I'm free on Sunday morning.</p><p>Aisha: Me too. Sara, would you like to come?</p><p>Sara: Thanks, but I work on Sunday morning. Maybe next time.</p>",
+          "tips": [
+            {
+              "text": "Use a natural but unhurried pace and distinct voices. Do not display the transcript. Repeat a requested part after the second listen."
+            }
+          ]
+        },
+        {
+          "instruction": "Ask the questions and check the evidence.",
+          "scripts": [
+            {
+              "text": "1. Who likes music and plays an instrument?"
+            },
+            {
+              "text": "2. Who enjoys reading?"
+            },
+            {
+              "text": "3. Who is the best match for a photo walk?"
+            },
+            {
+              "text": "4. Can Sara join on Sunday morning?"
+            },
+            {
+              "text": "5. Which detail would you like to hear again?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. Leo; he plays the guitar."
+            },
+            {
+              "text": "2. Sara."
+            },
+            {
+              "text": "3. Aisha."
+            },
+            {
+              "text": "4. No. She works then."
+            },
+            {
+              "text": "5. Accept a relevant request for repetition."
+            }
+          ]
+        },
+        {
+          "instruction": "Give feedback, then retry one difficult part with less support.",
+          "tips": [
+            {
+              "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+            }
+          ]
+        }
+      ],
+      "listeningScript": "<p>Sara: Leo, do you still play the guitar?</p><p>Leo: Yes. I practice every evening. I love music. How about you, Sara?</p><p>Sara: I don't play an instrument. I enjoy reading at home. Aisha, what do you do on weekends?</p><p>Aisha: I take photos in the park. I like walking, too.</p><p>Leo: That sounds nice. I'm free on Sunday morning.</p><p>Aisha: Me too. Sara, would you like to come?</p><p>Sara: Thanks, but I work on Sunday morning. Maybe next time.</p>"
+    },
+    "missionData2": {
+      "sectionNumber": 5,
+      "sectionTitle": "MISSION",
+      "missionType": "listening",
+      "challengeNumber": 2,
+      "challengeName": "Challenge 2",
+      "duration": "2 minutes",
+      "isOptional": true,
+      "situation": "Check one more short conversation or introduction.",
+      "situationTranslation": "もう一つの短い会話や自己紹介を聞いて、内容を確認しましょう。",
+      "instruction": "Listen carefully. Who plays the guitar, and who only says they like music?",
+      "instructionTranslation": "注意して聞きましょう。ギターを弾くのは誰ですか。音楽が好きとだけ言っているのは誰ですか。",
+      "showGrammarTip": false,
+      "grammarTipTitle": "",
+      "grammarTipItems": [],
+      "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+      "questions": [
+        {
+          "question": "Who plays the guitar?",
+          "hints": []
+        },
+        {
+          "question": "Does Ken play the guitar?",
+          "hints": []
+        }
+      ],
+      "listeningScript": "<p>Ken: I like music, but I don't play the guitar.</p><p>Sara: Leo plays the guitar. Ask him.</p><p>Ken: Thanks. Do you play an instrument, Sara?</p><p>Sara: No. I like reading.</p>",
+      "tutorSteps": [
+        {
+          "instruction": "Use this optional task only if time remains before feedback.",
+          "tips": [
+            {
+              "text": "Keep it to two minutes."
+            }
+          ]
+        },
+        {
+          "instruction": "Read once, then repeat if requested.",
+          "listeningScript": "<p>Ken: I like music, but I don't play the guitar.</p><p>Sara: Leo plays the guitar. Ask him.</p><p>Ken: Thanks. Do you play an instrument, Sara?</p><p>Sara: No. I like reading.</p>"
+        },
+        {
+          "instruction": "Check the answer and ask which detail helped.",
+          "scripts": [
+            {
+              "text": "1. Who plays the guitar?"
+            },
+            {
+              "text": "2. Does Ken play the guitar?"
+            }
+          ],
+          "tips": [
+            {
+              "text": "1. Leo."
+            },
+            {
+              "text": "2. No. He likes music but does not play the guitar."
+            }
+          ]
+        }
+      ]
+    },
+    "overlayColor": "#17252bcc",
+    "skill": "listening",
+    "status": "draft",
+    "stepBData": {
+      "stepType": "speak-your-mind",
+      "speakYourMind": {
+        "stepName": "STEP B: SPEAK YOUR MIND",
+        "duration": "2 minutes",
+        "tutorSteps": [
+          {
+            "instruction": "Model the focus with the examples. Keep the explanation brief.",
+            "script": "If you miss a detail, ask for it again. Check the exact word you are unsure about."
+          },
+          {
+            "instruction": "Ask the learner to try it, then give one focused correction.",
+            "tip": "Use the Japanese support only if needed. Return to English for practice."
+          }
+        ],
+        "explanation": "If you miss a detail, ask for it again. Check the exact word you are unsure about.<br><small lang=\"ja\">情報を聞き逃したら、もう一度尋ねましょう。分からなかった言葉を具体的に確認しましょう。</small>",
+        "speaker1": {
+          "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+          "speechBubble": "My name is Aisha."
+        },
+        "speaker2": {
+          "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/gathering.webp",
+          "speechBubble": "Sorry, could you say your name again?"
+        },
+        "question": "What can you say when you are not sure about a name?"
+      }
+    },
+    "storyData": {
+      "enabled": true,
+      "storyTitle": "New Friends at Maple House",
+      "setting": "A fictional international shared house in London. All characters are adults.",
+      "characters": [
+        {
+          "id": "yuki",
+          "name": "Yuki",
+          "role": "main",
+          "description": "An adult English student from Osaka. Likes walking and photography."
+        },
+        {
+          "id": "maya",
+          "name": "Maya",
+          "role": "supporting",
+          "description": "A teacher from a small town near Bristol. Likes cooking."
+        },
+        {
+          "id": "leo",
+          "name": "Leo",
+          "role": "supporting",
+          "description": "A cook from Bristol. Likes music, gardening, and cooking."
+        },
+        {
+          "id": "sara",
+          "name": "Sara",
+          "role": "supporting",
+          "description": "A nurse from Perth. Likes reading, walking, and photography."
+        },
+        {
+          "id": "aisha",
+          "name": "Aisha",
+          "role": "supporting",
+          "description": "A designer from Leeds. Likes photography and walking."
+        },
+        {
+          "id": "ken",
+          "name": "Ken",
+          "role": "supporting",
+          "description": "An adult student from Kyoto. Likes walking and photography."
+        }
+      ],
+      "previousSummary": "Maya sends the residents a message about a welcome gathering. Read the details carefully so you know where to go and what to bring.",
+      "currentPlotPoints": [
+        "At the welcome gathering, several residents talk at once in small groups. Listen to one group and keep track of who likes what.",
+        "Listen to three residents discussing free time. Choose the best person to invite to a music activity and the best person for a photo walk."
+      ],
+      "currentEpisodeSummary": "At the welcome gathering, several residents talk at once in small groups. Listen to one group and keep track of who likes what.",
+      "nextEpisodeHook": "A new resident arrives at Maple House. Bring together what you have learned: introduce yourself, ask questions, share interests, and make a plan together.",
+      "storyNotes": "Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys."
+    },
+    "supportLanguage": "ja",
+    "updatedAt": "2026-09-23T10:51:10.454Z"
+  }
+]

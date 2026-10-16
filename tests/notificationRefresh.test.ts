@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
-import { createNotificationRefresh as studentRefresh } from '../fluentxverse-student/src/utils/notificationRefresh';
-import { createNotificationRefresh as tutorRefresh } from '../fluentxverse-tutor/src/utils/notificationRefresh';
+import { createNotificationRefresh as studentRefresh } from '../fluentxverse-student-solid-prototype/student/utils/notificationRefresh';
+import { createNotificationRefresh as tutorRefresh } from '../fluentxverse-tutor-solid-prototype/tutor/utils/notificationRefresh';
 
 for (const [app, createRefresh] of [['student', studentRefresh], ['tutor', tutorRefresh]] as const) {
   test(`${app}: duplicate refreshes share one request`, async () => {

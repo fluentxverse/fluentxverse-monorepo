@@ -3,6 +3,9 @@ import { InterviewService } from '../services/interview.services/interview.servi
 import { NotificationService } from '../services/notification.services/notification.service';
 import { getIO } from '../socket/socket.server';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
+import { createAdminGuard } from '../middleware/auth.middleware';
+import { isAllowedAdminMutationOrigin } from '../config/cors';
+import { logger } from '../utils/logger';
 
 const interviewService = new InterviewService();
 const notificationService = new NotificationService();
@@ -31,6 +34,23 @@ const Interview = new Elysia({ prefix: '/interview' })
       return payload;
     };
     return { requireAdmin };
+  })
+  .get('/room/:id', async ({ params, cookie, set, request }) => {
+    set.headers['Cache-Control'] = 'private, no-store';
+    const room = await interviewService.getRoom(params.id);
+    const tutor = cookie.tutorAuth?.value ? await verifyAuthToken(String(cookie.tutorAuth.value)) : null;
+    if (tutor?.role === 'tutor' && room?.tutorId === tutor.userId) {
+      await refreshJwtCookie(cookie, tutor, 'tutorAuth');
+    } else {
+      if (!isAllowedAdminMutationOrigin(request.headers.get('origin')) || !await createAdminGuard(cookie, set, 'operations')) {
+        set.status = 403; return { success: false, error: 'Interview access denied' };
+      }
+    }
+    if (!room?.tutorId || !['booked', 'completed'].includes(room.status)) {
+      set.status = 404; return { success: false, error: 'Booked interview not found' };
+    }
+    const { recordingUrl, ...publicRoom } = room;
+    return { success: true, data: { ...publicRoom, hasRecording: Boolean(recordingUrl) } };
   })
   /**
    * Create interview slots (Admin only)
@@ -389,9 +409,12 @@ const Interview = new Elysia({ prefix: '/interview' })
    * Admin: Save interview result with rubric scores
    * POST /interview/result
    */
-  .post('/result', async ({ body, set, requireAdmin }) => {
+  .post('/result', async ({ body, set, cookie, request }) => {
     try {
-      const admin = await requireAdmin();
+      if (!isAllowedAdminMutationOrigin(request.headers.get('origin'))) {
+        set.status = 403; return { success: false, error: 'Invalid administration origin' };
+      }
+      const admin = await createAdminGuard(cookie, set, 'operations');
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -405,6 +428,7 @@ const Interview = new Elysia({ prefix: '/interview' })
         timestamps: body.timestamps,
         adminId: (admin as any).userId
       });
+      getIO()?.to(`interview-${body.slotId}`).emit('interview:ended');
 
       return {
         success: true,
@@ -424,11 +448,11 @@ const Interview = new Elysia({ prefix: '/interview' })
       tutorId: t.String(),
       result: t.Union([t.Literal('pass'), t.Literal('fail')]),
       rubricScores: t.Object({
-        grammar: t.Number(),
-        fluency: t.Number(),
-        pronunciation: t.Number(),
-        vocabulary: t.Number(),
-        professionalism: t.Number()
+        grammar: t.Integer({ minimum: 1, maximum: 5 }),
+        fluency: t.Integer({ minimum: 1, maximum: 5 }),
+        pronunciation: t.Integer({ minimum: 1, maximum: 5 }),
+        vocabulary: t.Integer({ minimum: 1, maximum: 5 }),
+        professionalism: t.Integer({ minimum: 1, maximum: 5 })
       }),
       notes: t.String(),
       timestamps: t.Array(t.Object({
@@ -496,9 +520,12 @@ const Interview = new Elysia({ prefix: '/interview' })
    * Admin: Upload interview recording
    * POST /interview/recording
    */
-  .post('/recording', async ({ request, set, requireAdmin }) => {
+  .post('/recording', async ({ request, set, cookie }) => {
     try {
-      const admin = await requireAdmin();
+      if (!isAllowedAdminMutationOrigin(request.headers.get('origin'))) {
+        set.status = 403; return { success: false, error: 'Invalid administration origin' };
+      }
+      const admin = await createAdminGuard(cookie, set, 'operations');
       if (!admin) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -507,6 +534,7 @@ const Interview = new Elysia({ prefix: '/interview' })
       const file = form.get('recording');
       const slotId = form.get('slotId') as string;
       const tutorId = form.get('tutorId') as string;
+      const recordingId = String(form.get('recordingId') || crypto.randomUUID());
 
       if (!(file instanceof File)) {
         set.status = 400;
@@ -517,10 +545,20 @@ const Interview = new Elysia({ prefix: '/interview' })
         set.status = 400;
         return { success: false, error: 'Missing slotId or tutorId' };
       }
+      if (!/^[a-zA-Z0-9_-]{1,100}$/.test(slotId) || !/^[a-zA-Z0-9_-]{1,128}$/.test(tutorId)
+        || !/^[0-9a-f-]{36}$/i.test(recordingId)) {
+        set.status = 400; return { success: false, error: 'Invalid recording identifiers' };
+      }
+      if (!['video/webm', 'video/mp4'].includes(file.type) || file.size < 1 || file.size > 90 * 1024 * 1024) {
+        set.status = 400; return { success: false, error: 'Recording must be WebM or MP4 and under 90 MiB' };
+      }
+      const room = await interviewService.getRoom(slotId);
+      if (room?.tutorId !== tutorId || !['booked', 'completed'].includes(room.status)) {
+        set.status = 403; return { success: false, error: 'Recording does not belong to this interview' };
+      }
 
       // Build SeaweedFS Filer path: /interview/{tutorId}/{slotId}_{timestamp}.webm
-      const timestamp = Date.now();
-      const filerPath = `/interview/${tutorId}/${slotId}_${timestamp}.webm`;
+      const filerPath = `/interview/${tutorId}/${slotId}_${recordingId}.${file.type === 'video/mp4' ? 'mp4' : 'webm'}`;
       const filerBase = process.env.SEAWEED_FILER_URL || 'http://localhost:8888';
       const uploadUrl = `${filerBase}${filerPath}`;
 
@@ -530,7 +568,8 @@ const Interview = new Elysia({ prefix: '/interview' })
         body: file.stream(),
         headers: {
           'Content-Type': file.type || 'video/webm'
-        }
+        },
+        signal: AbortSignal.timeout(60000)
       });
 
       if (!res.ok) {
@@ -541,11 +580,11 @@ const Interview = new Elysia({ prefix: '/interview' })
       }
 
       // Save recording URL to the interview result
-      await interviewService.saveRecordingUrl(slotId, tutorId, uploadUrl);
+      await interviewService.saveRecordingUrl(slotId, tutorId, uploadUrl, recordingId, admin.userId, file.size);
 
       return {
         success: true,
-        url: uploadUrl,
+        url: `/interview/recording/${encodeURIComponent(slotId)}`,
         message: 'Recording uploaded successfully'
       };
     } catch (error: any) {
@@ -556,6 +595,26 @@ const Interview = new Elysia({ prefix: '/interview' })
         error: error.message || 'Failed to upload recording'
       };
     }
+  })
+  .get('/recording/:id', async ({ params, cookie, set, request }) => {
+    set.headers['Cache-Control'] = 'private, no-store';
+    const admin = isAllowedAdminMutationOrigin(request.headers.get('origin')) ? await createAdminGuard(cookie, set, 'operations') : null;
+    if (!admin) {
+      set.status = 403; return { success: false, error: 'Interview recording access denied' };
+    }
+    const room = await interviewService.getRoom(params.id);
+    const filer = new URL(process.env.SEAWEED_FILER_URL || 'http://localhost:8888');
+    const url = room?.recordingUrl ? new URL(room.recordingUrl) : null;
+    if (!url || url.origin !== filer.origin || !url.pathname.startsWith(`/interview/${room?.tutorId}/`)) {
+      set.status = 404; return { success: false, error: 'Recording not found' };
+    }
+    const range = request.headers.get('range');
+    const response = await fetch(url, { headers: range ? { Range: range } : {}, signal: AbortSignal.timeout(15000) });
+    logger.info('Interview recording playback', { userId: admin.userId, userType: 'admin', interviewId: params.id, statusCode: response.status });
+    return new Response(response.body, { status: response.status, headers: {
+      'Content-Type': response.headers.get('content-type') || 'video/webm', 'Cache-Control': 'private, no-store',
+      'Accept-Ranges': 'bytes', ...(response.headers.get('content-range') ? { 'Content-Range': response.headers.get('content-range')! } : {}),
+    } });
   })
 
   /**

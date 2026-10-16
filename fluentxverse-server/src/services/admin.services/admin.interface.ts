@@ -88,13 +88,17 @@ export interface TutorListItem {
   id: string;
   name: string;
   email: string;
+  profilePicture?: string;
+  isBlocked: boolean;
+  blockExpiresAt?: string;
+  penaltyBlockOverrideUntil?: string;
   registeredAt: string;
   writtenExamPassed: boolean;
   speakingExamPassed: boolean;
   interviewPassed: boolean;
   writtenExamScore?: number;
   speakingExamScore?: number;
-  status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
+  status: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile' | 'test_qualified';
   profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
   zkCertificationStatus?: 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
   zkCredentialCommitment?: string;

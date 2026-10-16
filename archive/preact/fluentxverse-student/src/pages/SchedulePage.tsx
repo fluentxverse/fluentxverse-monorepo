@@ -1,0 +1,741 @@
+import { useState, useEffect, useMemo, useCallback } from 'preact/hooks';
+import { ArrowRight, CalendarDays, Clock, History, Globe, UserRound, X, RefreshCw, Search, TriangleAlert, Ticket, LoaderCircle, ShieldCheck, ExternalLink, CheckCircle } from 'lucide-preact';
+import Header from '../Components/Header/Header';
+import SideBar from '../Components/IndexOne/SideBar';
+import PastLessonCalendar from '../Components/PastLessonCalendar';
+import ProfileAvatar from '../Components/Common/ProfileAvatar';
+import { useCurrentTime } from '../hooks/useCurrentTime';
+import { canCancelLesson } from '../utils/lessonCancellation';
+import { useAuthContext } from '../context/AuthContext';
+import { scheduleApi, type StudentBooking } from '../api/schedule.api';
+import { lessonProofApi, type LessonProof } from '../api/lessonProof.api';
+import { API_BASE_URL } from '../config/api';
+import './SchedulePage.css';
+
+interface Booking {
+  id: string;
+  tutorId: string;
+  tutorName: string;
+  tutorAvatar?: string;
+  date: Date;
+  dateStr: string;
+  time: string;
+  timeDisplay: string;
+  duration: number;
+  status: 'upcoming' | 'completed' | 'cancelled';
+  originalStatus: string;
+  attendanceStudent?: string;
+}
+
+// Cancel confirmation modal component
+interface CancelModalProps {
+  isOpen: boolean;
+  booking: Booking | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isLoading: boolean;
+  willGetRefund: boolean;
+}
+
+const CancelModal = ({ isOpen, booking, onConfirm, onCancel, isLoading, willGetRefund }: CancelModalProps) => {
+  if (!isOpen || !booking) return null;
+
+  return (
+    <div className="cancel-modal-overlay" onClick={onCancel}>
+      <div className="cancel-modal" role="dialog" aria-modal="true" aria-labelledby="cancel-lesson-title" onClick={(e) => e.stopPropagation()}>
+        <div className="cancel-modal-header">
+          <TriangleAlert size={16} />
+          <h3 id="cancel-lesson-title">Cancel Lesson</h3>
+        </div>
+        <div className="cancel-modal-body">
+          <p>Are you sure you want to cancel your lesson with <strong>{booking.tutorName}</strong>?</p>
+          <div className="cancel-lesson-info">
+            <div className="cancel-info-row">
+              <CalendarDays size={16} />
+              <span>{booking.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'Asia/Tokyo' })}</span>
+            </div>
+            <div className="cancel-info-row">
+              <Clock size={16} />
+              <span>{booking.timeDisplay} JST</span>
+            </div>
+          </div>
+          <div className={`refund-notice ${willGetRefund ? 'refund-yes' : 'refund-no'}`}>
+            <Ticket size={20} />
+            {willGetRefund ? (
+              <span>You will receive a ticket refund for this cancellation.</span>
+            ) : (
+              <span>Cancellations less than 1 hour before the lesson are not eligible for refund.</span>
+            )}
+          </div>
+        </div>
+        <div className="cancel-modal-actions">
+          <button className="cancel-modal-btn cancel-btn" onClick={onCancel} disabled={isLoading}>
+            Keep Lesson
+          </button>
+          <button className="cancel-modal-btn confirm-btn" onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <LoaderCircle size={16} className="schedule-spin" />
+                Cancelling...
+              </>
+            ) : (
+              <>
+                <X size={16} />
+                Cancel Lesson
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SchedulePage = () => {
+  useEffect(() => {
+    document.title = 'My Schedule | FluentXVerse';
+  }, []);
+
+  const { user } = useAuthContext();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>(new URLSearchParams(window.location.search).get('tab') === 'past' ? 'past' : 'upcoming');
+  const currentTime = useCurrentTime();
+  const [lessonProofs, setLessonProofs] = useState<Record<string, LessonProof>>({});
+  const [proofLoading, setProofLoading] = useState<string | null>(null);
+  const [proofError, setProofError] = useState<Record<string, string>>({});
+  
+  // Cancel modal state
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelSuccess, setCancelSuccess] = useState<{ message: string; refunded: boolean } | null>(null);
+
+  // Check if cancellation is eligible for refund (more than 1 hour before lesson)
+  const isRefundEligible = (lessonDate: Date): boolean => {
+    const now = new Date();
+    const oneHourBefore = new Date(lessonDate.getTime() - 60 * 60 * 1000);
+    return now < oneHourBefore;
+  };
+
+  // Handle cancel button click
+  const handleCancelClick = (booking: Booking) => {
+    if (!canCancelLesson(booking.originalStatus, booking.date.getTime())) return;
+    setBookingToCancel(booking);
+    setCancelModalOpen(true);
+  };
+
+  // Handle cancel confirmation
+  const handleConfirmCancel = async () => {
+    if (!bookingToCancel) return;
+    if (!canCancelLesson(bookingToCancel.originalStatus, bookingToCancel.date.getTime())) {
+      setCancelModalOpen(false);
+      return;
+    }
+    
+    setCancelling(true);
+    try {
+      const result = await scheduleApi.cancelBooking(bookingToCancel.id);
+      
+      // Remove the cancelled booking from the list
+      setBookings(prev => prev.filter(b => b.id !== bookingToCancel.id));
+      
+      // Show success message
+      setCancelSuccess({
+        message: result.message || 'Lesson cancelled successfully',
+        refunded: result.refundEligible
+      });
+      
+      // Close modal
+      setCancelModalOpen(false);
+      setBookingToCancel(null);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setCancelSuccess(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to cancel booking:', err);
+      setError(typeof err === 'string' ? err : err.message || 'Failed to cancel booking');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // Handle modal close
+  const handleCancelModalClose = () => {
+    if (!cancelling) {
+      setCancelModalOpen(false);
+      setBookingToCancel(null);
+    }
+  };
+
+  // Convert 12-hour or 24-hour PHT time to 24-hour JST time
+  const convertPHTtoJST = (dateStr: string, timeStr: string): { date: string; time: string; dateObj: Date } => {
+    let hour: number;
+    let minute: number;
+    
+    // Try 12-hour format first (e.g., "11:30 PM")
+    const match12 = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (match12) {
+      hour = parseInt(match12[1], 10);
+      minute = parseInt(match12[2], 10);
+      const isPM = match12[3].toUpperCase() === 'PM';
+
+      if (hour === 12) {
+        hour = isPM ? 12 : 0;
+      } else if (isPM) {
+        hour += 12;
+      }
+    } else {
+      // Try 24-hour format (e.g., "23:30")
+      const match24 = timeStr.match(/(\d{1,2}):(\d{2})/);
+      if (match24) {
+        hour = parseInt(match24[1], 10);
+        minute = parseInt(match24[2], 10);
+      } else {
+        return { date: dateStr, time: '00:00', dateObj: new Date(dateStr) };
+      }
+    }
+
+    let jstHour = hour + 1;
+    let jstDate = dateStr;
+
+    if (jstHour >= 24) {
+      jstHour -= 24;
+      // Calculate next day without using toISOString (which converts to UTC)
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const nextDay = new Date(year, month - 1, day + 1);
+      jstDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+    }
+
+    const jstTime = `${String(jstHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    // Explicitly specify JST timezone (UTC+9) so JavaScript doesn't interpret as local time
+    const dateObj = new Date(`${jstDate}T${jstTime}:00+09:00`);
+
+    return { date: jstDate, time: jstTime, dateObj };
+  };
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const [data, proofResult] = await Promise.all([
+          scheduleApi.getStudentBookings(),
+          lessonProofApi.list().catch(() => null),
+        ]);
+        if (proofResult) setLessonProofs(Object.fromEntries(proofResult.map(proof => [proof.bookingId, proof])));
+
+        const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes
+        
+        const transformedBookings: Booking[] = data.map((booking: StudentBooking) => {
+          const { date: jstDate, time: jstTime, dateObj } = convertPHTtoJST(booking.slotDate, booking.slotTime);
+          const now = new Date();
+          const lessonEndTime = new Date(dateObj.getTime() + LESSON_DURATION_MS);
+
+          let status: 'upcoming' | 'completed' | 'cancelled' = 'upcoming';
+          if (booking.status === 'completed') {
+            status = 'completed';
+          } else if (booking.status === 'cancelled') {
+            status = 'cancelled';
+          } else if (now >= lessonEndTime) {
+            // Only mark as completed after the full 25-minute lesson duration
+            status = 'completed';
+          }
+          // If lesson has started but not ended, keep status as 'upcoming' (ongoing)
+
+          return {
+            id: booking.bookingId,
+            tutorId: booking.tutorId,
+            tutorName: booking.tutorName?.trim() || 'Tutor',
+            tutorAvatar: booking.tutorAvatar,
+            date: dateObj,
+            dateStr: jstDate,
+            time: jstTime,
+            timeDisplay: jstTime,
+            duration: booking.durationMinutes,
+            status,
+            originalStatus: booking.status,
+            attendanceStudent: booking.attendanceStudent
+          };
+        });
+
+        setBookings(transformedBookings);
+      } catch (err) {
+        console.error('Failed to fetch bookings:', err);
+        setError('Failed to load your schedule. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [user]);
+
+  const claimLessonProof = async (bookingId: string) => {
+    setProofLoading(bookingId);
+    setProofError(previous => ({ ...previous, [bookingId]: '' }));
+    try {
+      const proof = await lessonProofApi.claim(bookingId);
+      setLessonProofs(previous => ({ ...previous, [bookingId]: { ...proof, eligible: true } }));
+    } catch (err) {
+      setProofError(previous => ({ ...previous, [bookingId]: err instanceof Error ? err.message : 'Could not generate proof' }));
+    } finally {
+      setProofLoading(null);
+    }
+  };
+
+  const LESSON_DURATION_MS = 25 * 60 * 1000; // 25 minutes in milliseconds
+  
+  // Helper to check if lesson is still ongoing (within 25 minutes of start)
+  const isLessonOngoing = useCallback((lessonDate: Date): boolean => {
+    const currentTime = Date.now();
+    const lessonEnd = lessonDate.getTime() + LESSON_DURATION_MS;
+    return currentTime >= lessonDate.getTime() && currentTime < lessonEnd;
+  }, []);
+  
+  // Helper to check if lesson end time has passed
+  const isLessonEnded = useCallback((lessonDate: Date): boolean => {
+    const lessonEnd = lessonDate.getTime() + LESSON_DURATION_MS;
+    return Date.now() >= lessonEnd;
+  }, []);
+  
+  // Memoize filtered and sorted lesson lists
+  const { upcomingLessons, pastLessons } = useMemo(() => {
+    
+    const upcoming = bookings
+      .filter(b => {
+        if (b.status !== 'upcoming') return false;
+        const lessonEnd = b.date.getTime() + LESSON_DURATION_MS;
+        return b.date.getTime() > currentTime || currentTime < lessonEnd;
+      })
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    const past = bookings
+      .filter(b => {
+        if (b.status === 'completed') return true;
+        const lessonEnd = b.date.getTime() + LESSON_DURATION_MS;
+        return currentTime >= lessonEnd;
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+    return { upcomingLessons: upcoming, pastLessons: past };
+  }, [bookings, currentTime]);
+
+  useEffect(() => {
+    if (bookingToCancel && !cancelling && !canCancelLesson(bookingToCancel.originalStatus, bookingToCancel.date.getTime(), currentTime)) {
+      setCancelModalOpen(false);
+      setBookingToCancel(null);
+    }
+  }, [bookingToCancel, cancelling, currentTime]);
+
+  // Create JST formatter once (memoized)
+  const jstFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric'
+  }), []);
+
+  const jstDateFormatter = useMemo(() => new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Tokyo',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  }), []);
+
+  // Pre-compute today and tomorrow in JST (memoized)
+  const { todayJST, tomorrowJST } = useMemo(() => {
+    const now = new Date();
+    const todayParts = jstFormatter.formatToParts(now);
+    const todayYear = parseInt(todayParts.find(p => p.type === 'year')?.value || '0');
+    const todayMonth = parseInt(todayParts.find(p => p.type === 'month')?.value || '0');
+    const todayDay = parseInt(todayParts.find(p => p.type === 'day')?.value || '0');
+
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowParts = jstFormatter.formatToParts(tomorrow);
+    const tomorrowYear = parseInt(tomorrowParts.find(p => p.type === 'year')?.value || '0');
+    const tomorrowMonth = parseInt(tomorrowParts.find(p => p.type === 'month')?.value || '0');
+    const tomorrowDay = parseInt(tomorrowParts.find(p => p.type === 'day')?.value || '0');
+
+    return {
+      todayJST: `${todayYear}-${todayMonth}-${todayDay}`,
+      tomorrowJST: `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`
+    };
+  }, [jstFormatter]);
+
+  // Format date for display - optimized with memoized formatters
+  const formatLessonDate = useCallback((date: Date) => {
+    const jstParts = jstFormatter.formatToParts(date);
+    const jstYear = parseInt(jstParts.find(p => p.type === 'year')?.value || '0');
+    const jstMonth = parseInt(jstParts.find(p => p.type === 'month')?.value || '0');
+    const jstDay = parseInt(jstParts.find(p => p.type === 'day')?.value || '0');
+    const dateKey = `${jstYear}-${jstMonth}-${jstDay}`;
+
+    if (dateKey === todayJST) return 'Today';
+    if (dateKey === tomorrowJST) return 'Tomorrow';
+
+    return jstDateFormatter.format(date);
+  }, [jstFormatter, jstDateFormatter, todayJST, tomorrowJST]);
+
+  const getTimeUntil = useCallback((date: Date) => {
+    const currentTime = Date.now();
+    const diff = date.getTime() - currentTime;
+    
+    // If lesson has started, check if it's still ongoing
+    if (diff < 0) {
+      const lessonEnd = date.getTime() + LESSON_DURATION_MS;
+      const timeLeft = lessonEnd - currentTime;
+      if (timeLeft > 0) {
+        const minsLeft = Math.floor(timeLeft / 60000);
+        return `Ongoing • ${minsLeft}m left`;
+      }
+      return 'Ended';
+    }
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 60) {
+      return `in ${minutes} min`;
+    } else if (hours < 24) {
+      return `in ${hours}h ${minutes % 60}m`;
+    } else {
+      return `in ${days} day${days > 1 ? 's' : ''}`;
+    }
+  }, []);
+
+  const getTimeSince = useCallback((date: Date) => {
+    const currentTime = Date.now();
+    const diff = currentTime - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 30) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else if (days > 0) {
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    } else if (hours > 0) {
+      return `${hours}h ago`;
+    } else {
+      return `${minutes}m ago`;
+    }
+  }, []);
+
+  const displayedLessons = useMemo(() => 
+    activeTab === 'upcoming' ? upcomingLessons : pastLessons
+  , [activeTab, upcomingLessons, pastLessons]);
+
+  const selectTab = (tab: 'upcoming' | 'past') => {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    if (tab === 'past') url.searchParams.set('tab', 'past');
+    else { url.searchParams.delete('tab'); url.searchParams.delete('month'); url.searchParams.delete('day'); }
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  const renderPastActions = (bookingId: string) => {
+    const lesson = pastLessons.find(item => item.id === bookingId);
+    if (!lesson) return null;
+    const proof = lessonProofs[bookingId];
+    return <>
+      {proof?.eligible && ['ready', 'failed'].includes(proof.status) && <button className="action-btn primary" disabled={proofLoading === bookingId} onClick={() => claimLessonProof(bookingId)}><ShieldCheck size={16} />{proofLoading === bookingId ? 'Generating...' : proof.status === 'failed' ? 'Retry proof' : 'Claim proof'}</button>}
+      {proof?.eligible && proof.status === 'local_proof_generated' && (proof.submissionAvailable ? <button className="action-btn primary" disabled={proofLoading === bookingId} onClick={() => claimLessonProof(bookingId)}><ShieldCheck size={16} />{proofLoading === bookingId ? 'Submitting...' : 'Submit proof'}</button> : <span className="lesson-proof-pending">Local proof ready</span>)}
+      {proof?.commitment && <a className="action-btn secondary" target="_blank" rel="noopener noreferrer" href={`${API_BASE_URL}/proof/student-lessons/public/${proof.commitment}`}><ExternalLink size={16} />{proof.status === 'verified' ? 'Verified proof' : 'View proof status'}</a>}
+      {proof && !proof.eligible && proof.status === 'ready' && <span className="lesson-proof-pending">Attendance verification pending</span>}
+      {proofError[bookingId] && <span role="alert" className="lesson-proof-error">{proofError[bookingId]}</span>}
+      <a href={`/tutor/${lesson.tutorId}`} className="action-btn secondary"><RefreshCw size={16} />Book Again</a>
+    </>;
+  };
+
+  return (
+    <>
+      <SideBar />
+      <div className="student-schedule-shell">
+        <Header />
+        <main className="schedule-page">
+          <div className="container">
+            {/* Header Section */}
+            <div className="schedule-header">
+              <div className="schedule-header-left">
+                <img className="schedule-art" src="/assets/img/home-icons/schedule-v1.webp" width={64} height={64} alt="" />
+                <div>
+                  <h1 className="schedule-title">My Schedule</h1>
+                  <p className="schedule-subtitle">
+                    {loading ? 'Your learning calendar' : `${upcomingLessons.length} upcoming lesson${upcomingLessons.length !== 1 ? 's' : ''}`}
+                  </p>
+                </div>
+              </div>
+
+              <a href="/browse-tutors" className="schedule-book-btn">
+                <CalendarDays size={16} />
+                Book a Lesson
+              </a>
+            </div>
+
+            {/* Tabs */}
+            <div className="schedule-tabs">
+              <button
+                className={`schedule-tab ${activeTab === 'upcoming' ? 'active' : ''}`}
+                onClick={() => selectTab('upcoming')}
+              >
+                <Clock size={16} />
+                Upcoming
+                {upcomingLessons.length > 0 && (
+                  <span className="tab-count">{upcomingLessons.length}</span>
+                )}
+              </button>
+              <button
+                className={`schedule-tab ${activeTab === 'past' ? 'active' : ''}`}
+                onClick={() => selectTab('past')}
+              >
+                <History size={16} />
+                Past Lessons
+                {pastLessons.length > 0 && (
+                  <span className="tab-count past">{pastLessons.length}</span>
+                )}
+              </button>
+            </div>
+
+            {/* Timezone Notice */}
+            <div className="schedule-timezone">
+              <Globe size={16} />
+              <span>All times shown in Japan Time (JST)</span>
+            </div>
+
+            {/* Loading State - Skeleton Loader */}
+            {loading && (
+              <div className="schedule-skeleton">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton-card">
+                    <div className="skeleton-date"></div>
+                    <div className="skeleton-avatar"></div>
+                    <div className="skeleton-info">
+                      <div className="skeleton-title"></div>
+                      <div className="skeleton-detail"></div>
+                      <div className="skeleton-detail" style={{ width: '150px' }}></div>
+                    </div>
+                    <div className="skeleton-actions">
+                      <div className="skeleton-btn"></div>
+                      <div className="skeleton-btn" style={{ width: '80px' }}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && !loading && (
+              <div className="schedule-error">
+                <TriangleAlert size={16} />
+                <h3>Error Loading Schedule</h3>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()} className="retry-btn">
+                  <RefreshCw size={16} />
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            {/* Lessons List */}
+            {!loading && !error && activeTab === 'past' && <PastLessonCalendar lessons={pastLessons} renderActions={renderPastActions} />}
+            {!loading && !error && activeTab === 'upcoming' && displayedLessons.length > 0 && (
+              <div className="schedule-list">
+                {displayedLessons.map((lesson) => (
+                  <div key={lesson.id} className={`schedule-card ${activeTab}`}>
+                    {/* Date Badge */}
+                    <div className="schedule-card-date">
+                      <span className="date-day">{lesson.date.toLocaleDateString('en-US', { day: 'numeric', timeZone: 'Asia/Tokyo' })}</span>
+                      <span className="date-month">{lesson.date.toLocaleDateString('en-US', { month: 'short', timeZone: 'Asia/Tokyo' })}</span>
+                    </div>
+
+                    {/* Tutor Avatar */}
+                    <div className="schedule-card-avatar">
+                      <ProfileAvatar src={lesson.tutorAvatar} alt={lesson.tutorName} fallbackClassName="avatar-placeholder" fallback={<UserRound size={16} />} />
+                    </div>
+
+                    {/* Lesson Info */}
+                    <div className="schedule-card-info">
+                      <h3 className="schedule-card-tutor-name">{lesson.tutorName}</h3>
+                      <div className="lesson-details">
+                        <div className="lesson-detail">
+                          <CalendarDays size={16} />
+                          <span>{formatLessonDate(lesson.date)}</span>
+                        </div>
+                        <div className="lesson-detail">
+                          <Clock size={16} />
+                          <span>{lesson.timeDisplay} JST ({lesson.duration} min)</span>
+                        </div>
+                        {activeTab === 'upcoming' && (
+                          <div className={`lesson-detail countdown ${isLessonOngoing(lesson.date) ? 'ongoing' : ''}`}>
+                            <Clock size={16} />
+                            <span>{getTimeUntil(lesson.date)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="schedule-card-actions">
+                      {activeTab === 'upcoming' ? (
+                        <>
+                          <a href={`/lesson/${lesson.id}`} className="action-btn primary">
+                            <ArrowRight size={16} />
+                            Open Lesson
+                          </a>
+                          <a href={`/tutor/${lesson.tutorId}`} className="action-btn secondary">
+                            <UserRound size={16} />
+                            View Tutor
+                          </a>
+                          {canCancelLesson(lesson.originalStatus, lesson.date.getTime(), currentTime) && <button
+                            className="action-btn cancel"
+                            onClick={() => handleCancelClick(lesson)}
+                          >
+                            <X size={16} />
+                            Cancel
+                          </button>}
+                        </>
+                      ) : renderPastActions(lesson.id)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && activeTab === 'upcoming' && displayedLessons.length === 0 && (
+              <div className="schedule-empty">
+                <div className="empty-icon">
+                  <img className="schedule-art" src="/assets/img/home-icons/community-v1.webp" width={88} height={88} alt="" />
+                </div>
+                <h3>{activeTab === 'upcoming' ? 'No Upcoming Lessons' : 'No Past Lessons'}</h3>
+                <p>
+                  {activeTab === 'upcoming'
+                    ? "Find a tutor for your next conversation."
+                    : "You haven't completed any lessons yet. Book your first lesson to get started!"}
+                </p>
+                {activeTab === 'upcoming' && (
+                  <a href="/browse-tutors" className="empty-cta">
+                    <Search size={16} />
+                    Browse Tutors
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Cancel Success Notification */}
+            {cancelSuccess && (
+              <div className={`cancel-notification ${cancelSuccess.refunded ? 'refunded' : ''}`}>
+                <CheckCircle size={20} />
+                <span>{cancelSuccess.message}</span>
+                {cancelSuccess.refunded && (
+                  <span className="refund-badge">Ticket Refunded</span>
+                )}
+                <button className="notification-close" aria-label="Dismiss notification" onClick={() => setCancelSuccess(null)}>
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Cancel Confirmation Modal */}
+      {cancelModalOpen && bookingToCancel && (
+        <div className="cancel-modal-overlay" onClick={handleCancelModalClose}>
+          <div className="cancel-modal" role="dialog" aria-modal="true" aria-labelledby="schedule-cancel-title" onClick={(e) => e.stopPropagation()}>
+            <div className="cancel-modal-header">
+              <h3 id="schedule-cancel-title">Cancel Lesson</h3>
+              <button 
+                className="modal-close-btn" aria-label="Close cancellation dialog"
+                onClick={handleCancelModalClose}
+                disabled={cancelling}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="cancel-modal-body">
+              <div className="cancel-lesson-info">
+                <div className="cancel-tutor-avatar">
+                  <ProfileAvatar src={bookingToCancel.tutorAvatar} alt={bookingToCancel.tutorName} fallbackClassName="avatar-placeholder" fallback={<UserRound size={16} />} />
+                </div>
+                <div className="cancel-lesson-details">
+                  <h4>{bookingToCancel.tutorName}</h4>
+                  <p>
+                    <CalendarDays size={16} />
+                    {formatLessonDate(bookingToCancel.date)} at {bookingToCancel.timeDisplay} JST
+                  </p>
+                  <p>
+                    <Clock size={16} />
+                    {bookingToCancel.duration} minutes
+                  </p>
+                </div>
+              </div>
+
+              <div className={`refund-notice ${isRefundEligible(bookingToCancel.date) ? 'eligible' : 'not-eligible'}`}>
+                {isRefundEligible(bookingToCancel.date) ? (
+                  <>
+                    <CheckCircle size={20} />
+                    <div>
+                      <strong>Refund Eligible</strong>
+                      <p>Your ticket will be refunded since you're cancelling more than 1 hour before the lesson.</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <TriangleAlert size={16} />
+                    <div>
+                      <strong>No Refund</strong>
+                      <p>Cancellations less than 1 hour before the lesson are not eligible for a refund.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <p className="cancel-warning">
+                Are you sure you want to cancel this lesson? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="cancel-modal-footer">
+              <button 
+                className="cancel-modal-btn secondary" 
+                onClick={handleCancelModalClose}
+                disabled={cancelling}
+              >
+                Keep Lesson
+              </button>
+              <button 
+                className="cancel-modal-btn danger" 
+                onClick={handleConfirmCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <X size={16} />
+                    Cancel Lesson
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default SchedulePage;

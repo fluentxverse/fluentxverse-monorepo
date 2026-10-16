@@ -7,6 +7,9 @@ import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
 import LessonWorkflow from './routes/lessonWorkflow.route';
 import { adminOperationsRoute } from './routes/adminOperations.route';
+import { tutorEarningsRoute } from './routes/tutorEarnings.route';
+import { testingChecklistRoute } from './routes/testingChecklist.route';
+import { tutorCompensationFailure } from './services/admin.services/tutorCompensation.service';
 import Examination from "./routes/exam.route";
 import Admin from './routes/admin.route';
 import Interview from './routes/interview.route';
@@ -15,6 +18,9 @@ import Inbox from './routes/inbox.route';
 import Ticket from './routes/ticket.route';
 import Lesson from './routes/lesson.route';
 import Proof from './routes/proof.route';
+import Screening from './routes/screening.route';
+import AnonymousReviews from './routes/anonymousReviews.route';
+import LessonPasses from './routes/lessonPasses.route';
 import { categoryRoute } from './routes/category.route';
 import { mediaRoute } from './routes/media.route';
 import { analyticsRoute } from './routes/analytics.route';
@@ -33,6 +39,8 @@ import { initRedis, logRetentionCleanup, isRedisConnected } from './db/redis';
 import cors from '@elysiajs/cors';
 import cookie from '@elysiajs/cookie';
 import Student from "./routes/student.route";
+import { createMobileStudentRoutes, mobileStudentFailure } from './routes/mobileStudent.route';
+import { mobileStudentDependencies } from './routes/mobileStudent.dependencies';
 import Debug from './routes/debug.route';
 import { lessonMaterialRoutes } from './routes/lessonMaterial.route';
 import { dispatchRoutes } from './routes/dispatch.route';
@@ -173,7 +181,7 @@ const app = new Elysia({
     const path = new URL(request.url).pathname;
     
     // Skip logging for health checks and static assets
-    if (path === '/health' || path.startsWith('/docs')) return;
+    if (path === '/health' || path.startsWith('/docs') || path.startsWith('/anonymous-reviews/') || path.startsWith('/lesson-passes/')) return;
     
     logger.response({
       method: request.method,
@@ -187,6 +195,21 @@ const app = new Elysia({
     const duration = Date.now() - ((request as any).startTime || Date.now());
     const path = new URL(request.url).pathname;
     const requestId = (request as any).requestId;
+    if (path.startsWith('/mobile/student/')) {
+      const response = mobileStudentFailure(error, String(code));
+      set.status = response.status;
+      set.headers['Cache-Control'] = 'no-store';
+      return response.body;
+    }
+    if (path.startsWith('/admin/operations/compensation')) {
+      const response = tutorCompensationFailure(error, code);
+      set.status = response.status;
+      return response.body;
+    }
+    if (path.startsWith('/anonymous-reviews/') || path.startsWith('/lesson-passes/')) {
+      set.status = ['VALIDATION', 'PARSE'].includes(String(code)) ? 400 : String(code) === 'NOT_FOUND' ? 404 : 503;
+      return { success: false, error: 'Review request could not be processed' };
+    }
     
     // Determine appropriate status code
     let statusCode = 500;
@@ -297,7 +320,10 @@ const app = new Elysia({
   .use(Schedule)
   .use(LessonWorkflow)
   .use(adminOperationsRoute)
+  .use(tutorEarningsRoute)
+  .use(testingChecklistRoute)
   .use(Student)
+  .use(createMobileStudentRoutes(mobileStudentDependencies))
   .use(Debug)
   .use(Examination)
   .use(Admin)
@@ -308,6 +334,9 @@ const app = new Elysia({
   .use(Ticket)
   .use(Lesson)
   .use(Proof)
+  .use(Screening)
+  .use(AnonymousReviews)
+  .use(LessonPasses)
   .use(lessonMaterialRoutes)
   .use(dispatchRoutes)
   .use(youngLearnersRoute)
@@ -363,7 +392,7 @@ const app = new Elysia({
 
 
 // Start HTTP server - listen on all interfaces for LAN access
-.listen({ hostname: '0.0.0.0', port: 8765 }, () => {
+.listen({ hostname: '0.0.0.0', port: 8765, maxRequestBodySize: 100 * 1024 * 1024 }, () => {
 });
 
 

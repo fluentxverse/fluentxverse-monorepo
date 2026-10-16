@@ -60,7 +60,7 @@ export function buildChapter(apiBase: string) {
         introTexts: [{ language: 'en', text: s.intro[0] }, { language: 'ja', text: s.intro[1] }], introImage: scene, lessonIssue: null,
         lessonGoalDuration: '1 minute', lessonGoalSteps: [
           { instruction: 'Introduce today\'s goal and check understanding.', script: `Our goal for today is: ${s.goal[0]} Is it clear?` },
-          { instruction: 'Introduce the situation and connect it to the learner.', script: `Here\'s our situation. ${s.intro[0]}`, question: s.discussion[0][1][0] },
+          { instruction: 'Introduce the situation and connect it to the learner.', script: `Here\'s our situation. ${s.intro[0]}`, question: s.discussion[0]![1][0] },
         ],
       },
       learnData: { sectionTitle: 'LEARN', steps: [{
@@ -140,7 +140,7 @@ export function buildChapter(apiBase: string) {
           { id: 'aisha', name: 'Aisha', role: 'supporting', description: 'A designer from Leeds. Likes photography and walking.' },
           { id: 'ken', name: 'Ken', role: 'supporting', description: 'An adult student from Kyoto. Likes walking and photography.' },
         ],
-        previousSummary: s.number === 1 ? '' : specs[s.number - 2].intro[0],
+        previousSummary: s.number === 1 ? '' : specs[s.number - 2]!.intro[0],
         currentPlotPoints: [s.intro[0], s.mission[0]], currentEpisodeSummary: s.intro[0],
         nextEpisodeHook: specs[s.number]?.intro[0] || 'The residents are ready to explore everyday life together.',
         storyNotes: 'Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys.',
@@ -215,7 +215,7 @@ function feedback(s: LessonSpec) {
       { instruction: 'Have the learner retry one item and finish with the goal.', scripts: bullets(['Let\'s try that part once more.']) },
     ],
     categories: [
-      { id: 'range', title: receptive ? 'MAIN IDEA' : 'RANGE', titleJp: receptive ? '大まかな内容' : '表現の幅', focusOn: receptive ? 'Identifies the situation and purpose.' : 'Uses the target expressions appropriately.', exampleFeedbackItems: [s.goal[0]], vocabularyExample: s.words[0][0], examples: [] },
+      { id: 'range', title: receptive ? 'MAIN IDEA' : 'RANGE', titleJp: receptive ? '大まかな内容' : '表現の幅', focusOn: receptive ? 'Identifies the situation and purpose.' : 'Uses the target expressions appropriately.', exampleFeedbackItems: [s.goal[0]], vocabularyExample: s.words[0]![0], examples: [] },
       { id: 'accuracy', title: receptive ? 'KEY DETAILS' : 'ACCURACY', titleJp: receptive ? '詳しい情報' : '正確さ', focusOn: receptive ? 'Finds the details needed to complete the task and supports answers with evidence.' : 'Uses clear sentence patterns for the task.', exampleFeedbackItems: s.missionQuestions.slice(0, 2).map(([q]) => q), examples: [] },
       { id: 'fluency', title: receptive ? 'STRATEGY' : 'INTERACTION', titleJp: receptive ? '理解の工夫' : 'やり取り', focusOn: receptive ? (s.skill === 'listening' ? 'Uses a second listen or asks for repetition to check uncertain details.' : 'Rereads relevant lines and notices changed information.') : 'Responds to the partner and keeps the exchange moving.', exampleFeedbackItems: [receptive ? 'Check one uncertain detail again.' : 'Ask one relevant follow-up question.'], examples: [] },
     ],

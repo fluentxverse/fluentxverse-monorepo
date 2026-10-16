@@ -56,6 +56,7 @@ export function safePaginationOffset(value: string | undefined, defaultVal: numb
 
 // Default rate limit configurations
 export const RATE_LIMITS = {
+  screening: { windowMs: 60 * 1000, maxRequests: 6 },
   // Booking endpoints - strict limits
   booking: { windowMs: 60 * 1000, maxRequests: 5 },      // 5 bookings per minute
   

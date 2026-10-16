@@ -6,13 +6,18 @@ import { operations, operationError } from '../api/operations.api';
 import { compensationApi, usdRateLabel } from '../api/compensation.api';
 import type { TutorCompensation } from '../../../fluentxverse-server/src/shared/tutorCompensation';
 import { OperationsAccountModal } from '../components/OperationsAccountModal';
+import { OperationsAction, dateText } from '../components/OperationsShared';
+import ProfileAvatar from '../components/ProfileAvatar';
 
 type TabType = 'certified' | 'all' | 'suspended';
 import { API_BASE_URL } from '../config/api';
 
+const bookingBlocked = (tutor: TutorListItem) => tutor.isBlocked === true
+  && !(tutor.blockExpiresAt && Date.parse(tutor.blockExpiresAt) <= Date.now());
+
 const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id: string; tab: string }; onAccountClose?: () => void }) => {
   const [account, setAccount] = useState(initialAccount || null);
-  const closeAccount = () => { setAccount(null); setRatesRefresh(value => value + 1); onAccountClose?.(); };
+  const closeAccount = () => { setAccount(null); setRatesRefresh(value => value + 1); void loadTutors(); onAccountClose?.(); };
   const [tutors, setTutors] = useState<TutorListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +27,8 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
   const [total, setTotal] = useState(0);
   const [activeTab, setActiveTab] = useState<TabType>('certified');
   const [hasFinance, setHasFinance] = useState(false);
+  const [hasOperations, setHasOperations] = useState(false);
+  const [unblockingTutor, setUnblockingTutor] = useState<TutorListItem | null>(null);
   const [rates, setRates] = useState<Record<string, TutorCompensation>>({});
   const [ratesError, setRatesError] = useState('');
   const [ratesRefresh, setRatesRefresh] = useState(0);
@@ -48,7 +55,9 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
 
   useEffect(() => {
     let active = true;
-    operations('/access').then(access => { if (active) setHasFinance(access.permissions.includes('finance')); }).catch(() => { if (active) setHasFinance(false); });
+    operations('/access').then(access => {
+      if (active) { setHasFinance(access.permissions.includes('finance')); setHasOperations(access.permissions.includes('operations')); }
+    }).catch(() => { if (active) { setHasFinance(false); setHasOperations(false); } });
     return () => { active = false; };
   }, []);
 
@@ -375,7 +384,7 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
           </div>
         ) : (
           <table key={hasFinance ? 'finance' : 'standard'} className="tutors-table">
-            <caption className="sr-only">Tutors, exam results, certification, sessions, and account actions</caption>
+            <caption className="sr-only">Tutors, exam results, certification, booking access, sessions, and account actions</caption>
             <colgroup>
               <col className="tutor-column" />
               {hasFinance && <col key="rate" className="rate-column" />}
@@ -383,6 +392,7 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
               <col key="written" className="exam-column" />
               <col key="speaking" className="exam-column" />
               <col key="status" className="status-column" />
+              <col key="bookings" className="bookings-column" />
               <col key="proof" className="proof-column" />
               <col key="sessions" className="sessions-column" />
               <col key="rating" className="rating-column" />
@@ -396,6 +406,7 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
                 <th key="written" scope="col">Written Exam</th>
                 <th key="speaking" scope="col">Speaking Exam</th>
                 <th key="status" scope="col">Status</th>
+                <th key="bookings" scope="col">Bookings</th>
                 <th key="proof" scope="col">ZK Proof</th>
                 <th key="sessions" scope="col">Sessions</th>
                 <th key="rating" scope="col">Rating</th>
@@ -407,9 +418,8 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
                 <tr key={tutor.id} className={tutor.isSuspended ? 'suspended-row' : ''}>
                   <td key="tutor" className="tutor-cell">
                     <div className="tutor-info">
-                      <div className={`tutor-avatar ${tutor.isSuspended ? 'suspended' : ''}`}>
-                        <span>{tutor.name?.charAt(0) || 'T'}</span>
-                      </div>
+                      <ProfileAvatar src={tutor.profilePicture} name={tutor.name || tutor.email} className={`tutor-avatar ${tutor.isSuspended ? 'suspended' : ''}`}
+                        fallback={<span>{tutor.name?.charAt(0) || 'T'}</span>} />
                       <div className="tutor-details">
                         <span className="tutor-name">
                           {tutor.name}
@@ -458,6 +468,17 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
                     )}
                   </td>
                   <td key="status">{getStatusBadge(tutor)}</td>
+                  <td key="bookings" className="tutor-booking-access">
+                    <span className={`booking-access-status ${bookingBlocked(tutor) ? 'blocked' : tutor.isSuspended ? 'suspended' : tutor.isBlocked === undefined ? 'unknown' : 'open'}`}>
+                      <i aria-hidden="true" className={bookingBlocked(tutor) ? 'ri-lock-line' : tutor.isSuspended ? 'ri-forbid-line' : tutor.isBlocked === undefined ? 'ri-question-line' : 'ri-checkbox-circle-line'} />
+                      {bookingBlocked(tutor) ? 'Blocked' : tutor.isSuspended ? 'Suspended' : tutor.isBlocked === undefined ? 'Unavailable' : tutor.penaltyBlockOverrideUntil && Date.parse(tutor.penaltyBlockOverrideUntil) > Date.now() ? 'Block waived' : 'No block'}
+                    </span>
+                    {bookingBlocked(tutor) && <small>{tutor.blockExpiresAt ? `Until ${dateText(tutor.blockExpiresAt)}` : 'Until lifted'}</small>}
+                    {!bookingBlocked(tutor) && tutor.penaltyBlockOverrideUntil && Date.parse(tutor.penaltyBlockOverrideUntil) > Date.now() && <small>Waiver ends {dateText(tutor.penaltyBlockOverrideUntil)}</small>}
+                    {bookingBlocked(tutor) && hasOperations && <button type="button" className="booking-unblock" title={`Lift booking block for ${tutor.name || tutor.email}`} onClick={() => setUnblockingTutor(tutor)}>
+                      <i aria-hidden="true" className="ri-lock-unlock-line" />Lift block
+                    </button>}
+                  </td>
                   <td key="proof">{getProofStatusBadge(tutor)}</td>
                   <td key="sessions" className="sessions-cell">{tutor.totalSessions ?? 0}</td>
                   <td key="rating">
@@ -570,9 +591,8 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
             </div>
             <div className="modal-body">
               <div className="suspend-tutor-info">
-                <div className="tutor-avatar">
-                  <span>{suspendingTutor.name?.charAt(0) || 'T'}</span>
-                </div>
+                <ProfileAvatar src={suspendingTutor.profilePicture} name={suspendingTutor.name || suspendingTutor.email} className="tutor-avatar"
+                  fallback={<span>{suspendingTutor.name?.charAt(0) || 'T'}</span>} />
                 <div className="tutor-details">
                   <span className="tutor-name">{suspendingTutor.name}</span>
                   <span className="tutor-email">{suspendingTutor.email}</span>
@@ -633,9 +653,8 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
             </div>
             <div className="modal-body">
               <div className="profile-header">
-                <div className={`profile-avatar ${viewingTutor.isSuspended ? 'suspended' : ''}`}>
-                  <span>{viewingTutor.name?.charAt(0) || 'T'}</span>
-                </div>
+                <ProfileAvatar src={viewingTutor.profilePicture} name={viewingTutor.name || viewingTutor.email} className={`profile-avatar ${viewingTutor.isSuspended ? 'suspended' : ''}`}
+                  fallback={<span>{viewingTutor.name?.charAt(0) || 'T'}</span>} />
                 <div className="profile-info">
                   <h2>{viewingTutor.name}</h2>
                   <p>{viewingTutor.email}</p>
@@ -873,6 +892,9 @@ const TutorsPage = ({ initialAccount, onAccountClose }: { initialAccount?: { id:
         </div>
       )}
       {account && <OperationsAccountModal key={account.id} tutorId={account.id} initialTab={account.tab} onClose={closeAccount} />}
+      {unblockingTutor && <OperationsAction action={{ kind: 'unblock', id: unblockingTutor.id, name: unblockingTutor.name || unblockingTutor.email }}
+        permissions={hasOperations ? ['operations'] : []} onClose={() => setUnblockingTutor(null)}
+        onSaved={async () => { await loadTutors(); setSuccessMessage(`Booking restriction lifted for ${unblockingTutor.name || unblockingTutor.email}.`); }} />}
     </div>
   );
 };

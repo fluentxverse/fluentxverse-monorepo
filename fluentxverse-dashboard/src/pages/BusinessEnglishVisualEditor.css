@@ -310,282 +310,231 @@
     0 0 24px rgba(124, 58, 237, .08);
 }
 
-/* ─── Page Header Bar (Carbon Fiber + Gears + Circuit) ── */
+/* Angular black-and-violet course masthead; artwork stays static. */
 .beve-page-header {
-  background:
-    /* Carbon fiber weave */
-    linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255,255,255,.018) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(255,255,255,.018) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,.018) 75%),
-    /* Diagonal purple streaks */
-    repeating-linear-gradient(
-      -55deg,
-      transparent 0px,
-      transparent 18px,
-      rgba(124, 58, 237, .06) 18px,
-      rgba(124, 58, 237, .06) 20px,
-      transparent 20px,
-      transparent 38px
-    ),
-    /* Soft purple glow patches */
-    radial-gradient(ellipse at 15% 50%, rgba(124, 58, 237, .12) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 30%, rgba(139, 92, 246, .1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(76, 29, 149, .08) 0%, transparent 50%),
-    /* Circuit board paths — SVG pattern */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Cdefs%3E%3Cstyle%3Eline,polyline%7Bfill:none;stroke:rgba(124,58,237,0.18);stroke-width:1.4%7Dcircle%7Bfill:rgba(124,58,237,0.22)%7D%3C/style%3E%3C/defs%3E%3Cline x1='0' y1='30' x2='40' y2='30'/%3E%3Cpolyline points='40,30 50,20 90,20'/%3E%3Ccircle cx='90' cy='20' r='2.5'/%3E%3Cline x1='90' y1='20' x2='130' y2='20'/%3E%3Cpolyline points='130,20 140,30 170,30'/%3E%3Ccircle cx='170' cy='30' r='2'/%3E%3Cline x1='170' y1='30' x2='200' y2='30'/%3E%3Cline x1='20' y1='70' x2='60' y2='70'/%3E%3Cpolyline points='60,70 70,80 110,80'/%3E%3Ccircle cx='110' cy='80' r='2.5'/%3E%3Cline x1='110' y1='80' x2='150' y2='80'/%3E%3Cpolyline points='150,80 160,70 200,70'/%3E%3Ccircle cx='60' cy='70' r='2'/%3E%3Cline x1='45' y1='0' x2='45' y2='15'/%3E%3Cpolyline points='45,15 55,25'/%3E%3Cline x1='155' y1='100' x2='155' y2='85'/%3E%3Cpolyline points='155,85 145,75'/%3E%3Ccircle cx='45' cy='50' r='1.5'/%3E%3Cline x1='45' y1='50' x2='80' y2='50'/%3E%3Ccircle cx='80' cy='50' r='2'/%3E%3Cline x1='80' y1='50' x2='120' y2='50'/%3E%3Cpolyline points='120,50 130,40 160,40'/%3E%3Ccircle cx='160' cy='40' r='1.5'/%3E%3C/svg%3E"),
-    /* Gear pattern — large gear */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cdefs%3E%3Cstyle%3Epath%7Bfill:none;stroke:rgba(124,58,237,0.16);stroke-width:1.6%7Dcircle%7Bfill:none;stroke:rgba(124,58,237,0.16);stroke-width:1.6%7D%3C/style%3E%3C/defs%3E%3Ccircle cx='60' cy='60' r='20'/%3E%3Ccircle cx='60' cy='60' r='8'/%3E%3Cpath d='M60 36 L57 28 L63 28Z'/%3E%3Cpath d='M60 84 L57 92 L63 92Z'/%3E%3Cpath d='M36 60 L28 57 L28 63Z'/%3E%3Cpath d='M84 60 L92 57 L92 63Z'/%3E%3Cpath d='M43 43 L37 37 L42 35Z'/%3E%3Cpath d='M77 77 L83 83 L78 85Z'/%3E%3Cpath d='M77 43 L83 37 L85 42Z'/%3E%3Cpath d='M43 77 L37 83 L35 78Z'/%3E%3Cpath d='M55 37 L53 29 L57 28Z'/%3E%3Cpath d='M65 83 L67 91 L63 92Z'/%3E%3Cpath d='M37 55 L29 53 L28 57Z'/%3E%3Cpath d='M83 65 L91 67 L92 63Z'/%3E%3C/svg%3E"),
-    /* Gear pattern — small gear offset */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cdefs%3E%3Cstyle%3Epath%7Bfill:none;stroke:rgba(139,92,246,0.14);stroke-width:1.3%7Dcircle%7Bfill:none;stroke:rgba(139,92,246,0.14);stroke-width:1.3%7D%3C/style%3E%3C/defs%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3Ccircle cx='40' cy='40' r='5'/%3E%3Cpath d='M40 23L38 17 42 17Z'/%3E%3Cpath d='M40 57L38 63 42 63Z'/%3E%3Cpath d='M23 40L17 38 17 42Z'/%3E%3Cpath d='M57 40L63 38 63 42Z'/%3E%3Cpath d='M28 28L23 23 27 22Z'/%3E%3Cpath d='M52 52L57 57 53 58Z'/%3E%3Cpath d='M52 28L57 23 58 27Z'/%3E%3Cpath d='M28 52L23 57 22 53Z'/%3E%3C/svg%3E"),
-    /* Base gradient */
-    linear-gradient(135deg, #0a0614 0%, #110b20 30%, #0d0818 60%, #12091f 100%);
-  background-size:
-    4px 4px, 4px 4px, 4px 4px, 4px 4px,
-    100% 100%,
-    100% 100%, 100% 100%, 100% 100%,
-    200px 100px,
-    120px 120px,
-    80px 80px,
-    100% 100%;
-  background-position:
-    0 0, 0 0, 0 0, 0 0,
-    0 0,
-    0 0, 0 0, 0 0,
-    0 0,
-    right 20px top -10px,
-    right 90px bottom -5px,
-    0 0;
-  background-repeat:
-    repeat, repeat, repeat, repeat,
-    no-repeat,
-    no-repeat, no-repeat, no-repeat,
-    repeat,
-    repeat,
-    repeat,
-    no-repeat;
-  color: #fff;
-  padding: 12px 22px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  --be-header-bg: #131019;
+  --be-header-text: #f5f2fa;
+  --be-header-muted: #c1b4d4;
+  --be-header-line: #59426e;
+  --be-header-accent: #d3bbff;
+  --be-header-tag: #261c35;
+  --be-header-inset: 28px;
+  background: var(--be-header-bg);
+  color: var(--be-header-text);
+  padding: 10px var(--be-header-inset) 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 24px;
+  border-bottom: 2px solid #a371f3;
   position: relative;
-  border-bottom: 1px solid rgba(124, 58, 237, .25);
+  isolation: isolate;
   overflow: hidden;
+  letter-spacing: 0;
 }
 .beve-page-header::before {
-  content: '';
+  content: "";
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg,
-      transparent 0%,
-      rgba(124, 58, 237, .04) 20%,
-      rgba(139, 92, 246, .07) 40%,
-      rgba(76, 29, 149, .05) 60%,
-      rgba(124, 58, 237, .03) 80%,
-      transparent 100%
-    );
+  inset: 0 0 0 auto;
+  width: 44%;
+  background: #2c1846;
+  clip-path: polygon(27% 0, 100% 0, 100% 100%, 0 100%, 11% 74%, 11% 38%);
   pointer-events: none;
+  z-index: -2;
 }
 .beve-page-header::after {
-  content: '';
+  content: "";
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, .5), rgba(139, 92, 246, .6), rgba(124, 58, 237, .5), transparent);
-  box-shadow: 0 0 8px rgba(124, 58, 237, .3);
+  inset: 0 0 0 auto;
+  width: min(660px, 72%);
+  background: url("/assets/img/materials/business-header-pattern.svg") right center / 660px 220px no-repeat;
+  opacity: .8;
+  pointer-events: none;
+  z-index: -1;
 }
-
-.beve-page-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  flex: 1;
-  position: relative;
-  z-index: 1;
-}
-
-/* ─── Header Row 1: Brand + Level/Page ────────────────── */
-.beve-header-row1 {
+.beve-page-header .beve-header-row1 {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, .12);
-  margin-bottom: 5px;
-  position: relative;
-  z-index: 1;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--be-header-line);
 }
-
-.beve-header-brand {
+.beve-page-header .beve-header-brand {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
 }
-
-.beve-header-brand-text {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -.3px;
-  position: relative;
+.beve-page-header .beve-header-brand-text {
   display: inline-flex;
-  align-items: baseline;
-}
-
-.beve-header-brand-text .brand-fluent {
-  background: linear-gradient(135deg, #e9d5ff 0%, #d8c4f8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.beve-header-brand-text .brand-x {
-  font-size: 20px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #6d28d9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 8px rgba(124, 58, 237, .6)) drop-shadow(0 0 16px rgba(124, 58, 237, .3));
-  margin: 0 -0.5px;
-  position: relative;
-}
-
-.beve-header-brand-text .brand-verse {
-  background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.beve-header-brand-sub {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, .55);
-  letter-spacing: .3px;
-}
-
-.beve-header-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, .6);
-}
-
-.beve-header-meta strong {
-  color: #fff;
+  font-size: 18px;
+  line-height: 1.5;
   font-weight: 700;
-  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--be-header-text);
 }
-
-.beve-header-meta-divider {
-  color: rgba(255, 255, 255, .2);
-  font-weight: 300;
+.beve-page-header .beve-header-brand-text :is(.brand-fluent, .brand-x, .brand-verse) {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: inherit;
+  filter: none;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  margin: 0;
 }
-
-.beve-header-level,
-.beve-header-page {
-  font-weight: 400;
+.beve-page-header .beve-header-brand-text .brand-x { color: #c69bff; }
+.beve-page-header .beve-header-brand-sub {
+  padding: 4px 24px 4px 12px;
+  background: #7436c4;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
 }
-
-/* ─── Header Row 2: Chapter + Skill ───────────────────── */
-.beve-header-row2 {
+.beve-page-header .beve-header-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2px;
-  position: relative;
-  z-index: 1;
-}
-
-.beve-header-chapter {
+  gap: 14px;
+  margin-left: auto;
   font-size: 10px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.beve-page-header .beve-header-meta strong {
+  color: var(--be-header-text);
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, .65);
+  margin-left: 6px;
 }
-
-/* ─── Header Row 3: Lesson Name ───────────────────────── */
-.beve-header-row3 {
-  position: relative;
-  z-index: 1;
-}
-
-.beve-header-lesson {
-  font-size: 14px;
-  font-weight: 600;
-  font-style: italic;
-  color: #fff;
-  letter-spacing: -.1px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .25);
-}
-
-.beve-page-header-lesson {
-  font-size: 12px;
-  color: #a1a1aa;
-  margin-top: 1px;
-}
-
-.beve-page-header-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.beve-skill-badge {
-  background: linear-gradient(135deg, #6d28d9, #4c1d95);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 5px;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-  box-shadow: 0 2px 8px rgba(109, 40, 217, .25);
-}
-
-.beve-header-row2-right {
-  display: flex;
+.beve-page-header .beve-header-meta-divider { display: none; }
+.beve-page-header .beve-header-level,
+.beve-page-header .beve-header-page {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-}
-
-/* ─── Lesson Type Selector ────────────────────────────── */
-.beve-lesson-type-select {
-  appearance: none;
-  background: rgba(124, 58, 237, .15);
-  border: 1px solid rgba(124, 58, 237, .35);
-  color: #a78bfa;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .8px;
+  color: var(--be-header-muted);
+  white-space: nowrap;
   text-transform: uppercase;
-  padding: 3px 22px 3px 10px;
-  border-radius: 5px;
+  padding: 2px 0 2px 10px;
+  border-left: 2px solid #a371f3;
+  background: #1b1426;
+}
+.beve-page-header .beve-header-page { border-left-color: #74d7cf; }
+.beve-page-header .beve-header-row2 { display: contents; }
+.beve-page-header .beve-header-chapter {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  padding-left: 12px;
+  border-left: 3px solid #a371f3;
+  color: var(--be-header-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 500;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+.beve-page-header .beve-header-row2-right {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  display: flex;
+  align-self: end;
+  align-items: center;
+  padding: 3px;
+  background: #16101f;
+  border: 1px solid #68498b;
+  border-top: 2px solid #a371f3;
+}
+.beve-page-header .beve-header-row3 {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+  margin-top: -2px;
+}
+.beve-page-header .beve-header-lesson {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 0;
+  color: var(--be-header-text);
+  font-size: 26px;
+  line-height: 1.3;
+  font-weight: 700;
+  font-style: normal;
+  text-shadow: none;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+.beve-page-header .beve-header-lesson-number {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid #8f58d3;
+  border-left: 3px solid #c89bff;
+  background: #321c4c;
+  color: var(--be-header-accent);
+  font-size: 10px;
+  line-height: 1.5;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.beve-page-header .beve-header-lesson-title {
+  flex: 1 1 180px;
+  min-width: 0;
+  color: var(--be-header-text);
+}
+.beve-page-header .beve-skill-badge,
+.beve-page-header .beve-lesson-type-select {
+  box-sizing: border-box;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid #665078;
+  border-radius: 2px;
+  color: var(--be-header-accent);
+  background: var(--be-header-tag);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: capitalize;
+  box-shadow: none;
+}
+.beve-page-header .beve-skill-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.beve-page-header .beve-lesson-type-select {
+  appearance: auto;
+  min-width: 120px;
   cursor: pointer;
-  outline: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a78bfa' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 7px center;
-  transition: border-color .15s, background .15s;
+  color-scheme: dark;
 }
-.beve-lesson-type-select:hover {
-  border-color: #a78bfa;
-  background-color: rgba(124, 58, 237, .22);
-}
-.beve-lesson-type-select:focus {
-  border-color: #a78bfa;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, .2);
-}
-.beve-lesson-type-select option {
-  background: #1e1b2e;
-  color: #d4d4d8;
+.beve-page-header .beve-lesson-type-select:hover { border-color: var(--be-header-accent); }
+.beve-page-header .beve-lesson-type-select:focus-visible { outline: 2px solid var(--be-header-accent); outline-offset: 3px; }
+.beve-page-header .beve-lesson-type-select option { background: var(--be-header-bg); color: var(--be-header-text); }
+@media (max-width: 640px) {
+  .beve-page-header {
+    --be-header-inset: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding-block: 14px;
+  }
+  .beve-page-header .beve-header-brand { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .beve-page-header .beve-header-meta { margin-left: 0; }
+  .beve-page-header .beve-header-row2-right { grid-column: 1; grid-row: 4; justify-self: start; }
+  .beve-page-header .beve-header-lesson { flex-direction: column; align-items: flex-start; gap: 10px; font-size: 22px; }
+  .beve-page-header .beve-header-lesson-title { flex: none; width: 100%; }
+  .beve-page-header .beve-lesson-type-select { min-height: 44px; }
+  .beve-page-header::before { width: 55%; opacity: .6; }
+  .beve-page-header::after { width: 300px; max-width: 100%; background-size: 540px 180px; background-position: right top; opacity: .3; }
 }
 
 .beve-page-number {
@@ -2490,7 +2439,7 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, .06), 0 4px 16px rgba(0, 0, 0, .04), 0 0 16px rgba(124, 58, 237, .06);
 }
 
-/* Page header — always dark regardless of theme (no light overrides) */
+/* The course masthead keeps its brand colors in both themes. */
 
 /* ─── Two Columns ─────────────────────────────────────── */
 .beve.light .beve-col-student {
@@ -2923,20 +2872,7 @@
   color: #7c3aed;
 }
 
-/* ─── Lesson Type Selector (light) ────────────────────── */
-.beve.light .beve-lesson-type-select {
-  background: rgba(124, 58, 237, .06);
-  border-color: #d0c4f0;
-  color: #7c3aed;
-}
-.beve.light .beve-lesson-type-select:hover {
-  border-color: #7c3aed;
-  background: rgba(124, 58, 237, .1);
-}
-.beve.light .beve-lesson-type-select option {
-  background: #fff;
-  color: #3f3f50;
-}
+/* Header skill controls retain their dark palette in light lessons. */
 
 /* ─── Pattern Drill Tables (light) ────────────────────── */
 .beve.light .beve-drill-card {

@@ -51,7 +51,7 @@ async function fixture(browser, width, finance, accessDelay=0) {
         return {heads:[...table.tHead.rows[0].cells].map(bounds),rows:[...table.tBodies[0].rows].map(row=>[...row.cells].map(e=>({...bounds(e),text:e.innerText})))};
       });
       for(const row of geometry.rows){
-        assert.equal(row.length,finance?10:9);
+        assert.equal(row.length,finance?11:10);
         row.forEach((cell,i)=>{
           assert.equal(cell.display,'table-cell','Table cells must remain in the table formatting context');
           assert(Math.abs(cell.x-geometry.heads[i].x)<1,'Header and body column offsets must match');

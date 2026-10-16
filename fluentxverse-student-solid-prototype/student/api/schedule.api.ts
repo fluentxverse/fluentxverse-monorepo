@@ -1,0 +1,263 @@
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import { cssStyle, Fragment } from "../utils/cssStyle";
+import { client as api, getErrorMessage } from './utils';
+export interface StudentBooking {
+    bookingId: string;
+    tutorId: string;
+    tutorName: string;
+    tutorAvatar?: string;
+    slotDate: string;
+    slotTime: string;
+    durationMinutes: number;
+    status: string;
+    paymentMethod?: 'trial' | 'private_pass' | 'erc1155';
+    attendanceTutor?: string;
+    attendanceStudent?: string;
+    bookedAt: Date;
+}
+export interface AvailableSlot {
+    slotId: string;
+    tutorId: string;
+    date: string;
+    time: string;
+    durationMinutes: number;
+}
+export interface StudentStats {
+    lessonsCompleted: number;
+    upcomingLessons: number;
+    totalHours: number;
+    nextLesson?: {
+        tutorName: string;
+        tutorAvatar?: string;
+        slotDate: string;
+        slotTime: string;
+        bookingId: string;
+    };
+}
+export interface RecentActivity {
+    type: 'lesson_completed' | 'lesson_booked' | 'ticket_purchased';
+    tutorName?: string;
+    tutorAvatar?: string;
+    date: string;
+    action: string;
+    bookingId?: string;
+    slotDate?: string;
+    purchaseId?: string;
+    quantity?: number;
+    ticketTier?: 'basic' | 'premium' | 'trial';
+    timestamp: Date;
+}
+export const scheduleApi = {
+    reservationStatus: async (reservationId: string): Promise<{ state: 'booked' | 'held' | 'expired'; bookingId?: string }> => {
+        const response = await api.get(`/schedule/reservation/${encodeURIComponent(reservationId)}`);
+        if (!response.data.success) throw new Error('Reservation status unavailable');
+        return response.data.data;
+    },
+    bookTrial: async (slotId: string, reservationId: string): Promise<any> => {
+        const response = await api.post('/schedule/book', { slotId, reservationId });
+        if (!response.data.success) throw new Error(response.data.error || 'Trial booking could not be confirmed');
+        return response.data.data;
+    },
+    bookWithPass: async (slotId: string, reservationId: string, privatePassReservationId: string): Promise<any> => {
+        const response = await api.post('/schedule/book', { slotId, reservationId, privatePassReservationId });
+        if (!response.data.success) throw new Error(response.data.error || 'Pass booking could not be confirmed');
+        return response.data.data;
+    },
+    /**
+     * Get student's bookings
+     */
+    getStudentBookings: async (): Promise<StudentBooking[]> => {
+        try {
+            const response = await api.get('/schedule/student-bookings');
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to get bookings');
+            }
+            return response.data.data;
+        }
+        catch (error) {
+            console.error('Failed to get student bookings:', error);
+            throw error;
+        }
+    },
+    /**
+     * Get student statistics for dashboard
+     */
+    getStudentStats: async (): Promise<StudentStats> => {
+        try {
+            const response = await api.get('/schedule/student-stats');
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to get student stats');
+            }
+            return response.data.data;
+        }
+        catch (error) {
+            console.error('Failed to get student stats:', error);
+            throw error;
+        }
+    },
+    /**
+     * Get available slots for a tutor
+     */
+    getAvailableSlots: async (tutorId: string, startDate?: string, endDate?: string): Promise<AvailableSlot[]> => {
+        try {
+            const params: any = {};
+            if (startDate)
+                params.startDate = startDate;
+            if (endDate)
+                params.endDate = endDate;
+            const response = await api.get(`/schedule/available/${tutorId}`, { params });
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to get available slots');
+            }
+            return response.data.data;
+        }
+        catch (error) {
+            console.error('Failed to get available slots:', error);
+            throw new Error(getErrorMessage(error));
+        }
+    },
+    /**
+     * Book a time slot
+     * @param slotId - The ID of the slot to book
+     * @param ticketTransferTxHash - Optional transaction hash of the ticket transfer (for on-chain verification)
+     */
+    reserveSlot: async (slotId: string): Promise<{
+        reservationId: string;
+        expiresAt: string;
+        bookBy: string;
+    }> => {
+        const response = await api.post('/schedule/reserve', { slotId });
+        if (!response.data.success)
+            throw new Error(response.data.error || 'Could not reserve slot');
+        return response.data.data;
+    },
+    releaseReservation: async (slotId: string, reservationId: string): Promise<void> => {
+        await api.post('/schedule/release-reservation', { slotId, reservationId });
+    },
+    recoverTransfer: async (ticketTransferTxHash: string, slotId: string, reservationId: string): Promise<{
+        status: 'booked' | 'refunded' | 'processing';
+        bookingId?: string;
+        refundTxHash?: string;
+    }> => {
+        const response = await api.post('/schedule/recover-transfer', { ticketTransferTxHash, slotId, reservationId });
+        if (!response.data.success)
+            throw new Error(response.data.error || 'Could not recover ticket');
+        return response.data.data;
+    },
+    bookSlot: async (slotId: string, ticketTransferTxHash: string, reservationId: string): Promise<any> => {
+        try {
+            const response = await api.post('/schedule/book', {
+                slotId,
+                ticketTransferTxHash,
+                reservationId
+            });
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to book slot');
+            }
+            return response.data.data;
+        }
+        catch (error: any) {
+            console.error('Failed to book slot:', error);
+            throw new Error(getErrorMessage(error));
+        }
+    },
+    /**
+     * Get recent activity for student dashboard
+     */
+    getStudentActivity: async (limit: number = 10): Promise<RecentActivity[]> => {
+        try {
+            const response = await api.get('/schedule/student-activity', {
+                params: { limit }
+            });
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to get student activity');
+            }
+            return response.data.data;
+        }
+        catch (error) {
+            console.error('Failed to get student activity:', error);
+            throw error;
+        }
+    },
+    /**
+     * Get lesson details by booking ID
+     */
+    getLessonDetails: async (bookingId: string): Promise<any> => {
+        try {
+            const response = await api.get(`/schedule/lesson/${bookingId}`);
+            if (!response.data.success) {
+                console.error('API returned error:', response.data.error);
+                throw new Error(response.data.error || 'Failed to get lesson details');
+            }
+            return response.data.data;
+        }
+        catch (error: any) {
+            console.error('=== ERROR in FRONTEND API ===');
+            console.error('Failed to get lesson details:', error);
+            console.error('Error response:', error.response?.data);
+            throw error.response?.data?.error || error.message || 'Failed to load lesson';
+        }
+    },
+    /**
+     * Cancel a booking
+     * @param bookingId - The ID of the booking to cancel
+     * @param reason - Optional reason for cancellation
+     * @returns Object with refundEligible flag indicating if ticket was refunded
+     */
+    cancelBooking: async (bookingId: string, reason?: string): Promise<{
+        refundEligible: boolean;
+        message: string;
+    }> => {
+        try {
+            const response = await api.post('/schedule/cancel', {
+                bookingId,
+                reason
+            });
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to cancel booking');
+            }
+            return {
+                refundEligible: response.data.refunded,
+                message: response.data.message
+            };
+        }
+        catch (error: any) {
+            console.error('Failed to cancel booking:', error);
+            throw error.response?.data?.error || error.message || 'Failed to cancel booking';
+        }
+    },
+    /**
+     * Preload/warm cache for student dashboard data
+     * Call this on login or app initialization to pre-fetch data
+     */
+    preloadDashboardData: async (): Promise<{
+        stats: StudentStats;
+        bookingsCount: number;
+        activityCount: number;
+    }> => {
+        try {
+            const response = await api.post('/schedule/preload');
+            if (!response.data.success) {
+                throw new Error(response.data.error || 'Failed to preload data');
+            }
+            return response.data.data;
+        }
+        catch (error: any) {
+            console.error('Failed to preload dashboard data:', error);
+            throw error.response?.data?.error || error.message || 'Failed to preload data';
+        }
+    },
+    /**
+     * Invalidate student cache (call after booking/cancellation)
+     */
+    invalidateCache: async (): Promise<void> => {
+        try {
+            await api.post('/schedule/invalidate-cache');
+        }
+        catch (error: any) {
+            console.error('Failed to invalidate cache:', error);
+            // Don't throw - cache invalidation failure shouldn't break the app
+        }
+    }
+};

@@ -24,6 +24,9 @@ import { getIO } from '../../socket/socket.server';
 import { revokeLessonRoom } from '../../socket/revokeLessonRoom';
 import { emitSlotBooked, emitSlotCancelled } from '../../socket/handlers/schedule.handler';
 import { ticketService } from '../ticket.services/ticket.service';
+import { assertTrialAllowance, trialCanBeRestored, trialLaunchMode } from './trialPolicy';
+import { lessonPassService } from '../lessonPasses/service';
+import { privatePassMode, PassError } from '../lessonPasses/policy';
 import { REFUND_POLICY } from '../../config/constant';
 import { invalidateCache } from '../../db/redis';
 import { ClassroomActivityService } from '../classroomActivity.services/classroomActivity.service';
@@ -571,6 +574,15 @@ export class ScheduleService {
         } as Booking;
       }
 
+      const usesTrial = trialLaunchMode();
+      if (usesTrial && (input.ticketTransferTxHash || input.privatePassReservationId))
+        throw new Error('Trial bookings do not accept ticket transfers or lesson passes');
+      const usesPass = !usesTrial && privatePassMode();
+      if (usesPass) {
+        if (!input.privatePassReservationId || input.ticketTransferTxHash) throw new PassError('A private pass reservation is required', 409);
+        await lessonPassService.readyForBooking(input.studentId, input.privatePassReservationId);
+      } else if (input.privatePassReservationId) throw new PassError('Private passes are not enabled', 503);
+
       const slotResult = await session.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
@@ -580,7 +592,7 @@ export class ScheduleService {
         RETURN s
         `,
         { slotId: input.slotId, studentId: input.studentId, reservationId: input.reservationId,
-          ticketTransferTxHash: input.ticketTransferTxHash }
+          ticketTransferTxHash: input.ticketTransferTxHash || null }
       );
       
       
@@ -690,6 +702,8 @@ export class ScheduleService {
       // Get student's wallet address for ticket tracking
       const studentWallet = studentCheck.records[0]?.get('walletAddress') || studentCheck.records[0]?.get('smartWallet');
       
+      let verificationResult: { valid: boolean; tier?: 'basic' | 'premium' | 'trial'; error?: string } = { valid: true, tier: 'basic' };
+      if (!usesPass && !usesTrial) {
       if (!studentWallet) {
         throw new Error('You need a connected wallet to book lessons. Please connect your wallet first.');
       }
@@ -730,13 +744,14 @@ export class ScheduleService {
       
       // === SERVER-SIDE TICKET VERIFICATION ===
       // Verify the transaction on the blockchain before accepting the booking
-      const verificationResult = await ticketService.verifyTicketTransfer(
+      verificationResult = await ticketService.verifyTicketTransfer(
         input.ticketTransferTxHash,
         studentWallet
       );
       
       if (!verificationResult.valid) {
         throw new Error(`Ticket verification failed: ${verificationResult.error}`);
+      }
       }
       
       // === END SERVER-SIDE TICKET VERIFICATION ===
@@ -748,9 +763,11 @@ export class ScheduleService {
         const existing = await tx.run(`MATCH (b:Booking {reservationId: $reservationId, studentId: $studentId}) RETURN b, null AS s`,
           { reservationId: input.reservationId, studentId: input.studentId });
         if (existing.records.length) return existing;
+        if (usesTrial) await assertTrialAllowance(tx, input.studentId);
+        if (usesPass) await lessonPassService.repository.claimForBooking(tx, input.studentId, input.privatePassReservationId!, bookingId);
         await assertStudentScheduleAvailable(tx, input.studentId, slot);
         await assertTutorCanSchedule(tx, slot.tutorId);
-        return tx.run(
+        const result = await tx.run(
         `
         MATCH (s:TimeSlot {slotId: $slotId, status: 'pending', pendingBy: $studentId,
                             reservationId: $reservationId})
@@ -770,6 +787,8 @@ export class ScheduleService {
           tutorId: $tutorId,
           studentId: $studentId,
           ticketTransferTxHash: $ticketTransferTxHash,
+          privatePassReservationId: $privatePassReservationId,
+          paymentMethod: $paymentMethod,
           slotDateTime: datetime($slotDateTime),
           durationMinutes: $durationMinutes,
           status: 'confirmed',
@@ -787,7 +806,9 @@ export class ScheduleService {
         {
           slotId: input.slotId,
           reservationId: input.reservationId,
-          ticketTransferTxHash: input.ticketTransferTxHash,
+          ticketTransferTxHash: input.ticketTransferTxHash || null,
+          privatePassReservationId: input.privatePassReservationId || null,
+          paymentMethod: usesTrial ? 'trial' : usesPass ? 'private_pass' : 'erc1155',
           bookingId,
           studentId: input.studentId,
           tutorId: slot.tutorId,
@@ -797,6 +818,8 @@ export class ScheduleService {
           durationMinutes: slot.durationMinutes
         }
         );
+        if (!result.records.length) throw new Error('Checkout reservation expired before booking could finish');
+        return result;
       });
       if (!bookingResult.records.length) throw new Error('Checkout reservation expired before booking could finish');
       const savedBooking = bookingResult.records[0]!.get('b').properties;
@@ -806,7 +829,7 @@ export class ScheduleService {
         bookedAt: savedBooking.bookedAt?.toStandardDate?.() ?? savedBooking.bookedAt,
       } as Booking;
 
-      try {
+      if (!usesPass && !usesTrial) try {
         await ticketService.recordTicketDeduction({
           studentId: input.studentId,
           studentWallet,
@@ -872,7 +895,7 @@ export class ScheduleService {
       }
       
       // Invalidate ticket balance cache for the student
-      if (studentWallet) {
+      if (!usesTrial && studentWallet) {
         const cacheKey = `ticket:balance:${studentWallet.toLowerCase()}`;
         await invalidateCache(cacheKey);
       }
@@ -901,6 +924,18 @@ export class ScheduleService {
     } finally {
       await session.close();
     }
+  }
+
+  async reservationStatus(studentId: string, reservationId: string) {
+    const session = getDriver().session();
+    try {
+      const booked = await session.run(`MATCH (b:Booking {studentId: $studentId, reservationId: $reservationId})
+        RETURN b.bookingId AS bookingId`, { studentId, reservationId });
+      if (booked.records.length) return { state: 'booked', bookingId: booked.records[0]!.get('bookingId') };
+      const held = await session.run(`MATCH (s:TimeSlot {pendingBy: $studentId, reservationId: $reservationId, status: 'pending'})
+        WHERE s.pendingUntil > datetime() RETURN s.slotId AS slotId`, { studentId, reservationId });
+      return { state: held.records.length ? 'held' : 'expired' };
+    } finally { await session.close(); }
   }
 
   /**
@@ -969,7 +1004,7 @@ export class ScheduleService {
       const studentWallet = studentResult.records[0]?.get('walletAddress') || studentResult.records[0]?.get('smartWallet');
       
       // Get the original ticket transaction for this booking
-      const ticketTransaction = await ticketService.getBookingTransaction(input.bookingId);
+      const ticketTransaction = booking.privatePassReservationId || booking.paymentMethod === 'trial' ? null : await ticketService.getBookingTransaction(input.bookingId);
 
       // Claim cancellation atomically before any refund, rechecking the clock and status.
       const cancelled = await session.run(`
@@ -977,7 +1012,8 @@ export class ScheduleService {
         WHERE b.slotDateTime = datetime($scheduledAt) AND datetime() < datetime($cancelUntil)
         SET b.status = 'cancelled', b.cancelledAt = datetime(), b.cancelledBy = $cancelledBy,
             b.cancellationReason = $reason, b.refunded = false, b.updatedAt = datetime(),
-            b.refundStatus = 'pending', b.cancellationRefundVersion = 1,
+            b.refundStatus = CASE WHEN b.paymentMethod = 'trial' THEN 'not_required'
+              WHEN b.privatePassReservationId IS NOT NULL THEN 'pass_pending' ELSE 'pending' END, b.cancellationRefundVersion = 1,
             s.status = 'open', s.studentId = null, s.updatedAt = datetime()
         RETURN b`, {
         bookingId: input.bookingId, cancelledBy: input.cancelledBy,
@@ -994,7 +1030,13 @@ export class ScheduleService {
       let refundMessage = '';
       
       // Process refund if student has a wallet and there was a ticket transaction
-      if (studentWallet && ticketTransaction) {
+      if (booking.paymentMethod === 'trial') {
+        refundMessage = trialCanBeRestored(cancelled.records[0]!.get('b').properties)
+          ? 'Your trial lesson is available to book again.' : 'Your trial allowance remains used for this late cancellation.';
+      } else if (booking.privatePassReservationId) {
+        refundMessage = scheduledTime.getTime() - Date.now() >= REFUND_POLICY.NO_REFUND_HOURS * 3600000
+          ? 'Your replacement pass is pending finalization.' : 'No pass refund for cancellations less than one hour before the lesson.';
+      } else if (studentWallet && ticketTransaction) {
         try {
           const refundResult = await ticketService.refundTicketForCancellation({
             studentId: booking.studentId,
@@ -2009,6 +2051,7 @@ export class ScheduleService {
           slotTime: slot.slotTime,
           durationMinutes: parseInt(slot.durationMinutes) || 30,
           status: booking.status,
+          paymentMethod: booking.paymentMethod || 'erc1155',
           attendanceTutor: booking.attendanceTutor,
           attendanceStudent: booking.attendanceStudent,
           bookedAt: new Date(booking.bookedAt)
@@ -2438,6 +2481,7 @@ export class ScheduleService {
         RETURN 
           booking.bookingId AS bookingId,
           booking.status AS status,
+          booking.paymentMethod AS paymentMethod,
           booking.bookedAt AS bookedAt,
           booking.slotDateTime AS slotDateTime,
           booking.durationMinutes AS durationMinutes,
@@ -2462,6 +2506,7 @@ export class ScheduleService {
           RETURN 
             booking.bookingId AS bookingId,
             booking.status AS status,
+            booking.paymentMethod AS paymentMethod,
             booking.bookedAt AS bookedAt,
             booking.slotDateTime AS slotDateTime,
             booking.durationMinutes AS durationMinutes,
@@ -2579,6 +2624,7 @@ export class ScheduleService {
         startsAt: slotDateTime.toStandardDate().toISOString(),
         tutorAvatar: record.get('tutorAvatar'),
         tutorBio: record.get('tutorBio'),
+        paymentMethod: record.get('paymentMethod') || 'erc1155',
         hourlyRate: record.get('hourlyRate')?.toNumber?.() || record.get('hourlyRate'),
         slotDate,
         slotTime,

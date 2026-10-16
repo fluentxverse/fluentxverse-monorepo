@@ -1,0 +1,15 @@
+/* Additional styles for the IndexOne component */
+
+main {
+  background-color: #ffffff; /* Default light mode */
+}
+
+.dark-mode main {
+  background-color: #121212; /* Dark mode */
+}
+
+/* Additional fix for any gaps between components */
+.banner-bg + section,
+section + section {
+  margin-top: 0 !important;
+}

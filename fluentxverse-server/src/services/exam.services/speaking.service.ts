@@ -1,5 +1,8 @@
 import { createAgent } from "../agentFactory";
 import { getDriver } from "../../db/memgraph";
+import { randomUUID } from 'node:crypto';
+import { decodeSubmittedAudio, transcribeBoundRecording } from '../screening/evidence';
+import { savePrivateAudio } from '../screening/storage';
 import { tryIssueAndMaybeSubmitTutorCertificationProof } from "../proof.services/tutorCertificationWorkflow.service";
 import type {
   SpeakingExam,
@@ -500,20 +503,12 @@ Provide scores (1-5) and brief feedback.`;
       throw new Error("No JSON in grading response");
     }
     gradeData = JSON.parse(jsonMatch[0]);
-  } catch {
-    // Default scores if parsing fails
-    console.error("Failed to parse grading response, using defaults");
-    gradeData = {
-      scores: {
-        pronunciation: 3,
-        fluency: 3,
-        vocabulary: 3,
-        grammar: 3,
-        coherence: 3,
-        taskCompletion: 3,
-      },
-      feedback: "Unable to generate detailed feedback.",
-    };
+  } catch { throw new Error('Speaking assessment returned an invalid grading response'); }
+
+  const dimensions = ['pronunciation', 'fluency', 'vocabulary', 'grammar', 'coherence', 'taskCompletion'] as const;
+  if (!gradeData.scores || Object.keys(gradeData.scores).length !== dimensions.length
+    || dimensions.some(name => !Number.isFinite(gradeData.scores[name]) || gradeData.scores[name] < 1 || gradeData.scores[name] > 5)) {
+    throw new Error('Speaking rubric scores must be finite values between 1 and 5');
   }
 
   // Calculate averages
@@ -540,6 +535,7 @@ export const gradeSpeakingExam = async (
 ): Promise<SpeakingExamResult> => {
   const driver = getDriver();
   const session = driver.session();
+  const processingId = randomUUID();
 
   try {
     // Fetch exam from Memgraph
@@ -554,55 +550,43 @@ export const gradeSpeakingExam = async (
     }
 
     const examNode = result.records[0]?.get("e").properties;
+    if (examNode.type !== 'speaking') throw new Error('Invalid speaking exam attempt');
+    if (examNode.status === 'completed') return JSON.parse(examNode.result) as SpeakingExamResult;
+    if (examNode.status !== 'active') throw new Error('Exam is already being graded');
     const exam: SpeakingExam = JSON.parse(examNode.content);
-
+    if (recordings.length !== exam.tasks.length) throw new Error('A recording is required for every speaking task');
+    const seen = new Set<number>();
+    for (const recording of recordings) {
+      if (seen.has(recording.taskId) || !exam.tasks.some(task => task.id === recording.taskId)) throw new Error('Invalid or duplicate speaking task');
+      decodeSubmittedAudio(recording.audioUrl);
+      seen.add(recording.taskId);
+    }
 
     // Mark exam as "processing" so the user can see it's being graded
-    await session.run(
-      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId})
+    const claimed = await session.run(
+      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId, type: 'speaking', status: 'active'})
        SET e.status = 'processing',
+           e.processingId = $processingId,
            e.processingStartedAt = $processingStartedAt
        RETURN e`,
       {
         tutorId,
         examId,
+        processingId,
         processingStartedAt: new Date().toISOString(),
       }
     );
+    if (!claimed.records.length) throw new Error('Exam is already being graded');
 
-    // First, transcribe all recordings that don't have transcriptions
+    // Never trust client transcripts; bind server transcription to audio bytes.
     const transcribedRecordings: TaskRecording[] = [];
+    const audioEvidence: Record<string, unknown>[] = [];
     
     for (const recording of recordings) {
-      if (recording.transcription) {
-        // Already has transcription
-        transcribedRecordings.push(recording);
-        continue;
-      }
-      
-      if (!recording.audioUrl || recording.audioUrl.length < 100) {
-        transcribedRecordings.push({ ...recording, transcription: "" });
-        continue;
-      }
-      
-      try {
-        // Convert base64 to buffer
-        // audioUrl format: "data:audio/webm;base64,XXXXXX..."
-        const base64Data = recording.audioUrl.split(",")[1];
-        if (!base64Data) {
-          transcribedRecordings.push({ ...recording, transcription: "" });
-          continue;
-        }
-        
-        const audioBuffer = Buffer.from(base64Data, "base64");
-        
-        const transcription = await transcribeAudio(audioBuffer);
-        
-        transcribedRecordings.push({ ...recording, transcription });
-      } catch (err) {
-        console.error(`❌ Task ${recording.taskId}: Transcription failed`, err);
-        transcribedRecordings.push({ ...recording, transcription: "" });
-      }
+      const bound = await transcribeBoundRecording(tutorId, examId, recording.taskId, recording.audioUrl, transcribeAudio);
+      const privateAudioRef = await savePrivateAudio(decodeSubmittedAudio(recording.audioUrl));
+      audioEvidence.push({ ...bound.evidence, privateAudioRef });
+      transcribedRecordings.push({ ...recording, transcription: bound.transcription });
     }
     
 
@@ -700,19 +684,23 @@ export const gradeSpeakingExam = async (
     };
 
     // Update exam in Memgraph
-    await session.run(
-      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId})
+    const completed = await session.run(
+      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId, status: 'processing', processingId: $processingId})
        SET e.status = 'completed',
            e.result = $result,
+           e.screeningAudioEvidence = $audioEvidence,
            e.completedAt = $completedAt
        RETURN e`,
       {
         tutorId,
         examId,
+        processingId,
+        audioEvidence: JSON.stringify(audioEvidence),
         result: JSON.stringify(examResult),
         completedAt: examResult.completedAt,
       }
     );
+    if (!completed.records.length) throw new Error('Exam grading claim was lost');
 
     // If passed, update User node
     if (passed) {
@@ -733,6 +721,12 @@ export const gradeSpeakingExam = async (
     }
 
     return examResult;
+  } catch (error) {
+    await session.run(
+      `MATCH (e:Exam {id: $examId, status: 'processing', processingId: $processingId}) SET e.status = 'active'`,
+      { examId, processingId }
+    );
+    throw error;
   } finally {
     await session.close();
   }

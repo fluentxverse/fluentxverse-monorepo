@@ -5,6 +5,7 @@ import { ticketService } from '../src/services/ticket.services/ticket.service';
 import { attendanceStartMs } from '../src/services/schedule.services/attendanceWindow';
 
 const uri = process.env.TEST_MEMGRAPH_URI;
+process.env.LESSON_BOOKING_MODE = 'paid';
 if (!uri) throw new Error('TEST_MEMGRAPH_URI is required (use an isolated test database)');
 await initDriver(uri, '', '', 12, 1000);
 const db = getDriver().session();

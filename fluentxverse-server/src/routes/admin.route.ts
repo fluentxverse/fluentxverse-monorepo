@@ -221,7 +221,9 @@ const Admin = new Elysia({ prefix: '/admin' })
    * Approve or reject a tutor profile
    * POST /admin/profile/:tutorId/review
    */
-  .post('/profile/:tutorId/review', async ({ params, body }) => {
+  .post('/profile/:tutorId/review', async ({ params, body, cookie, set }) => {
+    const reviewer = await createAdminGuard(cookie, set, 'operations');
+    if (!reviewer) return { success: false, error: 'Unauthorized' };
     try {
       const { tutorId } = params;
       const { action, reason } = body as { action: 'approve' | 'reject'; reason?: string };
@@ -230,7 +232,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         return { success: false, error: 'Invalid action. Must be "approve" or "reject"' };
       }
 
-      await adminService.reviewTutorProfile(tutorId, action, reason);
+      await adminService.reviewTutorProfile(tutorId, action, reason, reviewer.userId);
 
       return { 
         success: true, 
@@ -246,7 +248,9 @@ const Admin = new Elysia({ prefix: '/admin' })
    * Approve or reject a specific profile item
    * POST /admin/profile/:tutorId/review-item
    */
-  .post('/profile/:tutorId/review-item', async ({ params, body }) => {
+  .post('/profile/:tutorId/review-item', async ({ params, body, cookie, set }) => {
+    const reviewer = await createAdminGuard(cookie, set, 'operations');
+    if (!reviewer) return { success: false, error: 'Unauthorized' };
     try {
       const { tutorId } = params;
       const { itemKey, action, reason } = body as { 
@@ -264,7 +268,7 @@ const Admin = new Elysia({ prefix: '/admin' })
         return { success: false, error: 'Invalid action. Must be "approve" or "reject"' };
       }
 
-      const result = await adminService.reviewProfileItem(tutorId, itemKey, action, reason);
+      const result = await adminService.reviewProfileItem(tutorId, itemKey, action, reason, reviewer.userId);
 
       return { 
         success: true, 

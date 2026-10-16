@@ -1,0 +1,1835 @@
+/* Notes Widget Panel */
+.dispatch-notes-widget {
+  --notes-header-gradient: linear-gradient(135deg, #0245ae 0%, #0366d6 100%);
+  --notes-label-color: #0245ae;
+  --notes-accent: #0245ae;
+  --notes-accent-hover: #023d9a;
+  --notes-accent-soft: rgba(2, 69, 174, 0.12);
+  position: fixed;
+  bottom: 96px;
+  right: 24px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 140px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.2s ease-out;
+}
+
+.lesson-notes-material-picker { flex-shrink: 0; display: grid; gap: 8px; padding: 12px 16px; background: var(--notes-input-bg, #f8fafc); border-bottom: 1px solid var(--notes-border-color, #dbe3ee); color: var(--notes-text-color, #202020); }
+.lesson-notes-material-picker label { font-size: 12px; font-weight: 600; }
+.lesson-notes-material-picker select { width: 100%; min-width: 0; height: 36px; border: 1px solid var(--notes-border-color, #dbe3ee); border-radius: 5px; padding: 6px 8px; font: inherit; font-size: 12px; color: inherit; background: var(--notes-input-bg, #fff); }
+.lesson-notes-material-picker button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 32px; padding: 6px 10px; border: 1px solid var(--notes-accent); border-radius: 5px; background: transparent; color: var(--notes-label-color); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.lesson-notes-material-picker button:disabled { cursor: default; opacity: .7; }
+.lesson-material-note-fields { margin: 0; padding: 0; border: 0; min-width: 0; }
+.lesson-material-note-fields:disabled { opacity: .6; }
+.lesson-material-progress-editor { display: grid; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #dbe3ee; color: #202020; }
+.lesson-material-progress-editor > label:not(.dispatch-notes-label) { color: inherit; font-size: 12px; font-weight: 600; }
+.lesson-progress-status { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+.lesson-progress-status button { display: flex; justify-content: center; align-items: center; gap: 7px; min-height: 36px; border: 1px solid #dbe3ee; border-radius: 5px; background: #fff; color: #475569; font: inherit; font-size: 12px; cursor: pointer; }
+.lesson-progress-status button[aria-pressed='true'] { background: var(--notes-accent-soft); border-color: var(--notes-accent); color: var(--notes-label-color); font-weight: 700; }
+.lesson-material-progress-editor :is(select, input) { width: 100%; min-width: 0; box-sizing: border-box; min-height: 36px; padding: 7px 9px; border: 1px solid #dbe3ee; border-radius: 5px; background: #fff; color: #202020; font: inherit; font-size: 12px; }
+.lesson-material-completed { display: flex; align-items: center; gap: 8px; color: #166534; font-size: 12px; font-weight: 700; }
+.lesson-progress-previous { margin: 2px 0 0; font-size: 11px; line-height: 1.5; color: #64748b; overflow-wrap: anywhere; }
+.lesson-progress-previous i { margin-right: 6px; }
+.lesson-progress-context-error { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.lesson-progress-context-error button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; color: inherit; background: transparent; border: 1px solid #dbe3ee; border-radius: 4px; cursor: pointer; }
+[data-theme='dark'] .lesson-material-progress-editor,
+.dispatch-notes-widget--business-english-dark .lesson-material-progress-editor { color: #f1f1f1; border-color: #414141; }
+[data-theme='dark'] .lesson-material-progress-editor :is(select, input),
+.dispatch-notes-widget--business-english-dark .lesson-material-progress-editor :is(select, input) { background: #303030; border-color: #484848; color: #f1f1f1; color-scheme: dark; }
+[data-theme='dark'] .lesson-progress-status button,
+.dispatch-notes-widget--business-english-dark .lesson-progress-status button { background: #303030; border-color: #484848; color: #f1f1f1; }
+[data-theme='dark'] .lesson-progress-status button[aria-pressed='true'],
+.dispatch-notes-widget--business-english-dark .lesson-progress-status button[aria-pressed='true'] { background: var(--notes-accent-soft); color: var(--notes-label-color); border-color: var(--notes-accent); }
+[data-theme='dark'] .lesson-progress-previous,
+.dispatch-notes-widget--business-english-dark .lesson-progress-previous { color: #b8b8b8; }
+[data-theme='dark'] .lesson-material-completed { color: #86efac; }
+.lesson-summary-retry { width: 24px; height: 24px; margin-left: 8px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; vertical-align: middle; }
+[data-theme='dark'] .lesson-notes-material-picker,
+.dispatch-notes-widget--business-english-dark .lesson-notes-material-picker { background: #262626; color: #f1f1f1; border-color: #414141; }
+[data-theme='dark'] .lesson-notes-material-picker select,
+.dispatch-notes-widget--business-english-dark .lesson-notes-material-picker select { background: #303030; color: #f1f1f1; border-color: #484848; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dispatch-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--notes-header-gradient);
+  color: #fff;
+}
+
+/* Daily Dispatch Theme Header */
+.dispatch-notes-widget--daily-dispatch {
+  --notes-header-gradient: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  --notes-label-color: #d97706;
+  --notes-accent: #d97706;
+  --notes-accent-hover: #b45309;
+  --notes-accent-soft: rgba(217, 119, 6, 0.1);
+}
+
+.dispatch-notes-widget--business-english-light {
+  --notes-header-gradient: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  --notes-label-color: #7c3aed;
+  --notes-accent: #7c3aed;
+  --notes-accent-hover: #6d28d9;
+  --notes-accent-soft: rgba(124, 58, 237, 0.14);
+}
+
+.dispatch-notes-widget--business-english {
+  width: 344px;
+  max-height: calc(100vh - 128px);
+  border-radius: 14px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-header {
+  padding: 13px 16px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-header h3 {
+  font-size: 15px;
+  gap: 7px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-header h3 i {
+  font-size: 18px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-close {
+  width: 30px;
+  height: 30px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-content {
+  padding: 12px;
+  gap: 12px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-section {
+  gap: 6px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-label {
+  gap: 6px;
+  font-size: 11px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-label i {
+  font-size: 14px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-items,
+.dispatch-notes-widget--business-english .grammar-items,
+.dispatch-notes-widget--business-english .pronunciation-items {
+  gap: 8px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-row,
+.dispatch-notes-widget--business-english .grammar-row,
+.dispatch-notes-widget--business-english .pronunciation-row {
+  gap: 5px;
+  padding: 10px;
+  padding-right: 36px;
+  border-radius: 10px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-inputs,
+.dispatch-notes-widget--business-english .grammar-inputs,
+.dispatch-notes-widget--business-english .pronunciation-inputs {
+  gap: 6px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-field,
+.dispatch-notes-widget--business-english .grammar-field,
+.dispatch-notes-widget--business-english .pronunciation-field {
+  gap: 3px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-field-label,
+.dispatch-notes-widget--business-english .grammar-field-label,
+.dispatch-notes-widget--business-english .pronunciation-field-label {
+  font-size: 10px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-word-input,
+.dispatch-notes-widget--business-english .vocabulary-definition-input,
+.dispatch-notes-widget--business-english .grammar-input,
+.dispatch-notes-widget--business-english .pronunciation-word-input {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-definition-input,
+.dispatch-notes-widget--business-english .grammar-input,
+.dispatch-notes-widget--business-english .dispatch-notes-textarea {
+  min-height: 36px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-textarea.dispatch-notes-textarea--tall {
+  min-height: 72px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-input-row,
+.dispatch-notes-widget--business-english .vocabulary-definition-row,
+.dispatch-notes-widget--business-english .grammar-input-row,
+.dispatch-notes-widget--business-english .grammar-correct-row,
+.dispatch-notes-widget--business-english .pronunciation-input-row,
+.dispatch-notes-widget--business-english .pronunciation-phonetic-row {
+  gap: 6px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-check-btn,
+.dispatch-notes-widget--business-english .vocabulary-info-btn,
+.dispatch-notes-widget--business-english .vocabulary-send-btn,
+.dispatch-notes-widget--business-english .vocabulary-toggle-btn,
+.dispatch-notes-widget--business-english .grammar-check-btn,
+.dispatch-notes-widget--business-english .grammar-info-btn,
+.dispatch-notes-widget--business-english .grammar-send-btn,
+.dispatch-notes-widget--business-english .pronunciation-check-btn,
+.dispatch-notes-widget--business-english .pronunciation-toggle-btn,
+.dispatch-notes-widget--business-english .pronunciation-send-btn {
+  width: 30px;
+  height: 30px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-remove-btn,
+.dispatch-notes-widget--business-english .grammar-remove-btn {
+  top: 8px;
+  right: 8px;
+}
+
+.dispatch-notes-widget--business-english .pronunciation-remove-btn {
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+}
+
+.dispatch-notes-widget--business-english .vocabulary-add-btn,
+.dispatch-notes-widget--business-english .grammar-add-btn,
+.dispatch-notes-widget--business-english .pronunciation-add-btn {
+  margin-top: 2px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-footer {
+  gap: 10px;
+  padding: 12px;
+}
+
+.dispatch-notes-widget--business-english .dispatch-notes-clear,
+.dispatch-notes-widget--business-english .dispatch-notes-copy {
+  padding: 9px 12px;
+  font-size: 12px;
+}
+
+.dispatch-notes-widget--business-english-dark {
+  --notes-header-gradient: linear-gradient(135deg, #2e1065 0%, #5b21b6 100%);
+  --notes-label-color: #6d28d9;
+  --notes-accent: #6d28d9;
+  --notes-accent-hover: #5b21b6;
+  --notes-accent-soft: rgba(91, 33, 182, 0.16);
+}
+
+.dispatch-notes-widget--business-english-dark {
+  background: linear-gradient(180deg, #161225 0%, #1d1830 100%);
+  border: 1px solid rgba(124, 58, 237, 0.24);
+  box-shadow: 0 18px 48px rgba(6, 5, 16, 0.55);
+}
+
+.dispatch-notes-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff !important;
+}
+
+.dispatch-notes-header h3 i {
+  font-size: 20px;
+  color: #fff !important;
+}
+
+.dispatch-notes-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff !important;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.dispatch-notes-close i {
+  color: #fff !important;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dispatch-notes-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.dispatch-notes-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dispatch-notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-content {
+  background: linear-gradient(180deg, #161225 0%, #1a1628 100%);
+}
+
+.dispatch-notes-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--notes-label-color);
+  text-transform: uppercase;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.dispatch-notes-label i {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Vocabulary Items */
+.vocabulary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vocabulary-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  padding-right: 40px;
+  background: #fafafa;
+  border-radius: 8px;
+  position: relative;
+}
+
+.vocabulary-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vocabulary-word-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: #1e293b;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.vocabulary-definition-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1e293b;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  min-height: 40px;
+  line-height: 1.4;
+  field-sizing: content;
+}
+
+.vocabulary-word-input::placeholder,
+.vocabulary-definition-input::placeholder {
+  color: #94a3b8;
+}
+
+.vocabulary-word-input:focus {
+  outline: none;
+  border-color: var(--notes-accent);
+  box-shadow: 0 0 0 3px var(--notes-accent-soft);
+}
+
+.vocabulary-definition-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.vocabulary-remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.vocabulary-remove-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-remove-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.vocabulary-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #fffbeb;
+  border: 1px dashed var(--notes-accent);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--notes-accent);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+
+.vocabulary-add-btn:hover {
+  background: #fef3c7;
+  border-style: solid;
+}
+
+.vocabulary-add-btn i {
+  font-size: 12px;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-row,
+.dispatch-notes-widget--business-english-dark .grammar-row,
+.dispatch-notes-widget--business-english-dark .pronunciation-row {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(139, 92, 246, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-field-label,
+.dispatch-notes-widget--business-english-dark .grammar-field-label,
+.dispatch-notes-widget--business-english-dark .pronunciation-field-label {
+  color: #b6adc9;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-word-input,
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-input,
+.dispatch-notes-widget--business-english-dark .grammar-input,
+.dispatch-notes-widget--business-english-dark .pronunciation-word-input,
+.dispatch-notes-widget--business-english-dark .dispatch-notes-textarea {
+  background: #263247;
+  border-color: rgba(138, 152, 178, 0.18);
+  color: #f5f3ff;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-input,
+.dispatch-notes-widget--business-english-dark .grammar-input-correct {
+  background: #20283a;
+  border-color: rgba(104, 211, 145, 0.18);
+  color: #d1fae5;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-word-input::placeholder,
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-input::placeholder,
+.dispatch-notes-widget--business-english-dark .grammar-input::placeholder,
+.dispatch-notes-widget--business-english-dark .pronunciation-word-input::placeholder,
+.dispatch-notes-widget--business-english-dark .dispatch-notes-textarea::placeholder {
+  color: #8f9bb3;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-content,
+.dispatch-notes-widget--business-english-dark .vocabulary-translations,
+.dispatch-notes-widget--business-english-dark .grammar-explanation,
+.dispatch-notes-widget--business-english-dark .pronunciation-loading,
+.dispatch-notes-widget--business-english-dark .pronunciation-display {
+  background: rgba(109, 40, 217, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-def-tab,
+.dispatch-notes-widget--business-english-dark .vocabulary-check-btn,
+.dispatch-notes-widget--business-english-dark .vocabulary-info-btn,
+.dispatch-notes-widget--business-english-dark .vocabulary-toggle-btn,
+.dispatch-notes-widget--business-english-dark .grammar-check-btn,
+.dispatch-notes-widget--business-english-dark .grammar-info-btn,
+.dispatch-notes-widget--business-english-dark .pronunciation-check-btn,
+.dispatch-notes-widget--business-english-dark .pronunciation-toggle-btn,
+.dispatch-notes-widget--business-english-dark .dispatch-notes-clear {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(138, 152, 178, 0.18);
+  color: #d7d2e8;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-add-btn,
+.dispatch-notes-widget--business-english-dark .grammar-add-btn,
+.dispatch-notes-widget--business-english-dark .pronunciation-add-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(139, 92, 246, 0.42);
+  color: #e9ddff;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-check-btn:hover:not(:disabled),
+.dispatch-notes-widget--business-english-dark .vocabulary-info-btn:hover,
+.dispatch-notes-widget--business-english-dark .vocabulary-toggle-btn:hover,
+.dispatch-notes-widget--business-english-dark .grammar-check-btn:hover:not(:disabled),
+.dispatch-notes-widget--business-english-dark .grammar-info-btn:hover,
+.dispatch-notes-widget--business-english-dark .pronunciation-check-btn:hover:not(:disabled),
+.dispatch-notes-widget--business-english-dark .pronunciation-toggle-btn:hover,
+.dispatch-notes-widget--business-english-dark .dispatch-notes-clear:hover {
+  background: rgba(109, 40, 217, 0.12);
+  border-color: rgba(139, 92, 246, 0.32);
+  color: #f5f3ff;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-add-btn:hover,
+.dispatch-notes-widget--business-english-dark .grammar-add-btn:hover,
+.dispatch-notes-widget--business-english-dark .pronunciation-add-btn:hover {
+  background: rgba(109, 40, 217, 0.12);
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #f5f3ff;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-placeholder,
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-hidden,
+.dispatch-notes-widget--business-english-dark .pronunciation-phonetic-hidden,
+.dispatch-notes-widget--business-english-dark .pronunciation-phonetic-placeholder {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(138, 152, 178, 0.18);
+  color: #9fabc2;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-definition-hidden span,
+.dispatch-notes-widget--business-english-dark .pronunciation-phonetic-hidden span,
+.dispatch-notes-widget--business-english-dark .vocabulary-loading,
+.dispatch-notes-widget--business-english-dark .grammar-loading,
+.dispatch-notes-widget--business-english-dark .pronunciation-loading,
+.dispatch-notes-widget--business-english-dark .translation-romanized,
+.dispatch-notes-widget--business-english-dark .vocabulary-part-of-speech {
+  color: #a9b3c9;
+}
+
+.dispatch-notes-widget--business-english-dark .vocabulary-meaning,
+.dispatch-notes-widget--business-english-dark .translation-native,
+.dispatch-notes-widget--business-english-dark .grammar-explanation-simple,
+.dispatch-notes-widget--business-english-dark .grammar-explanation-technical,
+.dispatch-notes-widget--business-english-dark .pronunciation-phonetic-display {
+  color: #f5f3ff;
+}
+
+.dispatch-notes-widget--business-english-dark .grammar-explanation-simple {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.24);
+}
+
+.dispatch-notes-widget--business-english-dark .grammar-explanation-simple i {
+  color: #6ee7b7;
+}
+
+.dispatch-notes-widget--business-english-dark .grammar-explanation-technical {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+.dispatch-notes-widget--business-english-dark .grammar-explanation-technical i {
+  color: #fbbf24;
+}
+
+/* Vocabulary Field Structure */
+.vocabulary-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vocabulary-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.vocabulary-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.vocabulary-input-row .vocabulary-word-input {
+  flex: 1;
+}
+
+.vocabulary-definition-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.vocabulary-definition-row .vocabulary-definition-input {
+  flex: 1;
+}
+
+.vocabulary-definition-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.vocabulary-definition-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.vocabulary-def-tab {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.vocabulary-def-tab:hover {
+  border-color: var(--notes-accent);
+  color: var(--notes-accent);
+}
+
+.vocabulary-def-tab.active {
+  background: var(--notes-accent);
+  border-color: var(--notes-accent);
+  color: #fff;
+}
+
+.vocabulary-definition-display {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vocabulary-part-of-speech {
+  font-size: 11px;
+  font-style: italic;
+  color: #64748b;
+}
+
+.vocabulary-meaning {
+  font-size: 13px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.vocabulary-definition-placeholder {
+  flex: 1;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.vocabulary-check-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.vocabulary-check-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-check-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: var(--notes-accent);
+  color: var(--notes-accent);
+}
+
+.vocabulary-check-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vocabulary-check-btn.loading i {
+  animation: spin 1s linear infinite;
+}
+
+.vocabulary-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.vocabulary-loading i {
+  animation: spin 1s linear infinite;
+}
+
+.vocabulary-info-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.vocabulary-info-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-info-btn:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.vocabulary-info-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.vocabulary-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--notes-accent);
+  border: 1px solid var(--notes-accent);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.vocabulary-send-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-send-btn:hover {
+  background: var(--notes-accent-hover);
+  border-color: var(--notes-accent-hover);
+}
+
+/* Vocabulary Toggle (Show/Hide) Button */
+.vocabulary-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.vocabulary-toggle-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-toggle-btn:hover {
+  background: #f8fafc;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.vocabulary-toggle-btn.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+/* Hidden Definition State */
+.vocabulary-definition-hidden {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  display: flex;
+  align-items: center;
+}
+
+.vocabulary-definition-hidden span {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Vocabulary Translations */
+.vocabulary-translations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+
+.vocabulary-translation-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.translation-flag {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.translation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.translation-native {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.translation-romanized {
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Grammar Items */
+.grammar-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grammar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  padding-right: 40px;
+  background: #fafafa;
+  border-radius: 8px;
+  position: relative;
+}
+
+.grammar-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grammar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grammar-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.grammar-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1e293b;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  min-height: 40px;
+  line-height: 1.4;
+  field-sizing: content;
+}
+
+.grammar-input::placeholder {
+  color: #94a3b8;
+}
+
+.grammar-input:focus {
+  outline: none;
+  border-color: var(--notes-accent);
+  box-shadow: 0 0 0 3px var(--notes-accent-soft);
+}
+
+.grammar-input-correct {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.grammar-input-correct:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.grammar-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.grammar-input-row .grammar-input {
+  flex: 1;
+}
+
+.grammar-check-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.grammar-check-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grammar-check-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: var(--notes-accent);
+  color: var(--notes-accent);
+}
+
+.grammar-check-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.grammar-check-btn.loading i {
+  animation: spin 1s linear infinite;
+}
+
+.grammar-correct-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.grammar-correct-row .grammar-input {
+  flex: 1;
+}
+
+.grammar-info-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.grammar-info-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grammar-info-btn:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.grammar-info-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+
+.grammar-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--notes-accent);
+  border: 1px solid var(--notes-accent);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.grammar-send-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grammar-send-btn:hover {
+  background: var(--notes-accent-hover);
+  border-color: var(--notes-accent-hover);
+}
+
+.grammar-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.grammar-loading i {
+  animation: spin 1s linear infinite;
+}
+
+.grammar-explanation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.grammar-explanation-simple,
+.grammar-explanation-technical {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.grammar-explanation-simple {
+  color: #166534;
+  background: #f0fdf4;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+}
+
+.grammar-explanation-simple i {
+  color: #22c55e;
+}
+
+.grammar-explanation-technical {
+  color: #92400e;
+  background: #fefce8;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #fef08a;
+}
+
+.grammar-explanation-technical i {
+  color: #eab308;
+}
+
+.grammar-explanation i {
+  flex-shrink: 0;
+  font-size: 14px;
+  margin-top: 1px;
+}
+
+.grammar-remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.grammar-remove-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grammar-remove-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.grammar-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #fffbeb;
+  border: 1px dashed var(--notes-accent);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--notes-accent);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+
+.grammar-add-btn:hover {
+  background: #fef3c7;
+  border-style: solid;
+}
+
+.grammar-add-btn i {
+  font-size: 12px;
+}
+
+.dispatch-notes-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dispatch-notes-textarea::placeholder {
+  color: #94a3b8;
+}
+
+.dispatch-notes-textarea:focus {
+  outline: none;
+  border-color: var(--notes-accent);
+  box-shadow: 0 0 0 3px var(--notes-accent-soft);
+}
+
+.dispatch-notes-textarea.dispatch-notes-textarea--tall {
+  min-height: 92px;
+}
+
+.dispatch-notes-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.dispatch-notes-save-state {
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #64748b;
+}
+
+.dispatch-notes-save-state--saving {
+  color: var(--notes-accent);
+}
+
+.dispatch-notes-save-state--saved {
+  color: #16a34a;
+}
+
+.dispatch-notes-save-state--draft {
+  color: #7c3aed;
+}
+
+.dispatch-notes-save-state--error {
+  color: #dc2626;
+}
+
+.dispatch-notes-clear,
+.dispatch-notes-copy {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dispatch-notes-clear {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.dispatch-notes-clear:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.dispatch-notes-copy {
+  background: var(--notes-header-gradient);
+  border: none;
+  color: #fff;
+}
+
+.dispatch-notes-copy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--notes-accent-soft);
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-footer {
+  background: linear-gradient(180deg, #181427 0%, #161225 100%);
+  border-top-color: rgba(138, 152, 178, 0.14);
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-save-state {
+  color: #b6adc9;
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-save-state--saving {
+  color: #c4b5fd;
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-save-state--saved {
+  color: #86efac;
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-save-state--draft {
+  color: #c4b5fd;
+}
+
+.dispatch-notes-widget--business-english-dark .dispatch-notes-save-state--error {
+  color: #fca5a5;
+}
+
+/* ============================================================================
+   PRONUNCIATION SECTION STYLES
+   ============================================================================ */
+
+.pronunciation-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pronunciation-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.pronunciation-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fee2e2;
+  border: none;
+  color: #dc2626;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.pronunciation-remove-btn:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+.pronunciation-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pronunciation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pronunciation-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pronunciation-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pronunciation-word-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.pronunciation-word-input:focus {
+  outline: none;
+  border-color: var(--notes-accent);
+  box-shadow: 0 0 0 3px var(--notes-accent-soft);
+}
+
+.pronunciation-check-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.pronunciation-check-btn:hover:not(:disabled) {
+  background: var(--notes-accent);
+  border-color: var(--notes-accent);
+  color: #fff;
+}
+
+.pronunciation-check-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pronunciation-check-btn.loading i {
+  animation: spin 1s linear infinite;
+}
+
+.pronunciation-phonetic-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pronunciation-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #fffbeb;
+  border-radius: 8px;
+  color: #92400e;
+  font-size: 13px;
+}
+
+.pronunciation-loading i {
+  animation: spin 1s linear infinite;
+}
+
+.pronunciation-phonetic-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.pronunciation-display {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #ecfdf5;
+  border-radius: 8px;
+  border: 1px solid #a7f3d0;
+}
+
+.pronunciation-phonetic-display {
+  font-size: 14px;
+  font-weight: 600;
+  color: #047857;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+.pronunciation-phonetic-hidden {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  display: flex;
+  align-items: center;
+}
+
+.pronunciation-phonetic-hidden span {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.pronunciation-phonetic-placeholder {
+  flex: 1;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #e2e8f0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.pronunciation-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.pronunciation-toggle-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pronunciation-toggle-btn:hover {
+  background: #f8fafc;
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.pronunciation-toggle-btn.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.pronunciation-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--notes-accent);
+  border: 1px solid var(--notes-accent);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.pronunciation-send-btn i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pronunciation-send-btn:hover {
+  background: var(--notes-accent-hover);
+  border-color: var(--notes-accent-hover);
+}
+
+.pronunciation-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 8px;
+}
+
+.pronunciation-add-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #475569;
+}
+
+.dispatch-notes-section .notes-character-count {
+  margin: 5px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--notes-muted, #64748b);
+}
+.dispatch-notes-section .notes-field-error { margin: 5px 0 0; color: #be123c; font-size: 12px; line-height: 1.5; }
+[data-theme='dark'] .dispatch-notes-section .notes-character-count { color: #b5b5b5; }
+[data-theme='dark'] .dispatch-notes-section .notes-field-error { color: #fda4af; }
+
+/* Daily Dispatch notes use the classroom palette, not the global form overrides. */
+.dispatch-notes-widget--daily-dispatch {
+  width: min(360px, calc(100vw - 32px));
+}
+
+.dispatch-notes-widget--daily-dispatch .dispatch-notes-header,
+.dispatch-notes-widget--daily-dispatch .dispatch-notes-footer {
+  flex-shrink: 0;
+}
+
+.dispatch-notes-widget--daily-dispatch .dispatch-notes-content {
+  min-height: 0;
+  overflow-wrap: anywhere;
+}
+
+.dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-inputs, .grammar-inputs, .pronunciation-inputs,
+  .vocabulary-definition-content, .translation-content
+) {
+  min-width: 0;
+}
+
+.dispatch-notes-widget--daily-dispatch :is(input, textarea) {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch {
+  --notes-header-gradient: linear-gradient(180deg, #2a2a2a, #232323);
+  --notes-label-color: #fbbf24;
+  --notes-accent: #fbbf24;
+  --notes-accent-hover: #fcd34d;
+  --notes-accent-soft: rgba(251, 191, 36, 0.14);
+  color-scheme: dark;
+  background: var(--fxv-surface, #1e1e1e);
+  color: var(--fxv-text, #f3f4f6);
+  border: 1px solid #404040;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-header {
+  border-bottom: 2px solid var(--notes-accent);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-content {
+  background: var(--fxv-surface, #1e1e1e);
+  scrollbar-color: var(--notes-accent) var(--fxv-surface, #1e1e1e);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-content::-webkit-scrollbar-track {
+  background: var(--fxv-surface, #1e1e1e);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-content::-webkit-scrollbar-thumb {
+  background: var(--notes-accent);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(.vocabulary-row, .grammar-row, .pronunciation-row) {
+  background: var(--fxv-surface-muted, #232323);
+  border: 1px solid #404040;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-field-label, .grammar-field-label, .pronunciation-field-label,
+  .vocabulary-part-of-speech, .translation-romanized,
+  .vocabulary-loading, .grammar-loading, .pronunciation-loading
+) {
+  color: #b8b8b8;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(input, textarea) {
+  background: #2a2a2a;
+  border-color: #525252;
+  color: #f3f4f6;
+  caret-color: var(--notes-accent);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(input, textarea)::placeholder {
+  color: #b8b8b8;
+  opacity: 1;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(input, textarea):focus {
+  border-color: var(--notes-accent);
+  box-shadow: 0 0 0 3px var(--notes-accent-soft);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-definition-content, .vocabulary-definition-placeholder, .vocabulary-definition-hidden,
+  .vocabulary-translations, .grammar-explanation, .pronunciation-display, .pronunciation-loading,
+  .pronunciation-phonetic-hidden, .pronunciation-phonetic-placeholder
+) {
+  background: #2a2a2a;
+  border-color: #525252;
+  color: #b8b8b8;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-meaning, .translation-native, .pronunciation-phonetic-display
+) {
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-definition-hidden span, .pronunciation-phonetic-hidden span
+) {
+  color: #b8b8b8;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-check-btn, .vocabulary-info-btn, .vocabulary-toggle-btn, .vocabulary-def-tab,
+  .grammar-check-btn, .grammar-info-btn, .pronunciation-check-btn, .pronunciation-toggle-btn,
+  .vocabulary-add-btn, .grammar-add-btn, .pronunciation-add-btn, .dispatch-notes-clear
+) {
+  background: #2a2a2a;
+  border-color: #525252;
+  color: #f3f4f6;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(.vocabulary-add-btn, .grammar-add-btn, .pronunciation-add-btn) {
+  border-color: var(--notes-accent);
+  color: var(--notes-accent);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch button:hover:not(:disabled) {
+  border-color: var(--notes-accent);
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-add-btn, .grammar-add-btn, .pronunciation-add-btn, .dispatch-notes-clear
+):hover {
+  background: #383838;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(
+  .vocabulary-def-tab.active, .vocabulary-toggle-btn.active, .vocabulary-info-btn.active,
+  .grammar-info-btn.active, .pronunciation-toggle-btn.active,
+  .vocabulary-send-btn, .grammar-send-btn, .pronunciation-send-btn, .dispatch-notes-copy
+) {
+  background: var(--notes-accent);
+  border-color: var(--notes-accent);
+  color: #171717;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch :is(.vocabulary-remove-btn, .grammar-remove-btn, .pronunciation-remove-btn) {
+  background: #3b2222;
+  border-color: #7f3939;
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .grammar-explanation-simple {
+  background: #20372b;
+  border-color: #39664d;
+  color: #bbf7d0;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .grammar-explanation-technical {
+  background: #382f20;
+  border-color: #78613a;
+  color: #fde68a;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-footer {
+  background: #232323;
+  border-top-color: #404040;
+}
+
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-save-state { color: #b8b8b8; }
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-save-state--saving { color: #fbbf24; }
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-save-state--saved { color: #86efac; }
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-save-state--draft { color: #d8b4fe; }
+[data-theme='dark'] .dispatch-notes-widget--daily-dispatch .dispatch-notes-save-state--error { color: #fca5a5; }
+
+@media (max-width: 900px) {
+  .dispatch-notes-widget--daily-dispatch { right: 16px; }
+}

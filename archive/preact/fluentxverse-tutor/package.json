@@ -1,0 +1,32 @@
+{
+  "name": "fluentxverse-tutor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cf:preview": "bun run build && bunx wrangler dev",
+    "cf:deploy": "bun run build && bunx wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/realtimekit": "2.0.2",
+    "axios": "^1.20.0",
+    "lucide-preact": "^1.51.0",
+    "pdfjs-dist": "5.7.284",
+    "preact": "^10.29.8",
+    "preact-iso": "^2.12.2",
+    "socket.io-client": "^4.8.4",
+    "wouter": "^3.12.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^25.9.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1",
+    "vite-plugin-full-reload": "^1.2.0"
+  }
+}

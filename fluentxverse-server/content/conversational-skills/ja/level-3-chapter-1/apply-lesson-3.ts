@@ -21,7 +21,7 @@ try {
   const source = await session.run('MATCH (l:LessonMaterial) WHERE l.id IN [$oldId, $newId] RETURN l', { oldId, newId });
   if (source.records.length !== 1) throw new Error('Expected exactly one Lesson 3 draft.');
   const result = source;
-  const raw = result.records[0].get('l').properties;
+  const raw = result.records[0]!.get('l').properties;
   const currentId = raw.id;
   if (raw.updatedAt !== expectedUpdatedAt) throw new Error(`Lesson changed at ${raw.updatedAt}; refusing to overwrite it.`);
 

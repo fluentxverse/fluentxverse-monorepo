@@ -20,7 +20,7 @@ const jsonFields = ['introductionData', 'learnData', 'stepBData', 'applyData', '
 try {
   const result = await session.run('MATCH (l:LessonMaterial {id: $id}) RETURN l', { id });
   if (result.records.length !== 1) throw new Error(`Lesson ${id} not found.`);
-  const raw = result.records[0].get('l').properties;
+  const raw = result.records[0]!.get('l').properties;
   if (raw.updatedAt !== expectedUpdatedAt) throw new Error(`Lesson changed at ${raw.updatedAt}; refusing to overwrite it.`);
 
   const previous: Record<string, any> = Object.fromEntries(

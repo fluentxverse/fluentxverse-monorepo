@@ -1,0 +1,19 @@
+.fxv-spinner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.fxv-spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid rgba(2,69,174,0.15);
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: fxv-spin 0.9s linear infinite;
+  box-shadow: 0 0 0 1px rgba(2,69,174,0.05);
+}
+@keyframes fxv-spin {
+  to { transform: rotate(360deg); }
+}
+.dark-mode .fxv-spinner { border: 4px solid rgba(74,158,255,0.25); border-top-color: #4a9eff; }

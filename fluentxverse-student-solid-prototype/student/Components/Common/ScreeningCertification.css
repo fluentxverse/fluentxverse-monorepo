@@ -1,0 +1,5 @@
+.screening-certification { margin-block: 12px; max-width: 520px; font-size: 13px; line-height: 1.6; }
+.screening-certification summary { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #12846b; font-weight: 600; }
+.screening-certification summary svg { flex-shrink: 0; }
+.screening-certification p { margin: 8px 0; overflow-wrap: anywhere; }
+.screening-certification a { color: #176adb; text-decoration: underline; }

@@ -1,0 +1,33 @@
+.yl-page { max-width:1200px; margin:auto; }
+.yl-page-header { margin-bottom:28px; }
+.yl-header-content { display:grid; grid-template-columns:48px minmax(0,1fr); gap:0 16px; align-items:center; }
+.yl-header-content img { grid-row:1/3; }
+.yl-header-content h1 { margin:0 0 6px; font-size:28px; }
+.yl-header-content p { margin:0; font-size:14px; color:var(--s-muted); line-height:1.65; }
+.yl-search-container { border-bottom:1px solid var(--s-border); padding-bottom:20px; margin-bottom:24px; }
+.yl-search-box { display:flex; align-items:center; gap:10px; max-width:480px; background:var(--s-surface); border:1px solid var(--s-border); padding:10px 12px; border-radius:6px; color:var(--s-muted); }
+.yl-search-box input { width:100%; border:0; background:none; color:var(--s-text); font-size:14px; outline:0; }
+.yl-search-clear { border:0; padding:0; background:none; color:var(--s-muted); }
+.yl-levels-list { display:grid; gap:20px; }
+.yl-level-header,.yl-unit-header { width:100%; display:flex; align-items:center; justify-content:space-between; gap:16px; border:0; padding:16px 0; background:none; text-align:left; color:var(--s-text); }
+.yl-level-header { border-bottom:1px solid var(--s-border); }
+.yl-level-info,.yl-unit-info { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.yl-level-number { color:var(--s-accent); font-size:16px; font-weight:700; }
+.yl-level-name { font-size:14px; }
+.yl-level-meta,.yl-unit-meta { display:flex; gap:12px; align-items:center; font-size:12px; color:var(--s-muted); flex-shrink:0; }
+.yl-unit-number { font-size:14px; font-weight:600; }
+.yl-unit-name { font-size:13px; color:var(--s-muted); }
+.yl-units-list { padding-top:12px; }
+.yl-lessons-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding-bottom:20px; }
+.yl-lesson-card { display:flex; align-items:flex-start; gap:16px; padding:20px; background:var(--s-surface); color:var(--s-text); border:1px solid var(--s-border); border-radius:8px; text-align:left; }
+.yl-lesson-card:hover { border-color:var(--s-accent); }
+.yl-card-content { min-width:0; }
+.yl-card-mascot { object-fit:contain; width:48px; height:48px; flex-shrink:0; }
+.yl-card-lesson { font-size:11px; color:var(--s-muted); }
+.yl-card-title { font-size:15px; margin:8px 0 14px; line-height:1.5; }
+.yl-card-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.yl-card-tag { font-size:11px; color:var(--s-muted); }
+.yl-loading,.yl-error,.yl-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; min-height:280px; text-align:center; color:var(--s-muted); }
+.yl-error button { background:var(--s-surface); color:var(--s-accent); border:1px solid var(--s-border); border-radius:6px; padding:10px 14px; font-size:13px; }
+@media(max-width:991px) { .yl-lessons-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .yl-lessons-grid { grid-template-columns:1fr; } .yl-header-content h1 { font-size:24px; } .yl-header-content p { font-size:13px; } .yl-lesson-count { display:none; } .yl-card-title { font-size:16px; } }

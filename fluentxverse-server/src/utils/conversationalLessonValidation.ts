@@ -37,7 +37,7 @@ export function conversationalLessonErrors(lesson: any): string[] {
   if (branchA) requireItems(exercise[branchA], 'Exercise Step A', 'sentence');
   else errors.push('Select a valid Exercise Step A variation.');
   if (exercise?.hasStepB) {
-    const branchB = { conversation: ['conversations', 'speechBubble'], 'multiple-choice': ['multipleChoiceItems', 'boldSentence'], compare: ['compareItems', 'sentence'] }[exercise.stepBType as string];
+    const branchB = { conversation: ['conversations', 'speechBubble'], 'multiple-choice': ['multipleChoiceItems', 'boldSentence'], compare: ['compareItems', 'sentence'] }[exercise.stepBType as string] as [string, string] | undefined;
     if (branchB) requireItems(exercise[branchB[0]], 'Exercise Step B', branchB[1]);
     else if (exercise.stepBType === 'speech') requireText(exercise.speechContent, 'Exercise speech');
     else errors.push('Select a valid Exercise Step B variation.');

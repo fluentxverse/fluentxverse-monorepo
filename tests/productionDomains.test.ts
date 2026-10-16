@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { productionEndpoints as student } from '../fluentxverse-student/src/config/productionDomains';
-import { productionEndpoints as tutor } from '../fluentxverse-tutor/src/config/productionDomains';
+import { productionEndpoints as student } from '../fluentxverse-student-solid-prototype/student/config/productionDomains';
+import { productionEndpoints as tutor } from '../fluentxverse-tutor-solid-prototype/tutor/config/productionDomains';
 import { productionEndpoints as dashboard } from '../fluentxverse-dashboard/src/config/productionDomains';
 
 for (const [app, endpoints] of Object.entries({ student, tutor, dashboard })) {

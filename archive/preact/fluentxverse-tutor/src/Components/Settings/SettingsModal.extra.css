@@ -1,0 +1,4 @@
+/* Extra spacing overrides for SettingsModal */
+.settings-form-row { margin-bottom: 1rem; }
+.settings-form-section .settings-form-group + .settings-form-group { margin-top: 0.75rem; }
+.settings-form-row + .settings-form-group .settings-form-label { margin-top: 0.25rem; }

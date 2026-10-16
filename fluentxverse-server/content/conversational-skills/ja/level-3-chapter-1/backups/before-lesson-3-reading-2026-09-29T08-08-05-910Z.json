@@ -1,0 +1,531 @@
+{
+  "applyData": {
+    "sectionNumber": 3,
+    "sectionTitle": "APPLY",
+    "activityType": "speaking",
+    "activityTitle": "SPEAKING",
+    "activityDuration": "4 minutes",
+    "situationText": "Read the conversation with your tutor. Switch roles, then change the details.<br><small lang=\"ja\">講師と会話を読みましょう。役割を交代し、情報を変えて練習しましょう。</small><br><br>1. Where is Yuki from?<br>2. Does Yuki live in Osaka now?<br>3. Is Maya's hometown busy or quiet?",
+    "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+    "dialogueLines": [
+      {
+        "speaker": "Maya",
+        "text": "Where are you from, Yuki?",
+        "isAction": false
+      },
+      {
+        "speaker": "Yuki",
+        "text": "I'm from Osaka, in Japan.",
+        "isAction": false
+      },
+      {
+        "speaker": "Maya",
+        "text": "Is it a big city?",
+        "isAction": false
+      },
+      {
+        "speaker": "Yuki",
+        "text": "Yes, it is. It's busy, and the food is great.",
+        "isAction": false
+      },
+      {
+        "speaker": "Maya",
+        "text": "Do you live there now?",
+        "isAction": false
+      },
+      {
+        "speaker": "Yuki",
+        "text": "No. I live in London now. How about you?",
+        "isAction": false
+      },
+      {
+        "speaker": "Maya",
+        "text": "I'm from a small town near Bristol.",
+        "isAction": false
+      },
+      {
+        "speaker": "Yuki",
+        "text": "Is it quiet?",
+        "isAction": false
+      },
+      {
+        "speaker": "Maya",
+        "text": "Yes, very quiet. I like it.",
+        "isAction": false
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Read the conversation with your tutor. Switch roles, then change the details.",
+        "tips": [
+          {
+            "text": "Model once, then share the roles. Do not make this a tutor-only reading."
+          }
+        ]
+      },
+      {
+        "instruction": "Check understanding and ask for evidence.",
+        "questions": [
+          {
+            "question": "Where is Yuki from?",
+            "answer": "Osaka."
+          },
+          {
+            "question": "Does Yuki live in Osaka now?",
+            "answer": "No. She lives in London."
+          },
+          {
+            "question": "Is Maya's hometown busy or quiet?",
+            "answer": "Quiet."
+          }
+        ]
+      },
+      {
+        "instruction": "Switch roles and change two details.",
+        "tips": [
+          {
+            "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+          }
+        ]
+      }
+    ],
+    "triviaEnabled": false
+  },
+  "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+  "authoringSource": "conversational-skills-ja-l3-c1-v1",
+  "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+  "beData": "",
+  "chapter": 1,
+  "chapterName": "Nice to Meet You",
+  "course": "conversational-skills",
+  "createdAt": "2026-09-23T06:32:26.413Z",
+  "createdBy": "codex",
+  "createdByName": "Lesson Authoring",
+  "discussionQuestionsData": "",
+  "exerciseData": {
+    "sectionNumber": 4,
+    "sectionTitle": "EXERCISE",
+    "duration": "4 minutes",
+    "stepAType": "change",
+    "stepAName": "STEP A",
+    "instructions": "Change the underlined words as directed.",
+    "instructionsTranslation": "指示に従って下線部を書き換えましょう。",
+    "showExpressions": false,
+    "expressions": [],
+    "showExample": false,
+    "exampleSentence": "",
+    "exampleAnswer": "",
+    "showInfoBox": false,
+    "exerciseItems": [],
+    "chooseItems": [],
+    "changeItems": [
+      {
+        "sentence": "I am from <u>Osaka</u>. (Use your hometown.)"
+      },
+      {
+        "sentence": "I live in <u>London</u> now. (Use your current home.)"
+      },
+      {
+        "sentence": "My hometown is <u>big and busy</u>. (Use two true words.)"
+      }
+    ],
+    "answers": [
+      {
+        "text": "I am from [hometown]."
+      },
+      {
+        "text": "I live in [place] now."
+      },
+      {
+        "text": "My hometown is [adjective] and [adjective]."
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Let the learner try independently. Check complete sentences.",
+        "answerKey": [
+          {
+            "text": "1. I am from [hometown]."
+          },
+          {
+            "text": "2. I live in [place] now."
+          },
+          {
+            "text": "3. My hometown is [adjective] and [adjective]."
+          }
+        ],
+        "tips": [
+          {
+            "text": "For personal answers, the examples are models, not the only correct responses."
+          }
+        ]
+      }
+    ],
+    "hasStepB": true,
+    "stepBType": "speech",
+    "stepBName": "STEP B",
+    "stepBInstruction": "Complete the introduction with your own information or an invented person.",
+    "stepBInstructionTranslation": "自分の情報や架空の人物の情報を使って紹介を完成させましょう。",
+    "conversations": [],
+    "multipleChoiceItems": [],
+    "speechSpeakerImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+    "speechContent": "I'm from _____. I live in _____ now. My hometown is _____. It is near _____. I like _____ there.",
+    "compareWordBox": [],
+    "compareImages": [],
+    "compareItems": [],
+    "stepBTutorSteps": [
+      {
+        "instruction": "Listen first. Give feedback, then let the learner try again.",
+        "answerKey": [
+          {
+            "text": "Answers vary. Check that each blank makes sense and that the learner responds to the partner."
+          }
+        ],
+        "tips": [
+          {
+            "text": "Do not demand the model wording if the meaning is clear."
+          }
+        ]
+      }
+    ]
+  },
+  "feedbackData": {
+    "sectionNumber": 6,
+    "sectionTitle": "FEEDBACK",
+    "duration": "2 minutes",
+    "goal": "I can say where I am from and describe my hometown simply.",
+    "goalJp": "出身地を伝え、故郷を簡単に説明することができる。",
+    "rubricTitle": "HOW DID YOU DO?",
+    "rubricLevels": [
+      {
+        "score": 3,
+        "label": "Independent",
+        "description": "Completes the task and responds with little help."
+      },
+      {
+        "score": 2,
+        "label": "With some help",
+        "description": "Completes most of the task with prompts or a second attempt."
+      },
+      {
+        "score": 1,
+        "label": "Keep practicing",
+        "description": "Needs a model and guided support to complete the task."
+      }
+    ],
+    "personalizedFeedbackTitle": "YOUR NEXT STEP",
+    "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+    "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+    "tutorSteps": [
+      {
+        "instruction": "Return to the goal. Ask the learner how the task felt.",
+        "scripts": [
+          {
+            "text": "What was easy today? What would you like to practice again?"
+          }
+        ]
+      },
+      {
+        "instruction": "Give one evidence-based success and one actionable next step.",
+        "tips": [
+          {
+            "text": "Notice successful communication before correcting language."
+          }
+        ]
+      },
+      {
+        "instruction": "Have the learner retry one item and finish with the goal.",
+        "scripts": [
+          {
+            "text": "Let's try that part once more."
+          }
+        ]
+      }
+    ],
+    "categories": [
+      {
+        "id": "range",
+        "title": "RANGE",
+        "titleJp": "表現の幅",
+        "focusOn": "Uses the target expressions appropriately.",
+        "exampleFeedbackItems": [
+          "I can say where I am from and describe my hometown simply."
+        ],
+        "vocabularyExample": "city",
+        "examples": []
+      },
+      {
+        "id": "accuracy",
+        "title": "ACCURACY",
+        "titleJp": "正確さ",
+        "focusOn": "Uses clear sentence patterns for the task.",
+        "exampleFeedbackItems": [
+          "Where are you from?",
+          "What is your hometown like?"
+        ],
+        "examples": []
+      },
+      {
+        "id": "fluency",
+        "title": "INTERACTION",
+        "titleJp": "やり取り",
+        "focusOn": "Responds to the partner and keeps the exchange moving.",
+        "exampleFeedbackItems": [
+          "Ask one relevant follow-up question."
+        ],
+        "examples": []
+      }
+    ]
+  },
+  "goalTextEn": "I can say where I am from and describe my hometown simply.",
+  "goalTextJp": "出身地を伝え、故郷を簡単に説明することができる。",
+  "id": "conversational-skills-L3-C1-3-speaking-ja-v1",
+  "introductionData": {
+    "introTexts": [
+      {
+        "language": "en",
+        "text": "Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown."
+      },
+      {
+        "language": "ja",
+        "text": "ユキとマヤが故郷の写真を見せ合います。町は大きい、小さい、にぎやか、静かなどの言葉で説明できます。新しい友達が想像できるよう、簡単な言葉で故郷を紹介しましょう。"
+      }
+    ],
+    "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+    "lessonIssue": null,
+    "lessonGoalDuration": "1 minute",
+    "lessonGoalSteps": [
+      {
+        "instruction": "Introduce the setting and connect it to the learner.",
+        "script": "Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown.",
+        "question": "What food is popular in your hometown?"
+      },
+      {
+        "instruction": "Read the goal and explain what success will look like.",
+        "script": "I can say where I am from and describe my hometown simply."
+      }
+    ]
+  },
+  "learnData": {
+    "sectionTitle": "LEARN",
+    "steps": [
+      {
+        "stepType": "vocabulary",
+        "stepName": "STEP A: VOCABULARY",
+        "duration": "4 minutes",
+        "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+        "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+        "vocabularyItems": [
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+            "englishText": "Osaka is a big city.",
+            "highlightedWord": "city",
+            "translation": "都市"
+          },
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+            "englishText": "My hometown is quiet.",
+            "highlightedWord": "quiet",
+            "translation": "静かな"
+          },
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+            "englishText": "It is near the sea.",
+            "highlightedWord": "near",
+            "translation": "〜の近くに"
+          }
+        ],
+        "tutorSteps": [
+          {
+            "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+            "script": "Listen first. Then say it with me."
+          },
+          {
+            "instruction": "Check the meaning of each example before moving to Apply.",
+            "question": "Can you give a different example?",
+            "tip": "The picture supports the setting; do not treat it as an answer key."
+          },
+          {
+            "instruction": "Personalize two examples.",
+            "script": "Now use your own information, or invent an example.",
+            "tip": "Allow invented details if the learner prefers not to share personal information."
+          }
+        ]
+      }
+    ]
+  },
+  "lessonName": "Talking About Where I'm From",
+  "lessonNumber": 3,
+  "level": 3,
+  "missionData": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "speaking",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "6 minutes",
+    "situation": "A new housemate wants to know about your hometown. Use your own information or invent a town.",
+    "situationTranslation": "新しいハウスメイトがあなたの故郷について知りたがっています。自分の情報を使うか、架空の町を考えましょう。",
+    "instruction": "Say where you are from and where you live now. Give two details about your hometown. Ask your partner about their hometown and ask one follow-up question.",
+    "instructionTranslation": "出身地と今住んでいる場所を伝え、故郷について二つ説明しましょう。相手の故郷について尋ね、さらに一つ質問しましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "Useful language",
+    "grammarTipItems": [],
+    "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/hometown.webp",
+    "questions": [
+      {
+        "question": "Where are you from?",
+        "hints": []
+      },
+      {
+        "question": "What is your hometown like?",
+        "hints": []
+      },
+      {
+        "question": "Do you live there now?",
+        "hints": []
+      },
+      {
+        "question": "What would you like to know about my hometown?",
+        "hints": []
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Set the task and check understanding without giving the answers.",
+        "scripts": [
+          {
+            "text": "Say where you are from and where you live now. Give two details about your hometown. Ask your partner about their hometown and ask one follow-up question."
+          }
+        ],
+        "tips": [
+          {
+            "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+          }
+        ]
+      },
+      {
+        "instruction": "Run the roleplay. Use these prompts only when the learner needs support.",
+        "scripts": [
+          {
+            "text": "1. Where are you from?"
+          },
+          {
+            "text": "2. What is your hometown like?"
+          },
+          {
+            "text": "3. Do you live there now?"
+          },
+          {
+            "text": "4. What would you like to know about my hometown?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "1. A place."
+          },
+          {
+            "text": "2. Two simple details such as size, atmosphere, or location."
+          },
+          {
+            "text": "3. A clear answer about the current home."
+          },
+          {
+            "text": "4. A relevant question and one follow-up."
+          }
+        ]
+      },
+      {
+        "instruction": "Give feedback, then retry one difficult part with less support.",
+        "tips": [
+          {
+            "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+          }
+        ]
+      }
+    ]
+  },
+  "missionData2": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "discussion",
+    "challengeNumber": 2,
+    "challengeName": "Challenge 2",
+    "duration": "2 minutes",
+    "isOptional": true,
+    "situation": "Connect the lesson to your own life.",
+    "situationTranslation": "レッスンの内容を自分の生活と結び付けましょう。",
+    "instruction": "Choose one topic. Answer your tutor and ask one question in return.",
+    "instructionTranslation": "トピックを一つ選びましょう。講師の質問に答え、自分からも一つ質問しましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "questions": [],
+    "topics": [
+      {
+        "title": "YOUR TOWN",
+        "questions": [
+          "What food is popular in your hometown?",
+          "What place do you like there?"
+        ]
+      },
+      {
+        "title": "PLACES",
+        "questions": [
+          "Do you like big cities or small towns?",
+          "What town would you like to visit?"
+        ]
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Use one topic if time remains. Ask a natural follow-up and invite the learner to ask you something.",
+        "tips": [
+          {
+            "text": "Skip this optional task if it would reduce feedback time."
+          }
+        ]
+      }
+    ]
+  },
+  "overlayColor": "#17252bcc",
+  "skill": "speaking",
+  "status": "draft",
+  "stepBData": {
+    "stepType": "grammar-tip",
+    "grammarTip": {
+      "stepName": "STEP B: GRAMMAR TIP",
+      "duration": "2 minutes",
+      "tutorSteps": [
+        {
+          "instruction": "Model the focus with the examples. Keep the explanation brief.",
+          "script": "Use I am from for your hometown. Use I live in for your home now. These places can be different."
+        },
+        {
+          "instruction": "Ask the learner to try it, then give one focused correction.",
+          "tip": "Use the Japanese support only if needed. Return to English for practice."
+        }
+      ],
+      "explanations": [
+        {
+          "ruleText": "Use I am from for your hometown. Use I live in for your home now. These places can be different.",
+          "ruleTranslation": "出身地には I am from、現在住んでいる場所には I live in を使います。二つの場所は同じとは限りません。",
+          "examplesTitle": "EXAMPLES",
+          "examples": [
+            {
+              "sentence": "I'm from Osaka. I live in London now.",
+              "translation": "大阪出身です。今はロンドンに住んでいます。"
+            },
+            {
+              "sentence": "My hometown is busy. It is near the sea.",
+              "translation": "私の故郷はにぎやかです。海の近くにあります。"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "storyData": "{\"enabled\":true,\"storyTitle\":\"New Friends at Maple House\",\"setting\":\"A fictional international shared house in London. All characters are adults.\",\"characters\":[{\"id\":\"yuki\",\"name\":\"Yuki\",\"role\":\"main\",\"description\":\"An adult English student from Osaka. Likes walking and photography.\"},{\"id\":\"maya\",\"name\":\"Maya\",\"role\":\"supporting\",\"description\":\"A teacher from a small town near Bristol. Likes cooking.\"},{\"id\":\"leo\",\"name\":\"Leo\",\"role\":\"supporting\",\"description\":\"A cook from Bristol. Likes music, gardening, and cooking.\"},{\"id\":\"sara\",\"name\":\"Sara\",\"role\":\"supporting\",\"description\":\"A nurse from Perth. Likes reading, walking, and photography.\"},{\"id\":\"aisha\",\"name\":\"Aisha\",\"role\":\"supporting\",\"description\":\"A designer from Leeds. Likes photography and walking.\"},{\"id\":\"ken\",\"name\":\"Ken\",\"role\":\"supporting\",\"description\":\"An adult student from Kyoto. Likes walking and photography.\"}],\"previousSummary\":\"Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word.\",\"currentPlotPoints\":[\"Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown.\",\"A new housemate wants to know about your hometown. Use your own information or invent a town.\"],\"currentEpisodeSummary\":\"Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown.\",\"nextEpisodeHook\":\"Maple House has a page where residents introduce themselves. Read three profiles and find out who works, who studies, and when they are free.\",\"storyNotes\":\"Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys.\"}",
+  "supportLanguage": "ja",
+  "updatedAt": "2026-09-23T10:51:10.454Z"
+}

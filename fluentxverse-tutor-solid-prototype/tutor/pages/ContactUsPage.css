@@ -1,0 +1,57 @@
+.contact-us-page-wrapper { padding-top: 100px; background: #fff; color: #202636; }
+.contact-us-page-wrapper .container { width: 100%; max-width: 1200px; padding: 0 32px; margin: 0 auto; }
+.contact-us-page-header { display: flex; align-items: center; gap: 24px; padding: 40px 0; }
+.contact-us-icon-wrapper { flex: 0 0 112px; width: 112px; height: 112px; }
+.contact-label { display: block; font-size: 13px; font-weight: 700; color: #0245ae; letter-spacing: 0; margin-bottom: 12px; }
+.contact-us-page-header h1 { color: #202636; font-size: 40px; line-height: 1.2; letter-spacing: 0; font-weight: 800; margin: 0 0 12px; }
+.contact-us-page-header p { color: #526071; font-size: 18px; line-height: 1.6; margin: 0; }
+.contact-cards-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.contact-card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; background: #fff; border: 1px solid #dfe6ee; border-radius: 8px; }
+.contact-card-icon { width: 112px; height: 112px; margin-bottom: 20px; }
+.contact-illustration { display: block; width: 100%; height: 100%; object-fit: contain; }
+.contact-card-content { flex: 1; min-width: 0; margin-bottom: 24px; }
+.contact-card-content h2 { font-size: 22px; font-weight: 700; color: #202636; margin: 0 0 12px; }
+.contact-card-content .contact-value { font-size: 17px; font-weight: 600; color: #0245ae; overflow-wrap: anywhere; margin: 0 0 12px; }
+.contact-card-content .contact-unavailable { color: #677484; }
+.contact-description { color: #526071; font-size: 15px; line-height: 1.75; margin: 0; }
+.contact-us-page-wrapper .contact-card-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 24px; background: #0245ae; color: #fff; border: 1px solid transparent; border-radius: 8px; font-size: 15px; font-weight: 700; line-height: 1.5; text-decoration: none; cursor: pointer; flex-shrink: 0; }
+.contact-us-page-wrapper .contact-card-btn:hover { background: #003b96; color: #fff; }
+.contact-us-page-wrapper .contact-card-btn:focus-visible { outline: 3px solid #4cc6a6; outline-offset: 4px; }
+.contact-us-page-wrapper .contact-card-btn:disabled { background: #edf0f4; border-color: #dfe6ee; color: #677484; cursor: not-allowed; }
+.contact-faq-section { padding: 64px 0; }
+.contact-section-header { margin-bottom: 28px; }
+.contact-section-header h2 { font-size: 28px; line-height: 1.3; color: #202636; font-weight: 800; margin: 0 0 12px; }
+.contact-section-header p { color: #526071; font-size: 16px; line-height: 1.6; margin: 0; }
+.contact-faq-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.contact-faq-card { background: #fff; border: 1px solid #dfe6ee; border-radius: 8px; padding: 24px; }
+.contact-faq-icon { width: 88px; height: 88px; margin-bottom: 16px; }
+.contact-faq-card h3 { color: #202636; font-size: 18px; line-height: 1.5; font-weight: 700; margin: 0 0 12px; }
+.contact-faq-card p { color: #526071; font-size: 15px; line-height: 1.75; margin: 0; }
+.contact-cta-section { padding: 48px 0; background: #edf7f5; }
+.contact-us-page-wrapper .contact-cta-content { display: flex; align-items: center; gap: 28px; }
+.contact-cta-icon { flex: 0 0 96px; width: 96px; height: 96px; }
+.contact-cta-text { flex: 1; min-width: 0; }
+.contact-cta-text h2 { color: #202636; font-size: 28px; line-height: 1.3; font-weight: 800; margin: 0 0 12px; }
+.contact-cta-text p { color: #526071; font-size: 16px; line-height: 1.75; margin: 0; max-width: 620px; }
+@media (max-width: 1024px) {
+  .contact-faq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .contact-us-page-wrapper .contact-cta-content { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+  .contact-us-page-wrapper { padding-top: 80px; }
+  .contact-us-page-wrapper .container { padding: 0 24px; }
+  .contact-us-page-header { gap: 16px; padding: 32px 0; }
+  .contact-us-icon-wrapper { flex-basis: 72px; width: 72px; height: 72px; }
+  .contact-label { font-size: 12px; }
+  .contact-us-page-header h1 { font-size: 30px; }
+  .contact-us-page-header p { font-size: 16px; }
+  .contact-cards-grid, .contact-faq-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .contact-card { padding: 24px; }
+  .contact-card-content .contact-value { font-size: 16px; }
+  .contact-card-icon { width: 96px; height: 96px; }
+  .contact-faq-section { padding: 40px 0; }
+  .contact-section-header h2, .contact-cta-text h2 { font-size: 26px; }
+  .contact-us-page-wrapper .contact-cta-content { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .contact-cta-icon { flex-basis: 80px; width: 80px; height: 80px; }
+  .contact-cta-content .contact-card-btn { width: 100%; }
+}

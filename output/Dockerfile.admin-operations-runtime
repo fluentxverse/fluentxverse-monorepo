@@ -1,0 +1,4 @@
+ARG SERVER_RUNTIME_IMAGE
+FROM ${SERVER_RUNTIME_IMAGE}
+COPY --chown=appuser:appgroup src /app/src
+COPY --chown=appuser:appgroup tsconfig.json /app/tsconfig.json

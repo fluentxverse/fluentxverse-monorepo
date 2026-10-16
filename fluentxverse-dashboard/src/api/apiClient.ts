@@ -1,6 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 import { API_BASE_URL } from '../config/api';
+import { isLessonMediaRequest, normalizeLessonMedia } from '../../../shared/lessonMedia';
 
 // Create a shared axios instance
 export const apiClient = axios.create({
@@ -16,7 +17,10 @@ let isHandlingUnauthorized = false;
 
 // Set up response interceptor to handle 401 errors
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (isLessonMediaRequest(response.config.url)) response.data = normalizeLessonMedia(response.data, API_BASE_URL);
+    return response;
+  },
   (error: AxiosError) => {
     // Check if it's a 401 Unauthorized error
     if (error.response?.status === 401) {

@@ -16,6 +16,9 @@ export function Footer() {
             <h2>Discover</h2>
             <A href="/">Home</A>
             <A href="/about">About us</A>
+            <A href="/technology">Technology</A>
+            <A href="/technology/ai">AI in education</A>
+            <A href="/onchain-education">Why onchain</A>
             <A href="/#ecosystem">Our ecosystem</A>
           </div>
           <div class="footer-column">

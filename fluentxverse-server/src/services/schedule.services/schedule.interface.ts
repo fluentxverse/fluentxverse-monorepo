@@ -132,6 +132,7 @@ export interface AvailableSlot {
 }
 
 export interface BookSlotInput {
+  privatePassReservationId?: string;
   studentId: string;
   slotId: string;
   reservationId: string;

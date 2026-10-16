@@ -14,12 +14,21 @@ FluentXVerse is an ESL (English as a Second Language) learning platform that ble
 
 ## Tech Stack
 
-- Frontend: Preact + TypeScript + Vite
+- Student/tutor frontend: SolidJS + TypeScript + Vite (Cloudflare Workers)
 - API: Elysia + Eden Treaty (type‑safe client)
 - Data: Memgraph (graph database) for users, lessons, and activity relations
 - Storage: SeaweedFS/MinIO for media (audio, images) — optional
 
 ## Development
+
+The active frontends are `fluentxverse-student-solid-prototype/` and
+`fluentxverse-tutor-solid-prototype/`. Their historical folder suffix is retained
+to preserve local project paths. Preact working trees are archived in
+`archive/preact/`, excluded from active builds and deployments.
+
+Use `bun run dev:student`, `bun run dev:tutor`, `bun run build:student`, and
+`bun run build:tutor` from the repository root. Deploy with `bun run deploy:student`
+or `bun run deploy:tutor`; see [Workers deployment](docs/cloudflare-workers-frontends.md).
 
 - `bun run dev` — start the frontend dev server
 - `bun run build` — build production assets

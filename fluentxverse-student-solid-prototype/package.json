@@ -1,0 +1,47 @@
+{
+  "name": "fluentxverse-student-solid-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretypecheck": "node scripts/sync-anonymous-review-policy.mjs && node scripts/sync-lesson-pass-policy.mjs",
+    "dev": "vite --host 127.0.0.1 --port 5176 --strictPort",
+    "dev:api": "bun run backend/server.ts",
+    "dev:student-api": "bun run backend/application-server.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.compatibility.json",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5176 --strictPort",
+    "cf:deploy": "npm run build && bunx wrangler@4.149.0 deploy",
+    "cf:dry-run": "npm run build && bunx wrangler@4.149.0 deploy --dry-run",
+    "test": "bun test tests/unit.test.ts tests/productionEndpoints.test.ts tests/lessonPassVault.test.ts",
+    "test:lesson-passes": "node tests/lesson-passes.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "test:origin": "node tests/origin-browser.cjs",
+    "test:live-sdk": "node tests/live-sdk.cjs",
+    "test:pdf": "node tests/pdf-browser.cjs",
+    "test:student": "node tests/student-parity.cjs",
+    "test:production": "node tests/production-hosting.cjs"
+  },
+  "dependencies": {
+    "@semaphore-protocol/group": "4.14.3",
+    "@semaphore-protocol/identity": "4.14.3",
+    "@semaphore-protocol/proof": "4.14.3",
+    "@cloudflare/realtimekit": "^2.0.2",
+    "@privy-io/js-sdk-core": "0.77.0",
+    "@solidjs/router": "^1.0.0",
+    "axios": "^1.20.0",
+    "lucide-solid": "1.55.0",
+    "pdfjs-dist": "^5.7.284",
+    "socket.io-client": "^4.8.4",
+    "solid-js": "1.9.17",
+    "three": "^0.184.0",
+    "viem": "2.56.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@types/node": "25.9.8",
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "vite-plugin-solid": "2.11.14"
+  }
+}

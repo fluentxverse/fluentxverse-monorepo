@@ -1,0 +1,181 @@
+/* Dark mode CSS variables and base styles */
+:root {
+  /* Light theme variables (default) */
+  --background-color: #ffffff;
+  --primary-color: #6DBE45;
+  --secondary-color: #f5f5f5;
+  --text-color: #131740;
+  --primary-text-color: #131740;
+  --secondary-text-color: #6a6a6a;
+  --border-color: #e9e9e9;
+  --card-background: #ffffff;
+  --header-background-color: #ffffff;
+  --footer-background-color: #ffffff;
+  --banner-overlay: rgba(0, 0, 0, 0.4);
+  --card-box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.08);
+  
+  /* Common accent colors */
+  --accent-color: #6DBE45;
+  --accent-hover: #5aa839;
+  --danger-color: #ff5e5b;
+  --warning-color: #ffbd59;
+  --info-color: #56b6c2;
+  --banner-overlay: rgba(0, 0, 0, 0.4);
+}
+
+/* Dark theme variables */
+.dark-mode {
+  --background-color: #121212;
+  --primary-color: #6DBE45;
+  --secondary-color: #2a2a2a;
+  --text-color: #e0e0e0;
+  --primary-text-color: #e0e0e0;
+  --secondary-text-color: #a0a0a0;
+  --border-color: #3a3a3a;
+  --card-background: #1e1e1e;
+  --header-background-color: #1a1a1a;
+  --footer-background-color: #1a1a1a;
+  --banner-overlay: rgba(0, 0, 0, 0.5);
+  --card-box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.25);
+  --sidebar-background: #1a1a1a;
+  --sidebar-icon-background: linear-gradient(rgb(30, 30, 30) 0%, rgba(25, 25, 25, 0) 100%);
+  --header-border-color: #4d4d4d; /* Enhanced dark mode border color for better visibility */
+}
+
+/* Background and text colors */
+.dark-mode {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Sidebar styles */
+.dark-mode .sidebar {
+  background-color: var(--sidebar-background);
+}
+
+/* Sidebar icon colors - using the same colors as light mode */
+.dark-mode .sidebar-icon ul li a {
+  color: var(--icon-color); /* Same as light mode */
+  background: var(--sidebar-icon-background);
+  border: 1px solid var(--icon-border-color);
+}
+
+.dark-mode .sidebar-icon ul li.active a {
+  background: var(--nft-gradient-color); /* Same as light mode */
+  color: #fff;
+  border: 1px solid var(--nft-gradient-color);
+}
+
+.dark-mode .sidebar-icon ul li a:hover {
+  background: var(--nft-gradient-color); /* Same as light mode */
+  color: #fff;
+}
+
+/* Header styles */
+.dark-mode .header-area {
+  background-color: var(--header-background-color);
+}
+
+.dark-mode .menu-wrap {
+  background-color: var(--header-background-color);
+}
+
+/* Main navigation */
+.dark-mode .main-menu ul li a {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .main-menu ul li.active > a, 
+.dark-mode .main-menu ul li a:hover, 
+.dark-mode .main-menu ul li.menu-item-has-children:hover > a {
+  color: var(--accent-color);
+}
+
+/* Dropdown menus */
+.dark-mode .main-menu ul li .submenu {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .main-menu ul li .submenu li a {
+  color: var(--primary-text-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .main-menu ul li .submenu li a:hover {
+  background: var(--secondary-color);
+  color: var(--accent-color);
+}
+
+/* Card styles */
+.dark-mode .card {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .product-card {
+  background-color: var(--card-background);
+}
+
+/* Button styles */
+.dark-mode .btn {
+  background: var(--accent-color);
+  color: white;
+}
+
+.dark-mode .btn-outline {
+  background: transparent;
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode .btn-outline:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Form elements */
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+  background-color: var(--secondary-color);
+  color: var(--primary-text-color);
+  border: 1px solid var(--border-color);
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: var(--secondary-text-color);
+}
+
+/* Modal styles */
+.dark-mode .modal-content {
+  background-color: var(--card-background);
+}
+
+.dark-mode .modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Table styles */
+.dark-mode table {
+  background-color: var(--card-background);
+  color: var(--primary-text-color);
+}
+
+.dark-mode th {
+  background-color: var(--secondary-color);
+}
+
+.dark-mode tr:nth-child(even) {
+  background-color: var(--secondary-color);
+}
+
+/* Apply smooth transitions for all elements */
+body, a, button, input, textarea, select, .card, .sidebar, .header-area, .footer-area, .main-content {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}

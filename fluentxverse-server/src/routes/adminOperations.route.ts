@@ -3,6 +3,7 @@ import { createAdminGuard } from '../middleware/auth.middleware';
 import { adminOperationsService as ops } from '../services/admin.services/operations.service';
 import { lessonIssueReviewService as issues } from '../services/lessonIssueReview.service';
 import { isAllowedAdminMutationOrigin } from '../config/cors';
+import { tutorCompensationService as compensation, tutorCompensationFailure } from '../services/admin.services/tutorCompensation.service';
 
 const reason = t.String({ minLength: 1, maxLength: 1000 });
 export const adminOperationsRoute = new Elysia({ prefix: '/admin/operations' })
@@ -13,11 +14,11 @@ export const adminOperationsRoute = new Elysia({ prefix: '/admin/operations' })
   .onBeforeHandle(({ operator, set, request }) => {
     set.headers['Cache-Control'] = 'private, no-store';
     if (!operator) { set.status = 403; return { success: false, error: 'Administrator access required' }; }
-    if (request.method !== 'GET' && !isAllowedAdminMutationOrigin(request.headers.get('origin'))) {
+    const path = new URL(request.url).pathname, method = request.method;
+    if ((method !== 'GET' || path.includes('/compensation')) && !isAllowedAdminMutationOrigin(request.headers.get('origin'))) {
       set.status = 403; return { success: false, error: 'Untrusted origin' };
     }
-    const path = new URL(request.url).pathname, method = request.method;
-    const cap = path.includes('/payments') || path.endsWith('/refund') ? 'finance'
+    const cap = path.includes('/payments') || path.includes('/compensation') || path.endsWith('/refund') ? 'finance'
       : path.includes('/surveys') ? 'qa'
       : path.endsWith('/schedule') || path.endsWith('/revoke') || path.endsWith('/unblock') ? 'operations'
       : path.includes('/reports') || path.endsWith('/reopen') ? 'support' : null;
@@ -26,6 +27,17 @@ export const adminOperationsRoute = new Elysia({ prefix: '/admin/operations' })
     }
   })
   .get('/access', ({ operator }) => ({ success: true, data: operator }))
+  .get('/compensation', async ({ query }) => ({ success: true, data: await compensation.summaries(query.tutorIds.split(',')) }), {
+    query: t.Object({ tutorIds: t.String({ minLength: 1, maxLength: 6500 }) }),
+  })
+  .get('/compensation/:id', async ({ params, query }) => ({ success: true,
+    data: await compensation.detail(params.id, query.beforeVersion === undefined ? undefined : Number(query.beforeVersion)) }), {
+    query: t.Object({ beforeVersion: t.Optional(t.String({ pattern: '^[1-9][0-9]{0,15}$' })) }),
+  })
+  .put('/compensation/:id', async ({ params, body, operator }) => ({ success: true, data: await compensation.save(params.id, body, operator!.id) }), {
+    body: t.Object({ amount: t.String({ minLength: 1, maxLength: 12 }), currency: t.Literal('USD'),
+      expectedVersion: t.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER - 1 }), requestId: t.String({ format: 'uuid' }), reason: t.String({ maxLength: 1000 }) }),
+  })
   .get('/lessons', async ({ query }) => ({ success: true, data: await ops.list({ ...query, page: Number(query.page || 1) }) }))
   .get('/slots', async ({ query }) => ({ success: true, data: await ops.slots(query.from, query.to, query.tutorId) }))
   .get('/lessons/:id', async ({ params, operator }) => ({ success: true, data: await ops.detail(params.id, operator!.permissions) }))
@@ -60,7 +72,12 @@ export const adminOperationsRoute = new Elysia({ prefix: '/admin/operations' })
     if (body.ticketTransactionId && !await createAdminGuard(cookie, set, 'finance')) return { success: false, error: 'Finance permission required' };
     return { success: true, data: await issues.review(params.source, params.id, operator!.id, body.status, body.resolution, body.ticketTransactionId) };
   }, { body: t.Object({ status: t.Union([t.Literal('submitted'), t.Literal('under_review'), t.Literal('resolved')]), resolution: t.String({ maxLength: 2000 }), ticketTransactionId: t.Optional(t.String()) }) })
-  .onError(({ error, set }) => {
+  .onError(({ error, set, path, code }) => {
+    if (path.includes('/compensation')) {
+      const response = tutorCompensationFailure(error, code);
+      set.status = response.status;
+      return response.body;
+    }
     if (Number(set.status || 200) < 400) set.status = 400;
     return { success: false, error: error instanceof Error ? error.message : 'Operation failed' };
   });

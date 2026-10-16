@@ -36,6 +36,13 @@ export interface ManagedUserWallet {
   metadata?: string;
 }
 
+export interface EngineProofSubmission {
+  id: string;
+  status: string;
+  zkVerifyNetwork: string;
+  transactionResult: string;
+}
+
 export class GmrEngineClient {
   private readonly baseUrl = (process.env.GMR_ENGINE_API_BASE || process.env.GMR_ENGINE_BASE_URL || '').replace(/\/$/, '');
   private readonly apiKey = process.env.GMR_ENGINE_API_KEY || '';
@@ -88,6 +95,17 @@ export class GmrEngineClient {
       method: 'POST', body: JSON.stringify({ chainId, method, params }),
     });
     return result.result;
+  }
+
+  async submitProof(input: { proof: unknown; publicSignals: unknown; vk: unknown; domainId: number }): Promise<Record<string, any>> {
+    const result = await this.request<{ submission: EngineProofSubmission }>('/v1/zkverify/proofs', {
+      method: 'POST', signal: AbortSignal.timeout(300_000),
+      body: JSON.stringify({ ...input, proofSystem: 'groth16', curve: 'bn128', expectedNetwork: 'Volta' }),
+    });
+    if (result.submission.zkVerifyNetwork !== 'Volta') throw new Error('Legacy proof submission requires Engine Volta configuration');
+    const transaction = JSON.parse(result.submission.transactionResult);
+    if (!transaction.txHash) throw new Error('Engine proof submission requires reconciliation');
+    return transaction;
   }
 
   async transaction(transactionId: string): Promise<EngineTransaction> {

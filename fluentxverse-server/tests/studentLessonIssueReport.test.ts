@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { studentIssueReportWindow } from '../src/services/studentLessonIssueReport.service';
 import { studentTutorIssues, studentTutorIssueLabel, validateStudentTutorIssue } from '../src/utils/studentTutorIssues';
-import { studentTutorIssues as studentChoices } from '../../fluentxverse-student/src/data/studentTutorIssues';
+import { studentTutorIssues as studentChoices } from '../../fluentxverse-student-solid-prototype/student/data/studentTutorIssues';
 describe('student lesson issue reporting window', () => {
   const start = '2026-10-07T07:00:00.000Z';
   const deadline = Date.parse(start) + (25 * 60 + 48 * 60 * 60) * 1000;

@@ -7,7 +7,7 @@ export const projects = [
     name: 'ESL student app',
     category: 'FOR LEARNERS',
     description: 'The learner side of FluentXVerse ESL. Book one-to-one English lessons, study with learning materials, and follow your progress.',
-    details: ['Onchain lesson tickets', 'One-to-one lessons', 'Progress & feedback'],
+    details: ['Ticket-based booking', 'One-to-one lessons', 'Progress & feedback'],
     href: 'https://student.fluentxverse.com',
     cta: 'Explore the ESL student app',
     image: '/assets/img/esl-japanese-student-v2.webp',

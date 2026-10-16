@@ -5,7 +5,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { buildEddsa, buildPoseidon } from 'circomlibjs';
-import { CurveType, Library, TransactionStatus, zkVerifySession } from 'zkverifyjs';
+import { TransactionStatus } from 'zkverifyjs';
+import { gmrEngine } from '../web3.services/gmrEngine.service';
 import { getDriver } from '../../db/memgraph';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -213,25 +214,18 @@ async function generate(studentId: string, bookingId: string): Promise<LessonPro
     await persist(bookingId, { status: 'local_proof_generated', commitment,
       issuerAx: input.issuerAx, issuerAy: input.issuerAy, localProofVerified: true, lastError: null });
 
-    const seed = process.env.ZKVERIFY_SEED_PHRASE;
-    if (!seed || process.env.ZKVERIFY_ENABLED === 'false') {
+    if (!gmrEngine.configured() || process.env.ZKVERIFY_ENABLED === 'false') {
       return { bookingId, status: 'local_proof_generated', commitment, submissionAvailable: false };
     }
     const domainId = Number(process.env.ZKVERIFY_DOMAIN_ID || '0');
     if (!Number.isInteger(domainId) || domainId < 0) throw new Error('Invalid ZKVERIFY_DOMAIN_ID');
-    const chainSession = await zkVerifySession.start().Volta().withAccount(seed);
-    try {
-      const { transactionResult } = await chainSession.verify()
-        .groth16({ library: Library.snarkjs, curve: CurveType.bn128 })
-        .execute({ proofData: { vk: JSON.parse(await readFile(vkPath, 'utf8')),
-          proof: JSON.parse(await readFile(proofPath, 'utf8')),
-          publicSignals: JSON.parse(await readFile(publicPath, 'utf8')) }, domainId });
-      const tx = await transactionResult;
+    const tx = await gmrEngine.submitProof({ vk: JSON.parse(await readFile(vkPath, 'utf8')),
+      proof: JSON.parse(await readFile(proofPath, 'utf8')),
+      publicSignals: JSON.parse(await readFile(publicPath, 'utf8')), domainId });
     const status = tx.status === TransactionStatus.Finalized ? 'verified' : 'submitted';
-      await persist(bookingId, { status, txHash: tx.txHash || null, aggregationId: tx.aggregationId ?? null,
-        statement: tx.statement || null, domainId, lastError: null });
-      return { bookingId, status, commitment, txHash: tx.txHash || undefined, aggregationId: tx.aggregationId };
-    } finally { await chainSession.close(); }
+    await persist(bookingId, { status, txHash: tx.txHash || null, aggregationId: tx.aggregationId ?? null,
+      statement: tx.statement || null, domainId, lastError: null });
+    return { bookingId, status, commitment, txHash: tx.txHash || undefined, aggregationId: tx.aggregationId };
   } catch (error) {
     await persist(bookingId, { status: 'failed', commitment, lastError: error instanceof Error ? error.message : String(error) });
     throw error;

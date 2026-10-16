@@ -1,0 +1,37 @@
+.tutor-recording-dialog {
+  --recording-bg: #fff; --recording-text: #202636; --recording-muted: #647184; --recording-border: #dfe5ed;
+  position: fixed; inset: 0; margin: auto; width: min(480px, calc(100vw - 32px)); max-width: none;
+  max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--recording-border); border-radius: 8px;
+  background: var(--recording-bg); color: var(--recording-text); font: inherit; overflow: hidden; color-scheme: light;
+}
+.tutor-recording-dialog[open] { display: flex; flex-direction: column; }
+.tutor-recording-dialog::backdrop { background: rgba(0, 0, 0, .6); }
+[data-theme='dark'] .tutor-recording-dialog { --recording-bg: var(--fxv-surface, #262626); --recording-text: var(--fxv-text, #f1f3f6); --recording-muted: var(--fxv-text-muted, #aab2bd); --recording-border: var(--fxv-border, #3c3c3c); color-scheme: dark; }
+.tutor-recording-dialog * { box-sizing: border-box; letter-spacing: 0; }
+.tutor-recording-dialog header { display: flex; align-items: center; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--recording-border); flex-shrink: 0; }
+.tutor-recording-dialog header img { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
+.tutor-recording-dialog h2 { flex: 1; min-width: 0; margin: 0; font-size: 18px; line-height: 1.4; color: inherit; outline: none; }
+.tutor-recording-dialog button { font: inherit; box-shadow: none; cursor: pointer; }
+.tutor-recording-dialog svg { flex-shrink: 0; }
+.tutor-recording-dialog .recording-close { position: static !important; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; flex-shrink: 0; border: 1px solid var(--recording-border); border-radius: 6px; background: var(--recording-bg); color: var(--recording-muted); }
+.tutor-recording-dialog .recording-dialog-body { padding: 20px; overflow-y: auto; min-height: 0; }
+.tutor-recording-dialog p { margin: 0 0 16px; color: inherit; font-size: 14px; line-height: 1.65; }
+.tutor-recording-dialog .recording-details { color: var(--recording-muted); font-size: 12px; }
+.tutor-recording-dialog .recording-current-choice { font-size: 12px; font-weight: 600; }
+.tutor-recording-dialog .recording-authority { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; line-height: 1.6; color: var(--recording-text); cursor: pointer; }
+.tutor-recording-dialog .recording-authority input { appearance: auto; width: 17px; height: 17px; margin: 2px 0 0; accent-color: #0245ae; flex-shrink: 0; }
+.tutor-recording-dialog footer { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 20px; border-top: 1px solid var(--recording-border); flex-shrink: 0; }
+.tutor-recording-dialog footer button { display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; min-height: 44px; padding: 10px 12px; border: 1px solid var(--recording-border); border-radius: 6px; background: var(--recording-bg); color: var(--recording-text); font-size: 13px; font-weight: 650; }
+.tutor-recording-dialog .recording-agree { background: #0245ae !important; color: #fff !important; border-color: #0245ae; }
+.tutor-recording-dialog .recording-agree:hover:not(:disabled) { background: #063b8d !important; }
+.tutor-recording-dialog .recording-decline:hover:not(:disabled) { background: rgba(100, 113, 132, .08); }
+.tutor-recording-dialog button:disabled { opacity: .5; cursor: default; }
+.tutor-recording-dialog :is(button,input):focus-visible { outline: 2px solid #79b5ff; outline-offset: 3px; }
+.tutor-recording-dialog .recording-error { display: flex; align-items: flex-start; gap: 8px; color: #bd3547; background: #fff4f5; padding: 12px; border: 1px solid #efcdd3; border-radius: 6px; font-size: 12px; }
+.tutor-recording-dialog .recording-error svg { margin-top: 2px; }
+[data-theme='dark'] .tutor-recording-dialog .recording-error { color: #ff9ca8; background: #38262a; border-color: #74454d; }
+.tutor-recording-dialog .recording-saving { flex-basis: 100%; color: var(--recording-muted); font-size: 12px; }
+.recording-spinner { animation: recording-spin 1s linear infinite; }
+@keyframes recording-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .recording-spinner { animation: none; } }
+@media (max-width: 360px) { .tutor-recording-dialog header { gap: 8px; padding: 16px; } .tutor-recording-dialog h2 { font-size: 16px; } .tutor-recording-dialog header img { width: 32px; height: 32px; } .tutor-recording-dialog footer, .tutor-recording-dialog .recording-dialog-body { padding: 16px; } }

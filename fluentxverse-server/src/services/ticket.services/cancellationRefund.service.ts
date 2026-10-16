@@ -23,6 +23,15 @@ export class CancellationRefundService {
           SET b.refundWriteVersion = coalesce(b.refundWriteVersion, 0) + 1 RETURN b`, { bookingId });
         const b = locked.records[0]?.get('b').properties;
         if (!b) throw new Error('A refund requires a cancelled booking');
+        if (b.paymentMethod === 'trial') {
+          await tx.run("MATCH (b:Booking {bookingId: $bookingId}) SET b.refundStatus = 'not_required'", { bookingId });
+          return null;
+        }
+        if (b.privatePassReservationId) {
+          await tx.run(`MATCH (b:Booking {bookingId:$bookingId}), (r:LessonPassReservation {id:$id,status:'booked'})
+            SET b.refundStatus='pass_pending'`, { bookingId, id: b.privatePassReservationId });
+          return null;
+        }
         const cancelledAt = b.cancelledAt?.toStandardDate?.()?.getTime();
         const startsAt = b.slotDateTime?.toStandardDate?.()?.getTime();
         if (b.status !== 'cancelled' && Date.now() < startsAt + (Number(b.durationMinutes) || 25) * 60000) throw new Error('Support refunds require an ended lesson');
@@ -87,6 +96,15 @@ export class CancellationRefundService {
       if (intent.refundPhase === 'dispatching') {
         if (!Number.isFinite(Date.parse(intent.leaseUntil || '')) || Date.parse(intent.leaseUntil) < Date.now()) await this.holdForReview(bookingId, intent.id, 'Transfer submission was interrupted; verify its outcome before retrying.');
         return this.dto(intent);
+      }
+      if (process.env.ALLOW_MOCK_TICKET_PURCHASES === 'true' && intent.refundPhase === 'queued') {
+        const originalHash = (await db.run('MATCH (o:TicketTransaction {id:$id,type:"booking"}) RETURN o.transferTxId AS hash',
+          { id: intent.originalTransactionId })).records[0]?.get('hash');
+        if (String(originalHash).startsWith('mock-ticket-')) {
+          const result = await this.completeMockRefund(bookingId, intent);
+          if (result?.status === 'completed') await this.finish(bookingId, result.id, result.transferTxId);
+          return result;
+        }
       }
       if (Date.parse(intent.nextAttemptAt || '') > Date.now()) return this.dto(intent);
       if (intent.refundPhase === 'submitted') {
@@ -165,6 +183,50 @@ export class CancellationRefundService {
 
   private dto(record: any): TicketTransaction { return { ...record, quantity: number(record.quantity) }; }
 
+  private async completeMockRefund(bookingId: string, intent: any): Promise<TicketTransaction | null> {
+    const db = getDriver().session();
+    try {
+      // Credit and refund finalization share the booking lock and one Memgraph transaction.
+      return await db.executeWrite(async tx => {
+        await tx.run('MATCH (b:Booking {bookingId:$bookingId}) SET b.refundWriteVersion=coalesce(b.refundWriteVersion,0)+1', { bookingId });
+        const row = (await tx.run('MATCH (r:TicketTransaction {id:$id}) RETURN r', { id: intent.id })).records[0];
+        const refund = row?.get('r').properties;
+        if (!refund) return null;
+        if (refund.status === 'completed') return this.dto(refund);
+        if (refund.refundPhase !== 'queued') return this.dto(refund);
+        const original = (await tx.run('MATCH (o:TicketTransaction {id:$id,bookingId:$bookingId,type:"booking",status:"completed"}) RETURN o',
+          { id: refund.originalTransactionId, bookingId })).records[0]?.get('o').properties;
+        const wallet = String(refund.studentWallet || '').toLowerCase();
+        const tier = ['basic', 'premium', 'trial'].includes(refund.tier) ? refund.tier : null;
+        const transfers = original && await tx.run(`MATCH (t:MockTicketTransfer {transactionHash:$hash,bookingId:$bookingId,
+          studentId:$studentId,walletAddress:$wallet,status:'used',tier:$tier}) RETURN t`,
+          { hash: original.transferTxId, bookingId, studentId: refund.studentId, wallet, tier: tier || '' });
+        const balances = await tx.run('MATCH (balance:MockTicketBalance {walletAddress:$wallet}) RETURN balance', { wallet });
+        const transfer = transfers?.records[0]?.get('t').properties;
+        if (!tier || refund.engineTransactionId || refund.transferTxId || !original || !String(original.transferTxId).startsWith('mock-ticket-')
+          || original.studentId !== refund.studentId || original.tier !== tier || original.tokenId !== refund.tokenId
+          || number(original.quantity) !== 1 || number(refund.quantity) !== 1 || transfers?.records.length !== 1
+          || number(transfer?.quantity) !== 1 || transfer?.refundId || String(original.studentWallet || '').toLowerCase() !== wallet || balances.records.length !== 1) {
+          const error = 'Mock refund evidence is missing or inconsistent. Verify the original ticket debit before retrying.';
+          await tx.run(`MATCH (b:Booking {bookingId:$bookingId}),(r:TicketTransaction {id:$id})
+            SET b.refundStatus='review',b.refundError=$error,r.refundPhase='review',r.lastError=$error`, { bookingId, id: refund.id, error });
+          return this.dto({ ...refund, refundPhase: 'review', lastError: error });
+        }
+        const remaining = number(balances.records[0]!.get('balance').properties[tier]);
+        if (!Number.isSafeInteger(remaining) || !Number.isSafeInteger(remaining + 1) || remaining < 0) throw new Error('Invalid mock ticket balance requires review');
+        const transferId = `mock-cancellation-refund-${bookingId}`, now = new Date().toISOString();
+        const result = await tx.run(`MATCH (b:Booking {bookingId:$bookingId}),(r:TicketTransaction {id:$id,refundPhase:'queued'}),
+          (balance:MockTicketBalance {walletAddress:$wallet}),(t:MockTicketTransfer {transactionHash:$hash,status:'used',bookingId:$bookingId})
+          SET balance.${tier}=balance.${tier}+1,balance.updatedAt=datetime(),t.status='refunded',t.refundId=$id,
+            b.refunded=true,b.refundStatus='completed',r.status='completed',r.refundPhase='completed',
+            r.transferTxId=$transferId,r.completedAt=$now REMOVE b.refundError,r.lastError,r.nextAttemptAt RETURN r`,
+          { bookingId, id: refund.id, wallet, hash: original.transferTxId, transferId, now });
+        if (result.records.length !== 1) throw new Error('Mock refund state changed before credit');
+        return this.dto(result.records[0]!.get('r').properties);
+      });
+    } finally { await db.close(); }
+  }
+
   private async retryLater(bookingId: string, id: string, error: string, phase: string) {
     const db = getDriver().session();
     try {
@@ -207,6 +269,8 @@ export class CancellationRefundService {
       const owner = await db.run('MATCH (b:Booking {bookingId: $bookingId}) RETURN b.studentId AS studentId', { bookingId });
       const studentId = owner.records[0]?.get('studentId');
       if (studentId) await invalidateCache(`student:*:${studentId}*`).catch(() => {});
+      const wallet = (await db.run('MATCH (r:TicketTransaction {id:$id}) RETURN r.studentWallet AS wallet', { id })).records[0]?.get('wallet');
+      if (wallet) await invalidateCache(`ticket:balance:${String(wallet).toLowerCase()}`).catch(() => {});
     } finally { await db.close(); }
   }
 
@@ -214,6 +278,7 @@ export class CancellationRefundService {
     const db = getDriver().session();
     try {
       const result = await db.run(`MATCH (b:Booking) WHERE (b.status = 'cancelled' OR b.refundApprovedBy IS NOT NULL) AND coalesce(b.refunded, false) = false
+        AND b.privatePassReservationId IS NULL
         AND coalesce(b.refundStatus, '') IN ['', 'pending'] AND ($ids IS NULL OR b.bookingId IN $ids)
         AND ($ids IS NOT NULL OR b.testFixture IS NULL)
         OPTIONAL MATCH (r:TicketTransaction {id: 'cancellation-refund-' + b.bookingId})

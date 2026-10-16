@@ -1,0 +1,36 @@
+/* Dark mode styles for footer */
+.dark-mode .footer-area {
+  background-color: var(--footer-background-color);
+  border-top: 1px solid var(--border-color);
+}
+
+.dark-mode .footer-widget .fw-title {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .footer-widget p {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .footer-menu li a {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .footer-menu li a:hover {
+  color: var(--accent-color);
+}
+
+.dark-mode .copyright-text {
+  color: var(--secondary-text-color);
+  border-top: 1px solid var(--border-color);
+}
+
+.dark-mode .footer-social ul li a {
+  background-color: var(--secondary-color);
+  color: var(--primary-text-color);
+}
+
+.dark-mode .footer-social ul li a:hover {
+  background-color: var(--accent-color);
+  color: white;
+}

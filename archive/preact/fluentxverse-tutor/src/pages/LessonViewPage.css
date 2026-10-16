@@ -1,0 +1,229 @@
+/* ================================
+   Lesson View Page - Full Page Layout
+   ================================ */
+
+.lesson-fullpage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #f8fafc;
+  z-index: 9999;
+}
+
+[data-theme='dark'] :is(.lesson-fullpage, .lesson-fullpage-iframe) {
+  background: #1a1a1a;
+  color-scheme: dark;
+}
+
+[data-theme='dark'] :is(.lesson-fullpage-loading p, .lesson-fullpage-error p) {
+  color: #b8b8b8;
+}
+
+/* Back Button */
+.lesson-back-btn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-back-btn:hover {
+  background: #fff;
+  border-color: #0245ae;
+  color: #0245ae;
+  transform: translateX(-2px);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.2);
+}
+
+.lesson-back-btn i {
+  font-size: 14px;
+}
+
+/* Full-page iframe */
+.lesson-fullpage-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+/* Hide iframe while loading to prevent flash */
+.lesson-fullpage-iframe.loading {
+  opacity: 0;
+}
+
+.lesson-fullpage-iframe.loaded {
+  opacity: 1;
+}
+
+/* Loading State */
+.lesson-fullpage-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  z-index: 1;
+}
+
+.lesson-fullpage-loading .spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.lesson-fullpage-loading p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Content Wrapper - replaces iframe */
+.lesson-content-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding-top: 60px; /* Space for fixed back button */
+}
+
+/* Loading State */
+.lesson-fullpage-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+}
+
+.lesson-fullpage-loading .spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #0245ae;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.lesson-fullpage-loading p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Error State */
+.lesson-fullpage-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+}
+
+.lesson-fullpage-error .error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.lesson-fullpage-error .error-icon i {
+  font-size: 28px;
+  color: #ef4444;
+}
+
+.lesson-fullpage-error h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.lesson-fullpage-error p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px;
+}
+
+.lesson-fullpage-error .btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lesson-fullpage-error .btn-back:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 69, 174, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lesson-back-btn {
+    top: 12px;
+    left: 12px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .lesson-back-btn span {
+    display: none;
+  }
+  
+  .lesson-content-wrapper {
+    padding-top: 50px;
+  }
+}

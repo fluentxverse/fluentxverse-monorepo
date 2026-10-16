@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { useRoute } from 'preact-iso';
 import { getLessonById, getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
+import { API_BASE_URL } from '../config/api';
+import { normalizeLessonMedia } from '../../../shared/lessonMedia';
 import './BusinessEnglishVisualEditor.css';
 import './BusinessEnglishPreview.css';
 
@@ -642,7 +644,7 @@ export default function BusinessEnglishPreview() {
     let hasStoredPreview = false;
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as PreviewOverrides;
+        const parsed = normalizeLessonMedia(JSON.parse(stored), API_BASE_URL) as PreviewOverrides;
         setPreviewOverrides(parsed);
         setHasSessionData(true);
         hasStoredPreview = true;
@@ -816,17 +818,17 @@ export default function BusinessEnglishPreview() {
       </div>
       <div className="beve-header-row2">
         <span className="beve-header-chapter">
-          CHAPTER {chapter}: {chapterName.toUpperCase() || 'UNTITLED'}
+          Chapter {chapter} / {chapterName || 'Untitled'}
         </span>
         <div className="beve-header-row2-right">
-          <span className="beve-preview-type-pill">{beData.lessonType}</span>
-          <span className="beve-skill-badge">{skill || beData.lessonType}</span>
+          <span className="beve-skill-badge">{beData.lessonType.toLowerCase()}</span>
         </div>
       </div>
       <div className="beve-header-row3">
-        <span className="beve-header-lesson">
-          Lesson {lessonNumber}: {lessonName || 'Untitled'}
-        </span>
+        <h2 className="beve-header-lesson">
+          <span className="beve-header-lesson-number">Lesson {lessonNumber}</span>{' '}
+          <span className="beve-header-lesson-title">{lessonName || 'Untitled'}</span>
+        </h2>
       </div>
     </div>
   );

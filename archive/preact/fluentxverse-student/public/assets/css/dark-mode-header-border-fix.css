@@ -1,0 +1,22 @@
+/* Enhanced floating border fix for dark mode */
+.dark-mode .menu-wrap::before {
+    /* Use a slightly lighter border color for better visibility in dark mode */
+    border-color: #4d4d4d;
+    /* Increase border width for more visibility */
+    border-width: 1px;
+    /* Ensure full opacity */
+    opacity: 1;
+    /* Add subtle glow effect to make border more visible */
+    box-shadow: 0 0 3px rgba(100, 100, 100, 0.3);
+}
+
+/* Additional specificity to ensure this rule is applied */
+.dark-mode #sticky-header .menu-wrap::before {
+    border-color: #4d4d4d;
+}
+
+/* Ensure the border is visible in all states */
+.dark-mode #sticky-header.sticky-menu .menu-wrap::before {
+    border-color: #4d4d4d;
+    display: block !important;
+}

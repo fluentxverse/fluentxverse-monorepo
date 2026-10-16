@@ -3,26 +3,28 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "fluentxverse-tutor",
-    "fluentxverse-student",
+    "fluentxverse-tutor-solid-prototype",
+    "fluentxverse-student-solid-prototype",
     "fluentxverse-server",
     "fluentxverse-dashboard",
     "fluentxverse-site"
   ],
   "scripts": {
-    "dev:tutor": "cd fluentxverse-tutor && bun run dev",
-    "dev:student": "cd fluentxverse-student && bun run dev",
+    "dev:tutor": "npm --prefix fluentxverse-tutor-solid-prototype run dev",
+    "dev:student": "npm --prefix fluentxverse-student-solid-prototype run dev",
     "dev:server": "cd fluentxverse-server && bun run dev",
     "dev:dashboard": "cd fluentxverse-dashboard && bun run dev",
     "dev:site": "cd fluentxverse-site && bun run dev",
     "dev:all": "concurrently \"bun run dev:server\" \"bun run dev:tutor\" \"bun run dev:student\" \"bun run dev:dashboard\"",
-    "build:tutor": "cd fluentxverse-tutor && bun run build",
-    "build:student": "cd fluentxverse-student && bun run build",
+    "build:tutor": "npm --prefix fluentxverse-tutor-solid-prototype run build",
+    "build:student": "npm --prefix fluentxverse-student-solid-prototype run build",
     "build:server": "cd fluentxverse-server && bunx tsc --noEmit",
     "build:dashboard": "cd fluentxverse-dashboard && bun run build",
     "build:site": "cd fluentxverse-site && bun run build",
     "build:all": "bun run build:server && bun run build:tutor && bun run build:student && bun run build:dashboard && bun run build:site",
-    "install:all": "bun install && cd fluentxverse-tutor && bun install && cd ../fluentxverse-student && bun install && cd ../fluentxverse-server && bun install && cd ../fluentxverse-dashboard && bun install"
+    "install:all": "bun install && npm --prefix fluentxverse-tutor-solid-prototype ci --workspaces=false && npm --prefix fluentxverse-student-solid-prototype ci --workspaces=false",
+    "deploy:student": "npm --prefix fluentxverse-student-solid-prototype run cf:deploy",
+    "deploy:tutor": "npm --prefix fluentxverse-tutor-solid-prototype run cf:deploy"
   },
   "devDependencies": {
     "concurrently": "^9.2.4"

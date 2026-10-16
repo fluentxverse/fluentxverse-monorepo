@@ -2,7 +2,7 @@
 
 The student, tutor and administrator apps are Vite single-page applications configured for Cloudflare Workers static asset hosting.
 
-## Live Hosting (2026-10-09)
+## Live Hosting (2026-10-11)
 
 | App | Worker | Production hosts |
 | --- | --- | --- |
@@ -11,6 +11,11 @@ The student, tutor and administrator apps are Vite single-page applications conf
 | Administrator | `fluentxverse-dashboard` | `dashboard.fluentxverse.xyz`, `dashboard.fluentxverse.com` |
 
 Both `.xyz` hosts now use Worker routes over their existing tunnel DNS records.
+Update at the 2026-10-11 SolidJS cutover: student and tutor `.xyz` DNS records
+are absent (authoritative Cloudflare DNS returns NXDOMAIN). Their historical
+Worker routes are retained but are not reachable until DNS is restored. The
+`.com` custom domains are the verified live frontends. No DNS records were
+created or removed during this cutover.
 The administrator `.xyz` host uses an existing Worker custom domain, retained
 alongside its new `.com` custom domain. Old backend tunnel routes were removed
 by the user, so keeping old frontend hosting alone does not restore old API access.
@@ -37,16 +42,23 @@ Asset-only previews (not allowlisted production authentication origins):
 
 ## Student App
 
+As of 2026-10-11, both student and tutor deployments use native SolidJS. The
+Preact working trees are preserved under `archive/preact/`, excluded from active
+workspaces, root commands, CI, and Docker builds. Existing API cookies, accounts
+and backend services are unchanged; no local test API is deployed.
+
 Directory:
 
 ```bash
-fluentxverse-student
+fluentxverse-student-solid-prototype
 ```
 
 Cloudflare settings:
 
 ```text
-Build command: bun run build
+Install command: npm ci --workspaces=false --ignore-scripts
+Build command: npm run build
+Deploy command: npx wrangler@4.149.0 deploy
 Output directory: dist
 Wrangler config: wrangler.jsonc
 Node version: 24.10.0
@@ -55,19 +67,49 @@ Node version: 24.10.0
 Deploy from the app directory:
 
 ```bash
-bun run cf:deploy
+npm run cf:deploy
 ```
 
 Required build variables:
 
 ```text
-VITE_API_URL=https://api.fluentxverse.com
-VITE_SOCKET_URL=https://ws.fluentxverse.com
+VITE_STUDENT_API_URL=https://api.fluentxverse.com
+VITE_STUDENT_SOCKET_URL=https://ws.fluentxverse.com
 VITE_PRIVY_APP_ID=<existing public Privy app ID>
-VITE_TICKET_CHAIN_ID=421614
-VITE_TICKET_CONTRACT_ADDRESS=<ticket contract>
-VITE_TICKET_RPC_URL=https://sepolia-rollup.arbitrum.io/rpc
+VITE_TICKET_CHAIN_ID=84532
+VITE_TICKET_CONTRACT_ADDRESS=<Base Sepolia ticket contract, currently unset>
+VITE_TICKET_RPC_URL=https://sepolia.base.org
 VITE_VAULT_WALLET_ADDRESS=<vault wallet>
+```
+
+Public production values are tracked in the Solid project's `.env.production`.
+The production entry point excludes the compatibility lab. Run
+`npm run test:production` for real desktop/mobile hosting, API/CORS, Privy
+initialization and Google OAuth initiation checks. These do not complete a real
+account sign-in or validate actual booking, payment or video calls.
+
+Cloudflare Git builds must use the Solid project directory above after its source
+is committed and pushed. Local deployment alone does not update GitHub or remote
+build settings.
+
+Solid deployment verification (2026-10-11):
+
+- Live version: `7147d17b-211e-456e-86d8-f4e7cf8d7a27`.
+- Previous SolidJS version: `3b416b99-a7b0-436d-a769-1e9370790e74`.
+- Previous Preact version: `16d69712-a57d-4d84-b2d9-0b8662b3a074`.
+- Build/typecheck, 36 unit tests, Wrangler dry run and server-secret bundle scan
+  passed. Dashboard, tutor browsing/booking, schedule, classroom-feedback and
+  carousel browser suites passed against the built frontend with fixture APIs.
+- Real production desktop/mobile probes passed for SolidJS identity, assets/MIME,
+  API/CORS, anonymous session rejection, Privy initialization and deep-link
+  refresh. Google OAuth initiation reached Google's authorization page.
+- Completed account login, live booking and actual video calls were not tested
+  by these deployment probes. No production student data was modified.
+
+Rollback from the Solid project directory, only if required:
+
+```sh
+bunx wrangler@4.149.0 rollback 16d69712-a57d-4d84-b2d9-0b8662b3a074 --message "Restore previous Preact student frontend"
 ```
 
 ## Tutor App
@@ -75,13 +117,15 @@ VITE_VAULT_WALLET_ADDRESS=<vault wallet>
 Directory:
 
 ```bash
-fluentxverse-tutor
+fluentxverse-tutor-solid-prototype
 ```
 
 Cloudflare settings:
 
 ```text
-Build command: bun run build
+Install command: npm ci --workspaces=false
+Build command: npm run build
+Deploy command: npx wrangler@4.149.0 deploy
 Output directory: dist
 Wrangler config: wrangler.jsonc
 Node version: 24.10.0
@@ -90,16 +134,48 @@ Node version: 24.10.0
 Deploy from the app directory:
 
 ```bash
-bun run cf:deploy
+npm run cf:deploy
 ```
 
 Required build variables:
 
 ```text
-VITE_API_URL=https://api.fluentxverse.com
-VITE_SOCKET_URL=https://ws.fluentxverse.com
+VITE_TUTOR_API_URL=https://api.fluentxverse.com
+VITE_TUTOR_SOCKET_URL=https://ws.fluentxverse.com
 VITE_ENABLE_NOTIFICATION_SOCKET=true
 ```
+
+SolidJS tutor version: `70369a11-cd43-480f-9888-5e436858a46d`.
+Initial SolidJS version: `da57586d-c18a-4d48-86de-432e0a6e0bb7`.
+The session-restoration hotfix accepts the legacy role-less `/tutor/me`
+response (the endpoint already validates tutor cookies) while rejecting an
+explicit non-tutor role. Regression fixtures now match that server contract
+and cover material-library navigation and page refresh.
+Previous Preact version: `a1588c9c-9298-48de-a086-6d512ba09c92`.
+Build/typecheck, 82 unit tests, Wrangler dry run, server-secret scan, and built
+desktop/mobile public-page/login probes passed. Existing fixture suites cover
+authentication/certification, booking links, schedules, reporting, recording
+consent, PDF rendering and lesson-note/attendance transitions. Live probes use
+anonymous sessions only; completed account login and actual calls remain pilot
+checks. No production student/tutor account data was changed by this cutover.
+Live `.com` desktop/mobile probes also passed for both apps: native SolidJS
+identity, assets/MIME, API/CORS, anonymous-session rejection, public light mode,
+login fields, and deep-link refresh. Student Privy initialization and Google
+OAuth initiation passed; OAuth was not completed as a real account.
+
+Emergency rollback from the tutor SolidJS directory:
+
+```sh
+bunx wrangler@4.149.0 rollback a1588c9c-9298-48de-a086-6d512ba09c92 --message "Restore previous Preact tutor frontend"
+```
+
+Root `deploy:student` and `deploy:tutor` commands and GitHub Actions now target
+SolidJS. Actions deployment requires the repository's `CLOUDFLARE_API_TOKEN`
+secret. These local source changes have not been committed or pushed by this
+deployment. Cloudflare dashboard Git build configuration could not be inspected
+or updated: the available OAuth token receives Builds API 403. If dashboard Git
+builds are configured, set their roots to the two SolidJS project directories
+before the next remote build; do not point them at `archive/preact/`.
 
 ## Notes
 

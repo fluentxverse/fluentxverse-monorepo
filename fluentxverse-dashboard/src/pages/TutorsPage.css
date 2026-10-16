@@ -293,7 +293,18 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
+
+.tutor-booking-access small { display:block; margin-top:6px; color:#64748b; font-size:11px; line-height:1.5; }
+.booking-access-status { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; }
+.booking-access-status.blocked { color:#b45309; }
+.booking-access-status.open { color:#15803d; }
+.booking-access-status.suspended { color:#be123c; }
+.booking-access-status.unknown { color:#64748b; }
+.tutors-page .booking-unblock { display:flex; align-items:center; gap:6px; margin-top:8px; padding:6px 8px; min-height:36px; background:#fff; border:1px solid #cbd5e1; border-radius:4px; color:#0b4bb5; font-size:12px; font-weight:600; cursor:pointer; }
+.tutors-page .booking-unblock:hover { background:#edf2fa; }
+.tutors-page .booking-unblock:focus-visible { outline:2px solid #0b4bb5; outline-offset:2px; }
 
 .tutor-details {
   display: flex;
@@ -968,7 +979,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
+
+.tutors-page .profile-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
 
 .profile-avatar.suspended {
   background: linear-gradient(135deg, #ef4444, #f87171);

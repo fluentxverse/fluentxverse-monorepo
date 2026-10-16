@@ -23,7 +23,7 @@ const cases = [
 
 try {
   const existing = await db.run('MATCH (n) RETURN count(n) AS total');
-  assert.equal(existing.records[0].get('total').toNumber(), 0, 'Integration test requires an empty isolated database');
+  assert.equal(existing.records[0]!.get('total').toNumber(), 0, 'Integration test requires an empty isolated database');
   for (const row of cases) {
     await db.run(`MERGE (s:Student {id: $student})
       CREATE (slot:TimeSlot {slotId: $id, slotDate: '2020-01-01', slotTime: '10:00 AM', durationMinutes: 25})
@@ -71,7 +71,7 @@ try {
   await schedule.markAttendance({ bookingId: 'proof-present', tutorId: 'proof-tutor', role: 'tutor', status: 'present' });
   const attendance = await db.run('MATCH (b:Booking {bookingId: $bookingId}) RETURN b.attendanceStudent AS attendance',
     { bookingId: 'proof-present' });
-  assert.equal(attendance.records[0].get('attendance'), 'present');
+  assert.equal(attendance.records[0]!.get('attendance'), 'present');
   console.log('PASS: auth, booking and tutor ownership, eligibility, local Groth16 claim, public status and privacy');
 } finally {
   await db.close();

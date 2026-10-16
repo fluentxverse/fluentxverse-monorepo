@@ -5,6 +5,7 @@ node_modules
 out
 dist
 zk-artifacts
+private-screening-evidence
 circuits/**/build
 circuits/**/*.r1cs
 circuits/**/*.sym
@@ -28,6 +29,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.test.local
 .env.production.local
 .env.local
+config/anonymous-reviews.env
+config/anonymous-tally.env
+.deployment/
+config/lesson-passes.env
 
 # caches
 .eslintcache

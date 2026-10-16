@@ -1,0 +1,47 @@
+/* Mobile responsiveness for dark mode */
+
+@media (max-width: 991.98px) {
+  /* Sidebar in mobile */
+  .dark-mode .sidebar {
+    background-color: var(--sidebar-background);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Menu items in mobile */
+  .dark-mode .offcanvas-menu ul li a {
+    color: var(--primary-text-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .dark-mode .offcanvas-menu ul li a:hover {
+    background-color: var(--secondary-color);
+    color: var(--accent-color);
+  }
+  
+  /* Mobile header */
+  .dark-mode .header-navigation {
+    background-color: var(--header-background-color);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Mobile toggle button */
+  .dark-mode .navbar-toggle span {
+    background-color: var(--primary-text-color);
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Card layouts for mobile */
+  .dark-mode .dashboard-card {
+    margin-bottom: 15px;
+  }
+  
+  /* Banner text for mobile */
+  .dark-mode .banner-content h2 {
+    font-size: 32px;
+  }
+  
+  .dark-mode .banner-content p {
+    font-size: 16px;
+  }
+}

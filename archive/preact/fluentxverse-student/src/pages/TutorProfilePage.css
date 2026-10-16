@@ -1,0 +1,70 @@
+.student-tutor-page .tutor-profile-page { background:var(--s-bg); }
+.profile-heading { max-width:1200px; margin:0 auto 24px; display:flex; align-items:center; gap:16px; }
+.profile-heading a { display:flex; align-items:center; gap:8px; color:var(--s-accent); font-size:13px; font-weight:600; }
+.profile-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:28px; max-width:1200px; margin:auto; align-items:start; }
+.profile-main-column { min-width:0; }
+.profile-sidebar { position:sticky; top:120px; }
+.profile-hero { padding:24px; border:1px solid var(--s-border); border-radius:8px; background:var(--s-surface); margin-bottom:24px; }
+.profile-hero-content { display:flex; gap:24px; align-items:flex-start; }
+.profile-header-left { flex-shrink:0; }
+.profile-avatar-wrapper { position:relative; }
+.profile-avatar-large,.profile-avatar-placeholder { width:112px; height:112px; border-radius:50%; object-fit:cover; }
+.profile-avatar-placeholder { display:grid; place-items:center; background:var(--s-tint); color:var(--s-accent); font-size:32px; font-weight:700; }
+.availability-badge { color:#15855e; font-size:11px; text-align:center; margin-top:12px; }
+.profile-header-right { flex:1; min-width:0; }
+.profile-name-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.profile-name { font-size:26px; line-height:1.4; margin:0 0 10px; }
+.btn-favorite-star { background:transparent; border:1px solid var(--s-border); color:var(--s-muted); border-radius:6px; width:36px; height:36px; flex-shrink:0; display:grid; place-items:center; padding:0; }
+.btn-favorite-star.favorited { color:#cc9418; }
+.profile-rating-row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; }
+.star-rating,.rating-stars { display:flex; align-items:center; gap:3px; color:#c98b0a; }
+.rating-score { font-weight:700; color:var(--s-text); }
+.rating-count { color:var(--s-muted); }
+.verified-badge,.zk-proof-badge { display:inline-flex; align-items:center; gap:5px; color:#15855e; font-size:11px; }
+.profile-meta { margin-top:14px; color:var(--s-muted); font-size:13px; }
+.meta-item { display:flex; gap:8px; align-items:center; }
+.profile-bio-short { color:var(--s-muted); font-size:14px; line-height:1.75; margin:14px 0; }
+.profile-tags,.interests-grid,.specializations-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.tag,.interest-tag,.specialization-card { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; font-size:12px; background:var(--s-tint); color:var(--s-accent); border:0; border-radius:4px; }
+.hero-video-section { margin-top:24px; padding-top:20px; border-top:1px solid var(--s-border); }
+.video-section-title { display:flex; align-items:center; gap:8px; font-size:15px; margin:0 0 16px; }
+.profile-tabs { display:flex; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--s-border); padding-bottom:12px; }
+.profile-tabs .tab-btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 16px; font-size:13px; color:var(--s-muted); background:transparent; border:0; border-radius:6px; }
+.profile-tabs .tab-btn.active { color:var(--s-accent); background:var(--s-tint); font-weight:600; }
+.profile-content { padding-top:24px; }
+.profile-content .content-section { padding:0 0 24px; margin-bottom:24px; border-bottom:1px solid var(--s-border); background:none; border-radius:0; }
+.profile-content .section-title { display:flex; align-items:center; gap:12px; font-size:18px; margin:0 0 16px; color:var(--s-text); }
+.profile-content .section-content { font-size:14px; line-height:1.8; color:var(--s-muted); overflow-wrap:anywhere; }
+.education-row,.education-details { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:10px; }
+.profile-booking-card { padding:24px; background:var(--s-surface); border:1px solid var(--s-border); border-radius:8px; }
+.booking-card-header { display:flex; flex-direction:column; gap:6px; }
+.booking-card-title { font-size:18px; font-weight:700; }
+.booking-card-subtitle,.price-label,.price-unit { font-size:13px; color:var(--s-muted); }
+.price-value { font-size:28px; font-weight:700; margin-top:8px; }
+.btn-book-trial,.btn-book-mobile { display:flex; align-items:center; justify-content:center; gap:8px; border:0; background:#0245ae; color:#fff; padding:12px 14px; border-radius:6px; margin:20px 0; width:100%; font-size:13px; font-weight:600; }
+.btn-book-mobile { display:none; }
+.booking-features { display:grid; gap:14px; padding:16px 0; border-top:1px solid var(--s-border); font-size:12px; }
+.booking-features .feature-item { display:flex; align-items:center; gap:8px; color:var(--s-muted); }
+.booking-features svg { color:#15855e; }
+.booking-note { display:flex; gap:8px; font-size:12px; color:var(--s-muted); margin-top:12px; }
+.schedule-period-tabs { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:16px 0; }
+.period-tab { background:var(--s-surface); color:var(--s-muted); border:1px solid var(--s-border); border-radius:6px; padding:8px 12px; font-size:12px; }
+.period-tab.active { color:var(--s-accent); background:var(--s-tint); border-color:var(--s-accent); }
+.timezone-note { font-size:12px; color:var(--s-muted); margin-left:auto; }
+.schedule-grid { max-width:100%; overflow-x:auto; }
+.schedule-table { border-collapse:separate; border-spacing:4px; width:100%; min-width:600px; font-size:11px; }
+.schedule-table :is(th,td) { padding:8px 4px; text-align:center; color:var(--s-muted); background:var(--s-surface); border:1px solid var(--s-border); border-radius:4px; }
+.schedule-table th { font-weight:600; }
+.schedule-table td.avail { padding:0; background:#ecf8f3; border-color:#b8daca; }
+.profile-slot-button { width:100%; min-height:36px; background:transparent; color:#087953; border:0; font-size:11px; padding:8px 4px; }
+.schedule-table td.my-booking { background:var(--s-tint); color:var(--s-accent); }
+.schedule-table td.disabled { background:transparent; opacity:.55; }
+.tutor-profile-loading,.tutor-profile-error { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:160px 24px 64px; min-height:80vh; text-align:center; gap:16px; color:var(--s-muted); }
+.tutor-profile-error .btn-primary { background:#0245ae; color:#fff; padding:10px 16px; border-radius:6px; }
+.reviews-summary { display:flex; gap:24px; flex-wrap:wrap; color:var(--s-muted); font-size:14px; }
+.overall-rating { display:grid; gap:8px; }
+.rating-big { font-size:28px; font-weight:700; color:var(--s-text); }
+.no-reviews { display:flex; flex-direction:column; align-items:center; text-align:center; color:var(--s-muted); gap:12px; padding:24px; }
+.no-reviews p { margin:0; }
+@media(max-width:991px) { .profile-layout { grid-template-columns:1fr; } .profile-sidebar { position:static; } }
+@media(max-width:600px) { .profile-hero { padding:20px; } .profile-hero-content { flex-direction:column; gap:20px; } .profile-avatar-large,.profile-avatar-placeholder { width:88px; height:88px; } .profile-header-right { width:100%; } .profile-name { font-size:23px; } .profile-tabs .tab-btn { padding:9px 12px; } }

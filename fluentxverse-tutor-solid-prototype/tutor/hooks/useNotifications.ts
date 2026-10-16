@@ -1,0 +1,291 @@
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import { cssStyle, Fragment } from "../utils/cssStyle";
+import { useNotificationStore } from '../context/NotificationContext';
+import { initSocket, connectSocket } from '../client/socket/socket.client';
+import { useAuthContext } from '../context/AuthContext';
+import type { Notification } from '../types/notification.types';
+let notificationSocketWarningShown = false;
+const dispatchedScheduleNotificationIds = new Set<string>();
+const notificationSocketEnabled = String(import.meta.env.VITE_ENABLE_NOTIFICATION_SOCKET ?? 'true').toLowerCase() !== 'false';
+const NOTIFICATION_REFRESH_INTERVAL_MS = 10000;
+const warnNotificationRealtimeUnavailable = () => {
+    if (!notificationSocketWarningShown) {
+        console.warn('Notification realtime connection unavailable. Falling back to standard refresh.');
+        notificationSocketWarningShown = true;
+    }
+};
+const dispatchScheduleNotificationEvent = (notification: Notification) => {
+    if (notification.type !== 'booking_new' && notification.type !== 'booking_cancelled') {
+        return;
+    }
+    window.dispatchEvent(new CustomEvent('fxv:schedule-notification', {
+        detail: notification
+    }));
+};
+const dispatchScheduleNotificationOnce = (notification: Notification) => {
+    if (!notification.id || dispatchedScheduleNotificationIds.has(notification.id)) {
+        return;
+    }
+    dispatchedScheduleNotificationIds.add(notification.id);
+    dispatchScheduleNotificationEvent(notification);
+};
+export const useNotifications = () => {
+    const _state0 = useNotificationStore();
+    const _state1 = useAuthContext();
+    createEffect(on(() => [_state1.user?.userId, _state1.user?.email], () => {
+        const _cleanup2 = untrack(() => {
+            _state0.setNotificationUser(_state1.user?.userId || null);
+            if (!_state1.user?.userId)
+                return;
+            let isActive = true;
+            let refreshInterval: ReturnType<typeof setInterval> | undefined;
+            const startStandardRefresh = () => {
+                if (refreshInterval) {
+                    return;
+                }
+                refreshInterval = setInterval(() => {
+                    if (isActive && !document.hidden && navigator.onLine) {
+                        void _state0.fetchNotifications();
+                    }
+                }, NOTIFICATION_REFRESH_INTERVAL_MS);
+            };
+            const stopStandardRefresh = () => {
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = undefined;
+                }
+            };
+            const handleOnline = () => {
+                if (isActive)
+                    void _state0.fetchNotifications(true);
+            };
+            window.addEventListener('online', handleOnline);
+            void _state0.fetchNotifications();
+            if (!notificationSocketEnabled) {
+                startStandardRefresh();
+                return () => {
+                    isActive = false;
+                    window.removeEventListener('online', handleOnline);
+                    if (refreshInterval) {
+                        clearInterval(refreshInterval);
+                    }
+                };
+            }
+            try {
+                const token = _state1.user ? JSON.stringify({
+                    get userId() {
+                        return _state1.user.userId;
+                    },
+                    get email() {
+                        return _state1.user.email;
+                    },
+                    tier: 2
+                }) : undefined;
+                const socket = initSocket(token);
+                const subscribeToNotifications = () => {
+                    if (!isActive) {
+                        return;
+                    }
+                    stopStandardRefresh();
+                    socket.emit('notification:subscribe');
+                    void _state0.fetchNotifications();
+                };
+                const handleDisconnect = () => {
+                    if (isActive) {
+                        startStandardRefresh();
+                    }
+                };
+                const handleConnectError = () => {
+                    warnNotificationRealtimeUnavailable();
+                    startStandardRefresh();
+                    void _state0.fetchNotifications();
+                };
+                const handleNewNotification = (notification: Notification) => {
+                    _state0.addNotification(notification);
+                    dispatchScheduleNotificationOnce(notification);
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification(notification.title, {
+                            body: notification.message,
+                            icon: '/assets/img/logo/icon_logo.png'
+                        });
+                    }
+                };
+                const handleNotificationList = (data: {
+                    notifications: Notification[];
+                    unreadCount: number;
+                }) => {
+                    useNotificationStore.setState({
+                        notifications: data.notifications,
+                        unreadCount: data.unreadCount
+                    });
+                };
+                const handleNotificationRead = (data: {
+                    notificationId: string;
+                    unreadCount: number;
+                }) => {
+                    _state0.setUnreadCount(data.unreadCount);
+                    useNotificationStore.setState((state) => ({
+                        notifications: state.notifications.map(n => n.id === data.notificationId ? { ...n, isRead: true } : n)
+                    }));
+                };
+                const handleNotificationReadAll = (data: {
+                    unreadCount: number;
+                }) => {
+                    _state0.setUnreadCount(data.unreadCount);
+                    useNotificationStore.setState((state) => ({
+                        notifications: state.notifications.map(n => ({ ...n, isRead: true }))
+                    }));
+                };
+                const handleNotificationDelete = (data: {
+                    notificationId: string;
+                    unreadCount: number;
+                }) => {
+                    _state0.setUnreadCount(data.unreadCount);
+                    useNotificationStore.setState((state) => ({
+                        notifications: state.notifications.filter(n => n.id !== data.notificationId)
+                    }));
+                };
+                socket.on('connect', subscribeToNotifications);
+                socket.on('disconnect', handleDisconnect);
+                socket.on('connect_error', handleConnectError);
+                socket.on('notification:new', handleNewNotification);
+                socket.on('notification:list', handleNotificationList);
+                socket.on('notification:read', handleNotificationRead);
+                socket.on('notification:read-all', handleNotificationReadAll);
+                socket.on('notification:delete', handleNotificationDelete);
+                startStandardRefresh();
+                connectSocket();
+                if (socket.connected) {
+                    subscribeToNotifications();
+                }
+                return () => {
+                    isActive = false;
+                    window.removeEventListener('online', handleOnline);
+                    stopStandardRefresh();
+                    socket.off('connect', subscribeToNotifications);
+                    socket.off('disconnect', handleDisconnect);
+                    socket.off('connect_error', handleConnectError);
+                    socket.off('notification:new', handleNewNotification);
+                    socket.off('notification:list', handleNotificationList);
+                    socket.off('notification:read', handleNotificationRead);
+                    socket.off('notification:read-all', handleNotificationReadAll);
+                    socket.off('notification:delete', handleNotificationDelete);
+                };
+            }
+            catch (error) {
+                warnNotificationRealtimeUnavailable();
+                startStandardRefresh();
+                void _state0.fetchNotifications();
+            }
+            return () => {
+                isActive = false;
+                window.removeEventListener('online', handleOnline);
+                stopStandardRefresh();
+            };
+        });
+        if (typeof _cleanup2 === "function")
+            onCleanup(_cleanup2);
+    }));
+    createEffect(on(() => [_state0.notifications], () => {
+        const _cleanup3 = untrack(() => {
+            _state0.notifications.forEach((notification) => {
+                if (!notification.isRead) {
+                    dispatchScheduleNotificationOnce(notification);
+                }
+            });
+        });
+        if (typeof _cleanup3 === "function")
+            onCleanup(_cleanup3);
+    }));
+    // Request browser notification permission
+    createEffect(on(() => [], () => {
+        const _cleanup4 = untrack(() => {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        });
+        if (typeof _cleanup4 === "function")
+            onCleanup(_cleanup4);
+    }));
+    return {
+        get notifications() {
+            return _state0.notifications;
+        },
+        get unreadCount() {
+            return _state0.unreadCount;
+        },
+        get isLoading() {
+            return _state0.isLoading;
+        },
+        get error() {
+            return _state0.error;
+        },
+        get isDropdownOpen() {
+            return _state0.isDropdownOpen;
+        },
+        get markAsRead() {
+            return _state0.markAsRead;
+        },
+        get markAllAsRead() {
+            return _state0.markAllAsRead;
+        },
+        get deleteNotification() {
+            return _state0.deleteNotification;
+        },
+        get setDropdownOpen() {
+            return _state0.setDropdownOpen;
+        },
+        get toggleDropdown() {
+            return _state0.toggleDropdown;
+        },
+        refreshNotifications: () => _state0.fetchNotifications(true)
+    };
+};
+// Helper function to get notification icon based on type
+export const getNotificationIcon = (type: string): {
+    icon: string;
+    color: string;
+} => {
+    switch (type) {
+        case 'booking_new':
+            return { icon: 'fa-calendar-plus', color: '#10b981' };
+        case 'booking_cancelled':
+            return { icon: 'fa-calendar-times', color: '#ef4444' };
+        case 'session_reminder':
+            return { icon: 'fa-bell', color: '#f59e0b' };
+        case 'session_started':
+            return { icon: 'fa-video', color: '#3b82f6' };
+        case 'interview_scheduled':
+            // Use blue to match modal styling
+            return { icon: 'fa-user-tie', color: '#3b82f6' };
+        case 'interview_reminder':
+            return { icon: 'fa-clock', color: '#f59e0b' };
+        case 'payment_received':
+            return { icon: 'fa-coins', color: '#10b981' };
+        case 'review_received':
+            return { icon: 'fa-star', color: '#f59e0b' };
+        case 'message':
+            return { icon: 'fa-envelope', color: '#3b82f6' };
+        default:
+            return { icon: 'fa-info-circle', color: '#64748b' };
+    }
+};
+// Format relative time
+export const formatRelativeTime = (timestamp: string): string => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1)
+        return 'Just now';
+    if (diffMins < 60)
+        return `${diffMins}m ago`;
+    if (diffHours < 24)
+        return `${diffHours}h ago`;
+    if (diffDays < 7)
+        return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};

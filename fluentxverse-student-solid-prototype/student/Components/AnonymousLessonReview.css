@@ -1,0 +1,46 @@
+.anonymous-lesson-review { color: var(--s-text, var(--fxv-text, #222)); padding: 18px 0; min-width: 0; }
+.anonymous-lesson-review > header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.anonymous-lesson-review h3 { font-size: 18px; line-height: 1.35; margin: 0; }
+.anonymous-lesson-review header span, .anonymous-review-notice, .anonymous-lesson-review footer > span { font-size: 13px; color: var(--s-muted, var(--fxv-text-muted, #666)); }
+.anonymous-review-notice { line-height: 1.6; margin: 14px 0; }
+.anonymous-review-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.anonymous-review-tools a { margin-left: auto; font-size: 14px; }
+.anonymous-lesson-review button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #b6bdc6; border-radius: 6px; min-height: 40px; padding: 9px 14px; background: transparent; color: inherit; font-size: 14px; }
+.anonymous-review-tools button { width: 40px; flex: 0 0 40px; padding: 0; }
+.anonymous-lesson-review button:disabled { opacity: .55; cursor: not-allowed; }
+.anonymous-lesson-review button:focus-visible, .anonymous-lesson-review a:focus-visible { outline: 2px solid #147b65; outline-offset: 3px; }
+.anonymous-lesson-review .anonymous-review-primary, .anonymous-lesson-review button[type=submit] { background: #147b65; color: #fff; border-color: #147b65; }
+.anonymous-review-error { color: #ba3348; font-size: 14px; }
+.anonymous-review-status { display: flex; align-items: center; gap: 8px; padding: 14px 0; font-size: 15px; }
+.anonymous-lesson-review fieldset { min-width: 0; border: 0; margin: 0; padding: 0; }
+.anonymous-lesson-review legend { font-size: 14px; font-weight: 600; margin-bottom: 12px; float: none; width: auto; color: inherit; }
+.anonymous-review-stars { display: flex; gap: 10px; height: 42px; align-items: center; }
+.anonymous-review-stars label { position: relative; color: #de9a12; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; cursor: pointer; }
+.anonymous-review-stars input { position: absolute; opacity: 0; width: 100%; height: 100%; }
+.anonymous-review-stars label:has(input:focus-visible) { outline: 2px solid #147b65; border-radius: 4px; }
+.anonymous-review-topics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 20px 0; }
+.anonymous-review-topics label { display: flex; align-items: start; gap: 9px; font-size: 14px; line-height: 1.45; margin: 10px 0; }
+.anonymous-review-topics input { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 2px; accent-color: #147b65; }
+.anonymous-lesson-review footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.anonymous-reviews-layout { --s-text: #202636; --s-muted: #647184; min-height: 100vh; background: #f5f7fa; color: var(--s-text); }
+[data-theme=dark] .anonymous-reviews-layout { --s-text: #f3f5f7; --s-muted: #aab5c4; background: #202020; }
+.anonymous-reviews-page { max-width: 1000px; padding: 150px 20px 40px; margin: 0 auto; }
+.anonymous-reviews-page h1 { font-size: 26px; margin: 0; }
+.anonymous-reviews-page :is(h1, h3) { color: inherit; }
+.anonymous-reviews-page > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.anonymous-review-item { border-bottom: 1px solid #b6bdc6; padding: 16px 0; }
+.anonymous-review-item > a { font-size: 14px; }
+.anonymous-tutor-ratings { border-top: 1px solid #b6bdc6; margin-top: 24px; padding-top: 20px; }
+.anonymous-tutor-ratings h3 { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.anonymous-tutor-ratings li, .anonymous-tutor-ratings span { font-size: 14px; }
+.anonymous-review-distribution { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.anonymous-review-distribution dt { font-size: 13px; font-weight: normal; }
+.anonymous-review-distribution dd { font-size: 16px; margin: 0; }
+.anonymous-tally-heading { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.anonymous-tally-label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+.anonymous-tally-download { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex: 0 0 36px; padding: 0; border: 1px solid #b6bdc6; border-radius: 6px; color: inherit; background: transparent; }
+.anonymous-tally-download:disabled { opacity: .55; }
+.anonymous-tally-download:focus-visible { outline: 2px solid #147b65; outline-offset: 3px; }
+.anonymous-reviews-page > header > button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #b6bdc6; background: transparent; color: inherit; border-radius: 6px; }
+@media (max-width: 991px) { .anonymous-reviews-page { padding-top: 110px; } }
+@media (max-width: 560px) { .anonymous-review-topics { grid-template-columns: minmax(0, 1fr); gap: 16px; } }

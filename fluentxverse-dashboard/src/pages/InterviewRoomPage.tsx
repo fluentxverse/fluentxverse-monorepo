@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
-import axios from 'axios';
+import { useRoute } from 'preact-iso';
+import { apiClient as api } from '../api/apiClient';
+import { API_BASE_URL } from '../config/api';
+import { interviewApi } from '../api/interview.api';
+import { InterviewCall } from '../../../shared/interviewCall';
+import { InterviewRecording } from '../client/interviewRecording';
 import { createRealtimeSocket, type RealtimeSocket } from '../client/realtimeSocket';
 import './InterviewRoomPage.css';
 
@@ -22,12 +27,36 @@ interface TimestampNote {
   note: string;
 }
 
-const api = axios.create({
-  baseURL: '/api',
-  withCredentials: true
-});
-
-const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPageProps) => {
+const InterviewRoomPage = (props: InterviewRoomPageProps) => {
+  const route = useRoute();
+  const interviewId = props.interviewId || route.params.interviewId;
+  const [room, setRoom] = useState<Awaited<ReturnType<typeof interviewApi.getRoom>> | null>(null);
+  const [roomLoading, setRoomLoading] = useState(true);
+  const tutorId = room?.tutorId;
+  const tutorName = room?.tutorName;
+  const [ended, setEnded] = useState(false);
+  const endedRef = useRef(false);
+  const mounted = useRef(true);
+  const callRef = useRef<InterviewCall | null>(null);
+  const recordingRef = useRef<InterviewRecording | null>(null);
+  const pendingRecording = useRef<{ blob: Blob; id: string } | null>(null);
+  const [hasPendingRecording, setHasPendingRecording] = useState(false);
+  const uploadRef = useRef<Promise<boolean> | null>(null);
+  const stoppingRecording = useRef<Promise<void> | null>(null);
+  const previewVersion = useRef(0);
+  useEffect(() => {
+    let active = true;
+    if (!interviewId) { setError('Select a booked interview from the schedule.'); setRoomLoading(false); return; }
+    interviewApi.getRoom(interviewId).then(data => {
+      if (active) {
+        setRoom(data);
+        if (data.hasRecording) setRecordingUrl(`/interview/recording/${encodeURIComponent(data.id)}`);
+        if (data.status !== 'booked' || data.mediaClosed) { setEnded(true); endedRef.current = true; setSetupComplete(true); }
+      }
+    }).catch(failure => { if (active) setError(failure.response?.data?.error || failure.message); })
+      .finally(() => { if (active) setRoomLoading(false); });
+    return () => { active = false; };
+  }, [interviewId]);
   // Media states
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -76,21 +105,10 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   // Refs
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<RealtimeSocket | null>(null);
   const callTimerRef = useRef<number | null>(null);
   const roomIdRef = useRef<string>(`interview-${interviewId || 'default'}`);
-  const autoSaveTimerRef = useRef<number | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-
-  // ICE servers configuration
-  const iceServers = {
-    iceServers: [
-      { urls: 'stun:stun.cloudflare.com:3478' }
-    ]
-  };
 
   // Format current time for timestamps
   const formatCurrentTime = () => {
@@ -131,8 +149,10 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
         rubricScores,
         callDuration
       };
-      localStorage.setItem(`interview-${interviewId}`, JSON.stringify(saveData));
-      setLastSaved(new Date().toLocaleTimeString());
+      try {
+        localStorage.setItem(`interview-${interviewId}`, JSON.stringify(saveData));
+        setLastSaved(new Date().toLocaleTimeString());
+      } catch { setError('Notes could not be saved locally. Keep this tab open until the result is submitted.'); }
     }
   }, [notes, timestampNotes, rubricScores, setupComplete, interviewId]);
 
@@ -160,9 +180,12 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       return;
     }
 
+    if (isSaving || recordingUploading || room?.result) return;
     setIsSaving(true);
     try {
-      await api.post('/interview/result', {
+      await handleEndCall();
+      if (pendingRecording.current && !await uploadRecording()) throw Error('Upload the recording before submitting the result.');
+      const response = await api.post('/interview/result', {
         slotId: interviewId,
         tutorId: tutorId,
         result,
@@ -170,6 +193,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
         notes: timestampNotes.map(t => `[${t.time}] ${t.note}`).join('\n') + (notes ? `\n[Final] ${notes}` : ''),
         timestamps: timestampNotes
       });
+      if (!response.data.success) throw Error(response.data.error || 'Failed to submit result');
 
       setResultSubmitted(true);
       localStorage.removeItem(`interview-${interviewId}`);
@@ -179,7 +203,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
         window.location.href = '/applications';
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to submit result');
+      setError(err.response?.data?.error || err.message || 'Failed to submit result');
     } finally {
       setIsSaving(false);
     }
@@ -188,8 +212,10 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   // Get available devices and auto-start preview
   useEffect(() => {
     const getDevices = async () => {
+      const version = ++previewVersion.current;
       try {
         const initialStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (!mounted.current || endedRef.current || version !== previewVersion.current) { initialStream.getTracks().forEach(track => track.stop()); return; }
         localStreamRef.current = initialStream;
         setLocalStream(initialStream);
         
@@ -209,8 +235,9 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       }
     };
     
-    getDevices();
-  }, []);
+    if (room?.status === 'booked' && !ended) void getDevices();
+    return () => { previewVersion.current++; };
+  }, [room?.id, ended]);
 
   // Sync video element with stream
   useEffect(() => {
@@ -242,6 +269,8 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   }, [remoteStream]);
 
   const startPreview = async () => {
+    const version = ++previewVersion.current;
+    if (endedRef.current) return;
     try {
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(track => track.stop());
@@ -254,6 +283,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
       };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (!mounted.current || endedRef.current || version !== previewVersion.current) { stream.getTracks().forEach(track => track.stop()); return; }
       localStreamRef.current = stream;
       setLocalStream(stream);
       
@@ -281,72 +311,8 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     }
   };
 
-  const createPeerConnection = () => {
-    const pc = new RTCPeerConnection(iceServers);
-    
-    pc.onicecandidate = (event) => {
-      if (event.candidate && socketRef.current) {
-        socketRef.current.emit('interview:ice-candidate', {
-          roomId: roomIdRef.current,
-          candidate: event.candidate
-        });
-      }
-    };
-    
-    pc.ontrack = (event) => {
-      if (event.streams[0]) {
-        setRemoteStream(event.streams[0]);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
-        }
-      }
-    };
-    
-    pc.onconnectionstatechange = () => {
-      setIsConnected(pc.connectionState === 'connected');
-      
-      if (pc.connectionState === 'connected') {
-        setIsConnecting(false);
-        setTutorConnected(true);
-        setError(null);
-        startCallTimer();
-      }
-      
-      if (pc.connectionState === 'failed') {
-        setError('Connection failed. The video call could not be established. Please check your network and try again.');
-        stopCallTimer();
-        setIsConnecting(false);
-      }
-      
-      if (pc.connectionState === 'disconnected') {
-        setError('Connection lost. Attempting to reconnect...');
-        // WebRTC will automatically try to reconnect
-      }
-      
-      if (pc.connectionState === 'closed') {
-        setError(null);
-        stopCallTimer();
-      }
-    };
-    
-    pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === 'failed') {
-        setError('Network connection failed. Please check your firewall settings or try a different network.');
-      }
-    };
-    
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => {
-        pc.addTrack(track, localStreamRef.current!);
-      });
-    }
-    
-    peerConnectionRef.current = pc;
-    return pc;
-  };
-
   const joinRoom = async () => {
-    if (!localStreamRef.current) {
+    if (!localStreamRef.current || room?.status !== 'booked' || endedRef.current || isConnecting) {
       setError('Please test your devices first');
       return;
     }
@@ -354,59 +320,30 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     setIsConnecting(true);
     
     try {
+      callRef.current?.close(); socketRef.current?.disconnect();
       const socket = createRealtimeSocket();
-      
       socketRef.current = socket;
-      const pc = createPeerConnection();
-      socket.on('interview:error', (data: { message: string }) => {
-        setIsConnecting(false);
-        setError(data.message);
+      const call = new InterviewCall({ socket, roomId: roomIdRef.current, role: 'admin', stream: localStreamRef.current,
+        onStream: stream => { if (mounted.current) { setRemoteStream(stream); if (!stream && recordingRef.current) void stopRecording(); } },
+        onState: state => {
+          if (!mounted.current) return;
+          setIsConnected(state === 'connected'); setIsConnecting(['connecting', 'reconnecting'].includes(state));
+          setTutorConnected(['connected', 'connecting', 'reconnecting'].includes(state));
+          if (state === 'connected') { setError(null); startCallTimer(); } else stopCallTimer();
+        },
+        onError: message => { if (mounted.current) { setError(message); setIsConnecting(false); } },
+        onEnded: () => { void handleEndCall(false); },
       });
-      socket.on('webrtc:ice-configuration', (configuration: RTCConfiguration) => {
-        pc.setConfiguration(configuration);
-      });
-      
-      socket.on('connect', () => {
-        socket.emit('interview:join', {
-          roomId: roomIdRef.current,
-          odIuser: 'admin',
-          role: 'admin'
-        });
-      });
-      
-      socket.on('interview:tutor-joined', async () => {
-        setTutorConnected(true);
-      });
-      
-      socket.on('interview:offer', async (data: { offer: RTCSessionDescriptionInit }) => {
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit('interview:answer', {
-          roomId: roomIdRef.current,
-          answer
-        });
-      });
-      
-      socket.on('interview:ice-candidate', async (data: { candidate: RTCIceCandidateInit }) => {
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-        } catch (err) {
-          console.error('Error adding ICE candidate:', err);
-        }
-      });
-      
-      socket.on('interview:ended', () => {
-        handleEndCall();
-      });
-
-      await socket.connect();
-      
-      setSetupComplete(true);
+      callRef.current = call;
+      const ready = call.start();
+      void socket.connect();
+      await ready;
+      if (mounted.current && !endedRef.current) setSetupComplete(true);
     } catch (err) {
       console.error('Error joining room:', err);
       setError('Failed to join interview room');
       setIsConnecting(false);
+      callRef.current?.close(); socketRef.current?.disconnect();
     }
   };
 
@@ -432,100 +369,76 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
 
   // Recording functions
   const startRecording = () => {
-    if (!localStream && !remoteStream) {
-      setError('No streams available to record');
+    if (!localStream || !remoteStream || !isConnected || recordingRef.current || pendingRecording.current) {
+      setError('Both participants must be connected before recording. Upload any pending recording first.');
       return;
     }
 
     try {
-      // Create a combined stream with local and remote audio/video
-      const audioContext = new AudioContext();
-      const destination = audioContext.createMediaStreamDestination();
-      
-      // Add local audio
-      if (localStream) {
-        const localAudio = audioContext.createMediaStreamSource(localStream);
-        localAudio.connect(destination);
-      }
-      
-      // Add remote audio
-      if (remoteStream) {
-        const remoteAudio = audioContext.createMediaStreamSource(remoteStream);
-        remoteAudio.connect(destination);
-      }
-
-      // Use local video for now (we could do picture-in-picture later)
-      const combinedStream = new MediaStream([
-        ...(localStream?.getVideoTracks() || []),
-        ...destination.stream.getAudioTracks()
-      ]);
-
-      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        // Fallback
-        options.mimeType = 'video/webm';
-      }
-
-      const mediaRecorder = new MediaRecorder(combinedStream, options);
-      recordedChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        // Upload the recording
-        await uploadRecording();
-      };
-
-      mediaRecorder.start(1000); // Collect data every second
-      mediaRecorderRef.current = mediaRecorder;
+      recordingRef.current = new InterviewRecording(localStream, remoteStream, () => { void stopRecording(); });
       setIsRecording(true);
+      socketRef.current?.emit('interview:recording-status', { roomId: roomIdRef.current, recording: true });
     } catch (err) {
       console.error('Failed to start recording:', err);
       setError('Failed to start recording. Your browser may not support this feature.');
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
+  const stopRecording = (): Promise<void> => {
+    const recorder = recordingRef.current;
+    if (!recorder) return stoppingRecording.current || Promise.resolve();
+    recordingRef.current = null;
+    setIsRecording(false); setRecordingUploading(true);
+    socketRef.current?.emit('interview:recording-status', { roomId: roomIdRef.current, recording: false });
+    const stop = (async () => { const blob = await recorder.stop();
+    if (!blob.size) { setRecordingUploading(false); setError('Recording was empty.'); return; }
+    pendingRecording.current = { blob, id: crypto.randomUUID() };
+    setHasPendingRecording(true);
+    await uploadRecording();
+    })().finally(() => { stoppingRecording.current = null; });
+    stoppingRecording.current = stop;
+    return stop;
   };
 
-  const uploadRecording = async () => {
-    if (recordedChunksRef.current.length === 0) return;
-
+  const uploadRecording = async (): Promise<boolean> => {
+    if (uploadRef.current) return uploadRef.current;
+    const pending = pendingRecording.current;
+    if (!pending) return true;
     setRecordingUploading(true);
-    try {
-      const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+    const upload = (async () => { try {
+      const { blob, id } = pending;
       const formData = new FormData();
-      formData.append('file', blob, `interview-${interviewId}-${Date.now()}.webm`);
-      formData.append('interviewId', interviewId || 'unknown');
-      formData.append('tutorId', tutorId || 'unknown');
+      formData.append('recording', blob, `interview-${interviewId}.${blob.type === 'video/mp4' ? 'mp4' : 'webm'}`);
+      formData.append('slotId', interviewId!);
+      formData.append('tutorId', tutorId!);
+      formData.append('recordingId', id);
 
       const response = await api.post('/interview/recording', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        timeout: 90000
       });
 
       if (response.data.success) {
         setRecordingUrl(response.data.url);
+        setError(null);
+        pendingRecording.current = null; setHasPendingRecording(false); return true;
       } else {
         throw new Error(response.data.error);
       }
     } catch (err: any) {
       console.error('Failed to upload recording:', err);
       setError('Failed to upload recording: ' + (err.message || 'Unknown error'));
+      return false;
     } finally {
       setRecordingUploading(false);
-      recordedChunksRef.current = [];
+      uploadRef.current = null;
     }
+    })();
+    uploadRef.current = upload;
+    return upload;
   };
 
   const startCallTimer = () => {
+    if (callTimerRef.current !== null) return;
     callTimerRef.current = window.setInterval(() => {
       setCallDuration(prev => prev + 1);
     }, 1000);
@@ -544,32 +457,27 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleEndCall = () => {
+  const handleEndCall = async (notify = true) => {
+    if (endedRef.current) { if (stoppingRecording.current) await stoppingRecording.current; if (uploadRef.current) await uploadRef.current; return; }
+    endedRef.current = true; previewVersion.current++;
     stopCallTimer();
-    
-    if (socketRef.current) {
-      socketRef.current.emit('interview:end', { roomId: roomIdRef.current });
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-    
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    
+    const recordingDone = stopRecording();
+    if (notify) callRef.current?.end(); else callRef.current?.close();
+    socketRef.current?.disconnect(); socketRef.current = null;
+    stopPreview(); setEnded(true); setIsConnecting(false);
     setIsConnected(false);
     setRemoteStream(null);
     setTutorConnected(false);
+    await recordingDone;
   };
 
   useEffect(() => {
     return () => {
+      mounted.current = false; previewVersion.current++;
       stopCallTimer();
       stopPreview();
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-      }
+      callRef.current?.close();
+      if (recordingRef.current) void recordingRef.current.stop();
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
@@ -577,10 +485,16 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
   }, []);
 
   useEffect(() => {
-    if (deviceTestPassed && localStream && (selectedCamera || selectedMic)) {
-      // Only restart if selection actually changed
-    }
-  }, [selectedCamera, selectedMic]);
+    if (!setupComplete || ended) return;
+    const renew = () => { void api.get('/admin/me').catch(() => {}); };
+    const timer = setInterval(renew, 5 * 60 * 1000);
+    return () => clearInterval(timer);
+  }, [setupComplete, ended]);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => { if (recordingRef.current || pendingRecording.current || uploadRef.current) { event.preventDefault(); event.returnValue = ''; } };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, []);
 
   // Rubric category labels
   const rubricCategories = [
@@ -611,7 +525,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                 <i className="ri-video-chat-line"></i>
               </div>
               <h1>Interview Room</h1>
-              <p>Prepare to conduct the interview{tutorName ? ` with ${tutorName}` : ''}</p>
+              <p>{roomLoading ? 'Loading booked interview...' : tutorName || 'Interview unavailable'}</p>
             </div>
 
             {error && (
@@ -645,7 +559,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
               <div className="device-selection">
                 <div className="device-group">
                   <label><i className="ri-camera-line"></i> Camera</label>
-                  <select value={selectedCamera} onChange={(e) => setSelectedCamera((e.target as HTMLSelectElement).value)}>
+                  <select disabled={ended || isConnecting} value={selectedCamera} onChange={(e) => { setSelectedCamera((e.target as HTMLSelectElement).value); setDeviceTestPassed(false); }}>
                     {cameras.map(camera => (
                       <option key={camera.deviceId} value={camera.deviceId}>
                         {camera.label || `Camera ${cameras.indexOf(camera) + 1}`}
@@ -656,7 +570,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
 
                 <div className="device-group">
                   <label><i className="ri-mic-line"></i> Microphone</label>
-                  <select value={selectedMic} onChange={(e) => setSelectedMic((e.target as HTMLSelectElement).value)}>
+                  <select disabled={ended || isConnecting} value={selectedMic} onChange={(e) => { setSelectedMic((e.target as HTMLSelectElement).value); setDeviceTestPassed(false); }}>
                     {mics.map(mic => (
                       <option key={mic.deviceId} value={mic.deviceId}>
                         {mic.label || `Microphone ${mics.indexOf(mic) + 1}`}
@@ -665,7 +579,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                   </select>
                 </div>
 
-                <button className="btn-test-devices" onClick={startPreview}>
+                <button disabled={ended || !room || isConnecting} className="btn-test-devices" onClick={startPreview}>
                   <i className="ri-refresh-line"></i> Test Devices
                 </button>
               </div>
@@ -675,7 +589,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
               <button className="btn-back" onClick={() => window.location.href = '/interviews'}>
                 <i className="ri-arrow-left-line"></i> Back
               </button>
-              <button className="btn-join" onClick={joinRoom} disabled={!deviceTestPassed || isConnecting}>
+              <button className="btn-join" onClick={joinRoom} disabled={!deviceTestPassed || isConnecting || roomLoading || !room || ended}>
                 {isConnecting ? (
                   <><i className="ri-loader-4-line ri-spin"></i> Connecting...</>
                 ) : (
@@ -697,7 +611,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                 <i className="ri-arrow-left-line"></i>
               </button>
               <span className="call-status">
-                {isConnected ? (
+                {ended ? <><i className="ri-checkbox-circle-line"></i> Interview ended</> : isConnected ? (
                   <><i className="ri-record-circle-fill live"></i> Live</>
                 ) : tutorConnected ? (
                   <><i className="ri-loader-4-line ri-spin"></i> Connecting...</>
@@ -749,23 +663,30 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
               </div>
 
               <div className="call-controls">
-                <button className={`control-btn ${!isAudioEnabled ? 'off' : ''}`} onClick={toggleAudio} title={isAudioEnabled ? 'Mute' : 'Unmute'}>
+                <button disabled={ended} className={`control-btn ${!isAudioEnabled ? 'off' : ''}`} onClick={toggleAudio} title={isAudioEnabled ? 'Mute' : 'Unmute'}>
                   <i className={isAudioEnabled ? 'ri-mic-line' : 'ri-mic-off-line'}></i>
                 </button>
-                <button className={`control-btn ${!isVideoEnabled ? 'off' : ''}`} onClick={toggleVideo} title={isVideoEnabled ? 'Turn off camera' : 'Turn on camera'}>
+                <button disabled={ended} className={`control-btn ${!isVideoEnabled ? 'off' : ''}`} onClick={toggleVideo} title={isVideoEnabled ? 'Turn off camera' : 'Turn on camera'}>
                   <i className={isVideoEnabled ? 'ri-camera-line' : 'ri-camera-off-line'}></i>
                 </button>
                 <button 
                   className={`control-btn ${isRecording ? 'recording' : ''}`} 
                   onClick={isRecording ? stopRecording : startRecording}
                   title={isRecording ? 'Stop recording' : 'Start recording'}
-                  disabled={recordingUploading}
+                  disabled={recordingUploading || hasPendingRecording || (!isRecording && (!isConnected || ended))}
                 >
                   <i className={isRecording ? 'ri-stop-circle-line' : 'ri-record-circle-line'}></i>
                 </button>
-                <button className="control-btn end-call" onClick={() => setShowEndCallConfirm(true)} title="End interview">
+                <button disabled={ended} className="control-btn" title="Reconnect interview" onClick={() => { if (socketRef.current?.connected) callRef.current?.recover(); else void socketRef.current?.connect(); }}><i className="ri-refresh-line" /></button>
+                <button disabled={ended} className="control-btn end-call" onClick={() => setShowEndCallConfirm(true)} title="End interview">
                   <i className="ri-phone-line"></i>
                 </button>
+              </div>
+              <div className="interview-recording-state" role="status">
+                {isRecording && <span>Recording both participants</span>}
+                {recordingUploading && <span>Saving recording...</span>}
+                {hasPendingRecording && !recordingUploading && <button onClick={() => { void uploadRecording(); }}><i aria-hidden="true" className="ri-upload-2-line" />Retry recording upload</button>}
+                {recordingUrl && <details><summary>Saved recording</summary><video controls crossOrigin="use-credentials" src={`${API_BASE_URL}${recordingUrl}`} /></details>}
               </div>
             </div>
 
@@ -773,6 +694,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
               <div className="notes-header">
                 <h3><i className="ri-file-text-line"></i> Interview Notes</h3>
               </div>
+              {room?.result ? <div className="result-section"><h3>Final result: {room.result === 'pass' ? 'Passed' : 'Failed'}</h3><a href="/interviews">Back to interviews</a></div> : <>
 
               {/* Rubric Scoring */}
               <div className="rubric-section">
@@ -835,7 +757,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                   <button 
                     className="btn-result btn-pass"
                     onClick={() => setShowPassConfirm(true)}
-                    disabled={isSaving}
+                    disabled={isSaving || recordingUploading || Boolean(room?.result)}
                   >
                     <i className="ri-checkbox-circle-fill"></i>
                     {isSaving ? 'Submitting...' : 'Pass'}
@@ -843,7 +765,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                   <button 
                     className="btn-result btn-fail"
                     onClick={() => setShowFailConfirm(true)}
-                    disabled={isSaving}
+                    disabled={isSaving || recordingUploading || Boolean(room?.result)}
                   >
                     <i className="ri-close-circle-fill"></i>
                     {isSaving ? 'Submitting...' : 'Fail'}
@@ -854,6 +776,7 @@ const InterviewRoomPage = ({ interviewId, tutorId, tutorName }: InterviewRoomPag
                   Submitting will end the interview and save all notes & scores
                 </p>
               </div>
+              </>}
             </div>
           </div>
 

@@ -667,6 +667,12 @@ const Schedule = new Elysia({ prefix: '/schedule' })
    * POST /schedule/book
    * Rate limited: 5 bookings per minute per user
    */
+  .get('/reservation/:reservationId', async ({ params, request, set }) => {
+    const student = await resolveStudentSession(request);
+    if (!student) { set.status = 401; return { success: false, error: 'Student authentication required' }; }
+    try { return { success: true, data: await scheduleService.reservationStatus(student.userId, params.reservationId) }; }
+    catch { set.status = 503; return { success: false, error: 'Reservation status unavailable' }; }
+  }, { params: t.Object({ reservationId: ID() }) })
   .post('/book', async ({ body, cookie, request, set }) => {
     try {
       
@@ -693,7 +699,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         studentId,
         slotId: body.slotId,
         reservationId: body.reservationId,
-        ticketTransferTxHash: body.ticketTransferTxHash
+        ticketTransferTxHash: body.ticketTransferTxHash,
+        privatePassReservationId: body.privatePassReservationId
       });
       
 
@@ -706,12 +713,7 @@ const Schedule = new Elysia({ prefix: '/schedule' })
         message: 'Booking confirmed successfully'
       };
     } catch (error: any) {
-      console.error('=== BOOKING ERROR ===');
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-      console.error('=== END BOOKING ERROR ===');
+      console.error('Booking request failed');
       
       set.status = 400;
       return {
@@ -723,7 +725,8 @@ const Schedule = new Elysia({ prefix: '/schedule' })
     body: t.Object({
       slotId: ID(),
       reservationId: ID(),
-      ticketTransferTxHash: t.String({ minLength: 8, maxLength: 100 })
+      ticketTransferTxHash: t.Optional(t.String({ minLength: 8, maxLength: 100 })),
+      privatePassReservationId: t.Optional(t.String({ pattern: '^0x[a-f0-9]{64}$' }))
     })
   })
 

@@ -4,6 +4,8 @@ tests/
 scripts/*
 !scripts/migrate-classroom-learning-data-to-memgraph.ts
 !scripts/check-web3.ts
+!scripts/review-tally-operator.ts
+!scripts/verify-review-tally.ts
 *.md
 docker-compose.yml
 Dockerfile*
@@ -11,6 +13,10 @@ init.sql
 migrate-inbox.sql
 nginx.conf
 .env*
+config/anonymous-reviews.env
+config/anonymous-tally.env
+config/lesson-passes.env
+.deployment/
 .git/
 .gitignore
 AUTO_DEPLOY_SETUP.md

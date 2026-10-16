@@ -29,6 +29,9 @@ export interface ServerToClientEvents {
   'webrtc:ready': (data: { from: string }) => void;
   
   // Interview events
+  'interview:joined': (data: { roomId: string; configuration: { iceServers: Array<{ urls: string | string[]; username?: string; credential?: string }> }; peerPresent: boolean; peerId?: string }) => void;
+  'interview:renegotiate': () => void;
+  'interview:recording-status': (data: { recording: boolean }) => void;
   'interview:admin-joined': () => void;
   'interview:tutor-joined': () => void;
   'interview:offer': (data: { offer: any }) => void;
@@ -84,6 +87,8 @@ export interface ClientToServerEvents {
   
   // Interview events
   'interview:join': (data: { roomId: string; odIuser?: string; role: 'tutor' | 'admin' }) => void;
+  'interview:renegotiate': (data: { roomId: string }) => void;
+  'interview:recording-status': (data: { roomId: string; recording: boolean }) => void;
   'interview:offer': (data: { roomId: string; offer: any }) => void;
   'interview:answer': (data: { roomId: string; answer: any }) => void;
   'interview:ice-candidate': (data: { roomId: string; candidate: any }) => void;

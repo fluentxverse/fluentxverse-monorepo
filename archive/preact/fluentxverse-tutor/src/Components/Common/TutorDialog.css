@@ -1,0 +1,15 @@
+.tutor-dialog { --sd-surface:#fff; --sd-text:#202636; --sd-muted:#647184; --sd-border:#dfe5ed; --sd-accent:#0245ae; --sd-tint:#edf4ff; position:fixed; inset:0; margin:auto; width:480px; max-width:calc(100vw - 32px); max-height:calc(100dvh - 32px); padding:24px; border:1px solid var(--sd-border); border-radius:8px; background:var(--sd-surface); color:var(--sd-text); overflow:auto; box-shadow:0 18px 64px #0003; box-sizing:border-box; letter-spacing:0; }
+[data-theme="dark"] .tutor-dialog { --sd-surface:var(--fxv-surface,#242424); --sd-text:var(--fxv-text,#f5f5f5); --sd-muted:var(--fxv-text-muted,#aab5c4); --sd-border:var(--fxv-border,#3b3b3b); --sd-accent:#79b5ff; --sd-tint:#293646; }
+.tutor-dialog::backdrop { background:#10182080; }
+.tutor-dialog h2 { font-size:22px; line-height:1.35; color:var(--sd-text); margin:0 0 12px; }
+.tutor-dialog p { color:var(--sd-muted); line-height:1.65; overflow-wrap:anywhere; }
+.tutor-dialog button { letter-spacing:0; box-shadow:none; border-radius:6px; }
+.tutor-dialog button:disabled { opacity:.55; cursor:not-allowed; }
+.tutor-dialog :focus-visible { outline:2px solid var(--sd-accent); outline-offset:3px; }
+.tutor-dialog .tutor-dialog-art { width:48px; height:48px; object-fit:contain; margin-bottom:16px; }
+.tutor-dialog .tutor-dialog-close { position:absolute!important; top:12px!important; right:12px!important; width:36px; height:36px; display:grid; place-items:center; background:transparent; border:1px solid var(--sd-border); color:var(--sd-muted); padding:0; }
+.tutor-dialog .tutor-dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; padding-top:18px; border-top:1px solid var(--sd-border); margin-top:20px; }
+.tutor-dialog .tutor-dialog-actions button { display:inline-flex; gap:8px; align-items:center; justify-content:center; min-height:40px; padding:8px 14px; background:var(--sd-surface); color:var(--sd-text); border:1px solid var(--sd-border); }
+.tutor-dialog .tutor-dialog-actions .primary { background:var(--sd-accent); color:#fff; border-color:var(--sd-accent); }
+[data-theme="dark"] .tutor-dialog .tutor-dialog-actions .primary { color:#142233; }
+@media(max-width:600px) { .tutor-dialog { padding:20px; } }

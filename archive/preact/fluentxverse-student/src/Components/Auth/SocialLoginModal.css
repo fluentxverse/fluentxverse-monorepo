@@ -1,0 +1,21 @@
+.social-login-dialog .social-login-modal { padding:16px 0 0; width:auto; background:none; box-shadow:none; border:0; }
+.social-login-dialog .social-brand { display:flex; align-items:center; gap:8px; margin-bottom:24px; color:var(--sd-accent); }
+.social-login-dialog .modal-logo img { width:28px; height:28px; }
+.social-login-dialog .modal-brand-text { font-size:17px; font-weight:700; }
+.social-login-dialog .login-title { text-align:left; }
+.social-login-dialog .login-title h2 { padding-right:12px; }
+.social-login-dialog .login-title p { font-size:13px; margin-bottom:24px; }
+.social-login-dialog .social-login-buttons { display:grid; gap:12px; }
+.social-login-dialog .social-btn { display:grid; grid-template-columns:24px minmax(0,1fr) auto; align-items:center; gap:12px; width:100%; min-height:48px; padding:10px 14px; background:var(--sd-surface); border:1px solid var(--sd-border); color:var(--sd-text); font-size:14px; text-align:left; }
+.social-login-dialog .social-btn:hover { background:var(--sd-tint); border-color:var(--sd-accent); }
+.social-login-dialog .social-icon-slot svg { width:22px; height:22px; display:block; }
+.social-login-dialog :is(.apple-mark,.x-mark) { fill:currentColor; }
+.social-login-dialog .last-used-badge { font-size:10px; color:var(--sd-muted); }
+.social-login-dialog .social-legal { border-top:1px solid var(--sd-border); margin-top:24px; padding-top:16px; }
+.social-login-dialog .social-legal p { font-size:12px; margin:0; }
+.social-login-dialog .social-legal a { color:var(--sd-accent); }
+.social-login-dialog .login-error { display:flex; align-items:flex-start; gap:8px; margin-top:18px; padding:12px; background:#fff1f2; color:#b42337; border-radius:6px; font-size:13px; }
+.social-login-dialog .btn-loading { grid-column:1/-1; display:flex; align-items:center; gap:12px; }
+.social-login-dialog .spinner { width:18px; height:18px; border:2px solid var(--sd-border); border-top-color:var(--sd-accent); border-radius:50%; animation:social-spin .8s linear infinite; }
+@keyframes social-spin { to { transform:rotate(360deg); } }
+@media(max-width:360px) { .social-login-dialog .social-btn { grid-template-columns:22px minmax(0,1fr); gap:8px; padding:10px; font-size:13px; } .social-login-dialog .social-btn-end { grid-column:2; } }

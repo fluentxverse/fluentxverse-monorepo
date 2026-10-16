@@ -27,6 +27,7 @@ RUN bun install --production --no-save
 COPY --chown=appuser:appgroup src ./src
 COPY --chown=appuser:appgroup scripts/migrate-classroom-learning-data-to-memgraph.ts ./scripts/
 COPY --chown=appuser:appgroup scripts/check-web3.ts ./scripts/
+COPY --chown=appuser:appgroup scripts/review-tally-operator.ts scripts/verify-review-tally.ts ./scripts/
 COPY --chown=appuser:appgroup circuits ./circuits
 COPY --chown=appuser:appgroup tsconfig.json ./
 

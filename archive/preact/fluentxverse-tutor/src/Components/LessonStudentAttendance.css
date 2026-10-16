@@ -1,0 +1,26 @@
+.lesson-student-attendance { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 0; font-size: 12px; border-bottom: 1px solid var(--lne-border, var(--notes-border)); color: var(--lne-text, var(--notes-text)); }
+.lesson-student-attendance strong { color: inherit; }
+.lesson-student-attendance label { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: inherit; cursor: pointer; }
+.lesson-student-attendance input[type='checkbox'] { width: 16px; height: 16px; accent-color: #0245ae; }
+.lesson-student-attendance .lesson-attendance-status { color: inherit; }
+.lesson-student-attendance .lesson-attendance-status[data-status='absent'] { color: #be123c; font-weight: 600; }
+.lesson-student-attendance .lesson-attendance-status[data-status='present'] { color: #166534; font-weight: 600; }
+.lesson-absence-confirmation { position: fixed; inset: 0; margin: auto; width: min(500px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; padding: 20px; border: 1px solid #dbe3ee; border-radius: 8px; background: #fff; color: #202020; overflow: auto; }
+.lesson-absence-confirmation::backdrop { background: rgba(0, 0, 0, .6); }
+.lesson-absence-confirmation h2 { display: flex; gap: 10px; align-items: center; font-size: 18px; margin: 0 0 16px; color: inherit; }
+.lesson-absence-confirmation h2 i { color: #be123c; }
+.lesson-absence-confirmation p { font-size: 13px; line-height: 1.7; color: inherit; margin: 0 0 16px; }
+.lesson-absence-confirmation label { display:grid; gap:6px; font-size:13px; margin-bottom:16px; }
+.lesson-absence-confirmation textarea { width:100%; box-sizing:border-box; min-height:72px; padding:10px; border:1px solid #dbe3ee; border-radius:6px; background:transparent; color:inherit; resize:vertical; }
+[data-theme='dark'] .lesson-absence-confirmation textarea { border-color:#484848; }
+.lesson-absence-confirmation footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.lesson-absence-confirmation button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 12px; min-height: 38px; border: 1px solid #dbe3ee; border-radius: 5px; background: #f8fafc; color: #202020; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.lesson-absence-confirmation .lesson-absence-confirm { background: #be123c; border-color: #be123c; color: #fff; }
+.lesson-absence-confirmation button:disabled { opacity: .5; cursor: default; }
+.lesson-attendance-error { flex-basis: 100%; margin: 0; }
+.lesson-student-attendance .lesson-attendance-error, .lesson-absence-confirmation .lesson-attendance-error { color: #be123c; font-size: 12px; }
+.lesson-student-attendance input:focus-visible, .lesson-absence-confirmation button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+[data-theme='dark'] .lesson-absence-confirmation { background: #242424; border-color: #484848; color: #f1f1f1; color-scheme: dark; }
+[data-theme='dark'] .lesson-absence-confirmation button:not(.lesson-absence-confirm) { background: #303030; border-color: #484848; color: #f1f1f1; }
+[data-theme='dark'] :is(.lesson-student-attendance .lesson-attendance-error, .lesson-absence-confirmation .lesson-attendance-error, .lesson-student-attendance .lesson-attendance-status[data-status='absent']) { color: #fda4af; }
+[data-theme='dark'] .lesson-student-attendance .lesson-attendance-status[data-status='present'] { color: #86efac; }

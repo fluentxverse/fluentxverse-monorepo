@@ -23,3 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 .TODO.md
+.env
+# Public proof assets are explicitly provisioned before deployment, not source files.
+fluentxverse-student-solid-prototype/public/anonymous-reviews/
+fluentxverse-server/config/lesson-passes.env
+
+# Generated local browser evidence and deployment caches (keep source artwork).
+.wrangler/
+/output/screenshots/
+/output/*.png
+/output/lesson-authoring/

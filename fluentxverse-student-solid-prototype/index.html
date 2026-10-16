@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="fxv-app-framework" content="solidjs" />
+		<meta http-equiv="x-ua-compatible" content="ie=edge" />
+		<title>Learn English Online | FluentXVerse - Expert ESL Tutors</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="color-scheme" content="light dark" />
+		<meta name="description" content="Learn English with expert ESL tutors on FluentXVerse. Personalized 1-on-1 lessons, flexible scheduling, and affordable rates. Start your language journey today." />
+		
+		<!-- SEO Meta Tags -->
+		<meta name="keywords" content="learn English online, ESL lessons, English tutor, online English classes, FluentXVerse, language learning, English speaking practice" />
+		<meta name="author" content="FluentXVerse" />
+		<meta name="robots" content="noindex, nofollow" />
+		<link rel="canonical" href="https://student.fluentxverse.com" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://student.fluentxverse.com" />
+		<meta property="og:title" content="Learn English Online | FluentXVerse" />
+		<meta property="og:description" content="Learn English with expert ESL tutors. Personalized 1-on-1 lessons, flexible scheduling, affordable rates." />
+		<meta property="og:image" content="https://student.fluentxverse.com/assets/img/og-student.png" />
+		<meta property="og:site_name" content="FluentXVerse" />
+		
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:url" content="https://student.fluentxverse.com" />
+		<meta name="twitter:title" content="Learn English Online | FluentXVerse" />
+		<meta name="twitter:description" content="Learn English with expert ESL tutors. Personalized 1-on-1 lessons, flexible scheduling, affordable rates." />
+		<meta name="twitter:image" content="https://student.fluentxverse.com/assets/img/og-student.png" />
+		
+		<!-- PWA Meta Tags -->
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="default">
+		<meta name="apple-mobile-web-app-title" content="FluentXVerse">
+		<meta name="theme-color" content="#0245ae">
+
+		<link rel="shortcut icon" type="image/x-icon" href="/assets/img/logo/icon_logo.png" />
+
+		<script>
+			(function () {
+				try {
+					var path = window.location.pathname;
+					var storedTheme = localStorage.getItem('theme-storage');
+					var parsedTheme = storedTheme ? JSON.parse(storedTheme) : null;
+					var prefersDark = !!(parsedTheme && parsedTheme.state && parsedTheme.state.isDarkMode);
+					var hasSessionHint = !!(
+						localStorage.getItem('authToken') ||
+						sessionStorage.getItem('authToken') ||
+						localStorage.getItem('fxv_user_id')
+					);
+					var forceLight = path === '/' || (path === '/browse-tutors' && !hasSessionHint);
+					var theme = forceLight ? 'light' : (prefersDark ? 'dark' : 'light');
+					var root = document.documentElement;
+					try {
+						if (window.self !== window.top) {
+							var parentTheme = window.parent.document.documentElement.dataset.theme;
+							if (parentTheme === 'dark' || parentTheme === 'light') theme = parentTheme;
+						}
+					} catch (error) {}
+					if (/^\/materials\/(daily-dispatch|conversational-skills|business-english)\/[^/]+\/?$/.test(path) || path === '/lesson/view' || path.indexOf('/conversation-mat/') === 0) {
+						root.dataset.materialPage = 'true';
+					}
+
+					root.dataset.theme = theme;
+					root.classList.toggle('dark-mode', theme === 'dark');
+					root.style.colorScheme = theme;
+
+					var themeColor = document.querySelector('meta[name="theme-color"]');
+					if (themeColor) {
+						themeColor.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#0245ae');
+					}
+				} catch (error) {
+					document.documentElement.dataset.theme = 'light';
+				}
+			})();
+		</script>
+
+		<!-- DNS Prefetch for external resources -->
+		<link rel="dns-prefetch" href="//fonts.googleapis.com">
+		<link rel="dns-prefetch" href="//fonts.gstatic.com">
+		
+		<!-- Critical CSS - Inlined for instant first paint -->
+		<style>
+			/* Critical CSS for above-the-fold content */
+			*,*::before,*::after{box-sizing:border-box}
+			html{line-height:1.15;-webkit-text-size-adjust:100%}
+			body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff}
+			html[data-theme="dark"] body{color:#f3f4f6;background-color:#1a1a1a}
+			html[data-material-page='true'][data-theme='dark'],html[data-material-page='true'][data-theme='dark'] body{background:#1a1a1a!important;color:#f3f4f6;transition:none}
+			main{display:block}
+			h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}
+			p{margin-top:0;margin-bottom:1rem}
+			a{color:#0245ae;text-decoration:none;background-color:transparent}
+			img{vertical-align:middle;border-style:none;max-width:100%;height:auto}
+			button{border-radius:0;margin:0;font-family:inherit;font-size:inherit;line-height:inherit}
+			.container{width:100%;padding-right:15px;padding-left:15px;margin-right:auto;margin-left:auto}
+			@media(min-width:576px){.container{max-width:540px}}
+			@media(min-width:768px){.container{max-width:720px}}
+			@media(min-width:992px){.container{max-width:960px}}
+			@media(min-width:1200px){.container{max-width:1140px}}
+			@media(min-width:1400px){.container{max-width:1320px}}
+			/* Loading state - use specific class to avoid conflicts */
+			#app{min-height:100vh}
+			.loading-placeholder{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f8f9fa}
+			.critical-spinner{width:40px;height:40px;border:3px solid #e9ecef;border-top-color:#0245ae;border-radius:50%;animation:critical-spin 1s linear infinite}
+			@keyframes critical-spin{to{transform:rotate(360deg)}}
+			/* Header skeleton */
+			.header-skeleton{height:80px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+		</style>
+
+		<!-- CSS Libraries -->
+		<link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+		<link rel="stylesheet" href="/assets/css/animate.min.css" />
+		<link rel="stylesheet" href="/assets/css/fontawesome-all.min.css" />
+		<link rel="stylesheet" href="/assets/css/uicons-solid-rounded.css" />
+		<link rel="stylesheet" href="/assets/css/flaticon.css" />
+		<link rel="stylesheet" href="/assets/icons/remixicon/remixicon.css" />
+		<link rel="stylesheet" href="/assets/css/magnific-popup.css" />
+		<link rel="stylesheet" href="/assets/css/jquery.mCustomScrollbar.min.css" />
+		<link rel="stylesheet" href="/assets/css/slick.css" />
+
+		<!-- Main Styles -->
+		<link rel="stylesheet" href="/assets/css/default.css" />
+		<link rel="stylesheet" href="/assets/css/style.css" />
+		<link rel="stylesheet" href="/assets/css/responsive.css" />
+		<link rel="stylesheet" href="/assets/css/custom.css" />
+
+		<!-- Dark Mode -->
+		<link rel="stylesheet" href="/assets/css/dark-mode.css" />
+		<link rel="stylesheet" href="/assets/css/dark-mode-homepage.css" />
+		<link rel="stylesheet" href="/assets/css/dark-mode-decorative.css" />
+		<link rel="stylesheet" href="/assets/css/dark-mode-footer.css" />
+		<link rel="stylesheet" href="/assets/css/dark-mode-responsive.css" />
+		<link rel="stylesheet" href="/assets/css/dark-mode-gap-fix.css" />
+
+		<!-- UI Fixes -->
+		<link rel="stylesheet" href="/assets/css/theme-toggle.css" />
+		<link rel="stylesheet" href="/assets/css/buttons-dark-mode.css" />
+		<link rel="stylesheet" href="/assets/css/sidebar-icon-consistency.css" />
+		<link rel="stylesheet" href="/assets/css/dark-mode-header-border-fix.css" />
+		<link rel="stylesheet" href="/assets/css/brand-text.css" />
+		<link rel="stylesheet" href="/assets/css/sticky-header-fix.css" />
+		<link rel="stylesheet" href="/assets/css/sticky-header-logo-fix.css" />
+
+		<!-- Banner & Header Fixes -->
+		<link rel="stylesheet" href="/assets/css/banner-image-fix.css" />
+		<link rel="stylesheet" href="/assets/css/banner-dark-mode-fix.css" />
+		<link rel="stylesheet" href="/assets/css/banner-visibility-fix.css" />
+		<link rel="stylesheet" href="/assets/css/banner-emergency-visibility.css" />
+
+		<!-- Mobile Fixes -->
+		<link rel="stylesheet" href="/assets/css/mobile-hamburger-fix.css" />
+
+		<!-- Components -->
+		<link rel="stylesheet" href="/assets/css/coming-soon-card-fix.css" />
+		<link rel="stylesheet" href="/assets/css/login-modal-dark-mode.css" />
+		<link rel="stylesheet" href="/assets/css/login-page-enhanced.css" />
+
+		<!-- Dark Mode Comprehensive Fixes -->
+		<link rel="stylesheet" href="/assets/css/dark-mode-comprehensive-fixes.css" />
+
+	</head>
+	<body>
+		<!-- Optional preloader here -->
+		<!-- Scroll-top -->
+		<button class="scroll-top scroll-to-target" data-target="html" aria-label="Scroll to top">
+			<i class="fas fa-angle-up" aria-hidden="true"></i>
+		</button>
+
+		<!-- Offcanvas-area -->
+		<div class="offcanvas-wrapper">
+			<div class="menu-trigger"><i class="fi-sr-angle-small-left"></i></div>
+			<div class="menu-close"><i class="fi-sr-angle-small-right"></i></div>
+			<div class="offcanvas-inner scroll">
+			</div>
+		</div>
+		<div class="offcanvas-overly"></div>
+
+		<noscript>You need to enable JavaScript to run this app.</noscript>
+		<div id="app"></div>
+
+		<!-- Solid student app entry -->
+		<script type="module" src="/entry.tsx"></script>
+	</body>
+</html>

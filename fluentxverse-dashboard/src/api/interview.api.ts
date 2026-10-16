@@ -52,6 +52,11 @@ export interface PendingInterview {
 }
 
 export const interviewApi = {
+  getRoom: async (id: string): Promise<{ id: string; tutorId: string; tutorName: string; status: string; result: string | null; hasRecording: boolean; mediaClosed: boolean }> => {
+    const { data } = await api.get(`/interview/room/${encodeURIComponent(id)}`);
+    if (!data.success) throw Error(data.error || 'Interview not found');
+    return data.data;
+  },
   /**
    * Create interview slots (Admin)
    */

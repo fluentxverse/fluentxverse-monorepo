@@ -78,6 +78,10 @@ export interface TutorListItem {
   id: string;
   name: string;
   email: string;
+  profilePicture?: string;
+  isBlocked?: boolean;
+  blockExpiresAt?: string;
+  penaltyBlockOverrideUntil?: string;
   registeredAt: string;
   writtenExamPassed: boolean;
   speakingExamPassed: boolean;
@@ -671,7 +675,26 @@ const normalizeSessionListItem = (value: any): SessionListItem => {
 };
 
 const normalizeSessionDetails = (value: any): SessionDetails => {
-  const session = normalizeSessionListItem(value);
+  const source = unwrapSession(value);
+  const session = normalizeSessionListItem({
+    ...source,
+    tutorId: source.tutor?.id ?? source.tutorId,
+    tutorName: source.tutor?.name ?? source.tutorName,
+    tutorEmail: source.tutor?.email ?? source.tutorEmail,
+    tutorAvatar: source.tutor?.avatar ?? source.tutorAvatar,
+    studentId: source.student?.id ?? source.studentId,
+    studentName: source.student?.name ?? source.studentName,
+    studentEmail: source.student?.email ?? source.studentEmail,
+    studentAvatar: source.student?.avatar ?? source.studentAvatar,
+    slotDate: source.schedule?.date ?? source.slotDate,
+    slotTime: source.schedule?.time ?? source.slotTime,
+    durationMinutes: source.schedule?.durationMinutes ?? source.durationMinutes,
+    attendanceTutor: source.attendance?.tutor ?? source.attendanceTutor,
+    attendanceStudent: source.attendance?.student ?? source.attendanceStudent,
+    bookedAt: source.timestamps?.bookedAt ?? source.bookedAt,
+    completedAt: source.timestamps?.completedAt ?? source.completedAt,
+    cancelledAt: source.timestamps?.cancelledAt ?? source.cancelledAt,
+  });
   return {
     id: session.id,
     tutor: {
@@ -690,7 +713,7 @@ const normalizeSessionDetails = (value: any): SessionDetails => {
       date: session.slotDate,
       time: session.slotTime,
       durationMinutes: session.durationMinutes,
-      timezone: 'JST',
+      timezone: source.schedule?.timezone || 'JST',
     },
     status: session.status,
     attendance: {
@@ -703,7 +726,7 @@ const normalizeSessionDetails = (value: any): SessionDetails => {
       cancelledAt: session.cancelledAt,
     },
     cancelReason: session.cancelReason,
-    ticketUsed: unwrapSession(value).ticketUsed || unwrapSession(value).ticketId || null,
+    ticketUsed: source.ticketUsed || source.ticketId || null,
   };
 };
 

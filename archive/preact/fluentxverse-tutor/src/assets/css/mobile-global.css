@@ -1,0 +1,33 @@
+/* Global Mobile Header Adjustments */
+/* Applied to all pages when the mobile header is visible */
+
+@media screen and (max-width: 991px) {
+  /* Ensure main content doesn't hide behind mobile header */
+  .main-content {
+    margin-left: 0 !important;
+    padding-top: 70px !important;
+    width: 100% !important;
+  }
+  
+  /* Hide desktop sidebar on mobile */
+  .sidebar {
+    display: none !important;
+  }
+  
+  /* Adjust container padding */
+  .main-content .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .main-content {
+    padding-top: 65px !important;
+  }
+  
+  .main-content .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

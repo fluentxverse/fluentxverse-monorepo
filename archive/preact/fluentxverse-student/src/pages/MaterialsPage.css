@@ -1,0 +1,76 @@
+.student-materials {
+  --mt-bg: #f5f7fa; --mt-surface: #fff; --mt-text: #202636; --mt-muted: #647184;
+  --mt-border: #dfe5ed; --mt-accent: #0245ae; --mt-tint: #edf4ff;
+  margin-left: 116px; background: var(--mt-bg); color: var(--mt-text); min-height: 100vh;
+}
+[data-theme='dark'] .student-materials {
+  --mt-bg: var(--fxv-bg, #202020); --mt-surface: var(--fxv-surface, #262626);
+  --mt-text: var(--fxv-text, #f1f3f6); --mt-muted: var(--fxv-text-muted, #aab2bd);
+  --mt-border: var(--fxv-border, #3c3c3c); --mt-accent: #79b5ff; --mt-tint: #293646;
+  color-scheme: dark;
+}
+.student-materials .materials-page { min-height: 100vh; padding: 132px 32px 64px; background: var(--mt-bg); }
+.materials-container { max-width: 1200px; width: 100%; margin: auto; min-width: 0; }
+.materials-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+.materials-heading > div { min-width: 0; }
+.materials-heading-art { width: 64px; height: 64px; object-fit: contain; flex-shrink: 0; }
+.materials-eyebrow { display: block; color: var(--mt-muted); font-size: 12px; font-weight: 600; }
+.materials-heading h1 { color: var(--mt-text); font-size: 28px; font-weight: 800; line-height: 1.35; letter-spacing: 0; margin: 4px 0 0; overflow-wrap: anywhere; }
+.student-materials .materials-book-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; margin-left: auto; border: 1px solid #0245ae; border-radius: 8px; background: #0245ae; color: #fff !important; font-size: 14px; font-weight: 700; line-height: 1.5; text-decoration: none; flex-shrink: 0; }
+.student-materials .materials-book-button:hover { background: #003b96; }
+.materials-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.materials-collections { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--mt-border); border-radius: 8px; background: var(--mt-surface); }
+.materials-collections button { min-height: 38px; padding: 8px 14px; border: 0; border-radius: 5px; background: transparent; color: var(--mt-muted); font-size: 13px; font-weight: 600; line-height: 1.5; cursor: pointer; letter-spacing: 0; }
+.materials-collections button.active { background: var(--mt-tint); color: var(--mt-accent); }
+.materials-search-field { display: flex; align-items: center; width: 340px; max-width: 100%; gap: 10px; padding: 0 12px; min-height: 46px; border: 1px solid var(--mt-border); border-radius: 8px; background: var(--mt-surface); color: var(--mt-muted); }
+.materials-search-field input { min-width: 0; flex: 1; width: 100%; height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--mt-text); font-size: 14px; box-shadow: none; }
+.materials-search-field input:focus { outline: none; }
+.materials-search-field:focus-within { outline: 2px solid var(--mt-accent); outline-offset: 2px; }
+.materials-search-field input::placeholder { color: var(--mt-muted); }
+.materials-search-field input::-webkit-search-cancel-button { display: none; }
+.materials-search-field button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; background: transparent; color: var(--mt-muted); border: 0; border-radius: 4px; cursor: pointer; }
+[data-theme='dark'] .student-materials .materials-search-field input { background: transparent; color: var(--mt-text); border: 0; }
+.student-materials svg { flex-shrink: 0; }
+.materials-result-count { color: var(--mt-muted); font-size: 12px; margin: 16px 0 24px; }
+.materials-course-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; align-items: stretch; }
+.student-materials .materials-course { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--mt-border); border-radius: 8px; background: var(--mt-surface); color: var(--mt-text); overflow: hidden; text-decoration: none; }
+.materials-course:hover { border-color: var(--mt-accent); }
+.materials-course-art { aspect-ratio: 16 / 9; width: 100%; overflow: hidden; background: #dceeff; }
+.materials-course-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.materials-course-content { display: flex; flex-direction: column; flex: 1; padding: 24px; min-width: 0; }
+.materials-course-category { font-size: 12px; font-weight: 600; color: var(--mt-accent); margin-bottom: 8px; }
+.materials-course h2 { color: var(--mt-text); font-size: 20px; font-weight: 700; line-height: 1.4; letter-spacing: 0; margin: 0 0 12px; overflow-wrap: anywhere; }
+.materials-course p { color: var(--mt-muted); font-size: 14px; line-height: 1.65; margin: 0 0 24px; }
+.materials-course-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--mt-border); padding-top: 16px; margin-top: auto; color: var(--mt-accent); font-size: 13px; font-weight: 600; }
+.student-materials .materials-course-footer > span { color: var(--mt-accent) !important; }
+[data-theme='dark'] .student-materials .materials-course-category,
+[data-theme='dark'] .student-materials .materials-course-footer { color: var(--mt-accent); }
+.materials-empty { padding: 48px 24px; border: 1px solid var(--mt-border); border-radius: 8px; background: var(--mt-surface); text-align: center; }
+.materials-empty img { object-fit: contain; margin-bottom: 20px; }
+.materials-empty h2 { color: var(--mt-text); font-size: 20px; font-weight: 700; line-height: 1.4; letter-spacing: 0; margin: 0 0 8px; }
+.materials-empty p { color: var(--mt-muted); font-size: 14px; line-height: 1.6; margin: 0 0 24px; overflow-wrap: anywhere; }
+.materials-reset-button { display: inline-flex; align-items: center; gap: 8px; justify-content: center; min-height: 44px; padding: 10px 16px; border: 1px solid var(--mt-border); border-radius: 8px; background: var(--mt-surface); color: var(--mt-accent); font-size: 13px; font-weight: 600; cursor: pointer; }
+.student-materials :is(a,button):focus-visible { outline: 2px solid var(--mt-accent); outline-offset: 3px; }
+@media (min-width: 1200px) { .materials-container { position: relative; left: -24px; } }
+@media (max-width: 1500px) { .student-materials { margin-left: 95px; } }
+@media (max-width: 1199px) { .student-materials { margin-left: 0; }.student-materials .materials-page { padding-bottom: 140px; } }
+@media (max-width: 991px) {
+  .student-materials .materials-page { padding-top: 148px; padding-bottom: 64px; }
+  .materials-course-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .materials-toolbar { flex-wrap: wrap; gap: 16px; }.materials-search-field { width: 100%; }
+}
+@media (max-width: 768px) {
+  .student-materials .materials-page { padding-inline: 20px; }
+  .materials-heading h1 { font-size: 24px; }.materials-course-content { padding: 20px; }
+  .materials-course h2 { font-size: 18px; }.materials-course-grid { gap: 20px; }
+}
+@media (max-width: 600px) {
+  .student-materials .materials-page { padding: 116px 16px 40px; }
+  .materials-heading { flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }.materials-heading-art { width: 48px; height: 48px; }
+  .materials-heading > div { flex: 1; }.materials-heading h1 { font-size: 22px; }
+  .student-materials .materials-book-button { width: 100%; margin: 8px 0 0; }
+  .materials-collections { width: 100%; }.materials-collections button { flex: 1; padding: 8px 6px; font-size: 12px; }
+  .materials-course-grid { grid-template-columns: minmax(0,1fr); }
+  .materials-result-count { margin-bottom: 20px; }.materials-empty { padding: 32px 20px; }
+}
+@media (max-width: 360px) { .student-materials .menu-wrap.main-menu .brand-text { font-size: 16px; } }

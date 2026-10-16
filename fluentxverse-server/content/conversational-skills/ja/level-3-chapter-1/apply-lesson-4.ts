@@ -17,7 +17,7 @@ const jsonFields = ['introductionData', 'learnData', 'stepBData', 'applyData', '
 try {
   const source = await session.run('MATCH (l:LessonMaterial) WHERE l.id IN [$oldId, $newId] RETURN l', { oldId, newId });
   if (source.records.length !== 1) throw new Error('Expected exactly one Lesson 4 draft.');
-  const raw = source.records[0].get('l').properties;
+  const raw = source.records[0]!.get('l').properties;
   const currentId = raw.id;
   if (raw.updatedAt !== expectedUpdatedAt) throw new Error(`Lesson changed at ${raw.updatedAt}; refusing to overwrite it.`);
 

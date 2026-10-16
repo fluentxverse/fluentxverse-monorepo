@@ -3,13 +3,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import {
-  CurveType,
-  Library,
   TransactionStatus,
-  zkVerifySession,
   type VerifyTransactionInfo,
 } from 'zkverifyjs';
 import { getDriver } from '../../db/memgraph';
+import { gmrEngine } from '../web3.services/gmrEngine.service';
 import { generateLocalTutorCertificationProof } from './localGroth16.service';
 import type { TutorCertificationProofStatus } from './proof.interface';
 
@@ -27,14 +25,6 @@ export interface ZkVerifySubmissionResult {
   statement: string | null;
 }
 
-function getSeedPhrase(): string {
-  const seedPhrase = process.env.ZKVERIFY_SEED_PHRASE || process.env.SEED_PHRASE;
-  if (!seedPhrase) {
-    throw new Error('ZKVERIFY_SEED_PHRASE is required to submit proofs to zkVerify');
-  }
-  return seedPhrase;
-}
-
 function getDomainId(): number {
   const raw = process.env.ZKVERIFY_DOMAIN_ID || '0';
   const parsed = Number(raw);
@@ -46,8 +36,7 @@ function getDomainId(): number {
 
 export function isZkVerifySubmissionConfigured(): boolean {
   const enabled = (process.env.ZKVERIFY_ENABLED || 'true').toLowerCase();
-  const seedPhrase = process.env.ZKVERIFY_SEED_PHRASE || process.env.SEED_PHRASE;
-  return enabled !== 'false' && Boolean(seedPhrase);
+  return enabled !== 'false' && gmrEngine.configured();
 }
 
 async function readJson(path: string): Promise<unknown> {
@@ -132,43 +121,24 @@ export async function persistZkVerifyFailure(
 
 export async function submitTutorCertificationProofToZkVerify(tutorId: string): Promise<ZkVerifySubmissionResult> {
   const localProof = await generateLocalTutorCertificationProof(tutorId);
-  const seedPhrase = getSeedPhrase();
   const domainId = getDomainId();
 
   const proof = await readJson(localProof.proofPath);
   const publicSignals = await readJson(localProof.publicPath);
   const verificationKey = await readJson(localProof.verificationKeyPath);
 
-  const session = await zkVerifySession.start().Volta().withAccount(seedPhrase);
+  const txInfo = await gmrEngine.submitProof({ vk: verificationKey, proof, publicSignals, domainId }) as VerifyTransactionInfo;
+  const result: ZkVerifySubmissionResult = {
+    credentialId: localProof.credentialId,
+    txHash: txInfo.txHash || null,
+    blockHash: txInfo.blockHash || null,
+    status: txInfo.status,
+    proofType: String(txInfo.proofType),
+    domainId: txInfo.domainId,
+    aggregationId: txInfo.aggregationId,
+    statement: txInfo.statement,
+  };
 
-  try {
-    const { transactionResult } = await session
-      .verify()
-      .groth16({ library: Library.snarkjs, curve: CurveType.bn128 })
-      .execute({
-        proofData: {
-          vk: verificationKey,
-          proof,
-          publicSignals,
-        },
-        domainId,
-      });
-
-    const txInfo: VerifyTransactionInfo = await transactionResult;
-    const result: ZkVerifySubmissionResult = {
-      credentialId: localProof.credentialId,
-      txHash: txInfo.txHash || null,
-      blockHash: txInfo.blockHash || null,
-      status: txInfo.status,
-      proofType: String(txInfo.proofType),
-      domainId: txInfo.domainId,
-      aggregationId: txInfo.aggregationId,
-      statement: txInfo.statement,
-    };
-
-    await persistZkVerifyResult(tutorId, result);
-    return result;
-  } finally {
-    await session.close();
-  }
+  await persistZkVerifyResult(tutorId, result);
+  return result;
 }

@@ -1,0 +1,116 @@
+.student-account-dialog {
+  --account-bg: #fff; --account-soft: #f8fafc; --account-text: #202636; --account-muted: #647184;
+  --account-border: #dfe5ed; --account-accent: #0245ae; --account-tint: #edf4ff;
+  position: fixed; inset: 0; margin: auto; width: min(540px, calc(100vw - 32px));
+  max-width: none; max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--account-border);
+  border-radius: 8px; background: var(--account-bg); color: var(--account-text); overflow: hidden;
+  font-family: inherit; color-scheme: light;
+}
+.student-account-dialog[open] { display: flex; flex-direction: column; }
+.student-account-dialog::backdrop { background: rgba(0,0,0,.6); }
+[data-theme='dark'] .student-account-dialog {
+  --account-bg: var(--fxv-surface, #262626); --account-soft: #292929; --account-text: var(--fxv-text, #f1f3f6);
+  --account-muted: var(--fxv-text-muted, #aab2bd); --account-border: var(--fxv-border, #3c3c3c);
+  --account-accent: #79b5ff; --account-tint: #293646; color-scheme: dark;
+}
+.student-account-dialog * { box-sizing: border-box; letter-spacing: 0; }
+.student-account-dialog :is(h2,h3,p) { margin: 0; color: inherit; }
+.student-account-dialog button { font: inherit; cursor: pointer; box-shadow: none; }
+.student-account-dialog button:disabled { opacity: .55; cursor: default; }
+.student-account-dialog svg { flex-shrink: 0; }
+.student-account-dialog :is(button,input,select,a):focus-visible { outline: 2px solid var(--account-accent); outline-offset: 3px; }
+.student-account-dialog .account-art { display: block; width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
+.student-account-dialog .account-dialog-header { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--account-border); flex-shrink: 0; }
+.student-account-dialog .account-dialog-header h2 { font-size: 19px; font-weight: 750; line-height: 1.4; flex: 1; min-width: 0; outline: none; }
+.student-account-dialog .account-dialog-header:has(.account-icon-button:first-child) .account-art { width: 36px; height: 36px; }
+.student-account-dialog .account-icon-button { position: static !important; inset: auto; transform: none; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; padding: 0; border: 1px solid var(--account-border); border-radius: 6px; background: var(--account-bg); color: var(--account-muted); }
+.student-account-dialog .account-icon-button:hover:not(:disabled) { color: var(--account-accent); background: var(--account-tint); }
+.student-account-dialog .account-dialog-body { padding: 24px; overflow-y: auto; min-height: 0; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.student-account-dialog .account-identity { display: flex; align-items: center; gap: 16px; min-width: 0; padding-bottom: 24px; }
+.student-account-dialog .account-identity > div:last-child { min-width: 0; }
+.student-account-dialog .account-avatar { display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: var(--account-tint); color: var(--account-accent); font-size: 23px; font-weight: 750; flex-shrink: 0; }
+.student-account-dialog .account-identity h3 { font-size: 20px; font-weight: 750; line-height: 1.4; overflow-wrap: anywhere; }
+.student-account-dialog .account-identity p { color: var(--account-muted); font-size: 13px; line-height: 1.6; margin-top: 4px; overflow-wrap: anywhere; }
+.student-account-dialog .account-student-id { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px !important; }
+.student-account-dialog code { font: inherit; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; color: var(--account-text); background: none; padding: 0; overflow-wrap: anywhere; }
+.student-account-dialog .account-wallet { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-top: 1px solid var(--account-border); }
+.student-account-dialog .account-wallet .account-art { width: 36px; height: 36px; }
+.student-account-dialog .account-wallet > div { flex: 1; min-width: 0; }
+.student-account-dialog .account-wallet span { display: block; color: var(--account-muted); font-size: 12px; }
+.student-account-dialog .account-wallet code { display: block; font-size: 13px; margin-top: 4px; }
+.student-account-dialog .account-copy-status { color: #15866e; font-size: 12px; margin-bottom: 10px; }
+[data-theme='dark'] .student-account-dialog .account-copy-status { color: #80dbc0; }
+.student-account-dialog .account-actions { border-top: 1px solid var(--account-border); }
+.student-account-dialog .account-actions button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 58px; padding: 14px 4px; border: 0; border-bottom: 1px solid var(--account-border); border-radius: 0; background: transparent; color: var(--account-text); text-align: left; font-size: 14px; font-weight: 600; }
+.student-account-dialog .account-actions button > svg:first-child { color: var(--account-accent); }
+.student-account-dialog .account-actions button > span { flex: 1; color: inherit; }
+.student-account-dialog .account-actions button > svg:last-child:not(:first-child) { color: var(--account-muted); }
+.student-account-dialog .account-actions button:hover:not(:disabled) { background: var(--account-soft); }
+.student-account-dialog .account-actions .account-logout { margin-top: 8px; border-bottom: 0; color: #bd3547; }
+.student-account-dialog .account-actions .account-logout > svg:first-child { color: inherit; }
+[data-theme='dark'] .student-account-dialog .account-actions .account-logout { color: #ff9ca8; }
+.student-account-dialog .account-form { margin: 0; }
+.student-account-dialog .account-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.student-account-dialog .account-field { margin-top: 18px; min-width: 0; }
+.student-account-dialog .account-form > fieldset > .account-field:first-child { margin-top: 0; }
+.student-account-dialog .account-field label, .student-account-dialog .account-checkboxes legend { display: block; color: var(--account-text); font-size: 13px; font-weight: 600; line-height: 1.5; margin-bottom: 8px; }
+.student-account-dialog .account-field label span { font-size: 11px; color: var(--account-muted); font-weight: 400; margin-left: 6px; }
+.student-account-dialog .account-field :is(input,select) { display: block; width: 100%; height: 44px; min-width: 0; padding: 10px 12px; border: 1px solid var(--account-border); border-radius: 6px; color: var(--account-text); background: var(--account-bg); font: inherit; font-size: 14px; line-height: 1.5; }
+.student-account-dialog .account-field select { appearance: auto; padding-right: 8px; text-overflow: ellipsis; }
+.student-account-dialog .account-field input::placeholder { color: var(--account-muted); opacity: .8; }
+.student-account-dialog .account-field [aria-invalid='true'] { border-color: #bd3547; }
+.student-account-dialog .account-field :is(input,select):disabled { opacity: .65; }
+.student-account-dialog .account-password-input { position: relative; }
+.student-account-dialog .account-password-input input { padding-right: 48px; }
+.student-account-dialog .account-password-input button { position: absolute; right: 3px; top: 3px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; color: var(--account-muted); border: 0; border-radius: 4px; }
+.student-account-dialog .account-password-input button:hover { color: var(--account-accent); }
+.student-account-dialog .account-field-hint { color: var(--account-muted); font-size: 12px; line-height: 1.6; margin-top: 8px; }
+.student-account-dialog .account-current-email { padding-bottom: 4px; }
+.student-account-dialog .account-current-email span { display: block; color: var(--account-muted); font-size: 12px; margin-bottom: 6px; }
+.student-account-dialog .account-current-email p { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.student-account-dialog .account-form-section { padding-top: 22px; margin-top: 22px; border-top: 1px solid var(--account-border); }
+.student-account-dialog .account-form-section:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
+.student-account-dialog .account-form-section h3 { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; line-height: 1.5; }
+.student-account-dialog .account-form-section h3 .account-art { width: 32px; height: 32px; }
+.student-account-dialog .account-field-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.student-account-dialog .account-checkboxes { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px 20px; margin-top: 20px !important; }
+.student-account-dialog .account-checkboxes legend { float: none; padding: 0; width: 100%; }
+.student-account-dialog .account-checkboxes label { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; font-weight: 400; line-height: 1.5; color: var(--account-text); cursor: pointer; min-width: 0; }
+.student-account-dialog .account-checkboxes input { width: 17px; height: 17px; flex-shrink: 0; margin: 2px 0 0; accent-color: var(--account-accent); appearance: auto; }
+.student-account-dialog .account-checkboxes span { overflow-wrap: anywhere; }
+.student-account-dialog .account-load-state { display: flex; align-items: center; flex-direction: column; gap: 16px; padding: 32px 0; text-align: center; color: var(--account-muted); font-size: 14px; line-height: 1.6; }
+.student-account-dialog .account-message { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--account-border); border-radius: 6px; margin-bottom: 20px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.student-account-dialog .account-message svg { margin-top: 2px; }
+.student-account-dialog .account-error { color: #bd3547; background: #fff4f5; border-color: #efcdd3; }
+.student-account-dialog .account-success { color: #13745d; background: #eff9f5; border-color: #b8dfd5; }
+[data-theme='dark'] .student-account-dialog .account-error { color: #ff9ca8; background: #38262a; border-color: #74454d; }
+[data-theme='dark'] .student-account-dialog .account-success { color: #80dbc0; background: #233a30; border-color: #3e6256; }
+.student-account-dialog .account-dialog-footer { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--account-border); flex-shrink: 0; }
+.student-account-dialog :is(.account-primary,.account-secondary) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--account-border); border-radius: 6px; background: var(--account-bg); color: var(--account-accent); font-size: 13px; font-weight: 650; line-height: 1.5; }
+.student-account-dialog .account-primary { background: #0245ae !important; color: #fff !important; border-color: #0245ae; }
+.student-account-dialog .account-primary:hover:not(:disabled) { background: #063b8d !important; }
+.student-account-dialog .account-secondary:hover:not(:disabled) { background: var(--account-tint); }
+.student-account-dialog .account-save-short { display: none; }
+.student-account-dialog .account-primary span { color: inherit !important; }
+.student-account-dialog .account-sr-only { position: absolute; width: 1px !important; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.account-spinner { animation: account-spin 1s linear infinite; }
+@keyframes account-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .account-spinner { animation: none; } }
+@media (max-width: 600px) {
+  .student-account-dialog .account-dialog-header { padding: 16px; gap: 10px; }
+  .student-account-dialog .account-dialog-header h2 { font-size: 17px; }
+  .student-account-dialog .account-art { width: 36px; height: 36px; }
+  .student-account-dialog .account-dialog-body { padding: 20px 16px; }
+  .student-account-dialog .account-identity { gap: 12px; }
+  .student-account-dialog .account-avatar { width: 52px; height: 52px; font-size: 20px; }
+  .student-account-dialog .account-identity h3 { font-size: 18px; }
+  .student-account-dialog .account-checkboxes, .student-account-dialog .account-field-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .student-account-dialog .account-dialog-footer { padding: 16px; }
+  .student-account-dialog .account-dialog-footer button { flex: 1; }
+  .student-account-dialog .account-save-label { display: none; }
+  .student-account-dialog .account-save-short { display: inline; }
+}
+@media (max-width: 360px) {
+  .student-account-dialog .account-dialog-header { gap: 8px; }
+  .student-account-dialog .account-dialog-header:has(.account-icon-button:first-child) .account-art { display: none; }
+}

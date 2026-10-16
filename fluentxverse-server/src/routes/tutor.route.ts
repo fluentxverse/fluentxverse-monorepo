@@ -11,6 +11,7 @@ import { MAX_PROFILE_PIC_BYTES } from '../config/constant';
 import { verifyAuthToken, refreshJwtCookie, type JwtAuthPayload } from '../utils/jwt';
 import { cacheGetOrSet, invalidateCache } from '../db/redis';
 import { tutorPerformanceService } from '../services/tutorPerformance.service';
+import { tutorLessonIssuesService } from '../services/tutorLessonIssues.service';
 
 const tutorService = new TutorService();
 const scheduleService = new ScheduleService();
@@ -18,6 +19,23 @@ const classroomNotesService = new ClassroomNotesService();
 const classroomExerciseMarksService = new ClassroomExerciseMarksService();
 
 const Tutor = new Elysia({ prefix: '/tutor' })
+  .get('/lesson-issues', async ({ cookie, query, set }) => {
+    set.headers['Cache-Control'] = 'no-store';
+    const raw = cookie.tutorAuth?.value;
+    const auth = raw ? await verifyAuthToken(String(raw)) : null;
+    if (!auth || auth.role !== 'tutor') { set.status = 401; return { success: false, error: 'Not authenticated' }; }
+    try {
+      const data = await tutorLessonIssuesService.list(auth.userId, query.period, query.month, query.direction, query.status, query.page ? Number(query.page) : 1);
+      await refreshJwtCookie(cookie, auth, 'tutorAuth');
+      return { success: true, data };
+    } catch (error) {
+      if (error instanceof Error && /^(Invalid (metrics|issue)|Choose a valid)/.test(error.message)) {
+        set.status = 400; return { success: false, error: error.message };
+      }
+      console.error('Failed to load tutor lesson issues:', error);
+      set.status = 500; return { success: false, error: 'Could not load lesson issues' };
+    }
+  }, { query: t.Object({ period: t.Optional(t.String()), month: t.Optional(t.String()), direction: t.Optional(t.String()), status: t.Optional(t.String()), page: t.Optional(t.String()) }) })
   .get('/performance', async ({ cookie, query, set }) => {
     const raw = cookie.tutorAuth?.value;
     const auth = raw ? await verifyAuthToken(String(raw)) : null;

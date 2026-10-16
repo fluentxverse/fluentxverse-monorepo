@@ -7,8 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  BUN_VERSION: "1.1.0"
-  NODE_VERSION: "20"
+  BUN_VERSION: "1.4.2"
+  NODE_VERSION: "24.10.0"
 
 jobs:
   # ============================================
@@ -52,14 +52,14 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
 
   # ============================================
-  # Student App Build & Lint
+  # SolidJS Student App
   # ============================================
   student-app:
     name: Student App CI
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./fluentxverse-student
+        working-directory: ./fluentxverse-student-solid-prototype
 
     steps:
       - name: Checkout code
@@ -78,31 +78,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bun-student-
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint
-        run: bun run biome check ./src
-        continue-on-error: true
-
-      - name: Type check
-        run: bun run tsc --noEmit
+        run: npm ci --workspaces=false
+      - name: Unit tests
+        run: npm test
 
       - name: Build
-        run: bun run build
+        run: npm run build
         env:
-          VITE_API_URL: https://api.fluentxverse.com
-          VITE_SOCKET_URL: https://ws.fluentxverse.com
+          VITE_STUDENT_API_URL: https://api.fluentxverse.com
+          VITE_STUDENT_SOCKET_URL: https://ws.fluentxverse.com
 
   # ============================================
-  # Tutor App Build & Lint
+  # SolidJS Tutor App
   # ============================================
   tutor-app:
     name: Tutor App CI
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./fluentxverse-tutor
+        working-directory: ./fluentxverse-tutor-solid-prototype
 
     steps:
       - name: Checkout code
@@ -121,21 +120,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bun-tutor-
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint
-        run: bun run biome check ./src
-        continue-on-error: true
-
-      - name: Type check
-        run: bun run tsc --noEmit
+        run: npm ci --workspaces=false
+      - name: Unit tests
+        run: npm test
 
       - name: Build
-        run: bun run build
+        run: npm run build
         env:
-          VITE_API_URL: https://api.fluentxverse.com
-          VITE_SOCKET_URL: https://ws.fluentxverse.com
+          VITE_TUTOR_API_URL: https://api.fluentxverse.com
+          VITE_TUTOR_SOCKET_URL: https://ws.fluentxverse.com
 
   # ============================================
   # Security Audit
@@ -157,11 +155,11 @@ jobs:
         run: bun audit || true
 
       - name: Audit student app dependencies
-        working-directory: ./fluentxverse-student
+        working-directory: ./fluentxverse-student-solid-prototype
         run: bun audit || true
 
       - name: Audit tutor app dependencies
-        working-directory: ./fluentxverse-tutor
+        working-directory: ./fluentxverse-tutor-solid-prototype
         run: bun audit || true
 
   # ============================================
@@ -172,6 +170,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [server, student-app, tutor-app]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: "8355506b306aa26ed64113cdc82cf338"
     
     steps:
       - name: Checkout code
@@ -186,25 +187,24 @@ jobs:
         env:
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
-      - name: Deploy Student App to Vercel
-        uses: amondnet/vercel-action@v25
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
+      - uses: actions/setup-node@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_STUDENT_PROJECT_ID }}
-          working-directory: ./fluentxverse-student
-          vercel-args: '--prod'
-
-      - name: Deploy Tutor App to Vercel
-        uses: amondnet/vercel-action@v25
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_TUTOR_PROJECT_ID }}
-          working-directory: ./fluentxverse-tutor
-          vercel-args: '--prod'
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Deploy SolidJS Student Worker
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: ./fluentxverse-student-solid-prototype
+        run: |
+          npm ci --workspaces=false
+          npm run cf:deploy
+      - name: Deploy SolidJS Tutor Worker
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: ./fluentxverse-tutor-solid-prototype
+        run: |
+          npm ci --workspaces=false
+          npm run cf:deploy
 
       - name: Notify deployment success
         if: success()

@@ -1,0 +1,6 @@
+.student-not-found { min-height:100vh; padding:56px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:16px; }
+.student-not-found h1 { font-size:30px; margin:0; }
+.student-not-found p { color:var(--s-muted); font-size:14px; line-height:1.8; margin:0; max-width:400px; }
+.student-not-found>div { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:12px 0; }
+.student-not-found>div :is(a,button) { display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 16px; border:1px solid var(--s-border); border-radius:6px; background:var(--s-surface); color:var(--s-accent); font-size:14px; }
+.student-not-found>a { color:var(--s-accent); font-size:13px; }

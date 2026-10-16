@@ -1,0 +1,49 @@
+.session-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.4);
+  z-index: 1100;
+}
+.session-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+  padding: 1.25rem 1.5rem;
+  width: 340px;
+}
+.session-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #0f172a;
+  margin-bottom: .5rem;
+}
+.session-body {
+  color: #334155;
+  margin-bottom: .75rem;
+}
+.session-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+.session-refresh {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  border: none;
+  padding: .45rem .75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.session-dismiss {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: none;
+  padding: .45rem .75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.dark-mode .session-modal { background: #1f2937; }
+.dark-mode .session-title { color: #e5e7eb; }
+.dark-mode .session-body { color: #cbd5e1; }
+.dark-mode .session-dismiss { background: #374151; color: #e5e7eb; }

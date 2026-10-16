@@ -15,11 +15,21 @@ services:
     container_name: fluentxverse-server
     restart: unless-stopped
     logging: *default-logging
+    env_file:
+      - path: ./config/anonymous-reviews.env
+        required: false
+      - path: ./config/anonymous-tally.env
+        required: false
+      - path: ./config/lesson-passes.env
+        required: false
     ports:
       - "${API_PORT:-8765}:8765"
       - "${SOCKET_PORT:-8767}:8767"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
+      - LESSON_BOOKING_MODE=${LESSON_BOOKING_MODE:-trial}
+      - TRIAL_LESSON_LIMIT=${TRIAL_LESSON_LIMIT:-1}
+      - PRIVACY_INFRA_MODE=${PRIVACY_INFRA_MODE:-bridge_only}
       # Database connections (using container names)
       - DATABASE_URL=postgres://${POSTGRES_USER:-fluentxverse_user}:${POSTGRES_PASSWORD:-fluentxverse_pass}@fluentxverse-postgres:5432/${POSTGRES_DB:-fluentxverse}
       - MEMGRAPH_URI=bolt://fluentxverse-memgraph:7687
@@ -62,6 +72,9 @@ services:
       # GMR Engine / Web3
       - GMR_ENGINE_API_BASE=${GMR_ENGINE_API_BASE}
       - GMR_ENGINE_API_KEY=${GMR_ENGINE_API_KEY}
+      - GMR_SCREENING_ENGINE_API_BASE=${GMR_SCREENING_ENGINE_API_BASE:-http://host.docker.internal:8090}
+      - GMR_SCREENING_ENGINE_API_KEY=${GMR_SCREENING_ENGINE_API_KEY:-}
+      - SCREENING_ENABLED=${SCREENING_ENABLED:-false}
       - VAULT_WALLET_ADDRESS=${VAULT_WALLET_ADDRESS}
       # OpenAI
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -70,7 +83,6 @@ services:
       - TUTOR_CERT_ISSUER_SECRET=${TUTOR_CERT_ISSUER_SECRET:-local-dev-tutor-cert-issuer-secret-change-me}
       - TUTOR_CERT_COMMITMENT_SALT=${TUTOR_CERT_COMMITMENT_SALT:-local-dev-tutor-cert-commitment-salt-change-me}
       - STUDENT_LESSON_ISSUER_SECRET=${STUDENT_LESSON_ISSUER_SECRET:-}
-      - ZKVERIFY_SEED_PHRASE=${ZKVERIFY_SEED_PHRASE}
       - ZKVERIFY_ENABLED=${ZKVERIFY_ENABLED:-true}
       - ZKVERIFY_DOMAIN_ID=${ZKVERIFY_DOMAIN_ID:-0}
       # LanguageTool
@@ -267,11 +279,11 @@ services:
   # ===========================================
   fluentxverse-student:
     build:
-      context: ../fluentxverse-student
+      context: ../fluentxverse-student-solid-prototype
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
-        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
+        VITE_STUDENT_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
+        VITE_STUDENT_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
         VITE_PRIVY_APP_ID: ${PRIVY_APP_ID}
     container_name: fluentxverse-student
     restart: unless-stopped
@@ -285,12 +297,12 @@ services:
 
   fluentxverse-tutor:
     build:
-      context: ../fluentxverse-tutor
+      context: ../fluentxverse-tutor-solid-prototype
       dockerfile: Dockerfile
       args:
         # Use separate build URLs so local Vite settings cannot enter the public bundle.
-        VITE_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
-        VITE_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
+        VITE_TUTOR_API_URL: ${FRONTEND_BUILD_API_URL:-https://api.fluentxverse.com}
+        VITE_TUTOR_SOCKET_URL: ${FRONTEND_BUILD_SOCKET_URL:-https://ws.fluentxverse.com}
         VITE_ENABLE_NOTIFICATION_SOCKET: "true"
     container_name: fluentxverse-tutor
     restart: unless-stopped

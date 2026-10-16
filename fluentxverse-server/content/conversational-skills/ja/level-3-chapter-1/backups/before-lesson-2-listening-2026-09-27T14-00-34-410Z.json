@@ -1,0 +1,583 @@
+{
+  "applyData": {
+    "sectionNumber": 3,
+    "sectionTitle": "APPLY",
+    "activityType": "listening",
+    "activityTitle": "LISTENING",
+    "activityDuration": "4 minutes",
+    "situationText": "Listen to your tutor. First listen for the main idea, then listen again for details.<br><small lang=\"ja\">講師の話を聞きましょう。一度目は大まかな内容、二度目は詳しい情報を聞き取りましょう。</small><br><br>1. Are the speakers meeting for the first time?<br>2. What is the man's name?<br>3. Where is he from?<br>4. Is he a student?",
+    "situationImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+    "dialogueLines": [],
+    "tutorSteps": [
+      {
+        "instruction": "Read once for the main idea. Read again for details.",
+        "listeningScript": "<p>Yuki: Hi. I'm Yuki. Are you new here?</p><p>Leo: Yes, I am. My name is Leo.</p><p>Yuki: Nice to meet you. Where are you from?</p><p>Leo: I'm from Bristol, in England. How about you?</p><p>Yuki: I'm from Osaka, in Japan. Are you a student?</p><p>Leo: No, I'm a cook. I work at a cafe near the house.</p><p>Yuki: Great. I'm a student.</p><p>Leo: Nice to meet you, Yuki.</p>",
+        "tips": [
+          {
+            "text": "Keep the script hidden from the learner. Pause only between speakers. Repeat once more if needed."
+          }
+        ]
+      },
+      {
+        "instruction": "Check understanding and ask for evidence.",
+        "questions": [
+          {
+            "question": "Are the speakers meeting for the first time?",
+            "answer": "Yes."
+          },
+          {
+            "question": "What is the man's name?",
+            "answer": "Leo."
+          },
+          {
+            "question": "Where is he from?",
+            "answer": "Bristol, England."
+          },
+          {
+            "question": "Is he a student?",
+            "answer": "No. He is a cook."
+          }
+        ]
+      },
+      {
+        "instruction": "Return to the line that supports each answer.",
+        "tips": [
+          {
+            "text": "Accept equivalent answers. Ask one follow-up question before moving on."
+          }
+        ]
+      }
+    ],
+    "triviaEnabled": false
+  },
+  "authoringImportedAt": "2026-09-23T10:51:10.454Z",
+  "authoringSource": "conversational-skills-ja-l3-c1-v1",
+  "backgroundImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+  "beData": "",
+  "chapter": 1,
+  "chapterName": "Nice to Meet You",
+  "course": "conversational-skills",
+  "createdAt": "2026-09-23T06:32:26.413Z",
+  "createdBy": "codex",
+  "createdByName": "Lesson Authoring",
+  "discussionQuestionsData": "",
+  "exerciseData": {
+    "sectionNumber": 4,
+    "sectionTitle": "EXERCISE",
+    "duration": "4 minutes",
+    "stepAType": "choose",
+    "stepAName": "STEP A",
+    "instructions": "Choose the correct word. Read the complete sentence.",
+    "instructionsTranslation": "正しい語を選び、文全体を読みましょう。",
+    "showExpressions": false,
+    "expressions": [],
+    "showExample": false,
+    "exampleSentence": "",
+    "exampleAnswer": "",
+    "exampleImage": "",
+    "exerciseItems": [],
+    "chooseItems": [
+      {
+        "sentence": "Where (are / is) you from?"
+      },
+      {
+        "sentence": "I'm (from / name) Bristol."
+      },
+      {
+        "sentence": "Leo is a (cook / cooking)."
+      }
+    ],
+    "chooseImage": "",
+    "changeItems": [],
+    "showInfoBox": false,
+    "infoBox": {
+      "title": "Comparison Table",
+      "rowLabels": [
+        "$",
+        "❤️",
+        "🙂"
+      ],
+      "columns": [
+        {
+          "header": "Option A",
+          "rows": [
+            "$",
+            "❤️❤️",
+            "🙂🙂🙂"
+          ]
+        },
+        {
+          "header": "Option B",
+          "rows": [
+            "$$",
+            "❤️❤️❤️",
+            "🙂🙂"
+          ]
+        },
+        {
+          "header": "Option C",
+          "rows": [
+            "$$$",
+            "❤️",
+            "🙂"
+          ]
+        }
+      ]
+    },
+    "answers": [
+      {
+        "text": "are"
+      },
+      {
+        "text": "from"
+      },
+      {
+        "text": "cook"
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Let the learner try independently. Check complete sentences.",
+        "answerKey": [
+          {
+            "text": "1. are"
+          },
+          {
+            "text": "2. from"
+          },
+          {
+            "text": "3. cook"
+          }
+        ],
+        "tips": [
+          {
+            "text": "For personal answers, the examples are models, not the only correct responses."
+          }
+        ]
+      }
+    ],
+    "hasStepB": true,
+    "stepBType": "multiple-choice",
+    "stepBName": "STEP B",
+    "stepBInstruction": "Choose the best answer. Explain what detail helped you.",
+    "stepBInstructionTranslation": "最も適切な答えを選び、手がかりとなった情報を伝えましょう。",
+    "conversations": [],
+    "multipleChoiceItems": [
+      {
+        "boldSentence": "You hear: I work at a hospital. I am a nurse. What is the job?",
+        "optionA": "A nurse",
+        "optionB": "A student"
+      },
+      {
+        "boldSentence": "You hear: My name is Ken. I am from Kyoto. What is the hometown?",
+        "optionA": "Ken",
+        "optionB": "Kyoto"
+      },
+      {
+        "boldSentence": "You hear: I am a cook, not a student. Is the speaker a student?",
+        "optionA": "Yes",
+        "optionB": "No"
+      }
+    ],
+    "multipleChoiceImage": "",
+    "speechSpeakerImage": "",
+    "speechContent": "I (often / sometimes / rarely) go to karaoke. I think that it's _____ to sing your heart out. I usually go (alone / with _____) because I feel like going wild in front of other people is _____. My favorite song to sing at karaoke is _____. I think I sound great when I sing it! I'm a little off-key when I sing _____, though, so I rarely choose to do that song.",
+    "compareWordBox": [],
+    "compareImages": [],
+    "compareItems": [],
+    "stepBTutorSteps": [
+      {
+        "instruction": "Check the answer and its supporting detail.",
+        "answerKey": [
+          {
+            "text": "1. A: A nurse"
+          },
+          {
+            "text": "2. B: Kyoto"
+          },
+          {
+            "text": "3. B: No"
+          }
+        ],
+        "tips": [
+          {
+            "text": "Do not demand the model wording if the meaning is clear."
+          }
+        ]
+      }
+    ]
+  },
+  "feedbackData": {
+    "sectionNumber": 6,
+    "sectionTitle": "FEEDBACK",
+    "duration": "2 minutes",
+    "goal": "I can identify names, hometowns, and jobs in short introductions.",
+    "goalJp": "短い自己紹介を聞いて、名前、出身地、仕事を聞き取ることができる。",
+    "rubricTitle": "HOW DID YOU DO?",
+    "rubricLevels": [
+      {
+        "score": 3,
+        "label": "Independent",
+        "description": "Finds the main idea and most details with little help."
+      },
+      {
+        "score": 2,
+        "label": "With some help",
+        "description": "Finds the main idea and some details after a second attempt or a prompt."
+      },
+      {
+        "score": 1,
+        "label": "Keep practicing",
+        "description": "Needs guided support to identify the main idea and key details."
+      }
+    ],
+    "personalizedFeedbackTitle": "YOUR NEXT STEP",
+    "feedbackGuideTitle": "TUTOR FEEDBACK GUIDE",
+    "rememberNote": "Name one success and one small next step. A score describes this task, not the learner as a person.",
+    "tutorSteps": [
+      {
+        "instruction": "Return to the goal. Ask the learner how the task felt.",
+        "scripts": [
+          {
+            "text": "What was easy today? What would you like to practice again?"
+          }
+        ]
+      },
+      {
+        "instruction": "Give one evidence-based success and one actionable next step.",
+        "tips": [
+          {
+            "text": "Assess understanding first. Do not lower comprehension feedback just because a correct answer is a short phrase."
+          }
+        ]
+      },
+      {
+        "instruction": "Have the learner retry one item and finish with the goal.",
+        "scripts": [
+          {
+            "text": "Let's try that part once more."
+          }
+        ]
+      }
+    ],
+    "categories": [
+      {
+        "id": "range",
+        "title": "MAIN IDEA",
+        "titleJp": "大まかな内容",
+        "focusOn": "Identifies the situation and purpose.",
+        "exampleFeedbackItems": [
+          "I can identify names, hometowns, and jobs in short introductions."
+        ],
+        "vocabularyExample": "name",
+        "examples": []
+      },
+      {
+        "id": "accuracy",
+        "title": "KEY DETAILS",
+        "titleJp": "詳しい情報",
+        "focusOn": "Finds the details needed to complete the task and supports answers with evidence.",
+        "exampleFeedbackItems": [
+          "How many people speak?",
+          "What three details do you hear about Sara?"
+        ],
+        "examples": []
+      },
+      {
+        "id": "fluency",
+        "title": "STRATEGY",
+        "titleJp": "理解の工夫",
+        "focusOn": "Uses a second listen or asks for repetition to check uncertain details.",
+        "exampleFeedbackItems": [
+          "Check one uncertain detail again."
+        ],
+        "examples": []
+      }
+    ]
+  },
+  "goalTextEn": "I can identify names, hometowns, and jobs in short introductions.",
+  "goalTextJp": "短い自己紹介を聞いて、名前、出身地、仕事を聞き取ることができる。",
+  "id": "conversational-skills-L3-C1-2-listening-ja-v1",
+  "introductionData": {
+    "introTexts": [
+      {
+        "language": "en",
+        "text": "Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word."
+      },
+      {
+        "language": "ja",
+        "text": "ユキがキッチンでレオに会います。初対面で伝える情報に注目して聞きましょう。すべての単語を理解する必要はありません。"
+      }
+    ],
+    "introImage": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+    "lessonIssue": null,
+    "lessonGoalDuration": "1 minute",
+    "lessonGoalSteps": [
+      {
+        "instruction": "Introduce the setting and connect it to the learner.",
+        "script": "Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word.",
+        "question": "Which name was easy to hear?"
+      },
+      {
+        "instruction": "Read the goal and explain what success will look like.",
+        "script": "I can identify names, hometowns, and jobs in short introductions."
+      }
+    ]
+  },
+  "learnData": {
+    "sectionTitle": "LEARN",
+    "steps": [
+      {
+        "stepType": "vocabulary",
+        "stepName": "STEP A: VOCABULARY",
+        "duration": "4 minutes",
+        "partLabel": "Learn the words and expressions. Say the examples, then use your own information.",
+        "partTranslation": "単語と表現を学びましょう。例文を言ってから、自分の情報で練習しましょう。",
+        "vocabularyItems": [
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+            "englishText": "My name is Leo.",
+            "highlightedWord": "name",
+            "translation": "名前"
+          },
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+            "englishText": "I'm from Bristol.",
+            "highlightedWord": "from",
+            "translation": "〜出身の"
+          },
+          {
+            "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+            "englishText": "I'm a cook.",
+            "highlightedWord": "cook",
+            "translation": "料理人"
+          }
+        ],
+        "tutorSteps": [
+          {
+            "instruction": "Model each item. Ask the learner to repeat and notice the meaning.",
+            "script": "Listen first. Then say it with me."
+          },
+          {
+            "instruction": "Check the meaning of each example before moving to Apply.",
+            "question": "Can you give a different example?",
+            "tip": "The picture supports the setting; do not treat it as an answer key."
+          },
+          {
+            "instruction": "Personalize two examples.",
+            "script": "Now use your own information, or invent an example.",
+            "tip": "Allow invented details if the learner prefers not to share personal information."
+          }
+        ]
+      }
+    ]
+  },
+  "lessonName": "Listening to New Friends",
+  "lessonNumber": 2,
+  "level": 3,
+  "missionData": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "listening",
+    "challengeNumber": 1,
+    "challengeName": "Challenge 1",
+    "duration": "6 minutes",
+    "situation": "Two new residents introduce themselves. Listen and make a simple profile for each person.",
+    "situationTranslation": "新しい住人が二人、自己紹介をします。聞いた情報をもとに、それぞれの簡単なプロフィールを作りましょう。",
+    "instruction": "Listen once: how many people speak? Listen again: say each person's name, hometown, and job or role. Decide whether both people are students.<br><br>1. How many people speak?<br>2. What three details do you hear about Sara?<br>3. What three details do you hear about Ken?<br>4. Are both people students?",
+    "instructionTranslation": "一度目は何人が話すか聞き取りましょう。二度目は一人ずつ名前、出身地、仕事や立場を答えましょう。二人とも学生かどうか確認しましょう。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "Useful language",
+    "grammarTipItems": [],
+    "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+    "questions": [
+      {
+        "question": "How many people speak?",
+        "hints": []
+      },
+      {
+        "question": "What three details do you hear about Sara?",
+        "hints": []
+      },
+      {
+        "question": "What three details do you hear about Ken?",
+        "hints": []
+      },
+      {
+        "question": "Are both people students?",
+        "hints": []
+      }
+    ],
+    "tutorSteps": [
+      {
+        "instruction": "Set the task and check understanding without giving the answers.",
+        "scripts": [
+          {
+            "text": "Listen once: how many people speak? Listen again: say each person's name, hometown, and job or role. Decide whether both people are students."
+          }
+        ],
+        "tips": [
+          {
+            "text": "Allow 20 seconds to prepare. Accept simple, clear English."
+          }
+        ]
+      },
+      {
+        "instruction": "Read the complete script once for gist, then again for details.",
+        "listeningScript": "<p>Hello. My name is Sara. I'm from Perth, in Australia. I'm a nurse. I work at a hospital near Maple House. I'm happy to meet you.</p><p>Hi, everyone. I'm Ken. I'm from Kyoto, in Japan. I'm a student. I study English in the morning. Nice to meet you all.</p>",
+        "tips": [
+          {
+            "text": "Use a natural but unhurried pace and distinct voices. Do not display the transcript. Repeat a requested part after the second listen."
+          }
+        ]
+      },
+      {
+        "instruction": "Ask the questions and check the evidence.",
+        "scripts": [
+          {
+            "text": "1. How many people speak?"
+          },
+          {
+            "text": "2. What three details do you hear about Sara?"
+          },
+          {
+            "text": "3. What three details do you hear about Ken?"
+          },
+          {
+            "text": "4. Are both people students?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "1. Two."
+          },
+          {
+            "text": "2. Sara; Perth, Australia; nurse."
+          },
+          {
+            "text": "3. Ken; Kyoto, Japan; student."
+          },
+          {
+            "text": "4. No. Only Ken is a student."
+          }
+        ]
+      },
+      {
+        "instruction": "Give feedback, then retry one difficult part with less support.",
+        "tips": [
+          {
+            "text": "Praise a specific success. Correct one important error after the activity, not during every sentence."
+          }
+        ]
+      }
+    ],
+    "listeningScript": "<p>Hello. My name is Sara. I'm from Perth, in Australia. I'm a nurse. I work at a hospital near Maple House. I'm happy to meet you.</p><p>Hi, everyone. I'm Ken. I'm from Kyoto, in Japan. I'm a student. I study English in the morning. Nice to meet you all.</p>"
+  },
+  "missionData2": {
+    "sectionNumber": 5,
+    "sectionTitle": "MISSION",
+    "missionType": "listening",
+    "challengeNumber": 2,
+    "challengeName": "Challenge 2",
+    "duration": "2 minutes",
+    "isOptional": true,
+    "situation": "Check one more short conversation or introduction.",
+    "situationTranslation": "もう一つの短い会話や自己紹介を聞いて、内容を確認しましょう。",
+    "instruction": "Listen to one more introduction. What is her name, where is she from, and what is her job?",
+    "instructionTranslation": "もう一つの自己紹介を聞きましょう。名前、出身地、仕事は何ですか。",
+    "showGrammarTip": false,
+    "grammarTipTitle": "",
+    "grammarTipItems": [],
+    "image": "http://localhost:8765/lesson/files/lessons/conversational-skills/ja/l3-c1/v1/questions.webp",
+    "questions": [
+      {
+        "question": "What is her name?",
+        "hints": []
+      },
+      {
+        "question": "Where is she from?",
+        "hints": []
+      },
+      {
+        "question": "Is she a teacher?",
+        "hints": []
+      }
+    ],
+    "listeningScript": "<p>Hi. I'm Aisha. I'm from Leeds. I'm a designer, not a teacher. I work at home.</p>",
+    "tutorSteps": [
+      {
+        "instruction": "Use this optional task only if time remains before feedback.",
+        "tips": [
+          {
+            "text": "Keep it to two minutes."
+          }
+        ]
+      },
+      {
+        "instruction": "Read once, then repeat if requested.",
+        "listeningScript": "<p>Hi. I'm Aisha. I'm from Leeds. I'm a designer, not a teacher. I work at home.</p>"
+      },
+      {
+        "instruction": "Check the answer and ask which detail helped.",
+        "scripts": [
+          {
+            "text": "1. What is her name?"
+          },
+          {
+            "text": "2. Where is she from?"
+          },
+          {
+            "text": "3. Is she a teacher?"
+          }
+        ],
+        "tips": [
+          {
+            "text": "1. Aisha."
+          },
+          {
+            "text": "2. Leeds."
+          },
+          {
+            "text": "3. No. She is a designer."
+          }
+        ]
+      }
+    ]
+  },
+  "overlayColor": "#17252bcc",
+  "skill": "listening",
+  "status": "draft",
+  "stepBData": {
+    "stepType": "pronunciation",
+    "pronunciation": {
+      "stepName": "STEP B: PRONUNCIATION",
+      "duration": "2 minutes",
+      "tutorSteps": [
+        {
+          "instruction": "Model the focus with the examples. Keep the explanation brief.",
+          "script": "Listen for the stressed name, place, and job. The small words between them may be quieter."
+        },
+        {
+          "instruction": "Ask the learner to try it, then give one focused correction.",
+          "tip": "Use the Japanese support only if needed. Return to English for practice."
+        }
+      ],
+      "tip": "Listen for the stressed name, place, and job. The small words between them may be quieter.<br><small lang=\"ja\">名前、地名、仕事を表す強く発音される語に注目しましょう。その間の短い語は弱く発音されることがあります。</small>",
+      "phrases": [
+        {
+          "phrase": "I'm LEO. I'm from BRISTOL.",
+          "pronunciationGuide": "",
+          "exampleSentence": "I'm LEO. I'm from BRISTOL."
+        },
+        {
+          "phrase": "I'm a COOK.",
+          "pronunciationGuide": "",
+          "exampleSentence": "I'm a COOK."
+        }
+      ]
+    }
+  },
+  "storyData": "{\"enabled\":true,\"storyTitle\":\"New Friends at Maple House\",\"characters\":[{\"id\":\"yuki\",\"name\":\"Yuki\",\"role\":\"main\",\"description\":\"An adult English student from Osaka. Likes walking and photography.\"},{\"id\":\"maya\",\"name\":\"Maya\",\"role\":\"supporting\",\"description\":\"A teacher from a small town near Bristol. Likes cooking.\"},{\"id\":\"leo\",\"name\":\"Leo\",\"role\":\"supporting\",\"description\":\"A cook from Bristol. Likes music, gardening, and cooking.\"},{\"id\":\"sara\",\"name\":\"Sara\",\"role\":\"supporting\",\"description\":\"A nurse from Perth. Likes reading, walking, and photography.\"},{\"id\":\"aisha\",\"name\":\"Aisha\",\"role\":\"supporting\",\"description\":\"A designer from Leeds. Likes photography and walking.\"},{\"id\":\"ken\",\"name\":\"Ken\",\"role\":\"supporting\",\"description\":\"An adult student from Kyoto. Likes walking and photography.\"}],\"setting\":\"A fictional international shared house in London. All characters are adults.\",\"previousSummary\":\"Yuki arrives at Maple House, an international shared house. Maya opens the door. Today, you will practice their first conversation and introduce yourself to a new housemate.\",\"currentPlotPoints\":[\"Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word.\",\"Two new residents introduce themselves. Listen and make a simple profile for each person.\"],\"currentEpisodeSummary\":\"Yuki meets Leo in the kitchen. Listen for the details people share when they meet. You do not need to understand every word.\",\"nextEpisodeHook\":\"Yuki and Maya share pictures of their hometowns. A place can be big, small, busy, or quiet. Use a few clear words to help a new friend imagine your hometown.\",\"storyNotes\":\"Japanese support edition. Main instruction and tutor guidance are in English. Supporting translations are in Japanese. Lessons can be used independently. Images illustrate situations; they are not identity or listening answer keys.\"}",
+  "supportLanguage": "ja",
+  "updatedAt": "2026-09-27T13:14:17.432Z"
+}

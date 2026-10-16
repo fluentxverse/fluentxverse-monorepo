@@ -1,0 +1,51 @@
+.fxv-legal-page { background:#f5f7fa; color:#202636; }
+.fxv-legal-page .fxv-legal { max-width:1180px; margin:0 auto; padding:140px 28px 64px; color:#202636; letter-spacing:0; }
+.fxv-legal-page .fxv-legal-heading { display:flex; align-items:flex-start; gap:20px; padding-bottom:24px; }
+.fxv-legal-page .fxv-legal-heading img { width:64px; height:64px; flex:0 0 64px; object-fit:contain; animation:none; transform:none; }
+.fxv-legal-page .fxv-legal h1 { font-size:32px; line-height:1.25; margin:4px 0 12px; color:#202636; }
+.fxv-legal-page .fxv-legal-heading p { margin:0 0 8px; max-width:760px; color:#596a80; }
+.fxv-legal-page .fxv-legal-heading .fxv-legal-eyebrow { font-size:13px; font-weight:600; color:#0b4bb5; }
+.fxv-legal-page .fxv-legal-heading .fxv-legal-updated { font-size:13px; margin-top:14px; }
+.fxv-legal-page .fxv-legal-tabs { display:flex; flex-wrap:wrap; gap:24px; border-bottom:1px solid #dce4ef; margin-bottom:32px; }
+.fxv-legal-page .fxv-legal-tabs a { padding:12px 0; border-bottom:3px solid transparent; color:#596a80; font-weight:600; }
+.fxv-legal-page .fxv-legal-tabs a[aria-current=page] { color:#0b4bb5; border-color:#0b4bb5; }
+.fxv-legal-page .fxv-legal-layout { display:grid; grid-template-columns:250px minmax(0,1fr); gap:48px; align-items:start; }
+.fxv-legal-page .fxv-legal-index { position:sticky; top:112px; max-height:calc(100vh - 132px); overflow:auto; padding-right:12px; }
+.fxv-legal-page .fxv-legal-index h2 { font-size:15px; color:#202636; margin:0 0 12px; }
+.fxv-legal-page .fxv-legal-index summary { font-size:15px; font-weight:600; color:#202636; margin-bottom:12px; cursor:pointer; }
+.fxv-legal-page footer .container { padding-left:20px; padding-right:20px; }
+.fxv-legal-page .fxv-legal-index ol { padding-left:22px; margin:0; list-style:decimal; }
+.fxv-legal-page .fxv-legal-index li { padding:4px 0; font-size:13px; line-height:1.5; color:#596a80; }
+.fxv-legal-page .fxv-legal-index a { color:#596a80; }
+.fxv-legal-page .fxv-legal-contact { display:inline-block; margin-top:20px; color:#0b4bb5!important; }
+.fxv-legal-page .fxv-legal-body { min-width:0; }
+.fxv-legal-page .fxv-legal-body section { padding:0 0 28px; margin:0 0 28px; border-bottom:1px solid #dce4ef; scroll-margin-top:120px; }
+.fxv-legal-page .fxv-legal-body h2 { font-size:20px; line-height:1.4; color:#202636; margin:0 0 16px; }
+.fxv-legal-page .fxv-legal-body p,.fxv-legal-page .fxv-legal-body li { font-size:15px; line-height:1.85; color:#405168; overflow-wrap:anywhere; }
+.fxv-legal-page .fxv-legal-body p { margin:0 0 14px; }
+.fxv-legal-page .fxv-legal-body ul { padding-left:24px; list-style:disc; }
+.fxv-legal-page .fxv-legal-body li { margin-bottom:8px; }
+.fxv-legal-page .fxv-legal a:hover { color:#0b4bb5; text-decoration:underline; }
+.fxv-legal-page .fxv-legal a:focus-visible { outline:2px solid #0b4bb5; outline-offset:4px; }
+.fxv-legal-page .fxv-legal summary:focus-visible { outline:2px solid #0b4bb5; outline-offset:4px; }
+.fxv-legal-page .fxv-legal-end a { color:#0b4bb5; }
+@media(max-width:900px) {
+  .fxv-legal-page .fxv-legal-layout { grid-template-columns:minmax(0,1fr); gap:32px; }
+  .fxv-legal-page .fxv-legal-index { position:static; max-height:none; padding:0 0 24px; border-bottom:1px solid #dce4ef; }
+  .fxv-legal-page .fxv-legal-index ol { columns:2; column-gap:28px; }
+  .fxv-legal-page .fxv-legal-index li { break-inside:avoid; }
+}
+@media(max-width:600px) {
+  .fxv-legal-page .fxv-legal { padding:116px 20px 40px; }
+  .fxv-legal-page .fxv-legal-heading { gap:12px; }
+  .fxv-legal-page .fxv-legal-heading img { width:48px; height:48px; flex-basis:48px; }
+  .fxv-legal-page .fxv-legal h1 { font-size:26px; }
+  .fxv-legal-page .fxv-legal-index ol { columns:1; }
+}
+@media print {
+  .fxv-legal-page :is(.sidebar,header:not(.fxv-legal-heading),footer,.fxv-legal-tabs,.fxv-legal-index,.fxv-legal-end>a) { display:none!important; }
+  .fxv-legal-page .main-content { margin:0!important; width:100%!important; padding:0!important; }
+  .fxv-legal-page .fxv-legal { padding:0; max-width:none; }
+  .fxv-legal-page .fxv-legal-layout { display:block; }
+  .fxv-legal-page .fxv-legal-body h2 { break-after:avoid; }
+}

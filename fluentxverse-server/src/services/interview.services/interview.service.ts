@@ -23,6 +23,20 @@ function formatDateISO(d: Date): string {
 }
 
 export class InterviewService {
+  async getRoom(slotId: string) {
+    if (!/^[a-zA-Z0-9_-]{1,100}$/.test(slotId)) return null;
+    const session = getDriver().session();
+    try {
+      const row = (await session.run(`MATCH (s:InterviewSlot {id: $slotId})
+        OPTIONAL MATCH (u:User {id: s.tutorId}) RETURN s, u.firstName AS firstName, u.lastName AS lastName`, { slotId })).records[0];
+      if (!row) return null;
+      const slot = row.get('s').properties;
+      return { id: slot.id as string, tutorId: slot.tutorId as string | undefined,
+        tutorName: `${row.get('firstName') || ''} ${row.get('lastName') || ''}`.trim(),
+        status: slot.status as string, date: slot.date as string, time: slot.time as string,
+        result: slot.result || null, mediaClosed: Boolean(slot.mediaClosedAt), recordingUrl: slot.recordingUrl as string | undefined };
+    } finally { await session.close(); }
+  }
   /**
    * Create interview slots (Admin only)
    */
@@ -417,8 +431,19 @@ export class InterviewService {
       const completedAt = new Date().toISOString();
       
       // Update the interview slot with result
-      await session.run(`
-        MATCH (s:InterviewSlot {id: $slotId})
+      const changed = await session.executeWrite(async tx => {
+      const existing = (await tx.run('MATCH (s:InterviewSlot {id: $slotId, tutorId: $tutorId}) RETURN s', {
+        slotId: data.slotId, tutorId: data.tutorId,
+      })).records[0]?.get('s')?.properties;
+      if (existing?.result != null) {
+        if (existing.result === data.result && existing.reviewedBy === data.adminId
+          && existing.rubricScores === JSON.stringify(data.rubricScores)
+          && existing.notes === data.notes && existing.timestamps === JSON.stringify(data.timestamps)) return false;
+        throw new Error('Interview already has a finalized result');
+      }
+      const saved = await tx.run(`
+        MATCH (s:InterviewSlot {id: $slotId, tutorId: $tutorId})
+        WHERE s.status IN ['booked', 'completed'] AND s.result IS NULL
         SET s.status = 'completed',
             s.completedAt = $completedAt,
             s.result = $result,
@@ -429,6 +454,7 @@ export class InterviewService {
         RETURN s
       `, { 
         slotId: data.slotId, 
+        tutorId: data.tutorId,
         completedAt, 
         result: data.result,
         rubricScores: JSON.stringify(data.rubricScores),
@@ -436,10 +462,11 @@ export class InterviewService {
         timestamps: JSON.stringify(data.timestamps),
         adminId: data.adminId
       });
+      if (!saved.records.length) throw new Error('Interview is not owned by this tutor or already has a finalized result');
 
       // If passed, update tutor certification status
       if (data.result === 'pass') {
-        await session.run(`
+        await tx.run(`
           MATCH (u:User {id: $tutorId})
           SET u.interviewPassed = true,
               u.interviewPassedAt = $completedAt,
@@ -458,7 +485,7 @@ export class InterviewService {
         });
 
         // Keep the legacy Tutor node in sync when it exists.
-        await session.run(`
+        await tx.run(`
           MATCH (t:Tutor {odIuser: $tutorId})
           SET t.interviewPassed = true,
               t.interviewPassedAt = $completedAt,
@@ -469,10 +496,9 @@ export class InterviewService {
           RETURN t
         `, { tutorId: data.tutorId, completedAt });
 
-        void tryIssueAndMaybeSubmitTutorCertificationProof(data.tutorId, 'interview_passed');
       } else {
         // If failed, mark interview as failed
-        await session.run(`
+        await tx.run(`
           MATCH (u:User {id: $tutorId})
           SET u.interviewPassed = false,
               u.interviewFailedAt = $completedAt,
@@ -488,13 +514,16 @@ export class InterviewService {
         });
 
         // Keep the legacy Tutor node in sync when it exists.
-        await session.run(`
+        await tx.run(`
           MATCH (t:Tutor {odIuser: $tutorId})
           SET t.interviewPassed = false,
               t.interviewFailedAt = $completedAt
           RETURN t
         `, { tutorId: data.tutorId, completedAt });
       }
+      return true;
+      });
+      if (changed && data.result === 'pass') void tryIssueAndMaybeSubmitTutorCertificationProof(data.tutorId, 'interview_passed');
     } finally {
       await session.close();
     }
@@ -541,16 +570,22 @@ export class InterviewService {
   /**
    * Save recording URL for an interview
    */
-  async saveRecordingUrl(slotId: string, tutorId: string, recordingUrl: string): Promise<void> {
+  async saveRecordingUrl(slotId: string, tutorId: string, recordingUrl: string, recordingId: string = crypto.randomUUID(), adminId = '', size = 0): Promise<void> {
     const driver = getDriver();
     const session = driver.session();
 
     try {
-      await session.run(`
+      const result = await session.run(`
         MATCH (s:InterviewSlot {id: $slotId, tutorId: $tutorId})
+        WHERE s.status IN ['booked', 'completed']
         SET s.recordingUrl = $recordingUrl
+        MERGE (r:InterviewRecording {id: $recordingId})
+        ON CREATE SET r.tutorId = $tutorId, r.slotId = $slotId, r.url = $recordingUrl,
+          r.recordedBy = $adminId, r.size = $size, r.createdAt = $at
+        MERGE (s)-[:HAS_RECORDING]->(r)
         RETURN s
-      `, { slotId, tutorId, recordingUrl });
+      `, { slotId, tutorId, recordingUrl, recordingId: `${slotId}:${recordingId}`, adminId, size: neo4j.int(size), at: new Date().toISOString() });
+      if (!result.records.length) throw new Error('Recording is not attached to an authorized interview');
     } finally {
       await session.close();
     }

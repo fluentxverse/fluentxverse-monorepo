@@ -1,0 +1,17 @@
+.student-contact-inner { max-width:1200px; margin:auto; }
+.student-contact header { display:flex; align-items:center; gap:16px; margin-bottom:32px; }
+.student-contact h1 { font-size:28px; margin:0 0 6px; }
+.student-contact header p { color:var(--s-muted); margin:0; font-size:14px; }
+.student-contact-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:40px; }
+.student-contact h2 { font-size:19px; margin:0 0 24px; }
+.student-contact-details>a,.student-contact-details>p { display:flex; align-items:center; gap:12px; font-size:14px; color:var(--s-muted); line-height:1.8; }
+.student-contact-details>a { color:var(--s-accent); overflow-wrap:anywhere; }
+.student-contact-details>a span { min-width:0; }
+.student-contact-social { display:flex; flex-wrap:wrap; gap:20px; margin:24px 0; }
+.student-contact-social a { display:flex; align-items:center; gap:6px; color:var(--s-accent); font-size:13px; }
+.student-contact iframe { width:100%; height:240px; border:1px solid var(--s-border); border-radius:8px; }
+.student-contact details { border-bottom:1px solid var(--s-border); padding:0 0 20px; margin-bottom:20px; }
+.student-contact summary { cursor:pointer; color:var(--s-text); font-size:15px; font-weight:600; line-height:1.7; }
+.student-contact details p { font-size:14px; line-height:1.8; color:var(--s-muted); margin:14px 0 0; }
+.student-contact details a { color:var(--s-accent); }
+@media(max-width:767px) { .student-contact-grid { grid-template-columns:1fr; gap:32px; } .student-contact h1 { font-size:24px; } }

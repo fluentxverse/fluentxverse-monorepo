@@ -1164,21 +1164,24 @@ export default function BusinessEnglishVisualEditor() {
       </div>
       {/* Row 2: Chapter + Lesson Type */}
       <div className="beve-header-row2">
-        <span className="beve-header-chapter">CHAPTER {lesson.chapter}: {chapterName.toUpperCase() || 'UNTITLED'}</span>
+        <span className="beve-header-chapter">Chapter {lesson.chapter} / {chapterName || 'Untitled'}</span>
         <div className="beve-header-row2-right">
-          <select className="beve-lesson-type-select" value={beData.lessonType}
+          <select className="beve-lesson-type-select" aria-label="Lesson skill" value={beData.lessonType}
             onChange={(e) => { setBeData(prev => ({ ...prev, lessonType: (e.target as HTMLSelectElement).value as LessonType })); triggerAutosave(); }}>
-            <option value="READING">READING</option>
-            <option value="SPEAKING">SPEAKING</option>
-            <option value="LISTENING">LISTENING</option>
-            <option value="WRITING">WRITING</option>
+            <option value="READING">Reading</option>
+            <option value="SPEAKING">Speaking</option>
+            <option value="LISTENING">Listening</option>
+            <option value="WRITING">Writing</option>
+            <option value="REVIEW">Review</option>
           </select>
-          <span className="beve-skill-badge">{lesson.skill.toUpperCase()}</span>
         </div>
       </div>
       {/* Row 3: Lesson name */}
       <div className="beve-header-row3">
-        <span className="beve-header-lesson">Lesson {lesson.lessonNumber}: {lessonName || 'Untitled'}</span>
+        <h2 className="beve-header-lesson">
+          <span className="beve-header-lesson-number">Lesson {lesson.lessonNumber}</span>{' '}
+          <span className="beve-header-lesson-title">{lessonName || 'Untitled'}</span>
+        </h2>
       </div>
     </div>
   );

@@ -40,6 +40,8 @@ export function Navbar() {
         <nav id="primary-navigation" class="primary-navigation" classList={{ 'is-open': open() }} aria-label="Main navigation">
           <A href="/" end activeClass="is-active">Home</A>
           <A href="/about" activeClass="is-active">About</A>
+          <A href="/technology" activeClass="is-active">Technology</A>
+          <A href="/onchain-education" activeClass="is-active">Why onchain</A>
           <A href="/#ecosystem" class="ecosystem-nav" onClick={() => setOpen(false)}>Our ecosystem</A>
           <a class="nav-contact" href={`mailto:${contactEmail}`}>Let's connect <ArrowUpRight size={17} /></a>
         </nav>

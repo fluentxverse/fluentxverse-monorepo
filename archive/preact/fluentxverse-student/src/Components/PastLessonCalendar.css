@@ -1,0 +1,60 @@
+.past-calendar-layout { --pc-surface: #fff; --pc-soft: #f8fafc; --pc-border: #dbe3ee; --pc-text: #172033; --pc-muted: #64748b; --pc-accent: #0245ae; --pc-selected: #eef5ff; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; color: var(--pc-text); }
+.schedule-page .past-calendar { min-width: 0; background: transparent; }
+.past-calendar-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; }
+.past-calendar-layout h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--pc-text); }
+.past-calendar-layout p { color: var(--pc-muted); margin: 0; line-height: 1.6; font-size: 13px; }
+.past-calendar-toolbar p { margin-top: 3px; }
+.past-calendar-controls { display: flex; align-items: center; gap: 6px; }
+.past-calendar-controls button { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 1px solid var(--pc-border); border-radius: 4px; color: var(--pc-text); background: var(--pc-surface); cursor: pointer; }
+.past-calendar-controls input, .past-calendar-agenda select { min-width: 0; height: 34px; padding: 5px 8px; border: 1px solid var(--pc-border); border-radius: 4px; background: var(--pc-surface); color: var(--pc-text); font: inherit; font-size: 12px; }
+.past-calendar-controls input { width: 142px; }
+.past-calendar-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); padding: 10px 0; color: var(--pc-muted); font-size: 12px; font-weight: 600; text-align: center; }
+.past-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--pc-border); border-left: 1px solid var(--pc-border); }
+.past-calendar-grid .past-calendar-day { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 8px; height: 104px; min-width: 0; padding: 10px; border: 0; border-right: 1px solid var(--pc-border); border-bottom: 1px solid var(--pc-border); border-radius: 0; background: var(--pc-surface); color: var(--pc-text); font: inherit; font-size: 13px; text-decoration: none; text-align: left; cursor: pointer; }
+.past-calendar-grid .past-calendar-day:disabled { cursor: default; }
+.past-calendar-grid .past-calendar-day.outside { background: var(--pc-soft); color: var(--pc-muted); }
+.past-calendar-layout .past-calendar-day-number { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; color: var(--pc-text); }
+.past-calendar-layout .outside .past-calendar-day-number { color: var(--pc-muted); }
+.past-calendar-day.today .past-calendar-day-number { color: #fff; background: var(--pc-accent); }
+.past-calendar-grid .past-calendar-day.selected { background: var(--pc-selected); box-shadow: inset 0 0 0 2px var(--pc-accent); }
+.past-calendar-grid .past-calendar-day.has-lessons:hover { background: var(--pc-selected); }
+.past-calendar-layout .past-calendar-day-count { display: flex; align-items: center; gap: 4px; color: var(--pc-accent); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.past-calendar-layout .past-calendar-day-count span { color: inherit; }
+.past-calendar-count-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.past-calendar-layout .past-calendar-day-time { color: var(--pc-muted); font-size: 11px; }
+.past-calendar-agenda { min-width: 0; padding-left: 24px; border-left: 1px solid var(--pc-border); scroll-margin-top: 120px; }
+.past-calendar-agenda > header { margin-bottom: 16px; }
+.past-calendar-agenda h2 { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.past-calendar-agenda select { display: block; width: 100%; margin-top: 12px; }
+.past-calendar-day-lessons { display: grid; gap: 12px; }
+.past-calendar-lesson { min-width: 0; padding: 14px; border: 1px solid var(--pc-border); border-radius: 6px; background: var(--pc-surface); }
+.past-calendar-lesson-time { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; color: var(--pc-text); font-size: 12px; }
+.past-calendar-lesson-time span { color: var(--pc-muted); margin-left: auto; }
+.past-calendar-layout .past-calendar-tutor { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; color: var(--pc-text); font-weight: 600; overflow-wrap: anywhere; }
+.past-calendar-layout svg { flex-shrink: 0; }
+.past-calendar-layout .past-calendar-attendance { margin-top: 6px; font-size: 12px; }
+.past-calendar-layout .past-calendar-attendance.present { color: #167346; }
+.past-calendar-layout .past-calendar-attendance.absent { color: #be123c; }
+.past-calendar-layout .past-calendar-open-lesson { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; padding: 8px 0; border-top: 1px solid var(--pc-border); color: var(--pc-accent); font-size: 13px; font-weight: 600; }
+.past-calendar-lesson-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.past-calendar-lesson-actions .action-btn { font-size: 11px; padding: 7px 9px; border-radius: 4px; }
+.past-calendar-lesson-actions :is(.lesson-proof-error, .lesson-proof-pending) { width: 100%; font-size: 11px; overflow-wrap: anywhere; }
+.past-calendar-empty { padding: 20px 0; }
+.past-calendar-layout :is(button, a, input, select):focus-visible, .past-calendar-agenda:focus-visible { outline: 2px solid var(--pc-accent); outline-offset: 2px; }
+[data-theme='dark'] .past-calendar-layout { --pc-surface: #242424; --pc-soft: #202020; --pc-border: #454545; --pc-text: #f1f1f1; --pc-muted: #aaa; --pc-accent: #79b5ff; --pc-selected: #293846; color-scheme: dark; }
+[data-theme='dark'] .past-calendar-layout .past-calendar-attendance.present { color: #86efac; }
+[data-theme='dark'] .past-calendar-layout .past-calendar-attendance.absent { color: #fda4af; }
+@media (max-width: 1100px) {
+  .past-calendar-layout { grid-template-columns: minmax(0, 1fr); }
+  .past-calendar-agenda { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--pc-border); }
+  .past-calendar-day-lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .past-calendar-toolbar { align-items: flex-start; }
+  .past-calendar-controls { gap: 4px; }
+  .past-calendar-controls input { width: 130px; }
+  .past-calendar-grid .past-calendar-day { height: 82px; padding: 6px 3px; gap: 4px; font-size: 12px; }
+  .past-calendar-count-label { display: none; }
+  .past-calendar-layout .past-calendar-day-time { font-size: 10px; }
+  .past-calendar-day-lessons { grid-template-columns: minmax(0, 1fr); }
+}

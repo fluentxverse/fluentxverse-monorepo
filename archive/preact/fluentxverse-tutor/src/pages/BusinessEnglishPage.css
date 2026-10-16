@@ -1,0 +1,17 @@
+.business-english-page {
+  padding-top: 52px;
+}
+
+.business-english-page .course-detail-container {
+  padding-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .business-english-page {
+    padding-top: 72px;
+  }
+
+  .business-english-page .course-detail-container {
+    padding-top: 12px;
+  }
+}

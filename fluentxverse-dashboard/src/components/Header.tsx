@@ -12,8 +12,9 @@ const pageNames: Record<string, string> = {
   '/interviews':'Interviews', '/sessions':'Sessions', '/recordings':'QA Recordings',
   '/lesson-operations':'Lesson Operations', '/tickets':'Tickets', '/payments':'Payments',
   '/analytics':'Analytics', '/tasks':'Tasks & Suggestions', '/inbox':'Inbox',
+  '/testing':'Testing',
   '/admins':'Administrators', '/settings':'Settings', '/lesson-material-maker':'Lesson Maker',
-  '/ceo-orientation':'CEO Orientation', '/platform-overview':'Platform Overview',
+  '/ceo-orientation':'CEO Orientation', '/platform-overview':'Platform Guide',
 };
 export function Header({ navigationOpen = false, onToggleNavigation }: { navigationOpen?: boolean; onToggleNavigation?: () => void }) {
   const { path } = useLocation();

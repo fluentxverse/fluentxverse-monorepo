@@ -8,25 +8,10 @@ import { useRoute } from 'preact-iso';
 import { getPublicLessonById, type LessonMaterial } from '../api/lessonMaterial.api';
 import { FixedFeedbackGuide } from '../components/FixedFeedbackGuide';
 import { API_BASE_URL } from '../config/api';
+import { normalizeLessonMedia } from '../../../shared/lessonMedia';
 import './ConversationalSkillsPreview.css';
 
 type ConversationalTheme = 'light' | 'dark';
-
-const legacyLessonAssetBase = 'http://localhost:8765/lesson/files/';
-const lessonAssetBase = `${API_BASE_URL}/lesson/files/`;
-
-function resolveLegacyLessonAssets<T>(value: T): T {
-  if (typeof value === 'string') {
-    return (value.startsWith(legacyLessonAssetBase)
-      ? lessonAssetBase + value.slice(legacyLessonAssetBase.length)
-      : value) as T;
-  }
-  if (Array.isArray(value)) return value.map(resolveLegacyLessonAssets) as T;
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, resolveLegacyLessonAssets(item)])) as T;
-  }
-  return value;
-}
 
 const getStoredConversationalTheme = (): ConversationalTheme => {
   const requestedTheme = new URLSearchParams(window.location.search).get('theme');
@@ -593,7 +578,7 @@ export default function ConversationalSkillsPreview() {
       if (storedData) {
         try {
           const parsed = JSON.parse(storedData);
-          setPreviewOverrides(resolveLegacyLessonAssets(parsed));
+          setPreviewOverrides(normalizeLessonMedia(parsed, API_BASE_URL));
           if (!new URLSearchParams(window.location.search).has('theme') && (parsed.theme === 'dark' || parsed.theme === 'light')) {
             setTheme(parsed.theme);
           }
@@ -611,7 +596,7 @@ export default function ConversationalSkillsPreview() {
       setLoading(true);
       // Use public endpoint so it works from student/tutor apps (iframe)
       const data = await getPublicLessonById(lessonId);
-      setLesson(resolveLegacyLessonAssets(data));
+      setLesson(data);
       setError(null);
     } catch (err) {
       console.error('Failed to load lesson from API:', err);

@@ -334,6 +334,9 @@ export const gradeExam = async (
     }
 
     const examNode = result.records[0]?.get("e").properties;
+    if (examNode.type !== 'written') throw new Error('Invalid written exam attempt');
+    if (examNode.status === 'completed') return JSON.parse(examNode.result) as ExamResult;
+    if (examNode.status !== 'active') throw new Error('Exam is not available for submission');
     const exam: WrittenExam = JSON.parse(examNode.content);
 
     // Pad answers array to match question count (unanswered = -1 = wrong)
@@ -392,8 +395,8 @@ export const gradeExam = async (
     };
 
     // Update exam status and save result in Memgraph
-    await session.run(
-      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId})
+    const saved = await session.run(
+      `MATCH (u:User {id: $tutorId})-[:TAKES]->(e:Exam {id: $examId, status: 'active', type: 'written'})
        SET e.status = 'completed',
            e.result = $result,
            e.completedAt = $completedAt
@@ -405,6 +408,8 @@ export const gradeExam = async (
         completedAt: examResult.completedAt,
       }
     );
+
+    if (!saved.records.length) throw new Error('Exam already submitted');
 
     // If passed, update the User node with the flag
     if (passed) {

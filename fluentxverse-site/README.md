@@ -27,11 +27,16 @@ bun run preview
 
 - `src/data/site.ts`: project descriptions, portal URLs, contact address, founder details, and the three team slots. Replace placeholders with approved names, roles, biographies, portrait paths, and optional LinkedIn URLs.
 - `src/pages/HomePage.tsx`: home page content.
+- `src/pages/TechnologyPage.tsx`: overview of AI, Web3, and zero-knowledge proofs and why we use them for education.
+- `src/pages/AiPage.tsx`: AI uses, instructional approach, and limitations.
+- `src/pages/OnchainPage.tsx`: the case for onchain education, proof boundaries, and FAQs.
 - `src/pages/AboutPage.tsx`: company story and principles.
 - `src/styles/main.css`: shared styles and responsive layout.
 - `public/assets/img/`: locally served imagery. Existing team portraits remain in `team/` for use when member details are confirmed.
 
 The office image is illustrative and originates from Unsplash: `photo-1497366754035-f200968a6e72`. The ESL cards use learning scenes generated with the built-in image generation tool and encoded as WebP for the site. The current tutor image uses a user-supplied portrait as its facial identity reference. Final prompts and asset paths are recorded in `docs/image-prompts.md`. Previous card assets remain available in the image directory.
+
+The three technology pages are lazy-loaded SolidJS routes. They distinguish implemented workflows, testnet evidence, and future capabilities. The source basis and primary references are recorded in `docs/technology-content.md`. Responsive route, navigation, image, metadata, and FAQ coverage is in `tests/browser/technology.cjs`.
 
 ## Deployment
 

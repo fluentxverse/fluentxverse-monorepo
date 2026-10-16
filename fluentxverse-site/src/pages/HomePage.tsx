@@ -67,11 +67,20 @@ export function HomePage() {
 
       <section class="purpose-section section-space" aria-labelledby="purpose-title">
         <div class="container purpose-grid">
-          <div class="purpose-heading"><span class="eyebrow">WHY ONCHAIN EDUCATION</span><h2 id="purpose-title">Learning experiences.<br /><span class="muted-heading">Verifiable foundations.</span></h2><A class="text-link" href="/about">Explore our vision <ArrowRight size={18} /></A></div>
+          <div class="purpose-heading"><span class="eyebrow">WHY ONCHAIN EDUCATION</span><h2 id="purpose-title">Learning experiences.<br /><span class="muted-heading">Verifiable foundations.</span></h2><A class="text-link" href="/onchain-education">Read the case for onchain education <ArrowRight size={18} /></A></div>
           <div class="purpose-list">
-            <article><span>01</span><div><h3>Onchain access to learning</h3><p>FluentXVerse ESL uses onchain lesson tickets to connect digital ownership with a practical use: booking an English lesson.</p></div></article>
+            <article><span>01</span><div><h3>Onchain access to learning</h3><p>Our lesson-ticket design connects digital ownership with a practical use: booking an English lesson. Base Sepolia integration is in testing; contract deployment and ticket validation remain ahead.</p></div></article>
             <article><span>02</span><div><h3>Credentials that can be checked</h3><p>We're developing proof-based verification for tutor qualifications and lesson participation, with care for learners' and educators' personal information.</p></div></article>
             <article><span>03</span><div><h3>A foundation beyond ESL</h3><p>Language learning is the starting point. Our wider ambition is to build onchain applications for different subjects, skills, and ways of learning.</p></div></article>
+          </div>
+        </div>
+      </section>
+      <section class="section-space" aria-labelledby="home-tech-title">
+        <div class="container">
+          <div class="section-heading"><div><span class="eyebrow">HOW WE BUILD</span><h2 id="home-tech-title">The technology behind the learning.</h2></div><A class="text-link" href="/technology">Explore our technology <ArrowRight size={18} /></A></div>
+          <div class="research-links">
+            <A href="/technology/ai"><div><span class="eyebrow">AI / EDUCATION</span><h3>Better tools for human teaching.</h3><p>Language assistance, lesson drafts, and assessment support, with clear limits.</p></div><ArrowRight size={22} /></A>
+            <A href="/onchain-education"><div><span class="eyebrow">WEB3 / VERIFICATION</span><h3>Evidence that can be checked.</h3><p>Our case for shared verification, private proofs, and portable learning records.</p></div><ArrowRight size={22} /></A>
           </div>
         </div>
       </section>

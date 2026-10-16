@@ -1,0 +1,737 @@
+/* Header styles */
+#sticky-header.tutor-public-header .mobile-nav-toggler {
+  display: none;
+  float: none;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  border: 1px solid #dbe6f5;
+  border-radius: 8px;
+  background: #f0f5fc;
+  color: #0245ae;
+  line-height: 1;
+  transition: background-color 0.2s ease;
+}
+
+#sticky-header.tutor-public-header .mobile-nav-toggler svg,
+.tutor-dialog.tutor-public-menu .close-btn svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+
+#sticky-header.tutor-public-header .mobile-nav-toggler:hover {
+  background: #e3edfc;
+}
+
+#sticky-header.tutor-public-header .mobile-nav-toggler:focus-visible {
+  outline: 2px solid #0245ae;
+  outline-offset: 3px;
+}
+
+/* The public menu uses a native dialog, not the legacy off-canvas visibility class. */
+dialog.tutor-dialog.tutor-public-menu {
+  width: 400px;
+}
+
+.tutor-dialog.tutor-public-menu .mobile-menu {
+  opacity: 1;
+}
+
+.tutor-dialog.tutor-public-menu .menu-box {
+  overflow: visible;
+}
+
+dialog.tutor-dialog.tutor-public-menu :is(.mobile-menu, .menu-box, .menu-outer, .mobile-menu-header, .mobile-nav, .navigation, .navigation li, .mobile-menu-actions, .social-links) {
+  border: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .menu-outer {
+  padding: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .mobile-menu-header {
+  padding: 0 0 20px;
+}
+
+dialog.tutor-dialog.tutor-public-menu .navigation {
+  padding: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .navigation li {
+  margin: 0 0 4px;
+  overflow: visible;
+}
+
+dialog.tutor-dialog.tutor-public-menu .navigation .nav-link {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 12px;
+  gap: 12px;
+  border-radius: 6px;
+  transform: none;
+}
+
+dialog.tutor-dialog.tutor-public-menu .navigation .nav-link svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+dialog.tutor-dialog.tutor-public-menu .mobile-menu-actions {
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .mobile-login-btn {
+  min-height: 48px;
+  padding: 12px 16px;
+  transform: none;
+  letter-spacing: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .social-links {
+  margin: 24px 0 0;
+  padding: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .social-links-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #647184;
+  opacity: 1;
+}
+
+dialog.tutor-dialog.tutor-public-menu .social-links ul {
+  gap: 12px;
+  padding: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .social-links li {
+  margin: 0;
+}
+
+dialog.tutor-dialog.tutor-public-menu .mobile-menu .social-links li a {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #dbe6f5;
+  border-radius: 8px;
+  background: #f0f5fc;
+  color: #0245ae;
+  transform: none;
+  box-shadow: none;
+}
+
+dialog.tutor-dialog.tutor-public-menu .mobile-menu .social-links li a:hover {
+  background: #e3edfc;
+}
+
+dialog.tutor-dialog.tutor-public-menu .social-links i {
+  display: block;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  line-height: 1;
+  color: inherit;
+}
+
+.tutor-dialog.tutor-public-menu .mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tutor-dialog.tutor-public-menu .mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tutor-dialog.tutor-public-menu .mobile-logo img {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.tutor-dialog.tutor-public-menu .mobile-logo .brand-text {
+  font-size: 20px;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.tutor-dialog.tutor-public-menu .close-btn {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #dbe6f5;
+  border-radius: 8px;
+  background: #f0f5fc;
+  color: #0245ae;
+  transition: background-color 0.2s ease;
+}
+
+@media (max-width: 991.98px) {
+  #sticky-header.tutor-public-header .mobile-nav-toggler {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #sticky-header.tutor-public-header .menu-nav {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  #sticky-header.tutor-public-header .menu-wrap {
+    padding: 0 12px;
+  }
+
+  #sticky-header.tutor-public-header .brand-text {
+    font-size: 20px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  #sticky-header.tutor-public-header .brand-text,
+  .tutor-dialog.tutor-public-menu .mobile-logo .brand-text {
+    font-size: 18px;
+  }
+
+  #sticky-header.tutor-public-header .logo img {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sticky-header.tutor-public-header .mobile-nav-toggler,
+  .tutor-dialog.tutor-public-menu .close-btn {
+    transition: none;
+    transform: none;
+  }
+}
+
+.header-action ul {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-theme-switch {
+  display: flex;
+  align-items: center;
+}
+
+.header-login {
+  display: flex;
+  align-items: center;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #0245ae, #4a9eff);
+  border: none;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 24px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(2, 69, 174, 0.2);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
+}
+
+.theme-toggle {
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.theme-btn {
+  background: transparent;
+  border: none;
+  color: #f8b500; /* Yellow color for light mode */
+  font-size: 18px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.theme-btn:hover {
+  background-color: rgba(248, 181, 0, 0.1); /* Light yellow background on hover */
+}
+
+/* For dark mode */
+.dark-mode .theme-btn {
+  color: var(--text-color, #fff);
+}
+
+/* Mobile styles */
+@media (max-width: 767.98px) {
+  .theme-btn {
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Login Modal Styles */
+.login-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+.login-modal-content {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 440px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.dark-mode .login-modal-content {
+  background: #1a1f2e;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: #5a6c7d;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1f2e;
+}
+
+.dark-mode .modal-close-btn {
+  color: #9ca9b8;
+}
+
+.dark-mode .modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  padding: 0;
+}
+
+.modal-logo img {
+  height: 60px;
+  width: auto;
+  background: transparent !important;
+  padding: 0;
+  display: block;
+  mix-blend-mode: multiply;
+  filter: brightness(1.2) contrast(1.1);
+}
+
+.dark-mode .modal-logo img {
+  mix-blend-mode: screen;
+  filter: brightness(1.3) invert(1);
+}
+
+.modal-brand-text {
+  font-size: 28px;
+  font-weight: 600;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #0245ae;
+  letter-spacing: 0.5px;
+}
+
+.modal-brand-text .brand-x {
+  color: #0245ae;
+}
+
+.dark-mode .modal-brand-text {
+  color: #4a9eff;
+}
+
+.dark-mode .modal-brand-text .brand-x {
+  color: #4a9eff;
+}
+
+.brand-text {
+  font-size: 24px;
+  font-weight: 600;
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #0245ae;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+}
+
+.brand-x {
+  color: #0245ae;
+  font-weight: 600;
+}
+
+@media (max-width: 360px) {
+  .menu-nav .brand-text { font-size: 18px; letter-spacing: 0; white-space: nowrap; }
+}
+
+.dark-mode .brand-text {
+  color: #4a9eff;
+}
+
+.dark-mode .brand-x {
+  color: #4a9eff;
+}
+
+.modal-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1f2e;
+  margin: 0 0 8px 0;
+}
+
+.dark-mode .modal-header h2 {
+  color: #ffffff;
+}
+
+.modal-header p {
+  font-size: 15px;
+  color: #5a6c7d;
+  margin: 0;
+}
+
+.dark-mode .modal-header p {
+  color: #9ca9b8;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1f2e;
+}
+
+.dark-mode .form-group label {
+  color: #ffffff;
+}
+
+.form-group input {
+  padding: 14px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #1a1f2e;
+}
+
+.dark-mode .form-group input {
+  background: #0f1419;
+  border-color: #2a3441;
+  color: #ffffff;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #0245ae;
+  box-shadow: 0 0 0 3px rgba(2, 69, 174, 0.1);
+}
+
+.dark-mode .form-group input:focus {
+  border-color: #4a9eff;
+  box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.1);
+}
+
+.form-options {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: -8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #5a6c7d;
+  cursor: pointer;
+}
+
+.dark-mode .checkbox-label {
+  color: #9ca9b8;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.forgot-password {
+  font-size: 14px;
+  color: #0245ae;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.dark-mode .forgot-password {
+  color: #4a9eff;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.login-submit-btn {
+  background: linear-gradient(135deg, #0245ae, #4a9eff);
+  color: #ffffff;
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.login-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(2, 69, 174, 0.3);
+}
+
+.modal-footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e1e8ed;
+}
+
+.dark-mode .modal-footer {
+  border-top-color: #2a3441;
+}
+
+.modal-footer p {
+  font-size: 14px;
+  color: #5a6c7d;
+  margin: 0;
+}
+
+.dark-mode .modal-footer p {
+  color: #9ca9b8;
+}
+
+.modal-footer a {
+  color: #0245ae;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dark-mode .modal-footer a {
+  color: #4a9eff;
+}
+
+.modal-footer a:hover {
+  text-decoration: underline;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 575px) {
+  .login-modal-content {
+    padding: 30px 20px;
+  }
+
+  .modal-header h2 {
+    font-size: 24px;
+  }
+}
+
+/* Override any unintended background panel behind the modal logo */
+.login-modal-content .modal-header,
+.login-modal-content .modal-logo,
+.login-modal-content .modal-header:before,
+.login-modal-content .modal-logo:before {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* Ensure modal header doesn't create a separate panel area */
+.login-modal-content .modal-header {
+  width: 100%;
+  padding: 0 !important;
+  margin-bottom: 28px;
+}
+
+/* If some global style injects a light gray, neutralize it */
+.login-modal-content .modal-header * {
+  background: transparent !important;
+}
+
+/* Optional: tighten spacing if panel space persists */
+.modal-logo img {
+  display: inline-block;
+}
+
+/* Mobile Menu Actions */
+.mobile-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 4px 0 8px;
+}
+
+.mobile-theme-row-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7c8da6;
+}
+
+.dark-mode .mobile-theme-row-label {
+  color: #a9b8cf;
+}
+
+.mobile-login-btn,
+.mobile-register-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.mobile-login-btn {
+  background: linear-gradient(135deg, #0245ae, #4a9eff);
+  color: #ffffff;
+  border: none;
+}
+
+.mobile-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(2, 69, 174, 0.3);
+}
+
+.mobile-register-btn {
+  background: transparent;
+  color: #0245ae;
+  border: 2px solid #0245ae;
+}
+
+.mobile-register-btn:hover {
+  background: rgba(2, 69, 174, 0.1);
+}

@@ -1,0 +1,58 @@
+/* Dark mode styles for login modal */
+.dark-mode .login-modal {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .modal-close {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .modal-title {
+  color: var(--primary-text-color);
+}
+
+.dark-mode .modal-subtitle {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .modal-input {
+  background-color: var(--secondary-color);
+  border-color: var(--border-color);
+  color: var(--primary-text-color);
+}
+
+.dark-mode .modal-input::placeholder {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .modal-input:focus {
+  border-color: var(--dark-lime-color);
+}
+
+.dark-mode .standard-blog-content p,
+.dark-mode .standard-blog-content.p,
+.dark-mode .standard-blog-content span {
+  color: var(--secondary-text-color);
+}
+
+.dark-mode .modal-link {
+  color: var(--accent-color);
+}
+
+.dark-mode .modal-btn {
+  background: var(--nft-gradient-color);
+}
+
+.dark-mode .modal-btn::after {
+  background: var(--gradient-btn-hover);
+}
+
+.dark-mode .modal-btn::before {
+  border: 1.5px dashed #fff;
+}
+
+.dark-mode .modal-btn:hover {
+  color: white;
+}

@@ -1,5 +1,5 @@
 import { LocationProvider, Router, Route, useLocation } from 'preact-iso';
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
@@ -19,6 +19,12 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import InboxPage from './pages/InboxPage';
 import LoginPage from './pages/LoginPage';
 import TicketsPage from './pages/TicketsPage';
+
+function TicketingPaused() {
+  const location = useLocation();
+  useEffect(() => { location.route('/', true); }, []);
+  return null;
+}
 import SessionsPage from './pages/SessionsPage';
 import RecordingsPage from './pages/RecordingsPage';
 import LessonMaterialMakerPage from './pages/LessonMaterialMakerPage';
@@ -41,6 +47,7 @@ import BusinessEnglishEditorPage from './pages/BusinessEnglishEditorPage';
 import BusinessEnglishPreview from './pages/BusinessEnglishPreview';
 import BusinessEnglishVisualEditor from './pages/BusinessEnglishVisualEditor';
 import AdminTasksPage from './pages/AdminTasksPage';
+import TestingPage from './pages/TestingPage';
 import LessonOperationsPage from './pages/LessonOperationsPage';
 import OperationsLessonPage from './pages/OperationsLessonPage';
 import OperationsAccountPage from './pages/OperationsAccountPage';
@@ -249,11 +256,12 @@ const AppContent = () => {
         <Route path="/analytics" component={AnalyticsPage} />
         <Route path="/inbox" component={InboxPage} />
         <Route path="/tasks" component={AdminTasksPage} />
+        <Route path="/testing" component={TestingPage} />
         <Route path="/lesson-operations" component={LessonOperationsPage} />
         <Route path="/lesson-operations/:id" component={OperationsLessonPage} />
         <Route path="/operations/people/:role/:id" component={OperationsAccountPage} />
         <Route path="/payments" component={LessonOperationsPage} />
-        <Route path="/tickets" component={TicketsPage} />
+        <Route path="/tickets" component={import.meta.env.VITE_ENABLE_TICKETING === 'true' ? TicketsPage : TicketingPaused} />
         <Route path="/lesson-material-maker" component={LessonMaterialMakerPage} />
         <Route path="/conversational-skills-editor" component={ConversationalSkillsEditorPage} />
         <Route path="/conversational-skills-preview/:id" component={ConversationalSkillsPreview} />

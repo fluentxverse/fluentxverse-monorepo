@@ -1,0 +1,444 @@
+import { ArrowLeft, CircleAlert, CalendarDays, Tag, Folder, CircleHelp, Link } from 'lucide-preact';
+/**
+ * DailyDispatchArticlePage - Student App
+ * Student-facing view for Daily Dispatch news article lessons
+ * Same as dashboard preview but without tutor instructions and answer keys
+ */
+import { useState, useEffect } from 'preact/hooks';
+import { useRoute } from 'preact-iso';
+import { API_BASE_URL } from '../config/api';
+import DailyDispatchLogo from '../assets/icons/daily-dispatch-logo.svg';
+import { useThemeStore } from '../context/ThemeContext';
+import { useEmbeddedTheme } from '../hooks/useEmbeddedTheme';
+import './DailyDispatchArticlePage.css';
+
+interface VocabularyWord {
+  word: string;
+  pronunciation: string;
+  partOfSpeech: string;
+  definition: string;
+  exampleSentence: string;
+  additionalInfo: string | null;
+}
+
+interface ArticleQuestion {
+  question: string;
+  answer: string;
+}
+
+interface Paragraph {
+  id: string;
+  text: string;
+  comprehensionQuestion?: ArticleQuestion | null;
+}
+
+interface ArticleContent {
+  paragraphs: Paragraph[];
+  source: string;
+}
+
+interface Discussion {
+  topic: string;
+  questions: string[];
+}
+
+interface Article {
+  id: string;
+  createdAt: string;
+  title: string;
+  category: string;
+  topic: string;
+  warmUpQuestions: string[];
+  vocabulary: VocabularyWord[];
+  articleContent: ArticleContent;
+  summaryQuestion: string;
+  discussionA: Discussion;
+  discussionB: Discussion;
+}
+
+interface ArchiveItem {
+  month: string;
+  count: number;
+}
+
+export default function DailyDispatchArticlePage() {
+  const { params } = useRoute();
+  const [data, setData] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [fontSize, setFontSize] = useState<'S' | 'M' | 'L'>('M');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [archives, setArchives] = useState<ArchiveItem[]>([]);
+  const [isInClassroom, setIsInClassroom] = useState(false);
+  const isDarkMode = useThemeStore(state => state.isDarkMode);
+  const classroomTheme = useEmbeddedTheme();
+  const articleTheme = classroomTheme || (isDarkMode ? 'dark' : 'light');
+
+  const id = params?.id;
+
+  // Detect if loaded in iframe (classroom context)
+  useEffect(() => {
+    const inIframe = window.self !== window.top;
+    setIsInClassroom(inIframe);
+    document.documentElement.classList.toggle('classroom-mode', inIframe);
+    if (inIframe) {
+      document.body.classList.add('classroom-mode');
+    } else {
+      document.body.classList.remove('classroom-mode');
+    }
+    return () => {
+      document.documentElement.classList.remove('classroom-mode');
+      document.body.classList.remove('classroom-mode');
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isInClassroom) return;
+    const elements = [document.documentElement, document.body];
+    const root = document.documentElement;
+    const previousScheme = root.style.colorScheme;
+    root.style.colorScheme = articleTheme;
+    elements.forEach(element => { element.dataset.dispatchTheme = articleTheme; });
+    return () => {
+      elements.forEach(element => { delete element.dataset.dispatchTheme; });
+      if (root.style.colorScheme === articleTheme) root.style.colorScheme = previousScheme;
+    };
+  }, [isInClassroom, articleTheme]);
+
+  useEffect(() => {
+    loadArchives();
+    if (id) {
+      loadArticle(id);
+    }
+  }, [id]);
+
+  const loadArchives = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/dispatch/archives`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // API returns { success: true, archives: [...] }
+        if (data.success && Array.isArray(data.archives)) {
+          setArchives(data.archives);
+        } else if (Array.isArray(data)) {
+          // Fallback if API returns array directly
+          setArchives(data);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load archives:', err);
+    }
+  };
+
+  const loadArticle = async (articleId: string) => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await fetch(`${API_BASE_URL}/dispatch/${articleId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to load article');
+      const article = await response.json();
+      setData(article);
+      document.title = `${article.title} | Daily Dispatch`;
+    } catch (err) {
+      console.error('Failed to load article:', err);
+      setError('Failed to load article. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'Date not set';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="ddp-loading" data-theme={articleTheme}>
+        <div className="ddp-loading-spinner" />
+        <p>Loading article...</p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="ddp-error" data-theme={articleTheme}>
+        <CircleAlert size={18} aria-hidden="true" />
+        <h2>Error</h2>
+        <p>{error || 'Article not found'}</p>
+        <button className="ddp-btn" onClick={() => id && loadArticle(id)}>Try again</button><a href="/materials/daily-dispatch" className="ddp-btn">Back to Articles</a>
+      </div>
+    );
+  }
+
+  const CATEGORIES = [
+    'Technology',
+    'Business',
+    'Science',
+    'Entertainment',
+    'Sports',
+    'Health & Wellness',
+    'Environment',
+    'Lifestyle',
+    'Education',
+  ];
+
+  return (
+    <div className={`ddp-container dds-container ddp-font-${fontSize.toLowerCase()}`} data-theme={articleTheme}>
+      {/* Header Bar with Logo and Categories */}
+      <nav className="ddp-header-bar no-print">
+        <div className="ddp-header-bar-inner">
+          <a href="/materials/daily-dispatch" className="ddp-toolbar-brand">
+            <img src="/assets/img/home-icons/dispatch-v1.png" alt="Daily Dispatch" className="ddp-logo" />
+            <span>Daily Dispatch</span>
+          </a>
+          <div className="ddp-categories-list">
+            {CATEGORIES.map((cat) => (
+              <span 
+                key={cat} 
+                className={`ddp-category-item ${data.category === cat ? 'active' : ''}`}
+              >
+                {cat}
+              </span>
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Layout with Content and Sidebar */}
+      <div className="ddp-layout">
+        {/* Main Content */}
+        <div className="ddp-content">
+          {/* Newspaper Header */}
+          <header className="ddp-header">
+            <div className="ddp-header-line" />
+            <h1 className="ddp-title">{data.title || 'Untitled Article'}</h1>
+            <div className="ddp-header-line" />
+            <div className="ddp-meta">
+              <span className="ddp-date">
+                <CalendarDays size={18} aria-hidden="true" />
+                {formatDate(data.createdAt)}
+              </span>
+              <span className="ddp-divider">|</span>
+              <span className="ddp-topic">
+                <Tag size={18} aria-hidden="true" />
+                {data.topic || 'Topic not set'}
+              </span>
+              <span className="ddp-divider">|</span>
+              <span className="ddp-category">
+                <Folder size={18} aria-hidden="true" />
+                {data.category || 'Uncategorized'}
+              </span>
+            </div>
+          </header>
+
+          {/* Warm-Up Questions (no tutor instruction) */}
+          <section className="ddp-section">
+            <div className="ddp-section-header">
+              <div className="ddp-section-line" />
+              <h2>WARM-UP QUESTIONS</h2>
+              <div className="ddp-section-line" />
+            </div>
+            <ul className="ddp-list ddp-indent">
+              {data.warmUpQuestions.filter(q => q.trim()).map((q, i) => (
+                <li key={i}>{q}</li>
+              ))}
+              {data.warmUpQuestions.filter(q => q.trim()).length === 0 && (
+                <li className="ddp-empty">No warm-up questions</li>
+              )}
+            </ul>
+          </section>
+
+          {/* Key Vocabulary (no tutor instruction) */}
+          <section className="ddp-section">
+            <div className="ddp-section-header">
+              <div className="ddp-section-line" />
+              <h2>KEY VOCABULARY</h2>
+              <div className="ddp-section-line" />
+            </div>
+            <div className="ddp-vocabulary">
+              {data.vocabulary.filter(v => v.word.trim()).map((vocab, i) => (
+                <div key={i} className="ddp-vocab-item">
+                  <div className="ddp-vocab-header">
+                    <span className="ddp-vocab-word">{vocab.word}</span>
+                    {vocab.pronunciation && (
+                      <span className="ddp-vocab-pronunciation">{vocab.pronunciation}</span>
+                    )}
+                    {vocab.partOfSpeech && (
+                      <span className="ddp-vocab-pos">({vocab.partOfSpeech})</span>
+                    )}
+                  </div>
+                  <div className="ddp-vocab-body">
+                    <p><strong>Meaning:</strong> {vocab.definition}</p>
+                    {vocab.exampleSentence && (
+                      <p><strong>Example:</strong> {vocab.exampleSentence}</p>
+                    )}
+                    {vocab.additionalInfo && (
+                      <p><strong>Note:</strong> {vocab.additionalInfo}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {data.vocabulary.filter(v => v.word.trim()).length === 0 && (
+                <p className="ddp-empty">No vocabulary words</p>
+              )}
+            </div>
+          </section>
+
+          {/* Reading Passage (questions only, no answers) */}
+          <section className="ddp-section">
+            <div className="ddp-section-header">
+              <div className="ddp-section-line" />
+              <h2>READING PASSAGE</h2>
+              <div className="ddp-section-line" />
+            </div>
+            <article className="ddp-article">
+              {data.articleContent.paragraphs.filter(p => p.text.trim()).map((para) => (
+                <div key={para.id} className="ddp-paragraph">
+                  <p>{para.text}</p>
+                  {para.comprehensionQuestion && para.comprehensionQuestion.question && (
+                    <div className="ddp-qa dds-question-only">
+                      <p className="ddp-question">
+                        <span className="ddp-qa-label">
+                          <CircleHelp size={18} aria-hidden="true" />
+                        </span>
+                        {para.comprehensionQuestion.question}
+                      </p>
+                      {/* Answer is hidden for student view */}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {data.articleContent.paragraphs.filter(p => p.text.trim()).length === 0 && (
+                <p className="ddp-empty">No article content</p>
+              )}
+            </article>
+            {data.articleContent.source && (
+              <p className="ddp-source">
+                <Link size={18} aria-hidden="true" />
+                Source: {data.articleContent.source}
+              </p>
+            )}
+          </section>
+
+          {/* Summary Question (no tutor instruction) */}
+          {data.summaryQuestion && (
+            <section className="ddp-section">
+              <div className="ddp-section-header">
+                <div className="ddp-section-line" />
+                <h2>SUMMARY QUESTION</h2>
+                <div className="ddp-section-line" />
+              </div>
+              <div className="ddp-comprehension">
+                <p className="ddp-summary-question">{data.summaryQuestion}</p>
+              </div>
+            </section>
+          )}
+
+          {/* Discussion Topics (no tutor instruction) */}
+          <section className="ddp-section">
+            <div className="ddp-section-header">
+              <div className="ddp-section-line" />
+              <h2>DISCUSSION TOPICS</h2>
+              <div className="ddp-section-line" />
+            </div>
+            
+            {data.discussionA.topic && (
+              <div className="ddp-discussion">
+                <h3>
+                  <span className="ddp-discussion-badge">A</span>
+                  {data.discussionA.topic}
+                </h3>
+                <ul className="ddp-discussion-list">
+                  {data.discussionA.questions.filter(q => q.trim()).map((q, i) => (
+                    <li key={i}>{q}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {data.discussionB.topic && (
+              <div className="ddp-discussion">
+                <h3>
+                  <span className="ddp-discussion-badge">B</span>
+                  {data.discussionB.topic}
+                </h3>
+                <ul className="ddp-discussion-list">
+                  {data.discussionB.questions.filter(q => q.trim()).map((q, i) => (
+                    <li key={i}>{q}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {!data.discussionA.topic && !data.discussionB.topic && (
+              <p className="ddp-empty">No discussion topics</p>
+            )}
+          </section>
+
+          {/* Footer */}
+          <footer className="ddp-footer">
+            <div className="ddp-footer-line" />
+            <p>FluentXVerse Daily Dispatch</p>
+          </footer>
+        </div>
+
+        {/* Sidebar */}
+        <aside className="ddp-sidebar no-print">
+          <a className="dispatch-library-link" href="/materials/daily-dispatch"><ArrowLeft size={16} />All articles</a>
+          {/* Font Size */}
+          <div className="ddp-sidebar-section">
+            <h3 className="ddp-sidebar-title">
+              <span>Font</span>
+              <span className="ddp-sidebar-subtitle">size</span>
+            </h3>
+            <div className="ddp-font-size-btns">
+              {(['S', 'M', 'L'] as const).map((size) => (
+                <button
+                  key={size}
+                  aria-label={`Font size ${size === 'S' ? 'small' : size === 'M' ? 'medium' : 'large'}`} aria-pressed={fontSize === size}
+                  className={`ddp-font-size-btn ${fontSize === size ? 'active' : ''}`}
+                  onClick={() => setFontSize(size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Archives */}
+          <div className="ddp-sidebar-section">
+            <h3 className="ddp-sidebar-title">Archives</h3>
+            {archives.length > 0 ? (
+              <ul className="ddp-archives-list">
+                {archives.map((archive, i) => (
+                  <li key={i}>
+                    <a 
+                      href={`/materials/daily-dispatch/archives/${encodeURIComponent(archive.month)}`}
+                    >
+                      {archive.month}
+                    </a>
+                    <span className="ddp-archive-count">({archive.count})</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="ddp-sidebar-empty">No archives yet</p>
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}

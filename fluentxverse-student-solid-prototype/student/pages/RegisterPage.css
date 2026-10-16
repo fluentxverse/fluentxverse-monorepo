@@ -1,0 +1,46 @@
+.student-registration { min-height:100vh; background:#f5f7fa; color:#202636; padding:132px 24px 56px; }
+.student-registration .register-content { max-width:640px; margin:auto; }
+.student-registration .register-form-card { background:#fff; border:1px solid #dfe5ed; padding:32px; border-radius:8px; }
+.student-registration .registration-art { margin-bottom:16px; }
+.student-registration .form-title { font-size:26px; line-height:1.4; margin:0 0 8px; color:#202636; }
+.student-registration .register-form-intro { font-size:14px; line-height:1.7; color:#647184; margin-bottom:24px; }
+.student-registration .step-indicator { display:flex; gap:12px; align-items:center; padding-bottom:20px; margin-bottom:24px; border-bottom:1px solid #dfe5ed; }
+.student-registration .register-step { display:flex; align-items:center; gap:8px; border:0; padding:0; background:none; color:#647184; font-size:12px; }
+.student-registration .register-step.current { color:#0245ae; font-weight:700; }
+.student-registration .step-dot { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; border:1px solid #dfe5ed; }
+.student-registration .current .step-dot { background:#edf4ff; border-color:#0245ae; }
+.student-registration .step-line { width:32px; height:1px; background:#dfe5ed; }
+.student-registration .form-section { margin-bottom:24px; }
+.student-registration .form-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.student-registration .form-group { margin-bottom:20px; min-width:0; }
+.student-registration .form-label { display:block; color:#202636; font-size:13px; font-weight:600; margin-bottom:8px; }
+.student-registration :is(.form-input,.form-select) { display:block; min-height:44px; width:100%; padding:10px 12px; border:1px solid #dfe5ed; background:#fff; color:#202636; border-radius:6px; font-size:14px; }
+.student-registration .required { color:#bd2843; }
+.student-registration :is(.form-hint-inline,.form-hint) { font-size:12px; color:#647184; font-weight:400; }
+.student-registration .password-wrapper { position:relative; }
+.student-registration .password-wrapper .form-input { padding-right:44px; }
+.student-registration .password-toggle { position:absolute; right:4px; top:4px; width:36px; height:36px; border:0; background:none; color:#647184; padding:0; display:grid; place-items:center; }
+.student-registration .form-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid #dfe5ed; padding-top:20px; }
+.student-registration :is(.btn-primary,.btn-secondary) { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 16px; min-height:44px; border:1px solid #dfe5ed; border-radius:6px; background:#fff; color:#0245ae; font-size:13px; font-weight:600; }
+.student-registration .btn-primary { background:#0245ae; border-color:#0245ae; color:#fff; margin-left:auto; }
+.student-registration button:disabled { opacity:.55; cursor:not-allowed; }
+.student-registration .goal-chips { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.student-registration .goal-option { display:flex; align-items:center; gap:8px; font-size:13px; color:#202636; }
+.student-registration .level-options { display:grid; gap:12px; }
+.student-registration .level-option { display:flex; align-items:center; gap:8px; font-size:13px; color:#202636; }
+.student-registration input:is([type="radio"],[type="checkbox"]) { accent-color:#0245ae; width:16px; height:16px; flex-shrink:0; }
+.student-registration .form-footer { margin-top:24px; text-align:center; font-size:13px; color:#647184; }
+.student-registration .form-footer-link { border:0; background:none; padding:0; color:#0245ae; font-weight:600; }
+.student-registration :is(.alert,.wallet-connected-banner,.tutor-booking-banner) { display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid #dfe5ed; border-radius:6px; margin-bottom:16px; font-size:13px; }
+.student-registration .alert-error { background:#fff1f2; border-color:#edb5bc; color:#b42337; }
+.student-registration .alert-success { color:#15855e; background:#effaf4; }
+.student-registration .form-section-title { font-size:17px; color:#202636; margin-bottom:20px; }
+.student-registration :focus-visible { outline:2px solid #0245ae; outline-offset:3px; }
+@media(max-width:991px) { .student-registration { padding-top:148px; } }
+@media(max-width:600px) { .student-registration { padding:116px 16px 40px; } .student-registration .register-form-card { padding:20px; } .student-registration .form-title { font-size:22px; } .student-registration .form-row,.student-registration .goal-chips { grid-template-columns:1fr; } .student-registration .form-actions { flex-wrap:wrap; } .student-registration .btn-primary { flex:1; } }
+
+.student-registration .register-birth-selects { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.student-registration .section-title { font-size:17px; color:#202636; margin:0 0 20px; }
+.student-registration .step-2-only .form-row:first-of-type { grid-template-columns:1fr; }
+
+.student-registration :is(.goal-option,.level-option) { font-weight:400; }

@@ -2,20 +2,26 @@ import type { Server, Socket } from 'socket.io';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/socket.types';
 import { getDriver } from '../../db/memgraph';
 import { getIceConfiguration } from '../iceConfiguration';
+import { adminCapabilities } from '../../utils/adminOperations';
 
 type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
 // Store interview room participants
-const interviewRooms = new Map<string, { tutorSocketId?: string; adminSocketId?: string }>();
+const interviewRooms = new Map<string, { tutorSocketId?: string; adminSocketId?: string; recording?: boolean }>();
 
 export const canJoinInterview = async (roomId: string, role: 'tutor' | 'admin', userId: string) => {
   if (!/^interview-[a-zA-Z0-9_-]{1,100}$/.test(roomId) || roomId === 'interview-default') return false;
   const session = getDriver().session();
   try {
+    if (role === 'admin') {
+      const admin = (await session.run('MATCH (a:Admin {id: $userId}) RETURN a', { userId })).records[0]?.get('a')?.properties;
+      if (!admin || !['admin', 'superadmin'].includes(admin.role || 'admin') || !adminCapabilities(admin).includes('operations')) return false;
+    }
     const result = await session.run(
       `MATCH (slot:InterviewSlot {id: $slotId, status: 'booked'})
        WHERE $role = 'admin' OR slot.tutorId = $userId
+       WITH slot WHERE slot.mediaClosedAt IS NULL
        RETURN slot.id AS id LIMIT 1`,
       { slotId: roomId.slice('interview-'.length), role, userId }
     );
@@ -80,16 +86,18 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       } else if (role === 'admin') {
         room.adminSocketId = socket.id;
       }
+      socket.emit('interview:joined', { roomId, configuration, peerPresent: Boolean(role === 'admin' ? room.tutorSocketId : room.adminSocketId), peerId: role === 'admin' ? room.tutorSocketId : room.adminSocketId });
+      socket.emit('interview:recording-status', { recording: Boolean(room.recording) });
       
       
       // Notify other participant
       if (role === 'admin' && room.tutorSocketId) {
         // Admin joined, notify tutor
-        io.to(room.tutorSocketId).emit('interview:admin-joined' as any);
+        io.to(room.tutorSocketId).emit('interview:admin-joined' as any, { peerId: socket.id });
       } else if (role === 'tutor' && room.adminSocketId) {
         // Tutor joined, notify admin
-        io.to(room.adminSocketId).emit('interview:tutor-joined' as any);
-        io.to(socket.id).emit('interview:admin-joined' as any);
+        io.to(room.adminSocketId).emit('interview:tutor-joined' as any, { peerId: socket.id });
+        io.to(socket.id).emit('interview:admin-joined' as any, { peerId: room.adminSocketId });
       }
     } catch (error) {
       console.error('Error joining interview room:', error);
@@ -97,15 +105,28 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
     }
   });
 
+  socket.on('interview:renegotiate', (data: { roomId: string }) => {
+    const room = interviewRooms.get(data?.roomId);
+    if (socket.data.interviewRoomId === data?.roomId && room?.adminSocketId === socket.id && room.tutorSocketId) {
+      io.to(room.tutorSocketId).emit('interview:renegotiate');
+    }
+  });
+  socket.on('interview:recording-status', (data: { roomId: string; recording: boolean }) => {
+    const room = interviewRooms.get(data?.roomId);
+    if (typeof data?.recording !== 'boolean' || socket.data.interviewRoomId !== data.roomId || room?.adminSocketId !== socket.id) return;
+    room.recording = data.recording;
+    io.to(data.roomId).emit('interview:recording-status', { recording: data.recording });
+  });
+
   // Handle interview offer (tutor -> admin)
-  socket.on('interview:offer', async (data: { roomId: string; offer: { type: string; sdp?: string } }) => {
+  socket.on('interview:offer', async (data: { roomId: string; offer: { type: string; sdp?: string }; negotiationId?: string }) => {
     try {
       const { roomId, offer } = data;
       const room = interviewRooms.get(roomId);
       
       if (socket.data.interviewRoomId === roomId && socket.data.interviewRole === 'tutor' &&
           room?.tutorSocketId === socket.id && room.adminSocketId) {
-        io.to(room.adminSocketId).emit('interview:offer' as any, { offer });
+        io.to(room.adminSocketId).emit('interview:offer' as any, { offer, negotiationId: data.negotiationId, from: socket.id });
       }
     } catch (error) {
       console.error('Error handling interview offer:', error);
@@ -113,14 +134,14 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
   });
 
   // Handle interview answer (admin -> tutor)
-  socket.on('interview:answer', async (data: { roomId: string; answer: { type: string; sdp?: string } }) => {
+  socket.on('interview:answer', async (data: { roomId: string; answer: { type: string; sdp?: string }; negotiationId?: string }) => {
     try {
       const { roomId, answer } = data;
       const room = interviewRooms.get(roomId);
       
       if (socket.data.interviewRoomId === roomId && socket.data.interviewRole === 'admin' &&
           room?.adminSocketId === socket.id && room.tutorSocketId) {
-        io.to(room.tutorSocketId).emit('interview:answer' as any, { answer });
+        io.to(room.tutorSocketId).emit('interview:answer' as any, { answer, negotiationId: data.negotiationId, from: socket.id });
       }
     } catch (error) {
       console.error('Error handling interview answer:', error);
@@ -128,7 +149,7 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
   });
 
   // Handle ICE candidates
-  socket.on('interview:ice-candidate', async (data: { roomId: string; candidate: { candidate: string; sdpMid?: string; sdpMLineIndex?: number } }) => {
+  socket.on('interview:ice-candidate', async (data: { roomId: string; candidate: { candidate: string; sdpMid?: string; sdpMLineIndex?: number }; negotiationId?: string }) => {
     try {
       const { roomId, candidate } = data;
       const room = interviewRooms.get(roomId);
@@ -140,7 +161,7 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       const targetSocketId = senderRole === 'tutor' ? room?.adminSocketId : room?.tutorSocketId;
       
       if (targetSocketId) {
-        io.to(targetSocketId).emit('interview:ice-candidate' as any, { candidate });
+        io.to(targetSocketId).emit('interview:ice-candidate' as any, { candidate, negotiationId: data.negotiationId, from: socket.id });
       }
     } catch (error) {
       console.error('Error handling interview ICE candidate:', error);
@@ -154,9 +175,17 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
       const room = interviewRooms.get(roomId);
       if (socket.data.interviewRoomId !== roomId ||
           (room?.tutorSocketId !== socket.id && room?.adminSocketId !== socket.id)) return;
+      const session = getDriver().session();
+      try { await session.run('MATCH (s:InterviewSlot {id: $id}) SET s.mediaClosedAt = coalesce(s.mediaClosedAt, $at)', {
+        id: roomId.slice('interview-'.length), at: new Date().toISOString(),
+      }); } finally { await session.close(); }
       
       // Notify all participants
       io.to(roomId).emit('interview:ended' as any);
+      for (const id of [room?.adminSocketId, room?.tutorSocketId]) {
+        const member = id ? io.sockets.sockets.get(id) : null;
+        if (member) { member.leave(roomId); member.data.interviewRoomId = undefined; member.data.interviewRole = undefined; }
+      }
       
       // Cleanup room
       interviewRooms.delete(roomId);
@@ -181,6 +210,8 @@ export const interviewHandler = (io: TypedServer, socket: TypedSocket) => {
           }
         } else if (role === 'admin' && room.adminSocketId === socket.id) {
           delete room.adminSocketId;
+          room.recording = false;
+          io.to(roomId).emit('interview:recording-status', { recording: false });
           // Notify tutor
           if (room.tutorSocketId) {
             io.to(room.tutorSocketId).emit('interview:admin-left' as any);

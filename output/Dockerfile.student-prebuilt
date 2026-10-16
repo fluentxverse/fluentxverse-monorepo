@@ -1,0 +1,2 @@
+FROM fluentxverse-server-fluentxverse-student
+COPY fluentxverse-student/dist/ /usr/share/nginx/html/

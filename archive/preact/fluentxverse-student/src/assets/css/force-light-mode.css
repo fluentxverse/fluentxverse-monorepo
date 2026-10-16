@@ -1,0 +1,32 @@
+/* Force Light Mode Only - Ignores System/Browser Dark Mode Preference */
+:root {
+  color-scheme: light only;
+  
+  /* Force light mode CSS variables */
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --text-color: #1e293b;
+  --secondary-text: #64748b;
+  --border-color: #e2e8f0;
+  --primary-text-color: #1e293b;
+  --secondary-text-color: #64748b;
+}
+
+/* Override any dark mode media queries */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light only;
+    --background-color: #f8fafc;
+    --card-background: #ffffff;
+    --text-color: #1e293b;
+    --secondary-text: #64748b;
+    --border-color: #e2e8f0;
+    --primary-text-color: #1e293b;
+    --secondary-text-color: #64748b;
+  }
+}
+
+html, body {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}

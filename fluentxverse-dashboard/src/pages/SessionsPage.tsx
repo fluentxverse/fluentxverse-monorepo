@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { adminApi, SessionListItem, SessionStats, SessionDetails } from '../api/admin.api';
+import SessionAvatar from '../components/SessionAvatar';
 import './SessionsPage.css';
 
 type SessionStatus = 'all' | 'confirmed' | 'completed' | 'cancelled';
@@ -400,33 +401,21 @@ const SessionsPage = () => {
                       <div className="time">{session.slotTime} JST</div>
                     </td>
                     <td className="user-cell">
-                      <div className="user-avatar">
-                        {session.tutorAvatar ? (
-                          <img src={session.tutorAvatar} alt={session.tutorName} />
-                        ) : (
-                          <div className="avatar-placeholder tutor">
-                            <i className="ri-user-star-line"></i>
-                          </div>
-                        )}
-                      </div>
-                      <div className="user-info">
-                        <span className="user-name">{session.tutorName}</span>
-                        <span className="user-email">{session.tutorEmail}</span>
+                      <div className="session-user">
+                        <SessionAvatar src={session.tutorAvatar} name={session.tutorName} kind="tutor" />
+                        <div className="user-info">
+                          <span className="user-name">{session.tutorName}</span>
+                          <span className="user-email">{session.tutorEmail}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="user-cell">
-                      <div className="user-avatar">
-                        {session.studentAvatar ? (
-                          <img src={session.studentAvatar} alt={session.studentName} />
-                        ) : (
-                          <div className="avatar-placeholder student">
-                            <i className="ri-graduation-cap-line"></i>
-                          </div>
-                        )}
-                      </div>
-                      <div className="user-info">
-                        <span className="user-name">{session.studentName}</span>
-                        <span className="user-email">{session.studentEmail}</span>
+                      <div className="session-user">
+                        <SessionAvatar src={session.studentAvatar} name={session.studentName} kind="student" />
+                        <div className="user-info">
+                          <span className="user-name">{session.studentName}</span>
+                          <span className="user-email">{session.studentEmail}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="duration-cell">
@@ -543,13 +532,7 @@ const SessionsPage = () => {
                           {getAttendanceBadge(selectedSession.attendance.tutor)}
                         </div>
                         <div className="participant-info">
-                          {selectedSession.tutor.avatar ? (
-                            <img src={selectedSession.tutor.avatar} alt={selectedSession.tutor.name} className="participant-avatar" />
-                          ) : (
-                            <div className="participant-avatar placeholder">
-                              <i className="ri-user-star-line"></i>
-                            </div>
-                          )}
+                          <SessionAvatar src={selectedSession.tutor.avatar} name={selectedSession.tutor.name} kind="tutor" detail />
                           <div>
                             <span className="participant-name">{selectedSession.tutor.name}</span>
                             <span className="participant-email">{selectedSession.tutor.email}</span>
@@ -562,13 +545,7 @@ const SessionsPage = () => {
                           {getAttendanceBadge(selectedSession.attendance.student)}
                         </div>
                         <div className="participant-info">
-                          {selectedSession.student.avatar ? (
-                            <img src={selectedSession.student.avatar} alt={selectedSession.student.name} className="participant-avatar" />
-                          ) : (
-                            <div className="participant-avatar placeholder">
-                              <i className="ri-graduation-cap-line"></i>
-                            </div>
-                          )}
+                          <SessionAvatar src={selectedSession.student.avatar} name={selectedSession.student.name} kind="student" detail />
                           <div>
                             <span className="participant-name">{selectedSession.student.name}</span>
                             <span className="participant-email">{selectedSession.student.email}</span>

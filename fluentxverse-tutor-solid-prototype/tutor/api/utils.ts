@@ -1,0 +1,108 @@
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import { cssStyle, Fragment } from "../utils/cssStyle";
+import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
+import { isLessonMediaRequest, normalizeLessonMedia } from '../../../shared/lessonMedia';
+import { getErrorMessage } from '../utils/errorUtils';
+let unauthorizedHandler: (() => void) | null = null;
+let isLoginInProgress = false;
+let authGeneration = 0;
+const requestGenerations = new WeakMap<object, number>();
+/**
+ * Extract a user-friendly error message from an error object
+ * Re-exported from errorUtils for convenience
+ */
+export { getErrorMessage } from '../utils/errorUtils';
+/**
+ * Create a user-friendly error from any error type
+ * Useful for throwing friendlier errors from API functions
+ */
+export const createFriendlyError = (error: unknown): Error => {
+    const message = getErrorMessage(error);
+    return new Error(message);
+};
+export const registerUnauthorizedHandler = (fn: () => void) => {
+    unauthorizedHandler = fn;
+    return () => {
+        if (unauthorizedHandler === fn)
+            unauthorizedHandler = null;
+    };
+};
+export const setLoginInProgress = (inProgress: boolean) => {
+    if (inProgress)
+        authGeneration += 1;
+    isLoginInProgress = inProgress;
+};
+// Clear client-side auth state (localStorage only, don't call server)
+// Server cookie will be overwritten on next successful login
+export const forceAuthCleanup = () => {
+    try {
+        localStorage.removeItem('fxv_user_fullname');
+        localStorage.removeItem('fxv_user_id');
+    }
+    catch (e) { }
+};
+// Configure Axios client to send cookies with requests
+export const client = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
+    timeout: 30000, // 30 seconds default
+    headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache'
+    }
+});
+// Request interceptor to add cache-busting for auth requests
+client.interceptors.request.use((config) => {
+    requestGenerations.set(config, authGeneration);
+    // Add timestamp to prevent caching of auth-related requests
+    if (config.url === '/tutor/me' || config.url === '/tutor/login' || config.url === '/tutor/logout' || config.url === '/tutor/refresh') {
+        config.params = { ...config.params, _t: Date.now() };
+        if (!config.headers)
+            config.headers = {} as any;
+        (config.headers as any)['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        (config.headers as any)['Pragma'] = 'no-cache';
+    }
+    return config;
+}, (error) => Promise.reject(error));
+// Response interceptor for 401 handling
+let last401 = 0;
+client.interceptors.response.use((response) => {
+    if (isLessonMediaRequest(response.config.url)) response.data = normalizeLessonMedia(response.data, API_BASE_URL);
+    return response;
+}, (error) => {
+    if (error?.response?.status === 401) {
+        // Don't trigger unauthorized handler during login process
+        // or for login/logout endpoints themselves
+        const url = error?.config?.url || '';
+        const isAuthEndpoint = url.includes('/login') || url.includes('/logout') || url.includes('/register')
+            || url === '/tutor/me';
+        const now = Date.now();
+        // Debounce 401 handling to avoid race conditions
+        if (!isLoginInProgress && !isAuthEndpoint && unauthorizedHandler
+            && requestGenerations.get(error.config) === authGeneration && (now - last401 > 500)) {
+            last401 = now;
+            unauthorizedHandler();
+        }
+    }
+    return Promise.reject(error);
+});
+// Send logs from frontend to server terminal
+export const logToServer = async (message: string, opts?: {
+    tag?: string;
+    level?: 'info' | 'warn' | 'error';
+    data?: any;
+}) => {
+    try {
+        await client.post('/debug/log', {
+            tag: opts?.tag ?? 'tutor-app',
+            level: opts?.level ?? 'info',
+            message,
+            data: opts?.data ?? null
+        });
+    }
+    catch (e) {
+        // Swallow errors to avoid breaking app flow
+    }
+};

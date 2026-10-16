@@ -1,0 +1,63 @@
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Portal } from "solid-js/web";
+import { cssStyle, Fragment } from "../utils/cssStyle";
+import { client as api } from './utils';
+export interface InterviewSlot {
+    id: string;
+    date: string;
+    time: string;
+    status: 'open' | 'booked' | 'completed' | 'cancelled';
+    tutorId?: string;
+    createdAt: string;
+    bookedAt?: string;
+}
+export interface MyInterview {
+    id: string;
+    date: string;
+    time: string;
+    status: 'booked' | 'completed' | 'in_progress';
+    bookedAt: string;
+    completedAt?: string;
+    result?: 'pass' | 'fail';
+}
+export const interviewApi = {
+    /**
+     * Get available interview slots (Tutor)
+     */
+    getAvailableSlots: async (weekOffset: number = 0): Promise<InterviewSlot[]> => {
+        const response = await api.get('/interview/available', { params: { weekOffset } });
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Failed to get available slots');
+        }
+        return response.data.data;
+    },
+    /**
+     * Get tutor's current interview booking
+     */
+    getMyBooking: async (): Promise<MyInterview | null> => {
+        const response = await api.get('/interview/my-booking');
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Failed to get interview booking');
+        }
+        return response.data.data;
+    },
+    /**
+     * Book an interview slot (Tutor)
+     */
+    bookSlot: async (slotId: string): Promise<InterviewSlot> => {
+        const response = await api.post('/interview/book', { slotId });
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Failed to book interview');
+        }
+        return response.data.data;
+    },
+    /**
+     * Cancel interview booking (Tutor)
+     */
+    cancelBooking: async (slotId: string): Promise<void> => {
+        const response = await api.post('/interview/cancel', { slotId });
+        if (!response.data.success) {
+            throw new Error(response.data.error || 'Failed to cancel interview');
+        }
+    }
+};

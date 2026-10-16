@@ -1,4 +1,6 @@
 import Elysia, { t } from 'elysia';
+import { privatePassMode } from '../services/lessonPasses/policy';
+import { trialLaunchMode } from '../services/schedule.services/trialPolicy';
 import { createAdminGuard } from '../middleware/auth.middleware';
 import { isMockTicketMode, ticketService, type TicketTier } from '@/services/ticket.services/ticket.service';
 import { cacheGetOrSet, invalidateCache } from '@/db/redis';
@@ -12,6 +14,12 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const Ticket = new Elysia({ prefix: '/tickets' })
   .onBeforeHandle(async ({ request, path, cookie, set }) => {
+    if (trialLaunchMode() && request.method === 'POST' && !path.includes('/refund')) {
+      set.status = 409; return { success: false, error: 'Ticketing is paused during the free trial launch' };
+    }
+    if (privatePassMode() && request.method === 'POST' && ['/purchase','/consume','/mint'].some(suffix => path.endsWith(suffix))) {
+      set.status = 409; return { success: false, error: 'New lesson credits use private passes; legacy refunds and history remain available' };
+    }
     const restricted = (request.method === 'POST' && (path === '/tickets/' || path === '/tickets' || path.endsWith('/mint'))) || path === '/tickets/purchases' || path === '/tickets/purchases/stats';
     if (restricted && !await createAdminGuard(cookie, set, 'finance')) return { success: false, error: 'Finance permission required' };
   })

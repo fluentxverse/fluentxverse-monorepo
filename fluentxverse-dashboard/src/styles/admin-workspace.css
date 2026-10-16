@@ -71,7 +71,7 @@
 .dashboard-layout .tutors-page .search-box input { min-width:0; }
 .dashboard-layout .tutors-page .btn-search { background:#edf2fa; color:#0b4bb5; box-shadow:none; border-radius:4px; padding:7px 16px; }
 .dashboard-layout .tutors-table-card { overflow:auto; border-radius:8px; background:#fff; }
-.dashboard-layout .tutors-table { table-layout:fixed; min-width:1240px; width:100%; }
+.dashboard-layout .tutors-table { table-layout:fixed; min-width:1400px; width:100%; }
 .dashboard-layout .tutors-table :is(th,td) { display:table-cell; vertical-align:middle; padding:16px 14px; overflow-wrap:anywhere; }
 .dashboard-layout .tutors-table th { white-space:normal; background:#f8fafc; font-size:11px; line-height:1.5; color:#65748a; height:55px; }
 .dashboard-layout .tutors-table th { overflow-wrap:normal; }
@@ -83,6 +83,7 @@
 .dashboard-layout .tutors-table col.languages-column { width:100px; }
 .dashboard-layout .tutors-table col.exam-column { width:90px; }
 .dashboard-layout .tutors-table col.status-column { width:140px; }
+.dashboard-layout .tutors-table col.bookings-column { width:160px; }
 .dashboard-layout .tutors-table col.proof-column { width:120px; }
 .dashboard-layout .tutors-table col.sessions-column { width:84px; }
 .dashboard-layout .tutors-table col.rating-column { width:70px; }

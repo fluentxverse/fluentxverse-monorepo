@@ -1,0 +1,43 @@
+/* Home page gradient styling */
+.gradient-footer-section {
+  background: linear-gradient(180deg, 
+    var(--section-background-color, #f7f8fa) 0%, 
+    rgba(2, 69, 174, 0.08) 30%, 
+    rgba(74, 158, 255, 0.12) 60%, 
+    rgba(2, 69, 174, 0.15) 100%
+  );
+  position: relative;
+}
+
+.gradient-footer-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(2, 69, 174, 0.03) 40%, 
+    rgba(74, 158, 255, 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+/* Dark mode gradient */
+.dark-mode .gradient-footer-section {
+  background: linear-gradient(180deg, 
+    var(--section-background-color, #1a1a1a) 0%, 
+    rgba(2, 69, 174, 0.05) 30%, 
+    rgba(74, 158, 255, 0.08) 60%, 
+    rgba(2, 69, 174, 0.1) 100%
+  );
+}
+
+.dark-mode .gradient-footer-section::before {
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(2, 69, 174, 0.02) 40%, 
+    rgba(74, 158, 255, 0.03) 100%
+  );
+}

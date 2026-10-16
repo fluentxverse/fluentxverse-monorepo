@@ -1,0 +1,109 @@
+.ticket-artwork {
+  --ticket-accent: #60a5fa;
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 108px;
+  height: 64px;
+  padding: 9px 13px;
+  overflow: hidden;
+  color: #f8fafc;
+  background: linear-gradient(145deg, #172554 0%, #1e3a8a 58%, #2563eb 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 34%, 94% 40%, 94% 60%, 100% 66%, 100% 100%, 0 100%, 0 66%, 6% 60%, 6% 40%, 0 34%);
+  filter: drop-shadow(0 7px 9px rgba(0, 0, 0, 0.28));
+}
+
+.ticket-artwork::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 3px;
+  border: 1px solid var(--ticket-accent);
+  clip-path: inherit;
+  opacity: 0.72;
+}
+
+.ticket-artwork::after {
+  content: '';
+  position: absolute;
+  z-index: -2;
+  top: -55%;
+  left: 46%;
+  width: 28%;
+  height: 210%;
+  background: rgba(255, 255, 255, 0.13);
+  transform: rotate(20deg);
+}
+
+.ticket-artwork--premium {
+  --ticket-accent: #fbbf24;
+  color: #fff7d6;
+  background: linear-gradient(145deg, #18181b 0%, #27272a 58%, #713f12 100%);
+}
+
+.ticket-artwork--trial {
+  --ticket-accent: #34d399;
+  background: linear-gradient(145deg, #052e2b 0%, #065f46 58%, #059669 100%);
+}
+
+.ticket-artwork__brand {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.ticket-artwork__brand img {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.ticket-artwork strong {
+  color: var(--ticket-accent);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.ticket-artwork small {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.ticket-artwork--compact {
+  width: 72px;
+  height: 44px;
+  padding: 6px 9px;
+}
+
+.ticket-artwork--compact .ticket-artwork__brand {
+  top: 5px;
+  left: 9px;
+}
+
+.ticket-artwork--compact strong {
+  font-size: 11px;
+}
+
+.ticket-artwork--compact small {
+  font-size: 5px;
+}

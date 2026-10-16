@@ -1,6 +1,9 @@
 import { getDriver } from '../../db/memgraph';
+import { randomUUID } from 'node:crypto';
 import { metricOutcome } from '../../utils/tutorPerformance';
 import { plainNode } from '../../utils/adminOperations';
+import { hasTutorSalaryTestQualification } from '../../utils/tutorTestQualification';
+import { adminTutorVisibility } from '../../utils/adminTutorVisibility';
 import { invalidateUserTokens } from '../../db/redis';
 import neo4j from 'neo4j-driver';
 import { adminActivityTimestamp, newestActivityFirst } from '../../utils/adminActivityTimestamp';
@@ -271,6 +274,7 @@ export class AdminService {
         const isProcessing = processingCount > 0;
         
         // Only include non-certified tutors
+        if (hasTutorSalaryTestQualification(u)) continue;
         if (writtenPassed && speakingPassed) continue;
         
         let status: 'pending_written' | 'pending_speaking' | 'processing';
@@ -398,7 +402,8 @@ export class AdminService {
     tutorId: string, 
     itemKey: 'profilePicture' | 'videoIntro' | 'bio' | 'education' | 'interests',
     action: 'approve' | 'reject',
-    reason?: string
+    reason?: string,
+    reviewerId?: string
   ): Promise<{ profileItemStatuses: any; allApproved: boolean }> {
     const driver = getDriver();
     const session = driver.session();
@@ -414,7 +419,7 @@ export class AdminService {
         throw new Error('Tutor not found');
       }
 
-      let currentStatuses: Record<string, { status: string; rejectionReason?: string; reviewedAt?: string }> = this.getDefaultItemStatuses();
+      let currentStatuses: Record<string, { status: string; rejectionReason?: string; reviewedAt?: string; reviewedBy?: string }> = this.getDefaultItemStatuses();
       const record = getResult.records[0];
       const storedStatuses = record ? record.get('itemStatuses') : null;
       if (storedStatuses) {
@@ -429,7 +434,8 @@ export class AdminService {
       currentStatuses[itemKey] = {
         status: action === 'approve' ? 'approved' : 'rejected',
         rejectionReason: action === 'reject' ? reason : undefined,
-        reviewedAt: new Date().toISOString()
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: reviewerId
       };
 
       // Check if all items are approved
@@ -455,12 +461,20 @@ export class AdminService {
         MATCH (u:User { id: $tutorId })
         SET u.profileItemStatuses = $itemStatuses,
             u.profileStatus = $overallStatus,
+            u.profileScreeningDecisionId = $decisionId,
+            u.profileReviewedBy = $reviewerId,
             u.profileReviewedAt = datetime()
+        CREATE (:ProfileScreeningDecision {id: $decisionId, tutorId: $tutorId, reviewerId: $reviewerId,
+          status: $overallStatus, reviewedAt: u.profileReviewedAt, itemStatuses: $itemStatuses,
+          firstName: u.firstName, lastName: u.lastName, bio: u.bio, education: u.education,
+          profilePicture: u.profilePicture, videoIntroUrl: u.videoIntroUrl})
         RETURN u
       `, { 
         tutorId, 
         itemStatuses: JSON.stringify(currentStatuses),
-        overallStatus
+        overallStatus,
+        decisionId: randomUUID(),
+        reviewerId: reviewerId || null
       });
 
       // If overall status changed to approved or rejected, notify the tutor
@@ -653,7 +667,7 @@ export class AdminService {
   /**
    * Approve or reject a tutor profile
    */
-  async reviewTutorProfile(tutorId: string, action: 'approve' | 'reject', reason?: string): Promise<void> {
+  async reviewTutorProfile(tutorId: string, action: 'approve' | 'reject', reason?: string, reviewerId?: string): Promise<void> {
     const driver = getDriver();
     const session = driver.session();
 
@@ -662,12 +676,20 @@ export class AdminService {
       const result = await session.run(`
         MATCH (u:User { id: $tutorId })
         SET u.profileStatus = $newStatus,
+            u.profileScreeningDecisionId = $decisionId,
+            u.profileReviewedBy = $reviewerId,
             u.profileReviewedAt = datetime(),
             u.profileRejectionReason = $reason
+        CREATE (:ProfileScreeningDecision {id: $decisionId, tutorId: $tutorId, reviewerId: $reviewerId,
+          status: $newStatus, reviewedAt: u.profileReviewedAt,
+          firstName: u.firstName, lastName: u.lastName, bio: u.bio, education: u.education,
+          profilePicture: u.profilePicture, videoIntroUrl: u.videoIntroUrl})
         RETURN u.firstName as firstName, u.lastName as lastName
       `, { 
         tutorId, 
-        newStatus, 
+        newStatus,
+        decisionId: randomUUID(),
+        reviewerId: reviewerId || null,
         reason: action === 'reject' ? reason : null 
       });
       
@@ -763,9 +785,11 @@ export class AdminService {
         const profileStatus = u.profileStatus || 'incomplete';
 
         // Determine tutor status - now includes profile review requirement
-        let tutorStatus: 'pending' | 'certified' | 'processing' | 'failed' | 'pending_profile';
+        let tutorStatus: TutorListItem['status'];
         if (writtenPassed && speakingPassed && profileStatus === 'approved' && interviewPassed) {
           tutorStatus = 'certified';
+        } else if (hasTutorSalaryTestQualification(u)) {
+          tutorStatus = 'test_qualified';
         } else if (writtenPassed && speakingPassed && profileStatus !== 'approved') {
           // Passed exams but profile not approved yet
           tutorStatus = 'pending_profile';
@@ -776,7 +800,8 @@ export class AdminService {
         }
 
         // Filter by status if specified
-        if (status !== 'all' && status !== 'suspended' && tutorStatus !== status) continue;
+        if (status !== 'all' && status !== 'suspended' && tutorStatus !== status
+          && !(status === 'certified' && tutorStatus === 'test_qualified')) continue;
         
         // Check suspension status
         const suspendedUntil = u.suspendedUntil ? new Date(u.suspendedUntil) : null;
@@ -789,6 +814,7 @@ export class AdminService {
           id: u.id,
           name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
           email: u.email,
+          ...adminTutorVisibility(u),
           registeredAt: u.createdAt || new Date().toISOString(),
           writtenExamPassed: writtenPassed,
           speakingExamPassed: speakingPassed,

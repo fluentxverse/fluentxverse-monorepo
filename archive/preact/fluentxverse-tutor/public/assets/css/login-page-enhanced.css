@@ -1,0 +1,65 @@
+.signup-benefits {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+
+.signup-benefits li {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.signup-benefits li i {
+  color: #6DBE45;
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.signup-info {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 25px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.signup-info h4 {
+  margin-bottom: 20px;
+  color: #131740;
+}
+
+/* Dark mode */
+.dark-mode .signup-info {
+  background-color: #2a2a2a;
+}
+
+.dark-mode .signup-info h4 {
+  color: #e0e0e0;
+}
+
+/* Adjust login form styles */
+.login-welcome-area .form-btn-wrap {
+  display: flex;
+  gap: 15px;
+}
+
+.login-welcome-area .form-btn-wrap .btn {
+  flex: 1;
+  padding: 12px 20px;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.dark-mode .alert-danger {
+  background-color: #3f2123;
+  color: #f8d7da;
+}
