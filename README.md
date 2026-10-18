@@ -1,124 +1,69 @@
+# FluentXVerse
 
-# FluentXVerse — ESL Learning Platform
+FluentXVerse is an online English tutoring platform connecting students with screened tutors. This monorepo contains the student and tutor experiences, administration dashboard, public website, application API, mobile workstream, and supporting privacy infrastructure.
 
-FluentXVerse is an ESL (English as a Second Language) learning platform that blends interactive lessons, real‑time practice, and community features to help learners improve reading, writing, listening, and speaking skills.
+Website: https://fluentxverse.com
 
-## Key Features
+## Applications
 
-- Adaptive lessons: progressive modules for grammar, vocabulary, and comprehension
-- Speaking practice: prompts and recordings with feedback
-- Writing exercises: guided tasks with rubrics and progress tracking
-- Live activities: quizzes, challenges, and collaborative tasks
-- Progress dashboard: goals, streaks, badges, and detailed analytics
-- Community: profiles, posts, and moderated discussion
+| Application | Monorepo directory | App-focused GitHub repository |
+| --- | --- | --- |
+| Student web app | `fluentxverse-student-solid-prototype/` | [fluentxverse-student](https://github.com/fluentxverse/fluentxverse-student) |
+| Tutor web app | `fluentxverse-tutor-solid-prototype/` | [fluentxverse-tutor](https://github.com/fluentxverse/fluentxverse-tutor) |
+| Administration dashboard | `fluentxverse-dashboard/` | [fluentxverse-dashboard](https://github.com/fluentxverse/fluentxverse-dashboard) |
+| Public website | `fluentxverse-site/` | [fluentxverse-site](https://github.com/fluentxverse/fluentxverse-site) |
+| Active Bun/Elysia API | `fluentxverse-server/` | [fluentxverse-server](https://github.com/fluentxverse/fluentxverse-server) |
+| Native student mobile workstream | `fluentxverse-mobile/` | [fluentxverse-mobile](https://github.com/fluentxverse/fluentxverse-mobile) |
+| Go backend migration workstream | `fluentxverse-go-server/` | [fluentxverse-go-server](https://github.com/fluentxverse/fluentxverse-go-server) |
 
-## Tech Stack
+The monorepo remains the source of truth. The app-focused repository names above are reserved publication targets; initial creation is awaiting authentication as the `fluentxverse` GitHub owner. Prepared exports have a recorded source commit and are not independent production releases. Private repository links require collaborator access. See [repository publishing](docs/app-repositories.md) for scope, validation, and refresh instructions.
 
-- Student/tutor frontend: SolidJS + TypeScript + Vite (Cloudflare Workers)
-- API: Elysia + Eden Treaty (type‑safe client)
-- Data: Memgraph (graph database) for users, lessons, and activity relations
-- Storage: SeaweedFS/MinIO for media (audio, images) — optional
+The active student and tutor web clients use SolidJS. Their historical folder names are retained for compatibility. Previous Preact clients are in `archive/preact/`, outside the active deployment path. The administration dashboard uses Preact. The Go server is a migration workstream, not the active API by default.
+
+## Architecture
+
+| Layer | Role |
+| --- | --- |
+| SolidJS, TypeScript, Vite | Student, tutor, and public-site frontends |
+| Preact, TypeScript, Vite | Administration dashboard |
+| Cloudflare Workers | Static frontend hosting |
+| Bun, Elysia, Socket.IO | Application API and realtime application events |
+| Cloudflare RealtimeKit | Configurable classroom media provider |
+| Memgraph | Primary business graph, including compensation and earnings |
+| PostgreSQL | Logs and supporting operational/session/recording metadata |
+| SeaweedFS | Media and encrypted archived recordings |
+| GMR Engine and GMR Vault | Separate Web3 execution, managed wallets, signing, and verification credentials |
+
+`shared/` contains cross-app utilities. `contracts/` and `zk/` contain supporting contract/proof source. GMR Engine and GMR Vault are separate services and are not included in this monorepo.
 
 ## Development
 
-The active frontends are `fluentxverse-student-solid-prototype/` and
-`fluentxverse-tutor-solid-prototype/`. Their historical folder suffix is retained
-to preserve local project paths. Preact working trees are archived in
-`archive/preact/`, excluded from active builds and deployments.
+Use Bun, Node.js 22+, and npm. Configure each app using its environment documentation and use isolated development services for mutation tests.
 
-Use `bun run dev:student`, `bun run dev:tutor`, `bun run build:student`, and
-`bun run build:tutor` from the repository root. Deploy with `bun run deploy:student`
-or `bun run deploy:tutor`; see [Workers deployment](docs/cloudflare-workers-frontends.md).
+```bash
+bun run install:all
+bun run dev:student
+bun run dev:tutor
+bun run dev:dashboard
+bun run dev:site
+```
 
-- `bun run dev` — start the frontend dev server
-- `bun run build` — build production assets
-- `bun run preview` — preview the production build locally
+Run the API with `bun run dev:server` only after reviewing its historical local TLS override. For a watch process without that override, run `bun --watch src/index.ts` from `fluentxverse-server/`. Never disable certificate validation in production.
 
-## Project Structure
+```bash
+bun run build:all
+```
 
-- `src/` — application source (components, pages, context, hooks)
-- `public/` — static assets
-- `assets/` — CSS, fonts, images
+Builds do not establish successful service integration. Database, authentication, classroom, refund, recording, and privacy workflows require their own configured tests and acceptance evidence. See [frontend deployment](docs/cloudflare-workers-frontends.md), [slot contention QA](docs/qa-slot-contention-20261014.md), and [cancellation/time-zone QA](docs/qa-cancellation-timezones-20261014.md).
 
-## API Integration
+## Privacy Workstreams
 
-- Typed API via Eden Treaty; see `src/api/`
-- Auth context handles login, logout, and session (`/me`)
+The platform includes application workflows and supporting proof source for privately verifiable tutor screening, privacy-oriented reviews/passes, and compensation-related work. Privy handles student social login. Tutor wallets are managed through GMR Engine/GMR Vault.
 
-## Environment
+Distinguish implemented code from reviewed proving artifacts, deployed contracts, enabled production modules, and completed acceptance tests. ZK statements over authorized records do not prove assessment accuracy or that teaching occurred. Ordinary public transfers do not provide shielded settlement. Production activation requires the appropriate issuer, policy, lifecycle, artifact-review, and operational gates.
 
-Configure backend and storage services as needed:
+Never commit student records, recordings, private assessment evidence, API tokens, seed phrases, or signing keys. Report security concerns privately to hello@fluentxverse.com.
 
-- Backend server (Elysia): `http://localhost:8765`
-- Optional storage (SeaweedFS): Filer `:8888`, S3 `:8333`
+## Licensing
 
-## License
-
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
-
-## Contact
-
-For questions, partnership, or support:
-
-- Email: <hello@fluentxverse.com>
-- Website: <https://www.fluentxverse.com>
-
-## Technologies Used
-
-- **React/Preact** (TypeScript)
-- **Vite** (Frontend tooling)
-- **Bun** (Server-side)
-- **CSS/Glassmorphism** (Modern UI)
-- **OpenStreetMap** (Map integration)
-- **Docker** (Server deployment)
-- **Vercel** (Hosting)
-
-## Getting Started
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone <your-repo-url> fluentxverse
-   cd fluentxverse
-   ```
-2. **Install dependencies:**
-
-   ```bash
-   bun install
-   # or
-   npm install
-   ```
-3. **Run the development server:**
-
-   ```bash
-   bun run dev
-   # or
-   npm run dev
-   ```
-4. **Build for production:**
-
-   ```bash
-   bun run build
-   # or
-   npm run build
-   ```
-5. **Deploy:**
-   - Recommended: Vercel, Netlify, or Docker
-
-## Project Structure
-
-- `src/` — Main frontend source code
-- `fluentxverse-server/` — Backend server (Elysia + Bun)
-- `public/` — Static assets (images, CSS, JS)
-- `uploads/` — User-uploaded files
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
-
-## Contact
-
-For questions, partnership, or support:
-
-- Email: hello@fluentxverse.com
-- Website: https://www.fluentxverse.com
+No root license file is currently present. Do not infer an MIT or other license from public repository availability. Contact hello@fluentxverse.com for licensing terms; third-party components retain their own licenses.
