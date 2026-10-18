@@ -16,7 +16,7 @@ Website: https://fluentxverse.com
 | Native student mobile workstream | `fluentxverse-mobile/` | [fluentxverse-mobile](https://github.com/fluentxverse/fluentxverse-mobile) |
 | Go backend migration workstream | `fluentxverse-go-server/` | [fluentxverse-go-server](https://github.com/fluentxverse/fluentxverse-go-server) |
 
-The monorepo remains the source of truth. The app-focused repository names above are reserved publication targets; initial creation is awaiting authentication as the `fluentxverse` GitHub owner. Prepared exports have a recorded source commit and are not independent production releases. Private repository links require collaborator access. See [repository publishing](docs/app-repositories.md) for scope, validation, and refresh instructions.
+The monorepo remains the source of truth. The seven app repositories above were published privately on 2026-10-18 as source exports with a recorded source commit, not independent production releases. Private repository links require collaborator access; public grant-review access has not been enabled. See [repository publishing](docs/app-repositories.md) for scope, validation, and refresh instructions.
 
 The active student and tutor web clients use SolidJS. Their historical folder names are retained for compatibility. Previous Preact clients are in `archive/preact/`, outside the active deployment path. The administration dashboard uses Preact. The Go server is a migration workstream, not the active API by default.
 

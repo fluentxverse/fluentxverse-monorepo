@@ -46,9 +46,19 @@ Publishing is intentionally not an automatic push hook. A committed source chang
 
 ## Initial Publication Status
 
-Prepared on 2026-10-18 from `c9696e491149275bc01df3b8d05d29a15263257a`, with local uncommitted application work deliberately excluded. Seven repositories are initialized and committed locally. Creation was rejected because GitHub CLI is authenticated as `YirenNing24`, which has push access to the monorepo but cannot create repositories owned by the separate `fluentxverse` personal account. No app repositories have been created by this run.
+Published on 2026-10-18 from `c9696e491149275bc01df3b8d05d29a15263257a`, with local uncommitted application work deliberately excluded. After the owner authenticated GitHub CLI as `fluentxverse`, all seven repositories were created privately and pushed to `main`. Each remote commit matches its validated local repository. Public visibility has not been approved or enabled, so grant reviewers need collaborator access unless visibility is explicitly changed.
 
-After the owner signs in through `gh auth login --hostname github.com --web`, the initial publisher can create the reviewed repositories:
+| Repository | Published initial commit |
+| --- | --- |
+| [fluentxverse-student](https://github.com/fluentxverse/fluentxverse-student) | `d8ea7b66e038` |
+| [fluentxverse-tutor](https://github.com/fluentxverse/fluentxverse-tutor) | `553e8412308a` |
+| [fluentxverse-dashboard](https://github.com/fluentxverse/fluentxverse-dashboard) | `3d0aa6112c97` |
+| [fluentxverse-site](https://github.com/fluentxverse/fluentxverse-site) | `329a882dc354` |
+| [fluentxverse-server](https://github.com/fluentxverse/fluentxverse-server) | `7e1d4bbd30a7` |
+| [fluentxverse-mobile](https://github.com/fluentxverse/fluentxverse-mobile) | `18bdddd4336d` |
+| [fluentxverse-go-server](https://github.com/fluentxverse/fluentxverse-go-server) | `91de5387136d` |
+
+Initial publication used the reviewed local repositories and the owner-only publisher:
 
 ```bash
 node scripts/publish-app-repos.mjs --source /home/paulanthonyarriola/Desktop/fluentxverse-app-repos-20261018
@@ -70,6 +80,8 @@ Initial local validation:
 | Secret scan of every initial repository commit | No unresolved findings; two exact public proving-checksum false positives reviewed |
 
 Dependency-install audit warnings remain outstanding; successful extraction/building does not resolve the previously reported dependency vulnerabilities. CI checks in the prepared Node repositories perform source/build checks only and never deploy. No Cloudflare configuration or production connection was changed.
+
+The initial hosted Actions attempts for the student and tutor repositories reported `startup_failure` before jobs were created. Their shared generated workflow passes Actionlint 1.7.7 locally; the hosted failure cause is not yet established. Local validation results above must not be interpreted as green hosted CI. Investigate the hosted workflow diagnostics before using Actions status as a release gate; do not connect these repositories to production deployment to bypass that problem.
 
 ## Validation Boundaries
 
