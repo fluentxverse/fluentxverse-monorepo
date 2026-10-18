@@ -46,7 +46,7 @@ Publishing is intentionally not an automatic push hook. A committed source chang
 
 ## Initial Publication Status
 
-Published on 2026-10-18 from `c9696e491149275bc01df3b8d05d29a15263257a`, with local uncommitted application work deliberately excluded. After the owner authenticated GitHub CLI as `fluentxverse`, all seven repositories were created privately and pushed to `main`. Each remote commit matches its validated local repository. Public visibility has not been approved or enabled, so grant reviewers need collaborator access unless visibility is explicitly changed.
+Published on 2026-10-18 from `c9696e491149275bc01df3b8d05d29a15263257a`, with local uncommitted application work deliberately excluded. After the owner authenticated GitHub CLI as `fluentxverse`, all seven repositories were created and pushed to `main`. Each remote commit matches its validated local repository. Following the owner's explicit request, all seven repositories were changed from private to public and their visibility was verified. Grant reviewers can access them without collaborator invitations.
 
 | Repository | Published initial commit |
 | --- | --- |
@@ -64,7 +64,7 @@ Initial publication used the reviewed local repositories and the owner-only publ
 node scripts/publish-app-repos.mjs --source /home/paulanthonyarriola/Desktop/fluentxverse-app-repos-20261018
 ```
 
-This publisher requires the exact owner login, a clean committed prepared repository, and the expected provenance. It creates private repositories, checks their default branch and pushed revision, and never force-pushes. It is intended for the initial publication, not automatic synchronization. Public visibility needs an explicit decision before grant reviewers can access the code without invitations.
+This publisher requires the exact owner login, a clean committed prepared repository, and the expected provenance. It creates private repositories, checks their default branch and pushed revision, and never force-pushes. It is intended for the initial publication, not automatic synchronization or re-running against repositories subsequently made public. The owner has approved public visibility for the seven repositories above; future refreshes should preserve that visibility and follow the reviewed refresh process.
 
 Initial local validation:
 
