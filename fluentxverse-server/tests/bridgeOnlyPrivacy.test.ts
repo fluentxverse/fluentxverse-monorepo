@@ -30,6 +30,14 @@ test('bridge-only is the default and unknown infrastructure fails closed', () =>
   delete process.env.PRIVACY_INFRA_MODE; expect(privacyInfrastructure()).toBe('bridge_only');
   process.env.PRIVACY_INFRA_MODE = 'typo'; expect(privacyInfrastructure).toThrow();
 });
+test('retired screening API client cannot send requests even with an Engine connection', async () => {
+  const { GmrScreeningEngineClient } = await import('../src/services/web3.services/gmrScreeningEngine.service');
+  const client = new GmrScreeningEngineClient('http://127.0.0.1:1', 'synthetic-test-key');
+  for (const action of ['config', 'register', 'prove', 'submit', 'certify', 'revoke']) {
+    await expect(client.operation(action)).rejects.toThrow('archived');
+  }
+  await expect(client.queue('register')).rejects.toThrow('archived');
+});
 test('only the official bridge is read at a fixed finalized block; missing roots never verify', async () => {
   let chain = 2651420, code = '0x01', accepted = false, changed = false;
   const calls: any[] = [];
@@ -69,9 +77,9 @@ test('review cohorts and acceptance use the bridge without registry reads or wri
     expect(await chain.accepted(proof)).toBe(false);
     expect(await chain.accepted(proof, JSON.stringify(receipt))).toBe(false);
     verify.mockResolvedValue(true); expect(await chain.accepted(proof, JSON.stringify(receipt))).toBe(true);
-    await expect(chain.certify(proof, receipt)).rejects.toThrow('writes are disabled');
+    await expect(chain.certify(proof, receipt)).rejects.toThrow('archived');
     process.env.PRIVACY_INFRA_MODE = 'legacy_contracts';
-    expect(reviewGroupId('tutor', '2026-10')).not.toBe(id);
+    expect(() => reviewGroupId('tutor', '2026-10')).toThrow('archived');
   } finally { check.mockRestore(); verify.mockRestore(); }
 });
 test('review certification persists only after a finalized bridge receipt and never queues a contract transaction', async () => {

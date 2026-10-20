@@ -39,3 +39,4 @@
   .student-issue-duration-options, .student-issue-reasons { grid-template-columns: minmax(0, 1fr); }
   .student-issue-report-dialog .student-issue-submit { width: 100%; order: 1; }
 }
+.student-dialog.student-issue-report-dialog { padding:0; }

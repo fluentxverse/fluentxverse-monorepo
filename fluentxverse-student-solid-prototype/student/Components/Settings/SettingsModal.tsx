@@ -324,7 +324,7 @@ export default function SettingsModal(_props1: {
         } }}>
     <header class="account-dialog-header">
       {view() !== 'main' && <button class="account-icon-button" type="button" title="Back to account" aria-label="Back to account" disabled={saving()} onClick={() => navigate('main')}><ArrowLeft size={19}/></button>}
-      {artwork(view() === 'update-info' ? 'community' : 'home')}
+      {artwork(view() === 'update-password' ? 'privacy' : 'profile')}
       <h2 id="student-account-title" ref={_element => heading.current = _element} tabIndex={-1}>{titles[view()]}</h2>
       <button class="account-icon-button account-close" type="button" title="Close settings" aria-label="Close settings" disabled={saving()} onClick={close}><X size={20}/></button>
     </header>

@@ -45,8 +45,12 @@ jobs:
               - 'fluentxverse-server/**'
             student:
               - 'fluentxverse-student-solid-prototype/**'
+              - 'shared/**'
+              - 'scripts/**'
             tutor:
               - 'fluentxverse-tutor-solid-prototype/**'
+              - 'shared/**'
+              - 'scripts/**'
 
   server-check:
     name: Server PR Check
@@ -80,6 +84,8 @@ jobs:
       - run: npm ci --workspaces=false
       - run: npm test
       - run: npm run build
+        env:
+          VITE_ENABLE_TICKETING: 'true'
 
   tutor-check:
     name: Tutor App PR Check

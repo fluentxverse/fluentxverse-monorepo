@@ -184,7 +184,7 @@ export function ClassroomRecordingNotice(_props0: {
                     first.focus();
                 }
             }}>
-    <header><img src="/assets/img/home-icons/community-v1.webp" alt=""/><h2 id="student-recording-title" tabIndex={-1}>Lesson recording</h2>
+    <header><img src="/assets/img/home-icons/video-v1.webp" alt=""/><h2 id="student-recording-title" tabIndex={-1}>Lesson recording</h2>
       <button class="recording-close" type="button" disabled={pending()} title="Close recording permission" aria-label="Close recording permission" onClick={() => { if (!busy.current)
             setOpen(false); }}><X size={20}/></button></header>
     <div class="recording-dialog-body">

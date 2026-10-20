@@ -11,6 +11,36 @@ import { isPrivyOriginAllowed, originError } from '../src/origin';
 import { createLabHandler } from '../backend/handler';
 import { LAB_ORIGIN, LAB_COOKIE } from '../backend/policy';
 import { permittedApplicationRoute } from '../backend/application-policy';
+import { fetchNotificationFeed } from '../student/utils/notificationFeed';
+
+describe('notification feed recovery', () => {
+  const feed = { data: { success: true, data: { notifications: [] } } };
+  test('retries a temporary failure once and returns the feed', async () => {
+    let calls = 0;
+    const result = await fetchNotificationFeed(async () => {
+      if (++calls === 1) throw Object.assign(new Error('Unavailable'), { response: { status: 503 } });
+      return feed;
+    }, new AbortController().signal, async () => {});
+    expect(result).toEqual([]);
+    expect(calls).toBe(2);
+  });
+  test('bounds retries and rejects malformed success responses', async () => {
+    let calls = 0;
+    await expect(fetchNotificationFeed(async () => { calls++; return { data: { success: true } }; }, new AbortController().signal, async () => {})).rejects.toThrow();
+    expect(calls).toBe(2);
+  });
+  test('does not retry authorization failures', async () => {
+    let calls = 0;
+    await expect(fetchNotificationFeed(async () => { calls++; throw { response: { status: 401 } }; }, new AbortController().signal)).rejects.toBeDefined();
+    expect(calls).toBe(1);
+  });
+  test('cancellation prevents the next request after a failed fetch', async () => {
+    const controller = new AbortController();
+    let calls = 0;
+    await expect(fetchNotificationFeed(async () => { calls++; throw new Error('Offline'); }, controller.signal, async () => { controller.abort(); })).rejects.toBeDefined();
+    expect(calls).toBe(1);
+  });
+});
 
 const student: Student = { userId: 'student-1', role: 'student' };
 const unauthorized = () => Promise.reject(Object.assign(new Error('Expired session'), { status: 401 }));

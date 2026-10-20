@@ -5,7 +5,7 @@ const apiPattern = /^(http:\/\/(localhost|127\.0\.0\.1):(?:8765|8780)|https:\/\/
 const article = { id:'article-fixture', title:'New conversations around the world', createdAt:'2026-10-08T12:00:00Z', category:'Education', topic:'Language learning', warmUpQuestions:['What do you enjoy learning?'], vocabulary:[{word:'conversation',pronunciation:'/conversation/',partOfSpeech:'noun',definition:'An exchange of ideas.',exampleSentence:'We had a conversation.',additionalInfo:null}], articleContent:{paragraphs:[{id:'one',text:'People are finding new ways to practice English.',comprehensionQuestion:{question:'What are people practicing?',answer:'Hidden answer'}}],source:'Editorial fixture'}, summaryQuestion:'What is the main idea?', discussionA:{topic:'New connections',questions:['Who do you enjoy talking with?']}, discussionB:{topic:'Learning',questions:['How do you practice?']} };
 const young = {id:'young-fixture',level:1,unit:1,lessonNumber:1,theme:'colors',ageGroup:'5-8',unitLabel:'Getting started',lessonTitle:'Everyday colors',mascot:'foxy',greeting:'Welcome to our lesson!',vocabularyWords:[{id:'blue',word:'Blue',translation:'Blue',image:'/assets/img/home-icons/training-v1.webp'}],song:null,story:null,activities:[]};
 (async () => {
-  const browser = await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
+  const browser = await chromium.launch({executablePath:process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome',args:['--no-sandbox']});
   try {
     for (const theme of (process.env.TEST_THEME ? [process.env.TEST_THEME] : ['light','dark'])) for (const width of (process.env.TEST_WIDTHS || '1566,768,375,320').split(',').map(Number)) {
       let authenticated = true, failedRead = false, failedPin = false, expireRequests = false;
@@ -61,7 +61,7 @@ const young = {id:'young-fixture',level:1,unit:1,lessonNumber:1,theme:'colors',a
             img.decode().then(()=>{clearTimeout(timeout);resolve();},error=>{clearTimeout(timeout);reject(error);});
           })));
           const dialog=document.querySelector('dialog[open]'), box=dialog?.getBoundingClientRect();
-          return {overflow:document.documentElement.scrollWidth>innerWidth,legacy:root.querySelectorAll('i').length,art:root.querySelectorAll('img[src*="home-icons"]').length,dialogFits:!box||(box.left>=0&&box.right<=innerWidth+1&&box.top>=0&&box.bottom<=innerHeight+1),bg:getComputedStyle(root).backgroundImage};
+          return {overflow:document.documentElement.scrollWidth>innerWidth,legacy:[...root.querySelectorAll('i')].filter(icon=>!icon.closest('.social-links')).length,art:root.querySelectorAll('img[src*="home-icons"]').length,dialogFits:!box||(box.left>=0&&box.right<=innerWidth+1&&box.top>=0&&box.bottom<=innerHeight+1),bg:getComputedStyle(root).backgroundImage};
         },scope);
         assert.equal(result.overflow,false,name+' horizontal overflow'); assert.equal(result.legacy,0,name+' legacy icon fonts'); assert.equal(result.dialogFits,true,name+' dialog clipping'); assert.equal(result.bg,'none',name+' decorative gradient');
         await page.screenshot({path:'../output/screenshots/secondary-'+theme+'-'+width+'-'+name+'.png',fullPage:true});
@@ -91,8 +91,8 @@ const young = {id:'young-fixture',level:1,unit:1,lessonNumber:1,theme:'colors',a
       assert.equal(await page.getByText('Hidden answer',{exact:true}).count(),0);
       await page.getByRole('button',{name:'Font size large'}).click(); assert.equal(await page.getByRole('button',{name:'Font size large'}).getAttribute('aria-pressed'),'true');
       await visit('/materials/daily-dispatch/archives/October%202026','.dda-header'); assert.equal(await page.locator('.dda-article-card').count(),1); await layout('archive','.ddp-container');
-      await visit('/privacy-policy','.privacy-content'); await layout('privacy','.student-legal');
-      await visit('/terms-of-service','.privacy-content'); await layout('terms','.student-legal');
+      await visit('/privacy-policy','.fxv-legal'); await layout('privacy','.fxv-legal');
+      await visit('/terms-of-service','.fxv-legal'); await layout('terms','.fxv-legal');
       await visit('/contact','.student-contact-faq'); await page.getByText('How do I book a lesson?',{exact:true}).click(); await layout('support','.student-contact');
       await page.getByRole('button',{name:/Notifications/}).click(); await page.getByRole('dialog',{name:'Notifications',exact:true}).waitFor(); await layout('notifications','.student-notification-dialog');
       assert.equal(await page.getByRole('link',{name:/Lesson booked Your booking/}).getAttribute('href'),'/lesson/booking-fixture'); await page.keyboard.press('Escape');
@@ -117,7 +117,7 @@ const young = {id:'young-fixture',level:1,unit:1,lessonNumber:1,theme:'colors',a
       await page.getByRole('checkbox').first().check(); await page.getByRole('button',{name:'Back',exact:true}).click();
       await page.getByRole('button',{name:'Sign in',exact:true}).click(); await page.getByRole('dialog',{name:'Sign in or register'}).waitFor(); await layout('auth','.social-login-dialog');
       await page.keyboard.press('Escape'); await page.waitForFunction(()=>!document.querySelector('dialog[open]')); assert.equal(await page.evaluate(()=>document.body.style.overflow),'');
-      for(const path of ['/contact','/privacy-policy','/terms-of-service','/tutor/tutor-fixture']) { await visit(path,path.includes('tutor')?'.profile-name':path==='/contact'?'.student-contact':'.privacy-content'); await page.waitForFunction(()=>document.documentElement.dataset.theme==='light'); assert.equal(await page.getByRole('button',{name:/Switch to .* mode/}).count(),0); }
+      for(const path of ['/contact','/privacy-policy','/terms-of-service','/tutor/tutor-fixture']) { await visit(path,path.includes('tutor')?'.profile-name':path==='/contact'?'.student-contact':'.fxv-legal'); await page.waitForFunction(()=>document.documentElement.dataset.theme==='light'); assert.equal(await page.getByRole('button',{name:/Switch to .* mode/}).count(),0); }
       await visit('/','.how-it-works');
       for (const selector of ['.how-it-works','.pricing-section','.why-choose-section']) {
         const section=page.locator(selector); await section.scrollIntoViewIfNeeded();

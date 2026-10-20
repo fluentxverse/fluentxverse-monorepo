@@ -8,7 +8,7 @@ const lessons = [
 ];
 const articles = Array.from({ length: 12 }, (_, i) => ({ id: 'article-' + i, title: 'Article ' + String(i).padStart(2, '0'), topic: i ? 'Science and discovery' : 'Workplace technology', category: i ? 'Science' : 'Technology', createdAt: '2026-10-' + String(i + 1).padStart(2, '0') + 'T02:00:00Z' }));
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     for (const theme of ['light', 'dark']) for (const width of [1566, 768, 375, 320]) {
       const context = await browser.newContext({ viewport: { width, height: 950 }, reducedMotion: 'reduce' });

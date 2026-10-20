@@ -4,7 +4,7 @@ const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=', 'base64');
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     for (const width of [1566, 375]) for (const valid of [true, false]) {
       const context = await browser.newContext({ viewport: { width, height: 900 } });

@@ -490,7 +490,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
     // Course definitions
     const courses = [
         { id: 'conversational-skills', name: 'Conversational Skills', icon: 'community', description: 'Conversation lessons for practical speaking practice.' },
-        { id: 'business-english', name: 'Business English', icon: 'training', description: 'Workplace English lessons and professional scenarios.' },
+        { id: 'business-english', name: 'Business English', icon: 'business', description: 'Workplace English lessons and professional scenarios.' },
         { id: 'daily-dispatch', name: 'Daily Dispatch', icon: 'dispatch', description: 'News-based reading and discussion material.' },
     ];
     const selectedCourseOption = createMemo(() => courses.find(course => course.id === selectedCourse()) || null);

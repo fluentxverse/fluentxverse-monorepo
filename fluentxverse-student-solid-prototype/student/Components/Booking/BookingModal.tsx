@@ -10,7 +10,7 @@ import { useThemeStore } from '../../context/ThemeContext';
 import { useAuthContext } from '../../context/AuthContext';
 import { appWallet, autoConnectWallet, connectWallet, type WalletAccount } from '../../config/wallet';
 import StudentDialog from '../Common/StudentDialog';
-import { X, CircleCheck, CircleAlert, Clock, ChevronRight } from "lucide-solid";
+import { X, CircleCheck, CircleAlert, Clock, ChevronRight, CalendarDays, Globe, Video, Check } from "lucide-solid";
 import './BookingModal.css';
 import { lessonPassApi } from '../../api/lessonPasses.api';
 import type { PassMode } from '../../shared/lessonPasses';
@@ -47,6 +47,7 @@ export const BookingModal = (_props0: BookingModalProps) => {
     const [loading, setLoading] = createSignal(false);
     const [error, setError] = createSignal<string | null>(null);
     const [selectedSlot, setSelectedSlot] = createSignal<AvailableSlot | null>(null);
+    const [activeDate, setActiveDate] = createSignal('');
     const [booking, setBooking] = createSignal(false);
     const [bookingSuccess, setBookingSuccess] = createSignal(false);
     const [ticketBalance, setTicketBalance] = createSignal<TicketBalance | null>(null);
@@ -574,28 +575,29 @@ export const BookingModal = (_props0: BookingModalProps) => {
         // Slot is elapsed if its time has already passed
         return slotTotalMinutes <= nowTotalMinutes;
     };
-    // Group slots by date and deduplicate by time
+    // Display Japan dates while retaining the original PHT slot for booking.
     const slotsByDate = createMemo(() => availableSlots().reduce((acc, slot) => {
         // Skip elapsed slots
         if (isSlotElapsed(slot.date, slot.time)) {
             return acc;
         }
-        if (!acc[slot.date]) {
-            acc[slot.date] = new Map<string, AvailableSlot>();
+        const display = convertToJapaneseTimeWithDate(slot.date, slot.time);
+        if (!acc[display.date]) {
+            acc[display.date] = new Map<string, AvailableSlot>();
         }
         // Only keep one slot per time (first one wins)
-        if (!acc[slot.date].has(slot.time)) {
-            acc[slot.date].set(slot.time, slot);
+        if (!acc[display.date].has(display.time)) {
+            acc[display.date].set(display.time, slot);
         }
         return acc;
     }, {} as Record<string, Map<string, AvailableSlot>>));
     // Convert Map values back to arrays
     const dedupedSlotsByDate = createMemo(() => Object.entries(slotsByDate()).reduce((acc, [date, slotsMap]) => {
-        acc[date] = Array.from(slotsMap.values());
+        acc[date] = Array.from(slotsMap.values()).sort((a, b) => convertToJapaneseTime(a.time).localeCompare(convertToJapaneseTime(b.time)));
         return acc;
     }, {} as Record<string, AvailableSlot[]>));
     const formatDate = (dateString: string) => {
-        // dateString is a PHT date (tutor's schedule date)
+        // Dates supplied here have already been converted to the displayed Japan day.
         const date = new Date(dateString + 'T00:00:00');
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -604,6 +606,31 @@ export const BookingModal = (_props0: BookingModalProps) => {
     const formatTime = (timeString: string) => {
         // Convert Philippine time to Japanese time (add 1 hour) - returns 24h format
         return convertToJapaneseTime(timeString);
+    };
+    const dates = createMemo(() => Object.keys(dedupedSlotsByDate()).sort());
+    createEffect(() => {
+        const chosen = selectedSlot();
+        const chosenDate = chosen ? convertToJapaneseTimeWithDate(chosen.date, chosen.time).date : null;
+        if (chosenDate && dates().includes(chosenDate)) setActiveDate(chosenDate);
+        else if (!dates().includes(activeDate())) setActiveDate(dates()[0] || '');
+    });
+    const selectedDate = createMemo(() => selectedSlot()
+        ? convertToJapaneseTimeWithDate(selectedSlot()!.date, selectedSlot()!.time).date : '');
+    const duration = createMemo(() => {
+        const slot = selectedSlot() || availableSlots()[0];
+        const raw = slot?.durationMinutes;
+        return typeof raw === 'object' && raw !== null ? Number((raw as any).low) : Number(raw);
+    });
+    const bookingCost = createMemo(() => creditMode()?.mode === 'trial' ? 'Free trial / no ticket charged'
+        : creditMode()?.mode === 'private_passes' ? '1 prepared lesson pass'
+        : creditMode()?.mode === 'legacy_erc1155' ? ticketLoading() ? 'Checking ticket balance...'
+            : ticketBalance()?.basic ? '1 Basic ticket' : ticketBalance()?.premium ? '1 Premium ticket' : '1 ticket required'
+        : 'Checking lesson credit...');
+    const chooseDate = (date: string) => {
+        if (date !== activeDate()) {
+            setSelectedSlot(null);
+            setActiveDate(date);
+        }
     };
     return createMemo(() => {
         if (!_props0["isOpen"])
@@ -624,6 +651,11 @@ export const BookingModal = (_props0: BookingModalProps) => {
               <h2 class="booking-modal-title">Book a Lesson</h2>
               <p class="booking-modal-tutor-name">{_props0["tutorName"]}</p>
             </div>
+          </div>
+          <div class="booking-modal-facts">
+            <span><Video size={15}/>1-on-1 lesson</span>
+            {duration() > 0 && <span><Clock size={15}/>{duration()} minutes</span>}
+            <span class="booking-modal-timezone"><Globe size={15}/>Japan time <strong>JST</strong></span>
           </div>
         </div>
 
@@ -654,38 +686,49 @@ export const BookingModal = (_props0: BookingModalProps) => {
         {/* Available Slots */}
         {!loading() && !bookingSuccess() && !error() && (<>
             <div class="booking-modal-content">
-              {Object.keys(dedupedSlotsByDate()).length === 0 ? (<div class="booking-modal-empty">
+              {dates().length === 0 ? (<div class="booking-modal-empty">
                   <img src="/assets/img/home-icons/schedule-v1.webp" alt="" width="64" height="64"/>
                   <p>No available slots for this date</p>
                   <small>Please check another date or try another tutor</small>
                 </div>) : (<div class="booking-modal-slots">
-                  {Object.entries(dedupedSlotsByDate()).map(([date, slots]) => (<div class="booking-modal-date-group">
-                      <h3 class="booking-modal-date-header">{formatDate(date)}</h3>
-                      <div class="booking-modal-time-grid">
-                        {slots.map((slot) => (<button class={`booking-modal-time-slot ${selectedSlot()?.slotId === slot.slotId ? 'selected' : ''}`} aria-pressed={selectedSlot()?.slotId === slot.slotId} onClick={() => setSelectedSlot(slot)}>
-                            <span>{formatTime(slot.time)} JST</span>
-                          </button>))}
-                      </div>
-                    </div>))}
+                  {dates().length > 1 && <div class="booking-modal-date-picker" role="group" aria-label="Lesson date">
+                    {dates().map(date => {
+                        const day = new Date(`${date}T12:00:00`);
+                        return <button class="booking-modal-date" aria-label={formatDate(date)} aria-pressed={activeDate() === date}
+                          disabled={booking()} onClick={() => chooseDate(date)}>
+                          <span>{day.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                          <strong>{day.getDate()}</strong>
+                          <span>{day.toLocaleDateString('en-US', { month: 'short' })}</span>
+                        </button>;
+                    })}
+                  </div>}
+                  <div class="booking-modal-date-group">
+                    <div class="booking-modal-date-heading">
+                      <h3 class="booking-modal-date-header"><CalendarDays size={18}/>{activeDate() ? formatDate(activeDate()) : ''}</h3>
+                      <span class="booking-modal-availability">{dedupedSlotsByDate()[activeDate()]?.length || 0} available</span>
+                    </div>
+                    <div class="booking-modal-time-grid" role="group" aria-label="Available lesson times in Japan Standard Time">
+                      {(dedupedSlotsByDate()[activeDate()] || []).map(slot => <button
+                        class={`booking-modal-time-slot ${selectedSlot()?.slotId === slot.slotId ? 'selected' : ''}`}
+                        aria-label={`${formatTime(slot.time)} JST`} aria-pressed={selectedSlot()?.slotId === slot.slotId}
+                        disabled={booking()} onClick={() => setSelectedSlot(slot)}>
+                        <span>{formatTime(slot.time)}</span><Check size={16} aria-hidden="true"/>
+                      </button>)}
+                    </div>
+                  </div>
                 </div>)}
             </div>
 
             {/* Footer */}
-            {selectedSlot() && (<div class="booking-modal-footer">
-                <div class="booking-modal-selected-info">
-                  <Clock size={20}/>
-                  <span>
-                    {formatDate(selectedSlot().date)} at {formatTime(selectedSlot().time)} JST
-                    <span class="booking-modal-duration"> ({(() => {
-                        // Neo4j Integer object has 'low' and 'high' properties
-                        const duration = typeof selectedSlot().durationMinutes === 'object' && selectedSlot().durationMinutes !== null
-                            ? (selectedSlot().durationMinutes as any).low || selectedSlot().durationMinutes
-                            : Number(selectedSlot().durationMinutes);
-                        return duration;
-                    })()} min)</span>
-                  </span>
-                </div>
-                <button class="booking-modal-confirm" onClick={handleBookSlot} disabled={booking() || !creditMode() || (creditMode()?.mode === 'legacy_erc1155' && _state1.isAuthenticated && (ticketLoading() || isWalletConnecting() || isWalletAutoConnecting()))}>
+            {dates().length > 0 && (<div class="booking-modal-footer">
+                <output class="booking-modal-selected-info" aria-live="polite">
+                  <span class="booking-modal-summary-label">Lesson time</span>
+                  {selectedSlot() ? <><strong>{formatTime(selectedSlot()!.time)} JST <span class="booking-modal-duration">{duration() > 0 ? `/ ${duration()} min` : ''}</span></strong>
+                    <span class="booking-modal-summary-date">{formatDate(selectedDate())}</span></>
+                    : <strong class="booking-modal-unselected">Not selected</strong>}
+                  <span class="booking-modal-credit">{bookingCost()}</span>
+                </output>
+                <button class="booking-modal-confirm" onClick={handleBookSlot} disabled={!selectedSlot() || booking() || !creditMode() || (creditMode()?.mode === 'legacy_erc1155' && _state1.isAuthenticated && (ticketLoading() || isWalletConnecting() || isWalletAutoConnecting()))}>
                   {booking() ? (<>
                       <span class="booking-modal-spinner-small"></span>
                       Booking...

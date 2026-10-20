@@ -1,6 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { Show, Index, batch } from 'solid-js';
+import { useBeforeLeave } from '@solidjs/router';
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorIcon from "./Common/TutorIcon";
 import TutorDialog from './Common/TutorDialog';
@@ -128,6 +129,16 @@ function LessonNotesEditor(_props1: {
     const active = createMemo(() => draft()?.materials.find((note) => key(note) === activeKey()));
     const absent = createMemo(() => draft()?.studentAttendance === 'absent');
     const dirty = createMemo(() => Boolean(base() && draft() && JSON.stringify(draft()) !== JSON.stringify(base())));
+    let navigationPending = false;
+    useBeforeLeave(event => {
+        if (!dirty() || absent() || event.defaultPrevented) return;
+        event.preventDefault();
+        if (navigationPending) return;
+        navigationPending = true;
+        void toastConfirm('Your unsaved lesson notes are kept on this device. They have not been submitted.', 'Leave with unsaved notes?', {
+            confirmLabel: 'Leave page', cancelLabel: 'Keep editing',
+        }).then(leave => { if (leave) event.retry(true); }).finally(() => { navigationPending = false; });
+    });
     const validation = createMemo(() => draft() ? validateLessonNotesEditor(draft()) : null);
     const missingPoints = createMemo(() => validation()?.stoppingPoints || []);
     const feedbackError = createMemo(() => validationAttempted() && validation()?.studentFeedback ? 'Student feedback must contain at least 100 characters.' : '');

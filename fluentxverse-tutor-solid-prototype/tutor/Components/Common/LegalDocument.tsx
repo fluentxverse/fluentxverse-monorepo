@@ -23,7 +23,7 @@ export default function LegalDocument(props: { kind: LegalKind }) {
       <Header showThemeSwitch={false} />
       <main class="fxv-legal" id="legal-top">
         <header class="fxv-legal-heading">
-          <img src="/assets/img/home-icons/training-v1.webp" alt="" width="64" height="64" />
+          <img src="/assets/img/home-icons/privacy-v1.webp" alt="" width="64" height="64" />
           <div>
             <p class="fxv-legal-eyebrow">FluentXVerse / Tutors</p>
             <h1>{content().title}</h1>

@@ -6,19 +6,20 @@ import Header from '../Header/Header';
 import SideBar from '../IndexOne/SideBar';
 import type { Lesson } from '../../api/lesson.api';
 import { mediaUrl } from '../../utils/mediaUrl';
+import { appArtworkSrc, type AppArtworkName } from '../../../../shared/appArtwork';
 import './MaterialLibrary.css';
 export function MaterialLibraryShell(_props0: {
     title: string;
     category: string;
     description: string;
-    art: string;
+    art: AppArtworkName;
     children: JSX.Element;
 }) {
     return <><SideBar /><div class="student-library"><Header />
     <main class="library-page"><div class="library-container">
       <a class="library-back" href="/materials"><ArrowLeft size={16}/>Back to Materials</a>
       <header class="library-heading">
-        <img class="library-heading-art" src={`/assets/img/home-icons/${_props0["art"]}-v1.${_props0["art"] === 'dispatch' ? 'png' : 'webp'}`} alt="" width="64" height="64"/>
+        <img class="library-heading-art" src={appArtworkSrc(_props0["art"])} alt="" width="64" height="64"/>
         <div><span class="library-eyebrow">{_props0["category"]}</span><h1>{_props0["title"]}</h1><p>{_props0["description"]}</p></div>
       </header>
       {_props0["children"]}
@@ -89,7 +90,7 @@ export default function CourseLibrary(_props2: {
             return business() ? <article class="library-lesson">{content}</article>
                 : <a class="library-lesson" href={`/materials/${_props2["course"]}/${encodeURIComponent(lesson.id)}`} target="_blank" rel="noopener noreferrer" aria-label={`Open ${lesson.title}`}>{content}</a>;
         })}</div>;
-    return <MaterialLibraryShell title={business() ? 'Business English' : 'Conversational Skills'} category="Curriculum" art={business() ? 'training' : 'community'} description={business() ? 'Build confidence in meetings, workplace conversations, and professional discussions.' : 'Practice everyday conversations and build confidence speaking English.'}>
+    return <MaterialLibraryShell title={business() ? 'Business English' : 'Conversational Skills'} category="Curriculum" art={business() ? 'business' : 'community'} description={business() ? 'Build confidence in meetings, workplace conversations, and professional discussions.' : 'Practice everyday conversations and build confidence speaking English.'}>
     <div class="library-overview"><span>{_props2["loading"] ? '—' : _props2["lessons"].length} lessons available</span><span>10 levels</span><span>Up to 5 chapters per level</span></div>
     {business() && <p class="library-notice"><Info size={17}/>Lesson previews are temporarily unavailable.</p>}
     <div class="library-toolbar">

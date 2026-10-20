@@ -2,6 +2,14 @@
 
 ## Status
 
+October 19, 2026: the application registry integration described below is archived.
+The active adapter accepts finalized receipts from the official Horizen bridge
+and enforces membership, nullifier uniqueness and acceptance in Memgraph. It does
+not provide an independently enforced on-chain review census. See
+[retirement scope](custom-contract-retirement.md) and
+[the source archive](../archive/custom-contracts-20261019/README.md).
+The remaining contract-specific description is historical, not a deployment guide.
+
 Deployed as an isolated Horizen testnet pilot on October 12, 2026 (Asia/Manila).
 The registry is `0x71611f8971a31B78a281FD2a32Ed6c09bFA1Aa6B`, with a dedicated
 restricted Engine project and pinned proving artifacts on the student host. See

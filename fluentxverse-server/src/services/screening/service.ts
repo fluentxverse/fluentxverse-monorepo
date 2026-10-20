@@ -1,5 +1,4 @@
 import { keccak256 } from 'viem';
-import { gmrScreeningEngine } from '../web3.services/gmrScreeningEngine.service';
 import { signScreeningCredential, assertCredentialCurrent } from './credential';
 import { agentRegistration, assertValidatorConfiguration, readChainCertification, screeningChainConfig, screeningPayloadBytes, screeningLeaf, submitBridgeScreeningProof } from './chain';
 import { privacyInfrastructure, validateHorizenReceipt } from '../proof.services/horizenReceipt';
@@ -80,10 +79,7 @@ export async function submitScreeningProof(commitment: string, actor: string) {
     await assertValidatorConfiguration(config, JSON.parse(stored.publicSignals));
     const claimed = await screeningQuery("MATCH (c:TutorScreeningCredential {commitment: $commitment, revoked: false, status: 'proof_ready'}) SET c.status = 'submitting_zkverify' RETURN c", { commitment });
     if (!claimed.records.length) throw new Error('Proof submission is already in progress or requires reconciliation');
-    const { submission } = privacyInfrastructure() === 'bridge_only'
-      ? await submitBridgeScreeningProof(JSON.parse(stored.proof), JSON.parse(stored.publicSignals))
-      : await gmrScreeningEngine.operation<{ submission: { id: string; transactionResult: string } }>('submit', {
-        proof: JSON.parse(stored.proof), publicSignals: JSON.parse(stored.publicSignals) });
+    const { submission } = await submitBridgeScreeningProof(JSON.parse(stored.proof), JSON.parse(stored.publicSignals));
     const result = JSON.parse(submission.transactionResult);
     if (!/^0x[a-fA-F0-9]{64}$/.test(result.txHash || '')) throw new Error('Engine submission has no confirmed zkVerify transaction');
     if (result.statement?.toLowerCase() !== screeningLeaf(config.vkHash, JSON.parse(stored.publicSignals)).toLowerCase()) throw new Error('zkVerify statement differs from issued credential');
@@ -100,11 +96,8 @@ export async function requestScreeningValidation(commitment: string, actor: stri
   if (!stored.shared || !stored.zkVerifyTx) throw new Error('Tutor sharing consent and zkVerify submission required');
   const values = JSON.parse(stored.publicSignals);
   await assertValidatorConfiguration(config, values);
-  if (privacyInfrastructure() === 'bridge_only') return { status: 'awaiting_horizen_validation', certified: false,
+  return { status: 'awaiting_horizen_validation', certified: false,
     instruction: 'Resolve the exact zkVerify aggregation receipt and certify it against the existing Horizen bridge. No ERC-8004 request is needed.' };
-  const tx = await gmrScreeningEngine.queue('request-validation', { publicSignals: values });
-  await screeningAudit(actor, 'request_validation', commitment);
-  return { transactionId: tx.id, status: tx.status, certified: false };
 }
 
 export interface AggregationReceipt { aggregationId: string; merklePath: string[]; leafCount: string; index: string }
@@ -115,7 +108,6 @@ export async function finalizeScreeningValidation(commitment: string, receipt: A
   if (!stored.zkVerifyTx || !stored.shared) throw new Error('Submission and sharing consent required');
   const values = JSON.parse(stored.publicSignals);
   await assertValidatorConfiguration(config, values);
-  if (privacyInfrastructure() === 'bridge_only') {
     const receiptJson = JSON.stringify(receipt);
     if (!await readChainCertification(config, values, receiptJson)) throw new Error('Screening receipt is not finalized on Horizen');
     const saved = await screeningQuery(`MATCH (c:TutorScreeningCredential {commitment: $commitment})
@@ -126,24 +118,16 @@ export async function finalizeScreeningValidation(commitment: string, receipt: A
     if (!saved.records.length) throw new Error('Credential was revoked, unshared or has a different receipt');
     await screeningAudit(actor, 'verify_bridge_receipt', commitment);
     return { commitment, status: 'verified', certified: true, infrastructure: 'bridge_only', revocationEnforcement: 'issuer' };
-  }
-  const tx = await gmrScreeningEngine.queue('certify', { publicSignals: values, receipt });
-  await screeningQuery('MATCH (c:TutorScreeningCredential {commitment: $commitment}) SET c.validationTransactionId = $id', { commitment, id: tx.id });
-  await screeningAudit(actor, 'queue_validation', commitment);
-  return { transactionId: tx.id, status: tx.status, certified: false };
 }
 
 export async function revokeScreeningCredential(commitment: string, actor: string) {
   requireScreeningEnabled();
   const stored = await getScreeningCredential(commitment);
   if (!stored) throw new Error('Credential not found');
-  // Fail closed locally even if the governance transaction needs retrying.
+  // Revocation is issuer-managed; no governance transaction is submitted.
   await screeningQuery("MATCH (c:TutorScreeningCredential {commitment: $commitment}) SET c.revoked = true, c.status = 'revoked'", { commitment });
   await screeningAudit(actor, 'revoke', commitment);
-  if (privacyInfrastructure() === 'bridge_only') return { commitment, status: 'revoked', revocationEnforcement: 'issuer', onChainRevocationTransactionId: null };
-  await assertValidatorConfiguration(screeningChainConfig());
-  const tx = await gmrScreeningEngine.queue('revoke', { commitment });
-  return { commitment, status: 'revoked', onChainRevocationTransactionId: tx.id, transactionStatus: tx.status };
+  return { commitment, status: 'revoked', revocationEnforcement: 'issuer', onChainRevocationTransactionId: null };
 }
 
 export function privateSummary(stored: StoredScreeningCredential) {
@@ -200,9 +184,6 @@ export async function publicScreeningSummary(commitment: string) {
     zkVerifyTx: stored.zkVerifyTx || null };
 }
 
-export async function registerScreeningAgent(actor: string) {
-  if (privacyInfrastructure() === 'bridge_only') throw new Error('ERC-8004 registration is disabled in bridge-only mode');
-  const tx = await gmrScreeningEngine.queue('register');
-  await screeningAudit(actor, 'register_agent', '');
-  return { transactionId: tx.id, status: tx.status, instruction: 'Confirm the identity registry Transfer event and configure its agentId before issuing credentials' };
+export async function registerScreeningAgent(_actor: string) {
+  throw new Error('ERC-8004 registration is disabled; custom screening contracts are archived');
 }

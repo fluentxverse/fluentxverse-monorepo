@@ -90,7 +90,7 @@ const Header = (_props0: HeaderProps) => {
             <div class="col-12">
               <div class="menu-wrap main-menu">
                 <nav class="menu-nav">
-                  <div class="logo"><a href="/#"><img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" width="40" height="40"/></a></div>
+                  <div class="logo"><a href="/#"><img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="40" height="40"/></a></div>
                   <div class="brand-text">
                     Fluent<span class="brand-x">X</span>Verse
                   </div>
@@ -132,7 +132,7 @@ const Header = (_props0: HeaderProps) => {
                   <div class="menu-outer">
                     <div class="mobile-menu-header">
                       <div class="mobile-logo">
-                        <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse" width="32" height="32"/> <div class="brand-text">Fluent<span class="brand-x">X</span>Verse</div>
+                        <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="32" height="32"/> <div class="brand-text">Fluent<span class="brand-x">X</span>Verse</div>
                       </div>
                       <button type="button" class="close-btn" onClick={closeMobileMenu()} aria-label="Close mobile menu" autofocus>
                         <TutorIcon name="fas fa-times" size={24}/>

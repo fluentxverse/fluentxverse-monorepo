@@ -4,6 +4,7 @@ import { useLocation } from '../routing';
 import LoadingSpinner from './LoadingSpinner';
 import { proofApi } from '../api/proof.api';
 import { useParams } from '@solidjs/router';
+import StatusPanel from '../../../shared/ui/StatusPanel';
 export function ProtectedRoute(props: {
     Component: Component<any>;
 }) {
@@ -27,13 +28,16 @@ export function CertifiedRoute(props: {
     const location = useLocation();
     const [loading, setLoading] = createSignal(true);
     const [certified, setCertified] = createSignal(false);
-    createEffect(on(() => [auth.user?.userId, auth.initialLoading, auth.logoutLoading] as const, ([userId, initialLoading, logoutLoading]) => {
+    const [error, setError] = createSignal(false);
+    const [revision, setRevision] = createSignal(0);
+    createEffect(on(() => [auth.user?.userId, auth.initialLoading, auth.logoutLoading, revision()] as const, ([userId, initialLoading, logoutLoading]) => {
         let active = true;
         onCleanup(() => { active = false; });
         if (!userId || initialLoading || logoutLoading)
             return;
         setLoading(true);
         setCertified(false);
+        setError(false);
         if (auth.user.email === 'paulanthonyarriola@gmail.com') {
             setCertified(true);
             setLoading(false);
@@ -47,14 +51,13 @@ export function CertifiedRoute(props: {
             else
                 location.route('/home?certification=required');
         }).catch(() => {
-            if (active)
-                location.route('/home?certification=error');
+            if (active) setError(true);
         })
             .finally(() => {
             if (active)
                 setLoading(false);
         });
     }));
-    return <ProtectedRoute Component={() => <Show when={!loading()} fallback={<LoadingSpinner />}><Show when={certified()}><props.Component {...params}/></Show></Show>}/>;
+    return <ProtectedRoute Component={() => <Show when={!loading()} fallback={<LoadingSpinner />}><Show when={!error()} fallback={<div class="fxv-route-state"><StatusPanel kind="error" title="Could not verify certification" message="Your session is unchanged. Please try again." onRetry={() => setRevision(value => value + 1)}/></div>}><Show when={certified()}><props.Component {...params}/></Show></Show></Show>}/>;
 }
 export const withCertified = (component: Component<any>) => () => <CertifiedRoute Component={component}/>;

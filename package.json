@@ -10,6 +10,9 @@
     "fluentxverse-site"
   ],
   "scripts": {
+    "check:apps": "node scripts/release-apps.mjs",
+    "check:app-budgets": "node scripts/check-app-budgets.mjs",
+    "deploy:apps": "node scripts/release-apps.mjs --deploy=all",
     "dev:tutor": "npm --prefix fluentxverse-tutor-solid-prototype run dev",
     "dev:student": "npm --prefix fluentxverse-student-solid-prototype run dev",
     "dev:server": "cd fluentxverse-server && bun run dev",

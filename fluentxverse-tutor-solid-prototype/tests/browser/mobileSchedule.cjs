@@ -7,7 +7,7 @@ const user = { userId: 'mobile-schedule', firstName: 'Alex', lastName: 'Teacher'
 
 (async () => {
   await mkdir(output, { recursive: true });
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     for (const [width, theme] of [[320, 'light'], [375, 'light'], [393, 'dark'], [430, 'light'], [767, 'light'], [1440, 'light']]) {
       const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });

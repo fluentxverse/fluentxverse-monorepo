@@ -51,7 +51,7 @@ const NotificationsPage = () => {
             <div class="notifications-page-header">
               <div class="notifications-page-title">
                 <div class="notifications-icon-wrapper">
-                  <TutorArt name="schedule" size={48}/>
+                  <TutorArt name="notifications" size={48}/>
                 </div>
                 <div>
                   <h1>Notifications</h1>

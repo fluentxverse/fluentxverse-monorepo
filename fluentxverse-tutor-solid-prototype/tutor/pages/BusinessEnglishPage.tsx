@@ -199,7 +199,7 @@ export default function BusinessEnglishPage() {
                 Back to Materials
               </a>
               <div class="course-hero">
-                <div class="course-hero-icon"><TutorArt name="training" size={80}/></div>
+                <div class="course-hero-icon"><TutorArt name="business" size={80}/></div>
                 <div class="course-hero-content">
                   <span class="course-category-badge">Business</span>
                   <h1 class="course-title-main">Business English</h1>

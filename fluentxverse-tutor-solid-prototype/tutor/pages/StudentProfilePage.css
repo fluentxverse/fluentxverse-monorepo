@@ -2118,6 +2118,7 @@
 
 .lesson-context-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
@@ -2126,6 +2127,8 @@
 
 .lesson-context-heading h2 {
   margin: 0;
+  flex-shrink: 0;
+  max-width: 100%;
 }
 
 .lesson-materials-link {

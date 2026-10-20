@@ -55,7 +55,7 @@ export function TutorLessonIssueReportDialog(_props0: Props) {
             <header class="trouble-report-header">
               <div>
                 <span class="trouble-report-step">Step {studentStep() ? '3' : _props0["reportDuration"] ? '2' : '1'} of {_props0["reportReason"] === 'student' ? '3' : '2'}</span>
-                <h2 id="trouble-report-title"><TutorArt name="community" size={32}/>Report a Lesson Issue</h2>
+                <h2 id="trouble-report-title"><TutorArt name="issue" size={32}/>Report a Lesson Issue</h2>
               </div>
               <button type="button" class="trouble-report-close" aria-label="Close report" disabled={_props0["reportSubmitting"]} onClick={_props0["closeReportModal"]}>
                 <TutorIcon name="fi fi-sr-cross" aria-hidden="true"/>

@@ -136,7 +136,7 @@ const RegisterPage = () => {
             { icon: 'fas fa-star', title: 'Room to grow', desc: 'Unlock more opportunities as you build consistency and quality.' }
         ].map((item, idx) => (<div class="feature-item">
                     <div class="feature-icon-circle">
-                      <TutorArt name={(["growth", "community", "schedule", "training", "community", "growth"] as const)[idx]} size={44}/>
+                      <TutorArt name={(["growth", "profile", "schedule", "training", "support", "certificate"] as const)[idx]} size={44}/>
                     </div>
                     <div class="feature-copy">
                       <div class="feature-title">{item.title}</div>
@@ -153,7 +153,7 @@ const RegisterPage = () => {
           {/* Right Side - Registration Form */}
           <div class="register-right-side">
             <div class="register-form-card">
-              <TutorArt name="community" size={48}/>
+              <TutorArt name="profile" size={48}/>
               <h2 class="form-title">
                 Registration
               </h2>

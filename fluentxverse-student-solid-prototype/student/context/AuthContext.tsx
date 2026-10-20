@@ -7,6 +7,7 @@ import { createContext } from "solid-js";
 import { loginUser, logoutUser, getMe, ensureStudentSession, loginWithWallet, registerWithWallet, loginWithPrivy, registerWithPrivy, type PrivyProfile, type PrivyRegisterParams, type WalletRegisterParams } from '../api/auth.api';
 import { PROTECTED_PATHS } from '../config/protectedPaths';
 import { registerUnauthorizedHandler, registerSessionRecoveryHandler, setLoginInProgress, forceAuthCleanup } from '../api/utils';
+import { clearSessionDrafts } from '../../../shared/sessionDraft';
 import { appWallet } from '../config/wallet';
 import { scheduleApi } from '../api/schedule.api';
 import { usePrivyIntegration } from './PrivyContext';
@@ -535,6 +536,7 @@ export const AuthProvider = (_props0: {
         if (loggingOutRef.current)
             return;
         loggingOutRef.current = true;
+        try { clearSessionDrafts(sessionStorage); } catch {}
         authGenerationRef.current += 1;
         setLoginLoading(true);
         // IMPORTANT: Clear local state FIRST to prevent race conditions

@@ -1,11 +1,13 @@
-import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, Suspense, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorDialog from "../Components/Common/TutorDialog";
 import TutorIcon from "../Components/Common/TutorIcon";
 import TutorArt from "../Components/Common/TutorArt";
 import { useAuthContext } from '../context/AuthContext';
-import { getPersonalInfo, PersonalInfoData } from '../api/auth.api';
+import type { TutorProfileData } from '../types/tutorProfile.types';
+import { tutorProfileCache } from '../utils/tutorProfileCache';
+import StatusPanel from '../../../shared/ui/StatusPanel';
 import { client } from '../api/utils';
 import { getTutorPerformance, type TutorPerformance } from '../api/performance.api';
 import SideBar from '../Components/IndexOne/SideBar';
@@ -18,71 +20,24 @@ import { mediaUrl } from '../utils/mediaUrl';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import './MyProfilePage.css';
 import ScreeningCredential from '../Components/Common/ScreeningCredential';
-interface ProfileItemStatus {
-    status: 'pending' | 'approved' | 'rejected';
-    rejectionReason?: string;
-    reviewedAt?: string;
-}
-interface ProfileItemStatuses {
-    profilePicture?: ProfileItemStatus;
-    videoIntro?: ProfileItemStatus;
-    bio?: ProfileItemStatus;
-    education?: ProfileItemStatus;
-    interests?: ProfileItemStatus;
-}
-interface PendingProfileChange {
-    itemKey: string;
-    fieldKey?: string;
-    newValue: any;
-    status: 'pending' | 'approved' | 'rejected';
-    rejectionReason?: string;
-    submittedAt: string;
-}
-interface TutorProfileData {
-    firstName: string;
-    lastName: string;
-    displayName?: string;
-    email: string;
-    phoneNumber?: string;
-    country?: string;
-    bio?: string;
-    introduction?: string;
-    teachingStyle?: string;
-    languages?: string[];
-    specializations?: string[];
-    interests?: string[];
-    education?: string[];
-    certifications?: string[];
-    experienceYears?: number;
-    hourlyRate?: number;
-    rating?: number;
-    totalReviews?: number;
-    totalSessions?: number;
-    isVerified?: boolean;
-    isAvailable?: boolean;
-    profilePicture?: string;
-    videoIntroUrl?: string;
-    profileStatus?: 'incomplete' | 'pending_review' | 'approved' | 'rejected';
-    profileSubmittedAt?: string;
-    profileItemStatuses?: ProfileItemStatuses;
-    profileRejectionReason?: string;
-    pendingProfileChanges?: PendingProfileChange[];
-    hasPendingChanges?: boolean;
-}
 export const MyProfilePage = () => {
     const _state0 = useAuthContext();
-    const [profileData, setProfileData] = createSignal<TutorProfileData | null>(null);
-    const [personalInfo, setPersonalInfo] = createSignal<PersonalInfoData | null>(null);
-    const [loading, setLoading] = createSignal(true);
+    const initialProfile = _state0.user?.userId ? tutorProfileCache.read(_state0.user.userId) : null;
+    const [profileData, setProfileData] = createSignal<TutorProfileData | null>(initialProfile);
+    const [loading, setLoading] = createSignal(!initialProfile);
+    const [loadError, setLoadError] = createSignal('');
+    let profileRequest = 0;
+    let profileController: AbortController | undefined;
+    onCleanup(() => { profileRequest++; profileController?.abort(); });
     const [activeTab, setActiveTab] = createSignal<'about' | 'stats' | 'settings'>('about');
     const [performance, setPerformance] = createSignal<TutorPerformance | null>(null);
     const [performanceError, setPerformanceError] = createSignal('');
     createEffect(on(() => [activeTab()], () => {
         const _cleanup1 = untrack(() => {
-            if (activeTab() !== 'stats')
+            if (activeTab() !== 'stats' || performance())
                 return;
             const controller = new AbortController();
-            getTutorPerformance('all', undefined, 1, controller.signal).then(data => { setPerformance(data); setPerformanceError(''); })
+            getTutorPerformance('all', undefined, 1, controller.signal).then(data => { if (!controller.signal.aborted) { setPerformance(data); setPerformanceError(''); } })
                 .catch(() => {
                 if (!controller.signal.aborted)
                     setPerformanceError('Could not load performance metrics.');
@@ -126,48 +81,47 @@ export const MyProfilePage = () => {
         if (typeof _cleanup2 === "function")
             onCleanup(_cleanup2);
     }));
-    createEffect(on(() => [], () => {
+    createEffect(on(() => _state0.user?.userId, () => {
         const _cleanup3 = untrack(() => {
             document.title = 'My Profile | FluentXVerse';
+            const cached = _state0.user?.userId ? tutorProfileCache.read(_state0.user.userId) : null;
+            setProfileData(cached); setAvatarUrl(cached?.profilePicture || null); setLoadError(''); setActiveTab('about'); setPerformance(null); setPerformanceError('');
             loadProfile();
+            return () => { profileRequest++; profileController?.abort(); };
         });
         if (typeof _cleanup3 === "function")
             onCleanup(_cleanup3);
     }));
-    const loadProfile = async () => {
+    const loadProfile = async (force = false) => {
+        const userId = _state0.user?.userId;
+        if (!userId) return;
+        const cached = !force && tutorProfileCache.read(userId);
+        if (cached) { setProfileData(cached); setAvatarUrl(cached.profilePicture || null); setLoading(false); return; }
+        const request = ++profileRequest;
+        profileController?.abort();
+        const controller = profileController = new AbortController();
+        const revision = tutorProfileCache.revision;
         try {
-            setLoading(true);
-            // Load tutor's own profile data (bio, introduction, etc.)
-            try {
-                const profileResponse = await client.get('/tutor/profile');
-                if (profileResponse.data.success && profileResponse.data.data) {
-                    const data = profileResponse.data.data as TutorProfileData;
-                    setProfileData(data);
-                    // Keep avatarUrl in sync with the currently approved profile picture
-                    if (data.profilePicture) {
-                        setAvatarUrl(data.profilePicture);
-                    }
-                }
-            }
-            catch (err) {
-                console.error('Failed to load tutor profile:', err);
-            }
-            // Load personal info (education, qualifications from Settings)
-            const personalData = await getPersonalInfo();
-            if (personalData) {
-                setPersonalInfo(personalData);
-            }
+            setLoading(!profileData()); setLoadError('');
+            const response = await client.get('/tutor/profile', { signal: controller.signal });
+            if (request !== profileRequest || controller.signal.aborted || _state0.user?.userId !== userId) return;
+            if (!response.data.success || !response.data.data || typeof response.data.data !== 'object' || Array.isArray(response.data.data)) throw new Error('Profile unavailable');
+            const data = response.data.data as TutorProfileData;
+            if (data.userId && data.userId !== userId) throw new Error('Profile account mismatch');
+            if (!tutorProfileCache.write(userId, data, revision)) return;
+            setProfileData(data);
+            setAvatarUrl(data.profilePicture || null);
         }
         catch (error) {
-            console.error('Failed to load personal info:', error);
+            if (request === profileRequest && !controller.signal.aborted) setLoadError('Could not load your profile');
         }
         finally {
-            setLoading(false);
+            if (request === profileRequest) setLoading(false);
         }
     };
     const handleSettingsClose = () => {
         setSettingsOpen(false);
-        // Reload personal info after settings modal closes
+        // Unchanged settings reuse memory; successful writes invalidate it in the client.
         loadProfile();
     };
     const handleAvatarClick = () => {
@@ -452,6 +406,7 @@ export const MyProfilePage = () => {
         </div>
       </>);
         }
+        if (!profileData() && loadError()) return <><SideBar/><div class="main-content"><DashboardHeader/><div class="my-profile-loading"><StatusPanel kind="error" title={loadError()} onRetry={() => void loadProfile(true)}/></div></div></>;
         const displayName = createMemo(() => _state0.user?.firstName && _state0.user?.lastName
             ? `${_state0.user.firstName} ${_state0.user.lastName}`.trim()
             : profileData()?.displayName
@@ -466,7 +421,7 @@ export const MyProfilePage = () => {
             { name: 'Bio', complete: !!(profileData()?.bio && profileData().bio.length > 10) },
             { name: 'Profile Picture', complete: !!currentAvatar() },
             { name: 'Introduction Video', complete: !!profileData()?.videoIntroUrl },
-            { name: 'Education', complete: !!((personalInfo()?.schoolAttended && personalInfo()?.major) || (profileData()?.education && profileData().education.length > 0)) },
+            { name: 'Education', complete: !!((profileData()?.schoolAttended && profileData()?.major) || (profileData()?.education && profileData().education.length > 0)) },
             { name: 'Interests', complete: !!(profileData()?.interests && profileData().interests.length > 0) },
         ]);
         const completedCount = createMemo(() => profileFields().filter(f => f.complete).length);
@@ -488,6 +443,7 @@ export const MyProfilePage = () => {
         
         <div class="my-profile-page">
           <div class="profile-container">
+            {loadError() && <StatusPanel compact kind="error" title={loadError()} onRetry={() => void loadProfile(true)}/>}
             {/* Hero Section */}
             <div class="profile-hero">
               <div class="profile-hero-content">
@@ -557,7 +513,7 @@ export const MyProfilePage = () => {
               {/* Video Introduction - Inside Hero Card */}
               <div class="hero-video-section">
                 <h3 class="video-section-title">
-                  <TutorIcon name="fi-sr-play"/>
+                  <TutorArt name="video" size={28}/>
                   Introduction Video
                 </h3>
                 {profileData()?.videoIntroUrl ? (<div class="hero-video-container">
@@ -584,7 +540,7 @@ export const MyProfilePage = () => {
             </div>
 
             {/* Profile Completeness Indicator */}
-            <ScreeningCredential />
+            <Suspense><ScreeningCredential /></Suspense>
             {completionPercent() < 100 && (<div class="profile-completeness-card">
                 <div class="completeness-header">
                   <div class="completeness-title">
@@ -762,7 +718,7 @@ export const MyProfilePage = () => {
                   {/* About Me */}
                   <section class="profile-tab-section">
                     <h2 class="profile-tab-title">
-                      <TutorArt name="community" size={32}/>
+                      <TutorArt name="profile" size={32}/>
                       About Me
                     </h2>
                     <div class="profile-tab-body">
@@ -771,23 +727,23 @@ export const MyProfilePage = () => {
                   </section>
 
                   {/* Education */}
-                  {(personalInfo()?.schoolAttended || (profileData()?.education && profileData().education.length > 0)) && (<section class="profile-tab-section">
+                  {(profileData()?.schoolAttended || (profileData()?.education && profileData().education.length > 0)) && (<section class="profile-tab-section">
                       <h2 class="profile-tab-title">
                         <TutorArt name="training" size={32}/>
                         Education
                       </h2>
                       <div class="profile-tab-body">
                         <div class="education-info">
-                          {personalInfo()?.schoolAttended ? (<>
+                          {profileData()?.schoolAttended ? (<>
                               <div class="education-row">
                                 <TutorIcon name="fi-sr-school"/>
                                 <span class="education-label">University:</span>
-                                <strong>{personalInfo().schoolAttended}</strong>
+                                <strong>{profileData().schoolAttended}</strong>
                               </div>
-                              {personalInfo().major && (<div class="education-row">
+                              {profileData().major && (<div class="education-row">
                                   <TutorIcon name="fi-sr-diploma"/>
                                   <span class="education-label">Degree:</span>
-                                  <strong>{personalInfo().major}</strong>
+                                  <strong>{profileData().major}</strong>
                                 </div>)}
                             </>) : (profileData()?.education?.map((edu, idx) => (<div class="education-row">
                                 <div class="education-details">
@@ -803,7 +759,7 @@ export const MyProfilePage = () => {
                   <section class="profile-tab-section">
                     <div class="profile-tab-title-row">
                       <h2 class="profile-tab-title">
-                        <TutorArt name="community" size={32}/>
+                        <TutorIcon name="fi-sr-heart"/>
                         Interests
                       </h2>
                       <button class="btn-edit-inline" onClick={() => startEditing('interests', profileData()?.interests?.join(', ') || '')}>
@@ -823,7 +779,7 @@ export const MyProfilePage = () => {
                   {/* Areas of Expertise */}
                   {profileData()?.specializations && profileData().specializations.length > 0 && (<section class="profile-tab-section">
                       <h2 class="profile-tab-title">
-                        <TutorArt name="community" size={32}/>
+                        <TutorArt name="certificate" size={32}/>
                         Areas of Expertise
                       </h2>
                       <div class="profile-tab-body">
@@ -880,7 +836,7 @@ export const MyProfilePage = () => {
               {activeTab() === 'settings' && (<div class="tab-content">
                   <section class="profile-tab-section">
                     <h2 class="profile-tab-title">
-                      <TutorArt name="community" size={32}/>
+                      <TutorIcon name="fi-sr-settings"/>
                       Quick Settings
                     </h2>
                     <div class="profile-settings-links">

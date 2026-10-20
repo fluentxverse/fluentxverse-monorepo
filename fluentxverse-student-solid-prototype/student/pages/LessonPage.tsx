@@ -9,7 +9,11 @@ import StudentLessonRecap from '../Components/StudentLessonRecap';
 import ClassroomLessonSurvey from '../Components/ClassroomLessonSurvey';
 import StudentLessonMaterialRequest from '../Components/StudentLessonMaterialRequest';
 import StudentLessonIssueReport from '../Components/StudentLessonIssueReport';
+import LessonEvidence from '../../../shared/ui/LessonEvidence';
+import { lessonPrivacyApi } from '../api/lessonPrivacy.api';
 import ProfileAvatar from '../Components/Common/ProfileAvatar';
+import StudentDialog from '../Components/Common/StudentDialog';
+import LessonJourney from '../Components/Booking/LessonJourney';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { canCancelLesson } from '../utils/lessonCancellation';
 import { canJoinClassroom } from '../utils/classroomWindow';
@@ -63,9 +67,6 @@ export const LessonPage = (_props0: {
         message: string;
         refunded: boolean;
     } | null>(null);
-    const modal = { current: null } as {
-        current: HTMLDivElement | null;
-    };
     const cancelBusy = { current: false } as {
         current: any;
     };
@@ -113,40 +114,6 @@ export const LessonPage = (_props0: {
             setCancelModalOpen(false); });
         if (typeof _cleanup3 === "function")
             onCleanup(_cleanup3);
-    }));
-    createEffect(on(() => [cancelModalOpen()], () => {
-        const _cleanup4 = untrack(() => {
-            if (!cancelModalOpen())
-                return;
-            const previousFocus = document.activeElement as HTMLElement | null;
-            const previousOverflow = document.body.style.overflow;
-            document.body.style.overflow = 'hidden';
-            modal.current?.querySelector<HTMLButtonElement>('.lesson-dialog-close')?.focus();
-            const onKey = (event: KeyboardEvent) => {
-                if (event.key === 'Escape' && !cancelBusy.current)
-                    setCancelModalOpen(false);
-                if (event.key !== 'Tab')
-                    return;
-                const controls = [...(modal.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]') || [])];
-                if (!controls.length) {
-                    event.preventDefault();
-                    return;
-                }
-                const first = controls[0], last = controls[controls.length - 1];
-                if (event.shiftKey && document.activeElement === first) {
-                    event.preventDefault();
-                    last.focus();
-                }
-                else if (!event.shiftKey && document.activeElement === last) {
-                    event.preventDefault();
-                    first.focus();
-                }
-            };
-            document.addEventListener('keydown', onKey);
-            return () => { document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', onKey); previousFocus?.focus(); };
-        });
-        if (typeof _cleanup4 === "function")
-            onCleanup(_cleanup4);
     }));
     const countdown = () => {
         if (hasEnded())
@@ -209,12 +176,13 @@ export const LessonPage = (_props0: {
             <a href="/schedule" class="lesson-back-link"><ArrowLeft size={17}/>Back to Schedule</a>
           </header>
           {loading() ? <div class="lesson-state" role="status">{art('schedule')}<LoaderCircle class="lesson-spin" size={22}/><p>Loading lesson details...</p></div>
-            : error() || !lesson() ? <div class="lesson-state" role="alert">{art('community')}<h2>Unable to load lesson</h2><p>{error() || 'Lesson not found.'}</p><button class="lesson-secondary" onClick={() => setRevision(value => value + 1)}><RotateCw size={17}/>Try again</button></div>
+            : error() || !lesson() ? <div class="lesson-state" role="alert">{art('issue')}<h2>Unable to load lesson</h2><p>{error() || 'Lesson not found.'}</p><button class="lesson-secondary" onClick={() => setRevision(value => value + 1)}><RotateCw size={17}/>Try again</button></div>
                 : <>
               {cancelSuccess() && <div class="lesson-notification" role="status"><CheckCircle2 size={20}/><span>{cancelSuccess().message}{cancelSuccess().refunded && ' Your ticket has been refunded.'}</span></div>}
+              {lesson().status !== 'cancelled' && <LessonJourney active={hasEnded() ? 'feedback' : canJoin() ? 'classroom' : 'prepare'}/>}
               <div class="lesson-grid">
                 <section class="lesson-detail-card lesson-overview-card" aria-labelledby="lesson-tutor-title">
-                  <header class="lesson-card-heading">{art('community')}<h2 id="lesson-tutor-title">Your tutor</h2></header>
+                  <header class="lesson-card-heading">{art('profile')}<h2 id="lesson-tutor-title">Your tutor</h2></header>
                   <div class="lesson-tutor-profile">
                     <ProfileAvatar src={lesson().tutorAvatar} alt={lesson().tutorName} className="lesson-tutor-avatar" fallback={<UserRound size={30}/>}/>
                     <div class="lesson-tutor-info"><h3>{lesson().tutorName}</h3>{lesson().tutorBio && <p>{lesson().tutorBio}</p>}
@@ -234,9 +202,9 @@ export const LessonPage = (_props0: {
                 } }}><CircleX size={17}/>Cancel Lesson</button>}
                 </section>
                 <section class="lesson-detail-card lesson-classroom-card" aria-labelledby="lesson-classroom-title">
-                  <header class="lesson-card-heading">{art('home')}<h2 id="lesson-classroom-title">Classroom</h2></header>
+                  <header class="lesson-card-heading">{art('classroom')}<h2 id="lesson-classroom-title">Classroom</h2></header>
                   <div class="lesson-classroom-content">
-                    {art(canJoin() ? 'community' : lesson().status === 'cancelled' ? 'schedule' : hasEnded() || lesson().status === 'completed' ? 'training' : 'schedule', 'lesson-classroom-art')}
+                    {art(canJoin() ? 'classroom' : lesson().status === 'cancelled' ? 'schedule' : hasEnded() || lesson().status === 'completed' ? 'training' : 'schedule', 'lesson-classroom-art')}
                     <h3>{canJoin() ? hasEnded() ? 'Lesson wrap-up' : now() < startsAt() ? 'Your classroom is open' : 'Ready to join' : lesson().status === 'cancelled' ? 'Lesson cancelled' : hasEnded() || lesson().status === 'completed' ? 'Lesson ended' : 'Your lesson is coming up'}</h3>
                     <p>{canJoin() ? hasEnded() ? 'You can stay for up to three minutes after the lesson.' : now() < startsAt() ? 'Settle in now. Audio, video, and chat start at your scheduled time.' : 'Join your lesson in the classroom.'
                         : lesson().status === 'cancelled' ? 'This lesson is no longer available.'
@@ -256,21 +224,20 @@ export const LessonPage = (_props0: {
               </div>
               <StudentLessonIssueReport bookingId={bookingId()!}/>
               <StudentLessonRecap bookingId={bookingId()!}/>
+              <LessonEvidence bookingId={bookingId()!} role="student" api={lessonPrivacyApi}/>
             </>}
         </div>
       </main>
-      {cancelModalOpen() && lesson() && <div class="lesson-cancel-overlay" onClick={closeCancel}>
-        <div class="lesson-cancel-dialog" ref={_element => modal.current = _element} role="dialog" aria-modal="true" aria-labelledby="lesson-cancel-title" aria-describedby="lesson-cancel-warning" onClick={event => event.stopPropagation()}>
-          <header><h2 id="lesson-cancel-title">Cancel lesson?</h2><button class="lesson-dialog-close" aria-label="Close cancellation" title="Close cancellation" disabled={cancelling()} onClick={closeCancel}><X size={20}/></button></header>
+      {cancelModalOpen() && lesson() && <StudentDialog className="lesson-cancel-dialog" label="Cancel lesson?" onClose={closeCancel} busy={cancelling()}>
+          <header><h2 id="lesson-cancel-title">Cancel lesson?</h2><button class="lesson-dialog-close" aria-label="Close cancellation" title="Close cancellation" disabled={cancelling()} onClick={closeCancel} autofocus><X size={20}/></button></header>
           <div class="lesson-cancel-body">
             <div class="lesson-cancel-summary">{art('schedule')}<div><strong>{lesson().tutorName}</strong><p>{date()}</p><p>{time()} · {lesson().durationMinutes} minutes</p></div></div>
             <div class={`lesson-refund-notice ${refundEligible() ? 'eligible' : ''}`}>{refundEligible() ? <CheckCircle2 size={20}/> : <Info size={20}/>}<div><strong>{lesson().paymentMethod === 'trial' ? refundEligible() ? 'Your trial will be available again' : 'Your trial allowance remains used' : refundEligible() ? 'Your credit will be refunded' : 'No credit refund'}</strong><p>{refundEligible() ? 'You are cancelling at least one hour before the lesson.' : lesson().paymentMethod === 'trial' ? 'Cancelling within one hour of the lesson uses your trial allowance.' : 'Cancellations within one hour of the lesson are not eligible for a refund.'}</p></div></div>
             <p id="lesson-cancel-warning">This cancellation cannot be undone.</p>
             {cancelError() && <p class="lesson-cancel-error" role="alert"><AlertCircle size={18}/>{cancelError()}</p>}
           </div>
-          <footer><button class="lesson-secondary" disabled={cancelling()} onClick={closeCancel}>Keep Lesson</button><button class="lesson-danger" disabled={cancelling()} onClick={confirmCancel}>{cancelling() ? <LoaderCircle size={17} class="lesson-spin"/> : <CircleX size={17}/>}{cancelling() ? 'Cancelling...' : 'Cancel Lesson'}</button></footer>
-        </div>
-      </div>}
+          <footer><button class="fxv-button fxv-button--secondary lesson-secondary" disabled={cancelling()} onClick={closeCancel}>Keep Lesson</button><button class="fxv-button lesson-danger" disabled={cancelling()} onClick={confirmCancel}>{cancelling() ? <LoaderCircle size={17} class="lesson-spin"/> : <CircleX size={17}/>}{cancelling() ? 'Cancelling...' : 'Cancel Lesson'}</button></footer>
+      </StudentDialog>}
     </div>
   </>;
 };

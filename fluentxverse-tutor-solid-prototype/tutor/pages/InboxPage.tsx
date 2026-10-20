@@ -150,7 +150,7 @@ export default function InboxPage() {
         <div class="inbox-header">
           <div class="inbox-header-content">
             <div class="inbox-icon-wrapper">
-              <TutorArt name="community" size={48}/>
+              <TutorArt name="inbox" size={48}/>
             </div>
             <div>
               <h1>Inbox</h1>

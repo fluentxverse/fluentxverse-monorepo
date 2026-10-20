@@ -8,10 +8,10 @@ const tutors = [
 ];
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     for (const authenticated of [true, false]) for (const theme of ['light', 'dark']) for (const width of [1566, 768, 375, 320]) {
-      let failPageTwo = true;
+      let failPageTwo = 2;
       const searches = [], errors = [];
       const requests = [];
       const context = await browser.newContext({ viewport: { width, height: 950 }, timezoneId: 'Pacific/Auckland' });
@@ -31,7 +31,7 @@ const tutors = [
           if (q === 'fast') return reply({ success: true, data: { tutors: [{ ...tutors[2], displayName: 'Fast Tutor' }], total: 1, hasMore: false } });
           if (q === 'missing') return reply({ success: true, data: { tutors: [], total: 0, hasMore: false } });
           if (q) return reply({ success: true, data: { tutors: tutors.filter(t => t.displayName.toLowerCase().includes(q.toLowerCase())), total: 1, hasMore: false } });
-          if (page === '2' && failPageTwo) { failPageTwo = false; return route.fulfill({ status: 503, json: { success: false } }); }
+          if (page === '2' && failPageTwo > 0) { failPageTwo--; return route.fulfill({ status: 503, json: { success: false } }); }
           return reply({ success: true, data: { tutors: page === '2' ? [{ ...tutors[2], userId: 'browse-four', displayName: 'Fourth Tutor' }] : tutors, total: 4, hasMore: page !== '2' } });
         }
         if (path.startsWith('/tickets/balance/')) return reply({ success: true, data: { basic: 5, premium: 2, trial: 1, basicTokenId: 'mock-basic' } });
@@ -73,7 +73,7 @@ const tutors = [
         assert.equal(await page.locator('.browse-tutor-card').count(), 3, 'Load-more errors retain results');
         await page.getByRole('button', { name: 'Try Again', exact: true }).click();
         await page.getByRole('heading', { name: 'Fourth Tutor', exact: true }).waitFor();
-        assert.equal(searches.filter(s => s.page === '2').length, 2, 'Retry does not skip a page');
+        assert.equal(searches.filter(s => s.page === '2').length, 3, 'One automatic retry and a manual retry do not skip a page');
         const search = page.getByLabel('Search tutors by name');
         await search.fill('slow'); await page.getByRole('button', { name: 'Search', exact: true }).click();
         await page.waitForFunction(() => document.querySelector('.browse-results-header').textContent.includes('Finding'));

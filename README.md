@@ -34,7 +34,13 @@ The active student and tutor web clients use SolidJS. Their historical folder na
 | SeaweedFS | Media and encrypted archived recordings |
 | GMR Engine and GMR Vault | Separate Web3 execution, managed wallets, signing, and verification credentials |
 
-`shared/` contains cross-app utilities. `contracts/` and `zk/` contain supporting contract/proof source. GMR Engine and GMR Vault are separate services and are not included in this monorepo.
+`shared/` contains cross-app utilities. `zk/` retains proof source. Custom application
+contracts and their original adapters are parked in
+[`archive/custom-contracts-20261019/`](archive/custom-contracts-20261019/README.md).
+The active privacy path uses ZK proofs, zkVerify, and its official Horizen receipt
+bridge; application acceptance rules are enforced by the backend, not custom
+contracts. See [retirement scope and limits](docs/custom-contract-retirement.md).
+GMR Engine and GMR Vault are separate services and are not included in this monorepo.
 
 ## Development
 
@@ -63,6 +69,11 @@ The platform includes application workflows and supporting proof source for priv
 Distinguish implemented code from reviewed proving artifacts, deployed contracts, enabled production modules, and completed acceptance tests. ZK statements over authorized records do not prove assessment accuracy or that teaching occurred. Ordinary public transfers do not provide shielded settlement. Production activation requires the appropriate issuer, policy, lifecycle, artifact-review, and operational gates.
 
 Never commit student records, recordings, private assessment evidence, API tokens, seed phrases, or signing keys. Report security concerns privately to hello@fluentxverse.com.
+
+Minimal signed lesson-dispute evidence is implemented as an application-layer
+privacy workflow. See the
+[scope, key configuration, privacy limits and tests](docs/private-lesson-disputes.md).
+These additions do not introduce custom contracts or claim ZK-verified attendance.
 
 ## Licensing
 

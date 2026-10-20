@@ -6,6 +6,8 @@ import Auth from './routes/auth.route';
 import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
 import LessonWorkflow from './routes/lessonWorkflow.route';
+import LessonPrivacy, { lessonPrivacyFailure } from './routes/lessonPrivacy.route';
+import { startLessonEvidenceRetention } from './services/lessonPrivacy/retention';
 import { adminOperationsRoute } from './routes/adminOperations.route';
 import { tutorEarningsRoute } from './routes/tutorEarnings.route';
 import { testingChecklistRoute } from './routes/testingChecklist.route';
@@ -181,7 +183,7 @@ const app = new Elysia({
     const path = new URL(request.url).pathname;
     
     // Skip logging for health checks and static assets
-    if (path === '/health' || path.startsWith('/docs') || path.startsWith('/anonymous-reviews/') || path.startsWith('/lesson-passes/')) return;
+    if (path === '/health' || path.startsWith('/docs') || path.startsWith('/anonymous-reviews/') || path.startsWith('/lesson-passes/') || path.startsWith('/lesson-privacy/')) return;
     
     logger.response({
       method: request.method,
@@ -195,6 +197,12 @@ const app = new Elysia({
     const duration = Date.now() - ((request as any).startTime || Date.now());
     const path = new URL(request.url).pathname;
     const requestId = (request as any).requestId;
+    if (path.startsWith('/lesson-privacy/')) {
+      const response = lessonPrivacyFailure(error,String(code));
+      set.status = response.status;
+      set.headers['Cache-Control'] = 'no-store';
+      return response.body;
+    }
     if (path.startsWith('/mobile/student/')) {
       const response = mobileStudentFailure(error, String(code));
       set.status = response.status;
@@ -319,6 +327,7 @@ const app = new Elysia({
   .use(Tutor)
   .use(Schedule)
   .use(LessonWorkflow)
+  .use(LessonPrivacy)
   .use(adminOperationsRoute)
   .use(tutorEarningsRoute)
   .use(testingChecklistRoute)
@@ -417,6 +426,7 @@ httpServer.listen(8767, '0.0.0.0', async () => {
   startAttendanceJob();
   startClassroomMediaReconciliation();
   startQaRecordingJobs();
+  startLessonEvidenceRetention();
   startCancellationRefundJob();
 
   // Start daily notification retention cleanup (delete read > N days)

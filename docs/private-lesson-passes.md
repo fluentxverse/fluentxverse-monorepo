@@ -1,5 +1,12 @@
 # Private Lesson Passes
 
+October 19, 2026: this contract-backed workflow and its deployment tools are
+[archived](../archive/custom-contracts-20261019/README.md). Mutations are disabled
+even if `LESSON_PASSES_ENABLED=true`; existing records remain readable and are not
+converted. The production booking policy is preserved, not switched to trials by
+the retirement. The protocol below is historical. See
+[retirement scope](custom-contract-retirement.md).
+
 October 13 source update: ticketing and paid passes are parked for the free-trial
 launch. Existing contracts/credits remain preserved; see
 [the new infrastructure runbook](bridge-only-trial-launch.md). This protocol is

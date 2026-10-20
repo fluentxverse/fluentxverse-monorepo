@@ -53,7 +53,7 @@ const MobileHeader = () => {
           </button>
           
           <div class="mobile-header-logo">
-            <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse"/>
+            <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse"/>
             <span class="mobile-header-brand">Fluent<span class="brand-x">X</span>Verse</span>
           </div>
 
@@ -69,7 +69,7 @@ const MobileHeader = () => {
             {/* Menu Header */}
             <div class="mobile-menu-header">
               <div class="mobile-menu-logo">
-                <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse"/>
+                <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse"/>
                 <span>Fluent<span class="brand-x">X</span>Verse</span>
               </div>
               <button class="mobile-menu-close" aria-label="Close navigation" onClick={closeMenu()}>

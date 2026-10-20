@@ -9,6 +9,8 @@ import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { getExamStatus, getSpeakingExamStatus, type ExamStatus, type SpeakingExamStatus } from '../api/exam.api';
 import './HomePage.css';
+import TeachingDesk from '../Components/Dashboard/TeachingDesk';
+import StatusPanel from '../../../shared/ui/StatusPanel';
 const HomePage = () => {
     createEffect(on(() => [], () => {
         const _cleanup1 = untrack(() => {
@@ -39,6 +41,8 @@ const HomePage = () => {
     const [writtenStatus, setWrittenStatus] = createSignal<ExamStatus | null>(null);
     const [speakingStatus, setSpeakingStatus] = createSignal<SpeakingExamStatus | null>(null);
     const [loadingStatus, setLoadingStatus] = createSignal(true);
+    const [statusError, setStatusError] = createSignal(false);
+    const [revision, setRevision] = createSignal(0);
     // Test accounts that bypass certification requirements
     const TEST_ACCOUNTS = ['paulanthonyarriola@gmail.com'];
     const isTestAccount = createMemo(() => _state0.user?.email && TEST_ACCOUNTS.includes(_state0.user.email));
@@ -54,19 +58,23 @@ const HomePage = () => {
             return 2; // Move to onboarding
         return 1; // Still on assessment
     };
-    const activeStep = getActiveStep();
+    const activeStep = createMemo(getActiveStep);
     // Fetch exam statuses on mount
-    createEffect(on(() => [_state0.user?.userId], () => {
+    createEffect(on(() => [_state0.user?.userId, revision()], () => {
         const _cleanup3 = untrack(() => {
+            let active = true;
             const fetchExamStatus = async () => {
                 if (!_state0.user?.userId)
                     return;
                 setLoadingStatus(true);
+                setStatusError(false);
                 try {
                     const [writtenRes, speakingRes] = await Promise.all([
                         getExamStatus(_state0.user.userId),
                         getSpeakingExamStatus(_state0.user.userId),
                     ]);
+                    if (!active) return;
+                    if (!writtenRes.success || !speakingRes.success) throw new Error('Assessment status unavailable');
                     if (writtenRes.success && writtenRes.status) {
                         setWrittenStatus(writtenRes.status);
                     }
@@ -75,13 +83,14 @@ const HomePage = () => {
                     }
                 }
                 catch (err) {
-                    console.error('Failed to fetch exam status:', err);
+                    if (active) setStatusError(true);
                 }
                 finally {
-                    setLoadingStatus(false);
+                    if (active) setLoadingStatus(false);
                 }
             };
             fetchExamStatus();
+            return () => { active = false; };
         });
         if (typeof _cleanup3 === "function")
             onCleanup(_cleanup3);
@@ -117,23 +126,24 @@ const HomePage = () => {
               <div class="page-title-icon">
                 <TutorArt name="home" size={48}/>
               </div>
-              <h2 class="page-title-gradient">{activeStep >= 2 ? `Welcome back, ${_state0.user?.firstName || "Tutor"}` : "Your teaching journey"}</h2>
+              <h2 class="page-title-gradient">{activeStep() >= 2 ? `Welcome back, ${_state0.user?.firstName || "Tutor"}` : "Your teaching journey"}</h2>
             </div>
 
-            {activeStep >= 2 && <nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav>}
+            {activeStep() >= 2 && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><TeachingDesk/></>}
+            {statusError() && <StatusPanel kind="error" title="Could not refresh assessment progress" onRetry={() => setRevision(value => value + 1)}/>}
             {/* Main Status Card */}
             <div class="main-status-card">
               {/* Progress Steps */}
               <div class="progress-steps">
                 {/* Progress Line - hidden on mobile via CSS */}
                 <div class="progress-line">
-                  <div class="progress-line-fill" style={cssStyle({ width: activeStep >= 2 ? '50%' : '0%' })}></div>
+                  <div class="progress-line-fill" style={cssStyle({ get width() { return activeStep() >= 2 ? '50%' : '0%'; } })}></div>
                 </div>
 
                 {/* Step 1 */}
                 <div class="progress-step">
-                  <div class={`progress-step-number ${activeStep >= 1 ? 'is-active' : 'is-inactive'}`}>1</div>
-                  <div class={`progress-step-copy ${activeStep >= 1 ? 'is-active' : 'is-inactive'}`}>
+                  <div class={`progress-step-number ${activeStep() >= 1 ? 'is-active' : 'is-inactive'}`}>1</div>
+                  <div class={`progress-step-copy ${activeStep() >= 1 ? 'is-active' : 'is-inactive'}`}>
                     <div class="progress-step-label">SKILLS</div>
                     <div class="progress-step-label">ASSESSMENT</div>
                   </div>
@@ -141,8 +151,8 @@ const HomePage = () => {
 
                 {/* Step 2 */}
                 <div class="progress-step">
-                  <div class={`progress-step-number ${activeStep >= 2 ? 'is-active' : 'is-inactive'}`}>2</div>
-                  <div class={`progress-step-copy ${activeStep >= 2 ? 'is-active' : 'is-inactive'}`}>
+                  <div class={`progress-step-number ${activeStep() >= 2 ? 'is-active' : 'is-inactive'}`}>2</div>
+                  <div class={`progress-step-copy ${activeStep() >= 2 ? 'is-active' : 'is-inactive'}`}>
                     <div class="progress-step-label">ONBOARDING &</div>
                     <div class="progress-step-label">PROFILE</div>
                   </div>
@@ -150,8 +160,8 @@ const HomePage = () => {
 
                 {/* Step 3 */}
                 <div class="progress-step">
-                  <div class={`progress-step-number ${activeStep >= 3 ? 'is-active' : 'is-inactive'}`}>3</div>
-                  <div class={`progress-step-copy ${activeStep >= 3 ? 'is-active' : 'is-inactive'}`}>
+                  <div class={`progress-step-number ${activeStep() >= 3 ? 'is-active' : 'is-inactive'}`}>3</div>
+                  <div class={`progress-step-copy ${activeStep() >= 3 ? 'is-active' : 'is-inactive'}`}>
                     <div class="progress-step-label">SCHEDULE SETUP</div>
                   </div>
                 </div>

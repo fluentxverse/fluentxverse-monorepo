@@ -73,7 +73,7 @@ const SideBar = (): JSX.Element | null => {
         return (<div class="sidebar hidden-on-mobile">
       <div class="sidebar-logo mb-25">
         <a href="/home">
-          <img src="/assets/img/logo/icon_logo.png" alt="FluentXVerse Logo"/>
+          <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse Logo"/>
         </a>
       </div>
       <div class="sidebar-icon">

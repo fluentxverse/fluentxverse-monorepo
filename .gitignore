@@ -27,6 +27,9 @@ dist-ssr
 # Public proof assets are explicitly provisioned before deployment, not source files.
 fluentxverse-student-solid-prototype/public/anonymous-reviews/
 fluentxverse-server/config/lesson-passes.env
+fluentxverse-server/config/lesson-privacy.env
+/output/release/lesson-dispute-*/
+/output/release/bridge-only-archive-*/
 
 # Generated local browser evidence and deployment caches (keep source artwork).
 .wrangler/

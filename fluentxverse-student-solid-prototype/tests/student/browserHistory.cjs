@@ -6,7 +6,7 @@ const tutor = { userId: 'history-tutor', firstName: 'Alex', lastName: 'Teacher',
   tier: 1, isAvailable: true, rating: 5, totalReviews: 1, languages: ['English'], bio: 'Conversation practice.' };
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     for (const authenticated of [false, true]) for (const width of [1566, 375]) {
       let profileDelay = 0;
@@ -89,8 +89,8 @@ const tutor = { userId: 'history-tutor', firstName: 'Alex', lastName: 'Teacher',
         link.click();
         link.remove();
       });
-      await expect(page.locator('.error-boundary-fallback')).toBeVisible();
-      await expect(page.locator('.App .error-boundary-fallback')).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Page unavailable' })).toBeVisible();
+      await expect(page.locator('.App .fxv-route-state[aria-label="Page unavailable"]')).toBeVisible();
       await page.goBack({ waitUntil: 'domcontentloaded' });
       await checkBrowse();
       await page.getByLabel('Search tutors by name').fill('Alex');
@@ -98,8 +98,8 @@ const tutor = { userId: 'history-tutor', firstName: 'Alex', lastName: 'Teacher',
       await expect.poll(() => searches.at(-1)).toBe('Alex');
       await checkBrowse();
       await page.goForward({ waitUntil: 'domcontentloaded' });
-      await expect(page.locator('.error-boundary-fallback')).toBeVisible();
-      await expect(page.locator('.App .error-boundary-fallback')).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Page unavailable' })).toBeVisible();
+      await expect(page.locator('.App .fxv-route-state[aria-label="Page unavailable"]')).toBeVisible();
       await page.goBack({ waitUntil: 'domcontentloaded' });
       await checkBrowse();
       assert.equal(documents, 1, 'Back recovers without reloading the document or resetting the session');

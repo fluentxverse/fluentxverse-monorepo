@@ -5,6 +5,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 import { isLessonMediaRequest, normalizeLessonMedia } from '../../../shared/lessonMedia';
 import { getErrorMessage } from '../utils/errorUtils';
+import { shouldRetryRead, readRetryDelay } from '../../../shared/readRetry';
 let unauthorizedHandler: (() => void) | null = null;
 let isLoginInProgress = false;
 let authGeneration = 0;
@@ -85,6 +86,14 @@ client.interceptors.response.use((response) => {
     if (isLessonMediaRequest(response.config.url)) response.data = normalizeLessonMedia(response.data, API_BASE_URL);
     return response;
 }, async (error) => {
+    const failed = error?.config;
+    if (failed && requestGenerations.get(failed) === authGeneration && navigator.onLine !== false && !failed.url?.startsWith('/notifications') && shouldRetryRead({
+        method: failed.method, status: error?.response?.status, aborted: failed.signal?.aborted, code: error.code, retried: failed._fxvReadRetry,
+    })) {
+        await new Promise(resolve => setTimeout(resolve, readRetryDelay(error.response?.headers?.['retry-after'])));
+        if (failed.signal?.aborted || requestGenerations.get(failed) !== authGeneration) return Promise.reject(error);
+        return client.request({ ...failed, _fxvReadRetry: true } as any);
+    }
     if (error?.response?.status === 401) {
         // Don't trigger unauthorized handler during login process
         // or for login/logout endpoints themselves

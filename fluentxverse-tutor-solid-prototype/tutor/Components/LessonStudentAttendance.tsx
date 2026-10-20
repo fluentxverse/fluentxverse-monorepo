@@ -62,7 +62,7 @@ function LessonStudentAttendance(_props0: {
       {error() && !confirming() && <p class="lesson-attendance-error" role="alert">{error()}</p>}
     </section>
     {confirming() && <TutorDialog label="Mark student absent?" className="lesson-absence-confirmation" onClose={() => { setConfirming(false); setError(''); }} busy={saving()}>
-      <h2 id="lesson-absence-title"><TutorArt name="community" size={32}/>Mark student absent?</h2>
+      <h2 id="lesson-absence-title"><TutorArt name="issue" size={32}/>Mark student absent?</h2>
       <p>This will remove all lesson notes from student and tutor views, including material progress, vocabulary, grammar, pronunciation, the level assessment, student feedback, and tutor handoff. Unsaved drafts will also be discarded. An admin-only recovery archive will be retained.</p>
       <p>No lesson notes are required while the student is marked absent. Marking the student present again will not restore deleted notes.</p>
       <label>Reason (optional)<textarea value={reason()} maxLength={1000} onInput={event => setReason(event.currentTarget.value)}/></label>

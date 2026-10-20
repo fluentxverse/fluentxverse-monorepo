@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const base = process.env.STUDENT_TEST_URL || 'http://localhost:5182';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox', '--enable-unsafe-swiftshader'] });
   await fs.mkdir('../output/screenshots/carousel-quality', { recursive: true });
   try {
     for (const [width, height, dpr] of [[1566, 900, 1], [1920, 1080, 2], [390, 844, 3], [320, 667, 2]]) {

@@ -3,8 +3,9 @@ import { createPublicClient, http, parseAbi, type Address, type Hex } from 'viem
 export type PrivacyInfrastructure = 'bridge_only' | 'legacy_contracts';
 export function privacyInfrastructure(): PrivacyInfrastructure {
   const mode = process.env.PRIVACY_INFRA_MODE || 'bridge_only';
-  if (mode !== 'bridge_only' && mode !== 'legacy_contracts') throw new Error('Unknown privacy infrastructure mode');
-  return mode;
+  if (mode === 'legacy_contracts') throw new Error('Custom application contracts are archived; use bridge_only');
+  if (mode !== 'bridge_only') throw new Error('Unknown privacy infrastructure mode');
+  return 'bridge_only';
 }
 export const HORIZEN_TESTNET_BRIDGE = '0x3098A6974649478f0133046e44105AA84e868C21' as Address;
 export const HORIZEN_MAINNET_BRIDGE = '0xCb47A3C3B9Eb2E549a3F2EA4729De28CafbB2b69' as Address;

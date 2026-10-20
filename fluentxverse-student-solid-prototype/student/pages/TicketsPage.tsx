@@ -545,7 +545,7 @@ function LegacyTicketsPage() {
 
             <section class="packages-section" aria-labelledby="ticket-packages-title">
               <div class="packages-header">
-                <img class="tickets-section-art" src="/assets/img/home-icons/training-v1.webp" width={40} height={40} alt=""/>
+                <img class="tickets-section-art" src="/assets/img/home-icons/pay-v1.webp" width={40} height={40} alt=""/>
                 <h2 id="ticket-packages-title">Ticket packages</h2>
                 <div class="tier-tabs" aria-label="Ticket package tier">
                   {(['all', 'basic', 'premium'] as const).map(tier => <button class={`tier-tab ${selectedTier() === tier ? 'active' : ''}`} aria-pressed={selectedTier() === tier} onClick={() => setSelectedTier(tier)}>{tier === 'all' ? 'All' : tier[0].toUpperCase() + tier.slice(1)}</button>)}

@@ -2,9 +2,12 @@
 
 ## Release State
 
-Implemented locally on October 13, 2026. This change has not been deployed to the
-running API or Cloudflare frontends. Existing deployed contracts and journals are
-preserved; they have not been deleted, migrated or re-certified.
+The original bridge-only/trial source work was implemented locally on October 13,
+2026. On October 19 the custom application-contract integrations were retired and
+archived. See [retirement scope](custom-contract-retirement.md) for the separately
+validated API rollout. This is not a trial-booking or frontend release: the live
+booking policy is preserved explicitly. Existing deployed contracts and journals
+have not been deleted, converted, migrated or re-certified.
 
 The source defaults are now:
 
@@ -108,10 +111,12 @@ paid credit refund or automatically change tutor compensation.
 6. Deploy the frontends with ticketing disabled; verify authenticated, anonymous,
    desktop/mobile, cancellation and interrupted-booking flows.
 
-Rollback requires a coordinated API/frontend change. Paid mode requires
-`LESSON_BOOKING_MODE=paid` and `VITE_ENABLE_TICKETING=true`; custom-contract paths
-also require `PRIVACY_INFRA_MODE=legacy_contracts` and their original trust/config
-and activation checks. Do not reopen paid intake just to clear a pending receipt.
+The source now rejects `PRIVACY_INFRA_MODE=legacy_contracts`. Reverting the
+infrastructure requires an explicit historical image/source rollback, reviewed
+configuration and a new migration plan; changing a flag cannot reactivate it.
+Trial/paid rollout remains a separate coordinated API/frontend decision. Paid
+mode requires `LESSON_BOOKING_MODE=paid` and `VITE_ENABLE_TICKETING=true`. Do not
+reopen paid intake just to clear a pending receipt.
 
 ## Verification
 

@@ -790,7 +790,7 @@
 .yl-lesson-page .yl-progress-fill { background:#0245ae; }
 .yl-lesson-page .yl-progress-bar { background:#dfe5ed; }
 .yl-lesson-page :focus-visible { outline:2px solid #0245ae; outline-offset:3px; }
-[data-theme="dark"] .yl-lesson-page { background:var(--fxv-bg,#202020); color:var(--fxv-text,#eee); }
+[data-theme="dark"] .yl-lesson-page { background:var(--fxv-bg,#202020) !important; color:var(--fxv-text,#eee); }
 [data-theme="dark"] .yl-lesson-page :is(.yl-lesson-header,.yl-nav-footer) { background:var(--fxv-surface,#242424); border-color:var(--fxv-border,#454545); }
 [data-theme="dark"] .yl-lesson-page .yl-lesson-header h1 { color:var(--fxv-text,#eee); }
 [data-theme="dark"] .yl-lesson-page :is(.yl-back-button,.yl-nav-btn) { background:var(--fxv-surface,#242424); border-color:var(--fxv-border,#454545); color:#79b5ff; }
@@ -805,3 +805,6 @@
 .yl-lesson-page :is(.yl-vocab-front,.yl-vocab-back,.yl-story-book,.yl-activity-card) { border-radius:8px; box-shadow:none; }
 [data-theme="dark"] .yl-lesson-page :is(.yl-lesson-footer,.yl-speech-bubble,.yl-vocab-front,.yl-vocab-back,.yl-story-book,.yl-story-page,.yl-activity-card) { background:var(--fxv-surface,#242424); border-color:var(--fxv-border,#454545); color:var(--fxv-text,#eee); }
 [data-theme="dark"] .yl-lesson-page :is(.yl-section-title,.yl-lesson-preview h2,.yl-preview-item,.yl-vocab-front h3,.yl-story-text,.yl-speech-bubble p) { color:var(--fxv-text,#eee); }
+[data-theme="dark"] .yl-lesson-page .yl-lyrics { background:var(--fxv-surface,#242424); }
+[data-theme="dark"] .yl-lesson-page .yl-lyric-line:nth-child(odd) { background:#333; }
+[data-theme="dark"] .yl-lesson-page :is(.yl-lyric-text p,.yl-song-title,.yl-story-title) { color:var(--fxv-text,#eee); }

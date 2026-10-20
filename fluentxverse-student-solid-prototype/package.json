@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.compatibility.json",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5176 --strictPort",
-    "cf:deploy": "npm run build && bunx wrangler@4.149.0 deploy",
+    "cf:deploy": "node ../scripts/release-apps.mjs --deploy=student",
     "cf:dry-run": "npm run build && bunx wrangler@4.149.0 deploy --dry-run",
     "test": "bun test tests/unit.test.ts tests/productionEndpoints.test.ts tests/lessonPassVault.test.ts",
     "test:lesson-passes": "node tests/lesson-passes.cjs",

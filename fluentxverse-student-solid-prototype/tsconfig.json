@@ -8,7 +8,7 @@
     "strict": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
-    "paths": { "@/*": ["./student/*"], "@client/*": ["./student/client/*"], "@components/*": ["./student/Components/*"], "@context/*": ["./student/context/*"] },
+    "paths": { "solid-js": ["./node_modules/solid-js"], "solid-js/*": ["./node_modules/solid-js/*"], "@solidjs/router": ["./node_modules/@solidjs/router"], "lucide-solid": ["./node_modules/lucide-solid"], "@/*": ["./student/*"], "@client/*": ["./student/client/*"], "@components/*": ["./student/Components/*"], "@context/*": ["./student/context/*"] },
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,

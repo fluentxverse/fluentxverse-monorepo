@@ -158,3 +158,27 @@
   .student-lesson-shell .lesson-cancel-dialog footer button { width: 100%; }
 }
 @media (max-width: 360px) { .student-lesson-shell .menu-wrap.main-menu .brand-text { font-size: 16px; } }
+.lesson-journey { margin:0 0 24px; border-bottom:1px solid var(--lesson-border); padding-bottom:18px; }
+.lesson-journey ol { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:0; padding:0; list-style:none; gap:8px; }
+.lesson-journey a { display:flex; align-items:center; gap:8px; min-height:44px; color:var(--lesson-muted); font-size:13px; font-weight:600; text-decoration:none; }
+.lesson-journey-mark { width:28px; height:28px; flex:none; display:grid; place-items:center; border:1px solid var(--lesson-border); border-radius:50%; font-size:12px; }
+.lesson-journey .is-current a { color:var(--lesson-accent); }
+.lesson-journey .is-current .lesson-journey-mark { color:#fff; background:#084bb7; border-color:#084bb7; }
+.lesson-journey .is-complete .lesson-journey-mark { color:#168057; background:#eaf8ef; border-color:#b8dfcd; }
+.student-dialog.lesson-cancel-dialog { --lesson-surface:var(--ui-surface); --lesson-surface-soft:var(--ui-bg); --lesson-text:var(--ui-text); --lesson-muted:var(--ui-muted); --lesson-border:var(--ui-border); padding:0; width:500px; color:var(--lesson-text); }
+.lesson-cancel-dialog > header { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:20px; border-bottom:1px solid var(--lesson-border); }
+.lesson-cancel-dialog h2 { font-size:18px; margin:0; }
+.lesson-cancel-dialog .lesson-dialog-close { width:44px; height:44px; flex:none; display:grid; place-items:center; padding:0; color:var(--lesson-muted); background:transparent; border:1px solid var(--lesson-border); }
+.lesson-cancel-dialog .lesson-cancel-body { padding:20px; }
+.lesson-cancel-dialog .lesson-cancel-summary { display:flex; align-items:center; gap:14px; }
+.lesson-cancel-dialog .lesson-art { width:48px; height:48px; object-fit:contain; flex:none; }
+.lesson-cancel-dialog .lesson-cancel-summary strong { font-size:15px; }
+.lesson-cancel-dialog p { margin:5px 0 0; font-size:13px; line-height:1.6; }
+.lesson-cancel-dialog .lesson-refund-notice { display:flex; gap:10px; align-items:flex-start; padding:14px; margin:20px 0; border:1px solid var(--lesson-border); background:var(--lesson-surface-soft); border-radius:6px; }
+.lesson-cancel-dialog .lesson-refund-notice svg { flex:none; margin-top:2px; color:#a56a0b; }
+.lesson-cancel-dialog .lesson-refund-notice.eligible svg { color:#168057; }
+.lesson-cancel-dialog .lesson-refund-notice strong { font-size:14px; }
+.lesson-cancel-dialog .lesson-cancel-error { display:flex; gap:8px; color:var(--ui-danger); margin-top:16px; }
+.lesson-cancel-dialog footer { display:flex; justify-content:flex-end; gap:12px; padding:16px 20px; border-top:1px solid var(--lesson-border); }
+.lesson-cancel-dialog .lesson-danger { background:#bd3547; color:#fff; }
+@media(max-width:600px) { .lesson-journey a { flex-direction:column; align-items:center; font-size:12px; } .lesson-cancel-dialog > header,.lesson-cancel-dialog .lesson-cancel-body { padding:16px; } .lesson-cancel-dialog footer { flex-direction:column; padding:16px; } .lesson-cancel-dialog footer button { width:100%; } }

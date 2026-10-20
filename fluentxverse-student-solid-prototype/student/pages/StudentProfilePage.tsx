@@ -11,6 +11,7 @@ import { getStudentProfile, updateLessonPreferences, updateAboutMe, saveLastView
 import { lessonApi, type Lesson } from '../api/lesson.api';
 import './StudentProfilePage.css';
 const OTHER_REQUESTS_MAX_LENGTH = 150;
+const HISTORY_PAGE_SIZE = 5;
 function ProfileArt(_props0: {
     name: string;
 }) {
@@ -30,6 +31,9 @@ const StudentProfilePage = () => {
     const _state1 = useLocation();
     const [activeTab, setActiveTab] = createSignal<'overview' | 'history' | 'materials'>('overview');
     const [history, setHistory] = createSignal<StudentBooking[]>([]);
+    const [historyPage, setHistoryPage] = createSignal(1);
+    const historyPages = createMemo(() => Math.max(1, Math.ceil(history().length / HISTORY_PAGE_SIZE)));
+    const visibleHistory = createMemo(() => history().slice((historyPage() - 1) * HISTORY_PAGE_SIZE, historyPage() * HISTORY_PAGE_SIZE));
     const [historyLoading, setHistoryLoading] = createSignal(false);
     const [historyError, setHistoryError] = createSignal('');
     const [lessonsError, setLessonsError] = createSignal('');
@@ -60,8 +64,8 @@ const StudentProfilePage = () => {
     const [expandedChapters, setExpandedChapters] = createSignal<string[]>([]);
     const courses = [
         { id: 'conversational-skills', name: 'Conversational Skills', icon: 'community', category: 'Conversation' },
-        { id: 'business-english', name: 'Business English', icon: 'training', category: 'Business' },
-        { id: 'young-learners', name: 'Young Learners', icon: 'home', category: 'Kids' },
+        { id: 'business-english', name: 'Business English', icon: 'business', category: 'Business' },
+        { id: 'young-learners', name: 'Young Learners', icon: 'story', category: 'Kids' },
     ];
     const getLevelNumber = (lesson: Lesson): number => {
         const levelBadge = lesson.lessonData?.header?.levelBadge || '';
@@ -759,6 +763,7 @@ const StudentProfilePage = () => {
                 const moment = bookingMoment(booking);
                 return booking.status === 'completed' || (!!moment && moment.getTime() + booking.durationMinutes * 60000 <= Date.now());
             }).sort((a, b) => (bookingMoment(b)?.getTime() || 0) - (bookingMoment(a)?.getTime() || 0)));
+            setHistoryPage(1);
         }
         catch {
             setHistoryError('Could not load your lesson history.');
@@ -815,7 +820,7 @@ const StudentProfilePage = () => {
           <Header />
           <div class="student-profile-main">
             <div class="loading-container">
-              <ProfileArt name="home"/>
+              <ProfileArt name="profile"/>
               <p>Loading your profile...</p>
             </div>
           </div>
@@ -848,7 +853,7 @@ const StudentProfilePage = () => {
           {/* Page Header */}
           <div class="profile-page-header">
             <div class="profile-header-left">
-              <ProfileArt name="home"/>
+              <ProfileArt name="profile"/>
               <div>
                 <span class="profile-page-subtitle">Your learning profile</span>
                 <h1 class="profile-page-title">My Profile</h1>
@@ -911,7 +916,7 @@ const StudentProfilePage = () => {
               <div class="content-card about-me-card">
                 <div class="card-title-row">
                   <h3 class="card-title">
-                    <ProfileArt name="community"/>
+                    <ProfileArt name="profile"/>
                     About Me
                   </h3>
                   <button class="edit-about-me-btn" onClick={openAboutMeModal} aria-label="Edit about me" title="Edit about me">
@@ -1038,14 +1043,23 @@ const StudentProfilePage = () => {
 
           {activeTab() === 'history' && <section class="profile-history-section">
             <div class="profile-section-heading"><ProfileArt name="schedule"/><h3>History & Notes</h3><a href="/schedule?tab=past">All past lessons<ArrowRight size={16}/></a></div>
-            {historyLoading() ? <p role="status">Loading lesson history...</p> : historyError() ? <div role="alert"><p>{historyError()}</p><button class="profile-secondary-button" onClick={loadHistory}><RotateCw size={16}/>Try again</button></div> : history().length ? <div class="profile-history-list">{history().map(booking => {
+            {historyLoading() ? <p role="status">Loading lesson history...</p> : historyError() ? <div role="alert"><p>{historyError()}</p><button class="profile-secondary-button" onClick={loadHistory}><RotateCw size={16}/>Try again</button></div> : history().length ? <><div class="profile-history-list">{visibleHistory().map(booking => {
                         const moment = bookingMoment(booking);
                         return <a class="profile-history-item" href={`/lesson/${encodeURIComponent(booking.bookingId)}`}>
                 <ProfileAvatar src={booking.tutorAvatar} alt={booking.tutorName || 'Tutor'} className="profile-history-avatar" fallback={booking.tutorName?.[0] || 'T'}/>
                 <div><h4>{booking.tutorName || 'Tutor'}</h4><p>{moment ? moment.toLocaleString('en-US', { timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' JST' : booking.slotDate} · {booking.durationMinutes} min</p></div>
                 <span>{booking.status === 'cancelled' ? 'Cancelled' : 'Lesson details & notes'}</span><ArrowRight size={18}/>
               </a>;
-                    })}</div> : <div class="profile-empty"><ProfileArt name="training"/><h3>No lesson history yet</h3></div>}
+                    })}</div>
+              {historyPages() > 1 && <nav class="profile-history-pagination" aria-label="Lesson history pagination">
+                <span class="profile-history-range">{(historyPage() - 1) * HISTORY_PAGE_SIZE + 1}-{Math.min(historyPage() * HISTORY_PAGE_SIZE, history().length)} of {history().length} lessons</span>
+                <div class="profile-history-controls">
+                  <button type="button" aria-label="Previous history page" title="Previous page" disabled={historyPage() === 1} onClick={() => setHistoryPage(page => Math.max(1, page - 1))}><ArrowLeft size={18}/></button>
+                  <span role="status" aria-live="polite" aria-atomic="true">Page {historyPage()} of {historyPages()}</span>
+                  <button type="button" aria-label="Next history page" title="Next page" disabled={historyPage() === historyPages()} onClick={() => setHistoryPage(page => Math.min(historyPages(), page + 1))}><ArrowRight size={18}/></button>
+                </div>
+              </nav>}
+            </> : <div class="profile-empty"><ProfileArt name="training"/><h3>No lesson history yet</h3></div>}
           </section>}
 
           {activeTab() === 'materials' && (<div class="materials-selector-container">

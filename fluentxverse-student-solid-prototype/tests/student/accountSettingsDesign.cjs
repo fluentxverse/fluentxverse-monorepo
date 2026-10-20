@@ -2,7 +2,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '@playwright/test'
 const assert = require('node:assert/strict');
 const base = process.env.STUDENT_TEST_URL || 'http://127.0.0.1:5176';
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     const themes = process.env.TEST_THEME ? [process.env.TEST_THEME] : ['light', 'dark'];
     const widths = process.env.TEST_WIDTHS ? process.env.TEST_WIDTHS.split(',').map(Number) : [1566, 1024, 768, 375, 320];

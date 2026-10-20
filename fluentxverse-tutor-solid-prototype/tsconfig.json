@@ -11,7 +11,7 @@
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "paths": { "@/*": ["./tutor/*"], "@client/*": ["./tutor/client/*"], "@components/*": ["./tutor/Components/*"], "@context/*": ["./tutor/context/*"] },
+    "paths": { "solid-js": ["./node_modules/solid-js"], "solid-js/*": ["./node_modules/solid-js/*"], "@solidjs/router": ["./node_modules/@solidjs/router"], "lucide-solid": ["./node_modules/lucide-solid"], "@/*": ["./tutor/*"], "@client/*": ["./tutor/client/*"], "@components/*": ["./tutor/Components/*"], "@context/*": ["./tutor/context/*"] },
     "types": ["vite/client", "node"]
   },
   "include": ["tutor", "vite.config.ts"]

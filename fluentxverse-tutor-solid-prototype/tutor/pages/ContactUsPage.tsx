@@ -11,7 +11,7 @@ const questions = [
     { icon: 'training', title: 'How do I become a tutor?', answer: 'Start your application using the Apply Now button below. You will need to complete a short interview process.' },
     { icon: 'schedule', title: 'What are the working hours?', answer: 'You set your own schedule. Choose the hours that work best for you and your students.' },
     { icon: 'pay', title: 'How do I get paid?', answer: 'Payments are processed weekly. You can receive payments through a bank or digital wallet.' },
-    { icon: 'home', title: 'What equipment do I need?', answer: 'A stable internet connection, a computer or laptop with a webcam, and a quiet teaching environment.' },
+    { icon: 'classroom', title: 'What equipment do I need?', answer: 'A stable internet connection, a computer or laptop with a webcam, and a quiet teaching environment.' },
 ] as const;
 const ContactUsPage = () => {
     createEffect(on(() => [], () => {
@@ -24,7 +24,7 @@ const ContactUsPage = () => {
       <main class="contact-us-page-wrapper">
         <div class="container">
           <header class="contact-us-page-header">
-            <div class="contact-us-icon-wrapper"><HomeIllustration name="community" loading="eager"/></div>
+            <div class="contact-us-icon-wrapper"><HomeIllustration name="support" loading="eager"/></div>
             <div>
               <span class="contact-label">FLUENTXVERSE SUPPORT</span>
               <h1>Contact Us</h1>

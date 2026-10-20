@@ -43,9 +43,13 @@ export const lessonWorkflowApi = {
             throw new Error(data.error || 'Could not submit notes.');
         return data.data;
     },
-    async pending(): Promise<(LessonWorkflow & {
+    async pending(signal?: AbortSignal): Promise<(LessonWorkflow & {
         bookingId: string;
         studentName: string;
-    })[]> { return (await client.get('/lesson-workflow/tutor/pending')).data.data; },
+    })[]> {
+        const { data } = await client.get('/lesson-workflow/tutor/pending', { signal });
+        if (!data.success || !Array.isArray(data.data)) throw new Error('Could not load pending lesson notes');
+        return data.data;
+    },
     async continuations(id: string): Promise<Continuation[]> { return (await client.get(`/lesson-workflow/tutor/${encodeURIComponent(id)}/continuations`)).data.data; }
 };

@@ -2,7 +2,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '@playwright/test'
 const assert = require('node:assert/strict');
 const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
   try {
     for (const theme of ['light', 'dark']) for (const width of [1566, 320]) {
       const context = await browser.newContext({ viewport: { width, height: 950 }, permissions: ['camera', 'microphone'] });

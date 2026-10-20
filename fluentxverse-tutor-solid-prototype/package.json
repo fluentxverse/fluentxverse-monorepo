@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5177 --strictPort",
-    "cf:deploy": "npm run build && bunx wrangler@4.149.0 deploy",
+    "cf:deploy": "node ../scripts/release-apps.mjs --deploy=tutor",
     "cf:dry-run": "npm run build && bunx wrangler@4.149.0 deploy --dry-run",
     "test:production": "node tests/production-hosting.cjs",
     "test": "bun test tests/*.test.ts",

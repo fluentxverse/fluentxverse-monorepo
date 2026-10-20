@@ -4,6 +4,7 @@ import { cssStyle, Fragment } from "../utils/cssStyle";
 // Axios API root for client usage
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
+import { shouldRetryRead, readRetryDelay } from '../../../shared/readRetry';
 export const api = axios.create({
     baseURL: API_BASE_URL,
     withCredentials: true
@@ -32,8 +33,15 @@ api.interceptors.response.use((response) => {
         }));
     }
     return response;
-}, (error) => {
+}, async (error) => {
     const cfg = error.config || {};
+    if (['/tutor/search', '/tutor/featured'].includes(cfg.url) && navigator.onLine !== false && shouldRetryRead({
+        method: cfg.method, status: error.response?.status, aborted: cfg.signal?.aborted, code: error.code, retried: cfg._fxvReadRetry,
+    })) {
+        await new Promise(resolve => setTimeout(resolve, readRetryDelay(error.response?.headers?.['retry-after'])));
+        if (cfg.signal?.aborted) return Promise.reject(error);
+        return api.request({ ...cfg, _fxvReadRetry: true } as any);
+    }
     const meta = (cfg as any).meta || {};
     const endTime = performance.now();
     const receivedAt = new Date().toISOString();

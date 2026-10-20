@@ -69,7 +69,7 @@ export default function LessonViewPage() {
         if (error()) {
             return (<div class="lesson-fullpage">
         <div class="lesson-fullpage-error">
-          <img src="/assets/img/home-icons/training-v1.webp" alt="" width="64" height="64"/>
+          <img src="/assets/img/home-icons/issue-v1.webp" alt="" width="64" height="64"/>
           <h3>Failed to load lesson</h3>
           <p>{error()}</p>
           <button onClick={handleBack} class="btn-back">

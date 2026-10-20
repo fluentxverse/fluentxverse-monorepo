@@ -327,7 +327,7 @@ const RegisterPage = () => {
                   <span>Complete registration to book your trial lesson</span>
                 </div>)}
               
-              <img class="registration-art" src="/assets/img/home-icons/community-v1.webp" alt="" width="56" height="56"/>
+              <img class="registration-art" src="/assets/img/home-icons/profile-v1.webp" alt="" width="56" height="56"/>
               <h2 class="form-title">
                 {step() === 1 ? 'Create Your Account' : 'Tell Us About Your English Goals'}
               </h2>

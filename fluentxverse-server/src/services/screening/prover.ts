@@ -1,5 +1,4 @@
 import { canonicalJson, decodeScreeningSignals } from './policy';
-import { gmrScreeningEngine } from '../web3.services/gmrScreeningEngine.service';
 import { createHash } from 'node:crypto';
 import { readFileSync, mkdtempSync, chmodSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -20,7 +19,7 @@ let active = false;
 
 export async function proveScreeningCredential(input: unknown, expectedSignals: string[]) {
   decodeScreeningSignals(expectedSignals);
-  if (privacyInfrastructure() === 'bridge_only') {
+  privacyInfrastructure();
     approvedScreeningArtifacts();
     if (active) throw new Error('Screening prover is busy');
     active = true;
@@ -41,10 +40,4 @@ export async function proveScreeningCredential(input: unknown, expectedSignals: 
       if (canonicalJson(result.publicSignals) !== canonicalJson(expectedSignals)) throw new Error('Screening proof statement changed');
       return result.proof;
     } finally { if (directory) rmSync(directory, { recursive: true, force: true }); active = false; }
-  }
-  const result = await gmrScreeningEngine.operation<{ proof: unknown; publicSignals: string[] }>('prove', { input, publicSignals: expectedSignals });
-  decodeScreeningSignals(result.publicSignals);
-  if (canonicalJson(result.publicSignals) !== canonicalJson(expectedSignals)) throw new Error('Engine prover statement does not match issued credential');
-  if (!result.proof || typeof result.proof !== 'object') throw new Error('Engine did not return a screening proof');
-  return result.proof;
 }

@@ -10,7 +10,7 @@ const HowItWorks = () => {
             number: '01',
             title: 'Apply Online',
             description: 'Fill out a simple application form. Share your background, availability, and passion for teaching.',
-            illustration: 'home',
+            illustration: 'profile',
             gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
         },
         {
@@ -24,14 +24,14 @@ const HowItWorks = () => {
             number: '03',
             title: 'Get Certified',
             description: 'Access our exclusive training modules and earn your FluentXVerse teaching certification.',
-            illustration: 'training',
+            illustration: 'certificate',
             gradient: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)'
         },
         {
             number: '04',
             title: 'Start Earning',
             description: 'Set your own hours, connect with students worldwide, and grow your teaching career.',
-            illustration: 'growth',
+            illustration: 'pay',
             gradient: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)'
         }
     ] as const;

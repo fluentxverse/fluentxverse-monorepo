@@ -17,7 +17,8 @@ export function requireAnonymousReviews() {
   if (process.env.ANONYMOUS_REVIEWS_ENABLED !== 'true') throw new AnonymousReviewError('Anonymous review pilot is disabled', 503);
 }
 export function reviewGroupId(tutorId: string, period: string) {
-  const protocol = privacyInfrastructure() === 'bridge_only' ? `${REVIEW_PROTOCOL}.bridge-only` : REVIEW_PROTOCOL;
+  privacyInfrastructure();
+  const protocol = `${REVIEW_PROTOCOL}.bridge-only`;
   if (Number(process.env.ANONYMOUS_REVIEWS_CHAIN_ID || '2651420') === 26514) {
     return keccak256(toHex(JSON.stringify({ protocol, tutorId, period, chainId: 26514 })));
   }
@@ -97,7 +98,7 @@ export function reviewConfig() {
     || !/^https?:\/\//.test(rpcUrl)) throw new AnonymousReviewError('Review chain configuration is incomplete', 503);
   const infrastructure = privacyInfrastructure(), bridge = address('ANONYMOUS_REVIEWS_BRIDGE');
   assertHorizenReceiptConfig({ chainId, bridge, domainId, rpcUrl });
-  return { infrastructure, network, chainId, contract: infrastructure === 'bridge_only' ? bridge : address('ANONYMOUS_REVIEWS_CONTRACT'), bridge,
+  return { infrastructure, network, chainId, contract: bridge, bridge,
     vkHash: vkHash as Hex, domainId, rpcUrl, depth: REVIEW_DEPTH,
     artifacts: { wasmUrl: '/anonymous-reviews/semaphore.wasm', zkeyUrl: '/anonymous-reviews/semaphore.zkey',
       wasmSha256: pin('ANONYMOUS_REVIEWS_WASM_SHA256'), zkeySha256: pin('ANONYMOUS_REVIEWS_ZKEY_SHA256') } };

@@ -11,18 +11,15 @@ import ErrorBoundary from './Components/ErrorBoundary';
 import SessionExpiredModal from './Components/Common/SessionExpiredModal';
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import LoadingSpinner from './Components/LoadingSpinner';
+import ConnectionNotice from '../../shared/ui/ConnectionNotice';
+import '../../shared/ui/app-ui.css';
+import { lazyRoute as page } from '../../shared/ui/lazyRoute';
 import './assets/css/privacy-policy.css';
 import './assets/css/terms-of-service.css';
 import './assets/css/app-theme.css';
 import './assets/css/scrollbar.css';
 import './assets/css/student-secondary.css';
 
-const page = (load: () => Promise<{ default: any }>) => {
-  const Page = lazy(load);
-  // Keep route failures below the persistent shell and router lifecycle.
-  const RoutePage = (props: Record<string, unknown>) => <ErrorBoundary><Page {...props} /></ErrorBoundary>;
-  return Object.assign(RoutePage, { preload: Page.preload });
-};
 const Home = page(() => import('./pages/Home'));
 const HomeProtected = page(() => import('./pages/HomeProtected'));
 const Schedule = page(() => import('./pages/SchedulePage'));
@@ -80,6 +77,7 @@ function Shell(props: ParentProps) {
     onCleanup(() => document.removeEventListener('click', listener));
   });
   return <div class={`App theme-${theme()}`}>
+    <ConnectionNotice />
     <SessionExpiryModal isAuthenticated={auth.isAuthenticated} autoRefresh={location.pathname.startsWith('/classroom/')} />
     <Suspense fallback={<LoadingSpinner />}>{props.children}</Suspense>
     <SessionExpiredModal />

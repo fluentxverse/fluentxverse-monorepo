@@ -93,7 +93,7 @@ export default function InboxPage() {
     const date = (value: string) => new Date(value).toLocaleString('en-US', { timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' JST';
     return <><SideBar /><div class="student-inbox-shell"><Header /><main class="inbox-page">
     <div class="inbox-container">
-      <header class="inbox-header"><div class="inbox-heading"><img src="/assets/img/home-icons/community-v1.webp" alt="" width="48" height="48"/><div><h1>Inbox</h1><p>{unread()} unread messages</p></div></div>
+      <header class="inbox-header"><div class="inbox-heading"><img src="/assets/img/home-icons/inbox-v1.webp" alt="" width="48" height="48"/><div><h1>Inbox</h1><p>{unread()} unread messages</p></div></div>
         <button class="inbox-command" disabled={!unread() || busy() || loading()} onClick={() => mutate(async () => {
             await inboxApi.markAllAsRead(userId());
             setMessages(prev => prev.map(message => ({ ...message, isRead: true })));
@@ -102,7 +102,7 @@ export default function InboxPage() {
       {error() && <div class="inbox-error" role="alert"><CircleAlert size={18}/><span>{error()}</span><button class="inbox-command" disabled={busy()} onClick={load}><RotateCw size={16}/>Reload</button></div>}
       <nav class="inbox-filters" aria-label="Message filters">{(['all', 'unread', 'pinned'] as const).map(value => <button aria-pressed={filter() === value} onClick={() => { setFilter(value); setSelectedId(null); }}><span>{value === 'all' ? 'All messages' : value === 'unread' ? 'Unread' : 'Pinned'}</span></button>)}</nav>
       <div class={`inbox-content ${selected() ? 'inbox-reading' : ''}`}>
-        <div class="messages-list" aria-label="Messages">{loading() ? <div class="inbox-state" role="status"><Mail size={24}/><p>Loading messages...</p></div> : !items().length ? <div class="inbox-state"><img src="/assets/img/home-icons/community-v1.webp" alt="" width="64" height="64"/><h2>{filter() === 'unread' ? 'All caught up' : filter() === 'pinned' ? 'No pinned messages' : 'No messages yet'}</h2></div> : items().map(message => <button type="button" class={`message-item ${!message.isRead ? 'unread' : ''}`} aria-pressed={selectedId() === message.id} disabled={busy()} onClick={() => open(message)}>
+        <div class="messages-list" aria-label="Messages">{loading() ? <div class="inbox-state" role="status"><Mail size={24}/><p>Loading messages...</p></div> : !items().length ? <div class="inbox-state"><img src="/assets/img/home-icons/inbox-v1.webp" alt="" width="64" height="64"/><h2>{filter() === 'unread' ? 'All caught up' : filter() === 'pinned' ? 'No pinned messages' : 'No messages yet'}</h2></div> : items().map(message => <button type="button" class={`message-item ${!message.isRead ? 'unread' : ''}`} aria-pressed={selectedId() === message.id} disabled={busy()} onClick={() => open(message)}>
           <div class="message-meta"><span>{categories[message.category] || 'Message'}</span>{message.isPinned && <Pin size={14}/>}<span class="message-time">{new Date(message.createdAt).toLocaleDateString('en-US', { timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric' })}</span></div>
           <h2>{message.title}</h2><p>{message.content}</p>{!message.isRead && <span class="message-unread">Unread</span>}
         </button>)}</div>

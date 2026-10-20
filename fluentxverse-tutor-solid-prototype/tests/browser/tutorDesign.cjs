@@ -6,7 +6,7 @@ const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
 const user = { userId: 'design-tutor', firstName: 'Alex', lastName: 'Teacher', email: 'paulanthonyarriola@gmail.com', role: 'tutor' };
 const pages = ['/home', '/schedule', '/profile', '/materials', '/materials/daily-dispatch', '/materials/conversational-skills', '/materials/business-english', '/materials/young-learners', '/inbox', '/notifications', '/interview', '/exam/written', '/exam/speaking'];
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   await fs.mkdir('../output/screenshots/tutor-design', { recursive: true });
   try {
     for (const theme of ['light', 'dark']) for (const width of [1566, 320]) {

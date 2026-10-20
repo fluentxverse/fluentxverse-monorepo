@@ -147,7 +147,7 @@ export function ClassroomRecordingNotice(_props0: {
         if (!visible() || !state())
             return null;
         return <TutorDialog className="tutor-recording-dialog" label="Lesson recording" onClose={() => setOpen(false)} busy={pending()}>
-    <header><img src="/assets/img/home-icons/community-v1.webp" alt=""/><h2 id="tutor-recording-title" tabIndex={-1}>Lesson recording</h2>
+    <header><img src="/assets/img/home-icons/video-v1.webp" alt=""/><h2 id="tutor-recording-title" tabIndex={-1}>Lesson recording</h2>
       <button class="recording-close" type="button" disabled={pending()} title="Close recording permission" aria-label="Close recording permission" onClick={() => {
                 if (!busy.current)
                     setOpen(false);

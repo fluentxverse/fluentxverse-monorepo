@@ -377,7 +377,7 @@ export const TutorProfilePage = () => {
       <div class={`student-tutor-page ${!_state0.user ? 'student-tutor-page--guest' : ''}`}>
         <Header />
         <div class="tutor-profile-page">
-          <div class="profile-heading"><img src="/assets/img/home-icons/community-v1.webp" alt="" width="48" height="48"/><a href="/browse-tutors"><ArrowLeft size={16}/>Browse tutors</a></div><div class="profile-layout">
+          <div class="profile-heading"><img src="/assets/img/home-icons/profile-v1.webp" alt="" width="48" height="48"/><a href="/browse-tutors"><ArrowLeft size={16}/>Browse tutors</a></div><div class="profile-layout">
             {/* Main Content Column */}
             <div class="profile-main-column">
               {/* Hero Section */}
@@ -448,7 +448,7 @@ export const TutorProfilePage = () => {
               {/* Video Introduction - Inside Hero Card but outside hero-content for full width */}
               {tutor().videoIntroUrl && (<div class="hero-video-section">
                   <h3 class="video-section-title">
-                    <Play size={18} aria-hidden="true"/>
+                    <img src="/assets/img/home-icons/video-v1.webp" alt="" width="28" height="28"/>
                     Introduction Video
                   </h3>
                   <VideoPlayer src={mediaUrl(tutor().videoIntroUrl)!}/>
@@ -477,7 +477,7 @@ export const TutorProfilePage = () => {
                 {/* About Me */}
                 <section class="content-section">
                   <h2 class="section-title">
-                    <img src="/assets/img/home-icons/community-v1.webp" alt="" width="32" height="32"/>
+                    <img src="/assets/img/home-icons/profile-v1.webp" alt="" width="32" height="32"/>
                     About Me
                   </h2>
                   <div class="section-content">
@@ -517,7 +517,7 @@ export const TutorProfilePage = () => {
                 {/* Interests */}
                 {tutor().interests && tutor().interests.length > 0 && (<section class="content-section">
                     <h2 class="section-title">
-                      <img src="/assets/img/home-icons/community-v1.webp" alt="" width="32" height="32"/>
+                      <Heart size={24} aria-hidden="true"/>
                       Interests
                     </h2>
                     <div class="section-content">
@@ -533,7 +533,7 @@ export const TutorProfilePage = () => {
                 {/* Specializations */}
                 {tutor().specializations && tutor().specializations.length > 0 && (<section class="content-section">
                     <h2 class="section-title">
-                      <img src="/assets/img/home-icons/community-v1.webp" alt="" width="32" height="32"/>
+                      <img src="/assets/img/home-icons/certificate-v1.webp" alt="" width="32" height="32"/>
                       Areas of Expertise
                     </h2>
                     <div class="section-content">
@@ -602,7 +602,7 @@ export const TutorProfilePage = () => {
             {activeTab() === 'reviews' && (<div class="tab-content">
                 <section class="content-section">
                   <h2 class="section-title">
-                    <img src="/assets/img/home-icons/community-v1.webp" alt="" width="32" height="32"/>
+                    <img src="/assets/img/home-icons/reviews-v1.webp" alt="" width="32" height="32"/>
                     Student Reviews
                   </h2>
                   {tutor().totalReviews && tutor().totalReviews > 0 ? (<div class="reviews-summary">

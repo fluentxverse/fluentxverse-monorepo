@@ -1,6 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
+import TutorArt from '../Components/Common/TutorArt';
 import TutorIcon from "../Components/Common/TutorIcon";
 import { useRoute, useLocation } from "../routing";
 import { lessonApi } from '../api/lesson.api';
@@ -160,19 +161,19 @@ export default function YoungLearnersLessonPage() {
         sections.push('complete');
         return sections;
     };
-    const availableSections = getAvailableSections();
-    const currentSectionIndex = createMemo(() => availableSections.indexOf(currentSection()));
+    const availableSections = createMemo(getAvailableSections);
+    const currentSectionIndex = createMemo(() => availableSections().indexOf(currentSection()));
     // Navigation
     const goToNextSection = () => {
         const nextIndex = currentSectionIndex() + 1;
-        if (nextIndex < availableSections.length) {
-            setCurrentSection(availableSections[nextIndex]);
+        if (nextIndex < availableSections().length) {
+            setCurrentSection(availableSections()[nextIndex]);
         }
     };
     const goToPrevSection = () => {
         const prevIndex = currentSectionIndex() - 1;
         if (prevIndex >= 0) {
-            setCurrentSection(availableSections[prevIndex]);
+            setCurrentSection(availableSections()[prevIndex]);
         }
     };
     // Play audio
@@ -240,7 +241,7 @@ export default function YoungLearnersLessonPage() {
       {/* Progress Bar */}
       <div class="yl-progress-bar">
         <div class="yl-progress-fill" style={cssStyle({ get width() {
-                    return `${((currentSectionIndex() + 1) / availableSections.length) * 100}%`;
+                    return `${((currentSectionIndex() + 1) / availableSections().length) * 100}%`;
                 } })}/>
       </div>
 
@@ -259,15 +260,15 @@ export default function YoungLearnersLessonPage() {
               <h2>What we'll learn today:</h2>
               <div class="yl-preview-items">
                 {lesson().vocabularyWords.length > 0 && (<div class="yl-preview-item">
-                    <span>📚</span>
+                    <TutorArt name="vocabulary" size={28}/>
                     <span>{lesson().vocabularyWords.length} new words</span>
                   </div>)}
                 {lesson().song && (<div class="yl-preview-item">
-                    <span>🎵</span>
+                    <TutorArt name="music" size={28}/>
                     <span>A fun song</span>
                   </div>)}
                 {lesson().story && (<div class="yl-preview-item">
-                    <span>📖</span>
+                    <TutorArt name="story" size={28}/>
                     <span>A story</span>
                   </div>)}
                 {lesson().activities.length > 0 && (<div class="yl-preview-item">
@@ -280,7 +281,7 @@ export default function YoungLearnersLessonPage() {
 
         {/* Vocabulary Section */}
         {currentSection() === 'vocabulary' && (<section class="yl-section yl-vocabulary">
-            <h2 class="yl-section-title">📚 New Words!</h2>
+            <h2 class="yl-section-title"><TutorArt name="vocabulary" size={32}/> New Words!</h2>
             <p class="yl-section-subtitle">Tap a card to see the meaning</p>
             
             <div class="yl-vocab-cards">
@@ -306,7 +307,7 @@ export default function YoungLearnersLessonPage() {
 
         {/* Song Section */}
         {currentSection() === 'song' && lesson().song && (<section class="yl-section yl-song">
-            <h2 class="yl-section-title">🎵 Sing Along!</h2>
+            <h2 class="yl-section-title"><TutorArt name="music" size={32}/> Sing Along!</h2>
             <h3 class="yl-song-title">{lesson().song.title}</h3>
             
             {lesson().song.audioUrl && (<button class="yl-play-song-btn" onClick={() => playAudio(lesson().song!.audioUrl!)}>
@@ -326,7 +327,7 @@ export default function YoungLearnersLessonPage() {
 
         {/* Story Section */}
         {currentSection() === 'story' && lesson().story && (<section class="yl-section yl-story">
-            <h2 class="yl-section-title">📖 Story Time!</h2>
+            <h2 class="yl-section-title"><TutorArt name="story" size={32}/> Story Time!</h2>
             <h3 class="yl-story-title">{lesson().story.title}</h3>
             
             <div class="yl-story-book">
@@ -395,10 +396,10 @@ export default function YoungLearnersLessonPage() {
         </button>
         
         <div class="yl-section-dots">
-          {availableSections.map((section, index) => (<span class={`yl-dot ${index === currentSectionIndex() ? 'active' : ''} ${index < currentSectionIndex() ? 'completed' : ''}`}/>))}
+          {availableSections().map((section, index) => (<span class={`yl-dot ${index === currentSectionIndex() ? 'active' : ''} ${index < currentSectionIndex() ? 'completed' : ''}`}/>))}
         </div>
         
-        <button class="yl-nav-btn next" onClick={goToNextSection} disabled={currentSectionIndex() === availableSections.length - 1}>
+        <button class="yl-nav-btn next" onClick={goToNextSection} disabled={currentSectionIndex() === availableSections().length - 1}>
           <span>Next</span>
           <TutorIcon name="ri-arrow-right-line"/>
         </button>

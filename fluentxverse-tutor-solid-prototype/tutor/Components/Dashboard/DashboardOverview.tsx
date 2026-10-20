@@ -139,7 +139,7 @@ const DashboardOverview = () => {
       {/* Progress Overview */}
       <div class="progress-overview">
         <div class="progress-header">
-          <h2><TutorArt name="growth" size={32}/> Certification Progress</h2>
+          <h2><TutorArt name="certificate" size={32}/> Certification Progress</h2>
           <span class="progress-percent">{progressPercent}%</span>
         </div>
 
@@ -317,7 +317,7 @@ const DashboardOverview = () => {
 
       {/* Quick Actions */}
       <div class="quick-actions">
-        <h2><TutorArt name="community" size={32}/> Quick Actions</h2>
+        <h2><TutorIcon name="fa-bolt"/> Quick Actions</h2>
         <div class="actions-grid">
           <a href="/profile" class="action-card">
             <div class="action-icon profile">

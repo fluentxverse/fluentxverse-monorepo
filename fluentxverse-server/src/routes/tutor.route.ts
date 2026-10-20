@@ -288,7 +288,8 @@ const Tutor = new Elysia({ prefix: '/tutor' })
    * Get current tutor's own profile data (bio, introduction, etc.)
    * GET /tutor/profile
    */
-  .get('/profile', async ({ cookie }) => {
+  .get('/profile', async ({ cookie, set }) => {
+    set.headers['Cache-Control'] = 'private, no-store';
     try {
       const raw = cookie.tutorAuth?.value;
       if (!raw) return { success: false, error: 'Not authenticated' };
@@ -299,7 +300,9 @@ const Tutor = new Elysia({ prefix: '/tutor' })
       // Refresh JWT cookie on every request
       await refreshJwtCookie(cookie, payload, 'tutorAuth');
 
+      const started = performance.now();
       const tutor = await tutorService.getTutorProfile(userId);
+      set.headers['Server-Timing'] = `profile;dur=${(performance.now() - started).toFixed(1)}`;
       
       if (!tutor) {
         return { success: false, error: 'Tutor profile not found' };

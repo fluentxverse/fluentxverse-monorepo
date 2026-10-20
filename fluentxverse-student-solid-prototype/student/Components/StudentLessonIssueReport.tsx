@@ -5,6 +5,17 @@ import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Send, X } from "luc
 import { lessonIssueReportApi, type LessonIssueDuration, type LessonIssueReason, type StudentIssueReportStatus } from '../api/lessonIssueReport.api';
 import { studentTutorIssues, type StudentTutorIssue } from '../data/studentTutorIssues';
 import './StudentLessonIssueReport.css';
+import StudentDialog from './Common/StudentDialog';
+import { useAuthContext } from '../context/AuthContext';
+import { readSessionDraft, saveSessionDraft, sessionDraftKey } from '../../../shared/sessionDraft';
+interface IssueDraft { duration: LessonIssueDuration | null; reason: LessonIssueReason | null; tutorIssue: StudentTutorIssue | null; step: 1 | 2 | 3; details: string }
+function isIssueDraft(value: unknown): value is IssueDraft {
+    const draft = value as IssueDraft | null;
+    return Boolean(draft && [null, 'up_to_ten', 'over_ten'].includes(draft.duration) && [1, 2, 3].includes(draft.step)
+        && (draft.reason === null || reasons.some(reason => reason.value === draft.reason))
+        && (draft.tutorIssue === null || studentTutorIssues.some(issue => issue.value === draft.tutorIssue))
+        && typeof draft.details === 'string' && draft.details.length <= 2000);
+}
 const reasons: {
     value: LessonIssueReason;
     label: string;
@@ -32,15 +43,16 @@ export default function StudentLessonIssueReport(_props0: {
     const [step, setStep] = createSignal<1 | 2 | 3>(1);
     const [details, setDetails] = createSignal('');
     const [saving, setSaving] = createSignal(false);
+    const auth = useAuthContext();
+    const draftKey = createMemo(() => auth.user?.userId ? sessionDraftKey(auth.user.userId, 'lesson-issue', _props0.bookingId) : null);
+    const [draftNotice, setDraftNotice] = createSignal('');
+    let openDraftKey: string | null = null;
     const [now, setNow] = createSignal(Date.now());
     const offset = { current: 0 } as {
         current: any;
     };
     const loadedBooking = { current: null } as {
         current: (string | null) | null;
-    };
-    const dialog = { current: null } as {
-        current: HTMLDialogElement | null;
     };
     const body = { current: null } as {
         current: HTMLDivElement | null;
@@ -81,12 +93,21 @@ export default function StudentLessonIssueReport(_props0: {
         if (typeof _cleanup2 === "function")
             onCleanup(_cleanup2);
     }));
-    createEffect(on(() => [open()], () => {
-        const _cleanup3 = untrack(() => { if (open())
-            dialog.current?.showModal(); });
-        if (typeof _cleanup3 === "function")
-            onCleanup(_cleanup3);
-    }));
+    createEffect(() => {
+        if (!open() || !draftKey() || openDraftKey !== draftKey() || status()?.report) return;
+        const value = { duration: duration(), reason: reason(), tutorIssue: tutorIssue(), step: step(), details: details() };
+        let stored = false;
+        try { stored = saveSessionDraft(sessionStorage, draftKey()!, value); } catch {}
+        if (!stored) setDraftNotice('Draft storage is unavailable. Keep this page open until the report is submitted.');
+    });
+    const openReport = () => {
+        openDraftKey = draftKey();
+        let saved: IssueDraft | null = null;
+        try { if (draftKey()) saved = readSessionDraft(sessionStorage, draftKey()!, isIssueDraft); } catch {}
+        setStep(saved?.step || 1); setDuration(saved?.duration || null); setReason(saved?.reason || null);
+        setTutorIssue(saved?.tutorIssue || null); setDetails(saved?.details || ''); setError('');
+        setDraftNotice(saved ? 'Your unfinished report was restored.' : ''); setOpen(true);
+    };
     createEffect(on(() => [open(), step()], () => {
         const _cleanup4 = untrack(() => {
             if (!open())
@@ -149,6 +170,8 @@ export default function StudentLessonIssueReport(_props0: {
         try {
             const report = await lessonIssueReportApi.submit(_props0["bookingId"], duration(), reason(), details(), reason() === 'tutor' ? tutorIssue()! : undefined);
             setStatus(current => current && ({ ...current, report, eligible: false }));
+            window.dispatchEvent(new Event('lesson-issue-updated'));
+            try { if (draftKey()) sessionStorage.removeItem(draftKey()!); } catch {}
             setOpen(false);
         }
         catch (err: any) {
@@ -162,7 +185,7 @@ export default function StudentLessonIssueReport(_props0: {
     };
     return <>
     <div class={`student-issue-report-control${(_props0["compact"] === undefined ? false : _props0["compact"]) ? ' classroom-report-control' : ''}`}>
-      <button type="button" class="student-report-issue-button" title={status()?.report ? 'One report per lesson. Your report has been submitted.' : loadError() || availabilityMessage()} disabled={loading() || !available()} onClick={() => { setStep(1); setDuration(null); setReason(null); setTutorIssue(null); setDetails(''); setError(''); setOpen(true); }}>
+      <button type="button" class="student-report-issue-button" title={status()?.report ? 'One report per lesson. Your report has been submitted.' : loadError() || availabilityMessage()} disabled={loading() || !available()} onClick={openReport}>
         {status()?.report ? <CheckCircle2 size={16}/> : <AlertTriangle size={16}/>}{status()?.report ? 'Issue reported' : 'Report issue'}
       </button>
       {(_props0["compact"] === undefined ? false : _props0["compact"]) && <span role="status">{loading() ? 'Checking availability...' : status()?.report ? 'Report submitted' : loadError() ? 'Availability unavailable' : available() ? 'One report per lesson' : 'Not available yet'}</span>}
@@ -171,10 +194,11 @@ export default function StudentLessonIssueReport(_props0: {
             : status()?.report ? <div role="status"><p>{status().report.status === 'resolved' ? 'Issue resolved' : status().report.status === 'under_review' ? 'Issue under review' : 'Your issue report has been submitted.'}</p>{status().report.tutorIssueLabel && <p>{status().report.tutorIssueLabel}</p>}{status().report.resolution && <p>{status().report.resolution}</p>}{status().report.attendanceCorrection && <p>Attendance corrected: {status().report.attendanceCorrection}</p>}{status().report.ticketTransactionId && <p>Ticket refund recorded: {status().report.ticketTransactionId}</p>}</div> : status() && <p>{status().reason === 'cancelled' ? 'Cancelled lessons cannot be reported.'
                     : availabilityMessage()}</p>)}
     </div>
-    {open() && <Portal mount={document.body}>{<dialog ref={_element => dialog.current = _element} class="student-issue-report-dialog" aria-labelledby="student-issue-title" onCancel={event => { event.preventDefault(); close(); }}>
+    {open() && <StudentDialog className="student-issue-report-dialog" label="Report a lesson issue" onClose={close} busy={saving()}>
       <form onSubmit={event => { event.preventDefault(); void submit(); }}>
-        <header><div><span>Step {step()} of {reason() === 'tutor' ? 3 : 2}</span><h2 id="student-issue-title"><img src="/assets/img/home-icons/community-v1.webp" alt="" width="32" height="32"/>Report a lesson issue</h2></div><button type="button" aria-label="Close report" title="Close report" disabled={saving()} onClick={close} autofocus><X size={20}/></button></header>
+        <header><div><span>Step {step()} of {reason() === 'tutor' ? 3 : 2}</span><h2 id="student-issue-title"><img src="/assets/img/home-icons/issue-v1.webp" alt="" width="32" height="32"/>Report a lesson issue</h2></div><button type="button" aria-label="Close report" title="Close report" disabled={saving()} onClick={close} autofocus><X size={20}/></button></header>
         <div class="student-issue-report-body" ref={_element => body.current = _element}>
+          {draftNotice() && <p role="status">{draftNotice()}</p>}
           {step() === 1 ? <><h3 tabIndex={-1}>How long were you able to study?</h3><div class="student-issue-duration-options"><button type="button" onClick={() => { setDuration('up_to_ten'); setStep(2); }}>10 minutes or less</button><button type="button" onClick={() => { setDuration('over_ten'); setStep(2); }}>More than 10 minutes</button></div></>
                 : <fieldset disabled={saving()}><legend tabIndex={-1}>{step() === 3 ? 'What happened with the tutor?' : 'What went wrong during the lesson?'}</legend><div class={`student-issue-reasons${step() === 3 ? ' student-tutor-issues' : ''}`}>
               {step() === 3 ? tutorChoices().map(item => <label><input type="radio" name="tutor-issue" value={item.value} checked={tutorIssue() === item.value} onChange={() => { setTutorIssue(item.value); setError(''); }}/>{item.label}</label>)
@@ -184,6 +208,6 @@ export default function StudentLessonIssueReport(_props0: {
         </div>
         <footer>{error() && <p role="alert" class="student-issue-error">{error()}</p>}{step() > 1 && <button type="button" disabled={saving()} onClick={() => { setStep(step() === 3 ? 2 : 1); setError(''); }}><ArrowLeft size={16}/>Back</button>}<button type="button" disabled={saving()} onClick={close}>Cancel</button>{step() === 2 && reason() === 'tutor' ? <button type="button" class="student-issue-submit" disabled={saving() || !available()} onClick={() => { setStep(3); setError(''); }}>Next<ArrowRight size={16}/></button> : step() > 1 && <button type="submit" class="student-issue-submit" disabled={saving() || !canSubmit()}><Send size={16}/>{saving() ? 'Submitting...' : 'Submit report'}</button>}</footer>
       </form>
-    </dialog>}</Portal>}
+    </StudentDialog>}
   </>;
 }

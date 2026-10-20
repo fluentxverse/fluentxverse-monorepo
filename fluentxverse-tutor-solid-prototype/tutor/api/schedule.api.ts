@@ -72,11 +72,11 @@ export const scheduleApi = {
     /**
      * Get tutor's schedule for a week
      */
-    getWeekSchedule: async (weekOffset: number): Promise<WeekSchedule> => {
+    getWeekSchedule: async (weekOffset: number, signal?: AbortSignal): Promise<WeekSchedule> => {
         const response = await api.get('/schedule/week', {
-            params: { weekOffset }
+            params: { weekOffset }, signal
         });
-        if (!response.data.success) {
+        if (!response.data.success || !Array.isArray(response.data.data?.slots)) {
             throw new Error(response.data.error || 'Failed to get schedule');
         }
         return response.data.data;

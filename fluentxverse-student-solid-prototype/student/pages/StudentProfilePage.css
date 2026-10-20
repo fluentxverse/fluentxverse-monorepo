@@ -85,6 +85,11 @@
 .student-profile-page .profile-history-item p { font-size: 12px; margin: 0; }
 .student-profile-page .profile-history-item > span { margin-left: auto; color: var(--sp-muted); font-size: 12px; }
 .student-profile-page .profile-history-item > svg { color: var(--sp-accent); }
+.student-profile-page .profile-history-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 20px; font-size: 12px; color: var(--sp-muted); }
+.student-profile-page .profile-history-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.student-profile-page .profile-history-controls > span { min-width: 82px; text-align: center; font-variant-numeric: tabular-nums; }
+.student-profile-page .profile-history-controls button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--sp-border); border-radius: 6px; background: var(--sp-surface); color: var(--sp-accent); cursor: pointer; flex-shrink: 0; }
+.student-profile-page .profile-history-controls button:not(:disabled):hover { background: var(--sp-tint); }
 .student-profile-page :is(.profile-empty,.loading-container,.error-container,.loading-lessons,.empty-state) { text-align: center; padding: 48px 20px; color: var(--sp-muted); }
 .student-profile-page :is(.profile-empty,.empty-state) h3 { font-size: 20px; margin: 16px 0 8px; }
 .student-profile-page .materials-header-section { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 0 0 24px; }

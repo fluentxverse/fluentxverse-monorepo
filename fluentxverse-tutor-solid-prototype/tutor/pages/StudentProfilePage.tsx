@@ -9,6 +9,8 @@ import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import LessonNotesCard from '../Components/LessonNotesCard';
 import LessonMaterialRequest from '../Components/LessonMaterialRequest';
+import LessonEvidence from '../../../shared/ui/LessonEvidence';
+import { lessonPrivacyApi } from '../api/lessonPrivacy.api';
 import { TutorLessonIssueReportDialog, type TroubleDuration, type TroubleReason, type TutorStudentIssue } from '../Components/TutorLessonIssueReportDialog';
 import { useAuthContext } from '../context/AuthContext';
 import { useNotificationStore } from '../context/NotificationContext';
@@ -89,7 +91,7 @@ const LessonReportOutcome = (_props0: {
     const issue = createMemo(() => _props0["report"].studentIssueLabel || _props0["report"].tutorIssueLabel || _props0["report"].reason);
     return (<section id={_props0["id"]} class={`lesson-report-outcome${(_props0["received"] === undefined ? false : _props0["received"]) ? ' student-report-received' : ''}`} aria-label={_props0["title"]}>
       <header class="lesson-report-header">
-        <h2><span class="lesson-section-icon"><TutorArt name="community" size={32}/></span>{_props0["title"]}</h2>
+        <h2><span class="lesson-section-icon"><TutorArt name="issue" size={32}/></span>{_props0["title"]}</h2>
         <span class={`lesson-report-status lesson-report-status--${status()}`}>
           <TutorIcon name={`fi ${status() === 'resolved' ? 'fi-sr-check' : 'fi-sr-clock'}`} aria-hidden="true"/>
           {status() === 'resolved' ? 'Resolved' : status() === 'under_review' ? 'Under review' : 'Submitted'}
@@ -275,6 +277,7 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
             if (!response.ok || !result.success)
                 throw new Error(result.error || 'Could not submit the report');
             setReportStatus(current => current ? { ...current, report: result.data } : current);
+            window.dispatchEvent(new Event('lesson-issue-updated'));
             setShowReportModal(false);
         }
         catch (err: any) {
@@ -778,7 +781,7 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
           {reportStatus()?.report && <LessonReportOutcome title="Lesson issue report" report={reportStatus().report}/>}
           {reportStatus()?.studentReport && <LessonReportOutcome id="student-lesson-report" title="Student report received" report={reportStatus().studentReport} received/>}
           <section class="learner-profile-card" aria-labelledby="learner-profile-title">
-            <h2 id="learner-profile-title" class="learner-profile-title"><span class="lesson-section-icon"><TutorArt name="training" size={32}/></span>Learning profile</h2>
+              <h2 id="learner-profile-title" class="learner-profile-title"><span class="lesson-section-icon"><TutorArt name="profile" size={32}/></span>Learning profile</h2>
             <div class="learner-profile-grid">
               <div class="learner-profile-field">
                 <span class="learner-profile-label"><TutorIcon name="fi fi-sr-signal-alt" aria-hidden="true"/>Self-assessed English level</span>
@@ -823,7 +826,7 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
 
           <section class="lesson-context" aria-labelledby="lesson-context-title">
             <div class="lesson-context-heading">
-              <h2 id="lesson-context-title"><span class="lesson-section-icon"><TutorArt name="community" size={32}/></span>Student context</h2>
+              <h2 id="lesson-context-title"><span class="lesson-section-icon"><TutorArt name="profile" size={32}/></span>Student context</h2>
               <a href="/materials" class="lesson-materials-link">
                 <TutorIcon name="fi fi-sr-book" aria-hidden="true"/>
                 Browse materials
@@ -855,13 +858,14 @@ const StudentProfilePage = (_props1: StudentProfilePageProps) => {
           </section>
           {lessonData() && <LessonMaterialRequest studentId={studentData().id || lessonData().studentId} sessionId={lessonData().sessionId || bookingId()!}/>}
           {lessonData() && <LessonNotesCard sessionId={lessonData().sessionId || bookingId()!}/>}
+          {lessonData() && <LessonEvidence bookingId={bookingId()!} role="tutor" api={lessonPrivacyApi}/>}
         </div>
       </div>
 
       {showChatLog() && (<TutorDialog label="Lesson chat log" className="tutor-chatlog-dialog" onClose={() => setShowChatLog(false)}>
           <section class="chatlog-modal" aria-labelledby="chatlog-title" onClick={event => event.stopPropagation()}>
             <header class="chatlog-modal-header">
-              <h2 id="chatlog-title"><TutorArt name="community" size={32}/>Lesson Chatlog</h2>
+              <h2 id="chatlog-title"><TutorArt name="inbox" size={32}/>Lesson Chatlog</h2>
               <button type="button" class="chatlog-close-btn" aria-label="Close chatlog" onClick={() => setShowChatLog(false)}>
                 <TutorIcon name="fi fi-sr-cross" aria-hidden="true"/>
               </button>

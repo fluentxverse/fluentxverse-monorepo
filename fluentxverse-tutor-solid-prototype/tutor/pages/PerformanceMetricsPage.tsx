@@ -202,13 +202,13 @@ export const PerformanceMetricsPage = () => {
 									</div>
 								</div>
 								<div class="metrics-overview-card">
-								<h2><TutorArt name="training" size={32}/>Teaching</h2>
+								<h2><TutorArt name="classroom" size={32}/>Teaching</h2>
 								<div class="metrics-kpis">
 								<Metric label="Attended lessons" value={ready().lessons.attended} icon="check" tone="green"/>
 								<Metric label="Teaching hours" value={ready().lessons.teachingHours} icon="clock"/>
 								</div></div>
 								<div class="metrics-overview-card">
-								<h2><TutorArt name="community" size={32}/>Attendance & notes</h2>
+								<h2><TutorIcon name="fa-clipboard-check"/>Attendance & notes</h2>
 								<div class="metrics-kpis metrics-quality-stats">
 								<Metric label="Tutor attendance" value={percent(ready().attendance.rate)} icon="calendar" tone="teal"/>
 								<Metric label="Reliability" value={percent(ready().reliability.score)} icon="shield-check" tone="amber"/>

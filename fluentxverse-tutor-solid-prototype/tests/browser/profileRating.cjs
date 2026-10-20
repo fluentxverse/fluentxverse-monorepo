@@ -6,7 +6,7 @@ const output = process.env.PROFILE_RATING_SCREENSHOTS || '/tmp/tutor-profile-rat
 const user = { userId: 'rating-check', firstName: 'Alex', lastName: 'Teacher', email: 'rating@example.test', role: 'tutor' };
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   await fs.mkdir(output, { recursive: true });
   try {
     for (const theme of ['light', 'dark']) for (const width of [1440, 768, 375, 320]) {

@@ -39,7 +39,7 @@ const HowItWorks = () => {
               <article class={`how-it-works__step how-it-works__step--${index + 1}`}>
                 <div class="how-it-works__step-number">{step.number}</div>
                 <div class="how-it-works__step-icon">
-                  <img src={`/assets/img/home-icons/${index === 0 ? 'schedule' : index === 1 ? 'community' : 'growth'}-v1.webp`} alt="" width="64" height="64"/>
+                  <img src={`/assets/img/home-icons/${index === 0 ? 'schedule' : index === 1 ? 'classroom' : 'growth'}-v1.webp`} alt="" width="64" height="64"/>
                 </div>
                 <div class="how-it-works__step-content">
                   <span>{step.meta}</span>

@@ -257,15 +257,15 @@ export default function YoungLearnersLessonPage() {
               <h2>What we'll learn today:</h2>
               <div class="yl-preview-items">
                 {lesson().vocabularyWords.length > 0 && (<div class="yl-preview-item">
-                    <img src="/assets/img/home-icons/training-v1.webp" alt="" width="28" height="28"/>
+                    <img src="/assets/img/home-icons/vocabulary-v1.webp" alt="" width="28" height="28"/>
                     <span>{lesson().vocabularyWords.length} new words</span>
                   </div>)}
                 {lesson().song && (<div class="yl-preview-item">
-                    <img src="/assets/img/home-icons/community-v1.webp" alt="" width="28" height="28"/>
+                    <img src="/assets/img/home-icons/music-v1.webp" alt="" width="28" height="28"/>
                     <span>A fun song</span>
                   </div>)}
                 {lesson().story && (<div class="yl-preview-item">
-                    <img src="/assets/img/home-icons/training-v1.webp" alt="" width="28" height="28"/>
+                    <img src="/assets/img/home-icons/story-v1.webp" alt="" width="28" height="28"/>
                     <span>A story</span>
                   </div>)}
                 {lesson().activities.length > 0 && (<div class="yl-preview-item">
@@ -278,7 +278,7 @@ export default function YoungLearnersLessonPage() {
 
         {/* Vocabulary Section */}
         {currentSection() === 'vocabulary' && (<section class="yl-section yl-vocabulary">
-            <h2 class="yl-section-title"><img src="/assets/img/home-icons/training-v1.webp" alt="" width="32" height="32"/>New words</h2>
+            <h2 class="yl-section-title"><img src="/assets/img/home-icons/vocabulary-v1.webp" alt="" width="32" height="32"/>New words</h2>
             <p class="yl-section-subtitle">Tap a card to see the meaning</p>
             
             <div class="yl-vocab-cards">
@@ -307,7 +307,7 @@ export default function YoungLearnersLessonPage() {
 
         {/* Song Section */}
         {currentSection() === 'song' && lesson().song && (<section class="yl-section yl-song">
-            <h2 class="yl-section-title"><img src="/assets/img/home-icons/community-v1.webp" alt="" width="32" height="32"/>Sing along</h2>
+            <h2 class="yl-section-title"><img src="/assets/img/home-icons/music-v1.webp" alt="" width="32" height="32"/>Sing along</h2>
             <h3 class="yl-song-title">{lesson().song.title}</h3>
             
             {lesson().song.audioUrl && (<button class="yl-play-song-btn" onClick={() => playAudio(lesson().song!.audioUrl!)}>
@@ -327,7 +327,7 @@ export default function YoungLearnersLessonPage() {
 
         {/* Story Section */}
         {currentSection() === 'story' && lesson().story && (<section class="yl-section yl-story">
-            <h2 class="yl-section-title"><img src="/assets/img/home-icons/training-v1.webp" alt="" width="32" height="32"/>Story time</h2>
+            <h2 class="yl-section-title"><img src="/assets/img/home-icons/story-v1.webp" alt="" width="32" height="32"/>Story time</h2>
             <h3 class="yl-story-title">{lesson().story.title}</h3>
             
             <div class="yl-story-book">

@@ -158,7 +158,7 @@ export const ToastProvider = (_props2: {
       
       {/* Confirmation Modal */}
       {confirmState().isOpen && (<StudentDialog className="student-confirm-dialog" label={confirmState().title || 'Confirm action'} onClose={() => handleConfirm()(false)}>
-          <div><img class="student-dialog-art" src="/assets/img/home-icons/community-v1.webp" alt=""/>
+          <div><img class="student-dialog-art" src="/assets/img/home-icons/issue-v1.webp" alt=""/>
             {confirmState().title && (<h2>{confirmState().title}</h2>)}
             <p class="toast-confirm-message">{confirmState().message}</p>
             <div class="student-dialog-actions">

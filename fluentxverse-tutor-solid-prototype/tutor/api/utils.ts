@@ -5,6 +5,8 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 import { isLessonMediaRequest, normalizeLessonMedia } from '../../../shared/lessonMedia';
 import { getErrorMessage } from '../utils/errorUtils';
+import { shouldRetryRead, readRetryDelay } from '../../../shared/readRetry';
+import { tutorProfileCache, changesTutorProfile } from '../utils/tutorProfileCache';
 let unauthorizedHandler: (() => void) | null = null;
 let isLoginInProgress = false;
 let authGeneration = 0;
@@ -32,11 +34,13 @@ export const registerUnauthorizedHandler = (fn: () => void) => {
 export const setLoginInProgress = (inProgress: boolean) => {
     if (inProgress)
         authGeneration += 1;
+    if (inProgress) tutorProfileCache.clear();
     isLoginInProgress = inProgress;
 };
 // Clear client-side auth state (localStorage only, don't call server)
 // Server cookie will be overwritten on next successful login
 export const forceAuthCleanup = () => {
+    tutorProfileCache.clear();
     try {
         localStorage.removeItem('fxv_user_fullname');
         localStorage.removeItem('fxv_user_id');
@@ -55,6 +59,7 @@ export const client = axios.create({
 });
 // Request interceptor to add cache-busting for auth requests
 client.interceptors.request.use((config) => {
+    if (!['get', 'head', 'options'].includes((config.method || 'get').toLowerCase()) && changesTutorProfile(config.url)) tutorProfileCache.clear();
     requestGenerations.set(config, authGeneration);
     // Add timestamp to prevent caching of auth-related requests
     if (config.url === '/tutor/me' || config.url === '/tutor/login' || config.url === '/tutor/logout' || config.url === '/tutor/refresh') {
@@ -71,7 +76,15 @@ let last401 = 0;
 client.interceptors.response.use((response) => {
     if (isLessonMediaRequest(response.config.url)) response.data = normalizeLessonMedia(response.data, API_BASE_URL);
     return response;
-}, (error) => {
+}, async (error) => {
+    const failed = error?.config;
+    if (failed && requestGenerations.get(failed) === authGeneration && navigator.onLine !== false && !failed.url?.startsWith('/notifications') && shouldRetryRead({
+        method: failed.method, status: error?.response?.status, aborted: failed.signal?.aborted, code: error.code, retried: failed._fxvReadRetry,
+    })) {
+        await new Promise(resolve => setTimeout(resolve, readRetryDelay(error.response?.headers?.['retry-after'])));
+        if (failed.signal?.aborted || requestGenerations.get(failed) !== authGeneration) return Promise.reject(error);
+        return client.request({ ...failed, _fxvReadRetry: true } as any);
+    }
     if (error?.response?.status === 401) {
         // Don't trigger unauthorized handler during login process
         // or for login/logout endpoints themselves

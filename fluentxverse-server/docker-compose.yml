@@ -16,6 +16,8 @@ services:
     restart: unless-stopped
     logging: *default-logging
     env_file:
+      - path: ./config/lesson-privacy.env
+        required: false
       - path: ./config/anonymous-reviews.env
         required: false
       - path: ./config/anonymous-tally.env
