@@ -9,7 +9,7 @@ export const applications = [
   { name: 'fluentxverse-tutor', directory: 'fluentxverse-tutor-solid-prototype', kind: 'web', lock: true, shared: true, homepage: 'https://tutor.fluentxverse.com', description: 'SolidJS tutor app for applications, screening, schedules, live lessons, and teaching operations.' },
   { name: 'fluentxverse-dashboard', directory: 'fluentxverse-dashboard', kind: 'web', shared: true, contracts: ['fluentxverse-server/src/shared/tutorCompensation.ts'], homepage: 'https://dashboard.fluentxverse.com', description: 'Administration dashboard for tutor screening, interviews, lesson operations, compensation, and release acceptance.' },
   { name: 'fluentxverse-site', directory: 'fluentxverse-site', kind: 'web', homepage: 'https://fluentxverse.com', description: 'Public FluentXVerse website describing the tutoring platform, ecosystem, and privacy technology.' },
-  { name: 'fluentxverse-server', directory: 'fluentxverse-server', kind: 'server', support: ['archive/custom-contracts-20261019/', 'zk/review-tally/'], description: 'Bun and Elysia application API for tutoring, scheduling, screening evidence, recordings, and compensation.' },
+  { name: 'fluentxverse-server', directory: 'fluentxverse-server', kind: 'server', shared: true, support: ['archive/custom-contracts-20261019/', 'zk/review-tally/'], description: 'Bun and Elysia application API for tutoring, scheduling, screening evidence, recordings, and compensation.' },
   { name: 'fluentxverse-mobile', directory: 'fluentxverse-mobile', kind: 'mobile', contracts: ['fluentxverse-server/MOBILE_API.md'], description: 'Kotlin Multiplatform student client with Android Compose, iOS SwiftUI, mobile authentication, and an offline demo.' },
   { name: 'fluentxverse-go-server', directory: 'fluentxverse-go-server', kind: 'go', description: 'Go Fiber backend migration workstream; not a replacement for the active Bun API by default.' },
 ];
@@ -17,7 +17,7 @@ export const applications = [
 export function excluded(path) {
   const parts = path.split('/');
   const name = parts.at(-1);
-  if (parts.some(part => ['node_modules', '.git', '.wrangler', '.gradle', '.kotlin', 'dist', 'build', 'target', 'backups', 'uploads', 'recordings', 'coverage', 'xcuserdata', 'test-results'].includes(part))) return true;
+  if (parts.some(part => ['node_modules', '.git', '.dev', '.wrangler', '.gradle', '.kotlin', 'dist', 'build', 'target', 'backups', 'uploads', 'recordings', 'coverage', 'xcuserdata', 'test-results'].includes(part))) return true;
   if (/^\.env(?:\.|$)/.test(name) && !name.endsWith('.example')) return true;
   if (/\.env$/.test(name) || /\.(?:pem|key|p12|pfx|jks|keystore|sqlite|sqlite3|db|log|ptau|zkey|wtns|r1cs|sym|wasm|apk|ipa)$/.test(name)) return true;
   return ['local.properties', '.DS_Store'].includes(name);

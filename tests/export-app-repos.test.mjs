@@ -29,6 +29,8 @@ test('preserve source, examples, lockfiles, artwork, and executable mobile wrapp
 });
 
 test('dashboard includes its compensation contract and mobile includes its API contract', () => {
+  assert.equal(applications.find(app => app.name === 'fluentxverse-server').shared, true);
+  assert.equal(excluded('app/.dev/index.js'), true);
   assert.ok(applications.find(app => app.name === 'fluentxverse-dashboard').contracts.includes('fluentxverse-server/src/shared/tutorCompensation.ts'));
   assert.ok(applications.find(app => app.name === 'fluentxverse-mobile').contracts.includes('fluentxverse-server/MOBILE_API.md'));
 });
