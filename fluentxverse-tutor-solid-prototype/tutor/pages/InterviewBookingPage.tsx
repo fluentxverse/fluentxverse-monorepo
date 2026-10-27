@@ -10,6 +10,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { interviewApi, type InterviewSlot, type MyInterview } from '../api/interview.api';
 import './InterviewBookingPage.css';
 const InterviewBookingPage = () => {
+    const manilaToday = () => new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) + 'T00:00:00');
     createEffect(on(() => [], () => {
         const _cleanup1 = untrack(() => {
             document.title = 'Book Interview | FluentXVerse';
@@ -36,9 +37,9 @@ const InterviewBookingPage = () => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     // Generate week dates
     const getWeekDates = (offset: number) => {
-        const today = new Date();
+        const today = manilaToday();
         const monday = new Date(today);
-        monday.setDate(today.getDate() - today.getDay() + 1 + (offset * 7));
+        monday.setDate(today.getDate() - (today.getDay() + 6) % 7 + (offset * 7));
         const week = [];
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
@@ -95,16 +96,14 @@ const InterviewBookingPage = () => {
     };
     // Check if slot is in the past
     const isPastSlot = (date: Date, timeStr: string): boolean => {
-        const now = new Date();
         const [time, period] = timeStr.split(' ');
         let [hour, minute] = time.split(':').map(Number);
         if (period === 'PM' && hour !== 12)
             hour += 12;
         if (period === 'AM' && hour === 12)
             hour = 0;
-        const slotDateTime = new Date(date);
-        slotDateTime.setHours(hour, minute, 0, 0);
-        return slotDateTime < now;
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return Date.parse(`${dateString}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+08:00`) <= Date.now();
     };
     // Load data
     createEffect(on(() => [currentWeekOffset()], () => {
@@ -226,7 +225,7 @@ const InterviewBookingPage = () => {
         }
     };
     const isToday = (date: Date) => {
-        const today = new Date();
+        const today = manilaToday();
         return date.getDate() === today.getDate() &&
             date.getMonth() === today.getMonth() &&
             date.getFullYear() === today.getFullYear();
@@ -320,37 +319,38 @@ const InterviewBookingPage = () => {
 
             {/* Schedule Card */}
             <div class="schedule-card">
+              <p class="interview-timezone">Interview times: Asia/Manila (UTC+08:00)</p>
+              <div class="interview-calendar-toolbar">
               {/* Calendar Navigation */}
               <div class="calendar-nav">
                 <div class="week-navigation">
-                  <button class="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
+                  <button class="nav-btn" aria-label="Previous week" title="Previous week" onClick={() => setCurrentWeekOffset(prev => prev - 1)}>
                     <TutorIcon name="fas fa-chevron-left"/>
-                    <span>Previous</span>
                   </button>
-                  <span class="week-range">
+                  <span class="week-range" aria-live="polite">
                     {formatDate(weekDates()[0])} - {formatDate(weekDates()[6])}
                   </span>
-                  <button class="nav-btn" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
-                    <span>Next</span>
+                  <button class="nav-btn" aria-label="Next week" title="Next week" onClick={() => setCurrentWeekOffset(prev => prev + 1)}>
                     <TutorIcon name="fas fa-chevron-right"/>
                   </button>
                 </div>
               </div>
 
               {/* Period Tabs */}
-              <div class="period-tabs">
-                <button class={`period-tab ${selectedPeriod() === 'morning' ? 'active' : ''}`} onClick={() => setSelectedPeriod('morning')}>
+              <div class="period-tabs" role="group" aria-label="Time of day">
+                <button aria-pressed={selectedPeriod() === 'morning'} class={`period-tab ${selectedPeriod() === 'morning' ? 'active' : ''}`} onClick={() => setSelectedPeriod('morning')}>
                   <TutorIcon name="fas fa-sun"/>
                   Morning
                 </button>
-                <button class={`period-tab ${selectedPeriod() === 'afternoon' ? 'active' : ''}`} onClick={() => setSelectedPeriod('afternoon')}>
+                <button aria-pressed={selectedPeriod() === 'afternoon'} class={`period-tab ${selectedPeriod() === 'afternoon' ? 'active' : ''}`} onClick={() => setSelectedPeriod('afternoon')}>
                   <TutorIcon name="fas fa-cloud-sun"/>
                   Afternoon
                 </button>
-                <button class={`period-tab ${selectedPeriod() === 'evening' ? 'active' : ''}`} onClick={() => setSelectedPeriod('evening')}>
+                <button aria-pressed={selectedPeriod() === 'evening'} class={`period-tab ${selectedPeriod() === 'evening' ? 'active' : ''}`} onClick={() => setSelectedPeriod('evening')}>
                   <TutorIcon name="fas fa-moon"/>
                   Evening
                 </button>
+              </div>
               </div>
 
               {/* Calendar Grid */}
@@ -363,7 +363,7 @@ const InterviewBookingPage = () => {
                   <button class="btn btn-primary" onClick={() => setCurrentWeekOffset(currentWeekOffset())}>
                     Retry
                   </button>
-                </div>) : (<div class="calendar-container">
+                </div>) : (<div class="calendar-container" role="region" aria-label="Interview availability" tabIndex={0}>
                   <div class="calendar-grid">
                     {/* Header Row */}
                     <div class="calendar-header">
@@ -387,9 +387,9 @@ const InterviewBookingPage = () => {
                     return (<div class={`slot-cell ${isPast ? 'past' : ''} ${isMyBooking ? 'booked' : ''} ${slot && !myBooking() ? 'available' : ''}`}>
                               {isMyBooking ? (<div class="slot-badge booked">
                                   <TutorIcon name="fas fa-check-circle"/> Your Booking
-                                </div>) : slot && !myBooking() ? (<div class="slot-badge open" onClick={() => handleSlotClick(slot)}>
+                                </div>) : slot && !myBooking() && !isPast ? (<button type="button" class="slot-badge open" aria-label={`Book interview on ${formatDateFull(slot.date)} at ${slot.time}`} onClick={() => handleSlotClick(slot)}>
                                   <TutorIcon name="fas fa-plus-circle"/> Available
-                                </div>) : null}
+                                </button>) : null}
                             </div>);
                 })}
                       </div>))}

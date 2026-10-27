@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "FXV-20261026-003",
+      "date": "2026-10-26",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Branded tutor confirmation emails",
+      "summary": "Tutor application emails now include the FluentXVerse logo, a clear confirmation button, and a clickable backup link in a mobile-friendly layout.",
+      "details": [
+        "The logo is embedded in the message rather than loaded from a tracking URL. A plain-text alternative is included.",
+        "Real delivery and the confirmation flow passed checks, including single-use links and resend cooldowns. Previously delivered emails remain unchanged."
+      ]
+    },
+    {
+      "id": "FXV-20261026-002",
+      "date": "2026-10-26",
+      "apps": ["tutor", "backend"],
+      "type": "improved",
+      "title": "Clearer written exams and stronger question checks",
+      "summary": "The written exam has an updated responsive design and additional AI review before newly generated questions are published.",
+      "details": [
+        "Vocabulary options must fit the sentence verbatim, including tense, agreement, and passive voice. Grammar and reading items receive structural and answer-consistency checks.",
+        "A separate reviewer call checks questions without seeing the answer key. Flagged items undergo bounded revision; the exam timer starts only after acceptance. Existing attempts are not rewritten.",
+        "Desktop and mobile checks passed in both themes, alongside a live generation, answer-saving, and resume test. AI review reduces errors but does not guarantee linguistic correctness."
+      ]
+    },
+    {
+      "id": "FXV-20261026-001",
+      "date": "2026-10-26",
+      "apps": ["tutor", "backend"],
+      "type": "added",
+      "title": "Email confirmation before tutor assessments",
+      "summary": "Tutor applicants must confirm their email address before accessing the written assessment.",
+      "details": [
+        "Confirmation messages are sent from tutor@fluentxverse.com. Links expire after 30 minutes, work once, and are protected by resend cooldowns.",
+        "The assessment gate is enforced by the backend. Live checks covered blocked unverified access, successful confirmation, and rejection of a reused link.",
+        "Administrators can access the shared tutor application mailbox from the dashboard."
+      ]
+    },
+    {
+      "id": "FXV-20261025-003",
+      "date": "2026-10-25",
+      "apps": ["engine"],
+      "type": "improved",
+      "title": "More recognizable Engine controls and browser tabs",
+      "summary": "Engine now has a dedicated blue terminal favicon and a compact save control beside the proof-destination selector.",
+      "details": [
+        "The save icon includes a tooltip and an accessible label, with desktop and mobile layout checks.",
+        "The favicon matches Engine's terminal mark and was checked at browser-tab sizes."
+      ]
+    },
+    {
+      "id": "FXV-20261025-002",
+      "date": "2026-10-25",
+      "apps": ["engine"],
+      "type": "fixed",
+      "title": "Restored zkVerify mainnet account lookups",
+      "summary": "Fixed the Engine verification-account error by correcting production module imports and aligning the native RPC settings with zkVerify mainnet.",
+      "details": [
+        "Production Node runtime checks now cover worker imports. The network identity check remains enforced.",
+        "Three consecutive authenticated account reads returned successfully through the public Engine service. No funds were moved or paid proofs submitted during these checks."
+      ]
+    },
+    {
+      "id": "FXV-20261025-001",
+      "date": "2026-10-25",
+      "apps": ["engine"],
+      "type": "added",
+      "title": "Project-wide proof-receipt destination selection",
+      "summary": "Each Engine project can select Base, ApeChain, Arbitrum One, OP Mainnet, or Robinhood Chain as its mainnet proof-receipt destination. Verification remains on zkVerify.",
+      "details": [
+        "Modules inherit their root project's selection. Existing proofs retain their original destination, and Horizen is not offered for new selections.",
+        "Approved module policies cannot be silently changed. FluentXVerse's current modules remain pinned to Base until a coordinated policy migration.",
+        "Persistence, project isolation, permissions, desktop and mobile layouts, and finalized bridge reads passed checks. A paid proof-and-relayer pilot was not run on every destination."
+      ]
+    },
+    {
+      "id": "FXV-20261024-003",
+      "date": "2026-10-24",
+      "apps": ["backend"],
+      "type": "improved",
+      "title": "Safer handling for uploads and intensive requests",
+      "summary": "The backend now checks access earlier and applies bounded request sizes and capacity limits to uploads and proof-related requests.",
+      "details": [
+        "Unauthorized upload requests are rejected before their files are processed.",
+        "Request-protection regression checks passed on the deployed backend. These controls do not guarantee protection against every network attack."
+      ]
+    },
+    {
+      "id": "FXV-20261024-002",
+      "date": "2026-10-24",
+      "apps": ["student", "tutor", "backend"],
+      "type": "fixed",
+      "title": "Session handling across student and tutor apps",
+      "summary": "Improved authentication handling when multiple FluentXVerse apps are open in the same browser.",
+      "details": [
+        "Backend requests use the session belonging to the appropriate app rather than another app's session.",
+        "Automated checks cover mixed student, tutor and administrator sessions. A new live Google sign-in and lesson test was not part of this release check."
+      ]
+    },
+    {
+      "id": "FXV-20261024-001",
+      "date": "2026-10-24",
+      "apps": ["backend"],
+      "type": "changed",
+      "title": "Base becomes the active proof-receipt destination",
+      "summary": "FluentXVerse's five Engine projects now use Base mainnet. Proof verification remains on zkVerify mainnet, with official bridge receipts checked on Base.",
+      "details": [
+        "Screening setup verification completed under the Base configuration. Historical transactions retain their original network.",
+        "Archived contract workflows and confidential payout settlement remain disabled. A new paid proof was not submitted as part of the migration check."
+      ]
+    }
+  ]
+}

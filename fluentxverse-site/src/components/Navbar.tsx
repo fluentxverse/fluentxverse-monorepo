@@ -43,6 +43,7 @@ export function Navbar() {
           <A href="/technology" activeClass="is-active">Technology</A>
           <A href="/onchain-education" activeClass="is-active">Why onchain</A>
           <A href="/#ecosystem" class="ecosystem-nav" onClick={() => setOpen(false)}>Our ecosystem</A>
+          <A href="/changelog" class="changelog-nav" activeClass="is-active">Changelog</A>
           <a class="nav-contact" href={`mailto:${contactEmail}`}>Let's connect <ArrowUpRight size={17} /></a>
         </nav>
         <button ref={toggle} type="button" class="menu-toggle" aria-label={open() ? 'Close menu' : 'Open menu'} aria-controls="primary-navigation" aria-expanded={open()} onClick={() => setOpen(!open())}>

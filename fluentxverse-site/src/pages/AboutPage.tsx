@@ -42,7 +42,7 @@ export function AboutPage() {
               <article class="team-member">
                 <div class="team-portrait">
                   <Show when={member.image} fallback={<div class="portrait-placeholder"><UserRound size={82} strokeWidth={0.8} /><span>FLUENTXVERSE / {String(index() + 1).padStart(2, '0')}</span></div>}>
-                    <img src={member.image} alt={member.name} width="600" height="720" loading="lazy" />
+                    <img src={member.image} alt={member.name} width="600" height="720" loading="lazy" style={{ 'object-position': member.imagePosition }} />
                   </Show>
                   <span class="portrait-index">0{index() + 1}</span>
                 </div>

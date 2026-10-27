@@ -1,0 +1,22 @@
+[Unit]
+Description=FluentXVerse Cloudflare Tunnel
+After=network-online.target docker.service fluentxverse-backend.service
+Requires=fluentxverse-backend.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=fluentxverse-deploy
+ExecStart=/usr/local/bin/cloudflared --no-autoupdate tunnel run --token-file /opt/fluentxverse/secrets/cloudflared.token
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077
+LimitNOFILE=65536
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

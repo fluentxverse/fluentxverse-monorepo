@@ -11,6 +11,8 @@ import { getExamStatus, getSpeakingExamStatus, type ExamStatus, type SpeakingExa
 import './HomePage.css';
 import TeachingDesk from '../Components/Dashboard/TeachingDesk';
 import StatusPanel from '../../../shared/ui/StatusPanel';
+import { proofApi } from '../api/proof.api';
+import { hasTeachingAccess } from '../utils/teachingAccess';
 const HomePage = () => {
     createEffect(on(() => [], () => {
         const _cleanup1 = untrack(() => {
@@ -23,19 +25,8 @@ const HomePage = () => {
     const location = useLocation();
     // Check if redirected due to certification requirement
     const [showCertificationAlert, setShowCertificationAlert] = createSignal(false);
-    createEffect(on(() => [], () => {
-        const _cleanup2 = untrack(() => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('certification') === 'required') {
-                setShowCertificationAlert(true);
-                // Clean up URL
-                window.history.replaceState({}, '', '/home');
-                // Auto-hide after 5 seconds
-                setTimeout(() => setShowCertificationAlert(false), 5000);
-            }
-        });
-        if (typeof _cleanup2 === "function")
-            onCleanup(_cleanup2);
+    createEffect(on(() => location.search, search => {
+        if (new URLSearchParams(search).get('certification') === 'required') setShowCertificationAlert(true);
     }));
     // Exam status state
     const [writtenStatus, setWrittenStatus] = createSignal<ExamStatus | null>(null);
@@ -43,14 +34,18 @@ const HomePage = () => {
     const [loadingStatus, setLoadingStatus] = createSignal(true);
     const [statusError, setStatusError] = createSignal(false);
     const [revision, setRevision] = createSignal(0);
-    // Test accounts that bypass certification requirements
-    const TEST_ACCOUNTS = ['paulanthonyarriola@gmail.com'];
-    const isTestAccount = createMemo(() => _state0.user?.email && TEST_ACCOUNTS.includes(_state0.user.email));
+    const [teachingApproved, setTeachingApproved] = createSignal(false);
+    createEffect(on(() => [_state0.user?.userId, revision()], () => {
+        let current = true;
+        onCleanup(() => { current = false; });
+        setTeachingApproved(false);
+        if (!_state0.user?.userId) return;
+        void proofApi.getTutorCertificationStatus().then(result => {
+            if (current) setTeachingApproved(hasTeachingAccess(result));
+        }).catch(() => { /* Keep teaching widgets locked when approval cannot be verified. */ });
+    }));
     // Calculate active step based on exam status
     const getActiveStep = () => {
-        // Test accounts always show as certified
-        if (isTestAccount())
-            return 2;
         if (!writtenStatus() || !speakingStatus())
             return 1;
         const bothPassed = writtenStatus().passed === true && speakingStatus().passed === true;
@@ -63,10 +58,11 @@ const HomePage = () => {
     createEffect(on(() => [_state0.user?.userId, revision()], () => {
         const _cleanup3 = untrack(() => {
             let active = true;
+            let poll: ReturnType<typeof setTimeout> | undefined;
             const fetchExamStatus = async () => {
                 if (!_state0.user?.userId)
                     return;
-                setLoadingStatus(true);
+                if (!writtenStatus()) setLoadingStatus(true);
                 setStatusError(false);
                 try {
                     const [writtenRes, speakingRes] = await Promise.all([
@@ -80,6 +76,7 @@ const HomePage = () => {
                     }
                     if (speakingRes.success && speakingRes.status) {
                         setSpeakingStatus(speakingRes.status);
+                        if (speakingRes.status.isProcessing) poll = setTimeout(fetchExamStatus, 5000);
                     }
                 }
                 catch (err) {
@@ -90,7 +87,7 @@ const HomePage = () => {
                 }
             };
             fetchExamStatus();
-            return () => { active = false; };
+            return () => { active = false; clearTimeout(poll); };
         });
         if (typeof _cleanup3 === "function")
             onCleanup(_cleanup3);
@@ -108,15 +105,15 @@ const HomePage = () => {
         <main class="home-page-container">
           <div class="container">
             {/* Certification Required Alert */}
-            {showCertificationAlert() && (<div class="certification-alert">
+            {showCertificationAlert() && !teachingApproved() && (<div class="certification-alert" role="alert">
                 <div class="certification-alert-icon">
                   <TutorIcon name="fas fa-lock"/>
                 </div>
                 <div class="certification-alert-content">
                   <strong>Certification Required</strong>
-                  <span>You must complete both the written and speaking exams before accessing that feature.</span>
+                  <span>Complete the written and speaking assessments, profile approval, and interview before accessing teaching features.</span>
                 </div>
-                <button class="certification-alert-close" onClick={() => setShowCertificationAlert(false)}>
+                <button class="certification-alert-close" aria-label="Dismiss certification warning" onClick={() => { setShowCertificationAlert(false); location.route('/home', true); }}>
                   <TutorIcon name="fas fa-times"/>
                 </button>
               </div>)}
@@ -126,10 +123,10 @@ const HomePage = () => {
               <div class="page-title-icon">
                 <TutorArt name="home" size={48}/>
               </div>
-              <h2 class="page-title-gradient">{activeStep() >= 2 ? `Welcome back, ${_state0.user?.firstName || "Tutor"}` : "Your teaching journey"}</h2>
+              <h2 class="page-title-gradient">{teachingApproved() ? `Welcome back, ${_state0.user?.firstName || "Tutor"}` : "Your teaching journey"}</h2>
             </div>
 
-            {activeStep() >= 2 && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><TeachingDesk/></>}
+            {teachingApproved() && <><nav class="tutor-home-shortcuts" aria-label="Teaching workspace">{([{ href: "/schedule", art: "schedule", title: "My schedule" }, { href: "/materials", art: "training", title: "Learning materials" }, { href: "/performance-metrics", art: "growth", title: "Performance metrics" }] as const).map(item => <a href={item.href}><TutorArt name={item.art} size={44}/><span>{item.title}</span><TutorIcon name="fa-arrow-right"/></a>)}</nav><TeachingDesk/></>}
             {statusError() && <StatusPanel kind="error" title="Could not refresh assessment progress" onRetry={() => setRevision(value => value + 1)}/>}
             {/* Main Status Card */}
             <div class="main-status-card">
@@ -202,7 +199,7 @@ const HomePage = () => {
                       A comprehensive assessment covering grammar, vocabulary, reading comprehension, and teaching methodology. Each exam is uniquely generated for every applicant.
                     </p>
                     {!loadingStatus() && writtenStatus() && writtenStatus().passed !== true && (<p class="attempts-info">
-                        <TutorIcon name="fas fa-info-circle"/> {writtenStatus().attemptsThisMonth}/{writtenStatus().maxAttemptsPerMonth} attempts used this month
+                        <TutorIcon name="fas fa-info-circle"/> {writtenStatus().attemptsThisMonth}/{writtenStatus().maxAttemptsPerMonth} attempts used in 30 days
                       </p>)}
                   </div>
                   {writtenStatus()?.passed !== true && (<button class="test-action-btn" onClick={handleTakeWrittenTest} disabled={(writtenStatus()?.attemptsThisMonth ?? 0) >= (writtenStatus()?.maxAttemptsPerMonth ?? 2)}>
@@ -215,39 +212,36 @@ const HomePage = () => {
                 </div>
 
                 {/* Speaking Test */}
-                <div class={`test-card ${speakingStatus()?.passed === true ? 'passed' : speakingStatus()?.passed === false ? 'failed' : speakingStatus()?.isProcessing ? 'processing' : ''}`}>
+                <div class={`test-card ${typeof speakingStatus()?.passed === 'boolean' || speakingStatus()?.isProcessing ? 'processing' : ''}`}>
                   <div class="test-icon" style={cssStyle({
             get background() {
-                return speakingStatus()?.passed === true
-                    ? 'linear-gradient(135deg, #10b981 0%, #34d399 100%)'
-                    : speakingStatus()?.passed === false
-                        ? 'linear-gradient(135deg, #ef4444 0%, #f87171 100%)'
-                        : speakingStatus()?.isProcessing
+                return speakingStatus()?.isProcessing
                             ? 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)'
                             : 'linear-gradient(135deg, #4a9eff 0%, #0245ae 100%)';
             }
         })}>
-                    <TutorIcon name={`fas ${speakingStatus()?.passed === true ? 'fa-check' : speakingStatus()?.passed === false ? 'fa-times' : speakingStatus()?.isProcessing ? 'fa-spinner fa-spin' : 'fa-microphone'}`}/>
+                    <TutorIcon name={`fas ${speakingStatus()?.isProcessing ? 'fa-spinner fa-spin' : 'fa-microphone'}`}/>
                   </div>
                   <div class="test-content">
                     <div class="test-header">
                       <h4>SPEAKING TEST</h4>
-                      {!loadingStatus() && speakingStatus() && (<span class={`test-status-badge ${speakingStatus().passed === true ? 'passed' : speakingStatus().passed === false ? 'failed' : speakingStatus().isProcessing ? 'processing' : 'pending'}`}>
-                          {speakingStatus().passed === true ? '✓ PASSED' : speakingStatus().passed === false ? '✗ FAILED' : speakingStatus().isProcessing ? '⏳ PROCESSING' : 'NOT TAKEN'}
+                      {!loadingStatus() && speakingStatus() && (<span class={`test-status-badge ${typeof speakingStatus().passed === 'boolean' || speakingStatus().isProcessing ? 'processing' : 'pending'}`}>
+                          {speakingStatus().isProcessing ? 'PROCESSING' : speakingStatus().gradingFailed ? 'REVIEW NEEDED' : typeof speakingStatus().passed === 'boolean' ? 'PROVISIONAL AI SCORE' : 'NOT TAKEN'}
                           {typeof speakingStatus().percentage === 'number' && ` (${Math.round(speakingStatus().percentage)}%)`}
                         </span>)}
                     </div>
                     <p>
                       {speakingStatus()?.isProcessing
-            ? 'Your exam is being graded. This may take a few minutes. Please refresh the page to check for results.'
-            : 'An assessment to evaluate your pronunciation teaching ability, fluency, and conversational coaching skills.'}
+            ? 'Your saved recordings are being graded. Your result will appear here when ready.'
+            : speakingStatus()?.gradingFailed ? 'Grading paused. Your recordings are saved and this has not deducted an exam attempt.'
+            : 'AI content scores are provisional, not a final application decision. Pronunciation, delivery, and teaching readiness require human review.'}
                     </p>
                     {!loadingStatus() && speakingStatus() && speakingStatus().passed !== true && !speakingStatus().isProcessing && (<p class="attempts-info">
-                        <TutorIcon name="fas fa-info-circle"/> {speakingStatus().attemptsThisMonth}/{speakingStatus().maxAttemptsPerMonth} attempts used this month
+                        <TutorIcon name="fas fa-info-circle"/> {speakingStatus().attemptsThisMonth}/{speakingStatus().maxAttemptsPerMonth} attempts used in 30 days
                       </p>)}
                   </div>
-                  {speakingStatus()?.passed !== true && !speakingStatus()?.isProcessing && (<button class="test-action-btn secondary" onClick={handleTakeSpeakingTest} disabled={(speakingStatus()?.attemptsThisMonth ?? 0) >= (speakingStatus()?.maxAttemptsPerMonth ?? 2)}>
-                      {speakingStatus()?.hasActiveExam ? 'RESUME' : speakingStatus()?.passed === false ? 'RETAKE' : 'TAKE TEST'} <TutorIcon name="fas fa-arrow-right"/>
+                  {speakingStatus()?.passed !== true && !speakingStatus()?.isProcessing && (<button class="test-action-btn secondary" onClick={handleTakeSpeakingTest} disabled={writtenStatus()?.passed !== true || (speakingStatus()?.attemptsThisMonth ?? 0) >= (speakingStatus()?.maxAttemptsPerMonth ?? 2)}>
+                      {writtenStatus()?.passed !== true ? 'WRITTEN PASS REQUIRED' : speakingStatus()?.gradingFailed ? 'REVIEW' : speakingStatus()?.hasActiveExam ? 'RESUME' : speakingStatus()?.passed === false ? 'RETAKE' : 'TAKE TEST'} <TutorIcon name="fas fa-arrow-right"/>
                     </button>)}
                   {speakingStatus()?.isProcessing && (<div class="test-processing-badge">
                       <TutorIcon name="fas fa-hourglass-half"/>
@@ -255,7 +249,7 @@ const HomePage = () => {
                     </div>)}
                   {speakingStatus()?.passed === true && (<div class="test-complete-badge">
                       <TutorIcon name="fas fa-check-circle"/>
-                      COMPLETE
+                      CONTENT THRESHOLD MET
                     </div>)}
                 </div>
               </div>
@@ -276,7 +270,7 @@ const HomePage = () => {
                       Ensure your contact number is correct and you have a messaging app (Viber, WhatsApp, or Telegram) for interview coordination.
                     </p>
                     <p class="secondary-text">
-                      Update your contact details here: <a href="/profile">My Profile</a>
+                      Update your contact details here: <a href={teachingApproved() ? '/profile' : '/application/profile'}>{teachingApproved() ? 'My Profile' : 'Application Profile'}</a>
                     </p>
                   </div>
                 </div>
@@ -305,7 +299,7 @@ const HomePage = () => {
                     <p>
                       Choose a convenient time for your interview with our recruitment team.
                     </p>
-                    <button class="action-btn green" onClick={() => location.route('/interview')}>
+                    <button class="action-btn green" disabled={!writtenStatus()?.passed || !speakingStatus()?.passed} onClick={() => location.route('/interview')}>
                       BOOK A SCHEDULE
                     </button>
                   </div>

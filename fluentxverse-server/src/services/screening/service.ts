@@ -22,6 +22,10 @@ async function credential(commitment: string) {
   assertCredentialCurrent(JSON.parse(result.publicSignals), screeningChainConfig(), screeningChainConfig().issuerHash);
   return result;
 }
+function proofMatchesRelease(stored: StoredScreeningCredential, vkHash: string) {
+  const release = process.env.SCREENING_RELEASE_MANIFEST_SHA256 || '';
+  return /^[a-f0-9]{64}$/.test(release) && stored.provingReleaseSHA256 === release && stored.proofVKHash?.toLowerCase() === vkHash.toLowerCase();
+}
 
 export async function issueScreeningCredential(tutorId: string, actor: string) {
   requireScreeningEnabled();
@@ -61,10 +65,16 @@ export async function generateScreeningProof(commitment: string, actor: string) 
   requireScreeningEnabled();
   return exclusive(`proof:${commitment}`, async () => {
     const stored = await credential(commitment);
-    if (stored.proof) return privateSummary(stored);
+    if (stored.proof && proofMatchesRelease(stored, screeningChainConfig().vkHash)) return privateSummary(stored);
+    if (stored.zkVerifyTx || stored.status === 'submitting_zkverify') throw Error('Submitted screening proof requires reconciliation before changing its release');
     const { input } = JSON.parse(openPrivateEvidence(stored.encryptedEvidence, stored.id).toString());
-    const proof = await proveScreeningCredential(input, JSON.parse(stored.publicSignals));
-    await screeningQuery("MATCH (c:TutorScreeningCredential {commitment: $commitment, revoked: false}) SET c.proof = $proof, c.status = 'proof_ready'", { commitment, proof: JSON.stringify(proof) });
+    const result = await proveScreeningCredential(input, JSON.parse(stored.publicSignals));
+    const saved = await screeningQuery(`MATCH (c:TutorScreeningCredential {commitment: $commitment})
+      SET c.writeVersion = coalesce(c.writeVersion, 0) + 1 WITH c
+      WHERE c.revoked = false AND c.publicSignals = $signals AND c.zkVerifyTx IS NULL AND c.status IN ['issued','proof_ready']
+      SET c.proof = $proof, c.provingReleaseSHA256 = $release, c.proofVKHash = $vk, c.status = 'proof_ready' RETURN c`,
+      { commitment, signals: stored.publicSignals, proof: JSON.stringify(result.proof), release: result.releaseManifestSHA256, vk: result.vkHash });
+    if (!saved.records.length) throw Error('Screening credential changed while its proof was being generated');
     await screeningAudit(actor, 'generate_proof', commitment);
     return { commitment, status: 'proof_ready', certified: false };
   });
@@ -74,10 +84,21 @@ export async function submitScreeningProof(commitment: string, actor: string) {
   requireScreeningEnabled();
   return exclusive(`submit:${commitment}`, async () => {
     const stored = await credential(commitment), config = screeningChainConfig();
+    if (!stored.shared) throw new Error('Tutor publication consent required before zkVerify submission');
     if (!stored.proof) throw new Error('Generate the approved proof first');
     if (stored.zkVerifyTx) return privateSummary(stored);
+    if (!proofMatchesRelease(stored, config.vkHash)) throw Error('Screening proof must be regenerated for the current reviewed release');
     await assertValidatorConfiguration(config, JSON.parse(stored.publicSignals));
-    const claimed = await screeningQuery("MATCH (c:TutorScreeningCredential {commitment: $commitment, revoked: false, status: 'proof_ready'}) SET c.status = 'submitting_zkverify' RETURN c", { commitment });
+    // The durable claim is the publication authorization point. Concurrent unsharing
+    // after it cannot retract an already authorized, irreversible chain submission.
+    const claimed = await screeningQuery(`MATCH (c:TutorScreeningCredential {commitment: $commitment})
+      SET c.writeVersion = coalesce(c.writeVersion, 0) + 1 WITH c
+      WHERE c.revoked = false AND c.shared = true AND c.status = 'proof_ready'
+        AND c.publicSignals = $signals AND c.proof = $proof
+        AND c.provingReleaseSHA256 = $release AND c.proofVKHash = $vk
+      SET c.status = 'submitting_zkverify', c.publicationAuthorizedAt = $now RETURN c`,
+      { commitment, signals: stored.publicSignals, proof: stored.proof, release: stored.provingReleaseSHA256,
+        vk: stored.proofVKHash, now: new Date().toISOString() });
     if (!claimed.records.length) throw new Error('Proof submission is already in progress or requires reconciliation');
     const { submission } = await submitBridgeScreeningProof(JSON.parse(stored.proof), JSON.parse(stored.publicSignals));
     const result = JSON.parse(submission.transactionResult);
@@ -125,7 +146,7 @@ export async function revokeScreeningCredential(commitment: string, actor: strin
   const stored = await getScreeningCredential(commitment);
   if (!stored) throw new Error('Credential not found');
   // Revocation is issuer-managed; no governance transaction is submitted.
-  await screeningQuery("MATCH (c:TutorScreeningCredential {commitment: $commitment}) SET c.revoked = true, c.status = 'revoked'", { commitment });
+  await screeningQuery("MATCH (c:TutorScreeningCredential {commitment: $commitment}) SET c.writeVersion = coalesce(c.writeVersion, 0) + 1, c.revoked = true, c.status = 'revoked'", { commitment });
   await screeningAudit(actor, 'revoke', commitment);
   return { commitment, status: 'revoked', revocationEnforcement: 'issuer', onChainRevocationTransactionId: null };
 }
@@ -150,7 +171,8 @@ export async function shareScreeningCredential(tutorId: string, commitment: stri
   requireScreeningEnabled();
   const stored = await getScreeningCredential(commitment);
   if (!stored || stored.tutorId !== tutorId) throw new Error('Credential not found');
-  await screeningQuery('MATCH (c:TutorScreeningCredential {commitment: $commitment, tutorId: $tutorId}) SET c.shared = $shared', { commitment, tutorId, shared });
+  await screeningQuery(`MATCH (c:TutorScreeningCredential {commitment: $commitment, tutorId: $tutorId})
+    SET c.writeVersion = coalesce(c.writeVersion, 0) + 1, c.shared = $shared`, { commitment, tutorId, shared });
   await screeningAudit(tutorId, shared ? 'share' : 'unshare', commitment);
   return privateSummary({ ...stored, shared });
 }
@@ -175,6 +197,9 @@ export async function publicScreeningSummary(commitment: string) {
     receipt: bridgeOnly && stored.receiptJson ? JSON.parse(stored.receiptJson) : null,
     validationMeaning: 'Credential verification outcome, not the tutor exam score', policyId: screeningPolicy.id,
     claim: screeningPolicy.claim, limitations: screeningPolicy.limitations, issuedAt: signals.issuedAt, expiresAt: signals.expiresAt,
+    assurance: { releasePolicy: process.env.SCREENING_RELEASE_POLICY || 'independent-reviewed',
+      independentlyReviewed: process.env.SCREENING_RELEASE_POLICY !== 'self-operated',
+      setupTrust: process.env.SCREENING_RELEASE_POLICY === 'self-operated' ? 'FluentXVerse-operated trusted setup; entropy destruction is operator-asserted' : 'Independently reviewed multi-party setup' },
     publicSignals: values, proof: stored.proof ? JSON.parse(stored.proof) : null,
     agent: agentRegistration(destination || undefined),
     verification: destination ? { chainId: destination.chainId, agentId: bridgeOnly ? null : destination.agentId, adapterAddress: bridgeOnly ? null : destination.adapterAddress,

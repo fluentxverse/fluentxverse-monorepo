@@ -4,7 +4,7 @@ import { client } from '../../api/utils';
 import './ScreeningCredential.css';
 
 interface Credential { commitment: string; status: string; shared: boolean; revoked: boolean; expiresAt: string; verificationUrl: string | null }
-const labels: Record<string, string> = { issued: 'Credential issued', proof_ready: 'Proof ready', awaiting_horizen_validation: 'Awaiting Horizen validation', revoked: 'Revoked', expired: 'Expired', verified: 'Verified on Horizen', verification_unavailable: 'Verification temporarily unavailable' };
+const labels: Record<string, string> = { issued: 'Credential issued', proof_ready: 'Proof ready', awaiting_horizen_validation: 'Awaiting receipt verification', revoked: 'Revoked', expired: 'Expired', verified: 'Certification verified', verification_unavailable: 'Verification temporarily unavailable' };
 export default function ScreeningCredential() {
   const [data, { refetch }] = createResource(async () => {
     try { return (await client.get('/screening/me')).data.data as { enabled: boolean; credentials: Credential[] }; }

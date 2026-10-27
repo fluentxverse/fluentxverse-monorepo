@@ -6,6 +6,7 @@ import { getIO } from '../../socket/socket.server';
 import { canReserveForBooking } from '../schedule.services/bookingPolicy';
 import { buildLevelAssessment } from '../assessmentProfile';
 import { tutorProfileQuery } from './tutorProfileQuery';
+import { retiredCredentialStatus } from '../proof.services/legacyProofRetirement';
 
 // Helper to convert Neo4j DateTime to ISO string
 function neo4jDateTimeToISO(dt: any): string | undefined {
@@ -75,10 +76,10 @@ function toTutorProofSummary(credentialNode: any) {
   if (!credential) return {};
 
   return {
-    zkCertificationStatus: credential.status || undefined,
+    zkCertificationStatus: retiredCredentialStatus(credential),
     zkCredentialCommitment: credential.credentialCommitment || undefined,
     zkCircuitVersion: credential.circuitVersion || undefined,
-    zkVerifiedAt: neo4jDateTimeToISO(credential.zkVerifyVerifiedAt) || neo4jDateTimeToISO(credential.verifiedAt) || undefined,
+    zkVerifiedAt: undefined,
     zkVerifyTxHash: credential.zkVerifyTxHash || undefined,
   };
 }

@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { batch, onMount, createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { TICKETING_VISIBLE } from '../config/launch';
 import { cssStyle, Fragment } from "../utils/cssStyle";
@@ -12,18 +12,8 @@ import ProfileAvatar from '../Components/Common/ProfileAvatar';
 import { useAuthContext } from '../context/AuthContext';
 import LoadingSpinner from '../Components/LoadingSpinner';
 import { API_BASE_URL } from '../config/api';
+import { BROWSE_START_TIMES, BROWSE_END_TIMES, bookableBrowseStarts, browseOperationalDate, browseTimeLabel as timeLabel, defaultBrowseTimeRange, normalizeBrowseTimeRange, type BrowseTimeRange } from '../utils/browseTimeFilter';
 import './BrowseTutorsPage.css';
-const timeOptions = Array.from({ length: 38 }, (_, index) => `${String(5 + Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`).concat('24:30');
-const timeLabel = (time: string) => {
-    const [hour, minute] = time.split(':').map(Number);
-    return `${String((hour + 1) % 24).padStart(2, '0')}:${String(minute).padStart(2, '0')}${hour + 1 >= 24 ? ' (+1 day)' : ''}`;
-};
-// Search availability is keyed by Philippine operational dates on the server.
-const operationalDate = () => {
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
-    const part = (type: string) => parts.find(p => p.type === type)?.value;
-    return `${part('year')}-${part('month')}-${part('day')}`;
-};
 function TutorCard(_props0: {
     tutor: Tutor;
     onBook: (tutor: Tutor) => void;
@@ -80,9 +70,12 @@ export const BrowseTutorsPage = () => {
     };
     const [draftQuery, setDraftQuery] = createSignal('');
     const [query, setQuery] = createSignal('');
-    const [selectedDate, setSelectedDate] = createSignal(operationalDate());
-    const [startTime, setStartTime] = createSignal('05:00');
-    const [endTime, setEndTime] = createSignal('24:30');
+    const initialNow = Date.now();
+    const initialRange = defaultBrowseTimeRange(initialNow);
+    const [now, setNow] = createSignal(initialNow);
+    const [selectedDate, setSelectedDate] = createSignal(initialRange.date);
+    const [startTime, setStartTime] = createSignal(initialRange.startTime);
+    const [endTime, setEndTime] = createSignal(initialRange.endTime);
     const [showFilters, setShowFilters] = createSignal(false);
     const filterDialog = { current: null } as {
         current: HTMLDialogElement | null;
@@ -96,13 +89,45 @@ export const BrowseTutorsPage = () => {
         premium: number;
         trial: number;
     } | null>(null);
-    const today = operationalDate();
-    const dates = Array.from({ length: 7 }, (_, index) => {
-        const date = new Date(`${today}T00:00:00Z`);
+    const today = createMemo(() => browseOperationalDate(now()));
+    const firstToday = createMemo(() => bookableBrowseStarts(today(), now())[0]);
+    const defaults = createMemo(on(() => [today(), firstToday()], () => defaultBrowseTimeRange(untrack(now))));
+    const startOptions = createMemo(() => selectedDate() > today() ? BROWSE_START_TIMES
+        : selectedDate() === today() && firstToday() ? BROWSE_START_TIMES.filter(time => time >= firstToday()) : []);
+    const endOptions = createMemo(() => BROWSE_END_TIMES.filter(time => time > startTime()));
+    const applyRange = (range: BrowseTimeRange) => batch(() => {
+        setSelectedDate(range.date);
+        setStartTime(range.startTime);
+        setEndTime(range.endTime);
+    });
+    const selectDate = (date: string) => {
+        const current = Date.now();
+        batch(() => {
+            setNow(current);
+            applyRange(normalizeBrowseTimeRange({ date, startTime: startTime(), endTime: endTime() }, current));
+        });
+    };
+    const selectStart = (time: string) => applyRange(normalizeBrowseTimeRange({ date: selectedDate(), startTime: time, endTime: endTime() }, Date.now()));
+    onMount(() => {
+        const refresh = () => { if (!document.hidden) setNow(Date.now()); };
+        const timer = window.setInterval(refresh, 1000);
+        window.addEventListener('focus', refresh);
+        document.addEventListener('visibilitychange', refresh);
+        onCleanup(() => {
+            window.clearInterval(timer);
+            window.removeEventListener('focus', refresh);
+            document.removeEventListener('visibilitychange', refresh);
+        });
+    });
+    createEffect(on(() => [today(), firstToday()], () => {
+        applyRange(normalizeBrowseTimeRange({ date: selectedDate(), startTime: startTime(), endTime: endTime() }, untrack(now)));
+    }));
+    const dates = createMemo(() => Array.from({ length: 7 }, (_, index) => {
+        const date = new Date(`${today()}T00:00:00Z`);
         date.setUTCDate(date.getUTCDate() + index);
         return { value: date.toISOString().slice(0, 10), label: index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'UTC' }).format(date), day: new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(date) };
-    });
-    const filtered = createMemo(() => !!query() || selectedDate() !== today || startTime() !== '05:00' || endTime() !== '24:30');
+    }));
+    const filtered = createMemo(() => !!query() || selectedDate() !== defaults().date || startTime() !== defaults().startTime || endTime() !== defaults().endTime);
     createEffect(on(() => [], () => {
         const _cleanup2 = untrack(() => {
             document.title = 'Browse Tutors | FluentXVerse';
@@ -153,9 +178,9 @@ export const BrowseTutorsPage = () => {
                 }, get dateFilter() {
                     return selectedDate();
                 }, get startTime() {
-                    return startTime() === '05:00' ? undefined : startTime();
+                    return startTime();
                 }, get endTime() {
-                    return endTime() === '24:30' ? undefined : endTime();
+                    return endTime();
                 }, page: nextPage, limit: 12 });
             if (id !== requestId.current)
                 return;
@@ -179,22 +204,24 @@ export const BrowseTutorsPage = () => {
             onCleanup(_cleanup5);
     }));
     const clearFilters = () => {
-        setDraftQuery('');
-        setQuery('');
-        setSelectedDate(today);
-        setStartTime('05:00');
-        setEndTime('24:30');
-        if (!filtered())
-            searchTutors()();
+        const current = Date.now(), range = defaultBrowseTimeRange(current);
+        const unchanged = !query() && selectedDate() === range.date && startTime() === range.startTime && endTime() === range.endTime;
+        batch(() => {
+            setNow(current);
+            setDraftQuery('');
+            setQuery('');
+            applyRange(range);
+        });
+        if (unchanged) searchTutors()();
     };
     const timeControls = (suffix: string) => <div class="browse-time-controls">
     <span class="browse-time-label">JST</span>
-    <select aria-label={`Start time${suffix}`} value={startTime()} onChange={e => setStartTime(e.currentTarget.value)}>
-      {timeOptions.filter(time => time < endTime()).map(time => <option value={time}>{timeLabel(time)}</option>)}
+    <select aria-label={`Start time${suffix}`} value={startTime()} onChange={e => selectStart(e.currentTarget.value)}>
+      {startOptions().map(time => <option value={time}>{timeLabel(time)}</option>)}
     </select>
     <span aria-hidden="true">–</span>
     <select aria-label={`End time${suffix}`} value={endTime()} onChange={e => setEndTime(e.currentTarget.value)}>
-      {timeOptions.filter(time => time > startTime()).map(time => <option value={time}>{timeLabel(time)}</option>)}
+      {endOptions().map(time => <option value={time}>{timeLabel(time)}</option>)}
     </select>
   </div>;
     return createMemo(() => {
@@ -228,7 +255,7 @@ export const BrowseTutorsPage = () => {
             <button ref={_element => filterButton.current = _element} class="browse-button browse-button--secondary browse-filter-button" onClick={() => setShowFilters(true)} aria-haspopup="dialog"><SlidersHorizontal size={17}/>Filters</button>
           </div>
           <div class="browse-day-strip" aria-label="Availability day">
-            {dates.map(date => <button aria-pressed={selectedDate() === date.value} onClick={() => setSelectedDate(date.value)}><strong>{date.label}</strong><span>{date.day}</span></button>)}
+            {dates().map(date => <button aria-pressed={selectedDate() === date.value} disabled={date.value === today() && !firstToday()} onClick={() => selectDate(date.value)}><strong>{date.label}</strong><span>{date.day}</span></button>)}
           </div>
           <div class="browse-results-header">
             <p role="status">{loading() ? 'Finding tutors…' : `${tutors().length} of ${total()} ${total() === 1 ? 'tutor' : 'tutors'}`}</p>
@@ -249,7 +276,7 @@ export const BrowseTutorsPage = () => {
                     setShowFilters(false);
             } }}>
         <div class="browse-filter-dialog-header"><h2 id="browse-filter-title">Lesson availability</h2><button class="browse-icon-button" onClick={() => setShowFilters(false)} aria-label="Close filters" title="Close filters"><X size={20}/></button></div>
-        <label for="browse-date">Lesson day</label><select id="browse-date" value={selectedDate()} onChange={e => setSelectedDate(e.currentTarget.value)}>{dates.map(date => <option value={date.value}>{date.label}, {date.day}</option>)}</select>
+        <label for="browse-date">Lesson day</label><select id="browse-date" value={selectedDate()} onChange={e => selectDate(e.currentTarget.value)}>{dates().map(date => <option value={date.value} disabled={date.value === today() && !firstToday()}>{date.label}, {date.day}</option>)}</select>
         <label>Lesson time (JST)</label>{timeControls(' in filters')}
         <div class="browse-filter-dialog-footer"><button class="browse-reset" onClick={clearFilters}><RotateCcw size={14}/>Reset</button><button class="browse-button" onClick={() => setShowFilters(false)}>View Tutors <ArrowRight size={16}/></button></div>
       </dialog>}

@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
+import { Show, createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorArt from "../Components/Common/TutorArt";
@@ -163,7 +163,7 @@ export default function InboxPage() {
             </button>)}
         </div>
 
-        <div class="inbox-error-slot" aria-live="polite">
+        <div class={`inbox-error-slot ${error() ? 'has-error' : ''}`} aria-live="polite">
           {error() && (<div class="inbox-error">
               <TutorIcon name="fas fa-exclamation-circle"/>
               <p>{error()}</p>
@@ -171,25 +171,25 @@ export default function InboxPage() {
             </div>)}
         </div>
 
-        <div class="inbox-filters">
-          <button class={`filter-btn ${filter() === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+        <div class="inbox-filters" role="group" aria-label="Filter messages">
+          <button class={`inbox-filter-btn ${filter() === 'all' ? 'active' : ''}`} aria-label={`All Messages ${messages().length}`} aria-pressed={filter() === 'all'} onClick={() => setFilter('all')}>
             <TutorIcon name="fas fa-inbox"/>
-            All Messages
+            <span>All<span class="inbox-long-label"> Messages</span></span>
             <span class="filter-count">{messages().length}</span>
           </button>
-          <button class={`filter-btn ${filter() === 'unread' ? 'active' : ''}`} onClick={() => setFilter('unread')}>
+          <button class={`inbox-filter-btn ${filter() === 'unread' ? 'active' : ''}`} aria-pressed={filter() === 'unread'} onClick={() => setFilter('unread')}>
             <TutorIcon name="fas fa-envelope"/>
             Unread
             {unreadCount() > 0 && <span class="filter-count unread">{unreadCount()}</span>}
           </button>
-          <button class={`filter-btn ${filter() === 'pinned' ? 'active' : ''}`} onClick={() => setFilter('pinned')}>
+          <button class={`inbox-filter-btn ${filter() === 'pinned' ? 'active' : ''}`} aria-pressed={filter() === 'pinned'} onClick={() => setFilter('pinned')}>
             <TutorIcon name="fas fa-thumbtack"/>
             Pinned
           </button>
         </div>
 
-        <div class="inbox-content">
-          <div class="messages-list">
+        <div class={`inbox-content ${selectedMessage() ? 'has-selection' : ''}`}>
+          <div class="messages-list" aria-label="Messages" aria-busy={isLoading()}>
             {isLoading() ? (<div class="inbox-loading">
                 <TutorIcon name="fas fa-spinner fa-spin"/>
                 <p>Loading messages...</p>
@@ -203,7 +203,7 @@ export default function InboxPage() {
                 </span>
               </div>) : (sortedMessages().map(message => {
             const catInfo = categoryInfo[message.category];
-            return (<div class={`message-item ${!message.isRead ? 'unread' : ''} ${selectedMessage()?.id === message.id ? 'selected' : ''}`} onClick={() => handleMessageClick(message)}>
+            return (<div class={`message-item ${!message.isRead ? 'unread' : ''} ${selectedMessage()?.id === message.id ? 'selected' : ''}`} role="button" tabIndex={0} aria-pressed={selectedMessage()?.id === message.id} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleMessageClick(message); } }} onClick={() => handleMessageClick(message)}>
                     <div class="message-icon" style={cssStyle({ backgroundColor: `${catInfo.color}15`, color: catInfo.color })}>
                       <TutorIcon name={`fas ${catInfo.icon}`}/>
                     </div>
@@ -228,29 +228,42 @@ export default function InboxPage() {
           </div>
 
           <div class={`message-detail ${selectedMessage() ? 'visible' : ''}`}>
-            {selectedMessage() ? (<>
+            <Show when={selectedMessage()} keyed fallback={<div class="no-message-selected">
+                <TutorIcon name="fas fa-envelope-open-text"/>
+                <p>Select a message to read</p>
+              </div>}>{message => (<>
                 <div class="detail-header">
-                  <button class="back-btn" onClick={() => setSelectedMessage(null)}>
+                  <button class="back-btn" aria-label="Back to messages" onClick={() => setSelectedMessage(null)}>
                     <TutorIcon name="fas fa-arrow-left"/>
                   </button>
+                  <div class="inbox-sender">
+                    <img src="/assets/img/logo/icon_logo.webp" alt="" width="32" height="32" />
+                    <div>
+                      <strong>FluentXVerse</strong>
+                      <span>Tutor communications</span>
+                    </div>
+                  </div>
                   <div class="detail-actions">
-                    <button class={`inbox-action-btn ${selectedMessage().isPinned ? 'active' : ''}`} onClick={() => togglePin(selectedMessage().id)} title={selectedMessage().isPinned ? 'Unpin' : 'Pin'}>
+                    <button class={`inbox-action-btn ${message.isPinned ? 'active' : ''}`} aria-label={message.isPinned ? 'Unpin message' : 'Pin message'} onClick={() => togglePin(message.id)} title={message.isPinned ? 'Unpin' : 'Pin'}>
                       <TutorIcon name="fas fa-thumbtack"/>
                     </button>
                   </div>
                 </div>
-                <div class="detail-content">
+                <div class="detail-content" style={cssStyle({ '--inbox-category-accent': categoryInfo[message.category].color })}>
+                  <div class="detail-subject">
                   <div class="detail-category" style={cssStyle({ get backgroundColor() {
-                    return `${categoryInfo[selectedMessage().category].color}15`;
+                    return `${categoryInfo[message.category].color}15`;
                 }, get color() {
-                    return categoryInfo[selectedMessage().category].color;
+                    return categoryInfo[message.category].color;
                 } })}>
-                    <TutorIcon name={`fas ${categoryInfo[selectedMessage().category].icon}`}/>
-                    {categoryInfo[selectedMessage().category].label}
+                    <TutorIcon name={`fas ${categoryInfo[message.category].icon}`}/>
+                    {categoryInfo[message.category].label}
                   </div>
-                  <h2 class="detail-title">{selectedMessage().title}</h2>
-                  <span class="detail-date">
-                    {new Date(selectedMessage().createdAt).toLocaleDateString('en-US', {
+                  <h2 class="detail-title">{message.title}</h2>
+                  <div class="detail-date">
+                    <TutorIcon name="fas fa-clock"/>
+                    <time dateTime={message.createdAt}>
+                    {new Date(message.createdAt).toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -258,15 +271,14 @@ export default function InboxPage() {
                 hour: '2-digit',
                 minute: '2-digit'
             })}
-                  </span>
+                    </time>
+                  </div>
+                  </div>
                   <div class="detail-body">
-                    <p>{selectedMessage().content}</p>
+                    <p>{message.content}</p>
                   </div>
                 </div>
-              </>) : (<div class="no-message-selected">
-                <TutorIcon name="fas fa-envelope-open-text"/>
-                <p>Select a message to read</p>
-              </div>)}
+              </>)}</Show>
           </div>
         </div>
       </div>

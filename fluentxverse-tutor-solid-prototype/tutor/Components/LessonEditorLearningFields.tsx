@@ -132,7 +132,7 @@ export default function LessonEditorLearningFields(_props0: {
                 : group === 'grammarItems'
                     ? 'grammar-check'
                     : 'pronunciation';
-            const { data } = await client.post(`/ai/${path}`, group === 'grammarItems' ? { text } : { word: text }, {
+            const { data } = await client.post(`/ai/${path}`, group === 'grammarItems' ? { text, sessionId: latest.current.note.sessionId } : { word: text, sessionId: latest.current.note.sessionId }, {
                 signal: controller.signal
             });
             if (group === 'vocabularyItems')

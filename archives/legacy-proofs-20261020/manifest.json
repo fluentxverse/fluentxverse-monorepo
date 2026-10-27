@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "retired": true,
+  "files": [
+    {
+      "source": "fluentxverse-server/src/services/proof.services/localGroth16.service.ts",
+      "archive": "src/services/proof.services/localGroth16.service.ts.txt",
+      "sha256": "2427342c7e71848a41b8aceb5324a7990af554a530c71a3178ee556f33035b18"
+    },
+    {
+      "source": "fluentxverse-server/src/services/proof.services/studentLessonProof.service.ts",
+      "archive": "src/services/proof.services/studentLessonProof.service.ts.txt",
+      "sha256": "727eee2399287887c66273a639e933623df174c230e1cbb5df156531450715c2"
+    },
+    {
+      "source": "fluentxverse-server/src/services/proof.services/tutorCertificationProof.service.ts",
+      "archive": "src/services/proof.services/tutorCertificationProof.service.ts.txt",
+      "sha256": "37342ea7b03ce4198a92cc64c2a8b02d36ffe3583c0e8b6393b427894e8d4387"
+    },
+    {
+      "source": "fluentxverse-server/src/services/proof.services/zkVerifySubmit.service.ts",
+      "archive": "src/services/proof.services/zkVerifySubmit.service.ts.txt",
+      "sha256": "b445ff7dcf95972f9f9ebfea010bdc433ec9ac68aaabebc45eee94d398ad74a4"
+    },
+    {
+      "source": "fluentxverse-server/src/services/proof.services/tutorCertificationWorkflow.service.ts",
+      "archive": "src/services/proof.services/tutorCertificationWorkflow.service.ts.txt",
+      "sha256": "817d724fc66b4bfc8d87ec4504598f6e89d1acc64214fa84e4db20d5a0a47c1a"
+    },
+    {
+      "source": "fluentxverse-server/circuits/tutor-certification/tutor_certification.circom",
+      "archive": "circuits/tutor-certification/tutor_certification.circom.txt",
+      "sha256": "c6eefedbc77bff64d7ff55ff7f1af22398d131392d370e0e525305f55fe90b5c"
+    },
+    {
+      "source": "fluentxverse-go-server/internal/proof/service.go",
+      "archive": "fluentxverse-go-server/internal/proof/service.go.txt",
+      "sha256": "a900c7256b1a3c22c05c93f71cc1946e83693b606a17f44c13f4d9b8a88fb5df"
+    },
+    {
+      "source": "fluentxverse-go-server/internal/proof/bridge/tutor_cert_bridge.mjs",
+      "archive": "fluentxverse-go-server/internal/proof/bridge/tutor_cert_bridge.mjs.txt",
+      "sha256": "821c47e53d5aedbdbc011fa33cc725791973a49b92e2cb39e06c84f73983a4f0"
+    }
+  ]
+}

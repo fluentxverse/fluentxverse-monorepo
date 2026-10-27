@@ -38,10 +38,11 @@ const DashboardOverview = () => {
     const [proofStatus, setProofStatus] = createSignal<TutorCertificationProofResponse | null>(null);
     createEffect(on(() => [_state0.user?.userId], () => {
         const _cleanup1 = untrack(() => {
+            let disposed = false;
+            let poll: ReturnType<typeof setTimeout> | undefined;
             const fetchData = async () => {
                 if (!_state0.user?.userId)
                     return;
-                setLoading(true);
                 try {
                     const [writtenRes, speakingRes, interviewRes, proofRes] = await Promise.all([
                         getExamStatus(_state0.user.userId),
@@ -49,6 +50,7 @@ const DashboardOverview = () => {
                         interviewApi.getMyBooking().catch(() => null),
                         proofApi.getTutorCertificationStatus().catch(() => null)
                     ]);
+                    if (disposed) return;
                     if (writtenRes.success && writtenRes.status) {
                         setWrittenStatus(writtenRes.status);
                     }
@@ -57,6 +59,7 @@ const DashboardOverview = () => {
                     }
                     setInterview(interviewRes);
                     setProofStatus(proofRes);
+                    if (speakingRes.status?.isProcessing) poll = setTimeout(fetchData, 5000);
                 }
                 catch (err) {
                     console.error('Failed to fetch dashboard data:', err);
@@ -66,6 +69,7 @@ const DashboardOverview = () => {
                 }
             };
             fetchData();
+            return () => { disposed = true; clearTimeout(poll); };
         });
         if (typeof _cleanup1 === "function")
             onCleanup(_cleanup1);
@@ -85,22 +89,20 @@ const DashboardOverview = () => {
     const getCertificationStatus = () => {
         const missing = proofStatus()?.snapshot.missingRequirements || [];
         const allPassed = Boolean(proofStatus()) && missing.length === 0;
-        if (allPassed && proofStatus()?.credential.status === 'verified')
-            return { text: 'zkVerified', color: '#10b981' };
         if (allPassed)
-            return { text: 'ZK Ready', color: '#10b981' };
-        if (proofStatus() && missing.includes('profile_approval'))
-            return { text: 'Profile Review Pending', color: '#f59e0b' };
-        if (proofStatus() && missing.includes('interview_pass'))
-            return { text: 'Interview Pending', color: '#f59e0b' };
+            return { text: 'Application approved', color: '#10b981' };
+        if (speakingStatus()?.isProcessing)
+            return { text: 'Speaking Assessment Processing', color: '#3b82f6' };
         if (speakingStatus()?.passed && writtenStatus()?.passed)
-            return { text: 'Interview Pending', color: '#f59e0b' };
+            return { text: interview()?.result === 'pass' || proofStatus()?.snapshot.interviewPassed ? 'Profile Review Pending' : 'Interview Pending', color: '#f59e0b' };
         if (writtenStatus()?.passed)
             return { text: 'Speaking Exam Pending', color: '#3b82f6' };
         return { text: 'In Progress', color: '#94a3b8' };
     };
     const getProofBadge = () => {
         const status = proofStatus()?.credential.status || 'requirements_incomplete';
+        if (['retired', 'expired', 'revoked'].includes(status))
+            return { label: status.toUpperCase(), className: 'processing' };
         if (status === 'verified')
             return { label: 'ZK VERIFIED', className: 'passed' };
         if (status === 'local_proof_generated')
@@ -113,8 +115,8 @@ const DashboardOverview = () => {
             return { label: 'FAILED', className: 'failed' };
         return { label: 'INCOMPLETE', className: 'pending' };
     };
-    const certStatus = getCertificationStatus();
-    const progressPercent = getProgressPercentage();
+    const certStatus = createMemo(getCertificationStatus);
+    const progressPercent = createMemo(getProgressPercentage);
     return createMemo(() => {
         if (loading()) {
             return (<div class="dashboard-overview loading">
@@ -131,8 +133,8 @@ const DashboardOverview = () => {
           <h1>Welcome back, {_state0.user?.firstName || 'Tutor'}! 👋</h1>
           <p>Track your certification progress and upcoming tasks.</p>
         </div>
-        <div class="certification-badge" style={cssStyle({ borderColor: certStatus.color })}>
-          <span class="badge-status" style={cssStyle({ color: certStatus.color })}>{certStatus.text}</span>
+        <div class="certification-badge" style={cssStyle({ borderColor: certStatus().color })}>
+          <span class="badge-status" style={cssStyle({ color: certStatus().color })}>{certStatus().text}</span>
         </div>
       </div>
 
@@ -140,14 +142,14 @@ const DashboardOverview = () => {
       <div class="progress-overview">
         <div class="progress-header">
           <h2><TutorArt name="certificate" size={32}/> Certification Progress</h2>
-          <span class="progress-percent">{progressPercent}%</span>
+          <span class="progress-percent">{progressPercent()}%</span>
         </div>
 
         {/* Progress Ring */}
         <div class="progress-ring-container">
           <svg viewBox="0 0 100 100" class="progress-ring">
             <circle cx="50" cy="50" r="42" fill="none" stroke="#e2e8f0" stroke-width="8"/>
-            <circle cx="50" cy="50" r="42" fill="none" stroke="url(#progressGradient)" stroke-width="8" stroke-dasharray={`${progressPercent * 2.64} 264`} stroke-dashoffset="66" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="url(#progressGradient)" stroke-width="8" stroke-dasharray={`${progressPercent() * 2.64} 264`} stroke-dashoffset="66" stroke-linecap="round" transform="rotate(-90 50 50)"/>
             <defs>
               <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#3b82f6"/>
@@ -156,7 +158,7 @@ const DashboardOverview = () => {
             </defs>
           </svg>
           <div class="progress-ring-inner">
-            <span class="progress-value">{progressPercent}%</span>
+            <span class="progress-value">{progressPercent()}%</span>
             <span class="progress-label">Complete</span>
           </div>
         </div>
@@ -180,19 +182,17 @@ const DashboardOverview = () => {
 
           <div class="step-connector"></div>
 
-          <div class={`progress-step ${speakingStatus()?.passed ? 'completed' : speakingStatus()?.isProcessing ? 'processing' : speakingStatus()?.passed === false ? 'failed' : ''}`}>
+          <div class={`progress-step ${typeof speakingStatus()?.passed === 'boolean' || speakingStatus()?.isProcessing ? 'processing' : ''}`}>
             <div class="step-icon">
-              {speakingStatus()?.passed ? <TutorIcon name="fas fa-check"/> :
+              {typeof speakingStatus()?.passed === 'boolean' ? <TutorIcon name="fas fa-microphone"/> :
                 speakingStatus()?.isProcessing ? <TutorIcon name="fas fa-spinner fa-spin"/> :
-                    speakingStatus()?.passed === false ? <TutorIcon name="fas fa-times"/> :
                         <span>2</span>}
             </div>
             <div class="step-info">
               <span class="step-title">Speaking Exam</span>
               <span class="step-status">
-                {speakingStatus()?.passed ? `Passed (${Math.round(speakingStatus().percentage || 0)}%)` :
-                speakingStatus()?.isProcessing ? 'Processing...' :
-                    speakingStatus()?.passed === false ? 'Failed' : 'Not taken'}
+                {speakingStatus()?.isProcessing ? 'Processing...' :
+                    typeof speakingStatus()?.passed === 'boolean' ? `Provisional AI score (${Math.round(speakingStatus().percentage || 0)}%)` : 'Not taken'}
               </span>
             </div>
           </div>
@@ -223,7 +223,7 @@ const DashboardOverview = () => {
           <div class="stat-card-content">
             <h3>Written Exam</h3>
             <div class="stat-score">
-              {writtenStatus()?.passed !== undefined ? (<>
+              {typeof writtenStatus()?.passed === 'boolean' ? (<>
                   <span class={`score-badge ${writtenStatus().passed ? 'passed' : 'failed'}`}>
                     {writtenStatus().passed ? 'PASSED' : 'FAILED'}
                   </span>
@@ -232,7 +232,7 @@ const DashboardOverview = () => {
             </div>
             <div class="stat-attempts">
               <TutorIcon name="fas fa-redo"/>
-              {writtenStatus()?.attemptsThisMonth || 0}/{writtenStatus()?.maxAttemptsPerMonth || 2} attempts this month
+              {writtenStatus()?.attemptsThisMonth || 0}/{writtenStatus()?.maxAttemptsPerMonth || 2} attempts in 30 days
             </div>
           </div>
           {!writtenStatus()?.passed && (<button class="stat-action" onClick={() => location.route('/exam/written')}>
@@ -248,20 +248,21 @@ const DashboardOverview = () => {
           <div class="stat-card-content">
             <h3>Speaking Exam</h3>
             <div class="stat-score">
-              {speakingStatus()?.isProcessing ? (<span class="score-badge processing">PROCESSING</span>) : speakingStatus()?.passed !== undefined ? (<>
-                  <span class={`score-badge ${speakingStatus().passed ? 'passed' : 'failed'}`}>
-                    {speakingStatus().passed ? 'PASSED' : 'FAILED'}
+              {speakingStatus()?.isProcessing ? (<span class="score-badge processing">PROCESSING</span>) : speakingStatus()?.gradingFailed ? (<span class="score-badge processing">REVIEW NEEDED</span>) : typeof speakingStatus()?.passed === 'boolean' ? (<>
+                  <span class="score-badge processing">
+                    PROVISIONAL AI SCORE
                   </span>
                   {speakingStatus().percentage !== null && (<span class="score-percent">{Math.round(speakingStatus().percentage)}%</span>)}
                 </>) : (<span class="score-badge pending">NOT TAKEN</span>)}
             </div>
+            <p>Human review is required for a final application decision.</p>
             <div class="stat-attempts">
               <TutorIcon name="fas fa-redo"/>
-              {speakingStatus()?.attemptsThisMonth || 0}/{speakingStatus()?.maxAttemptsPerMonth || 2} attempts this month
+              {speakingStatus()?.attemptsThisMonth || 0}/{speakingStatus()?.maxAttemptsPerMonth || 2} attempts in 30 days
             </div>
           </div>
-          {!speakingStatus()?.passed && !speakingStatus()?.isProcessing && (<button class="stat-action" onClick={() => location.route('/exam/speaking')}>
-              {speakingStatus()?.hasActiveExam ? 'Resume' : 'Take Exam'}
+          {!speakingStatus()?.passed && !speakingStatus()?.isProcessing && (<button class="stat-action" disabled={!writtenStatus()?.passed} onClick={() => location.route('/exam/speaking')}>
+              {!writtenStatus()?.passed ? 'Written pass required' : speakingStatus()?.gradingFailed ? 'Review' : speakingStatus()?.hasActiveExam ? 'Resume' : 'Take Exam'}
               <TutorIcon name="fas fa-arrow-right"/>
             </button>)}
         </div>

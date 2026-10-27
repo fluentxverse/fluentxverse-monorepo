@@ -8,7 +8,9 @@ import { useThemeStore } from '../../context/ThemeContext';
 import SettingsModal from '../Settings/SettingsModal';
 import ProfileAvatar from '../Common/ProfileAvatar';
 import ThemeSwitch from '../Common/ThemeSwitch';
+import { LibraryBig } from 'lucide-solid';
 import './MobileHeader.css';
+import BrandWordmark from '../../../../shared/ui/BrandWordmark';
 interface MenuItem {
     href: string;
     icon: string;
@@ -20,6 +22,7 @@ const menuItems: MenuItem[] = [
     { href: "/schedule", icon: "fi-sr-calendar", label: "Schedule" },
     { href: "/materials", icon: "fi-sr-book-alt", label: "Materials" },
     { href: "/performance-metrics", icon: "fi-sr-chart-histogram", label: "Metrics" },
+    { href: "/knowledge-base", icon: "knowledge-base", label: "Knowledge Base" },
     { href: "/about", icon: "fi-sr-info", label: "About" },
 ];
 const MobileHeader = () => {
@@ -54,7 +57,7 @@ const MobileHeader = () => {
           
           <div class="mobile-header-logo">
             <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse"/>
-            <span class="mobile-header-brand">Fluent<span class="brand-x">X</span>Verse</span>
+            <span class="mobile-header-brand"><BrandWordmark compact /></span>
           </div>
 
           <a href="/profile" class="mobile-header-user">
@@ -70,7 +73,7 @@ const MobileHeader = () => {
             <div class="mobile-menu-header">
               <div class="mobile-menu-logo">
                 <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse"/>
-                <span>Fluent<span class="brand-x">X</span>Verse</span>
+                <span><BrandWordmark compact /></span>
               </div>
               <button class="mobile-menu-close" aria-label="Close navigation" onClick={closeMenu()}>
                 <i class="fas fa-times" aria-hidden="true"></i>
@@ -91,9 +94,9 @@ const MobileHeader = () => {
             {/* Navigation Links */}
             <nav class="mobile-menu-nav">
               <ul>
-                {menuItems.map((item) => (<li class={_state1.path === item.href ? 'active' : ''}>
-                    <a href={item.href} onClick={closeMenu()}>
-                      <i class={item.icon} aria-hidden="true"></i>
+                {menuItems.map((item) => (<li class={_state1.path === item.href || _state1.path.startsWith(`${item.href}/`) ? 'active' : ''}>
+                    <a href={item.href} onClick={closeMenu()} aria-current={_state1.path === item.href || _state1.path.startsWith(`${item.href}/`) ? 'page' : undefined}>
+                      {item.icon === 'knowledge-base' ? <LibraryBig size={20} aria-hidden="true"/> : <i class={item.icon} aria-hidden="true"></i>}
                       <span>{item.label}</span>
                     </a>
                   </li>))}

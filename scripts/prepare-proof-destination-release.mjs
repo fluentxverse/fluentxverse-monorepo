@@ -1,0 +1,52 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { cpSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { ssh } from './lib/cloud-ssh.mjs';
+const root=process.cwd(),budol=join(root,'../budol'),engine=join(budol,'gmr-engine');
+const release=join(root,'output/release/proof-destinations-20261025'),prior=join(root,'output/release/base-migration-20261024');
+mkdirSync(release,{recursive:true});const hash=b=>createHash('sha256').update(b).digest('hex');
+const copy=(a,b)=>{mkdirSync(dirname(b),{recursive:true});copyFileSync(a,b)};
+const run=(c,a,options={})=>execFileSync(c,a,{stdio:'inherit',...options});
+const frontend=join(release,'frontend');mkdirSync(frontend,{recursive:true});
+cpSync(join(budol,'gmr-dashboard'),join(frontend,'gmr-dashboard'),{recursive:true,filter:path=>!['node_modules','dist','.wrangler'].includes(path.split('/').at(-1))});
+mkdirSync(join(frontend,'public'),{recursive:true});copy(join(budol,'public/client-env.js'),join(frontend,'public/client-env.js'));
+copy(join(budol,'src/lib/runtimeConfig.ts'),join(frontend,'src/lib/runtimeConfig.ts'));
+if(!existsSync(join(frontend,'node_modules')))symlinkSync(join(budol,'node_modules'),join(frontend,'node_modules'));
+const tools=join(frontend,'gmr-dashboard/src/EngineTools.tsx');let content=readFileSync(tools,'utf8');
+const widgetChanges=["import { ProofDestinationPanel } from './ProofDestinationPanel';\n","  const [receiptDomain, setReceiptDomain] = useState(2);\n",
+  "  useEffect(() => {\n    if (network === 'zkVerify' && !policy) setDraft(previous => ({ ...previous, domainId: String(receiptDomain) }));\n  }, [network, receiptDomain, policy]);\n",
+  "    <ProofDestinationPanel projectId={projectId} disabled={busy || !!pending} onChanged={domain => { setReceiptDomain(domain); setPending(null); }} />\n"];
+for(const marker of widgetChanges){if(content.split(marker).length!==2)throw Error('Frontend marker changed');content=content.replace(marker,'');}
+writeFileSync(tools,content);
+run('bun',['build','./gmr-dashboard/index.html','--outdir=baseline-dist','--public-path=/','--production','--minify'],{cwd:frontend});
+const js=readdirSync(join(frontend,'baseline-dist')).find(p=>p.endsWith('.js'));
+const baseline=readFileSync(join(frontend,'baseline-dist',js));
+const expected=readFileSync(join(prior,'frontend/assets/index-base-2692a0336e08.js'));
+writeFileSync(join(release,'frontend-baseline-check.json'),JSON.stringify({rebuilt:hash(baseline),expected:hash(expected),matched:hash(baseline)===hash(expected)},null,2));
+if(hash(baseline)!==hash(expected))throw Error('Frontend baseline is not byte-identical. Review compiler version or unrelated source before deployment.');
+copy(join(budol,'gmr-dashboard/src/EngineTools.tsx'),tools);
+run('bun',['build','./gmr-dashboard/index.html','--outdir=dist','--public-path=/','--production','--minify'],{cwd:frontend});
+const dist=join(frontend,'dist');for(const path of ['_headers','public/client-env.js'])copy(join(prior,'frontend/assets',path),join(dist,path));
+let html=readFileSync(join(dist,'index.html'),'utf8').replaceAll('href="./','href="/').replaceAll('src="./','src="/');
+if(!html.includes('<script src="/public/client-env.js"></script>'))html=html.replace('</head>','<script src="/public/client-env.js"></script>\n</head>');writeFileSync(join(dist,'index.html'),html);
+copy(join(prior,'frontend/worker.ts'),join(frontend,'worker.ts'));
+const cfg=JSON.parse(readFileSync(join(prior,'frontend/wrangler.json')));cfg.assets.directory='./dist';writeFileSync(join(frontend,'wrangler.json'),JSON.stringify(cfg,null,2));
+const source=join(release,'engine-source');rmSync(source,{recursive:true,force:true});cpSync(join(prior,'engine-source'),source,{recursive:true,verbatimSymlinks:true,filter:p=>p.split('/').at(-1)!=='node_modules'});
+if(!existsSync(join(source,'node_modules')))symlinkSync(join(engine,'node_modules'),join(source,'node_modules'));
+const image=JSON.parse(ssh("docker inspect budol-gmr-engine-1 --format '{{json .Config.Image}}'"));
+if(image!=='fluentxverse-cloud/gmr-engine:base-migration-20261024')throw Error('Engine deployment baseline changed.');
+const binary=join(release,'baseline-engine');const env={...process.env,GOTOOLCHAIN:'go1.25.14',CGO_ENABLED:'0',GOOS:'linux',GOARCH:'amd64',GOAMD64:'v1'};
+run('go',['build','-buildvcs=false','-trimpath','-ldflags=-s -w','-o',binary,'./cmd/api'],{cwd:source,env});
+const liveHash=ssh('docker exec budol-gmr-engine-1 sha256sum /usr/local/bin/gmr-engine').split(/\s/)[0];
+if(hash(readFileSync(binary))!==liveHash)throw Error('Engine baseline binary changed.');
+const changed=['internal/config/proof_destination.go','internal/store/proof_destination.go','internal/store/proof_destination_integration_test.go',
+  'internal/httpapi/proof_destination.go','internal/httpapi/proof_destination_test.go','internal/httpapi/api.go','internal/httpapi/zkverify.go','internal/httpapi/zkverify_policy.go','internal/httpapi/zkverify_receipt.go'];
+for(const path of changed)copy(join(engine,path),join(source,path));
+run('go',['test','./internal/config','./internal/store','./internal/httpapi'],{cwd:source,env});
+const overlay=join(release,'engine');mkdirSync(overlay,{recursive:true});
+run('go',['build','-buildvcs=false','-trimpath','-ldflags=-s -w','-o',join(overlay,'gmr-engine'),'./cmd/api'],{cwd:source,env});
+for(const path of ['zkverify.ts','horizen-receipt.ts','horizen-receipt.test.ts','proof-destinations.ts','screening-bridge-prover.ts','screening-bridge-prover.test.ts','zkverify-node-runtime.test.mjs'])copy(join(engine,'scripts',path),join(overlay,'scripts',path));
+writeFileSync(join(overlay,'Dockerfile'),`FROM ${image}\nCOPY --chmod=755 gmr-engine /usr/local/bin/gmr-engine\nCOPY scripts/ /app/scripts/\n`);
+writeFileSync(join(release,'manifest.json'),JSON.stringify({preparedAt:new Date().toISOString(),engineImage:image,baselineEngineHash:liveHash,frontendBaselineHash:hash(expected),previousWorker:'38abc58c-fef0-487f-9a9b-cd2de90b4f3a'},null,2));
+console.log('PASS scoped destination release prepared from reproduced production baselines.');

@@ -7,6 +7,8 @@ import { scheduleApi, type WeekSchedule } from '../../api/schedule.api';
 import { useAuthContext } from '../../context/AuthContext';
 import { activeClassroomBookingId, getAttendanceReminderSlots, getRoomEntryReminderSlots } from '../../utils/attendanceReminder';
 import './AttendanceReminder.css';
+import { proofApi } from '../../api/proof.api';
+import { hasTeachingAccess } from '../../utils/teachingAccess';
 export default function AttendanceReminder() {
     const _state0 = useAuthContext();
     const _state1 = useLocation();
@@ -29,12 +31,15 @@ export default function AttendanceReminder() {
                     return;
                 inFlight = true;
                 try {
+                    const approval = await proofApi.getTutorCertificationStatus();
+                    if (disposed) return;
+                    if (!hasTeachingAccess(approval)) { setSlots([]); return; }
                     const schedule = await scheduleApi.getWeekSchedule(0);
                     if (!disposed)
                         setSlots(schedule.slots);
                 }
                 catch {
-                    // A failed refresh leaves the last known slots visible until their window expires.
+                    if (!disposed) setSlots([]);
                 }
                 finally {
                     inFlight = false;

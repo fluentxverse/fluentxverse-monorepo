@@ -86,7 +86,7 @@ export const generateExam = async (tutorId: string): Promise<{
     try {
         const response = await client.post('/exam/written/generate', {
             tutorId
-        });
+        }, { timeout: 100000 });
         return response.data;
     }
     catch (error) {
@@ -102,7 +102,7 @@ export const getActiveExam = async (tutorId: string): Promise<{
     exam?: ClientExam;
 }> => {
     try {
-        const response = await client.get(`/exam/active/${tutorId}`);
+        const response = await client.get('/exam/active');
         return response.data;
     }
     catch (error) {
@@ -183,7 +183,7 @@ export const getExamResult = async (tutorId: string, examId: string): Promise<{
     result?: ExamResult;
 }> => {
     try {
-        const response = await client.get(`/exam/result/${tutorId}/${examId}`);
+        const response = await client.get(`/exam/result/${encodeURIComponent(examId)}`);
         return response.data;
     }
     catch (error) {
@@ -249,11 +249,14 @@ export interface OpenResponseTask {
 }
 export type SpeakingTask = ReadAloudTask | PictureDescriptionTask | SituationalResponseTask | TeachingDemoTask | OpenResponseTask;
 export interface ClientSpeakingExam {
+    format?: 'read-aloud.v1';
     examId: string;
     title: string;
     description: string;
     totalTimeLimit: number;
     passingScore: number;
+    startedAt?: string;
+    savedTaskIds?: number[];
     tasks: SpeakingTask[];
 }
 export interface TaskRecording {
@@ -267,8 +270,8 @@ export interface TaskScore {
     taskType: SpeakingTask['type'];
     transcription: string;
     scores: {
-        pronunciation: number;
-        fluency: number;
+        pronunciation: number | null;
+        fluency: number | null;
         vocabulary: number;
         grammar: number;
         coherence: number;
@@ -279,14 +282,15 @@ export interface TaskScore {
     feedback: string;
 }
 export interface SpeakingExamResult {
+    format?: 'read-aloud.v1';
     examId: string;
     tutorId: string;
     overallScore: number;
     passed: boolean;
     taskScores: TaskScore[];
     sectionAverages: {
-        pronunciation: number;
-        fluency: number;
+        pronunciation: number | null;
+        fluency: number | null;
         vocabulary: number;
         grammar: number;
         coherence: number;
@@ -294,6 +298,9 @@ export interface SpeakingExamResult {
     };
     overallFeedback: string;
     completedAt: string;
+    assessmentMode?: 'transcript-content';
+    audioReviewRequired?: boolean;
+    decisionStatus?: 'human_review_required';
 }
 export interface SpeakingExamStatus {
     hasActiveExam: boolean;
@@ -304,6 +311,9 @@ export interface SpeakingExamStatus {
     examId: string | null;
     attemptsThisMonth: number;
     maxAttemptsPerMonth: number;
+    state?: string;
+    gradingFailed?: boolean;
+    canRetryGrading?: boolean;
 }
 // ============================================================================
 // SPEAKING EXAM API FUNCTIONS
@@ -319,7 +329,7 @@ export const generateSpeakingExam = async (tutorId: string): Promise<{
     try {
         const response = await client.post('/exam/speaking/generate', {
             tutorId
-        });
+        }, { timeout: 100000 });
         return response.data;
     }
     catch (error) {
@@ -335,7 +345,7 @@ export const getActiveSpeakingExam = async (tutorId: string): Promise<{
     exam?: ClientSpeakingExam;
 }> => {
     try {
-        const response = await client.get(`/exam/speaking/active/${tutorId}`);
+        const response = await client.get('/exam/speaking/active');
         return response.data;
     }
     catch (error) {
@@ -344,39 +354,17 @@ export const getActiveSpeakingExam = async (tutorId: string): Promise<{
     }
 };
 /**
- * Transcribe audio using Whisper API
+ * Queue grading after all recordings have been saved
  */
-export const transcribeAudio = async (audioBase64: string): Promise<{
-    success: boolean;
-    transcription?: string;
-}> => {
-    try {
-        const response = await client.post('/exam/speaking/transcribe', {
-            audioBase64
-        });
-        return response.data;
-    }
-    catch (error) {
-        console.error('Failed to transcribe audio:', error);
-        throw error;
-    }
-};
-/**
- * Submit speaking exam with recordings
- */
-export const submitSpeakingExam = async (examId: string, tutorId: string, recordings: TaskRecording[]): Promise<{
+export const submitSpeakingExam = async (examId: string, _tutorId: string): Promise<{
     success: boolean;
     message: string;
     result?: SpeakingExamResult;
+    state?: string;
 }> => {
     try {
-        // Use longer timeout for speaking exam - transcription can take 2-3 minutes
         const response = await client.post('/exam/speaking/submit', {
-            examId,
-            tutorId,
-            recordings
-        }, {
-            timeout: 180000
+            examId
         });
         return response.data;
     }
@@ -394,13 +382,21 @@ export const getSpeakingExamResult = async (tutorId: string, examId: string): Pr
     result?: SpeakingExamResult;
 }> => {
     try {
-        const response = await client.get(`/exam/speaking/result/${tutorId}/${examId}`);
+        const response = await client.get(`/exam/speaking/result/${encodeURIComponent(examId)}`);
         return response.data;
     }
     catch (error) {
         console.error('Failed to get speaking exam result:', error);
         throw error;
     }
+};
+export const saveSpeakingRecording = async (examId: string, recording: TaskRecording) => {
+    const response = await client.post('/exam/speaking/recording', { examId, recording });
+    return response.data as { success: boolean; saved: boolean; taskId: number };
+};
+export const retrySpeakingGrading = async (examId: string) => {
+    const response = await client.post('/exam/speaking/retry', { examId });
+    return response.data as { success: boolean; state: string };
 };
 /**
  * Get speaking exam status for tutor
@@ -430,7 +426,6 @@ export default {
     // Speaking exam
     generateSpeakingExam,
     getActiveSpeakingExam,
-    transcribeAudio,
     submitSpeakingExam,
     getSpeakingExamResult,
     getSpeakingExamStatus

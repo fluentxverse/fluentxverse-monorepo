@@ -6,7 +6,7 @@ export interface LessonProof {
     bookingId: string;
     eligible: boolean;
     submissionAvailable?: boolean;
-    status: 'ready' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
+    status: 'ready' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed' | 'retired' | 'expired' | 'revoked';
     commitment?: string;
     txHash?: string;
     aggregationId?: number;

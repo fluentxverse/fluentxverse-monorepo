@@ -11,6 +11,7 @@ const tutors = [
   const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   try {
     for (const authenticated of [true, false]) for (const theme of ['light', 'dark']) for (const width of [1566, 768, 375, 320]) {
+      if (process.env.BROWSE_TEST_CASE && process.env.BROWSE_TEST_CASE !== `${authenticated}-${theme}-${width}`) continue;
       let failPageTwo = 2;
       const searches = [], errors = [];
       const requests = [];
@@ -42,6 +43,7 @@ const tutors = [
         return reply({ success: true, data: [], user, profile: {}, lessons: [] });
       });
       const page = await context.newPage();
+      await page.clock.setFixedTime(new Date('2026-10-23T00:12:00Z'));
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(`${base}/browse-tutors`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Browse Tutors', exact: true }).waitFor();

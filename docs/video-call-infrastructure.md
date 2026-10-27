@@ -50,6 +50,10 @@ Provider outages can delay server-side closure; monitor reconciliation warnings.
 
 ### QA recording and private local Seaweed storage
 
+Future design only: [student-controlled recording access](student-controlled-recordings-proposal.md)
+documents a parked proposal for encrypted archives and dispute-specific disclosure.
+It does not change the current platform-managed recording keys or QA access.
+
 Every meeting still sets `record_on_start=false`. Both apps show a versioned
 recording notice. Each assigned participant must explicitly agree and confirm
 adult/parent/legal-guardian authority. Declining or withdrawing permission does

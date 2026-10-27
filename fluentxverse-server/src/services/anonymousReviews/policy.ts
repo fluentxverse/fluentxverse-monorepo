@@ -19,8 +19,9 @@ export function requireAnonymousReviews() {
 export function reviewGroupId(tutorId: string, period: string) {
   privacyInfrastructure();
   const protocol = `${REVIEW_PROTOCOL}.bridge-only`;
-  if (Number(process.env.ANONYMOUS_REVIEWS_CHAIN_ID || '2651420') === 26514) {
-    return keccak256(toHex(JSON.stringify({ protocol, tutorId, period, chainId: 26514 })));
+  const chainId = Number(process.env.ANONYMOUS_REVIEWS_CHAIN_ID || '8453');
+  if (chainId !== 2651420) {
+    return keccak256(toHex(JSON.stringify({ protocol, tutorId, period, chainId })));
   }
   return keccak256(toHex(JSON.stringify({ protocol, tutorId, period })));
 }
@@ -79,7 +80,7 @@ export async function verifyReviewProof(proof: AnonymousReviewProof): Promise<bo
 export function reviewGroth16(proof: AnonymousReviewProof) { return unpackGroth16Proof(proof.points); }
 
 export function reviewConfig() {
-  const chainId = Number(process.env.ANONYMOUS_REVIEWS_CHAIN_ID || '2651420');
+  const chainId = Number(process.env.ANONYMOUS_REVIEWS_CHAIN_ID || '8453');
   const network = horizenVerificationNetwork(chainId);
   const address = (name: string): Address => {
     const value = process.env[name] || '';

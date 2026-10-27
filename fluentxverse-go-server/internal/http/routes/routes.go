@@ -4218,6 +4218,7 @@ func registerProof(app *fiber.App, deps Dependencies) {
 
 func proofPublic(service *proof.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		c.Set("Cache-Control", "no-store")
 		commitment := c.Params("credentialCommitment")
 		if strings.TrimSpace(commitment) == "" {
 			return response.Error(c, fiber.StatusBadRequest, "credentialCommitment is required")
@@ -4239,6 +4240,10 @@ func proofMe(deps Dependencies, service *proof.Service) fiber.Handler {
 		if err != nil {
 			return response.Error(c, fiber.StatusUnauthorized, err.Error())
 		}
+		if payload.Role != "tutor" {
+			return response.Error(c, fiber.StatusForbidden, "Tutor authentication required")
+		}
+		c.Set("Cache-Control", "no-store")
 		setTutorCookieFromPayload(c, deps, payload)
 		data, err := service.MaybeIssue(c.UserContext(), payload.UserID, "status_check")
 		if err != nil {
@@ -4254,6 +4259,10 @@ func proofMaybeIssue(deps Dependencies, service *proof.Service) fiber.Handler {
 		if err != nil {
 			return response.Error(c, fiber.StatusUnauthorized, err.Error())
 		}
+		if payload.Role != "tutor" {
+			return response.Error(c, fiber.StatusForbidden, "Tutor authentication required")
+		}
+		c.Set("Cache-Control", "no-store")
 		setTutorCookieFromPayload(c, deps, payload)
 		data, err := service.MaybeIssue(c.UserContext(), payload.UserID, "manual_tutor_trigger")
 		if err != nil {
@@ -4269,10 +4278,14 @@ func proofGenerateLocal(deps Dependencies, service *proof.Service) fiber.Handler
 		if err != nil {
 			return response.Error(c, fiber.StatusUnauthorized, err.Error())
 		}
+		if payload.Role != "tutor" {
+			return response.Error(c, fiber.StatusForbidden, "Tutor authentication required")
+		}
+		c.Set("Cache-Control", "no-store")
 		setTutorCookieFromPayload(c, deps, payload)
 		data, err := service.GenerateLocal(c.UserContext(), payload.UserID)
 		if err != nil {
-			return response.Error(c, fiber.StatusBadRequest, err.Error())
+			return response.Error(c, fiber.StatusGone, err.Error())
 		}
 		return response.OK(c, data)
 	}
@@ -4284,10 +4297,14 @@ func proofSubmitZkVerify(deps Dependencies, service *proof.Service) fiber.Handle
 		if err != nil {
 			return response.Error(c, fiber.StatusUnauthorized, err.Error())
 		}
+		if payload.Role != "tutor" {
+			return response.Error(c, fiber.StatusForbidden, "Tutor authentication required")
+		}
+		c.Set("Cache-Control", "no-store")
 		setTutorCookieFromPayload(c, deps, payload)
 		data, err := service.SubmitZkVerify(c.UserContext(), payload.UserID)
 		if err != nil {
-			return response.Error(c, fiber.StatusBadRequest, err.Error())
+			return response.Error(c, fiber.StatusGone, err.Error())
 		}
 		return response.OK(c, data)
 	}
@@ -4811,7 +4828,7 @@ func adminProofRetry(deps Dependencies, service *proof.Service) fiber.Handler {
 		}
 		data, err := service.SubmitZkVerify(c.UserContext(), tutorID)
 		if err != nil {
-			return response.Error(c, fiber.StatusInternalServerError, err.Error())
+			return response.Error(c, fiber.StatusGone, err.Error())
 		}
 		return c.JSON(fiber.Map{
 			"success": true,

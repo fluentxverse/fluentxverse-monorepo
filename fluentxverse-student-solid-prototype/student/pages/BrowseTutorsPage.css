@@ -1,3 +1,10 @@
+/* Result placeholders can toggle the viewport scrollbar between searches. */
+html:has(.browse-page) { scrollbar-gutter: stable; }
+
+@supports not (scrollbar-gutter: stable) {
+  html:has(.browse-page) { overflow-y: scroll; }
+}
+
 .browse-page {
   --browse-bg: #f5f7fa;
   --browse-surface: #fff;
@@ -58,6 +65,7 @@
 .browse-day-strip strong { color: var(--browse-text); font-size: 14px; font-weight: 600; }
 .browse-day-strip button[aria-pressed='true'] { background: var(--browse-tint); border-color: var(--browse-accent); }
 .browse-day-strip button[aria-pressed='true'] strong { color: var(--browse-accent); }
+.browse-day-strip button:disabled { opacity: 0.5; cursor: not-allowed; }
 .browse-results-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 40px; margin-bottom: 12px; }
 .browse-results-header p { color: var(--browse-muted); font-size: 14px; margin: 0; }
 .browse-reset { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--browse-accent); cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 0; }

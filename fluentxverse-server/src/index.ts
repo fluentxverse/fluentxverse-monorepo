@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { swagger } from "@elysiajs/swagger";
 
 import Auth from './routes/auth.route';
+import { tutorEmailFailure } from './services/auth.services/tutorEmailPolicy';
 import Tutor from './routes/tutor.route';
 import Schedule from './routes/schedule.route';
 import LessonWorkflow from './routes/lessonWorkflow.route';
@@ -11,9 +12,15 @@ import { startLessonEvidenceRetention } from './services/lessonPrivacy/retention
 import { adminOperationsRoute } from './routes/adminOperations.route';
 import { tutorEarningsRoute } from './routes/tutorEarnings.route';
 import { testingChecklistRoute } from './routes/testingChecklist.route';
+import { mailRoute } from './routes/mail.route';
+import { mailFailure } from './services/mail/mailPolicy';
 import { tutorCompensationFailure } from './services/admin.services/tutorCompensation.service';
 import Examination from "./routes/exam.route";
 import Admin from './routes/admin.route';
+import { serverHealthRoute } from './routes/serverHealth.route';
+import { containerStatsRoute } from './routes/containerStats.route';
+import { operationalAlertsRoute } from './routes/operationalAlerts.route';
+import { requestDefense } from './utils/requestDefense';
 import Interview from './routes/interview.route';
 import Notification from './routes/notification.route';
 import Inbox from './routes/inbox.route';
@@ -30,6 +37,8 @@ import { initDriver, getDriver } from './db/memgraph';
 import { db } from './db/postgres';
 import { initSocketServer } from './socket/socket.server';
 import { startCancellationRefundJob } from './services/ticket.services/cancellationRefund.job';
+import { startSpeakingWorker } from './services/exam.services/speakingQueue';
+import { applicationFailure } from './services/exam.services/applicationPolicy';
 import { startReminderService } from './services/notification.services/reminder.service';
 import { NotificationService } from './services/notification.services/notification.service';
 import { startSuspensionJob } from './services/admin.services/suspension.job';
@@ -86,24 +95,12 @@ initRedis().catch(err => console.warn('Redis initialization skipped:', err));
 const allowedOrigins = getAllowedOrigins(process.env.FRONTEND_URLS || '');
 
 
-// Security: Maximum body size limit (10MB)
-const MAX_BODY_SIZE = 10 * 1024 * 1024;
-
 // Initialize Elysia app
 const app = new Elysia({ 
   serve: { idleTimeout: 255 }
 })
-  // Security: Request body size limit middleware
-  .onRequest(({ request, set }) => {
-    const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
-    if (contentLength > MAX_BODY_SIZE) {
-      set.status = 413;
-      return { 
-        success: false, 
-        error: 'Request body too large. Maximum size is 10MB.' 
-      };
-    }
-  })
+  .onRequest(context => requestDefense.before(context))
+  .onAfterResponse(({ request }) => requestDefense.release(request))
   .use(swagger({
     documentation: {
       info: {
@@ -197,6 +194,31 @@ const app = new Elysia({
     const duration = Date.now() - ((request as any).startTime || Date.now());
     const path = new URL(request.url).pathname;
     const requestId = (request as any).requestId;
+    if (path.startsWith('/tutor/email-verification')) {
+      const failure = tutorEmailFailure(error, String(code));
+      set.status = failure.status;
+      set.headers['Cache-Control'] = 'private, no-store';
+      if (failure.retryAfter) set.headers['Retry-After'] = String(failure.retryAfter);
+      return failure.body;
+    }
+    // Validation errors can embed submitted text; do not send them to general logs.
+    if (path.startsWith('/ai/') || path.startsWith('/lesson-workflow/') || /^\/tutor\/classroom-(?:lesson-)?notes(?:\/|$)/.test(path)) {
+      set.status = ['VALIDATION', 'PARSE'].includes(String(code)) ? 400 : String(code) === 'NOT_FOUND' ? 404 : 503;
+      set.headers['Cache-Control'] = 'private, no-store';
+      return { success: false, error: set.status === 400 ? 'Invalid lesson or AI request. Please check your input.' : 'The private content request could not be processed.' };
+    }
+    if (path.startsWith('/exam/')) {
+      const response = String(code) === 'VALIDATION' ? { status: 422, message: 'Invalid assessment request.' } : applicationFailure(error);
+      set.status = response.status;
+      set.headers['cache-control'] = 'private, no-store';
+      return { success: false, message: response.message, error: response.message };
+    }
+    if (path.startsWith('/admin/mail/')) {
+      const response = mailFailure(error, String(code));
+      set.status = response.status;
+      set.headers['Cache-Control'] = 'private, no-store';
+      return response.body;
+    }
     if (path.startsWith('/lesson-privacy/')) {
       const response = lessonPrivacyFailure(error,String(code));
       set.status = response.status;
@@ -331,11 +353,15 @@ const app = new Elysia({
   .use(adminOperationsRoute)
   .use(tutorEarningsRoute)
   .use(testingChecklistRoute)
+  .use(mailRoute)
   .use(Student)
   .use(createMobileStudentRoutes(mobileStudentDependencies))
   .use(Debug)
   .use(Examination)
   .use(Admin)
+  .use(serverHealthRoute)
+  .use(containerStatsRoute)
+  .use(operationalAlertsRoute)
   .use(qaRecordingRoute)
   .use(Interview)
   .use(Notification)
@@ -428,6 +454,7 @@ httpServer.listen(8767, '0.0.0.0', async () => {
   startQaRecordingJobs();
   startLessonEvidenceRetention();
   startCancellationRefundJob();
+  startSpeakingWorker();
 
   // Start daily notification retention cleanup (delete read > N days)
   const notificationService = new NotificationService();

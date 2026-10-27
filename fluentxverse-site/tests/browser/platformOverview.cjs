@@ -1,0 +1,65 @@
+const { chromium, expect } = require(process.env.PLAYWRIGHT_MODULE || '@playwright/test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const base = process.env.SITE_URL || 'http://127.0.0.1:5205';
+const widths = (process.env.SITE_WIDTHS || '1920,1440,1024,900,768,390,320').split(',').map(Number);
+(async () => {
+  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const output = process.env.SITE_SCREENSHOTS || '../output/screenshots/platform-overview';
+  await fs.mkdir(output, { recursive: true });
+  try {
+    for (const width of widths) {
+      const context = await browser.newContext({ viewport: { width, height: 950 }, permissions: ['clipboard-read','clipboard-write'] });
+      const page = await context.newPage(), errors = [], protectedRequests = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await page.route(/https:\/\/(?:api|dashboard)\.fluentxverse\.com\//, route => { protectedRequests.push(route.request().url()); return route.abort(); });
+      await page.goto(base + '/');
+      await page.locator('.project-tutor').getByRole('link', { name: 'How the platform works', exact: true }).click();
+      await expect(page).toHaveURL(/\/esl-tutor-app$/);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('FluentXVerse ESL');
+      await expect(page).toHaveTitle('ESL Tutor App & Platform Overview | FluentXVerse');
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://fluentxverse.com/esl-tutor-app');
+      await expect(page.locator('.esl-reading > .esl-chapter')).toHaveCount(16);
+      await page.locator('.esl-guide-hero img').evaluate(image => image.decode());
+      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => scrollTo(0,0));
+      await page.screenshot({ path: `${output}/${width}-intro.png` });
+      const overflow = await page.evaluate(() => ({ page: document.documentElement.scrollWidth > innerWidth + 1, text: [...document.querySelectorAll('main h1,main h2,main h3,main p,main td,main th,nav a')].filter(element => element.getBoundingClientRect().width && element.scrollWidth > element.clientWidth + 1).map(element => element.textContent.slice(0,100)) }));
+      assert.equal(overflow.page, false); assert.deepEqual(overflow.text, []);
+      if (width <= 900) await page.getByRole('button', { name: 'In this guide', exact: true }).click();
+      await page.getByRole('navigation', { name: 'Platform overview chapters' }).getByRole('link', { name: /How tutors qualify/ }).click();
+      await expect(page).toHaveURL(/#tutor-screening$/);
+      await expect(page.locator('#tutor-screening')).toBeFocused();
+      const top = await page.locator('#tutor-screening').evaluate(element => element.getBoundingClientRect().top);
+      assert(top >= (width <= 760 ? 70 : 88), 'Chapter clears sticky site header');
+      await page.getByRole('button', { name: 'Copy public guide link', exact: true }).click();
+      await expect(page.getByRole('status')).toHaveText('Link copied');
+      assert.equal(await page.evaluate(() => navigator.clipboard.readText()), 'https://fluentxverse.com/esl-tutor-app#tutor-screening');
+      await page.getByRole('group', { name: 'Filter guide topics' }).getByRole('button', { name: 'Privacy', exact: true }).click();
+      await expect(page.locator('.esl-reading > .esl-chapter')).toHaveCount(2);
+      await expect(page.locator('.esl-result-count')).toContainText('2 of 14');
+      const search = page.getByRole('searchbox', { name: 'Search the platform overview' });
+      await search.fill('no-such-topic');
+      await expect(page.getByRole('heading', { name: 'No matching chapters' })).toBeVisible();
+      await page.locator('.esl-no-results').getByRole('button', { name: 'Show full guide' }).click();
+      await expect(search).toHaveValue('');
+      await expect(page.locator('.esl-reading > .esl-chapter')).toHaveCount(16);
+      await search.fill('transcript');
+      await expect(page.locator('.esl-reading > .esl-chapter')).toHaveCount(2);
+      await page.getByRole('button', { name: 'Clear search', exact: true }).click();
+      await page.locator('#verification').screenshot({ path: `${output}/${width}-verification.png` });
+      await page.emulateMedia({ media: 'print' });
+      assert.equal(await page.locator('.esl-chapter-nav').isVisible(), false);
+      assert.equal(await page.locator('.esl-reading-toolbar').isVisible(), false);
+      assert.equal(await page.locator('#business-model').isVisible(), true);
+      await page.emulateMedia({ media: 'screen' });
+      await page.reload();
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('FluentXVerse ESL');
+      await page.goto(base + '/esl-tutor-app#networks-status');
+      await expect(page.locator('#networks-status')).toBeFocused();
+      assert.deepEqual(protectedRequests, []); assert.deepEqual(errors, []);
+      await context.close();
+      console.log(`PASS public overview ${width}: discovery, chapters, search/topic filters, copy/deep link, print, no auth/API calls, layout`);
+    }
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });

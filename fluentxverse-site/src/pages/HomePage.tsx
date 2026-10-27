@@ -41,17 +41,17 @@ export function HomePage() {
           <div class="project-grid">
             <For each={projects}>{(project) => (
               <article class={`project-card project-${project.id}`}>
-                <a class="project-photo-link" href={project.href} target="_blank" rel="noopener noreferrer" aria-label={project.cta}>
+                <A class="project-photo-link" href={`/esl-${project.id}-app`} aria-label={`Learn how the ESL ${project.id} app works`}>
                   <img src={project.image} alt={project.alt} width="900" height="600" loading="lazy" />
                   <span class="photo-category"><Dynamic component={project.icon} size={16} />{project.category}</span>
                   <span class="photo-arrow"><ArrowUpRight size={23} /></span>
-                </a>
+                </A>
                 <div class="project-body">
                   <span class="project-number">FLUENTXVERSE / {project.number}</span>
                   <h3>{project.name}</h3>
                   <p>{project.description}</p>
                   <ul class="project-details"><For each={project.details}>{(detail) => <li>{detail}</li>}</For></ul>
-                  <a class="text-link" href={project.href} target="_blank" rel="noopener noreferrer">{project.cta} <ArrowUpRight size={18} /></a>
+                  <div class="project-guide-link"><A class="text-link" href={`/esl-${project.id}-app`}>{project.id === 'student' ? 'How the student app works' : 'How the platform works'} <ArrowRight size={18}/></A><a class="text-link" href={project.href} target="_blank" rel="noopener noreferrer">Open {project.id} app <ArrowUpRight size={16}/></a></div>
                 </div>
               </article>
             )}</For>

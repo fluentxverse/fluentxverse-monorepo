@@ -1,0 +1,12 @@
+{
+  "name": "fluentxverse-alerts",
+  "account_id": "8355506b306aa26ed64113cdc82cf338",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-24",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "workers_dev": true,
+  "triggers": { "crons": ["* * * * *"] },
+  "durable_objects": { "bindings": [{ "name": "MONITOR", "class_name": "AlertMonitor" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AlertMonitor"] }],
+  "observability": { "enabled": true }
+}

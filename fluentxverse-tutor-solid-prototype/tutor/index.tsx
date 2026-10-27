@@ -6,6 +6,7 @@ import { useLocation } from './routing';
 import TutorIcon from "./Components/Common/TutorIcon";
 import { ToastProvider } from './Components/Common/Toast';
 import { withProtected, withCertified } from './Components/ProtectedRoute';
+import { withVerifiedEmail } from './Components/EmailVerifiedRoute';
 import { AuthProvider } from './context/AuthContext';
 import SessionExpiryModal from './Components/SessionExpiryModal';
 import { SessionExpiredModal } from './Components/Common/SessionExpiredModal';
@@ -45,11 +46,13 @@ const BusinessEnglishPage = lazyRoute(() => import('./pages/BusinessEnglishPage'
 const BusinessEnglishPreviewPage = lazyRoute(() => import('./pages/BusinessEnglishPreviewPage'));
 const LessonViewPage = lazyRoute(() => import('./pages/LessonViewPage'));
 const InboxPage = lazyRoute(() => import('./pages/InboxPage'));
+const KnowledgeBasePage = lazyRoute(() => import('./pages/KnowledgeBasePage'));
 const MyProfilePage = lazyRoute(() => import('./pages/MyProfilePage'));
 const PerformanceMetricsPage = lazyRoute(() => import('./pages/PerformanceMetricsPage'));
 const YoungLearnersPage = lazyRoute(() => import('./pages/YoungLearnersPage'));
 const YoungLearnersLessonPage = lazyRoute(() => import('./pages/YoungLearnersLessonPage'));
 const RegisterPage = lazyRoute(() => import('./pages/RegisterPage'));
+const ConfirmEmailPage = lazyRoute(() => import('./pages/ConfirmEmailPage'));
 const ContactUsPage = lazyRoute(() => import('./pages/ContactUsPage'));
 const AboutUsPage = lazyRoute(() => import('./pages/AboutUsPage'));
 const BecomeTutorPage = lazyRoute(() => import('./pages/BecomeTutorPage'));
@@ -65,7 +68,7 @@ function AppShell(props: {
     const hydrateTheme = createMemo(() => useThemeStore((state) => state.hydrateTheme));
     const syncSystemTheme = createMemo(() => useThemeStore((state) => state.syncSystemTheme));
     const embeddedTheme = useEmbeddedTheme();
-    const isLightOnlyPage = createMemo(() => _state1.path === '/' || /^\/(become-tutor|about|contact|register|privacy-policy|terms-of-service)\/?$/.test(_state1.path));
+    const isLightOnlyPage = createMemo(() => _state1.path === '/' || /^\/(become-tutor|about|contact|register|confirm-email|privacy-policy|terms-of-service)\/?$/.test(_state1.path));
     const isStandalonePage = createMemo(() => /^\/(classroom\/|interview\/room|lesson\/view|conversation-mat\/|materials\/(?:daily-dispatch|conversational-skills|business-english|young-learners)\/)/.test(_state1.path));
     const effectiveTheme = createMemo(() => isLightOnlyPage() ? 'light' : (embeddedTheme() ?? resolvedTheme()));
     // Auth state for session modal
@@ -142,34 +145,37 @@ function AppShell(props: {
 export function AppInner() {
     return (<Router root={AppShell}>
 						<Route path="/" component={Home}/>
-					<Route path="/home" component={withProtected(HomeProtected)}/>
+					<Route path="/home" component={withVerifiedEmail(HomeProtected, true)}/>
 					{/* Login page intentionally removed; login via modal */}
 					<Route path="/register" component={RegisterPage}/>
+                    <Route path="/confirm-email" component={ConfirmEmailPage}/>
 
 					<Route path="/schedule" component={withCertified(SchedulePage)}/>
-							{/* LessonViewPage handles its own loading - not wrapped to avoid triple spinner */}
-							<Route path="/lesson/view" component={LessonViewPage}/>
+							{/* Material viewers require the same approval as the teaching workspace. */}
+							<Route path="/lesson/view" component={withCertified(LessonViewPage)}/>
 							<Route path="/lesson/:bookingId" component={withCertified(StudentProfilePage)}/>
 							<Route path="/classroom/:sessionId" component={withCertified(ClassroomPage)}/>
-							<Route path="/exam/written" component={withProtected(ExamPage)}/>
-							<Route path="/exam/speaking" component={withProtected(SpeakingExamPage)}/>
+							<Route path="/exam/written" component={withVerifiedEmail(ExamPage)}/>
+							<Route path="/exam/speaking" component={withVerifiedEmail(SpeakingExamPage)}/>
 							<Route path="/interview" component={withProtected(InterviewBookingPage)}/>
 							<Route path="/interview/room/:interviewId?" component={withProtected(InterviewRoomPage)}/>
 							<Route path="/notifications" component={withProtected(NotificationsPage)}/>
-							<Route path="/materials" component={withProtected(MaterialsPage)}/>
-							<Route path="/materials/daily-dispatch" component={withProtected(DailyDispatchPage)}/>
-							<Route path="/materials/daily-dispatch/archives/:month" component={withProtected(DailyDispatchArchivePage)}/>
-							<Route path="/materials/daily-dispatch/:id" component={withProtected(DailyDispatchArticlePage)}/>
-							<Route path="/materials/conversational-skills" component={withProtected(ConversationalSkillsPage)}/>
-							<Route path="/materials/conversational-skills/:id" component={withProtected(ConversationalSkillsLessonPage)}/>
-							<Route path="/materials/business-english" component={withProtected(BusinessEnglishPage)}/>
-							<Route path="/materials/business-english/:id" component={withProtected(BusinessEnglishPreviewPage)}/>
-							<Route path="/materials/young-learners" component={withProtected(YoungLearnersPage)}/>
-							<Route path="/materials/young-learners/lesson/:id" component={withProtected(YoungLearnersLessonPage)}/>
-							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={LessonViewPage}/>
+							<Route path="/materials" component={withCertified(MaterialsPage)}/>
+							<Route path="/materials/daily-dispatch" component={withCertified(DailyDispatchPage)}/>
+							<Route path="/materials/daily-dispatch/archives/:month" component={withCertified(DailyDispatchArchivePage)}/>
+							<Route path="/materials/daily-dispatch/:id" component={withCertified(DailyDispatchArticlePage)}/>
+							<Route path="/materials/conversational-skills" component={withCertified(ConversationalSkillsPage)}/>
+							<Route path="/materials/conversational-skills/:id" component={withCertified(ConversationalSkillsLessonPage)}/>
+							<Route path="/materials/business-english" component={withCertified(BusinessEnglishPage)}/>
+							<Route path="/materials/business-english/:id" component={withCertified(BusinessEnglishPreviewPage)}/>
+							<Route path="/materials/young-learners" component={withCertified(YoungLearnersPage)}/>
+							<Route path="/materials/young-learners/lesson/:id" component={withCertified(YoungLearnersLessonPage)}/>
+							<Route path="/conversation-mat/:level/:chapter/:goalSlug" component={withCertified(LessonViewPage)}/>
 							<Route path="/inbox" component={withProtected(InboxPage)}/>
-							<Route path="/profile" component={withProtected(MyProfilePage)}/>
-							<Route path="/performance-metrics" component={withProtected(PerformanceMetricsPage)}/>
+							<Route path="/knowledge-base/:slug?" component={withCertified(KnowledgeBasePage)}/>
+							<Route path="/profile" component={withCertified(MyProfilePage)}/>
+                            <Route path="/application/profile" component={withProtected(MyProfilePage)}/>
+							<Route path="/performance-metrics" component={withCertified(PerformanceMetricsPage)}/>
 
 							<Route path="/contact" component={ContactUsPage}/>
 							<Route path="/about" component={AboutUsPage}/>

@@ -10,8 +10,23 @@ import { AboutPage } from './pages/AboutPage';
 const TechnologyPage = lazy(() => import('./pages/TechnologyPage'));
 const AiPage = lazy(() => import('./pages/AiPage'));
 const OnchainPage = lazy(() => import('./pages/OnchainPage'));
+const EslTutorAppPage = lazy(() => import('./pages/EslTutorAppPage'));
+const EslStudentAppPage = lazy(() => import('./pages/EslStudentAppPage'));
+const ChangelogPage = lazy(() => import('./pages/ChangelogPage'));
 
 const metadata: Record<string, { title: string; description: string }> = {
+  '/changelog': {
+    title: 'Changelog | FluentXVerse',
+    description: 'Release notes for the FluentXVerse student app, tutor app, backend, and GMR Engine, with permanent update IDs and app-specific filters.',
+  },
+  '/esl-student-app': {
+    title: 'ESL Student App Guide | FluentXVerse',
+    description: 'How the FluentXVerse student app works: find a tutor, book English lessons, join the classroom, study materials, review notes, and understand privacy and access rules.',
+  },
+  '/esl-tutor-app': {
+    title: 'ESL Tutor App & Platform Overview | FluentXVerse',
+    description: 'A public guide to FluentXVerse ESL: tutor screening, lessons, scheduling, business operations, AI assistance, privacy proofs, and rollout boundaries for partners and funders.',
+  },
   '/': {
     title: 'FluentXVerse | Learning, backed by proof.',
     description: 'Learning, backed by proof. FluentXVerse builds onchain education applications, starting with ESL and growing across subjects and skills.',
@@ -30,7 +45,7 @@ const metadata: Record<string, { title: string; description: string }> = {
   },
   '/onchain-education': {
     title: 'Why Onchain Education | FluentXVerse',
-    description: 'The FluentXVerse case for portable learning evidence, shared verification, and private credential proofs, including where blockchain is not needed.',
+    description: 'Five reasons to bring online education onchain: verifiable credentials, learner-held records, learning incentives, educator payments, and community governance, with privacy and rollout boundaries.',
   },
 };
 
@@ -77,6 +92,9 @@ export default function App() {
       <Route path="/technology" component={TechnologyPage} />
       <Route path="/technology/ai" component={AiPage} />
       <Route path="/onchain-education" component={OnchainPage} />
+      <Route path="/esl-tutor-app" component={EslTutorAppPage} />
+      <Route path="/esl-student-app" component={EslStudentAppPage} />
+      <Route path="/changelog" component={ChangelogPage} />
       <Route path="*" component={NotFound} />
     </Router>
   );

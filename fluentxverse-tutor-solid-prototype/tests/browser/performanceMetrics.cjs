@@ -37,6 +37,7 @@ function fixture(period, selectedMonth, page, empty, corrected) {
         const url = new URL(route.request().url()), path = url.pathname;
         const user = { userId: 'metrics-tutor', id: 'metrics-tutor', role: 'tutor', firstName: 'Metrics', email: 'paulanthonyarriola@gmail.com' };
         if (path === '/tutor/me') return route.fulfill({ json: { success: true, user } });
+        if (path === '/proof/tutor-certification/me') return route.fulfill({ json: { success: true, data: { snapshot: { writtenPassed: true, speakingPassed: true, profileApproved: true, interviewPassed: true, missingRequirements: [] } } } });
         if (path === '/schedule/week') return route.fulfill({ json: { success: true, data: { slots: [] } } });
         if (path === '/notifications' || path === '/notifications/') return route.fulfill({ json: { success: true, data: { notifications: [], unreadCount: 0 } } });
         if (path === '/tutor/performance') {

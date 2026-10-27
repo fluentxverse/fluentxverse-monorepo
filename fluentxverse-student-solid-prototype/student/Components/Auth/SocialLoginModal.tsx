@@ -1,5 +1,6 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
+import BrandWordmark from '../../../../shared/ui/BrandWordmark';
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import { usePrivyIntegration } from '../../context/PrivyContext';
 import StudentDialog from '../Common/StudentDialog';
@@ -80,7 +81,7 @@ export function SocialLoginModal(_props0: SocialLoginModalProps) {
 
         <div class="social-brand">
           <div class="modal-logo"><img src="/assets/img/logo/icon_logo.webp" alt="" width="88" height="100"/></div>
-          <div class="modal-brand-text">Fluent<span class="brand-x">X</span>Verse</div>
+          <div class="modal-brand-text"><BrandWordmark /></div>
         </div>
 
         <div class="login-title">

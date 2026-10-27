@@ -1,5 +1,6 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component } from "solid-js";
 import { Portal } from "solid-js/web";
+import BrandWordmark from '../../../../shared/ui/BrandWordmark';
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import TutorDialog from '../Common/TutorDialog';
 import TutorIcon from '../Common/TutorIcon';
@@ -45,7 +46,7 @@ const LoginModal: Component<LoginModalProps> = (_props0) => {
         <div class="tutor-login-header">
           <div class="modal-logo">
             <img src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40"/>
-            <div class="modal-brand-text">Fluent<span class="brand-x">X</span>Verse</div>
+            <div class="modal-brand-text"><BrandWordmark /></div>
           </div>
           <button type="button" class="modal-close" onClick={_props0["onClose"]} aria-label="Close login modal" disabled={loading()}><TutorIcon name="fa-times"/></button>
         </div>

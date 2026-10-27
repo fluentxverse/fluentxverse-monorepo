@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"fluentxverse-go-server/internal/database"
+	"fluentxverse-go-server/internal/proof"
 	"fluentxverse-go-server/internal/web3"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -912,10 +913,10 @@ func proofSummary(credential map[string]any) map[string]any {
 		return map[string]any{"zkCertificationStatus": "requirements_incomplete"}
 	}
 	return map[string]any{
-		"zkCertificationStatus":     defaultString(credential["status"], "requirements_incomplete"),
+		"zkCertificationStatus":     proof.RetiredStatus(credential),
 		"zkCredentialCommitment":    emptyAsNil(credential["commitment"]),
 		"zkCircuitVersion":          emptyAsNil(credential["circuitVersion"]),
-		"zkVerifiedAt":              emptyAsNil(credential["verifiedAt"]),
+		"zkVerifiedAt":              nil,
 		"zkVerifyTxHash":            emptyAsNil(credential["zkVerifyTxHash"]),
 		"zkVerifyAttestationId":     emptyAsNil(credential["zkVerifyAttestationId"]),
 		"zkVerifyBlockHash":         emptyAsNil(credential["zkVerifyBlockHash"]),

@@ -1,0 +1,28 @@
+.onchain-pillar-intro { max-width: 720px; margin-bottom: 38px; font-size: 14px; }
+.onchain-pillars { display: grid; }
+.onchain-pillar {
+  display: grid;
+  grid-template-columns: 36px minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: 20px 38px;
+  padding-block: 32px;
+  border-top: 1px solid #d6e0ec;
+  scroll-margin-top: 108px;
+}
+.onchain-pillar > * { min-width: 0; }
+.onchain-pillar-number { color: #26745b; font-size: 12px; font-weight: 700; padding-top: 6px; }
+.onchain-pillar h3 { font-size: 24px; line-height: 1.4; overflow-wrap: anywhere; }
+.onchain-pillar-summary p { margin-top: 14px; font-size: 14px; }
+.onchain-pillar-benefits { display: grid; gap: 22px; margin: 0; padding-left: 18px; }
+.onchain-pillar-benefits li { padding-left: 4px; color: #26745b; }
+.onchain-pillar-benefits strong { display: block; color: var(--text); font-size: 14px; line-height: 1.6; font-weight: 700; }
+.onchain-pillar-benefits p { margin-top: 5px; font-size: 14px; }
+.onchain-pillar-boundary { grid-column: 2 / -1; padding-left: 14px; border-left: 2px solid #a9c9b8; font-size: 12px; }
+@media (max-width: 900px) {
+  .onchain-pillar { grid-template-columns: 28px minmax(0, 1fr); gap: 18px 20px; }
+  .onchain-pillar-benefits, .onchain-pillar-boundary { grid-column: 2; }
+  .onchain-pillar h3 { font-size: 22px; }
+}
+@media (max-width: 480px) {
+  .onchain-pillar { column-gap: 12px; }
+  .onchain-pillar-benefits, .onchain-pillar-boundary { grid-column: 1 / -1; }
+}

@@ -28,7 +28,7 @@ go run ./cmd/api
 
 The default HTTP port is 8765; choose a different port if the Bun server is already using it. Configure a dedicated development database and secrets in `.env`. Do not run both backends against mutable production data to test parity.
 
-Node.js dependencies in this directory support legacy proof bridge experiments. Generated Circom build files and development proving/setup artifacts are not exported. Do not enable proof routes without explicitly provisioned, reviewed artifacts. Existing development setup generation is not suitable for a production proof system.
+The legacy proof bridge and its direct zkVerify signer are retired. Generation and submission fail unconditionally; historical status reads cannot issue or renew credentials. Generated Circom build files and development proving/setup artifacts are not exported. New proof integration must use reviewed V2 artifacts and GMR Engine, not the retired bridge.
 
 ## Migration and Security Boundaries
 

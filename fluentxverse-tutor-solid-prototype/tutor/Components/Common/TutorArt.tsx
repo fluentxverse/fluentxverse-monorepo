@@ -8,7 +8,7 @@ export default function TutorArt(_props0: {
     name: TutorArtName;
     size?: number;
     className?: string;
-} & JSX.HTMLAttributes<HTMLImageElement>) {
+} & JSX.ImgHTMLAttributes<HTMLImageElement>) {
     const props = splitProps(_props0, ["name", "size", "className"])[1];
     return <img {...props} class={`tutor-art ${_props0["className"] === undefined ? '' : _props0["className"]}`} src={appArtworkSrc(_props0["name"])} width={_props0["size"] === undefined ? 40 : _props0["size"]} height={_props0["size"] === undefined ? 40 : _props0["size"]} alt="" aria-hidden="true" style={cssStyle({ get width() {
                 return _props0["size"] === undefined ? 40 : _props0["size"];

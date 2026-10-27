@@ -21,8 +21,8 @@ const AboutUsPage = () => {
         {/* Hero Section */}
         <section class="about-hero-section">
           <picture>
-            <source media="(max-width: 600px)" srcset="/assets/img/banner/about-lesson-mobile-v1.webp"/>
-            <img class="about-hero-image" src="/assets/img/banner/about-lesson-wide-v2.webp" alt="" fetchpriority="high" width={2048} height={683}/>
+            <source media="(max-width: 900px)" srcset="/assets/img/banner/about-tutor-closeup-mobile-v2.webp"/>
+            <img class="about-hero-image" src="/assets/img/banner/about-tutor-closeup-wide-v2.webp" alt="" fetchpriority="high" width={2048} height={683}/>
           </picture>
           
           <div class="container">

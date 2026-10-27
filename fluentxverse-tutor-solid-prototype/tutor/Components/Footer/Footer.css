@@ -79,9 +79,10 @@ footer * {
 }
 
 .footer-social li a {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 8px;
   background: rgba(74, 158, 255, 0.15);
   border: 1px solid rgba(74, 158, 255, 0.3);
   display: flex;
@@ -89,14 +90,25 @@ footer * {
   justify-content: center;
   color: #4a9eff;
   font-size: 16px;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.footer-social svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.footer-social li a:focus-visible {
+  outline: 2px solid #9acaff;
+  outline-offset: 4px;
 }
 
 .footer-social li a:hover {
   background: linear-gradient(135deg, #0245ae 0%, #3b82f6 100%);
   border-color: #4a9eff;
   color: #ffffff;
-  transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(74, 158, 255, 0.3);
 }
 

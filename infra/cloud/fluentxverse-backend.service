@@ -1,0 +1,19 @@
+[Unit]
+Description=FluentXVerse Internal Testing Backend
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=fluentxverse-deploy
+WorkingDirectory=/opt/fluentxverse/releases/20261023
+ExecStart=/usr/bin/docker compose -f compose.private.json up -d --wait --wait-timeout 300
+ExecStop=/usr/bin/docker compose -f compose.private.json stop --timeout 60
+TimeoutStartSec=360
+TimeoutStopSec=180
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

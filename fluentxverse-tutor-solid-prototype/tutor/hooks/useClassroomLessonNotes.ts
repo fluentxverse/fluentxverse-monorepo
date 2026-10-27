@@ -4,6 +4,7 @@ import { cssStyle, Fragment } from "../utils/cssStyle";
 import { tutorApi, type ClassroomLessonNotes, type ClassroomNotesRecord } from '../api/tutor.api';
 import { API_BASE_URL } from '../config/api';
 import { validateLessonFeedback } from '../utils/lessonNotesValidation';
+import { lessonNoteSaveError } from '../utils/lessonNoteSaveError';
 type Summary = Pick<ClassroomLessonNotes, 'studentComment' | 'tutorMemo'>;
 type Draft = Summary & {
     updatedAt: number;
@@ -52,6 +53,7 @@ export function useClassroomLessonNotes(sessionId: Accessor<string>) {
     const [summary, setSummary] = createSignal<Summary>(empty);
     const [materials, setMaterials] = createSignal<ClassroomNotesRecord[]>([]);
     const [saveState, setSaveState] = createSignal<SaveState>('loading');
+    const [saveError, setSaveError] = createSignal('');
     const [ready, setReady] = createSignal(false);
     const [revision, setRevision] = createSignal(0);
     const latest = { current: null } as {
@@ -78,11 +80,15 @@ export function useClassroomLessonNotes(sessionId: Accessor<string>) {
             if (activeSession.current === id)
                 setSaveState('saving');
             await tutorApi.saveClassroomLessonNotes(id, { ...draft, clientUpdatedAt: draft.updatedAt });
-            if (activeSession.current === id && latest.current?.draft.updatedAt === draft.updatedAt)
+            if (activeSession.current === id && latest.current?.draft.updatedAt === draft.updatedAt) {
                 setSaveState('saved');
-        }).catch(() => {
-            if (activeSession.current === id)
+                setSaveError('');
+            }
+        }).catch((error) => {
+            if (activeSession.current === id && latest.current?.draft.updatedAt === draft.updatedAt) {
                 setSaveState('draft');
+                setSaveError(lessonNoteSaveError(error));
+            }
         });
     };
     createEffect(on(() => [sessionId(), revision()], () => {
@@ -92,6 +98,7 @@ export function useClassroomLessonNotes(sessionId: Accessor<string>) {
             setReady(false);
             setMaterials([]);
             setSaveState('loading');
+            setSaveError('');
             setSummary(local || empty);
             latest.current = local ? { get sessionId() {
                     return sessionId();
@@ -136,6 +143,7 @@ export function useClassroomLessonNotes(sessionId: Accessor<string>) {
             latest.current = { sessionId: sessionId(), draft };
             persistDraft(sessionId(), draft);
             setSaveState('draft');
+            setSaveError('');
             return next;
         });
     };
@@ -181,7 +189,7 @@ export function useClassroomLessonNotes(sessionId: Accessor<string>) {
     };
     return mergeProps(() => summary(), { get materials() {
             return materials();
-        } }, { rememberMaterial }, { get saveState() {
+        } }, { get saveError() { return saveError(); } }, { rememberMaterial }, { get saveState() {
             return saveState();
         } }, { get ready() {
             return ready();

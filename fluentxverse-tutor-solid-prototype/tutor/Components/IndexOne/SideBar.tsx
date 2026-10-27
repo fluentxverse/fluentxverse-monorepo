@@ -5,70 +5,30 @@ import { useLocation } from "../../routing";
 import { JSX } from "solid-js";
 import { useAuthContext } from '../../context/AuthContext';
 import SettingsModal from '../Settings/SettingsModal';
-import { getExamStatus, getSpeakingExamStatus } from '../../api/exam.api';
+import { LibraryBig } from 'lucide-solid';
 interface MenuItem {
     href: string;
     icon: string;
-    requiresCertification?: boolean;
+    label?: string;
 }
 // Menu items for the static site
 const menuItems: MenuItem[] = [
     { href: "/home", icon: "fi-sr-home" },
-    { href: "/schedule", icon: "fi-sr-calendar", requiresCertification: true },
+    { href: "/schedule", icon: "fi-sr-calendar" },
     { href: "/materials", icon: "fi-sr-book-alt" },
     { href: "/profile", icon: "fi-sr-user" },
     { href: "/performance-metrics", icon: "fi-sr-chart-histogram" },
+    { href: "/knowledge-base", icon: "knowledge-base", label: "Knowledge Base" },
 ];
 const SideBar = (): JSX.Element | null => {
     const _state0 = useLocation();
     const _state1 = useAuthContext();
     const [showSettings, setShowSettings] = createSignal(false);
-    const [isCertified, setIsCertified] = createSignal<boolean | null>(null);
-    // Test accounts that bypass certification requirements
-    const TEST_ACCOUNTS = ['paulanthonyarriola@gmail.com'];
-    const isTestAccount = createMemo(() => _state1.user?.email && TEST_ACCOUNTS.includes(_state1.user.email));
-    // Check certification status
-    createEffect(on(() => [_state1.user?.userId, isTestAccount()], () => {
-        const _cleanup2 = untrack(() => {
-            const checkCertification = async () => {
-                if (!_state1.user?.userId)
-                    return;
-                // Bypass for test accounts
-                if (isTestAccount()) {
-                    setIsCertified(true);
-                    return;
-                }
-                try {
-                    const [writtenRes, speakingRes] = await Promise.all([
-                        getExamStatus(_state1.user.userId),
-                        getSpeakingExamStatus(_state1.user.userId),
-                    ]);
-                    const writtenPassed = writtenRes.success && writtenRes.status?.passed === true;
-                    const speakingPassed = speakingRes.success && speakingRes.status?.passed === true;
-                    setIsCertified(writtenPassed && speakingPassed);
-                }
-                catch (err) {
-                    console.error('Failed to check certification:', err);
-                    setIsCertified(false);
-                }
-            };
-            checkCertification();
-        });
-        if (typeof _cleanup2 === "function")
-            onCleanup(_cleanup2);
-    }));
     return createMemo(() => {
         // Don't render sidebar if user is not logged in
         if (!_state1.user) {
             return null;
         }
-        // Filter menu items based on certification
-        const visibleMenuItems = createMemo(() => menuItems.filter(item => {
-            if (item.requiresCertification && isCertified() === false) {
-                return false;
-            }
-            return true;
-        }));
         // Menu items for the static site
         return (<div class="sidebar hidden-on-mobile">
       <div class="sidebar-logo mb-25">
@@ -78,9 +38,9 @@ const SideBar = (): JSX.Element | null => {
       </div>
       <div class="sidebar-icon">
         <ul>
-          {visibleMenuItems().map((item) => (<li class={_state0.path === item.href ? "active" : ""}>
-              <a href={item.href} aria-label={item.href.slice(1).replaceAll("-", " ")} title={item.href.slice(1).replaceAll("-", " ")} aria-current={_state0.path === item.href ? "page" : undefined}>
-                <i class={item.icon} aria-hidden="true"></i>
+          {menuItems.map((item) => (<li class={_state0.path === item.href || _state0.path.startsWith(`${item.href}/`) ? "active" : ""}>
+              <a href={item.href} aria-label={item.label || item.href.slice(1).replaceAll("-", " ")} title={item.label || item.href.slice(1).replaceAll("-", " ")} aria-current={_state0.path === item.href || _state0.path.startsWith(`${item.href}/`) ? "page" : undefined}>
+                {item.icon === 'knowledge-base' ? <LibraryBig size={24} class="sidebar-knowledge-icon" aria-hidden="true"/> : <i class={item.icon} aria-hidden="true"></i>}
               </a>
             </li>))}
           
@@ -100,6 +60,8 @@ const SideBar = (): JSX.Element | null => {
       <SettingsModal isOpen={showSettings()} onClose={() => setShowSettings(false)}/>
       
       <style>{`
+        .sidebar-knowledge-icon { color: #9c9c9c; }
+        .sidebar-icon ul li.active a .sidebar-knowledge-icon { color: #fff; }
         /* Glow effect for active menu item */
         .sidebar-icon ul li.active a {
           background: linear-gradient(135deg, #0245ae 0%, #4a9eff 100%);

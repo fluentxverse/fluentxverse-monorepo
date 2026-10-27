@@ -1098,3 +1098,43 @@
   background: rgba(255, 255, 255, 0.08) !important;
   color: var(--fxv-text) !important;
 }
+
+/* Keep calendar density independent of shared schedule and tab styling. */
+.App.tutor-workspace .interview-booking-page .container { max-width: 1040px !important; left: 0; }
+.interview-booking-page .interview-header { margin-bottom: 16px; }
+.interview-booking-page .info-card { padding: 12px 16px; margin-bottom: 16px; gap: 12px; }
+.interview-booking-page .info-card-icon { width: 32px; height: 32px; border-radius: 6px; box-shadow: none; }
+.interview-booking-page .info-card p { font-size: 13px; }
+.App.tutor-workspace .interview-booking-page .schedule-card { padding: 16px !important; }
+.interview-booking-page .interview-timezone { margin: 0 0 8px; font-size: 12px; color: var(--td-muted, #64748b); }
+.interview-calendar-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
+.interview-booking-page .calendar-nav { margin: 0; padding: 0; border: 0; }
+.interview-booking-page .week-navigation { gap: 8px; }
+.interview-booking-page .week-range { font-size: 14px; font-weight: 700; letter-spacing: 0; min-width: 130px; text-align: center; }
+.interview-booking-page .nav-btn { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 6px; }
+.App.tutor-workspace .interview-booking-page .period-tabs { margin: 0; gap: 0; flex-wrap: nowrap; border-bottom: 0; }
+.interview-booking-page .period-tab { min-height: 32px; padding: 6px 10px; font-size: 12px; gap: 6px; border-radius: 6px; }
+.interview-booking-page .calendar-container { max-height: 440px; overflow: auto; border-radius: 6px; scrollbar-gutter: stable; }
+.interview-booking-page .calendar-grid { grid-template-columns: 76px repeat(7, minmax(82px, 1fr)); grid-auto-rows: 34px; border-radius: 6px; }
+.interview-booking-page .calendar-header > div { position: sticky; top: 0; z-index: 2; }
+.interview-booking-page .day-header { padding: 2px 4px; background: var(--td-surface, #fff); }
+.interview-booking-page .day-header .day-name { font-size: 10px; margin: 0; letter-spacing: 0; line-height: 14px; }
+.interview-booking-page .day-header .day-date { font-size: 13px; line-height: 16px; }
+.interview-booking-page .time-label { font-size: 11px; padding: 4px 8px; white-space: nowrap; }
+.interview-booking-page .slot-cell { min-height: 0; padding: 2px; }
+.interview-booking-page .slot-badge { min-height: 28px; height: 28px; padding: 3px 4px; font-size: 10px; border: 0; border-radius: 4px; letter-spacing: 0; box-shadow: none; white-space: nowrap; }
+.interview-booking-page .slot-badge.open:hover { transform: none; }
+.interview-booking-page :is(.nav-btn,.period-tab,.slot-badge,.calendar-container):focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+[data-theme='dark'] .interview-booking-page .calendar-header > div { background: var(--td-surface, #202020); }
+
+@media (max-width: 768px) {
+  .interview-calendar-toolbar { align-items: flex-start; }
+  .interview-booking-page .nav-btn { width: 44px; height: 44px; }
+  .interview-booking-page .period-tab { min-height: 44px; padding: 8px 10px; }
+  .interview-booking-page .calendar-container { max-height: 420px; }
+  .interview-booking-page .calendar-grid { grid-template-columns: 68px repeat(7, 90px); grid-auto-rows: 48px; width: max-content; min-width: 100%; }
+  .interview-booking-page .slot-badge { min-height: 44px; height: 44px; }
+  .interview-booking-page .time-label { position: sticky; left: 0; z-index: 1; background: var(--td-surface, #fff); }
+  .interview-booking-page .time-header { left: 0; z-index: 3; }
+  .interview-booking-page .day-header { padding: 8px 4px; }
+}

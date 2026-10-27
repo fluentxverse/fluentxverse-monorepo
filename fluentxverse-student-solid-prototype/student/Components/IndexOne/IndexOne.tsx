@@ -3,6 +3,7 @@ import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../../utils/cssStyle";
 import Banner from './Banner';
 import BeginnerWelcome from './BeginnerWelcome';
+import TutorQuality from './TutorQuality';
 import WhyChooseUs from './WhyChooseUs';
 import HowItWorks from './HowItWorks';
 import PricingSection from './PricingSection';
@@ -12,6 +13,7 @@ const IndexOne = () => {
     return (<main>
       <Banner />
       <BeginnerWelcome />
+      <TutorQuality />
       <WhyChooseUs />
       <HowItWorks />
       {TICKETING_VISIBLE && <PricingSection />}

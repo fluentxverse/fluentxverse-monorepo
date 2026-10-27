@@ -1,5 +1,7 @@
 # Tutor Certification ZK Implementation
 
+Security notice, 2026-10-20: this is a historical implementation report, not a current security claim. V1 keys accepted witness-free fabricated proofs and are retired. Generation and submission now return HTTP 410. The transactions below remain historical records only; finalization did not establish sound certification. See [the remediation report](zk-security-remediation-20261020.md).
+
 Last updated: 2026-05-04
 
 ## Executive Summary

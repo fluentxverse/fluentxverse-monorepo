@@ -5,7 +5,9 @@ import TutorIcon from "../Components/Common/TutorIcon";
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
-import { generateSpeakingExam, submitSpeakingExam, getActiveSpeakingExam, type ClientSpeakingExam, type SpeakingTask, type TaskRecording, type SpeakingExamResult, } from '../api/exam.api';
+import { generateSpeakingExam, submitSpeakingExam, getActiveSpeakingExam, getSpeakingExamStatus, getSpeakingExamResult,
+    getExamStatus, saveSpeakingRecording, retrySpeakingGrading,
+    type ClientSpeakingExam, type SpeakingTask, type TaskRecording, type SpeakingExamResult, } from '../api/exam.api';
 import './SpeakingExamPage.css';
 type ExamPhase = 'intro' // Initial instructions
  | 'mic-test' // Testing microphone
@@ -14,6 +16,7 @@ type ExamPhase = 'intro' // Initial instructions
  | 'prep' // Prep time before recording
  | 'recording' // Currently recording
  | 'submitting' // Submitting exam
+ | 'saving'
  | 'results' // Showing results
  | 'error'; // Microphone failure
 // Prep time per task type (seconds)
@@ -32,6 +35,13 @@ const SpeakingExamPage = () => {
     const [currentTaskIndex, setCurrentTaskIndex] = createSignal(0);
     const [result, setResult] = createSignal<SpeakingExamResult | null>(null);
     const [error, setError] = createSignal<string | null>(null);
+    const [canStart, setCanStart] = createSignal(false);
+    const [canRetryGrading, setCanRetryGrading] = createSignal(false);
+    const [jobId, setJobId] = createSignal<string | null>(null);
+    const [pendingRecording, setPendingRecording] = createSignal<TaskRecording | null>(null);
+    let disposed = false, advancing = false;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
+    const errorMessage = (err: any, fallback: string) => err?.response?.data?.message || err?.message || fallback;
     // Timer state
     const [timeRemaining, setTimeRemaining] = createSignal(0);
     const timerRef = { current: null } as {
@@ -44,7 +54,6 @@ const SpeakingExamPage = () => {
     const [micTestPassed, setMicTestPassed] = createSignal(false);
     const [speakerTestPassed, setSpeakerTestPassed] = createSignal(false);
     // Recording state
-    const [recordings, setRecordings] = createSignal<TaskRecording[]>([]);
     const mediaRecorderRef = { current: null } as {
         current: (MediaRecorder | null) | null;
     };
@@ -72,7 +81,13 @@ const SpeakingExamPage = () => {
             document.title = 'Speaking Proficiency Test | FluentXVerse';
             return () => {
                 // Cleanup on unmount
-                stopMicAnalysis();
+                disposed = true;
+                clearTimeout(pollTimer);
+                if (mediaRecorderRef.current) {
+                    mediaRecorderRef.current.onstop = null;
+                    if (mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
+                }
+                stopStream();
                 if (timerRef.current)
                     clearInterval(timerRef.current);
             };
@@ -82,6 +97,54 @@ const SpeakingExamPage = () => {
     }));
     // Current task helper
     const currentTask = createMemo(() => exam()?.tasks[currentTaskIndex()] || null);
+    createEffect(on(phase, value => {
+        if (['prep', 'results', 'error'].includes(value)) {
+            const frame = requestAnimationFrame(() => window.scrollTo(0, 0));
+            onCleanup(() => cancelAnimationFrame(frame));
+        }
+    }));
+    const pollResult = async (id: string) => {
+        if (disposed || !_state0.user?.userId) return;
+        clearTimeout(pollTimer);
+        try {
+            const response = await getSpeakingExamStatus(_state0.user.userId);
+            if (disposed) return;
+            const status = response.status;
+            if (!response.success || !status) throw new Error('Assessment status unavailable.');
+            if (status.hasCompletedExam && status.examId === id) {
+                const completed = await getSpeakingExamResult(_state0.user.userId, id);
+                if (disposed) return;
+                if (!completed.result) throw new Error('Assessment result unavailable.');
+                setResult(completed.result); setPhase('results'); return;
+            }
+            if (status.gradingFailed) {
+                setCanRetryGrading(!!status.canRetryGrading);
+                setError('Grading could not finish. Your recordings are saved; no exam attempt has been deducted.');
+                setPhase('error'); return;
+            }
+        } catch {
+            // A network outage must not erase the submitted job or start a second attempt.
+        }
+        if (!disposed) pollTimer = setTimeout(() => pollResult(id), 5000);
+    };
+    createEffect(on(() => _state0.user?.userId, userId => {
+        if (!userId) return;
+        let cancelled = false;
+        void (async () => {
+            try {
+                const written = await getExamStatus(userId);
+                if (cancelled || disposed) return;
+                setCanStart(written.status?.passed === true);
+                const oral = await getSpeakingExamStatus(userId);
+                if (cancelled || disposed) return;
+                if (oral.status?.examId && (oral.status.isProcessing || oral.status.hasCompletedExam || oral.status.gradingFailed)) {
+                    setJobId(oral.status.examId); setPhase('submitting');
+                    void pollResult(oral.status.examId);
+                }
+            } catch (err) { if (!cancelled && !disposed) setError(errorMessage(err, 'Unable to load application progress.')); }
+        })();
+        onCleanup(() => { cancelled = true; clearTimeout(pollTimer); });
+    }));
     // ============================================================================
     // MICROPHONE HANDLING
     // ============================================================================
@@ -103,6 +166,7 @@ const SpeakingExamPage = () => {
                 }
             }
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            if (disposed) { stream.getTracks().forEach(track => track.stop()); return; }
             streamRef.current = stream;
             setMicPermission('granted');
             setupAudioContext(stream);
@@ -115,10 +179,7 @@ const SpeakingExamPage = () => {
         }
     };
     const setupAudioContext = (stream: MediaStream) => {
-        // Clean up existing audio context
-        if (audioContextRef.current) {
-            audioContextRef.current.close();
-        }
+        stopMicAnalysis();
         // Set up audio analysis for level visualization
         audioContextRef.current = new AudioContext();
         const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -169,6 +230,8 @@ const SpeakingExamPage = () => {
     // RECORDING HANDLING
     // ============================================================================
     const startRecording = async () => {
+        if (disposed || advancing || mediaRecorderRef.current?.state === 'recording' || phase() !== 'prep') return;
+        if (exam()?.startedAt && Date.now() >= Date.parse(exam()!.startedAt!) + exam()!.totalTimeLimit * 60000) { await submitExam(); return; }
         // Clear any existing timer first to prevent race conditions
         if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -178,26 +241,27 @@ const SpeakingExamPage = () => {
             // Try to get mic permission again
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                if (disposed) { stream.getTracks().forEach(track => track.stop()); return; }
                 streamRef.current = stream;
             }
             catch (err) {
-                setError('Microphone access lost. Exam failed.');
+                setError('Microphone access was lost. Your completed recordings are saved.');
                 setPhase('error');
                 return;
             }
         }
         audioChunksRef.current = [];
         try {
-            const mediaRecorder = new MediaRecorder(streamRef.current, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
+            const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find(type => MediaRecorder.isTypeSupported(type));
+            if (!mimeType) throw new Error('This browser cannot record a supported audio format.');
+            const mediaRecorder = new MediaRecorder(streamRef.current, { mimeType });
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
+                    audioChunksRef.current?.push(event.data);
                 }
             };
             mediaRecorder.onerror = () => {
-                setError('Recording failed. Exam failed.');
+                setError('Recording failed. Your completed recordings are saved.');
                 setPhase('error');
             };
             mediaRecorder.start(100); // Collect data every 100ms
@@ -227,55 +291,76 @@ const SpeakingExamPage = () => {
         }
         catch (err) {
             console.error('Failed to start recording:', err);
-            setError('Failed to start recording. Exam failed.');
+            setError(errorMessage(err, 'Failed to start recording. Your completed recordings are saved.'));
             setPhase('error');
         }
     };
     const stopRecordingAndAdvance = async () => {
+        if (advancing || disposed || !currentTask()) return;
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
         if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
-            advanceToNextTask();
             return;
         }
+        advancing = true;
+        const taskId = currentTask()!.id;
         const mediaRecorder = mediaRecorderRef.current;
+        setPhase('saving');
         // Get final recording
-        const newRecording = await new Promise<TaskRecording>((resolve) => {
+        try {
+        const newRecording = await new Promise<TaskRecording>((resolve, reject) => {
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                const duration = Math.round((Date.now() - recordingStartRef.current) / 1000);
+                const audioBlob = new Blob(audioChunksRef.current || [], { type: mediaRecorder.mimeType });
+                const duration = (Date.now() - (recordingStartRef.current || Date.now())) / 1000;
                 // Convert to base64 for submission
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result as string;
                     const recording: TaskRecording = {
-                        get taskId() {
-                            return currentTask()?.id || 0;
-                        },
+                        taskId,
                         audioUrl: base64,
                         duration
                     };
                     resolve(recording);
                 };
+                reader.onerror = () => reject(new Error('Unable to read recording.'));
                 reader.readAsDataURL(audioBlob);
             };
             mediaRecorder.stop();
         });
-        // Update recordings state
-        const updatedRecordings = [...recordings(), newRecording];
-        setRecordings(updatedRecordings);
         mediaRecorderRef.current = null;
-        advanceToNextTask(updatedRecordings);
+        if (disposed) return;
+        if (newRecording.duration < 0.5 || newRecording.duration > (currentTask()?.timeLimit ?? 120) + 5) {
+            throw new Error('The recording duration is invalid. Resume this unsaved task and record again.');
+        }
+        setPendingRecording(newRecording);
+        await persistRecording(newRecording);
+        } catch (err) {
+            if (!disposed) { setError(errorMessage(err, 'Unable to save recording. Please retry.')); setPhase('error'); }
+        } finally { advancing = false; }
     };
-    const advanceToNextTask = (currentRecordings?: TaskRecording[]) => {
+    const persistRecording = async (recording: TaskRecording) => {
+        if (!exam() || disposed) return;
+        let saved;
+        try { saved = await saveSpeakingRecording(exam()!.examId, recording); }
+        catch (err: any) {
+            if ([400, 404, 409, 413, 422].includes(err?.response?.status)) setPendingRecording(null);
+            throw err;
+        }
+        if (!saved.success || !saved.saved) throw new Error('Recording was not saved. Please retry.');
+        if (disposed) return;
+        setPendingRecording(null);
+        advanceToNextTask();
+    };
+    const advanceToNextTask = () => {
         if (!exam())
             return;
         const nextIndex = currentTaskIndex() + 1;
         if (nextIndex >= exam().tasks.length) {
             // All tasks completed - submit exam with passed recordings
-            submitExam(currentRecordings || recordings());
+            void submitExam();
         }
         else {
             // Move to next task
@@ -337,7 +422,7 @@ const SpeakingExamPage = () => {
         setSpeakerTestPassed(true);
     };
     const startExam = async () => {
-        if (!_state0.user?.userId)
+        if (!_state0.user?.userId || !canStart())
             return;
         setPhase('loading');
         setError(null);
@@ -345,23 +430,29 @@ const SpeakingExamPage = () => {
             // Check for active exam first
             const activeRes = await getActiveSpeakingExam(_state0.user.userId);
             if (activeRes.success && activeRes.exam) {
-                setExam(activeRes.exam);
-                startPrepPhase(activeRes.exam.tasks[0]);
+                resumeExam(activeRes.exam);
                 return;
             }
             // Generate new exam
             const res = await generateSpeakingExam(_state0.user.userId);
             if (res.success && res.exam) {
-                setExam(res.exam);
-                startPrepPhase(res.exam.tasks[0]);
+                resumeExam(res.exam);
             }
             else {
-                setError(res.message || 'Failed to generate exam');
+                setError(res.message || 'Failed to generate exam'); setPhase('error');
             }
         }
         catch (err: any) {
-            setError(err.message || 'Failed to start exam');
+            setError(errorMessage(err, 'Failed to start exam')); setPhase('error');
         }
+    };
+    const resumeExam = (active: ClientSpeakingExam) => {
+        if (disposed) return;
+        setExam(active);
+        const index = active.tasks.findIndex(task => !active.savedTaskIds?.includes(task.id));
+        if (index < 0 || (active.startedAt && Date.now() >= Date.parse(active.startedAt) + active.totalTimeLimit * 60000)) { void submitExam(); return; }
+        setCurrentTaskIndex(index);
+        startPrepPhase(active.tasks[index]!);
     };
     const startPrepPhase = (task: SpeakingTask) => {
         // Clear any existing timer first
@@ -395,25 +486,28 @@ const SpeakingExamPage = () => {
         // Use setTimeout to ensure clean transition
         setTimeout(() => startRecording(), 0);
     };
-    const submitExam = async (recordingsToSubmit: TaskRecording[]) => {
+    const submitExam = async () => {
         if (!exam() || !_state0.user?.userId)
             return;
         setPhase('submitting');
         stopStream();
         try {
-            const res = await submitSpeakingExam(exam().examId, _state0.user.userId, recordingsToSubmit);
+            const res = await submitSpeakingExam(exam().examId, _state0.user.userId);
+            if (disposed) return;
             if (res.success && res.result) {
                 setResult(res.result);
                 setPhase('results');
             }
-            else {
+            else if (res.success && (res.state === 'queued' || res.state === 'processing')) {
+                setJobId(exam()!.examId);
+                void pollResult(exam()!.examId);
+            } else {
                 setError(res.message || 'Failed to submit exam');
                 setPhase('error');
             }
         }
         catch (err: any) {
-            console.error('❌ Submit error:', err);
-            setError(err.message || 'Failed to submit exam');
+            setError(errorMessage(err, 'Failed to submit exam'));
             setPhase('error');
         }
     };
@@ -455,47 +549,36 @@ const SpeakingExamPage = () => {
         </div>
         <h2>Speaking Proficiency Test</h2>
         <p class="exam-intro-description">
-          This exam assesses your English speaking skills through various task types.
-          You will be recorded and evaluated by AI on pronunciation, fluency, vocabulary,
-          grammar, coherence, and task completion.
+          Read 10 short sentences aloud, one at a time. You do not need to describe
+          pictures, answer questions, or teach a topic. AI compares your transcribed
+          words with each sentence. Scores are provisional, not a final application
+          decision. Pronunciation and delivery still require human review.
         </p>
 
         <div class="exam-info-grid">
           <div class="exam-info-item">
             <TutorIcon name="fas fa-tasks"/>
-            <span>10 Tasks</span>
+            <span>10 Sentences</span>
           </div>
           <div class="exam-info-item">
             <TutorIcon name="fas fa-clock"/>
-            <span>~15 mins</span>
+            <span>30 Seconds Each</span>
           </div>
           <div class="exam-info-item">
             <TutorIcon name="fas fa-trophy"/>
-            <span>85% to Pass</span>
+            <span>85% Content Threshold</span>
           </div>
           <div class="exam-info-item">
             <TutorIcon name="fas fa-redo"/>
-            <span>2 Attempts/Month</span>
+            <span>2 Attempts / 30 Days</span>
           </div>
         </div>
 
         <div class="exam-categories">
-          <h4>Task Types</h4>
+          <h4>Assessment</h4>
           <div class="category-tags">
             <span class="category-tag">
-              <TutorIcon name="fas fa-book"/> Read Aloud
-            </span>
-            <span class="category-tag">
-              <TutorIcon name="fas fa-image"/> Picture Description
-            </span>
-            <span class="category-tag">
-              <TutorIcon name="fas fa-comments"/> Situational Response
-            </span>
-            <span class="category-tag">
-              <TutorIcon name="fas fa-chalkboard-teacher"/> Teaching Demo
-            </span>
-            <span class="category-tag">
-              <TutorIcon name="fas fa-microphone"/> Open Response
+              <TutorIcon name="fas fa-book"/> Read Aloud Only
             </span>
           </div>
         </div>
@@ -508,12 +591,13 @@ const SpeakingExamPage = () => {
             <li><strong>One Chance Per Task:</strong> You cannot re-record a task once it's completed.</li>
             <li><strong>No Pausing:</strong> The exam cannot be paused once started.</li>
             <li><strong>Browser Access:</strong> Please allow microphone access when prompted.</li>
-            <li><strong>Recording Failure = Fail:</strong> If your microphone fails during the exam, it will be marked as failed.</li>
+            <li><strong>Saved Progress:</strong> Completed recordings are saved. A recording or grading error does not itself fail your application.</li>
           </ul>
         </div>
 
-        <button class="start-exam-btn" onClick={startMicTest}>
-          <TutorIcon name="fas fa-cog"/> Test Your Equipment
+        {error() && <p role="alert">{error()}</p>}
+        <button class="start-exam-btn" disabled={!canStart()} onClick={startMicTest}>
+          <TutorIcon name="fas fa-cog"/> {canStart() ? 'Test Your Equipment' : 'Written Exam Pass Required'}
         </button>
       </div>
     </div>);
@@ -613,6 +697,7 @@ const SpeakingExamPage = () => {
             case 'picture-description':
                 return (<div class="task-content picture-description">
             <p class="task-instruction">{currentTask().instruction}</p>
+            <p class="task-vocabulary-guidance">Use varied, precise vocabulary naturally. Clear everyday words are welcome; uncommon words are not required.</p>
             <div class="task-image-container">
               <img src={task.imageUrl} alt="Describe this image"/>
             </div>
@@ -678,7 +763,7 @@ const SpeakingExamPage = () => {
         </div>
 
         <div class="prep-instructions">
-          <p><TutorIcon name="fas fa-eye"/> Read and prepare your response</p>
+          <p><TutorIcon name="fas fa-eye"/> {currentTask()?.type === 'read-aloud' ? 'Read the sentence before recording' : 'Read and prepare your response'}</p>
         </div>
 
         {renderTaskContent()}
@@ -751,13 +836,16 @@ const SpeakingExamPage = () => {
           </div>
         </div>
         <p class="time-estimate">
-          <TutorIcon name="fas fa-clock"/> This usually takes 1-2 minutes. Please don't close this page.
+          <TutorIcon name="fas fa-clock"/> Recordings are saved. You can return to your dashboard while grading finishes.
         </p>
       </div>
+      <a class="back-home-btn" href="/home">Back to Dashboard</a>
     </div>);
     const renderResults = () => {
         if (!result())
             return null;
+        const readAloud = result().format === 'read-aloud.v1';
+        const readAloudLabels: Record<string, string> = { vocabulary: 'Words read', grammar: 'Sentence', coherence: 'Word order', taskCompletion: 'Coverage' };
         const getScoreColor = (score: number) => {
             if (score >= 85)
                 return 'excellent';
@@ -769,22 +857,22 @@ const SpeakingExamPage = () => {
         };
         return (<div class="exam-results speaking-results">
         <div class="results-header">
-          <div class={`result-badge ${result().passed ? 'passed' : 'failed'}`}>
-            <TutorIcon name={`fas ${result().passed ? 'fa-check-circle' : 'fa-times-circle'}`}/>
-            <span>{result().passed ? 'PASSED' : 'FAILED'}</span>
+          <div class="result-badge provisional">
+            <TutorIcon name="fas fa-clipboard-check"/>
+            <span>AI CONTENT ASSESSMENT</span>
           </div>
-          <h2>Speaking Exam Results</h2>
+          <h2>{readAloud ? 'Read-Aloud Results' : 'Speaking Exam Results'}</h2>
         </div>
 
         <div class="score-overview">
           <div class={`overall-score ${getScoreColor(result().overallScore)}`}>
             <span class="score-value">{Math.round(result().overallScore)}%</span>
-            <span class="score-label">Overall Score</span>
+            <span class="score-label">Provisional Content Score</span>
           </div>
           <p class="passing-note">
             {result().passed
-                ? '🎉 Congratulations! You have passed the speaking exam.'
-                : `You needed 85% to pass. You have ${2 - 1} attempt(s) remaining this month.`}
+                ? 'The AI content score meets the 85% screening threshold. Human review is required for a final application decision.'
+                : 'The AI content score is below the 85% screening threshold. This is not a final rejection. Human review is required; contact support to discuss your assessment.'}
           </p>
         </div>
 
@@ -793,19 +881,21 @@ const SpeakingExamPage = () => {
           <div class="score-grid">
             {Object.entries(result().sectionAverages).map(([category, score]) => (<div class="score-item">
                 <span class="score-category">
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                  {readAloudLabels[category] && readAloud ? readAloudLabels[category] : category === 'taskCompletion' ? 'Task completion' : category.charAt(0).toUpperCase() + category.slice(1)}
                 </span>
                 <div class="score-bar-container">
-                  <div class={`score-bar ${getScoreColor(score * 20)}`} style={cssStyle({ width: `${score * 20}%` })}/>
+                  <div class={`score-bar ${getScoreColor((score ?? 0) * 20)}`} style={cssStyle({ width: `${(score ?? 0) * 20}%` })}/>
                 </div>
-                <span class="score-number">{score.toFixed(1)}/5</span>
+                <span class="score-number">{score === null ? 'Human review' : `${score.toFixed(1)}/5`}</span>
               </div>))}
           </div>
         </div>
 
         <div class="overall-feedback">
-          <h3>Feedback</h3>
-          <p>{result().overallFeedback}</p>
+          <h3>What This Score Means</h3>
+          <p>{readAloud
+            ? 'This score compares the transcript with the supplied sentences. It does not measure spontaneous speaking, teaching ability, pronunciation, accent, or delivery. Human review is still required.'
+            : 'This score covers transcribed content only. It does not assess pronunciation, accent, or delivery, and it does not replace a human decision about your application.'}</p>
         </div>
 
         <div class="task-scores-detail">
@@ -823,6 +913,7 @@ const SpeakingExamPage = () => {
         </div>
 
         <div class="results-actions">
+          <a href="mailto:tutor@fluentxverse.com" class="back-home-btn">Contact Tutor Applications</a>
           <a href="/home" class="back-home-btn">
             <TutorIcon name="fas fa-home"/> Back to Dashboard
           </a>
@@ -834,9 +925,20 @@ const SpeakingExamPage = () => {
         <div class="error-icon">
           <TutorIcon name="fas fa-times-circle"/>
         </div>
-        <h2>Exam Failed</h2>
+        <h2>Assessment Paused</h2>
         <p>{error() || 'An error occurred during the exam.'}</p>
         <div class="error-actions">
+          {pendingRecording() && <button class="back-home-btn" onClick={async () => {
+              if (advancing) return; advancing = true; setPhase('saving');
+              try { await persistRecording(pendingRecording()!); } catch (err) { setError(errorMessage(err, 'Upload failed.')); setPhase('error'); }
+              finally { advancing = false; }
+          }}>Retry Saving Recording</button>}
+          {canRetryGrading() && jobId() && <button class="back-home-btn" onClick={async () => {
+              setCanRetryGrading(false);
+              try { await retrySpeakingGrading(jobId()!); setPhase('submitting'); void pollResult(jobId()!); }
+              catch (err) { setError(errorMessage(err, 'Please contact support to resume grading.')); }
+          }}>Retry Grading</button>}
+          {!pendingRecording() && !jobId() && <button class="back-home-btn" onClick={() => { setError(null); setPhase('intro'); }}>Resume Assessment</button>}
           <a href="/home" class="back-home-btn">
             <TutorIcon name="fas fa-home"/> Back to Dashboard
           </a>
@@ -862,6 +964,8 @@ const SpeakingExamPage = () => {
                 return renderRecording();
             case 'submitting':
                 return renderSubmitting();
+            case 'saving':
+                return <div class="exam-loading"><div class="loading-spinner"/><h3>Saving Recording</h3><p>Task {currentTaskIndex() + 1}</p></div>;
             case 'results':
                 return renderResults();
             case 'error':

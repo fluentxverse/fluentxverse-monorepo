@@ -268,10 +268,16 @@
     min-height: auto;
   }
 
-  .hero-content {
-    padding-right: 0;
+  .hero-section .hero-content {
+    padding: 0;
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 0;
+  }
+
+  .hero-section::before,
+  .hero-section::after,
+  .hero-image-bg {
+    display: none;
   }
 
   .hero-title {
@@ -298,15 +304,29 @@
     transform: none;
     width: 100%;
     height: auto;
-    padding: 40px 0;
+    padding: 40px 20px;
+    justify-content: center;
+  }
+
+  .hero-image-wrapper picture {
+    display: block;
+    width: 100%;
+    max-width: 600px;
   }
   
   .hero-image {
-    max-width: 90%;
+    display: block;
+    width: 100%;
+    max-width: 100%;
     height: auto;
-    max-height: 600px;
+    max-height: none;
     border-radius: 24px;
-    margin: 0 auto;
+    margin: 0;
+    aspect-ratio: 1200 / 805;
+  }
+
+  .hero-image:hover {
+    transform: none;
   }
   
   .hero-image-wrapper::before {
@@ -342,12 +362,31 @@
   .hero-buttons {
     flex-direction: column;
     width: 100%;
+    margin-bottom: 28px;
   }
 
   .hero-features {
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+    display: grid;
+    width: min(100%, 300px);
+    margin: 0 auto;
+    gap: 0;
+    text-align: left;
+    justify-content: stretch;
+  }
+
+  .hero-features .feature-badge {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 14px;
+    padding: 10px 0;
+  }
+
+  .hero-features .feature-badge + .feature-badge {
+    border-top: 1px solid #e1e8ed;
+  }
+
+  .dark-mode .hero-features .feature-badge + .feature-badge {
+    border-color: #2a3441;
   }
 
   .floating-card {
@@ -378,14 +417,5 @@
   
   .hero-text {
     font-size: 15px;
-  }
-
-  .hero-image-bg {
-    width: 350px;
-    height: 350px;
-  }
-  
-  .hero-image {
-    max-height: 400px;
   }
 }

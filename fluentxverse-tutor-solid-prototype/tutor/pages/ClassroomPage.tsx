@@ -24,6 +24,7 @@ import DispatchMaterialPicker from '../Components/DispatchMaterialPicker';
 import CurriculumMaterialPicker from '../Components/CurriculumMaterialPicker';
 import LearningNotesFields from '../Components/LearningNotesFields';
 import LessonFeedbackFields from '../Components/LessonFeedbackFields';
+import { lessonNoteSaveError } from '../utils/lessonNoteSaveError';
 import MaterialProgressEditor from '../Components/MaterialProgressEditor';
 import { dispatchPostDate, type DispatchArticle } from '../utils/dispatchLibrary';
 import { toast, toastConfirm } from '../Components/Common/Toast';
@@ -805,6 +806,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         }, targets: [] });
     const previewedNotesTargets = createMemo(() => previewedNotes().sessionId === currentSessionId() ? previewedNotes().targets : []);
     const [notesPersistenceState, setNotesPersistenceState] = createSignal<'idle' | 'loading' | 'saving' | 'saved' | 'draft' | 'error'>('idle');
+    const [notesSaveError, setNotesSaveError] = createSignal('');
     const notesHydratedKeyRef = { current: null } as {
         current: (string | null) | null;
     };
@@ -904,7 +906,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ word: item.word })
+                body: JSON.stringify({ word: item.word, sessionId: currentSessionId() })
             });
             if (!response.ok)
                 throw new Error('Failed to get definition');
@@ -1049,7 +1051,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ text: item.youSaid })
+                body: JSON.stringify({ text: item.youSaid, sessionId: currentSessionId() })
             });
             if (!response.ok)
                 throw new Error('Failed to get correction');
@@ -1134,7 +1136,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ word: item.word })
+                body: JSON.stringify({ word: item.word, sessionId: currentSessionId() })
             });
             if (!response.ok)
                 throw new Error('Failed to get pronunciation');
@@ -1445,7 +1447,14 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
         const saveStartedAt = Date.now();
         const pending = (notesSaveQueuesRef.current[bindingKey] || Promise.resolve()).catch(() => { }).then(() => tutorApi.saveClassroomNotes(currentSessionId(), { ...buildClassroomNotesPayload(target, snapshot), clientUpdatedAt: saveStartedAt, ...(isUsed ? { isUsed: true } : {}) }));
         notesSaveQueuesRef.current[bindingKey] = pending;
-        const savedRecord = await pending;
+        let savedRecord;
+        try {
+            savedRecord = await pending;
+            if (activeNotesKeyRef.current === bindingKey) setNotesSaveError('');
+        } catch (error) {
+            if (activeNotesKeyRef.current === bindingKey) setNotesSaveError(lessonNoteSaveError(error));
+            throw error;
+        }
         syncDraftFromServerRecord(bindingKey, target, savedRecord, saveStartedAt);
         _state3.rememberMaterial(savedRecord);
         return savedRecord;
@@ -1613,6 +1622,7 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
             let cancelled = false;
             const localDraft = readClassroomNotesDraft(activeNotesBindingKey());
             setNotesPersistenceState('loading');
+            setNotesSaveError('');
             if (localDraft) {
                 notesHydratedKeyRef.current = activeNotesBindingKey();
                 notesSkipAutosaveRef.current = true;
@@ -3468,6 +3478,8 @@ const ClassroomPage = (_props0: ClassroomPageProps) => {
           </div>
           
           <div class="dispatch-notes-footer">
+            {notesSaveError() && <p class="notes-field-error" role="alert">{notesSaveError()}</p>}
+            {_state3.saveError && <p class="notes-field-error" role="alert">{_state3.saveError}</p>}
             <div class={`dispatch-notes-save-state dispatch-notes-save-state--${notesPersistenceState()}`}>
               {notesPersistenceState() === 'loading'
                 ? 'Loading saved notes...'

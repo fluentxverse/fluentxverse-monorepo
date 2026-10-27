@@ -8,6 +8,8 @@ import TutorDialog from "../Common/TutorDialog";
 import LoginModal from "../InnerPages/LoginModal";
 import ThemeSwitch from '../Common/ThemeSwitch';
 import "./Header.css";
+import BrandWordmark from '../../../../shared/ui/BrandWordmark';
+import SocialBrandIcon from '../../../../shared/ui/SocialBrandIcon';
 interface HeaderProps {
     showThemeSwitch?: boolean;
 }
@@ -91,9 +93,7 @@ const Header = (_props0: HeaderProps) => {
               <div class="menu-wrap main-menu">
                 <nav class="menu-nav">
                   <div class="logo"><a href="/#"><img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="40" height="40"/></a></div>
-                  <div class="brand-text">
-                    Fluent<span class="brand-x">X</span>Verse
-                  </div>
+                  <div class="brand-text"><BrandWordmark /></div>
                   <div class="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul class="navigation">
                       <li><Link href="/">Home</Link></li>
@@ -132,7 +132,7 @@ const Header = (_props0: HeaderProps) => {
                   <div class="menu-outer">
                     <div class="mobile-menu-header">
                       <div class="mobile-logo">
-                        <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="32" height="32"/> <div class="brand-text">Fluent<span class="brand-x">X</span>Verse</div>
+                        <img src="/assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="32" height="32"/> <div class="brand-text"><BrandWordmark compact /></div>
                       </div>
                       <button type="button" class="close-btn" onClick={closeMobileMenu()} aria-label="Close mobile menu" autofocus>
                         <TutorIcon name="fas fa-times" size={24}/>
@@ -176,9 +176,9 @@ const Header = (_props0: HeaderProps) => {
                   <div class="social-links">
                     <h4 class="social-links-title">Follow us on:</h4>
                     <ul>
-                      <li><a aria-label="LinkedIn" title="LinkedIn" href="https://www.linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer"><i class="ri-linkedin-fill" aria-hidden="true"/></a></li>
-                      <li><a aria-label="Facebook" title="Facebook" href="https://www.facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer"><i class="ri-facebook-fill" aria-hidden="true"/></a></li>
-                      <li><a aria-label="X" title="X" href="https://x.com/FluentXverse" target="_blank" rel="noopener noreferrer"><i class="ri-twitter-x-fill" aria-hidden="true"/></a></li>
+                      <li><a aria-label="LinkedIn" title="LinkedIn" href="https://www.linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer"><SocialBrandIcon name="linkedin"/></a></li>
+                      <li><a aria-label="Facebook" title="Facebook" href="https://www.facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer"><SocialBrandIcon name="facebook"/></a></li>
+                      <li><a aria-label="X" title="X" href="https://x.com/fluentxverse" target="_blank" rel="noopener noreferrer"><SocialBrandIcon name="x"/></a></li>
                     </ul>
                   </div>
                 </nav>

@@ -5,6 +5,7 @@ import LoadingSpinner from './LoadingSpinner';
 import { proofApi } from '../api/proof.api';
 import { useParams } from '@solidjs/router';
 import StatusPanel from '../../../shared/ui/StatusPanel';
+import { hasTeachingAccess } from '../utils/teachingAccess';
 export function ProtectedRoute(props: {
     Component: Component<any>;
 }) {
@@ -38,18 +39,13 @@ export function CertifiedRoute(props: {
         setLoading(true);
         setCertified(false);
         setError(false);
-        if (auth.user.email === 'paulanthonyarriola@gmail.com') {
-            setCertified(true);
-            setLoading(false);
-            return;
-        }
         void proofApi.getTutorCertificationStatus().then(result => {
             if (!active)
                 return;
-            if (result.snapshot.missingRequirements.length === 0)
+            if (hasTeachingAccess(result))
                 setCertified(true);
             else
-                location.route('/home?certification=required');
+                location.route('/home?certification=required', true);
         }).catch(() => {
             if (active) setError(true);
         })

@@ -1,5 +1,9 @@
 # Tutor compensation: USD base rates
 
+The [October 25 privacy implementation](privacy-ai-notes-and-payouts.md) adds
+finance controls and an Engine-owned private v2 proof path, without activating
+payments or claiming a completed production-native pilot.
+
 The dashboard manages each tutor's current administrator-set base rate. A separate
 finance-authorized earnings API now records approved payable completions and
 reserves payout batches. Neither endpoint transfers funds or claims that real
@@ -84,6 +88,14 @@ Fresh evidence export rechecks refund/hold state, reservation ownership and
 expiry. `zkVerified` and `transferEnabled` remain false. Reservations are not
 automatically released after timeout or an uncertain operation.
 
+Application-side [payout recovery](tutor-payout-recovery.md) now adds a durable
+dispatch journal, immutable intents, finance-only inspection/reconciliation and
+explicit idempotent cancellation of journal-confirmed undispatched versioned reservations.
+Unknown dispatch outcomes remain held and are never automatically resent.
+Cancelled refunded/held lessons remain non-payable. The live Engine payout
+adapter and reviewed settlement integration are still absent; no transfer route
+or manual "mark paid" action is exposed.
+
 The prototype signs a one-hour authorization. Production must select a versioned
 validity policy that covers actual aggregation/finality/retry latency, with fresh
 ledger checks and revocation before release. Engine's development circuit,
@@ -94,8 +106,8 @@ repository. These are not audited shielded settlement.
 1. Define automatic accrual and refund/dispute cutoffs around the implemented
    approval-driven ledger. Do not multiply every past completed lesson by today's
    rate or automatically backfill uncertain lessons.
-2. Add approved payout batches, authenticated tutor authorization, adjustments
-   and durable transfer reconciliation. Custodial Engine wallets are not proof
+2. Complete authenticated tutor authorization, adjustments and live Engine
+   reconciliation around the reservation/journal primitives. Custodial Engine wallets are not proof
    that the tutor alone controls an entitlement.
 3. Build a dedicated Engine-owned earnings circuit covering authorized payable
    records, private rates, integer fee/rounding rules and claim/destination

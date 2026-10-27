@@ -43,7 +43,8 @@ suite('profile optimization (disposable Memgraph only)', () => {
     expect(profile?.major).toBe('English');
     expect(profile?.rating).toBe(5);
     expect(profile?.interests).toEqual(['Reading']);
-    expect(profile?.zkCertificationStatus).toBe('verified');
+    expect(profile?.zkCertificationStatus).toBe('retired');
+    expect(profile?.zkVerifiedAt).toBeUndefined();
     expect(profile?.zkCredentialCommitment).toBe('public-commitment');
     expect(await new TutorService().getTutorProfile('missing-profile-fixture')).toBeNull();
   });

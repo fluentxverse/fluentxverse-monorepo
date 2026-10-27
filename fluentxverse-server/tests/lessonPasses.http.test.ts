@@ -34,3 +34,12 @@ test('never accepts witness keys, strips no fields, bounds payloads without Cont
   expect(extra.status).toBe(400); expect(await extra.text()).not.toContain('secret-test-key');
   expect((await post('orders',{unexpected:'x'.repeat(310000)})).status).toBe(413);
 });
+test('pass body limits do not reject unrelated application uploads', async () => {
+  const parent = new Elysia().use(createLessonPassRoutes())
+    .post('/exam/speaking/recording', ({ body }) => ({ length: (body as any).audio.length }));
+  const response = await parent.handle(new Request('http://localhost/exam/speaking/recording', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ audio: 'x'.repeat(400_000) }),
+  }));
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ length: 400_000 });
+});

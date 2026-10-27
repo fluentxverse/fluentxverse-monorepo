@@ -7,3 +7,9 @@
 
 /index.html
   Cache-Control: no-store, no-cache, must-revalidate
+
+/changelog
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/changelog.json
+  Cache-Control: public, max-age=0, must-revalidate

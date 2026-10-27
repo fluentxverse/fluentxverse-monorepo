@@ -10,6 +10,7 @@ import { TICKETING_VISIBLE } from '../../config/launch';
 import SettingsModal from '../Settings/SettingsModal';
 import { Settings, House, Users, CalendarDays, Ticket, BookOpen, User, Menu, X, Sun, Moon } from "lucide-solid";
 import "./Header.css";
+import BrandWordmark from '../../../../shared/ui/BrandWordmark';
 const Header = () => {
     const _state0 = useAuthContext();
     const _state1 = useLocation();
@@ -149,9 +150,7 @@ const Header = () => {
                         <img class="logo__face logo__face--front" src="/assets/img/logo/icon_logo.png" alt="" width="40" height="40"/>
                       </span>
                     </span>
-                    <span class="brand-text">
-                      Fluent<span class="brand-x">X</span>Verse
-                    </span>
+                    <span class="brand-text"><BrandWordmark inverse={isLandingPage()} /></span>
                   </a>
                   <div class="navbar-wrap push-menu main-menu d-none d-lg-flex">
                     <ul class={`navigation ${isLandingPage() ? 'landing-navigation' : ''}${isPublicBrowsePage() ? ' public-browse-navigation' : ''}`}>
@@ -195,7 +194,7 @@ const Header = () => {
                   <div class="menu-outer">
                     <div class="mobile-menu-header">
                       <div class="mobile-logo">
-                        <img src="assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="32" height="32"/> <div class="brand-text">Fluent<span class="brand-x">X</span>Verse</div>
+                        <img src="assets/img/logo/icon_logo.webp" alt="FluentXVerse" width="32" height="32"/> <div class="brand-text"><BrandWordmark compact inverse /></div>
                       </div>
                     </div>
                     

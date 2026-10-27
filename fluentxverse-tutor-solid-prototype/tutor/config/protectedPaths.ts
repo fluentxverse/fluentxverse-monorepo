@@ -2,4 +2,4 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 // Central list of protected paths (prefix match)
-export const PROTECTED_PATHS = ['/home', '/schedule', '/student', '/classroom'];
+export const PROTECTED_PATHS = ['/home', '/schedule', '/student', '/classroom', '/application'];

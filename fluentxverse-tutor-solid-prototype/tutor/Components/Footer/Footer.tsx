@@ -1,8 +1,9 @@
 import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useContext, splitProps, mergeProps, type Accessor, type Component, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../../utils/cssStyle";
-import TutorIcon from "../Common/TutorIcon";
+import SocialBrandIcon from '../../../../shared/ui/SocialBrandIcon';
 import './Footer.css';
+import BrandWordmark from '../../../../shared/ui/BrandWordmark';
 const Footer = () => {
     const currentYear = new Date().getFullYear();
     return (<footer>
@@ -14,7 +15,7 @@ const Footer = () => {
                 <div class="footer-logo mb-25">
                   <a href="/" style={cssStyle({ display: 'flex', alignItems: 'center', gap: '8px' })}>
                     <img src="assets/img/logo/icon_logo.png" alt="FluentXVerse"/>
-                    <div class="footer-brand-text">Fluent<span class="brand-x">X</span>Verse</div>
+                    <div class="footer-brand-text"><BrandWordmark inverse /></div>
                   </a>
                 </div>
                 <p class="footer-description">
@@ -25,10 +26,10 @@ const Footer = () => {
                     support@fluentxverse.com
                   </a>
                 </p>
-                <ul class="footer-social">
-                  <li><a href="https://facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer"><TutorIcon name="fab fa-facebook-f"/></a></li>
-                  <li><a href="https://twitter.com/fluentxverse" target="_blank" rel="noopener noreferrer"><TutorIcon name="fab fa-twitter"/></a></li>
-                  <li><a href="https://linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer"><TutorIcon name="fab fa-linkedin-in"/></a></li>
+                <ul class="footer-social" aria-label="Follow FluentXVerse">
+                  <li><a href="https://www.linkedin.com/company/fluentxverse" target="_blank" rel="noopener noreferrer" aria-label="FluentXVerse on LinkedIn" title="LinkedIn"><SocialBrandIcon name="linkedin"/></a></li>
+                  <li><a href="https://www.facebook.com/fluentxverse" target="_blank" rel="noopener noreferrer" aria-label="FluentXVerse on Facebook" title="Facebook"><SocialBrandIcon name="facebook"/></a></li>
+                  <li><a href="https://x.com/fluentxverse" target="_blank" rel="noopener noreferrer" aria-label="FluentXVerse on X" title="X"><SocialBrandIcon name="x"/></a></li>
                 </ul>
               </div>
             </div>

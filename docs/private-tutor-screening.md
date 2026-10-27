@@ -1,9 +1,25 @@
 # Privately Verifiable Tutor Screening
 
+Current release policy: [Self-Operated Screening Release](screening-self-operated.md)
+documents the operator-approved setup, exact artifact pins and live-pilot/activation
+records. The independent-review requirement and contract-based design below are
+historical; this release does not claim an independent audit or deploy a custom verifier.
+October 23: the bridge-only release is enabled after the real mainnet proof and
+finalized Horizen pilot passed. Historical "not deployed" statements below do not
+describe the current self-operated release. Actual tutors still need qualifying
+evidence and publication consent; no legacy credential is automatically migrated.
+
+October 22 implementation update: bridge-only Engine proving, strict complete-exam
+evidence validation, release verification and current review handoff are described
+in [Screening Certification Activation](screening-activation.md). This engineering
+work is not production activation or an independent review.
+
+October 20 security update: V1 certification/attendance keys and automatic proving are permanently retired. V2 screening remains disabled pending independently reviewed artifacts. Publication requires tutor consent before the durable submission claim. [Current remediation and release gates](zk-security-remediation-20261020.md) supersede historical activation instructions.
+
 October 13 source update: the default infrastructure is now bridge-only with
 issuer-managed credentials and no ERC-8004 registration. See
 [the new infrastructure runbook](bridge-only-trial-launch.md). The contract-based
-v2 design below is retained only for explicit `legacy_contracts` mode.
+v2 design below is retained as historical design documentation. Runtime `legacy_contracts` mode is blocked.
 
 ## Implemented, Not Deployed
 

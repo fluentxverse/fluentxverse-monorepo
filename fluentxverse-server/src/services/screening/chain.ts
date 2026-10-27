@@ -2,8 +2,7 @@ import { concat, encodeAbiParameters, keccak256, sha256, toHex, type Address, ty
 import { assertCredentialCurrent, type ScreeningBinding } from './credential';
 import { FIELD_MODULUS, decodeScreeningSignals, type ScreeningSignals } from './policy';
 import { assertHorizenReceiptConfig, horizenReceiptReader, privacyInfrastructure, horizenVerificationNetwork } from '../proof.services/horizenReceipt';
-import { approvedScreeningArtifacts } from './prover';
-import { readFileSync } from 'node:fs';
+import { approvedScreeningArtifacts, screeningEngineRequest } from './prover';
 
 export interface ScreeningChainConfig extends ScreeningBinding {
   validationRegistry: Address; identityRegistry: Address; bridge: Address; signer: Address;
@@ -11,7 +10,7 @@ export interface ScreeningChainConfig extends ScreeningBinding {
 }
 export function screeningChainConfig(): ScreeningChainConfig {
   privacyInfrastructure();
-  const chainId = Number(process.env.SCREENING_CHAIN_ID || '2651420');
+  const chainId = Number(process.env.SCREENING_CHAIN_ID || '8453');
   const issuerHash = process.env.SCREENING_ISSUER_HASH || '', vkHash = process.env.SCREENING_ZKVERIFY_VK_HASH || '';
   const domainId = Number(process.env.SCREENING_ZKVERIFY_DOMAIN_ID || '0');
   if (!/^[1-9]\d*$/.test(issuerHash) || BigInt(issuerHash) >= FIELD_MODULUS || !/^0x[a-fA-F0-9]{64}$/.test(vkHash)
@@ -43,8 +42,9 @@ export function validationResponseSummary(certified: boolean, signals: Screening
 }
 export async function assertValidatorConfiguration(config: ScreeningChainConfig, signals?: string[]) {
   if (signals) assertCredentialCurrent(signals, config, config.issuerHash);
-  approvedScreeningArtifacts();
+  const release = await approvedScreeningArtifacts();
   await horizenReceiptReader.check({ ...config, rpcUrl: process.env.SCREENING_RPC_URL || '' });
+  return release;
 }
 export async function readChainCertification(config: ScreeningChainConfig, values: string[], receiptJson?: string): Promise<boolean> {
   assertCredentialCurrent(values, config, config.issuerHash);
@@ -54,16 +54,13 @@ export async function readChainCertification(config: ScreeningChainConfig, value
 }
 export async function submitBridgeScreeningProof(proof: unknown, values: string[]) {
   const config = screeningChainConfig();
-  await assertValidatorConfiguration(config, values);
-  const base = (process.env.GMR_SCREENING_ENGINE_API_BASE || '').replace(/\/$/, ''), key = process.env.GMR_SCREENING_ENGINE_API_KEY || '';
-  if (!base || !key) throw new Error('Dedicated screening proof project is not configured');
+  const release = await assertValidatorConfiguration(config, values);
   const network = horizenVerificationNetwork(config.chainId);
-  const response = await fetch(`${base}/v1/zkverify/proofs`, { method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-GMR-Engine-Key': key },
-    body: JSON.stringify({ proof, publicSignals: values, vk: JSON.parse(readFileSync(process.env.SCREENING_VK_PATH!, 'utf8')),
-      domainId: config.domainId, proofSystem: 'groth16', curve: 'bn128', expectedNetwork: network }), signal: AbortSignal.timeout(300_000) });
-  if (!response.ok) throw new Error('Screening proof submission needs reconciliation');
-  const result = await response.json() as { submission: { id: string; transactionResult: string; zkVerifyNetwork: string } };
+  let result: { submission: { id: string; transactionResult: string; zkVerifyNetwork: string } };
+  try {
+    result = await screeningEngineRequest('/v1/zkverify/proofs', { proof, publicSignals: values, vk: release.vk,
+      domainId: config.domainId, proofSystem: 'groth16', curve: 'bn128', expectedNetwork: network }, 300000);
+  } catch { throw new Error('Screening proof submission needs reconciliation'); }
   if (result.submission?.zkVerifyNetwork !== network || !result.submission.id) throw new Error('Wrong screening proof network');
   return result;
 }
@@ -72,7 +69,7 @@ export function agentRegistration(_config?: Pick<ScreeningChainConfig, 'chainId'
   return { type: 'fluentxverse.screening-service.v1', name: 'FluentXVerse Tutor Screening',
     active: process.env.SCREENING_ENABLED === 'true', registrations: [],
     screening: { policy: `${api}/policy`, credentialVerification: `${api}/public/{commitment}`,
-      validationMethod: 'Existing Horizen zkVerify receipt bridge; issuer-managed credentials and revocation',
+      validationMethod: 'Official zkVerify receipt bridge on the configured chain; issuer-managed credentials and revocation',
       modelExecutionProven: false, privateEvidencePublished: false },
   };
 }

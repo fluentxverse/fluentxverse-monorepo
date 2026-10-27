@@ -25,8 +25,11 @@ bun run preview
 
 ## Content
 
-- `src/data/site.ts`: project descriptions, portal URLs, contact address, founder details, and the three team slots. Replace placeholders with approved names, roles, biographies, portrait paths, and optional LinkedIn URLs.
+- `src/data/changelogEntries.json`: public release history at `/changelog`, with permanent update IDs, student/tutor/backend filters, search, and a generated `/changelog.json` feed. See `docs/changelog.md` for publishing rules. Build-time tests reject duplicate IDs and malformed records.
+- `src/data/site.ts`: project descriptions, portal URLs, contact address, founder details, and team members in display order. Each entry includes a name, role, biography, portrait, and optional portrait position and LinkedIn URL.
 - `src/pages/HomePage.tsx`: home page content.
+- `src/pages/EslTutorAppPage.tsx`: public partner/funder platform guide at `/esl-tutor-app`, adapted from the dashboard guide without importing dashboard code or calling protected APIs. Content and source mapping are in `docs/platform-overview-content.md`.
+- `src/pages/EslStudentAppPage.tsx`: original learner-focused guide at `/esl-student-app`, sourced from the student interface. Both guides use the shared `PublicAppGuide` reader. See `docs/student-overview-content.md` for source coverage and claim boundaries.
 - `src/pages/TechnologyPage.tsx`: overview of AI, Web3, and zero-knowledge proofs and why we use them for education.
 - `src/pages/AiPage.tsx`: AI uses, instructional approach, and limitations.
 - `src/pages/OnchainPage.tsx`: the case for onchain education, proof boundaries, and FAQs.

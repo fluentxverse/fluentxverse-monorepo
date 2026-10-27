@@ -2,7 +2,7 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import { client } from './utils';
-export type TutorCertificationProofStatus = 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed';
+export type TutorCertificationProofStatus = 'requirements_incomplete' | 'ready_for_proving' | 'local_proof_generated' | 'submitted' | 'verified' | 'failed' | 'retired' | 'expired' | 'revoked';
 export type TutorCertificationRequirement = 'written_exam' | 'speaking_exam' | 'profile_approval' | 'interview_pass';
 export interface TutorCertificationSnapshot {
     tutorId: string;

@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 .TODO.md
 .env
+fluentxverse-go-server/private-key.txt
 # Public proof assets are explicitly provisioned before deployment, not source files.
 fluentxverse-student-solid-prototype/public/anonymous-reviews/
 fluentxverse-server/config/lesson-passes.env
@@ -36,3 +37,11 @@ fluentxverse-server/config/lesson-privacy.env
 /output/screenshots/
 /output/*.png
 /output/lesson-authoring/
+/output/capacity/
+/output/cloud/
+
+# Local release snapshots and private test/runtime evidence.
+/output/release/
+/output/email/
+/output/lesson-privacy/
+**/output/screenshots/

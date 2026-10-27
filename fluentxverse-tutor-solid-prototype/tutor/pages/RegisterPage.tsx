@@ -83,7 +83,7 @@ const RegisterPage = () => {
                 // Set the user in AuthContext so the app knows we're logged in
                 _state0.setUserFromRegistration(result.user);
                 // Use replace to prevent back-button returning to register form
-                window.location.replace('/home');
+                window.location.replace('/confirm-email');
             }
             else {
                 // Server returned success: false with a message
@@ -164,7 +164,7 @@ const RegisterPage = () => {
               {/* Success Message */}
               {success() && (<div class="alert alert-success">
                   <TutorIcon name="fas fa-check-circle"/>
-                  Registration successful! Redirecting to login...
+                  Registration successful! Confirm your email to continue.
                 </div>)}
 
               {/* Error Message */}

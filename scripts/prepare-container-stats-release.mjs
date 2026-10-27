@@ -1,0 +1,40 @@
+import { cpSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { ssh } from './lib/cloud-ssh.mjs';
+
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const release=join(root,'output/release/container-stats-20261023');
+const baseline=join(root,'output/release/server-health-20261023');
+const previousDashboard='dfdead9d-78e8-4f3b-b8bd-9fe37da6bb69';
+if(JSON.parse(readFileSync(join(baseline,'dashboard-deployment.json'))).version!==previousDashboard)throw Error('Review dashboard baseline.');
+const manifest={createdAt:new Date().toISOString(),previousDashboard,files:{}};
+mkdirSync(release,{recursive:true});
+if(!existsSync(join(release,'frontend')))cpSync(join(baseline,'frontend'),join(release,'frontend'),{recursive:true,verbatimSymlinks:true,filter:path=>!['dist','.wrangler','node_modules'].includes(path.split('/').at(-1))});
+function copy(from,to){mkdirSync(dirname(to),{recursive:true});copyFileSync(from,to);manifest.files[from.replace(root+'/','')]=createHash('sha256').update(readFileSync(from)).digest('hex');}
+function insert(path,before,after){const value=readFileSync(path,'utf8');if(value.includes(after))return;if(value.split(before).length!==2)throw Error('Changed baseline: '+path);writeFileSync(path,value.replace(before,after));}
+const frontend=join(release,'frontend/fluentxverse-dashboard');
+for(const path of ['src/api/containerStats.api.ts','src/pages/ContainerStatsPage.tsx','src/pages/ContainerStatsPage.css','src/utils/metricFormat.ts','tests/browser/containerStats.cjs'])copy(join(root,'fluentxverse-dashboard',path),join(frontend,path));
+copy(join(root,'shared/containerStats.ts'),join(release,'frontend/shared/containerStats.ts'));
+insert(join(frontend,'src/App.tsx'),"const ServerHealthPage = lazy(() => import('./pages/ServerHealthPage'));","const ServerHealthPage = lazy(() => import('./pages/ServerHealthPage'));\nconst ContainerStatsPage = lazy(() => import('./pages/ContainerStatsPage'));");
+insert(join(frontend,'src/App.tsx'),'<Route path="/server-health" component={ServerHealthPage} />','<Route path="/server-health" component={ServerHealthPage} />\n        <Route path="/stats" component={ContainerStatsPage} />');
+insert(join(frontend,'src/components/Header.tsx'),"'/server-health':'Server Health',","'/server-health':'Server Health',\n  '/stats':'Stats',");
+insert(join(frontend,'src/components/Sidebar.tsx'),"{ path: '/server-health', icon: 'ri-server-line', label: 'Server Health' },","{ path: '/server-health', icon: 'ri-server-line', label: 'Server Health' },\n  { path: '/stats', icon: 'ri-bar-chart-horizontal-line', label: 'Stats' },");
+insert(join(frontend,'src/components/Sidebar.tsx'),"(item.path !== '/server-health' || permissions.includes('operations'))","(!['/server-health', '/stats'].includes(item.path) || permissions.includes('operations'))");
+const before=readFileSync(join(baseline,'frontend/fluentxverse-dashboard/src/pages/ServerHealthPage.tsx'),'utf8');
+const original=before.slice(before.indexOf('export function formatBytes('),before.indexOf('\nfunction uptime('));
+insert(join(frontend,'src/pages/ServerHealthPage.tsx'),original,"import { formatBytes } from '../utils/metricFormat';\n");
+const api=join(release,'api');mkdirSync(api,{recursive:true});
+manifest.apiBaselineImage=JSON.parse(ssh("docker inspect fluentxverse-server --format '{{json .Image}}'"));
+const index=ssh('docker exec fluentxverse-server cat /app/src/index.ts');
+if(index.includes('containerStatsRoute'))throw Error('Container stats already deployed; review.');
+manifest.apiBaselineIndexHash=createHash('sha256').update(index).digest('hex');
+writeFileSync(join(api,'index.ts'),index);
+insert(join(api,'index.ts'),"import { serverHealthRoute } from './routes/serverHealth.route';","import { serverHealthRoute } from './routes/serverHealth.route';\nimport { containerStatsRoute } from './routes/containerStats.route';");
+insert(join(api,'index.ts'),'.use(serverHealthRoute)','.use(serverHealthRoute)\n  .use(containerStatsRoute)');
+for(const path of ['src/routes/containerStats.route.ts','src/services/admin.services/containerStats.service.ts','tests/containerStats.test.ts'])copy(join(root,'fluentxverse-server',path),join(api,path));
+copy(join(root,'shared/containerStats.ts'),join(api,'shared/containerStats.ts'));
+writeFileSync(join(api,'Dockerfile'),`FROM fluentxverse-cloud/api:server-health-20261023\nCOPY --chown=appuser:appgroup index.ts /app/src/index.ts\nCOPY --chown=appuser:appgroup src/ /app/src/\nCOPY --chown=appuser:appgroup tests/ /app/tests/\nCOPY shared/ /shared/\n`);
+writeFileSync(join(release,'source-manifest.json'),JSON.stringify(manifest,null,2));
+console.log('Prepared container-stats-only API overlay and pinned dashboard source snapshot.');

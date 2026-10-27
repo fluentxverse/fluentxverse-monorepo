@@ -1,0 +1,235 @@
+.tutor-quality {
+  --tq-bg: #f0f6ff;
+  --tq-text: #172b4d;
+  --tq-muted: #506480;
+  --tq-accent: #0b55d9;
+  --tq-line: #cfdef4;
+  background: var(--tq-bg);
+  color: var(--tq-text);
+  padding: 88px 0;
+  letter-spacing: 0;
+}
+
+.tutor-quality__inner {
+  width: calc(100% - 64px);
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 72px;
+  align-items: center;
+}
+
+.tutor-quality__eyebrow {
+  margin: 0 0 18px;
+  color: var(--tq-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tutor-quality h2 {
+  margin: 0;
+  color: var(--tq-text);
+  font-size: 44px;
+  font-weight: 750;
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+.tutor-quality__intro {
+  margin: 22px 0 28px;
+  color: var(--tq-muted);
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 550px;
+}
+
+.tutor-quality__standards,
+.tutor-quality__goals ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tutor-quality__standards {
+  display: grid;
+  gap: 22px;
+}
+
+.tutor-quality__standards li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.tutor-quality__standards svg {
+  color: var(--tq-accent);
+  margin-top: 2px;
+}
+
+.tutor-quality h3 {
+  margin: 0 0 5px;
+  color: var(--tq-text);
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.tutor-quality__standards p {
+  margin: 0;
+  color: var(--tq-muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.tutor-quality__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 48px;
+  max-width: 100%;
+  padding: 12px 22px;
+  margin-top: 32px;
+  background: var(--tq-accent);
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms;
+}
+
+.tutor-quality__cta:hover {
+  background: #0842ac;
+  color: #fff;
+}
+
+.tutor-quality__cta:focus-visible {
+  outline: 3px solid var(--tq-accent);
+  outline-offset: 4px;
+}
+
+.tutor-quality__visual {
+  min-width: 0;
+  padding-left: 44px;
+  border-left: 1px solid var(--tq-line);
+}
+
+.tutor-quality__art {
+  position: relative;
+  padding-top: 50px;
+}
+
+.tutor-quality__art img {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  margin: 0 auto 22px;
+}
+
+.tutor-quality__note {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--tq-text);
+  font-size: 22px;
+  line-height: 1.35;
+  transform: rotate(-5deg);
+}
+
+.tutor-quality__note strong {
+  color: var(--tq-accent);
+}
+
+.tutor-quality__goals > p {
+  margin: 0 0 16px;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.tutor-quality__goals li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid var(--tq-line);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tutor-quality__goals svg {
+  flex-shrink: 0;
+  color: var(--tq-accent);
+}
+
+.tutor-quality__goals strong {
+  display: block;
+  color: var(--tq-text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tutor-quality__goals li span {
+  display: block;
+  margin-top: 4px;
+  color: var(--tq-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.tutor-quality__signoff {
+  display: block;
+  margin-top: 18px;
+  color: var(--tq-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dark-mode .tutor-quality {
+  --tq-bg: #171e2b;
+  --tq-text: #eef4ff;
+  --tq-muted: #b8c7dd;
+  --tq-accent: #83b4ff;
+  --tq-line: #35465f;
+}
+
+.dark-mode .tutor-quality__cta {
+  color: #11284d;
+}
+
+.dark-mode .tutor-quality__cta:hover {
+  background: #abcfff;
+}
+
+@media (max-width: 1024px) {
+  .tutor-quality__inner { gap: 36px; }
+  .tutor-quality__visual { padding-left: 28px; }
+}
+
+@media (max-width: 767px) {
+  .tutor-quality { padding: 60px 0; }
+  .tutor-quality__inner {
+    width: calc(100% - 40px);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+  .tutor-quality h2 { font-size: 34px; }
+  .tutor-quality__visual {
+    border-left: 0;
+    border-top: 1px solid var(--tq-line);
+    padding: 28px 0 0;
+  }
+  .tutor-quality__art { padding-top: 40px; }
+  .tutor-quality__art img { max-width: 260px; }
+  .tutor-quality__note { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutor-quality__cta { transition: none; }
+}

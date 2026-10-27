@@ -64,11 +64,13 @@ Builds do not establish successful service integration. Database, authentication
 
 ## Privacy Workstreams
 
+Security update, October 20: legacy tutor-certification and student-attendance proofs are retired because their Groth16 setup keys were unsafe. Historical chain finalization is not valid certification evidence. See [the remediation and remaining release gates](docs/zk-security-remediation-20261020.md).
+
 The platform includes application workflows and supporting proof source for privately verifiable tutor screening, privacy-oriented reviews/passes, and compensation-related work. Privy handles student social login. Tutor wallets are managed through GMR Engine/GMR Vault.
 
 Distinguish implemented code from reviewed proving artifacts, deployed contracts, enabled production modules, and completed acceptance tests. ZK statements over authorized records do not prove assessment accuracy or that teaching occurred. Ordinary public transfers do not provide shielded settlement. Production activation requires the appropriate issuer, policy, lifecycle, artifact-review, and operational gates.
 
-Never commit student records, recordings, private assessment evidence, API tokens, seed phrases, or signing keys. Report security concerns privately to hello@fluentxverse.com.
+Never commit student records, recordings, private assessment evidence, API tokens, seed phrases, or signing keys. Report security concerns privately to support@fluentxverse.com.
 
 Minimal signed lesson-dispute evidence is implemented as an application-layer
 privacy workflow. See the
@@ -77,4 +79,4 @@ These additions do not introduce custom contracts or claim ZK-verified attendanc
 
 ## Licensing
 
-No root license file is currently present. Do not infer an MIT or other license from public repository availability. Contact hello@fluentxverse.com for licensing terms; third-party components retain their own licenses.
+  license file is currently present. Do not infer an MIT or other license from public repository availability. Contact support@fluentxverse.com for licensing terms; third-party components retain their own licenses.

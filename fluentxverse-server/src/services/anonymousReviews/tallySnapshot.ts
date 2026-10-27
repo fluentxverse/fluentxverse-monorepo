@@ -4,7 +4,7 @@ import { AnonymousReviewChain, type ReviewReceipt } from './chain';
 import { AnonymousReviewError, reviewConfig, reviewGroupId, reviewScope, semaphoreHash,
   parseReviewProof, reviewPublicSignals, reviewStatement } from './policy';
 import { AnonymousReviewRepository, type ReviewCohort } from './repository';
-import { horizenReceiptReader } from '../proof.services/horizenReceipt';
+import { horizenReceiptReader, type HorizenReceipt } from '../proof.services/horizenReceipt';
 import { tallyConfig, tallyManifestHash, word, type AcceptedReview, type TallySnapshot } from './tallyPolicy';
 
 export class ReviewTallySnapshotSource {
@@ -30,6 +30,7 @@ export class ReviewTallySnapshotSource {
     if (!Number.isSafeInteger(closesAt) || block.timestamp < BigInt(closesAt)) throw new AnonymousReviewError('Wait for finalized review window closure', 409);
     if (!await this.chain.active(cohort)) throw new AnonymousReviewError('Bridge-only cohort is inactive', 409);
     const accepted: AcceptedReview[] = [];
+    const receipts: { statement: Hex; receipt: HorizenReceipt }[] = [];
     for (const item of await this.repository.submissions(cohort.id)) {
       if (item.status !== 'verified') continue;
       if (!item.receiptJson || !item.zkVerifyTx || !item.acceptedAt
@@ -39,10 +40,12 @@ export class ReviewTallySnapshotSource {
       if (proof.merkleTreeRoot !== cohort.root || proof.scope !== cohort.scope || proof.nullifier !== item.nullifier)
         throw new AnonymousReviewError('Review acceptance differs from the frozen cohort', 409);
       const statement = reviewStatement(config.vkHash, proof);
-      if (!await horizenReceiptReader.verify(config, statement, JSON.parse(item.receiptJson), {
-        blockNumber: Number(block.number), blockHash: block.hash })) throw new AnonymousReviewError('Accepted review lacks a finalized bridge receipt', 409);
+      receipts.push({ statement, receipt: JSON.parse(item.receiptJson) });
       accepted.push({ nullifier: word(BigInt(signals[1]!)), messageHash: word(BigInt(signals[2]!)), statement });
     }
+    const verified = await horizenReceiptReader.verifyBatch(config, receipts, { blockNumber: Number(block.number), blockHash: block.hash });
+    if (verified.some(result => result !== true) || verified.length !== receipts.length)
+      throw new AnonymousReviewError('Accepted review lacks a finalized bridge receipt', 409);
     accepted.sort((a, b) => BigInt(a.nullifier) < BigInt(b.nullifier) ? -1 : BigInt(a.nullifier) > BigInt(b.nullifier) ? 1 : 0);
     const snapshot: TallySnapshot = { chainId: config.chainId, registry: config.bridge.toLowerCase(), groupId: cohort.id as Hex,
       scopeHash: word(BigInt(semaphoreHash(cohort.scope))), root: word(BigInt(cohort.root)), reviewVk: config.vkHash.toLowerCase() as Hex, closesAt,

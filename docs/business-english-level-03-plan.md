@@ -26,6 +26,17 @@ This file stores the working plan and key decisions for the Business English Lev
 - It should be based on the student's mistakes, corrections, and weak points from Lessons 1 to 9 in the same chapter
 - This is not only a content task. It is a cross-app product feature involving tutor input, backend storage, aggregation logic, and lesson generation
 
+## A4 Layout Pilot (2026-10-24)
+
+- Pilot: Business English Level 3, Chapter 1, Lesson 1 only.
+- Student pages use A4 portrait proportions; teaching notes remain alongside the paper and are excluded from printing.
+- Physical page numbers are measured from content rather than fixed to the seven teaching groups.
+- Keep an activity together when it fits. Move it to a fresh page when needed; divide oversized groups only between complete cards or activities.
+- Keep questions, choices, dialogue exercises, and feedback templates intact. An indivisible oversized activity displays a warning and disables the print command.
+- The editor saves manual page breaks and keep-together preferences under `beData.a4Layout` using the existing Memgraph-backed lesson save.
+- Editing commands live with the teaching notes. Reflow waits until an active text edit finishes.
+- Desktop and mobile scale the same paper layout; printing includes all sheets at A4 size.
+
 ## Current Product Understanding
 
 - The current Business English admin editor supports a dedicated `beData` lesson structure

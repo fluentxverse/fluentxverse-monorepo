@@ -20,6 +20,8 @@ export const appArtwork = {
     certificate: 'certificate-v1.webp',
     privacy: 'privacy-v1.webp',
     classroom: 'classroom-v1.webp',
+    network: 'network-v1.webp',
+    headset: 'headset-v1.webp',
 } as const;
 
 export type AppArtworkName = keyof typeof appArtwork;

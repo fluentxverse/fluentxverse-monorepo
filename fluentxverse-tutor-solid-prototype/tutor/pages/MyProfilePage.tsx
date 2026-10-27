@@ -20,8 +20,28 @@ import { mediaUrl } from '../utils/mediaUrl';
 import { toast, toastConfirm } from '../Components/Common/Toast';
 import './MyProfilePage.css';
 import ScreeningCredential from '../Components/Common/ScreeningCredential';
+import { proofApi } from '../api/proof.api';
+import { hasTeachingAccess } from '../utils/teachingAccess';
+import { useLocation } from '../routing';
 export const MyProfilePage = () => {
     const _state0 = useAuthContext();
+    const location = useLocation();
+    const applicationProfile = createMemo(() => location.path === '/application/profile');
+    const [checkingStatsAccess, setCheckingStatsAccess] = createSignal(false);
+    let statsAccessRequest = 0;
+    onCleanup(() => { statsAccessRequest++; });
+    const openStats = async () => {
+        const id = _state0.user?.userId, request = ++statsAccessRequest;
+        setCheckingStatsAccess(true);
+        try {
+            const result = await proofApi.getTutorCertificationStatus();
+            if (request !== statsAccessRequest || _state0.user?.userId !== id) return;
+            if (hasTeachingAccess(result)) setActiveTab('stats');
+            else location.route('/home?certification=required');
+        } catch {
+            if (request === statsAccessRequest) toast.error('Could not verify certification. Please try again.');
+        } finally { if (request === statsAccessRequest) setCheckingStatsAccess(false); }
+    };
     const initialProfile = _state0.user?.userId ? tutorProfileCache.read(_state0.user.userId) : null;
     const [profileData, setProfileData] = createSignal<TutorProfileData | null>(initialProfile);
     const [loading, setLoading] = createSignal(!initialProfile);
@@ -83,7 +103,7 @@ export const MyProfilePage = () => {
     }));
     createEffect(on(() => _state0.user?.userId, () => {
         const _cleanup3 = untrack(() => {
-            document.title = 'My Profile | FluentXVerse';
+            document.title = applicationProfile() ? 'Application Profile | FluentXVerse' : 'My Profile | FluentXVerse';
             const cached = _state0.user?.userId ? tutorProfileCache.read(_state0.user.userId) : null;
             setProfileData(cached); setAvatarUrl(cached?.profilePicture || null); setLoadError(''); setActiveTab('about'); setPerformance(null); setPerformanceError('');
             loadProfile();
@@ -702,10 +722,10 @@ export const MyProfilePage = () => {
                 <TutorIcon name="fi-sr-user"/>
                 About
               </button>
-              <button class={`tab-btn ${activeTab() === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>
+              {!applicationProfile() && <button class={`tab-btn ${activeTab() === 'stats' ? 'active' : ''}`} onClick={openStats} disabled={checkingStatsAccess()} aria-busy={checkingStatsAccess()}>
                 <TutorIcon name="fi-sr-chart-histogram"/>
                 Stats
-              </button>
+              </button>}
               <button class={`tab-btn ${activeTab() === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
                 <TutorIcon name="fi-sr-settings"/>
                 Settings

@@ -17,7 +17,8 @@ const base = process.env.TUTOR_TEST_URL || 'http://127.0.0.1:5177';
           const { role: omitted, ...restoredUser } = user;
           json.user = restoredUser;
         }
-        if (path === '/proof/tutor-certification/me') json.data = { snapshot: { missingRequirements: certified ? [] : ['interview'] }, proofs: [] };
+        if (path === '/proof/tutor-certification/me') json.data = { snapshot: { writtenPassed: true, speakingPassed: true, profileApproved: true, interviewPassed: certified, missingRequirements: certified ? [] : ['interview_pass'] }, proofs: [] };
+        if (path.replace(/\/$/, '') === '/tutor/email-verification') json.data = { verified: true };
         if (path === '/schedule/week') json.data = { slots: [], weekStart: '2026-10-05', weekEnd: '2026-10-11' };
         if (path.startsWith('/notifications')) json.data = { notifications: [], unreadCount: 0 };
         if (path === '/tutor/profile') json.data = { ...user, interests: [], education: [], profileStatus: 'approved' };

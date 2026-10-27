@@ -20,9 +20,12 @@ export function Footer() {
             <A href="/technology/ai">AI in education</A>
             <A href="/onchain-education">Why onchain</A>
             <A href="/#ecosystem">Our ecosystem</A>
+            <A href="/changelog">Changelog</A>
           </div>
           <div class="footer-column">
             <h2>FluentXVerse ESL</h2>
+            <A href="/esl-student-app">Student-app guide</A>
+            <A href="/esl-tutor-app">How the platform works</A>
             <a href="https://student.fluentxverse.com" target="_blank" rel="noopener noreferrer">Student app <ArrowUpRight size={14} /></a>
             <a href="https://tutor.fluentxverse.com" target="_blank" rel="noopener noreferrer">Tutor app <ArrowUpRight size={14} /></a>
           </div>

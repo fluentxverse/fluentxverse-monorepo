@@ -2,12 +2,15 @@ import { createSignal, createMemo, createEffect, on, onCleanup, untrack, useCont
 import { Portal } from "solid-js/web";
 import { cssStyle, Fragment } from "../utils/cssStyle";
 import TutorIcon from "../Components/Common/TutorIcon";
+import TutorArt from '../Components/Common/TutorArt';
+import { ArrowLeft, ArrowRight, BookOpenText, Clock3, ListOrdered, RotateCcw, ShieldCheck, SpellCheck } from 'lucide-solid';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader';
 import SideBar from '../Components/IndexOne/SideBar';
 import { useAuthContext } from '../context/AuthContext';
 import { toastConfirm } from '../Components/Common/Toast';
 import { generateExam, submitExam, getActiveExam, saveExamAnswers, checkExpiredExam, type ClientExam, type ExamQuestion, type FillInBlankQuestion, type ComprehensionQuestion, type ComprehensionPassage, type ExamResult, } from '../api/exam.api';
 import './ExamPage.css';
+import './WrittenExamPage.css';
 type ExamPhase = 'intro' | 'loading' | 'exam' | 'submitting' | 'results' | 'expired';
 // LocalStorage keys for exam state persistence (backup only)
 const STORAGE_KEYS = {
@@ -266,7 +269,8 @@ const ExamPage = () => {
         }
         catch (err) {
             console.error('Error starting exam:', err);
-            setError('Failed to connect to server. Please try again.');
+            const message = (err as any)?.response?.data?.message;
+            setError(typeof message === 'string' ? message : 'Your assessment could not be prepared. Please try again. Your exam has not started.');
             setPhase('intro');
         }
     };
@@ -353,7 +357,7 @@ const ExamPage = () => {
         return (<div class="fill-in-blank-question">
         <p class="sentence-text">{question.sentence}</p>
         <div class="answer-options">
-          {question.options.map((option, idx) => (<button class={`answer-option ${answers()[currentQuestion()] === idx ? 'selected' : ''}`} onClick={() => selectAnswer(idx)}>
+          {question.options.map((option, idx) => (<button type="button" aria-pressed={answers()[currentQuestion()] === idx} class={`answer-option ${answers()[currentQuestion()] === idx ? 'selected' : ''}`} onClick={() => selectAnswer(idx)}>
               <span class="option-letter">{String.fromCharCode(65 + idx)}</span>
               <span class="option-text">{option}</span>
             </button>))}
@@ -374,7 +378,7 @@ const ExamPage = () => {
         <div class="comprehension-q">
           <p class="question-text">{question.question}</p>
           <div class="answer-options">
-            {question.options.map((option, idx) => (<button class={`answer-option ${answers()[currentQuestion()] === idx ? 'selected' : ''}`} onClick={() => selectAnswer(idx)}>
+            {question.options.map((option, idx) => (<button type="button" aria-pressed={answers()[currentQuestion()] === idx} class={`answer-option ${answers()[currentQuestion()] === idx ? 'selected' : ''}`} onClick={() => selectAnswer(idx)}>
                 <span class="option-letter">{String.fromCharCode(65 + idx)}</span>
                 <span class="option-text">{option}</span>
               </button>))}
@@ -384,79 +388,70 @@ const ExamPage = () => {
     };
     // Render intro screen
     const renderIntro = () => (<div class="exam-intro">
-      <div class="exam-intro-card">
-        <div class="exam-intro-icon">
-          <TutorIcon name="fas fa-pen"/>
-        </div>
-        <h2>Written Proficiency Test</h2>
+      <div class="written-intro-content">
+        <a class="written-back" href="/home"><ArrowLeft size={16} />Tutor application</a>
+        <header class="written-heading"><TutorArt name="training" size={52} /><div>
+          <p class="written-eyebrow">STEP 1 / WRITTEN ASSESSMENT</p>
+          <h1>Written Proficiency Test</h1>
+        </div></header>
         <p class="exam-intro-description">
-          This exam will assess your English proficiency to become a FluentXVerse tutor.
-          Each exam is uniquely generated to ensure fairness.
+          Demonstrate your English grammar, vocabulary, and reading comprehension.
+          Your 25-minute timer begins when your questions are ready.
         </p>
 
         <div class="exam-info-grid">
           <div class="exam-info-item">
-            <TutorIcon name="fas fa-list-ol"/>
+            <ListOrdered size={20}/>
             <span class="exam-info-value">30</span>
             <span class="exam-info-label">Questions</span>
           </div>
           <div class="exam-info-item">
-            <TutorIcon name="fas fa-clock"/>
+            <Clock3 size={20}/>
             <span class="exam-info-value">25</span>
             <span class="exam-info-label">Minutes</span>
           </div>
           <div class="exam-info-item">
-            <TutorIcon name="fas fa-percentage"/>
+            <ShieldCheck size={20}/>
             <span class="exam-info-value">90%</span>
-            <span class="exam-info-label">To Pass</span>
+            <span class="exam-info-label">Passing score</span>
           </div>
           <div class="exam-info-item">
-            <TutorIcon name="fas fa-redo"/>
+            <RotateCcw size={20}/>
             <span class="exam-info-value">2</span>
-            <span class="exam-info-label">Attempts/Month</span>
+            <span class="exam-info-label">Attempts / 30 days</span>
           </div>
         </div>
 
-        <div class="exam-categories">
-          <h4>Sections:</h4>
-          <div class="category-tags">
-            <span class="category-tag category-tag--grammar">
-              <TutorIcon name="fas fa-spell-check"/> Grammar (10 questions)
-            </span>
-            <span class="category-tag category-tag--vocabulary">
-              <TutorIcon name="fas fa-book"/> Vocabulary (10 questions)
-            </span>
-            <span class="category-tag category-tag--comprehension">
-              <TutorIcon name="fas fa-glasses"/> Comprehension (5 questions)
-            </span>
+        <div class="written-overview">
+        <section class="exam-categories" aria-labelledby="written-sections-title">
+          <h2 id="written-sections-title">Three sections. One assessment.</h2>
+          <div class="written-section-list">
+            <div class="written-section"><span class="written-section-icon grammar"><SpellCheck size={21}/></span><div><h3>Grammar</h3><p>Sentence structure and correct usage</p></div><span>10 questions</span></div>
+            <div class="written-section"><span class="written-section-icon vocabulary"><BookOpenText size={21}/></span><div><h3>Vocabulary</h3><p>The right word in context</p></div><span>10 questions</span></div>
+            <div class="written-section"><span class="written-section-icon comprehension"><TutorIcon name="fas fa-glasses"/></span><div><h3>Reading comprehension</h3><p>Understand passages and their meaning</p></div><span>10 questions</span></div>
           </div>
-        </div>
-
+        </section>
         <div class="exam-rules">
-          <h4>Instructions:</h4>
-          <ul>
-            <li>Fill in the blank with the correct word from the options</li>
-            <li>Read passages carefully before answering comprehension questions</li>
-            <li>Do not refresh or leave the page during the exam</li>
-            <li>The exam will auto-submit when time runs out</li>
-            <li><strong>Unanswered questions are marked as incorrect</strong></li>
-            <li>Results will be shown immediately after submission</li>
-          </ul>
+          <h2>Before you begin</h2>
+          <ol>
+            <li>Choose one answer per question. Use each option exactly as written.</li>
+            <li>You can revisit questions and change your answers before submitting.</li>
+            <li>The timer continues if you leave or refresh. Saved progress can be resumed.</li>
+            <li>Your exam submits when time runs out. Unanswered questions count as incorrect.</li>
+          </ol>
+        </div>
         </div>
 
-        {error() && <div class="exam-error">{error()}</div>}
+        {error() && <div class="exam-error" role="alert">{error()}</div>}
 
-        <button class="start-exam-btn" onClick={startExam}>
-          <TutorIcon name="fas fa-play"/>
-          Start Exam
-        </button>
+        <footer class="written-intro-actions"><p>Ready when you are. Allow 25 uninterrupted minutes.</p><button class="start-exam-btn" onClick={startExam}>Start Exam<ArrowRight size={18}/></button></footer>
       </div>
     </div>);
     // Render loading screen
     const renderLoading = () => (<div class="exam-loading">
       <div class="loading-spinner"></div>
-      <h3>Generating Your Unique Exam...</h3>
-      <p>We are creating personalized questions just for you.</p>
+      <h3>Preparing your assessment</h3>
+      <p>Your questions are being generated and checked. Your timer has not started.</p>
     </div>);
     // Render exam screen
     const renderExam = () => {
@@ -480,9 +475,7 @@ const ExamPage = () => {
         
         {/* Timer and Progress Header */}
         <div class="exam-header">
-          <div class="exam-timer" style={cssStyle({ get color() {
-                    return timeRemaining() < 300 ? '#ef4444' : '#0245ae';
-                } })}>
+          <div class="exam-timer" classList={{ 'is-low': timeRemaining() < 300 }}>
             <TutorIcon name="fas fa-clock"/>
             {formatTime(timeRemaining())}
           </div>
@@ -508,13 +501,13 @@ const ExamPage = () => {
           </div>
           <div class="section-label" style={cssStyle({ borderColor: '#10b981' })}>
             <span>Comprehension</span>
-            <small>21-25</small>
+            <small>21-30</small>
           </div>
         </div>
 
         {/* Question Navigation */}
         <div class="question-nav">
-          {exam().questions.map((_, idx) => (<button class={`question-nav-btn ${idx === currentQuestion() ? 'active' : ''} ${answers()[idx] !== -1 ? 'answered' : ''}`} style={cssStyle({
+          {exam().questions.map((_, idx) => (<button type="button" aria-label={`Question ${idx + 1}${answers()[idx] !== -1 ? ', answered' : ', unanswered'}`} aria-current={idx === currentQuestion() ? 'step' : undefined} title={`Question ${idx + 1}`} class={`question-nav-btn ${idx === currentQuestion() ? 'active' : ''} ${answers()[idx] !== -1 ? 'answered' : ''}`} style={cssStyle({
                     borderBottomColor: getTypeColor(getSectionForIndex(idx) as ExamQuestion['type']),
                     get backgroundColor() {
                         return idx === currentQuestion() ? getTypeColor(getSectionForIndex(idx) as ExamQuestion['type']) : undefined;
@@ -713,7 +706,7 @@ const ExamPage = () => {
           <TutorIcon name="fas fa-info-circle"/>
           <p>
             {canRetake() ? 'You can retake the exam. Click below to start a new attempt.'
-                : 'You have used all your exam attempts this month. Please try again next month.'}
+                : 'You have used both exam attempts in the last 30 days. Try again when an attempt becomes available.'}
           </p>
         </div>
 
@@ -739,7 +732,7 @@ const ExamPage = () => {
       <SideBar />
       <div class="main-content">
         <DashboardHeader user={_state0.user || undefined}/>
-        <main class="exam-page">
+        <main class="exam-page written-exam-page">
           <div class="container">
             {phase() === 'intro' && renderIntro()}
             {phase() === 'loading' && renderLoading()}
